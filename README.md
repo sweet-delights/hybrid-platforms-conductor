@@ -15,6 +15,17 @@ Hybrid Platforms Conductor covers the following needs:
 
 The way it works is by having a simple configuration file having an extensive DSL to describe the platforms to operate and the current DevOps environment (gateways, users...).
 
+# Table of Contents
+  * [Requirements to use it](#requirements)
+  * [First time setup](#first_setup)
+  * [How to use tools from Hybrid Platforms Conductor](#how_to)
+  * [List of tools available](#tools_list)
+  * [Common command line options](#common_options)
+  * [List of tests available](#tests_list)
+  * [Using secrets](#secrets)
+  * [Development API](#development_api)
+  * [Extending Hybrid Platforms Conductor features](#extending)
+
 <a name="requirements"></a>
 # Requirements to use it
 
@@ -66,6 +77,7 @@ cd ../..
 sudo gem install bundler
 ```
 
+<a name="first_setup"></a>
 # First time setup
 
 ## 1. Create 2 files in a directory:
@@ -135,6 +147,7 @@ This command will list all the nodes that could be found in the platforms.
 ./bin/check-node --show-hosts
 ```
 
+<a name="how_to"></a>
 # How to use tools from Hybrid Platforms Conductor
 
 Each executable is installed in a `./bin` directory and can be called directly using its name (for example `./bin/setup`).
@@ -176,6 +189,7 @@ Deployer options specific to platforms of type chef:
                                        MODIFIER: append - Append a run_list after the node's run_list. - PARAMS: run_list to append after. Ex: debug::dump_node,git
 ```
 
+<a name="tools_list"></a>
 # List of tools available
 
 A bunch of tools are available for handling development and deployment of recipes in platforms handled by HPC.
@@ -1094,6 +1108,7 @@ Bundle complete! 9 Gemfile dependencies, 98 gems now installed.
 Bundled gems are installed into `./vendor/bundle`
 ```
 
+<a name="common_options"></a>
 # Common command line options
 
 Most of the tools share a set of common command line options. The shared command line options are grouped by functionality the tool is using.
@@ -1215,6 +1230,7 @@ Tests runner options:
 * `--skip-run`: Don't fetch the information from the nodes themselves, but use the previous output from the `run_logs` directory. Useful if executing the command several times.
 * `--test TEST_NAME`: Specify the test to be performed.
 
+<a name="tests_list"></a>
 # List of tests available
 
 The `test` executable allows to run a list of tests. Here is the list of available ones.
@@ -1259,6 +1275,7 @@ Test that the node has no orphan files.
 
 Test that the vulnerabilities Spectre and Meltdown are patched.
 
+<a name="secrets"></a>
 # Using secrets
 
 Some recipes need to have secrets to be set (like passwords, API keys...). As it is unsafe to have those passwords stored in this chef-repo repository, it is possible to specify those secrets to the deployment tools (`check-node` and `deploy`) using the `--secrets` option.
@@ -1281,6 +1298,7 @@ smtp_passwd = secret 'smtp_pass'
 }
 ```
 
+<a name="development_api"></a>
 # Development API
 
 In case you want to develop other tools using SSH access and nodes configurations, here is the Ruby API you can use in your scripts.
@@ -1298,7 +1316,7 @@ nodes_handler = NodesHandler.new
 ```
 
 Then handful of methods can be used on this `nodes_handler` object.
-Check the [NodesHandler public methods](https://www.site.my_company.net/git/projects/PROJECTrepos/TODO) to have an exhaustive list.
+Check the [NodesHandler public methods](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/browse/lib/hybrid_platforms_conductor/nodes_handler.rb) to have an exhaustive list.
 
 Examples:
 ```ruby
@@ -1327,7 +1345,7 @@ ssh_executor = SshExecutor.new
 ```
 
 Then handful of methods can be used on this `ssh_executor` object.
-Check the [SshExecutor public methods](https://www.site.my_company.net/git/projects/PROJECTrepos/TODO) to have an exhaustive list.
+Check the [SshExecutor public methods](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/browse/lib/hybrid_platforms_conductor/ssh_executor.rb) to have an exhaustive list.
 
 Examples:
 ```ruby
@@ -1383,6 +1401,7 @@ ssh_executor.run_cmd_on_hosts({ list: 'my_host_list' } => { bash: 'hostname'})
 ssh_executor.run_cmd_on_hosts({ '/xae/' => { bash: 'hostname'} }, concurrent: true)
 ```
 
+<a name="extending"></a>
 # Extending Hybrid Platforms Conductor features
 
 Hybrid Platforms Conductor is built around plugins-oriented architecture that lets it easily being extended.
@@ -1450,7 +1469,7 @@ end
 
 This file will declare your plugin and implement all the methods that Hybrid Platforms Conductor need to pilot a platform of this type.
 
-You can take its content directly from the [Platform Handler plugin sample file](https://www.site.my_company.net/git/projects/PROJECTrepos/TODO), and adapt it.
+You can take its content directly from the [Platform Handler plugin sample file](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/browse/lib/hybrid_platforms_conductor/platform_handlers/platform_handler_plugin.rb.sample), and adapt it.
 
 ### 2. Reference this new repository in your TI Platforms Gemfile
 
@@ -1513,7 +1532,7 @@ Then you can develop your plugin by editing the file `lib/hybrid_platforms_condu
 You can also add new binaries by creating a `./bin` directory in your plugin root folder.
 They will also be made available automatically by issuing a `bundle install` command in platforms handled by HPCs project directory.
 
-You can get inspired by [existing binaries](https://www.site.my_company.net/git/projects/PROJECTrepos/TODO), to know how to write your own, using platforms handled by HPCs Conductor API.
+You can get inspired by [existing binaries](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/browse/bin), to know how to write your own, using platforms handled by HPCs Conductor API.
 
 ## Adding new tests
 
@@ -1522,13 +1541,13 @@ You can get inspired by [existing binaries](https://www.site.my_company.net/git/
 New tests are implemented by adding files in the `./lib/hybrid_platforms_conductor/tests/plugins` directory.
 Once new files are present in this directory, then the `test` executable is already able to use them, without further configuration.
 
-You can take tests content directly from the [test plugin sample file](https://www.site.my_company.net/git/projects/PROJECTrepos/TODO), and adapt it.
+You can take tests content directly from the [test plugin sample file](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/browse/lib/hybrid_platforms_conductor/tests/plugins/my_test_plugin.rb.sample), and adapt it.
 
 ### Platform type specific tests, applicable to only platforms of a given type
 
 New platform type specific tests are implemented in the corresponding Platform Handler plugin.
 The `platform_tests` method from the Platform Handler plugin class registers new test classes.
-The test classes returned follow the same API as the [test plugin sample file](https://www.site.my_company.net/git/projects/PROJECTrepos/TODO).
+The test classes returned follow the same API as the [test plugin sample file](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/browse/lib/hybrid_platforms_conductor/tests/plugins/my_test_plugin.rb.sample).
 
 ## Adding new reports formats
 
@@ -1537,7 +1556,7 @@ It is possible to extend the `report` executable functionality by adding new rep
 This is done by adding files in the `./lib/hybrid_platforms_conductor/reports` directory.
 Once new files are present in this directory, then the `report` executable is already able to use them, without further configuration.
 
-You can take report plugin content directly from the [report plugin sample file](https://www.site.my_company.net/git/projects/PROJECTrepos/TODO), and adapt it.
+You can take report plugin content directly from the [report plugin sample file](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/browse/lib/hybrid_platforms_conductor/reports/my_report_plugin.rb.sample), and adapt it.
 
 ## Adding new Topographer output formats
 
@@ -1546,4 +1565,4 @@ It is possible to extend the `topographer` executable functionality by adding ne
 This is done by adding files in the `./lib/hybrid_platforms_conductor/topographer/plugins` directory.
 Once new files are present in this directory, then the `topographer` executable is already able to use them, without further configuration.
 
-You can take topographer plugin content directly from the [topographer plugin sample file](https://www.site.my_company.net/git/projects/PROJECTrepos/TODO), and adapt it.
+You can take topographer plugin content directly from the [topographer plugin sample file](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/browse/lib/hybrid_platforms_conductor/topographer/plugins/my_topographer_output_plugin.rb.sample), and adapt it.
