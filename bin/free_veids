@@ -1,0 +1,14 @@
+#!/usr/bin/env ruby
+require 'hybrid_platforms_conductor/nodes_handler'
+require 'range_operators'
+
+nodes_handler = HybridPlatformsConductor::NodesHandler.new
+veids = nodes_handler.
+  known_hostnames.
+  map do |hostname|
+    conf = nodes_handler.site_meta_for hostname
+    conf.key?('veid') ? conf['veid'].to_i : nil
+  end.
+  compact
+
+puts "Free VEIDs: #{([10_000] + veids).missing.rangify}"

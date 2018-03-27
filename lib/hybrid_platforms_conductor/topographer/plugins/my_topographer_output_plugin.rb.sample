@@ -1,0 +1,37 @@
+# This file is an example of a generic Test plugin.
+# The MyTopographerOutputPlugin example contains example of code that could be used to write a plugin for new topographer output formats.
+module HybridPlatformsConductor
+
+  class Topographer
+
+    module Plugins
+
+      # Brief description of the plugin here.
+      # The name should match the file name.
+      # It should always inherit from Topographer::Plugin.
+      # In all instance methods of a test plugin, the following variables are accessible:
+      # * @topographer (Topographer): Topographer used to get info about the graph to render.
+      class MyTopographerOutputPlugin < Topographer::Plugin
+
+        # Output the nodes graph in a file
+        # [API] - This method is mandatory.
+        #
+        # Parameters::
+        # * *file_name* (String): The file name for output
+        def write_graph(file_name)
+          # This method is meant to dump into a file named file_name the graph in the plugin-specific format.
+          File.open(file_name, 'w') do |f|
+            f.puts 'Graph dump'
+            @topographer.nodes_graph.each do |node_name, node_info|
+              f.puts "#{node_name} is linked to #{node_info[:connections].map { |connected_node_name, _labels| connected_node_name }.join(', ')}"
+            end
+          end
+        end
+
+      end
+
+    end
+
+  end
+
+end

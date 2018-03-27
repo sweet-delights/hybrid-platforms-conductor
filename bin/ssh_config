@@ -1,0 +1,76 @@
+#!/usr/bin/env ruby
+require 'hybrid_platforms_conductor/nodes_handler'
+require 'hybrid_platforms_conductor/ssh_executor'
+require 'optparse'
+
+nodes_handler = HybridPlatformsConductor::NodesHandler.new
+ssh_executor = HybridPlatformsConductor::SshExecutor.new(nodes_handler: nodes_handler)
+ssh_exec = 'ssh'
+OptionParser.new do |opts|
+  opts.banner = "Usage: #{$0} [options]"
+  opts.separator ''
+  opts.separator 'Main options:'
+  opts.on('-h', '--help', 'Display help and exit') do
+    puts opts
+    exit 0
+  end
+  opts.on('-x', '--ssh-exec FILE_PATH', "Path to the SSH executable to be used. Useful to give default options (especially with GIT_SSH). Defaults to #{ssh_exec}.") do |file_path|
+    ssh_exec = file_path
+  end
+  nodes_handler.options_parse(opts)
+  ssh_executor.options_parse(opts, parallel: false)
+end.parse!
+ssh_executor.validate_params
+raise "Unknown options: #{ARGV.join(' ')}" unless ARGV.empty?
+
+open_ssh_major_version = `ssh -V 2>&1`.match(/^OpenSSH_(\d)\..+$/)[1].to_i
+
+# Get the possible SSH aliases for a given hostname accessed through one of its IPs.
+#
+# Parameters::
+# * *hostname* (String): The hostname to access
+# * *ip* (String): Corresponding IP
+# Result::
+# * Array<String>: The list of possible SSH aliases
+def ssh_aliases_for(hostname, ip)
+  aliases = ["hpc.#{ip}"]
+  split_ip = ip.split('.').map(&:to_i)
+  aliases << "hpc.#{split_ip[2..3].join('.')}" if split_ip[0..1] == [172, 16]
+  aliases
+end
+
+puts "
+############
+# GATEWAYS #
+############
+
+#{nodes_handler.ssh_for_gateway(ssh_executor.gateways_conf, ssh_exec: ssh_exec, user: ssh_executor.ssh_user_name)}
+
+#############
+# ENDPOINTS #
+#############
+
+Host *
+  User #{ssh_executor.ssh_user_name}
+  # Default control socket path to be used when multiplexing SSH connections
+  ControlPath /tmp/ssh_executor_mux_%h_%p_%r
+  #{open_ssh_major_version >= 7 ? 'PubkeyAcceptedKeyTypes +ssh-dss' : ''}
+
+"
+# Add each node
+nodes_handler.known_hostnames.sort.each do |hostname|
+  conf = nodes_handler.site_meta_for hostname
+  if !conf.nil? && conf.key?('private_ips')
+    conf['private_ips'].sort.each.with_index do |private_ip, idx|
+      # Generate the conf for the hostname
+      real_ip, gateway, gateway_user = ssh_executor.connection_info_for(hostname, private_ip)
+      aliases = ssh_aliases_for(hostname, private_ip)
+      aliases << "hpc.#{hostname}" if idx == 0
+      puts "# #{hostname} - #{private_ip} - #{nodes_handler.platform_for(hostname).repository_path}#{conf.key?('description') ? " - #{conf['description']}" : ''}"
+      puts "Host #{aliases.join(' ')}"
+      puts "  Hostname #{real_ip}"
+      puts "  ProxyCommand #{ssh_exec} -q -W %h:%p #{gateway_user}@#{gateway}" unless gateway.nil?
+      puts
+    end
+  end
+end

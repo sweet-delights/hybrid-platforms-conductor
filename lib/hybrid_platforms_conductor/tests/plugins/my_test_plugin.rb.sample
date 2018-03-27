@@ -1,0 +1,94 @@
+# This file is an example of a generic Test plugin.
+# The MyTestPlugin example contains example of code that could be used to write a plugin for new tests.
+module HybridPlatformsConductor
+
+  module Tests
+
+    module Plugins
+
+      # Brief description of the plugin here.
+      # The name should match the file name.
+      # It should always inherit from Tests::Test.
+      # A test plugin can define 1 or several test methods, whose name will drive the way the test is run:
+      # * test: Global test run once.
+      # * test_for_node: Node-specific test run once per node.
+      # * test_on_node: Node-specific test that test some SSH command execution directly on the node.
+      # * test_on_check_node: Node-specific test that test the result of a why-run deployment on the node.
+      # In all instance methods of a test plugin, the following variables are accessible:
+      # * @nodes_handler (NodesHandler): Nodes handler used to access information about the platforms
+      # In all instance methods of a test plugin, the following methods can be used for assertions (see their description in the file test.rb):
+      # * assert_equal(tested_object, expected_object, error_msg): Check equality between 2 objects and logs an error in case of mismatch.
+      # * assert_match(tested_object, expected_object, error_msg): Check string Regexp matching and logs an error in case of mismatch.
+      # * error(message): Log an error.
+      class MyTestPlugin < Tests::Test
+
+        # Run test
+        def test
+          # If this method is defined, it will be simply run as is.
+          # This is useful to code global tests, that are not specific to 1 node.
+          assert_equal 2 + 2, 4, 'If this is displayed, it\'s serious!'
+        end
+
+        # Run test using for each node
+        # [API] - @hostname can be used to adapt the command with the hostname.
+        #
+        # Result::
+        # * Hash<String,Object>: For each command to execute, information regarding the assertion.
+        #   * Values can be:
+        #     * Proc: The code block making the test given the stdout of the command. Here is the Proc description:
+        #       * Parameters::
+        #         * *stdout* (Array<String>): List of lines of the stdout of the command.
+        #     * Hash<Symbol,Object>: More complete information, that can contain the following keys:
+        #       * *validator* (Proc): The proc containing the assertions to perform (as described above). This key is mandatory.
+        #       * *timeout* (Integer): Timeout to wait for this command to execute.
+        def test_for_node
+          # If this method is defined, it will be used to execute once per node to be tested.
+          assert_match @hostname, /my_host_.+/, 'Hostname does not follow naming convention'
+        end
+
+        # Run test using commands on the node
+        # [API] - @hostname can be used to adapt the command with the hostname.
+        #
+        # Result::
+        # * Hash<String,Object>: For each command to execute, information regarding the assertion.
+        #   * Values can be:
+        #     * Proc: The code block making the test given the stdout of the command. Here is the Proc description:
+        #       * Parameters::
+        #         * *stdout* (Array<String>): List of lines of the stdout of the command.
+        #     * Hash<Symbol,Object>: More complete information, that can contain the following keys:
+        #       * *validator* (Proc): The proc containing the assertions to perform (as described above). This key is mandatory.
+        #       * *timeout* (Integer): Timeout to wait for this command to execute.
+        def test_on_node
+          # If this method is defined, it will be used to execute SSH commands on each node that is being tested.
+          # For each SSH command, a validator code block will be called with the stdout of the command run remotely on the node.
+          # In place of a simple validator code block, a more complex structure can be used to give more info (for example timeout).
+          {
+            'echo 1' => proc do |stdout|
+              assert_equal stdout.first, '1', 'Echo did not return 1 on the host!!!'
+            end,
+            "./longer_test_that_should_return_success.sh --hostname #{@hostname}" => {
+              validator: proc do |stdout|
+                error 'Test run but failed' if stdout.first == 'Start test' && !(stdout.last =~ /Success/)
+              end,
+              timeout: 30 # If the SSH session does not return in less than 3 seconds, we consider the test failed.
+            }
+          }
+        end
+
+        # Perform some testing on the check-node output.
+        # [API] - @hostname can be used to know for which hostname the test is being run.
+        #
+        # Parameters::
+        # * *stdout* (Array<String>): The check-node output
+        def test_on_check_node(stdout)
+          # If this method is defined, the tests runner will execute a why-run deploy on the node and call this method to have assertions on the stdout of the why-run deploy.
+          assert_match stdout.last, /Success/, 'check-node did not end correctly'
+        end
+
+      end
+
+    end
+
+  end
+
+end

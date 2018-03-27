@@ -1,0 +1,34 @@
+#!/usr/bin/env ruby
+require 'fileutils'
+require 'optparse'
+require 'terminal-table'
+require 'time'
+require 'hybrid_platforms_conductor/nodes_handler'
+require 'hybrid_platforms_conductor/ssh_executor'
+require 'hybrid_platforms_conductor/tests_runner'
+
+nodes_handler = HybridPlatformsConductor::NodesHandler.new
+ssh_executor = HybridPlatformsConductor::SshExecutor.new(nodes_handler: nodes_handler)
+tests_runner = HybridPlatformsConductor::TestsRunner.new(ssh_executor: ssh_executor)
+ssh_executor.max_threads = 64
+hosts = []
+# User name per hosts list
+# Hash<String, String>
+alternate_users = {}
+OptionParser.new do |opts|
+  opts.banner = "Usage: #{$0} [options]"
+  opts.separator ''
+  opts.separator 'Main options:'
+  opts.on('-h', '--help', 'Display help and exit.') do
+    puts opts
+    exit 0
+  end
+  nodes_handler.options_parse(opts)
+  nodes_handler.options_parse_hosts(opts, hosts)
+  ssh_executor.options_parse(opts)
+  tests_runner.options_parse(opts)
+end.parse!
+ssh_executor.validate_params
+raise "Unknown options: #{ARGV.join(' ')}" unless ARGV.empty?
+
+exit(tests_runner.run_tests(hosts.empty? ? [] : nodes_handler.resolve_hosts(hosts)))

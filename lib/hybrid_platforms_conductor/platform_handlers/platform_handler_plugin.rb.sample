@@ -1,0 +1,261 @@
+# This file is an example of a platform handler plugin.
+# Platform handler plugins should be stored in a separate Git repository, and packaged as Rubygems that are then included in Gemfile.
+# This way their discovery is automatic.
+# The PlatformHandlerPlugin example contains example of code that could be used to write a plugin for a new kind of platform handler.
+require 'hybrid_platforms_conductor/platform_handler'
+
+module HybridPlatformsConductor
+
+  module PlatformHandlers
+
+    # Brief description of the plugin here.
+    # The name should match the file name.
+    # It should always inherit from PlatformHandler.
+    # In all instance methods of a platform handler, the following variables are accessible:
+    # * @platform_type (Symbol): The platform type. It is the name of the plugin (:platform_handler_plugin)
+    # * @repository_path (String): The repository on which this platform handler instance will perform (/path/to/repository)
+    # * @nodes_handler (NodesHandler): Nodes handler used to access information about the platforms
+    class PlatformHandlerPlugin < PlatformHandler
+
+      # Register test classes
+      # [API] - This method is optional
+      #
+      # Result::
+      # * Hash<Symbol,Class>: A list of tests classes (that should inherit from Tests::Test), per test name
+      def self.platform_tests
+        # If this plugin defines some tests that are specific to this platform, then return the test classes here.
+        # If no tests are written, then no need to define this method at all.
+        # The documentation of those test classes can be found in the file my_test_plugin.rb.sample.
+        # Additionnally to generic test classes, the ones that are defined from specific platform handler plugins (like here) have the following differences:
+        # * Global tests (using the test instance method) are run once per platform of the matching kind.
+        # * Node-specific tests (using the test_for_node, test_on_node and test_on_check_node methods) are run only on nodes belonging to a platform of the matching kind.
+        # * All instance methods have access to the variable @repository_path that can be used to reference the specific repository for which tests are being run.
+        {
+          my_test1: HybridPlatformsConductor::Tests::MyTestClass1,
+          my_test2: HybridPlatformsConductor::Tests::MyTestClass2
+        }
+      end
+
+      # Initialize a new instance of this platform handler.
+      # [API] - This method is optional.
+      def init
+        # This method is called when initializing a new instance of this platform handler, for a given repository.
+        @my_instance_variable = initial_value
+      end
+
+      # Setup the platform, install dependencies...
+      # [API] - This method is mandatory.
+      # [API] - @cmd_runner is accessible.
+      def setup
+        # This method is called by the setup executable.
+        # It should contain any command that sets up a repository.
+        @cmd_runner.run_cmd "cd #{@repository_path} && bundle install --path vendor/bundle --binstubs"
+      end
+
+      # Get the list of known hostnames.
+      # [API] - This method is mandatory.
+      #
+      # Result::
+      # * Array<String>: List of hostnames
+      def known_hostnames
+        # This method is used to get the list of hostnames that are handled by the platform
+        [
+          'my_host_1',
+          'my_host_2',
+          'my_host_3'
+        ]
+      end
+
+      # Get the list of known host list names
+      # [API] - This method is optional.
+      #
+      # Result::
+      # * Array<String>: List of hosts list names
+      def known_hosts_lists
+        # This method is used to get the list of hosts lists that are handled by the platform.
+        # A hosts list is just a group of hosts description that can then be used to ease command line interfaces.
+        [
+          'my_host_list_1',
+          'my_host_list_2'
+        ]
+      end
+
+      # Get the list of host descriptions belonging to a hosts list
+      # [API] - This method is optional unless known_hosts_lists has been defined.
+      #
+      # Parameters::
+      # * *hosts_list_name* (String): Name of the hosts list
+      # Result::
+      # * Array<Object>: List of host descriptions
+      def hosts_desc_from_list(hosts_list_name)
+        # If known_hosts_lists has been defined, then this method should return the list of hosts descriptions of a given host list.
+        case hosts_list_name
+        when 'my_host_list_1'
+          [
+            'my_host_1',
+            'my_host_2'
+          ]
+        when 'my_host_list_2'
+          [
+            '/my_host.*/'
+          ]
+        else
+          raise "Unknown list name #{hosts_list_name}"
+        end
+      end
+
+      # Get the configuration of a given hostname.
+      # [API] - This method is mandatory.
+      #
+      # Parameters::
+      # * *hostname* (String): Hostname to read configuration from
+      # Result::
+      # * Hash<String,Object>: The corresponding JSON configuration
+      def node_conf_for(hostname)
+        # This method should return the host configuration, among which site_meta data is present.
+        JSON.parse(File.read("#{@repository_path}/nodes/#{hostname}.json"))
+      end
+
+      # Get the default gateway name to be used for a given hostname.
+      # [API] - This method is optional.
+      #
+      # Parameters::
+      # * *hostname* (String): Hostname we want to connect to.
+      # * *ip* (String): IP of the hostname we want to use for connection.
+      # Result::
+      # * String or nil: Name of the gateway (should be defined by the gateways configurations), or nil if no gateway.
+      def default_gateway_for(hostname, ip)
+        # This method is used to generate the proper SSH configuration file.
+        # Depending on the hosts to be reached, different gateway names could be used.
+        # The gateway names should be defined in the SSH gateways of the platforms configuration (in ti_platforms/platforms.rb).
+        case hostname
+        when 'my_host_2'
+          'gateway_adp.ti'
+        else
+          nil
+        end
+      end
+
+      # Package the repository, ready to be deployed on artefacts.
+      # [API] - This method is mandatory.
+      # [API] - @cmd_runner is accessible.
+      # [API] - @ssh_executor is accessible.
+      def package
+        # This method should take all actions to prepare the repository to be deployed on hosts later.
+        # Usually it is meant to package the deployment scripts.
+        @cmd_runner.run_cmd "cd #{@repository_path} && ./scripts/package_in_debian_format.sh"
+      end
+
+      # Deliver what has been packaged for a given hostname.
+      # [API] - This method is mandatory.
+      # [API] - @cmd_runner is accessible.
+      # [API] - @ssh_executor is accessible.
+      #
+      # Parameters::
+      # * *hostname* (String): Hostname to deliver for
+      def deliver_on_artefact_for(hostname)
+        # This method is used to deliver a packaged repository on the artefact server that is accessible then to a hostname.
+        @cmd_runner.run_cmd "cd #{@repository_path} && scp package.deb artefact_user@artefact.server.my_company.net:./artefacts/package.deb"
+      end
+
+      # Complete an option parser with options meant to control the deployment of such a platform.
+      # [API] - This method is optional.
+      #
+      # Parameters::
+      # * *options_parser* (OptionParser): The option parser to complete
+      def self.options_parse_for_deploy(options_parser)
+        # This method can be used to add options to the deployer command line, that are specific for this kind of platform.
+        # Options have to be stored at the class level, and not instance level, because they will apply to all platform instances of this kind.
+        # Storing a class attribute is done by defining this in the class definition:
+        # class << self
+        #   attr_accessor :class_level_option
+        # end
+        # And accessing it is done this way from an instance of this class:
+        # self.class.class_level_option
+        options_parser.on('-m', '--my-option PARAMETER', 'A great option to deploy things differently') do |parameter|
+          self.class_level_option = parameter
+        end
+      end
+
+      # Register secrets given in JSON format
+      # [API] - This method is mandatory.
+      # [API] - @cmd_runner is accessible.
+      # [API] - @ssh_executor is accessible.
+      #
+      # Parameters::
+      # * *json* (Hash<String,Object>): JSON secrets
+      def register_secrets(json)
+        # This method is meant to take the secrets (in json format) and prepare the deployment to use them.
+        File.write('temporary_secrets_to_be_deployed.json', json)
+      end
+
+      # Prepare deployments.
+      # [API] - This method is optional.
+      # [API] - @cmd_runner is accessible.
+      # [API] - @ssh_executor is accessible.
+      #
+      # Parameters::
+      # * *use_why_run* (Boolean): Do we use a why-run mode? [default = true]
+      def prepare_for_deploy(use_why_run: true)
+        # This method is used if some actions are needed before deploying for real.
+        # The use_why_run switch is on if the deployment should just be simulated.
+        ENV['deploy_time'] = Time.now.to_s
+      end
+
+      # Get the list of actions to perform to deploy on a given hostname.
+      # Those actions can be executed in parallel with other deployments on other hostnames. They must be thread safe.
+      # [API] - This method is mandatory.
+      # [API] - @cmd_runner is accessible.
+      # [API] - @ssh_executor is accessible.
+      #
+      # Parameters::
+      # * *hostname* (String): Hostname to deploy on
+      # * *use_why_run* (Boolean): Do we use a why-run mode? [default = true]
+      # Result::
+      # * Array< Hash<Symbol,Object> >: List of actions to be done
+      def actions_to_deploy_on(hostname, use_why_run: true)
+        # This method returns all the actions to execute to deploy on a hostname.
+        # The use_why_run switch is on if the deployment should just be simulated.
+        # Those actions (bash commands, scp of files, ruby code...) should be thread safe as they can be executed in parallel with other deployment actions for other hosts in case of a concurrent deployment on several nodes.
+        # The complete description of an action can be found in ssh_executor.rb file, in the execute_actions_on method description.
+        [
+          {
+            scp: {
+              "#{File.dirname(__FILE__)}/platform_handler_plugin/scripts" => './deploy_scripts',
+              'temporary_secrets_to_be_deployed.json' => './temporary_secrets_to_be_deployed.json'
+            },
+            bash: [
+              'cd ./deploy_scripts',
+              './deploy_everything',
+              'rm temporary_secrets_to_be_deployed.json'
+            ]
+          }
+        ]
+      end
+
+      # Prepare a why-run deployment so that a JSON file describing the nodes will be output in the run_logs.
+      # [API] - This method is mandatory.
+      # [API] - @cmd_runner is accessible.
+      # [API] - @ssh_executor is accessible.
+      # [API] - @deployer is accessible.
+      def prepare_why_run_deploy_for_json_dump
+        # This method is used to prepare a deployment action that should dump JSON info from the node itself.
+        @dump_json_mode = true
+      end
+
+      # Give the deployment logs directory of a given hostname
+      # [API] - This method is mandatory.
+      #
+      # Parameters::
+      # * *hostname* (String): The hostname
+      def deployment_logs_dir(hostname)
+        # This method returns the path in which deployment log files should be found on the node itself.
+        '/var/log/deployments'
+      end
+
+    end
+
+  end
+
+end
+

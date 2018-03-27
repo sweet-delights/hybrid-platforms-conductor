@@ -1,0 +1,47 @@
+#!/usr/bin/env ruby
+require 'optparse'
+require 'hybrid_platforms_conductor/nodes_handler'
+require 'hybrid_platforms_conductor/ssh_executor'
+
+hosts = []
+commands = []
+timeout = nil
+concurrent_execution = false
+interactive = false
+nodes_handler = HybridPlatformsConductor::NodesHandler.new
+ssh_executor = HybridPlatformsConductor::SshExecutor.new(nodes_handler: nodes_handler)
+OptionParser.new do |opts|
+  opts.banner = "Usage: #{$0} [options]"
+  opts.separator ''
+  opts.separator 'Main options:'
+  opts.on('-c', '--command CMD', 'Command to execute (can\'t be used with --interactive) (can be used several times, commands will be executed sequentially)') do |cmd|
+    commands << cmd
+  end
+  opts.on('-f', '--commands-file FILE_NAME', 'Execute commands taken from a file (can\'t be used with --interactive) (can be used several times, commands will be executed sequentially)') do |file_name|
+    commands << { file: file_name }
+  end
+  opts.on('-h', '--help', 'Display help and exit') do
+    puts opts
+    exit 0
+  end
+  opts.on('-i', '--interactive', 'Run an interactive SSH session instead of executing a command (can\'t be used with --command or --commands-file)') do
+    interactive = true
+  end
+  opts.on('-p', '--parallel', 'Execute the commands in parallel (put the standard output in files ./run_logs/*.stdout)') do
+    concurrent_execution = true
+  end
+  opts.on('-t', '--timeout SECS', 'Timeout in seconds to wait for each command (defaults to no timeout)') do |nbr_secs|
+    timeout = nbr_secs.to_i
+  end
+  nodes_handler.options_parse(opts)
+  nodes_handler.options_parse_hosts(opts, hosts)
+  ssh_executor.options_parse(opts)
+end.parse!
+ssh_executor.validate_params
+raise '--interactive or --command options have to be present' if commands.empty? && !interactive
+raise "Unknown options: #{ARGV.join(' ')}" unless ARGV.empty?
+actions = []
+actions << { bash: commands } unless commands.empty?
+actions << { interactive: true } if interactive
+
+ssh_executor.run_cmd_on_hosts({ hosts => actions }, timeout: timeout, concurrent: concurrent_execution, log_to_stdout: !concurrent_execution)
