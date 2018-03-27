@@ -391,7 +391,7 @@ module HybridPlatformsConductor
     # Parameters::
     # * *hostname* (String): The hostname
     # * *actions* (Array<[Symbol, Object]>): Ordered list of actions to perform. Each action is identified by an identifier (Symbol) and has associated data. Here are possible actions:
-    #   * *scp* (Hash<String, String>): Set of couples source => destination to scp files or directories from the local file system to the remote file system.
+    #   * *scp* (Hash<String, String>): Set of couples source => destination_dir to scp files or directories from the local file system to the remote file system.
     #   * *bash* (Array< Hash<Symbol, Object> or Array<String> or String>): List of bash actions to execute. Each action can have the following properties:
     #     * *commands* (Array<String> or String): List of bash commands to execute (can be a single one). This is the default property also that allows to not use the Hash form for brevity.
     #     * *file* (String): Name of file from which commands should be taken.
@@ -418,12 +418,13 @@ module HybridPlatformsConductor
           actions.each do |(action_type, action_info)|
             case action_type
             when :ruby
+              log_debug "[#{hostname}] - Execute Ruby commands \"#{action_info}\"..."
               actions_file.puts "ruby -e \"#{action_info.gsub('"', '\"')}\""
             when :scp
-              action_info.each do |scp_from, scp_to|
-                log_debug "[#{hostname}] - Execute scp command \"#{scp_from}\" => \"#{scp_to}\""
+              action_info.each do |scp_from, scp_to_dir|
+                log_debug "[#{hostname}] - Execute scp command \"#{scp_from}\" => \"#{scp_to_dir}\""
                 # Redirect stderr so that we take it into the log file
-                actions_file.puts "tar -czf - #{scp_from} | #{ssh_exec} #{ssh_url} #{ssh_options_str} \"tar -xzf -\" 2>&1"
+                actions_file.puts "cd #{File.dirname(scp_from)} && tar -czf - #{File.basename(scp_from)} | #{ssh_exec} #{ssh_url} #{ssh_options_str} \"tar -xzf - -C #{scp_to_dir}\" 2>&1"
               end
             when :bash
               # Normalize action_info
