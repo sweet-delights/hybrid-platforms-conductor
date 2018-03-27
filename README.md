@@ -15,6 +15,7 @@ Hybrid Platforms Conductor covers the following needs:
 
 The way it works is by having a simple configuration file having an extensive DSL to describe the platforms to operate and the current DevOps environment (gateways, users...).
 
+<a name="requirements"></a>
 # Requirements to use it
 
 * Have Git installed.
