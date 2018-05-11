@@ -12,9 +12,11 @@ module HybridPlatformsConductor
     # Parameters::
     # * *nodes_handler* (NodesHandler): Nodes handler to be used [default = NodesHandler.new]
     # * *ssh_executor* (SshExecutor): SSH executor to be used for the tests [default = SshExecutor.new]
-    def initialize(nodes_handler: NodesHandler.new, ssh_executor: SshExecutor.new)
+    # * *deployer* (Deployer): Deployer to be used for the tests needed why-run deployments [default = Deployer.new]
+    def initialize(nodes_handler: NodesHandler.new, ssh_executor: SshExecutor.new, deployer: Deployer.new)
       @nodes_handler = nodes_handler
       @ssh_executor = ssh_executor
+      @deployer = deployer
       # The list of tests plugins, with their associated class
       # Hash< Symbol, Class >
       @tests_plugins = Hash[Dir.
@@ -39,8 +41,6 @@ module HybridPlatformsConductor
           end
         end
       end
-      # List of secret files to be given if needed
-      @secret_files = []
       # Do we skip running check-node?
       @skip_run = false
       # List of tests to be performed
@@ -54,9 +54,6 @@ module HybridPlatformsConductor
     def options_parse(options_parser)
       options_parser.separator ''
       options_parser.separator 'Tests runner options:'
-      options_parser.on('-e', '--secrets JSON_FILE_NAME', 'Specify a JSON file storing secrets (can be specified several times).') do |json_file|
-        @secret_files << json_file
-      end
       options_parser.on('-k', '--skip-run', 'Skip running the check-node commands for real, and just analyze existing run logs.') do
         @skip_run = true
       end
@@ -376,8 +373,10 @@ module HybridPlatformsConductor
         unless @skip_run
           # Why-run deploy on all nodes
           FileUtils.rm_rf 'run_logs'
-          # Run tests on remaining hosts using default account
-          system "./bin/deploy --timeout #{CHECK_NODE_TIMEOUT} --ssh-user #{@ssh_executor.ssh_user_name}#{@ssh_executor.debug ? ' --debug' : ' --parallel'}#{@ssh_executor.dry_run ? ' --show-commands' : ''} --max-threads #{@ssh_executor.max_threads} --why-run #{@secret_files.map { |file_name| "-e #{file_name}" }.join(' ')} #{@hostnames.map { |hostname| "-n #{hostname}" }.join(' ')}"
+          @deployer.concurrent_execution = true
+          @deployer.use_why_run = true
+          @deployer.timeout = CHECK_NODE_TIMEOUT
+          @deployer.deploy_for(@hostnames)
         end
         # Analyze output run_logs
         @hostnames.sort.each do |hostname|

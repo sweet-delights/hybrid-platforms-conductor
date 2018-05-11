@@ -44,9 +44,11 @@ module HybridPlatformsConductor
     # * *hostnames* (Array<String>): List of hostnames to dump files for
     def dump_json_for(hostnames)
       unless @skip_run
-        @nodes_handler.platforms.each do |platform_handler|
+        hostnames.map { |hostname| @nodes_handler.platform_for(hostname) }.uniq.each.each do |platform_handler|
           platform_handler.prepare_why_run_deploy_for_json_dump
         end
+        @deployer.concurrent_execution = true
+        @deployer.use_why_run = true
         @deployer.deploy_for(hostnames)
       end
       # Parse the logs

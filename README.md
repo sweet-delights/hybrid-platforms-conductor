@@ -113,12 +113,23 @@ Host gw.data.ti
 '
 ```
 
+`platforms.rb` file is a Ruby file that can use all public methods of [this file](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/browse/lib/hybrid_platforms_conductor/platforms_dsl.rb), as a DSL.
+In particular the following methods are important:
+* `<platform_type>_platform`: Used to declare a new platform, providing either a local path to it (using `path: '/path/to/files'`) or a git repository to it (using `git: 'git_url'`).
+* `gateway`: Used to declare a new gateway, with 2 parameters: its name (as a Symbol) and its SSH configuration (as a String).
+* `hybrid_platforms_dir`: Used to get the directory in which the `platforms.rb` file is stored.
+
 ## 2. Install dependencies
 
 This will install the dependencies for Hybrid Platforms Conductor to work correctly.
 ```
 bundle install --path vendor/bundle --binstubs
 ```
+This will create a `bin` directory with all executables stored inside. You can then add this directory to your `PATH` environment variable to avoid prefixing your commands by `./bin/`.
+
+Alternatively, you can install Hybrid Platforms Conductor in a non-local path, using simply `bundle install`, and use the executables directly from Ruby's installation path.
+
+This README considers that executables are installed in the `./bin` directory and commands are all issued from the directory containing `platforms.rb`.
 
 ## 3. Setup the local Hybrid Platforms Conductor environment variables
 
@@ -126,6 +137,12 @@ Those values can always be overridden by the tools command lines options if need
 ```
 export platforms_ssh_user=<your_default_ssh_user_name>
 export ti_gateways_conf=<your_default_gateway_configuration>
+```
+
+Unless you use the commands from directory containing the file `platforms.rb`, you'll have to set the `ti_platforms` environment variable to the path containing the `platforms.rb` file.
+For example if the file `/path/to/hybrid-platforms/platforms.rb` exists:
+```
+export ti_platforms=/path/to/hybrid-platforms
 ```
 
 ## 4. Setup the platform repositories
@@ -953,7 +970,7 @@ The `test` executable runs various tests and displays the eventual errors that h
 Errors are being displayed at the end of the execution, along with a summary of the failed tests and nodes.
 
 This `test` executable is using test plugins to be able to validate various tests (at global level, on each node, or on the check-node output). Those plugins are located in `./lib/hybrid_platforms_conductor/tests/plugins`. They are meant to be completed with any test deemed useful.
-Check the file `./lib/hybrid_platforms_conductor/tests/plugins/my_test_plugin.rb.sample` to know how to write a new test plugin.
+Check the file [`./lib/hybrid_platforms_conductor/tests/plugins/my_test_plugin.rb.sample`](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/browse/lib/hybrid_platforms_conductor/tests/plugins/my_test_plugin.rb.sample) to know how to write a new test plugin.
 
 This executable is perfectly suited to be integrated in a continuous integration workflow.
 
@@ -980,8 +997,10 @@ SSH executor options:
     -y GATEWAYS_CONF_NAME,           Name of the gateways configuration to be used. Can also be set from environment variable ti_gateways_conf. Defaults to madrid.
         --gateways-conf
 
-Tests runner options:
+Deployer options:
     -e, --secrets JSON_FILE_NAME     Specify a JSON file storing secrets (can be specified several times).
+
+Tests runner options:
     -k, --skip-run                   Skip running the check-node commands for real, and just analyze existing run logs.
     -t, --test TEST_NAME             Specify a test name. Can be used several times. Can be all for all tests. Possible values: chef_executables, chef_success, chef_woulds, connection, deploy_freshness, executables, food_critic, group_ids, hostname, ip, obsolete_home_dirs, obsolete_users, orphan_files, private_ips, public_ips, rubocop, spectre, unused_recipes, unused_roles, user_ids, users_without_roles, veids (defaults to all).
 ```
@@ -1221,12 +1240,10 @@ Test Runner options are used to drive the running of tests.
 
 ```
 Tests runner options:
-    -e, --secrets JSON_FILE_NAME     Specify a JSON file storing secrets (can be specified several times).
     -k, --skip-run                   Skip running the check-node commands for real, and just analyze existing run logs.
     -t, --test TEST_NAME             Specify a test name. Can be used several times. Can be all for all tests. Possible values: chef_executables, chef_success, chef_woulds, connection, deploy_freshness, executables, food_critic, group_ids, hostname, ip, obsolete_home_dirs, obsolete_users, orphan_files, private_ips, public_ips, rubocop, spectre, unused_recipes, unused_roles, user_ids, users_without_roles, veids (defaults to all).
 ```
 
-* `--secrets JSON_FILE_NAME`: Specify a JSON file storing secrets that can be used by the deployment process. Secrets are values that are needed for deployment but that should not be part of the platforms repositories (such as passwords).
 * `--skip-run`: Don't fetch the information from the nodes themselves, but use the previous output from the `run_logs` directory. Useful if executing the command several times.
 * `--test TEST_NAME`: Specify the test to be performed.
 

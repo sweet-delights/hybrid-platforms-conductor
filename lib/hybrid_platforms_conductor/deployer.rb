@@ -48,7 +48,8 @@ module HybridPlatformsConductor
     # * *parallel_switch* (Boolean): Do we allow parallel execution to be switched? [default = true]
     # * *why_run_switch* (Boolean): Do we allow the why run to be switched? [default = false]
     # * *plugins_options* (Boolean): Do we allow plugins options? [default = true]
-    def options_parse(options_parser, parallel_switch: true, why_run_switch: false, plugins_options: true)
+    # * *timeout_options* (Boolean): Do we allow timeout options? [default = true]
+    def options_parse(options_parser, parallel_switch: true, why_run_switch: false, plugins_options: true, timeout_options: true)
       options_parser.separator ''
       options_parser.separator 'Deployer options:'
       options_parser.on('-e', '--secrets JSON_FILE_NAME', 'Specify a JSON file storing secrets (can be specified several times).') do |json_file|
@@ -59,7 +60,7 @@ module HybridPlatformsConductor
       end if parallel_switch
       options_parser.on('-t', '--timeout SECS', "Timeout in seconds to wait for each chef run. Only used in why-run mode. (defaults to #{@timeout.nil? ? 'no timeout' : @timeout})") do |nbr_secs|
         @timeout = nbr_secs.to_i
-      end
+      end if timeout_options
       options_parser.on('-W', '--why-run', 'Use the why-run mode to see what would be the result of the deploy instead of deploying it for real.') do
         @use_why_run = true
       end if why_run_switch

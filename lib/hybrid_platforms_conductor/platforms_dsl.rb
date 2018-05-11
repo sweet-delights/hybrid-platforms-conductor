@@ -10,6 +10,10 @@ module HybridPlatformsConductor
     #   Hash<Symbol,Class>
     attr_reader :platform_types
 
+    # Directory of the definition of the platforms
+    #   String
+    attr_reader :hybrid_platforms_dir
+
     # Get the list of available platform handler plugins
     #
     # Result::
@@ -46,10 +50,12 @@ module HybridPlatformsConductor
       # List of platform handler per known host list name
       # Hash<String, PlatformHandler>
       @nodes_list_platform = {}
+      # Directory in which we have platforms handled by HPCs definition
+      @hybrid_platforms_dir = ENV['ti_platforms'].nil? ? '.' : ENV['ti_platforms']
       # Directory in which platforms are cloned
-      @git_platforms_dir = './cloned_platforms'
+      @git_platforms_dir = "#{hybrid_platforms_dir}/cloned_platforms"
       # Read platforms file
-      self.instance_eval(File.read('./platforms.rb'))
+      self.instance_eval(File.read("#{hybrid_platforms_dir}/platforms.rb"))
     end
 
     # Dynamically define the platform methods allowing to register a new platform.

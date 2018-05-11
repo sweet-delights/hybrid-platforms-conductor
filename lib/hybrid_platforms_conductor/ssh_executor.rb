@@ -292,7 +292,7 @@ module HybridPlatformsConductor
               file.puts "#!#{`which env`.strip} bash"
               file.puts "ssh -F #{ssh_conf_file_name} $*"
             end
-            @cmd_runner.run_cmd "./bin/ssh_config --ssh-exec #{ssh_exec_file_name} --gateways-conf #{@gateways_conf} --gateway-user #{@gateway_user} >#{ssh_conf_file_name}", silent: true
+            @cmd_runner.run_hybrid_platforms_conductor_cmd "ssh_config --ssh-exec #{ssh_exec_file_name} --gateways-conf #{@gateways_conf} --gateway-user #{@gateway_user} >#{ssh_conf_file_name}", silent: true
             dir_created = true
           end
           @platforms_ssh_dir_nbr_users += 1
