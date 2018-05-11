@@ -17,6 +17,10 @@ module HybridPlatformsConductor
       #   String
       attr_reader :tested_reference
 
+      # Get the hostname, or nil for global test
+      #   String or nil
+      attr_reader :hostname
+
       # Constructor
       #
       # Parameters::

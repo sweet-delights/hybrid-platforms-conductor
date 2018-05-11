@@ -151,10 +151,6 @@ module HybridPlatformsConductor
       end
       puts
 
-      # Keep the list of errors per reference and per test name
-      # Hash< String,    Hash< Symbol,    Array<String> > >
-      # Hash< reference, Hash< test_name, Array<error>  > >
-      errors_per_reference = {}
       puts '======= By node:'
       puts
       @tests_run.group_by(&:tested_reference).sort.each do |tested_reference, tests|
@@ -162,11 +158,10 @@ module HybridPlatformsConductor
           if test.errors.empty?
             total_errors
           else
-            total_errors.merge(test.test_name => test.errors) { |_reference, errors1, errors2| errors1 + errors2 }
+            total_errors.merge(test.test_name => test.errors) { |_test_name, errors1, errors2| errors1 + errors2 }
           end
         end
         unless errors_per_test.empty?
-          errors_per_reference[tested_reference] = errors_per_test
           puts "===== [ #{tested_reference} ] - #{errors_per_test.size} failing tests:"
           errors_per_test.sort.each do |test_name, errors_list|
             puts "  * Test #{test_name} - #{errors_list.size} errors:"
@@ -178,6 +173,18 @@ module HybridPlatformsConductor
         end
       end
 
+      # Get the errors per hostname
+      errors_per_hostname = {}
+      @tests_run.group_by(&:hostname).each do |hostname, tests|
+        errors_per_test = tests.inject({}) do |total_errors, test|
+          if test.errors.empty?
+            total_errors
+          else
+            total_errors.merge(test.test_name => test.errors) { |_test_name, errors1, errors2| errors1 + errors2 }
+          end
+        end
+        errors_per_hostname[hostname] = errors_per_test unless errors_per_test.empty?
+      end
       puts '========== Stats by hosts list:'
       puts
       puts(Terminal::Table.new(headings: ['List name', '% tested', '% success']) do |table|
@@ -186,7 +193,7 @@ module HybridPlatformsConductor
           hosts_from_list = @nodes_handler.host_names_from_list(hosts_list_name, ignore_unknowns: true)
           no_list_hostnames -= hosts_from_list
           tested_hosts_from_list = hosts_from_list & @hostnames
-          error_hosts_from_list = tested_hosts_from_list & errors_per_reference.keys
+          error_hosts_from_list = tested_hosts_from_list & errors_per_hostname.keys
           table << [
             hosts_list_name,
             "#{(tested_hosts_from_list.size*100.0/hosts_from_list.size).to_i} %",
@@ -195,7 +202,7 @@ module HybridPlatformsConductor
         end
         unless no_list_hostnames.empty?
           tested_hosts_from_list = no_list_hostnames & @hostnames
-          error_hosts_from_list = tested_hosts_from_list & errors_per_reference.keys
+          error_hosts_from_list = tested_hosts_from_list & errors_per_hostname.keys
           table << [
             'No list',
             "#{(tested_hosts_from_list.size*100.0/no_list_hostnames.size).to_i} %",
