@@ -71,6 +71,22 @@ sudo make install
 cd ../..
 ```
 
+### Using RVM
+
+```
+sudo apt-get install dirmngr curl
+gpg --keyserver hkp://keys.gnupg.net:80 --recv-keys 409B6B1796C275462A1703113804BB82D39DC0E3 7D2BAF1CF37B13E2069D6956105BD0E739499BDB
+curl -sSL https://get.rvm.io | bash -s stable # Fails because you need a gpg2 binary somewhere...
+rvm install 2.5.0
+rvm use 2.5.0
+```
+
+## Using Debian (>= Stretch) package manager
+
+```
+sudo apt-get install ruby-dev libffi-dev zlib1g-dev
+```
+
 ## 4. Install bundler
 
 ```
