@@ -187,7 +187,7 @@ module HybridPlatformsConductor
       end
       puts '========== Stats by hosts list:'
       puts
-      puts(Terminal::Table.new(headings: ['List name', '% tested', '% success']) do |table|
+      puts(Terminal::Table.new(headings: ['List name', '# hosts', '% tested', '% success']) do |table|
         no_list_hostnames = @nodes_handler.known_hostnames
         @nodes_handler.known_hosts_lists.sort.each do |hosts_list_name|
           hosts_from_list = @nodes_handler.host_names_from_list(hosts_list_name, ignore_unknowns: true)
@@ -196,6 +196,7 @@ module HybridPlatformsConductor
           error_hosts_from_list = tested_hosts_from_list & errors_per_hostname.keys
           table << [
             hosts_list_name,
+            hosts_from_list.size,
             "#{(tested_hosts_from_list.size*100.0/hosts_from_list.size).to_i} %",
             tested_hosts_from_list.empty? ? '' : "#{((tested_hosts_from_list.size-error_hosts_from_list.size)*100.0/tested_hosts_from_list.size).to_i} %"
           ]
@@ -205,10 +206,17 @@ module HybridPlatformsConductor
           error_hosts_from_list = tested_hosts_from_list & errors_per_hostname.keys
           table << [
             'No list',
+            no_list_hostnames.size,
             "#{(tested_hosts_from_list.size*100.0/no_list_hostnames.size).to_i} %",
             tested_hosts_from_list.empty? ? '' : "#{((tested_hosts_from_list.size-error_hosts_from_list.size)*100.0/tested_hosts_from_list.size).to_i} %"
           ]
         end
+        table << [
+          'All',
+          @nodes_handler.known_hostnames.size,
+          "#{(@hostnames.size*100.0/@nodes_handler.known_hostnames.size).to_i} %",
+          @hostnames.empty? ? '' : "#{((@hostnames.size-errors_per_hostname.size)*100.0/@hostnames.size).to_i} %"
+        ]
       end)
     end
 
