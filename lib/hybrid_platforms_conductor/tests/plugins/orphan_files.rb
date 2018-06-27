@@ -81,7 +81,7 @@ module HybridPlatformsConductor
         #       * *timeout* (Integer): Timeout to wait for this command to execute.
         def test_on_node
           {
-            "sudo find / \\( #{((DIRECTORIES_TO_IGNORE_NORMALIZED[@hostname] || []) + DIRECTORIES_TO_ALWAYS_IGNORE).uniq.map { |dir| "-path #{dir}" }.join(' -o ')} \\) -prune -o -nogroup -nouser -print 2>/dev/null" => {
+            "sudo /usr/bin/find / \\( #{((DIRECTORIES_TO_IGNORE_NORMALIZED[@hostname] || []) + DIRECTORIES_TO_ALWAYS_IGNORE).uniq.map { |dir| "-path #{dir}" }.join(' -o ')} \\) -prune -o -nogroup -nouser -print 2>/dev/null" => {
               validator: proc do |stdout|
                 assert_equal stdout, [], "Orphan files found:\n  #{stdout.join("\n  ")}"
               end,
