@@ -211,11 +211,14 @@ module HybridPlatformsConductor
             tested_hosts_from_list.empty? ? '' : "#{((tested_hosts_from_list.size-error_hosts_from_list.size)*100.0/tested_hosts_from_list.size).to_i} %"
           ]
         end
+        nbr_hostnames_in_error = errors_per_hostname.size
+        # Don't count the global errors (not linked to a given hostname)
+        nbr_hostnames_in_error -= 1 if errors_per_hostname.key?(nil)
         table << [
           'All',
           @nodes_handler.known_hostnames.size,
           "#{(@hostnames.size*100.0/@nodes_handler.known_hostnames.size).to_i} %",
-          @hostnames.empty? ? '' : "#{((@hostnames.size-errors_per_hostname.size)*100.0/@hostnames.size).to_i} %"
+          @hostnames.empty? ? '' : "#{((@hostnames.size-nbr_hostnames_in_error)*100.0/@hostnames.size).to_i} %"
         ]
       end)
     end
