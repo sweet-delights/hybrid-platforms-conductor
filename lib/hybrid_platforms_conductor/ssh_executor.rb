@@ -327,9 +327,12 @@ module HybridPlatformsConductor
     # * *log_to_stdout* (Boolean): Do we send the output to stdout? [default: true]
     # Result::
     # * String or Symbol: Standard output, or a symbol indicating an error
-    # * Integer: Exit status, or nil in case of error
+    # * String: Standard error output
+    # * Integer or nil: Exit status, or nil in case of error
     def run_local_cmd(cmd, log_to_file: nil, log_to_stdout: true)
-      remote_stdout = nil
+      cmd_stdout = nil
+      cmd_stderr = nil
+      exit_status = nil
       # Use Open3 so that we can output as it gets streamed
       file_output =
         if log_to_file
@@ -338,25 +341,34 @@ module HybridPlatformsConductor
         else
           nil
         end
-      exit_status = nil
       begin
-        remote_stdout_lines = []
-        Open3.popen3(cmd) do |_stdin, stdout, _stderr, wait_thr|
-          while line = stdout.gets
-            $stdout << line if log_to_stdout
-            file_output << line unless file_output.nil?
-            remote_stdout_lines << line
+        cmd_stdout_lines = []
+        cmd_stderr_lines = []
+        Open3.popen3(cmd) do |_stdin, stdout, stderr, wait_thr|
+          while (line_stdout = stdout.gets) || (line_stderr = stderr.gets)
+            if line_stdout
+              $stdout << line_stdout if log_to_stdout
+              file_output << line_stdout unless file_output.nil?
+              cmd_stdout_lines << line_stdout
+            end
+            if line_stderr
+              $stderr << line_stderr if log_to_stdout
+              file_output << line_stderr unless file_output.nil?
+              cmd_stderr_lines << line_stderr
+            end
           end
           exit_status = wait_thr.value.exitstatus
         end
-        remote_stdout = remote_stdout_lines.join
+        cmd_stdout = cmd_stdout_lines.join
+        cmd_stderr = cmd_stderr_lines.join
       rescue
         puts "!!! Error while executing #{cmd}: #{$!}"
-        remote_stdout = :command_error
+        cmd_stdout = :command_error
+        cmd_stderr = ''
       ensure
         file_output.close unless file_output.nil?
       end
-      return remote_stdout, exit_status
+      return cmd_stdout, cmd_stderr, exit_status
     end
 
     # Prepare an SSH control master to multiplex connections, and give a file to write commands that will use this control master.
@@ -397,11 +409,12 @@ module HybridPlatformsConductor
     #     * *file* (String): Name of file from which commands should be taken.
     #   * *interactive* (Boolean): If true, then launch an interactive session.
     # * *timeout* (Integer): Timeout in seconds, or nil if none. [default: nil]
-    # * *log_to_file* (String or nil): Log file capturing stdout or stderr (or nil for none). [default: nil]
-    # * *log_to_stdout* (Boolean): Do we send the output to stdout? [default: true]
+    # * *log_to_file* (String or nil): Log file capturing stdout and stderr (or nil for none). [default: nil]
+    # * *log_to_stdout* (Boolean): Do we send the output to stdout and stderr? [default: true]
     # * CodeBlock: Code called after execution
     #   * Parameters::
     #   * *stdout* (String or Symbol): Standard output of the command, or Symbol in case of error
+    #   * *stderr* (String): Standard error output of the command
     def execute_actions_on(hostname, actions, timeout: nil, log_to_file: nil, log_to_stdout: true)
       with_platforms_ssh do |ssh_exec|
         ssh_options = {
@@ -417,8 +430,11 @@ module HybridPlatformsConductor
           actions_file.puts 'set -e'
           actions.each do |(action_type, action_info)|
             case action_type
+            when :local_bash
+              log_debug "[#{hostname}] - Execute local Bash commands \"#{action_info}\"..."
+              actions_file.puts action_info
             when :ruby
-              log_debug "[#{hostname}] - Execute Ruby commands \"#{action_info}\"..."
+              log_debug "[#{hostname}] - Execute local Ruby commands \"#{action_info}\"..."
               actions_file.puts "ruby -e \"#{action_info.gsub('"', '\"')}\""
             when :scp
               action_info.each do |scp_from, scp_to_dir|
@@ -432,7 +448,7 @@ module HybridPlatformsConductor
               action_info = { commands: action_info } if action_info.is_a?(Array)
               bash_commands = action_info.key?(:commands) ? action_info[:commands].clone : []
               bash_commands.concat(File.read(action_info[:file])) if action_info.key?(:file)
-              log_debug "[#{hostname}] - Execute bash commands \"#{bash_commands.join("\n")}\"..."
+              log_debug "[#{hostname}] - Execute remote Bash commands \"#{bash_commands.join("\n")}\"..."
               # Redirect stderr so that we take it into the log file
               actions_file.puts "#{ssh_exec} #{ssh_url} #{ssh_options_str} /bin/bash <<'EOF' 2>&1\n#{bash_commands.join("\n")}\nEOF"
             when :interactive
@@ -465,21 +481,21 @@ module HybridPlatformsConductor
                 yield :interactive
               else
                 log_debug "----- Commands in temporary file:\n#{File.read(actions_file.path)}\n-----\n"
-                remote_stdout = nil
+                actions_stdout = nil
+                actions_stderr = nil
                 if timeout.nil?
                   log_debug cmd_to_run
-                  remote_stdout, _exit_status = run_local_cmd(cmd_to_run, log_to_file: log_to_file, log_to_stdout: log_to_stdout)
-                  log_debug '[#{hostname}] - !!! Error while executing command' if remote_stdout.nil?
+                  actions_stdout, actions_stderr, _exit_status = run_local_cmd(cmd_to_run, log_to_file: log_to_file, log_to_stdout: log_to_stdout)
                 else
                   cmd_to_run_with_timeout = "timeout #{timeout} #{cmd_to_run}"
                   log_debug cmd_to_run_with_timeout
-                  remote_stdout, exit_status = run_local_cmd(cmd_to_run_with_timeout, log_to_file: log_to_file, log_to_stdout: log_to_stdout)
+                  actions_stdout, actions_stderr, exit_status = run_local_cmd(cmd_to_run_with_timeout, log_to_file: log_to_file, log_to_stdout: log_to_stdout)
                   if exit_status == 124
                     log_debug "[#{hostname}] - !!! Timeout after #{timeout} seconds"
-                    remote_stdout = :timeout
+                    actions_stdout = :timeout
                   end
                 end
-                yield remote_stdout
+                yield actions_stdout, actions_stderr
               end
             end
           rescue
