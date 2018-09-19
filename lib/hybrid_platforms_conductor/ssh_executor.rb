@@ -247,7 +247,7 @@ module HybridPlatformsConductor
     #
     # Parameters::
     # * *hostname* (String): The hostname to access
-    # * *ip* (String): Corresponding IP
+    # * *ip* (String or nil): Corresponding IP (can be nil if no IP information given)
     # Result::
     # * String: The real hostname or IP to be used to connect
     # * String or nil: The gateway name to be used (should be defined by the gateways configurations), or nil if no gateway to be used.

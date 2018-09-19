@@ -29,14 +29,18 @@ open_ssh_major_version = `ssh -V 2>&1`.match(/^OpenSSH_(\d)\..+$/)[1].to_i
 #
 # Parameters::
 # * *hostname* (String): The hostname to access
-# * *ip* (String): Corresponding IP
+# * *ip* (String or nil): Corresponding IP, or nil if none available
 # Result::
 # * Array<String>: The list of possible SSH aliases
 def ssh_aliases_for(hostname, ip)
-  aliases = ["hpc.#{ip}"]
-  split_ip = ip.split('.').map(&:to_i)
-  aliases << "hpc.#{split_ip[2..3].join('.')}" if split_ip[0..1] == [172, 16]
-  aliases
+  if ip.nil?
+    []
+  else
+    aliases = ["hpc.#{ip}"]
+    split_ip = ip.split('.').map(&:to_i)
+    aliases << "hpc.#{split_ip[2..3].join('.')}" if split_ip[0..1] == [172, 16]
+    aliases
+  end
 end
 
 puts "
@@ -60,13 +64,13 @@ Host *
 # Add each node
 nodes_handler.known_hostnames.sort.each do |hostname|
   conf = nodes_handler.site_meta_for hostname
-  if !conf.nil? && conf.key?('private_ips')
-    conf['private_ips'].sort.each.with_index do |private_ip, idx|
+  unless conf.nil?
+    (conf.key?('private_ips') ? conf['private_ips'].sort : [nil]).each.with_index do |private_ip, idx|
       # Generate the conf for the hostname
       real_ip, gateway, gateway_user = ssh_executor.connection_info_for(hostname, private_ip)
       aliases = ssh_aliases_for(hostname, private_ip)
       aliases << "hpc.#{hostname}" if idx == 0
-      puts "# #{hostname} - #{private_ip} - #{nodes_handler.platform_for(hostname).repository_path}#{conf.key?('description') ? " - #{conf['description']}" : ''}"
+      puts "# #{hostname} - #{private_ip.nil? ? 'Unknown IP address' : private_ip} - #{nodes_handler.platform_for(hostname).repository_path}#{conf.key?('description') ? " - #{conf['description']}" : ''}"
       puts "Host #{aliases.join(' ')}"
       puts "  Hostname #{real_ip}"
       puts "  ProxyCommand #{ssh_exec} -q -W %h:%p #{gateway_user}@#{gateway}" unless gateway.nil?
