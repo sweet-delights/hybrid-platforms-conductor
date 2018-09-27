@@ -183,7 +183,7 @@ module HybridPlatformsConductor
       if platform_type.nil?
         @platform_handlers.values.flatten
       else
-        @platform_handlers[platform_type]
+        @platform_handlers[platform_type] || []
       end
     end
 
