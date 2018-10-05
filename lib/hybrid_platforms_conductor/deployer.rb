@@ -157,7 +157,12 @@ module HybridPlatformsConductor
           @hosts.map do |hostname|
             [
               hostname,
-              @nodes_handler.platform_for(hostname).actions_to_deploy_on(hostname, use_why_run: @use_why_run)
+              [
+                {
+                  scp: { "#{File.dirname(__FILE__)}/mutex_dir" => '.' },
+                  bash: 'while ! ./mutex_dir lock /tmp/hybrid_platforms_conductor_deploy_lock "$(ps -o ppid= -p $$)"; do echo -e \'Another deployment is running. Waiting for it to finish to continue...\' ; sleep 5 ; done'
+                }
+              ] + @nodes_handler.platform_for(hostname).actions_to_deploy_on(hostname, use_why_run: @use_why_run)
             ]
           end,
           timeout: @timeout,
