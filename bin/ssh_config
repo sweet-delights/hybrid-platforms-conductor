@@ -72,7 +72,7 @@ nodes_handler.known_hostnames.sort.each do |hostname|
       aliases << "hpc.#{hostname}" if idx == 0
       puts "# #{hostname} - #{private_ip.nil? ? 'Unknown IP address' : private_ip} - #{nodes_handler.platform_for(hostname).repository_path}#{conf.key?('description') ? " - #{conf['description']}" : ''}"
       puts "Host #{aliases.join(' ')}"
-      puts "  Hostname #{real_ip}"
+      puts "  Hostname #{real_ip}" unless real_ip.nil?
       puts "  ProxyCommand #{ssh_exec} -q -W %h:%p #{gateway_user}@#{gateway}" unless gateway.nil?
       puts
     end
