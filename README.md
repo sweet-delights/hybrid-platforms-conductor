@@ -117,15 +117,26 @@ chef_platform path: '../chef-repo'
 chef_platform git: 'https://www.site.my_company.net/git/scm/team17/xae-chef-repo.git'
 
 # Define the gateways
-gateway :nice, '
-# DMZ Gateway
-Host gw.dmz.ti
-  Hostname dmz.My_domain.com
+gateway :munich, '
+# Nice gateway provided by DEVOPS
+Host my.gateway.com
+  Hostname node12host.site.my_company.net
 
-# Data Gateway
+# Munich gateway provided by TEAM
+Host my.gateway.com
+  Hostname nodetest001.os.my_company.net
+  User p<%= @user.gsub(\'a_\', \'\')[0..6] %>
+  ProxyCommand <%= @ssh_exec %> -q -W %h:%p my.gateway.com
+
+# XAE-DMZ gateway provided by TEAM
+Host gw.dmz.ti
+  Hostname 192.168.190.141
+  ProxyCommand <%= @ssh_exec %> -W %h:%p my.gateway.com
+
+# XAE-DATA gateway provided by TEAM
 Host gw.data.ti
-  Hostname fr-had.My_domain.com
-  ProxyCommand <%= @ssh_exec %> -q -W %h:%p datagw@gw.dmz.ti
+  Hostname 192.168.190.9
+  ProxyCommand <%= @ssh_exec %> -W %h:%p my.gateway.com
 '
 ```
 
@@ -208,7 +219,7 @@ SSH executor options:
     -m, --max-threads NBR            Set the number of threads to use for concurrent queries (defaults to 16)
     -s, --show-commands              Display the SSH commands that would be run instead of running them
     -u, --ssh-user USER_NAME         Name of user to be used in SSH connections (defaults to platforms_ssh_user or USER environment variables)
-    -y GATEWAYS_CONF_NAME,           Name of the gateways configuration to be used. Can also be set from environment variable ti_gateways_conf. Defaults to madrid.
+    -y GATEWAYS_CONF_NAME,           Name of the gateways configuration to be used. Can also be set from environment variable ti_gateways_conf. Defaults to munich.
         --gateways-conf
 
 Deployer options:
@@ -254,7 +265,7 @@ SSH executor options:
     -g, --gateway-user USER_NAME     Name of the gateway user to be used by the XAE gateways (defaults to ubradm)
     -s, --show-commands              Display the SSH commands that would be run instead of running them
     -u, --ssh-user USER_NAME         Name of user to be used in SSH connections (defaults to platforms_ssh_user or USER environment variables)
-    -y GATEWAYS_CONF_NAME,           Name of the gateways configuration to be used. Can also be set from environment variable ti_gateways_conf. Defaults to madrid.
+    -y GATEWAYS_CONF_NAME,           Name of the gateways configuration to be used. Can also be set from environment variable ti_gateways_conf. Defaults to munich.
         --gateways-conf
 
 Deployer options:
@@ -358,7 +369,7 @@ SSH executor options:
     -m, --max-threads NBR            Set the number of threads to use for concurrent queries (defaults to 16)
     -s, --show-commands              Display the SSH commands that would be run instead of running them
     -u, --ssh-user USER_NAME         Name of user to be used in SSH connections (defaults to platforms_ssh_user or USER environment variables)
-    -y GATEWAYS_CONF_NAME,           Name of the gateways configuration to be used. Can also be set from environment variable ti_gateways_conf. Defaults to madrid.
+    -y GATEWAYS_CONF_NAME,           Name of the gateways configuration to be used. Can also be set from environment variable ti_gateways_conf. Defaults to munich.
         --gateways-conf
 
 Deployer options:
@@ -483,7 +494,7 @@ SSH executor options:
     -m, --max-threads NBR            Set the number of threads to use for concurrent queries (defaults to 16)
     -s, --show-commands              Display the SSH commands that would be run instead of running them
     -u, --ssh-user USER_NAME         Name of user to be used in SSH connections (defaults to platforms_ssh_user or USER environment variables)
-    -y GATEWAYS_CONF_NAME,           Name of the gateways configuration to be used. Can also be set from environment variable ti_gateways_conf. Defaults to madrid.
+    -y GATEWAYS_CONF_NAME,           Name of the gateways configuration to be used. Can also be set from environment variable ti_gateways_conf. Defaults to munich.
         --gateways-conf
 ```
 
@@ -546,7 +557,7 @@ SSH executor options:
     -g, --gateway-user USER_NAME     Name of the gateway user to be used by the XAE gateways (defaults to ubradm)
     -s, --show-commands              Display the SSH commands that would be run instead of running them
     -u, --ssh-user USER_NAME         Name of user to be used in SSH connections (defaults to platforms_ssh_user or USER environment variables)
-    -y GATEWAYS_CONF_NAME,           Name of the gateways configuration to be used. Can also be set from environment variable ti_gateways_conf. Defaults to madrid.
+    -y GATEWAYS_CONF_NAME,           Name of the gateways configuration to be used. Can also be set from environment variable ti_gateways_conf. Defaults to munich.
         --gateways-conf
 ```
 
@@ -804,7 +815,7 @@ SSH executor options:
     -m, --max-threads NBR            Set the number of threads to use for concurrent queries (defaults to 64)
     -s, --show-commands              Display the SSH commands that would be run instead of running them
     -u, --ssh-user USER_NAME         Name of user to be used in SSH connections (defaults to platforms_ssh_user or USER environment variables)
-    -y GATEWAYS_CONF_NAME,           Name of the gateways configuration to be used. Can also be set from environment variable ti_gateways_conf. Defaults to madrid.
+    -y GATEWAYS_CONF_NAME,           Name of the gateways configuration to be used. Can also be set from environment variable ti_gateways_conf. Defaults to munich.
         --gateways-conf
 ```
 
@@ -867,7 +878,7 @@ SSH executor options:
     -m, --max-threads NBR            Set the number of threads to use for concurrent queries (defaults to 16)
     -s, --show-commands              Display the SSH commands that would be run instead of running them
     -u, --ssh-user USER_NAME         Name of user to be used in SSH connections (defaults to platforms_ssh_user or USER environment variables)
-    -y GATEWAYS_CONF_NAME,           Name of the gateways configuration to be used. Can also be set from environment variable ti_gateways_conf. Defaults to madrid.
+    -y GATEWAYS_CONF_NAME,           Name of the gateways configuration to be used. Can also be set from environment variable ti_gateways_conf. Defaults to munich.
         --gateways-conf
 
 Deployer options:
@@ -935,7 +946,7 @@ SSH executor options:
     -m, --max-threads NBR            Set the number of threads to use for concurrent queries (defaults to 16)
     -s, --show-commands              Display the SSH commands that would be run instead of running them
     -u, --ssh-user USER_NAME         Name of user to be used in SSH connections (defaults to platforms_ssh_user or USER environment variables)
-    -y GATEWAYS_CONF_NAME,           Name of the gateways configuration to be used. Can also be set from environment variable ti_gateways_conf. Defaults to madrid.
+    -y GATEWAYS_CONF_NAME,           Name of the gateways configuration to be used. Can also be set from environment variable ti_gateways_conf. Defaults to munich.
         --gateways-conf
 
 Deployer options:
@@ -1010,7 +1021,7 @@ SSH executor options:
     -m, --max-threads NBR            Set the number of threads to use for concurrent queries (defaults to 64)
     -s, --show-commands              Display the SSH commands that would be run instead of running them
     -u, --ssh-user USER_NAME         Name of user to be used in SSH connections (defaults to platforms_ssh_user or USER environment variables)
-    -y GATEWAYS_CONF_NAME,           Name of the gateways configuration to be used. Can also be set from environment variable ti_gateways_conf. Defaults to madrid.
+    -y GATEWAYS_CONF_NAME,           Name of the gateways configuration to be used. Can also be set from environment variable ti_gateways_conf. Defaults to munich.
         --gateways-conf
 
 Deployer options:
@@ -1186,7 +1197,7 @@ SSH executor options:
     -m, --max-threads NBR            Set the number of threads to use for concurrent queries (defaults to 64)
     -s, --show-commands              Display the SSH commands that would be run instead of running them
     -u, --ssh-user USER_NAME         Name of user to be used in SSH connections (defaults to platforms_ssh_user or USER environment variables)
-    -y GATEWAYS_CONF_NAME,           Name of the gateways configuration to be used. Can also be set from environment variable ti_gateways_conf. Defaults to madrid.
+    -y GATEWAYS_CONF_NAME,           Name of the gateways configuration to be used. Can also be set from environment variable ti_gateways_conf. Defaults to munich.
         --gateways-conf
 ```
 

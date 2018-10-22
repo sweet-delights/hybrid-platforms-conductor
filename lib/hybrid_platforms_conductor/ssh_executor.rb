@@ -16,7 +16,7 @@ module HybridPlatformsConductor
     #   String
     attr_accessor :gateway_user
 
-    # Name of the gateways configuration. [default: ENV['ti_gateways_conf'] or nice]
+    # Name of the gateways configuration. [default: ENV['ti_gateways_conf'] or munich]
     #   Symbol
     attr_accessor :gateways_conf
 
@@ -50,7 +50,7 @@ module HybridPlatformsConductor
       @debug = false
       @max_threads = 16
       @dry_run = false
-      @gateways_conf = ENV['ti_gateways_conf'].nil? ? :nice : ENV['ti_gateways_conf'].to_sym
+      @gateways_conf = ENV['ti_gateways_conf'].nil? ? :munich : ENV['ti_gateways_conf'].to_sym
       @gateway_user = ENV['ti_gateway_user'].nil? ? 'ubradm' : ENV['ti_gateway_user']
       @platforms_ssh_dir = nil
       @platforms_ssh_dir_nbr_users = 0
