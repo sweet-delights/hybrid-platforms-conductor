@@ -14,6 +14,7 @@ ssh_executor = HybridPlatformsConductor::SshExecutor.new(cmd_runner: cmd_runner,
 deployer = HybridPlatformsConductor::Deployer.new(cmd_runner: cmd_runner, ssh_executor: ssh_executor)
 json_dumper = HybridPlatformsConductor::JsonDumper.new(nodes_handler: nodes_handler, deployer: deployer)
 deployer.timeout = 30
+deployer.use_why_run = true
 OptionParser.new do |opts|
   opts.banner = "Usage: #{$0} [options]"
   opts.separator ''
