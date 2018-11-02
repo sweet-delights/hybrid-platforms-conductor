@@ -51,7 +51,7 @@ module HybridPlatformsConductor
       # Hash<String, PlatformHandler>
       @nodes_list_platform = {}
       # Directory in which we have platforms handled by HPCs definition
-      @hybrid_platforms_dir = ENV['ti_platforms'].nil? ? '.' : ENV['ti_platforms']
+      @hybrid_platforms_dir = File.expand_path(ENV['ti_platforms'].nil? ? '.' : ENV['ti_platforms'])
       # Directory in which platforms are cloned
       @git_platforms_dir = "#{hybrid_platforms_dir}/cloned_platforms"
       # Read platforms file
