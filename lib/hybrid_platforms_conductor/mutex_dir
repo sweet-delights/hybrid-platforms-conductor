@@ -23,6 +23,7 @@ HELP_INFO
 lock_dir="$2"
 app_pid="$3"
 pid_file="${lock_dir}/pid"
+user_file="${lock_dir}/user"
 
 # exit codes
 ENO_SUCCESS=0
@@ -39,6 +40,8 @@ function lock(){
   if mkdir "${lock_dir}" &>/dev/null; then
     # lock succeeded, store the PID
     echo "$app_pid" >"${pid_file}"
+    # Dump the user having this lock in another file
+    echo "${SUDO_USER}" >"${user_file}"
     return ${ENO_SUCCESS}
   else
     # lock failed, now check if the other PID is alive
