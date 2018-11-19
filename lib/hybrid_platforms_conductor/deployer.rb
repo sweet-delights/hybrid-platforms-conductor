@@ -1,6 +1,8 @@
 require 'hybrid_platforms_conductor/nodes_handler'
 require 'hybrid_platforms_conductor/ssh_executor'
 require 'hybrid_platforms_conductor/cmd_runner'
+require 'tmpdir'
+require 'time'
 
 module HybridPlatformsConductor
 
@@ -153,8 +155,8 @@ module HybridPlatformsConductor
           platform_handler.prepare_for_deploy(use_why_run: @use_why_run) if platform_handler.respond_to?(:prepare_for_deploy)
         end
 
-        @ssh_executor.run_cmd_on_hosts(
-          @hosts.map do |hostname|
+        outputs = @ssh_executor.run_cmd_on_hosts(
+          Hash[@hosts.map do |hostname|
             [
               hostname,
               [
@@ -164,11 +166,64 @@ module HybridPlatformsConductor
                 }
               ] + @nodes_handler.platform_for(hostname).actions_to_deploy_on(hostname, use_why_run: @use_why_run)
             ]
-          end,
+          end],
           timeout: @timeout,
           concurrent: @concurrent_execution,
           log_to_stdout: !@concurrent_execution
         )
+        save_logs(outputs) if !@use_why_run && !@ssh_executor.dry_run
+      end
+    end
+
+    # Save some deployment logs.
+    # It uploads them on the nodes that have been deployed.
+    #
+    # Parameters::
+    # * *logs* (Hash<String, [String, String] or Symbol>): Standard output and error, or Symbol in case of error, for each hostname.
+    def save_logs(logs)
+      section("Saving deployment logs for #{logs.size} hosts") do
+        Dir.mktmpdir('hybrid_platforms_conductor-logs') do |tmp_dir|
+          @ssh_executor.run_cmd_on_hosts(
+            Hash[logs.map do |hostname, (stdout, stderr)|
+              # Create a log file to be scp with all relevant info
+              now = Time.now.utc
+              log_file = "#{tmp_dir}/#{now.strftime('%F_%H%M%S')}_#{@ssh_executor.ssh_user_name}"
+              platform_info = @nodes_handler.platform_for(hostname).info
+              user_name = @ssh_executor.ssh_user_name
+              File.write(
+                log_file,
+                {
+                  date: now.strftime('%F %T'),
+                  user: user_name,
+                  debug: @ssh_executor.debug ? 'Yes' : 'No',
+                  repo_name: platform_info[:repo_name],
+                  commit_id: platform_info[:commit][:id],
+                  commit_message: platform_info[:commit][:message].split("\n").first,
+                  diff_files: (platform_info[:status][:changed_files] + platform_info[:status][:added_files] + platform_info[:status][:deleted_files] + platform_info[:status][:untracked_files]).join(', ')
+                }.map { |property, value| "#{property}: #{value}" }.join("\n") +
+                  "\n===== STDOUT =====\n" +
+                  stdout +
+                  "\n===== STDERR =====\n" +
+                  stderr
+              )
+              [
+                hostname,
+                {
+                  bash: "#{user_name == 'root' ? '' : 'sudo '}mkdir -p /var/log/deployments",
+                  scp: {
+                    log_file => '/var/log/deployments',
+                    :sudo => true,
+                    :owner => 'root',
+                    :group => 'root'
+                  }
+                }
+              ]
+            end],
+            timeout: 10,
+            concurrent: true,
+            log_to_dir: nil
+          )
+        end
       end
     end
 

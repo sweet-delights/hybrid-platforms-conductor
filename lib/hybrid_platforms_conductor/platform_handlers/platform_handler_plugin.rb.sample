@@ -243,16 +243,6 @@ module HybridPlatformsConductor
         @dump_json_mode = true
       end
 
-      # Give the deployment logs directory of a given hostname
-      # [API] - This method is mandatory.
-      #
-      # Parameters::
-      # * *hostname* (String): The hostname
-      def deployment_logs_dir(hostname)
-        # This method returns the path in which deployment log files should be found on the node itself.
-        '/var/log/deployments'
-      end
-
     end
 
   end

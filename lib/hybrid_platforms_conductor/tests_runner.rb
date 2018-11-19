@@ -325,12 +325,12 @@ module HybridPlatformsConductor
           log_to_dir: nil,
           log_to_stdout: @ssh_executor.debug,
           timeout: timeout
-        ).each do |hostname, stdout|
+        ).each do |hostname, (stdout, stderr)|
           nbr_secs = (Time.now - start_time).round(1) if nbr_secs.nil?
           if stdout.is_a?(Symbol)
-            error("Error while executing tests: #{stdout}", hostname: hostname)
+            error("Error while executing tests: #{stdout}\n#{stderr}", hostname: hostname)
           else
-            puts "----- Commands for #{hostname}:\n#{test_cmds[hostname][:bash].join("\n")}\n----- Output:\n#{stdout}\n-----" if @ssh_executor.debug
+            puts "----- Commands for #{hostname}:\n#{test_cmds[hostname][:bash].join("\n")}\n----- Output:\n#{stdout}\n----- Error:\n#{stderr}\n-----" if @ssh_executor.debug
             # Skip the first section, as it can contain SSH banners
             cmd_stdouts = stdout.split("#{CMD_SEPARATOR}\n")[1..-1]
             cmd_stdouts = [] if cmd_stdouts.nil?

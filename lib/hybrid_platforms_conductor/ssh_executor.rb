@@ -105,10 +105,10 @@ module HybridPlatformsConductor
     #   See execute_actions_on to know about the API of an action.
     # * *timeout* (Integer): Timeout in seconds, or nil if none. [default: nil]
     # * *concurrent* (Boolean): Do we run the commands in parallel? If yes, then stdout of commands is stored in log files. [default: false]
-    # * *log_to_dir* (String): In case of concurrent processing, directory name to store log files. Can be nil to not store log files. [default: 'run_logs']
+    # * *log_to_dir* (String): Directory name to store log files. Can be nil to not store log files. [default: 'run_logs']
     # * *log_to_stdout* (Boolean): Do we log the command result on stdout? [default: true]
     # Result::
-    # * Hash<String, String or Symbol>: Standard output, or Symbol in case of error or dry run, for each hostname.
+    # * Hash<String, [String, String] or Symbol>: Standard output and error, or Symbol in case of error or dry run, for each hostname.
     def run_cmd_on_hosts(actions_descriptions, timeout: nil, concurrent: false, log_to_dir: 'run_logs', log_to_stdout: true)
       # Make sure stale mutexes are removed before launching commands
       clean_stale_ssh_mutex
@@ -162,8 +162,8 @@ module HybridPlatformsConductor
                 end
                 break if hostname.nil?
                 # Handle hostname
-                execute_actions_on(hostname, actions_per_hostname[hostname], timeout: timeout, log_to_file: log_to_dir.nil? ? nil : "#{log_to_dir}/#{hostname}.stdout", log_to_stdout: log_to_stdout) do |stdout|
-                  result[hostname] = stdout
+                execute_actions_on(hostname, actions_per_hostname[hostname], timeout: timeout, log_to_file: log_to_dir.nil? ? nil : "#{log_to_dir}/#{hostname}.stdout", log_to_stdout: log_to_stdout) do |stdout, stderr|
+                  result[hostname] = [stdout, stderr]
                 end
                 pools_semaphore.synchronize do
                   pools[:processing].delete(hostname)
@@ -196,8 +196,8 @@ module HybridPlatformsConductor
         else
           # Execute synchronously
           actions_per_hostname.each do |hostname, actions|
-            execute_actions_on(hostname, actions, timeout: timeout, log_to_stdout: log_to_stdout) do |stdout|
-              result[hostname] = stdout
+            execute_actions_on(hostname, actions, timeout: timeout, log_to_file: log_to_dir.nil? ? nil : "#{log_to_dir}/#{hostname}.stdout", log_to_stdout: log_to_stdout) do |stdout, stderr|
+              result[hostname] = [stdout, stderr]
             end
           end
         end
@@ -403,7 +403,10 @@ module HybridPlatformsConductor
     # Parameters::
     # * *hostname* (String): The hostname
     # * *actions* (Array<[Symbol, Object]>): Ordered list of actions to perform. Each action is identified by an identifier (Symbol) and has associated data. Here are possible actions:
-    #   * *scp* (Hash<String, String>): Set of couples source => destination_dir to scp files or directories from the local file system to the remote file system.
+    #   * *scp* (Hash<String or Symbol, String or Object>): Set of couples source => destination_dir to scp files or directories from the local file system to the remote file system. Additional options can be provided using symbols:
+    #     * *sudo* (Boolean): Do we use sudo to make the copy?
+    #     * *owner* (String): Owner to use for files
+    #     * *group* (String): Group to use for files
     #   * *bash* (Array< Hash<Symbol, Object> or Array<String> or String>): List of bash actions to execute. Each action can have the following properties:
     #     * *commands* (Array<String> or String): List of bash commands to execute (can be a single one). This is the default property also that allows to not use the Hash form for brevity.
     #     * *file* (String): Name of file from which commands should be taken.
@@ -437,10 +440,13 @@ module HybridPlatformsConductor
               log_debug "[#{hostname}] - Execute local Ruby commands \"#{action_info}\"..."
               actions_file.puts "ruby -e \"#{action_info.gsub('"', '\"')}\""
             when :scp
+              sudo = action_info.delete(:sudo)
+              owner = action_info.delete(:owner)
+              group = action_info.delete(:group)
               action_info.each do |scp_from, scp_to_dir|
                 log_debug "[#{hostname}] - Execute scp command \"#{scp_from}\" => \"#{scp_to_dir}\""
                 # Redirect stderr so that we take it into the log file
-                actions_file.puts "cd #{File.dirname(scp_from)} && tar -czf - #{File.basename(scp_from)} | #{ssh_exec} #{ssh_url} #{ssh_options_str} \"tar -xzf - -C #{scp_to_dir}\" 2>&1"
+                actions_file.puts "cd #{File.dirname(scp_from)} && tar -czf - #{owner.nil? ? '' : "--owner=#{owner}"} #{group.nil? ? '' : "--group=#{group}"} #{File.basename(scp_from)} | #{ssh_exec} #{ssh_url} #{ssh_options_str} \"#{sudo ? 'sudo ' : ''}tar -xzf - -C #{scp_to_dir} --owner=root\" 2>&1"
               end
             when :bash
               # Normalize action_info

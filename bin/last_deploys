@@ -57,51 +57,53 @@ sorted_deploy_info = Hash[ssh_executor.
     Hash[nodes_handler.resolve_hosts(hosts).map do |hostname|
       [
         hostname,
-        { bash: "cd #{nodes_handler.platform_for(hostname).deployment_logs_dir(hostname)} && ls -t | head -1 | xargs cat | head -6" }
+        { bash: "cd /var/log/deployments && ls -t | head -1 | xargs sed '/===== STDOUT =====/q'" }
       ]
     end],
     log_to_stdout: false,
     concurrent: true,
     timeout: 10
   ).
-  map do |hostname, stdout|
+  map do |hostname, (stdout, stderr)|
     # Expected format for stdout:
-    # Date: Thu Nov 23 18:43:01 UTC 2017
-    # User: a_usernme
-    # GIT repository: http://172.16.0.46/git/chef-dist.git
-    # Branch applied: v20171123T194235
-    # Chef commit: 73c2017a2a85a5a086cd2474ce02d2755c273f3c Added sorting capabilities
-    # Chef options: -o solo.rb
+    # Property1: Value1
+    # ...
+    # PropertyN: ValueN
+    # ===== STDOUT =====
+    # ...
     deploy_info = { host: hostname }
     if stdout.is_a?(Symbol)
-      deploy_info[:error] = "Error: #{stdout}"
+      deploy_info[:error] = "Error: #{stdout}\n#{stderr}"
     else
       stdout_lines = stdout.split("\n")
       if stdout_lines.first =~ /No such file or directory/
-        deploy_info[:error] = '/var/log/chef-deployments missing'
+        deploy_info[:error] = '/var/log/deployments missing'
       else
         stdout_lines.each do |line|
           if line =~ /^([^:]+): (.+)$/
             key, value = $1, $2
             case key
-            when 'Date'
+            when 'date'
               # Thu Nov 23 18:43:01 UTC 2017
               deploy_info[:datetime] = Time.parse(value).strftime('%F %T')
-            when 'User'
+            when 'user'
               # a_usernme
               deploy_info[:admin] = value
-            when 'GIT repository'
-              # http://172.16.0.46/git/chef-dist.git
-              deploy_info[:git_repo] = value.match(/^http:\/\/(\d+\.\d+\.\d+\.\d+)\/.+$/)[1]
-            when 'Branch applied'
-              # v20171123T194235
-              deploy_info[:git_branch] = value
-            when 'Chef commit'
-              # 73c2017a2a85a5a086cd2474ce02d2755c273f3c Added sorting capabilities
-              deploy_info[:chef_commit_id], deploy_info[:chef_commit_comment] = value.match(/^(\w{11})\w+ (.+)$/)[1..2]
-            when 'Chef options'
-              # Command line options
-              deploy_info[:chef_options] = value
+            when 'debug'
+              # Yes
+              deploy_info[:debug] = (value == 'Yes')
+            when 'repo_name'
+              # ansible_repo
+              deploy_info[:repo_name] = value
+            when 'commit_id'
+              # 73c2017a2a85a5a086cd2474ce02d2755c273f3c
+              deploy_info[:commit_id] = value
+            when 'commit_message'
+              # Added sorting capabilities
+              deploy_info[:commit_message] = value
+            when 'diff_files'
+              # my_file.txt, other_file.txt
+              deploy_info[:nbr_diff_files] = value.split(', ').size
             else
               deploy_info[key.to_sym] = value
             end
@@ -123,11 +125,11 @@ INFO_DISPLAYED = {
   host: 'Hostname',
   datetime: 'Date',
   admin: 'Admin',
-  git_repo: 'Git artefact',
-  git_branch: 'Git branch',
-  chef_commit_id: 'Chef commit',
-  chef_commit_comment: 'Chef comment',
-  # chef_options: 'Chef options',
+  # debug: 'Debug',
+  repo_name: 'Repository',
+  # commit_id: 'Commit ID',
+  commit_message: 'Commit message',
+  nbr_diff_files: 'Differing files',
   error: 'Error'
 }
 puts(Terminal::Table.new(headings: INFO_DISPLAYED.values) do |table|
