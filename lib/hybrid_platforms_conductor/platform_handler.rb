@@ -3,6 +3,9 @@ module HybridPlatformsConductor
   # Common ancestor to any platform handler
   class PlatformHandler
 
+    # Make it so that we can sort lists of platforms
+    include Comparable
+
     # Repository path
     #   String
     attr_reader :repository_path
@@ -38,6 +41,9 @@ module HybridPlatformsConductor
     #     * *ref* (String): Associated reference
     #     * *message* (String): Associated message
     #     * *date* (Time): Commit date in UTC
+    #     * *author* (Hash<Symbol,Object>): Information on the author:
+    #       * *name* (String): Name of the commit author
+    #       * *email* (String): Email of the commit author
     #  * *status* (Hash<Symbol,Object>): Information on the checked out Git status
     #    * *changed_files* (Array<String>): List of changed files
     #    * *added_files* (Array<String>): List of added files
@@ -53,7 +59,11 @@ module HybridPlatformsConductor
           id: git_commit.sha,
           ref: git_commit.name,
           message: git_commit.message,
-          date: git_commit.date.utc
+          date: git_commit.date.utc,
+          author: {
+            name: git_commit.author.name,
+            email: git_commit.author.email
+          }
         },
         status: {
           changed_files: git_status.changed.keys,
@@ -62,6 +72,20 @@ module HybridPlatformsConductor
           untracked_files: git_status.untracked.keys
         }
       }
+    end
+
+    # Order relation
+    #
+    # Parameters::
+    # * *other* (Object): Other object to compare to
+    # Result::
+    # * Integer: -1, 0, or +1 depending on whether the receiver is less than, equal to, or greater than the other object
+    def <=>(other)
+      if other.is_a?(PlatformHandler)
+        info[:repo_name] <=> other.info[:repo_name]
+      else
+        super
+      end
     end
 
   end

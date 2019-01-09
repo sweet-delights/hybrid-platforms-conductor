@@ -9,7 +9,7 @@ module HybridPlatformsConductor
       # Check that all executables run correctly, from an environment/installation point of view.
       class Executables < Tests::Test
 
-        # Run test
+        # Check my_test_plugin.rb.sample documentation for signature details.
         def test
           example_host = NodesHandler.new.platforms.first.known_hostnames.first
         	[
@@ -19,7 +19,7 @@ module HybridPlatformsConductor
             "#{CmdRunner.executables_prefix}free_ips",
             "#{CmdRunner.executables_prefix}free_veids",
             "#{CmdRunner.executables_prefix}last_deploys --host-name #{example_host} --show-commands",
-            "#{CmdRunner.executables_prefix}report --host-name #{example_host}",
+            "#{CmdRunner.executables_prefix}report --host-name #{example_host} --format mediawiki",
             "#{CmdRunner.executables_prefix}ssh_config",
             "#{CmdRunner.executables_prefix}ssh_run --host-name #{example_host} --show-commands --interactive",
             "#{CmdRunner.executables_prefix}setup --help",

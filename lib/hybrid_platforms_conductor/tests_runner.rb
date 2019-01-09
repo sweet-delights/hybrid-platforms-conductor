@@ -1,6 +1,7 @@
 require 'hybrid_platforms_conductor/nodes_handler'
 require 'hybrid_platforms_conductor/ssh_executor'
 require 'hybrid_platforms_conductor/tests/test'
+require 'hybrid_platforms_conductor/tests/reports_plugin'
 
 module HybridPlatformsConductor
 
@@ -29,15 +30,24 @@ module HybridPlatformsConductor
             Tests::Plugins.const_get(test_name.to_s.split('_').collect(&:capitalize).join.to_sym)
           ]
         end]
-      # For each test name, remember the ones that belong to a specific platform type
-      # Hash<Symbol, Symbol>
-      @platform_tests = {}
+      # The list of tests reports plugins, with their associated class
+      # Hash< Symbol, Class >
+      @reports_plugins = Hash[Dir.
+        glob("#{File.dirname(__FILE__)}/tests/reports_plugins/*.rb").
+        map do |file_name|
+          plugin_name = File.basename(file_name)[0..-4].to_sym
+          require file_name
+          [
+            plugin_name,
+            Tests::ReportsPlugins.const_get(plugin_name.to_s.split('_').collect(&:capitalize).join.to_sym)
+          ]
+        end]
+      # Register test classes from plugins
       @nodes_handler.platform_types.each do |platform_type, platform_handler_class|
-        if platform_handler_class.respond_to?(:platform_tests)
-          platform_handler_class.platform_tests.each do |test_name, test_class|
-            raise "Cannot register #{test_name} for platform #{platform_handler.repository_path} as it's already registered for another platform" if @tests_plugins.key?(test_name)
+        if platform_handler_class.respond_to?(:tests)
+          platform_handler_class.tests.each do |test_name, test_class|
+            raise "Cannot register #{test_name} from platform #{platform_type} as it's already registered for another platform" if @tests_plugins.key?(test_name)
             @tests_plugins[test_name] = test_class
-            @platform_tests[test_name] = platform_type
           end
         end
       end
@@ -45,6 +55,8 @@ module HybridPlatformsConductor
       @skip_run = false
       # List of tests to be performed
       @tests = []
+      # List of reports to be used
+      @reports = []
     end
 
     # Complete an option parser with options meant to control this tests runner
@@ -56,6 +68,9 @@ module HybridPlatformsConductor
       options_parser.separator 'Tests runner options:'
       options_parser.on('-k', '--skip-run', 'Skip running the check-node commands for real, and just analyze existing run logs.') do
         @skip_run = true
+      end
+      options_parser.on('-r', '--report REPORT_NAME', "Specify a report name. Can be used several times. Can be all for all reports. Possible values: #{@reports_plugins.keys.sort.join(', ')} (defaults to stdout).") do |report_name|
+        @reports << report_name.to_sym
       end
       options_parser.on('-t', '--test TEST_NAME', "Specify a test name. Can be used several times. Can be all for all tests. Possible values: #{@tests_plugins.keys.sort.join(', ')} (defaults to all).") do |test_name|
         @tests << test_name.to_sym
@@ -79,20 +94,32 @@ module HybridPlatformsConductor
       # Compute the resolved list of tests to perform
       @tests << :all if @tests.empty?
       @tests = @tests_plugins.keys if @tests.include?(:all)
+      @tests.uniq!
+      @tests.sort!
+      @reports = [:stdout] if @reports.empty?
+      @reports = @reports_plugins.keys if @reports.include?(:all)
+      @reports.uniq!
+      @reports.sort!
       unknown_tests = @tests - @tests_plugins.keys
       raise "Unknown test names: #{unknown_tests.join(', ')}" unless unknown_tests.empty?
-      @hostnames = hostnames
+      @hostnames = hostnames.uniq.sort
+      @tested_platforms = []
 
       # Keep a list of all tests that have run for the report
       # Array< Test >
       @tests_run = []
 
       run_tests_global
+      run_tests_platform
       run_tests_for_nodes
       run_tests_ssh_on_nodes
       run_tests_on_check_nodes
+      @tested_platforms.uniq!
+      @tested_platforms.sort_by!
 
-      display_report
+      @reports.each do |report_name|
+        @reports_plugins[report_name].new(@nodes_handler, @hostnames, @tested_platforms, @tests_run).report
+      end
 
       puts
       if @tests_run.all? { |test| test.errors.empty? }
@@ -114,142 +141,53 @@ module HybridPlatformsConductor
     def error(message, hostname: nil)
       global_test = Tests::Test.new(
         @nodes_handler,
-        test_name: :global,
-        debug: @ssh_executor.debug,
-        hostname: hostname
+        name: :global,
+        platform: hostname.nil? ? nil : @nodes_handler.platform_for(hostname),
+        node: hostname,
+        debug: @ssh_executor.debug
       )
       global_test.errors << message
+      global_test.executed
       @tests_run << global_test
-    end
-
-    # Display report
-    def display_report
-      puts
-      puts "========== Error report of #{@tests_run.size} tests run on #{@hostnames.size} nodes"
-      puts
-
-      puts '======= By test:'
-      puts
-      @tests_run.group_by(&:test_name).sort.each do |test_name, tests|
-        errors_per_reference = tests.inject({}) do |total_errors, test|
-          if test.errors.empty?
-            total_errors
-          else
-            total_errors.merge(test.tested_reference => test.errors) { |_reference, errors1, errors2| errors1 + errors2 }
-          end
-        end
-        unless errors_per_reference.empty?
-          puts "===== #{test_name} found #{errors_per_reference.size} tests having errors:"
-          errors_per_reference.sort.each do |tested_reference, errors_list|
-            puts "  * [ #{tested_reference} ] - #{errors_list.size} errors:"
-            errors_list.each do |error|
-              puts "    - #{error}"
-            end
-          end
-          puts
-        end
-      end
-      puts
-
-      puts '======= By node:'
-      puts
-      @tests_run.group_by(&:tested_reference).sort.each do |tested_reference, tests|
-        errors_per_test = tests.inject({}) do |total_errors, test|
-          if test.errors.empty?
-            total_errors
-          else
-            total_errors.merge(test.test_name => test.errors) { |_test_name, errors1, errors2| errors1 + errors2 }
-          end
-        end
-        unless errors_per_test.empty?
-          puts "===== [ #{tested_reference} ] - #{errors_per_test.size} failing tests:"
-          errors_per_test.sort.each do |test_name, errors_list|
-            puts "  * Test #{test_name} - #{errors_list.size} errors:"
-            errors_list.each do |error|
-              puts "    - #{error}"
-            end
-          end
-          puts
-        end
-      end
-
-      # Get the errors per hostname
-      errors_per_hostname = {}
-      @tests_run.group_by(&:hostname).each do |hostname, tests|
-        errors_per_test = tests.inject({}) do |total_errors, test|
-          if test.errors.empty?
-            total_errors
-          else
-            total_errors.merge(test.test_name => test.errors) { |_test_name, errors1, errors2| errors1 + errors2 }
-          end
-        end
-        errors_per_hostname[hostname] = errors_per_test unless errors_per_test.empty?
-      end
-      puts '========== Stats by hosts list:'
-      puts
-      puts(Terminal::Table.new(headings: ['List name', '# hosts', '% tested', '% success']) do |table|
-        no_list_hostnames = @nodes_handler.known_hostnames
-        @nodes_handler.known_hosts_lists.sort.each do |hosts_list_name|
-          hosts_from_list = @nodes_handler.host_names_from_list(hosts_list_name, ignore_unknowns: true)
-          no_list_hostnames -= hosts_from_list
-          tested_hosts_from_list = hosts_from_list & @hostnames
-          error_hosts_from_list = tested_hosts_from_list & errors_per_hostname.keys
-          table << [
-            hosts_list_name,
-            hosts_from_list.size,
-            "#{(tested_hosts_from_list.size*100.0/hosts_from_list.size).to_i} %",
-            tested_hosts_from_list.empty? ? '' : "#{((tested_hosts_from_list.size-error_hosts_from_list.size)*100.0/tested_hosts_from_list.size).to_i} %"
-          ]
-        end
-        unless no_list_hostnames.empty?
-          tested_hosts_from_list = no_list_hostnames & @hostnames
-          error_hosts_from_list = tested_hosts_from_list & errors_per_hostname.keys
-          table << [
-            'No list',
-            no_list_hostnames.size,
-            "#{(tested_hosts_from_list.size*100.0/no_list_hostnames.size).to_i} %",
-            tested_hosts_from_list.empty? ? '' : "#{((tested_hosts_from_list.size-error_hosts_from_list.size)*100.0/tested_hosts_from_list.size).to_i} %"
-          ]
-        end
-        nbr_hostnames_in_error = errors_per_hostname.size
-        # Don't count the global errors (not linked to a given hostname)
-        nbr_hostnames_in_error -= 1 if errors_per_hostname.key?(nil)
-        table << [
-          'All',
-          @nodes_handler.known_hostnames.size,
-          "#{(@hostnames.size*100.0/@nodes_handler.known_hostnames.size).to_i} %",
-          @hostnames.empty? ? '' : "#{((@hostnames.size-nbr_hostnames_in_error)*100.0/@hostnames.size).to_i} %"
-        ]
-      end)
     end
 
     # Run tests that are global
     def run_tests_global
       # Run global tests
-      @tests.sort.each do |test_name|
+      @tests.each do |test_name|
         if @tests_plugins[test_name].method_defined?(:test)
-          if @platform_tests.key?(test_name)
-            # Run this test for every platform of type @platform_tests[test_name]
-            @nodes_handler.platforms(platform_type: @platform_tests[test_name]).each do |platform_handler|
-              puts "========== Run global #{@platform_tests[test_name]} test #{test_name} on #{platform_handler.repository_path}..."
+          puts "========== Run global test #{test_name}..."
+          test = @tests_plugins[test_name].new(
+            @nodes_handler,
+            name: test_name,
+            debug: @ssh_executor.debug
+          )
+          test.test
+          test.executed
+          @tests_run << test
+        end
+      end
+    end
+
+    # Run tests that are platform specific
+    def run_tests_platform
+      @tests.each do |test_name|
+        if @tests_plugins[test_name].method_defined?(:test_on_platform)
+          # Run this test for every platform allowed
+          @nodes_handler.platforms.each do |platform_handler|
+            @tested_platforms << platform_handler
+            if should_test_be_run_on(test_name, platform: platform_handler)
+              puts "========== Run platform test #{test_name} on #{platform_handler.repository_path}..."
               test = @tests_plugins[test_name].new(
                 @nodes_handler,
-                test_name: test_name,
-                debug: @ssh_executor.debug,
-                repository_path: platform_handler.repository_path
+                name: test_name,
+                platform: platform_handler,
+                debug: @ssh_executor.debug
               )
-              test.test
+              test.test_on_platform
+              test.executed
               @tests_run << test
             end
-          else
-            puts "========== Run global test #{test_name}..."
-            test = @tests_plugins[test_name].new(
-              @nodes_handler,
-              test_name: test_name,
-              debug: @ssh_executor.debug
-            )
-            test.test
-            @tests_run << test
           end
         end
       end
@@ -262,45 +200,28 @@ module HybridPlatformsConductor
       cmds_to_run = {}
       # List of tests run on nodes
       tests_on_nodes = []
-      @hostnames.sort.each do |hostname|
-        @tests.sort.each do |test_name|
-          if @tests_plugins[test_name].method_defined?(:test_on_node)
-            test =
-              if @platform_tests.key?(test_name)
-                # We apply this test to hostname only if hostname belongs to a platform of type @platform_tests[test_name]
-                platform_handler = @nodes_handler.platform_for(hostname)
-                if platform_handler.platform_type == @platform_tests[test_name]
-                  @tests_plugins[test_name].new(
-                    @nodes_handler,
-                    test_name: test_name,
-                    debug: @ssh_executor.debug,
-                    repository_path: platform_handler.repository_path,
-                    hostname: hostname
-                  )
-                else
-                  nil
-                end
-              else
-                @tests_plugins[test_name].new(
-                  @nodes_handler,
-                  test_name: test_name,
-                  debug: @ssh_executor.debug,
-                  hostname: hostname
-                )
-              end
-            unless test.nil?
-              test.test_on_node.each do |cmd, test_info|
-                test_info_normalized = test_info.is_a?(Hash) ? test_info.clone : { validator: test_info }
-                test_info_normalized[:timeout] = DEFAULT_CMD_TIMEOUT unless test_info_normalized.key?(:timeout)
-                cmds_to_run[hostname] = [] unless cmds_to_run.key?(hostname)
-                cmds_to_run[hostname] << [
-                  cmd,
-                  test_info_normalized
-                ]
-              end
-              @tests_run << test
-              tests_on_nodes << test_name
+      @hostnames.each do |hostname|
+        @tests.each do |test_name|
+          if @tests_plugins[test_name].method_defined?(:test_on_node) && should_test_be_run_on(test_name, node: hostname)
+            test = @tests_plugins[test_name].new(
+              @nodes_handler,
+              name: test_name,
+              platform: @nodes_handler.platform_for(hostname),
+              node: hostname,
+              debug: @ssh_executor.debug
+            )
+            test.test_on_node.each do |cmd, test_info|
+              test_info_normalized = test_info.is_a?(Hash) ? test_info.clone : { validator: test_info }
+              test_info_normalized[:timeout] = DEFAULT_CMD_TIMEOUT unless test_info_normalized.key?(:timeout)
+              test_info_normalized[:test] = test
+              cmds_to_run[hostname] = [] unless cmds_to_run.key?(hostname)
+              cmds_to_run[hostname] << [
+                cmd,
+                test_info_normalized
+              ]
             end
+            @tests_run << test
+            tests_on_nodes << test_name
           end
         end
       end
@@ -337,6 +258,7 @@ module HybridPlatformsConductor
             cmds_to_run[hostname].zip(cmd_stdouts).each do |(cmd, test_info), cmd_stdout|
               cmd_stdout = '' if cmd_stdout.nil?
               test_info[:validator].call(cmd_stdout.split("\n"))
+              test_info[:test].executed
             end
           end
         end
@@ -346,37 +268,20 @@ module HybridPlatformsConductor
 
     # Run tests that are node specific
     def run_tests_for_nodes
-      @hostnames.sort.each do |hostname|
-        @tests.sort.each do |test_name|
-          if @tests_plugins[test_name].method_defined?(:test_for_node)
-            test =
-              if @platform_tests.key?(test_name)
-                # We apply this test to hostname only if hostname belongs to a platform of type @platform_tests[test_name]
-                platform_handler = @nodes_handler.platform_for(hostname)
-                if platform_handler.platform_type == @platform_tests[test_name]
-                  @tests_plugins[test_name].new(
-                    @nodes_handler,
-                    test_name: test_name,
-                    debug: @ssh_executor.debug,
-                    repository_path: platform_handler.repository_path,
-                    hostname: hostname
-                  )
-                else
-                  nil
-                end
-              else
-                @tests_plugins[test_name].new(
-                  @nodes_handler,
-                  test_name: test_name,
-                  debug: @ssh_executor.debug,
-                  hostname: hostname
-                )
-              end
-            unless test.nil?
-              puts "========== Run node test #{test_name} on node #{hostname}..."
-              test.test_for_node
-              @tests_run << test
-            end
+      @hostnames.each do |hostname|
+        @tests.each do |test_name|
+          if @tests_plugins[test_name].method_defined?(:test_for_node) && should_test_be_run_on(test_name, node: hostname)
+            test = @tests_plugins[test_name].new(
+              @nodes_handler,
+              name: test_name,
+              platform: @nodes_handler.platform_for(hostname),
+              node: hostname,
+              debug: @ssh_executor.debug
+            )
+            puts "========== Run node test #{test_name} on node #{hostname}..."
+            test.test_for_node
+            test.executed
+            @tests_run << test
           end
         end
       end
@@ -397,44 +302,52 @@ module HybridPlatformsConductor
           @deployer.deploy_for(@hostnames)
         end
         # Analyze output run_logs
-        @hostnames.sort.each do |hostname|
+        @hostnames.each do |hostname|
           # Check there is a log file
           run_log_file_name = "./run_logs/#{hostname}.stdout"
-          if File.exists?(run_log_file_name)
-            log = File.read(run_log_file_name).split("\n")
-            tests_for_check_node.each do |test_name|
-              test =
-                if @platform_tests.key?(test_name)
-                  # We apply this test to hostname only if hostname belongs to a platform of type @platform_tests[test_name]
-                  platform_handler = @nodes_handler.platform_for(hostname)
-                  if platform_handler.platform_type == @platform_tests[test_name]
-                    @tests_plugins[test_name].new(
-                      @nodes_handler,
-                      test_name: test_name,
-                      debug: @ssh_executor.debug,
-                      repository_path: platform_handler.repository_path,
-                      hostname: hostname
-                    )
-                  else
-                    nil
-                  end
-                else
-                  @tests_plugins[test_name].new(
-                    @nodes_handler,
-                    test_name: test_name,
-                    debug: @ssh_executor.debug,
-                    hostname: hostname
-                  )
-                end
-              unless test.nil?
+          log = File.exists?(run_log_file_name) ? File.read(run_log_file_name).split("\n") : nil
+          tests_for_check_node.each do |test_name|
+            if should_test_be_run_on(test_name, node: hostname)
+              test = @tests_plugins[test_name].new(
+                @nodes_handler,
+                name: test_name,
+                platform: @nodes_handler.platform_for(hostname),
+                node: hostname,
+                debug: @ssh_executor.debug
+              )
+              if log.nil?
+                test.error 'No check-node log file found despite the run of check-node.'
+              else
                 test.test_on_check_node(log)
-                @tests_run << test
               end
+              test.executed
+              @tests_run << test
             end
-          else
-            error('No check-node log file found despite the run of check-node.', hostname: hostname)
           end
         end
+      end
+    end
+
+    # Should the given test name be run on a given node or platform?
+    #
+    # Parameters::
+    # * *test_name* (String): The test name.
+    # * *node* (String or nil): Node name, or nil for a platform test. [default: nil]
+    # * *platform* (PlatformHandler or nil): Platform or nil for a node test. [default: nil]
+    # Result::
+    # * Boolean: Should the given test name be run on a given node or platform?
+    def should_test_be_run_on(test_name, node: nil, platform: nil)
+      allowed_platform_types = @tests_plugins[test_name].only_on_platforms || @nodes_handler.platform_types.keys
+      node_platform = platform || @nodes_handler.platform_for(node)
+      if allowed_platform_types.include?(node_platform.platform_type)
+        if node.nil?
+          true
+        else
+          allowed_nodes = @tests_plugins[test_name].only_on_nodes || [node]
+          allowed_nodes.any? { |allowed_node| allowed_node.is_a?(String) ? allowed_node == node : node.match(allowed_node) }
+        end
+      else
+        false
       end
     end
 

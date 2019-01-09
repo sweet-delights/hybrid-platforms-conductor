@@ -22,7 +22,7 @@ module HybridPlatformsConductor
       #
       # Result::
       # * Hash<Symbol,Class>: A list of tests classes (that should inherit from Tests::Test), per test name
-      def self.platform_tests
+      def self.tests
         # If this plugin defines some tests that are specific to this platform, then return the test classes here.
         # If no tests are written, then no need to define this method at all.
         # The documentation of those test classes can be found in the file my_test_plugin.rb.sample.

@@ -7,7 +7,7 @@ module HybridPlatformsConductor
       # Test that Private IPs are assigned correctly
       class PrivateIps < Tests::Test
 
-        # Run test
+        # Check my_test_plugin.rb.sample documentation for signature details.
         def test
           # Get a map of private IPs per hostname
           private_ips = Hash[@nodes_handler.

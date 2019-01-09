@@ -1029,6 +1029,7 @@ Deployer options:
 
 Tests runner options:
     -k, --skip-run                   Skip running the check-node commands for real, and just analyze existing run logs.
+    -r, --report REPORT_NAME         Specify a report name. Can be used several times. Can be all for all reports. Possible values: stdout (defaults to stdout).
     -t, --test TEST_NAME             Specify a test name. Can be used several times. Can be all for all tests. Possible values: chef_executables, chef_success, chef_woulds, connection, deploy_freshness, executables, food_critic, group_ids, hostname, ip, obsolete_home_dirs, obsolete_users, orphan_files, private_ips, public_ips, rubocop, spectre, unused_recipes, unused_roles, user_ids, users_without_roles, veids (defaults to all).
 ```
 

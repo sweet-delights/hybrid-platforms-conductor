@@ -11,38 +11,48 @@ module HybridPlatformsConductor
 
       # Get the test name
       #   String
-      attr_reader :test_name
+      attr_reader :name
 
-      # Get the reference name of what is being tested
-      #   String
-      attr_reader :tested_reference
+      # Get the platform being tested, or nil for global tests
+      #   PlatformHandler or nil
+      attr_reader :platform
 
-      # Get the hostname, or nil for global test
+      # Get the node name being tested, or nil for global and platform tests
       #   String or nil
-      attr_reader :hostname
+      attr_reader :node
 
       # Constructor
       #
       # Parameters::
       # * *nodes_handler* (NodesHandler): Nodes handler that can be used by tests
-      # * *test_name* (String): Name of the test being instantiated [default = 'unknown_test']
+      # * *name* (String): Name of the test being instantiated [default = 'unknown_test']
+      # * *platform* (PlatformHandler): Platform handler for which the test is instantiated, or nil if global [default = nil]
+      # * *node* (String): Node name for which the test is instantiated, or nil if global or platform specific [default = nil]
       # * *debug* (Boolean): Are we in debug mode? [default = false]
-      # * *repository_path* (String): Repository path for which the test is instantiated, or nil if global [default = nil]
-      # * *hostname* (String): Hostname for which the test is instantiated, or nil if global [default = nil]
-      def initialize(nodes_handler, test_name: 'unknown_test', debug: false, repository_path: nil, hostname: nil)
+      def initialize(nodes_handler, name: 'unknown_test', platform: nil, node: nil, debug: false)
         @nodes_handler = nodes_handler
-        @test_name = test_name
+        @name = name
+        @platform = platform
+        @node = node
         @debug = debug
-        @repository_path = repository_path
-        @platform_handler = @repository_path.nil? ? nil : @nodes_handler.platforms.find { |platform_handler| platform_handler.repository_path == @repository_path }
-        @hostname = hostname
         @errors = []
-        @tested_reference =
-          if @hostname.nil?
-            @repository_path.nil? ? 'GLOBAL' : "(#{@repository_path})"
+        @executed = false
+      end
+
+      # Get a String identifier of this test, useful for outputing messages
+      #
+      # Result::
+      # * String: Identifier of this test
+      def to_s
+        test_desc =
+          if platform.nil?
+            'Global'
+          elsif node.nil?
+            "Platform #{@repository}"
           else
-            @repository_path.nil? ? @hostname : "#{@hostname} (#{@repository_path})"
+            "Node #{@node} (#{@repository})"
           end
+        "#< Test #{name} - #{test_desc} >"
       end
 
       # Assert an equality
@@ -70,8 +80,37 @@ module HybridPlatformsConductor
       # Parameters::
       # * *message* (String): The error message
       def error(message)
-        puts "!!! [ #{tested_reference} ] - #{message}" if @debug
+        puts "!!! [ #{self} ] - #{message}" if @debug
         @errors << message
+      end
+
+      # Mark the test has being executed
+      def executed
+        @executed = true
+      end
+
+      # Has the test been executed?
+      #
+      # Result::
+      # * Boolean: Has the test been executed?
+      def executed?
+        @executed
+      end
+
+      # Limit the list of platform types for these tests.
+      #
+      # Result::
+      # * Array<Symbol> or nil: List of platform types allowed for this test, or nil for all
+      def self.only_on_platforms
+        nil
+      end
+
+      # Limit the list of nodes for these tests.
+      #
+      # Result::
+      # * Array<String or Regex> or nil: List of nodes allowed for this test, or nil for all. Regular expressions matching node names can also be used.
+      def self.only_on_nodes
+        nil
       end
 
     end

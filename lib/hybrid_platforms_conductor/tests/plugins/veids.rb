@@ -7,7 +7,7 @@ module HybridPlatformsConductor
       # Test that VEIDs are assigned correctly
       class Veids < Tests::Test
 
-        # Run test
+        # Check my_test_plugin.rb.sample documentation for signature details.
         def test
           # Get a map of VEIDs per hostname
           veids = Hash[@nodes_handler.
