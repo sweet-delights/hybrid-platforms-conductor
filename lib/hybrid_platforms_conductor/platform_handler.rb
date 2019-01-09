@@ -50,28 +50,32 @@ module HybridPlatformsConductor
     #    * *deleted_files* (Array<String>): List of deleted files
     #    * *untracked_files* (Array<String>): List of untracked files
     def info
-      git = Git.open(@repository_path)
-      git_status = git.status
-      git_commit = git.log.first
-      {
-        repo_name: File.basename(git.remotes.first.url),
-        commit: {
-          id: git_commit.sha,
-          ref: git_commit.name,
-          message: git_commit.message,
-          date: git_commit.date.utc,
-          author: {
-            name: git_commit.author.name,
-            email: git_commit.author.email
+      # Keep info in a memory cache, so that we don't query git for nothing
+      unless defined?(@info)
+        git = Git.open(@repository_path)
+        git_status = git.status
+        git_commit = git.log.first
+        @info = {
+          repo_name: File.basename(git.remotes.first.url),
+          commit: {
+            id: git_commit.sha,
+            ref: git_commit.name,
+            message: git_commit.message,
+            date: git_commit.date.utc,
+            author: {
+              name: git_commit.author.name,
+              email: git_commit.author.email
+            }
+          },
+          status: {
+            changed_files: git_status.changed.keys,
+            added_files: git_status.added.keys,
+            deleted_files: git_status.deleted.keys,
+            untracked_files: git_status.untracked.keys
           }
-        },
-        status: {
-          changed_files: git_status.changed.keys,
-          added_files: git_status.added.keys,
-          deleted_files: git_status.deleted.keys,
-          untracked_files: git_status.untracked.keys
         }
-      }
+      end
+      @info
     end
 
     # Order relation

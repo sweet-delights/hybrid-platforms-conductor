@@ -1,0 +1,39 @@
+<ac:structured-macro ac:name="toc" ac:schema-version="1"/>
+<table>
+  <tbody>
+    <tr>
+      <th>Node name</th>
+      <th>Platform</th>
+      <th>Private IPs</th>
+      <th>Public IPs</th>
+      <th>Physical node?</th>
+      <th>OS</th>
+      <th>Cluster</th>
+      <th>IP range</th>
+      <th>Product</th>
+      <th>Description</th>
+      <th>Missing industrialization?</th>
+    </tr>
+    <% @hosts.sort.each do |node| %>
+      <% node_info = @nodes_handler.site_meta_for(node) %>
+      <tr style="vertical-align: middle;">
+        <td><strong><%= node %></strong></td>
+        <td><%= @nodes_handler.platform_for(node).info[:repo_name] %></td>
+        <td><%= node_info['private_ips'] ? node_info['private_ips'].join(' ') : '' %></td>
+        <td><%= node_info['public_ips'] ? node_info['public_ips'].join(' ') : '' %></td>
+        <td><%= node_info['physical_node'] ? 'Yes' : 'No' %></td>
+        <td><%= node_info['os'] %></td>
+        <td><%= node_info['cluster'] %></td>
+        <td><%= node_info['private_ips'] ? "#{node_info['private_ips'].first.split('.')[0..2].join('.')}.*" : '' %></td>
+        <td><%= node_info['product'] %></td>
+        <td><%= node_info['description'] %></td>
+        <td><%= node_info['missing_industrialization'] ? 'Yes' : 'No' %></td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>
+<p>
+  <br/>
+  Generated at <%= Time.now.utc.strftime('%F %T') %> UTC by <a href="https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/browse">Hybrid Platforms Conductor</a>.
+  <br/>
+</p>
