@@ -1,0 +1,39 @@
+<%# Partial template used to display a status.
+  # Expects the following variables to be set:
+  # * *@status_test_name* (String): The test name
+  # * *@status_test_criteria* (Hash<Symbol,Object>): The test criteria (options to give to the signatures of methods retrieving test data, like errors_for)
+%>
+<% if should_have_been_tested?(@status_test_name, **@status_test_criteria) %>
+  <%
+    errors = errors_for(@status_test_name, **@status_test_criteria)
+    color =
+      if missing_tests_for(@status_test_name, **@status_test_criteria)
+        'Grey'
+      elsif errors.empty?
+        'Green'
+      else
+        'Red'
+      end
+  %>
+  <div class="content-wrapper">
+    <p>
+      <ac:structured-macro ac:name="status" ac:schema-version="1">
+        <ac:parameter ac:name="colour"><%= color %></ac:parameter>
+      </ac:structured-macro>
+      <% unless errors.empty? %>
+        <ac:structured-macro ac:name="expand" ac:schema-version="1">
+          <ac:parameter ac:name="title">Errors</ac:parameter>
+          <ac:rich-text-body>
+            <div style="text-align: left;">
+              <ul>
+                <% errors.each do |error| %>
+                  <li><%= CGI.escapeHTML(error) %></li>
+                <% end %>
+              </ul>
+            </div>
+          </ac:rich-text-body>
+        </ac:structured-macro>
+      <% end %>
+    </p>
+  </div>
+<% end %>

@@ -1,0 +1,210 @@
+<ac:structured-macro ac:name="toc" ac:schema-version="1"/>
+<h1>Summary</h1>
+<table>
+  <tbody>
+    <% # Compute the global counters of tests
+       nbr_global_tests = @global_test_names.size
+       nbr_global_tests_in_error = group_errors(global_tests, :test_name).size
+       nbr_platform_tests_by_test_and_platform = platform_tests.map { |test| [test.name, test.platform] }.uniq.size
+       nbr_platform_tests_by_test_and_platform_in_error = flatten_hash(group_errors(platform_tests, :test_name, :platform)).size
+       nbr_node_tests_by_test_and_node = node_tests.map { |test| [test.name, test.node] }.uniq.size
+       nbr_node_tests_by_test_and_node_in_error = flatten_hash(group_errors(node_tests, :test_name, :node)).size
+       success_percentage = 100.0 * (1.0 - (nbr_global_tests_in_error + nbr_platform_tests_by_test_and_platform_in_error + nbr_node_tests_by_test_and_node_in_error).to_f / (nbr_global_tests + nbr_platform_tests_by_test_and_platform + nbr_node_tests_by_test_and_node))
+    %>
+    <tr>
+      <th style="text-align: center; vertical-align: middle;">Global-level tests</th>
+      <th style="text-align: center; vertical-align: middle;">Platforms/repositories tests</th>
+      <th style="text-align: center; vertical-align: middle;">Nodes tests</th>
+    </tr>
+    <tr>
+      <td style="text-align: center; vertical-align: middle;">
+        <ac:structured-macro ac:name="status" ac:schema-version="1">
+          <ac:parameter ac:name="colour"><%= nbr_global_tests_in_error == 0 ? 'Green' : 'Red' %></ac:parameter>
+        </ac:structured-macro>
+      </td>
+      <td style="text-align: center; vertical-align: middle;">
+        <ac:structured-macro ac:name="status" ac:schema-version="1">
+          <ac:parameter ac:name="colour"><%= nbr_platform_tests_by_test_and_platform_in_error == 0 ? 'Green' : 'Red' %></ac:parameter>
+        </ac:structured-macro>
+      </td>
+      <td style="text-align: center; vertical-align: middle;">
+        <ac:structured-macro ac:name="status" ac:schema-version="1">
+          <ac:parameter ac:name="colour"><%= nbr_node_tests_by_test_and_node_in_error == 0 ? 'Green' : 'Red' %></ac:parameter>
+        </ac:structured-macro>
+      </td>
+    </tr>
+    <tr>
+      <td style="text-align: center; vertical-align: middle;"><%= render_gauge(nbr_global_tests, nbr_global_tests - nbr_global_tests_in_error) %></td>
+      <td style="text-align: center; vertical-align: middle;"><%= render_gauge(nbr_platform_tests_by_test_and_platform, nbr_platform_tests_by_test_and_platform - nbr_platform_tests_by_test_and_platform_in_error) %></td>
+      <td style="text-align: center; vertical-align: middle;"><%= render_gauge(nbr_node_tests_by_test_and_node, nbr_node_tests_by_test_and_node - nbr_node_tests_by_test_and_node_in_error) %></td>
+    </tr>
+  </tbody>
+</table>
+<h1>Evolution</h1>
+<ac:structured-macro ac:name="chart" ac:schema-version="1">
+  <ac:parameter ac:name="imageFormat">png</ac:parameter>
+  <ac:parameter ac:name="timeSeries">true</ac:parameter>
+  <ac:parameter ac:name="dateFormat">yyyy-MM-dd HH:mm:ss</ac:parameter>
+  <ac:parameter ac:name="forgive">false</ac:parameter>
+  <ac:parameter ac:name="timePeriod">Second</ac:parameter>
+  <ac:parameter ac:name="width">800</ac:parameter>
+  <ac:parameter ac:name="dataOrientation">vertical</ac:parameter>
+  <ac:parameter ac:name="type">timeSeries</ac:parameter>
+  <ac:parameter ac:name="yLabel">% success</ac:parameter>
+  <ac:parameter ac:name="height">300</ac:parameter>
+  <ac:rich-text-body>
+    <table>
+      <tbody>
+        <tr>
+          <th>Time</th>
+          <th>% success</th>
+        </tr>
+        <% (@previous_success_percentages + [[Time.now.utc, success_percentage]]).each do |time, percentage| %>
+          <tr>
+            <td><%= time.strftime('%F %T') %></td>
+            <td><%= percentage %></td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </ac:rich-text-body>
+</ac:structured-macro>
+<h1>Platforms used for those tests</h1>
+<table>
+  <tbody>
+    <tr>
+      <th>Platform</th>
+      <th>Commit title</th>
+      <th>Commit date</th>
+      <th>Commit hash</th>
+      <th>Commit author</th>
+    </tr>
+    <% @tests.map { |test| test.platform }.uniq.compact.sort.each do |platform| %>
+      <% platform_info = platform.info %>
+      <tr>
+        <td><strong><%= platform_info[:repo_name] %></strong></td>
+        <td><%= platform_info[:commit][:message] %></td>
+        <td><%= platform_info[:commit][:date].strftime('%F %T') %></td>
+        <td><%= platform_info[:commit][:id] %></td>
+        <td><%= platform_info[:commit][:author][:name] %> (<%= platform_info[:commit][:author][:email] %>)</td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>
+<h1>Stats by hosts list</h1>
+<table>
+  <tbody>
+    <tr>
+      <th style="vertical-align: middle;">Hosts list</th>
+      <th style="text-align: center; vertical-align: middle;">Number of nodes</th>
+      <th style="text-align: center; vertical-align: middle;">% tested</th>
+      <th style="text-align: center; vertical-align: middle;">% success</th>
+      <th style="text-align: center; vertical-align: middle;">Nodes in error</th>
+    </tr>
+    <% nodes_by_hosts_list.each do |hosts_list_name, nodes_info| %>
+      <tr>
+        <td style="vertical-align: middle;">
+          <ac:structured-macro ac:name="status" ac:schema-version="1">
+            <ac:parameter ac:name="colour"><%= nodes_info[:tested_nodes_in_error].empty? ? 'Green' : 'Red' %></ac:parameter>
+          </ac:structured-macro>
+          <strong><%= hosts_list_name %></strong>
+        </td>
+        <td style="text-align: center; vertical-align: middle;"><%= nodes_info[:nodes].size %></td>
+        <td style="text-align: center; vertical-align: middle;"><%= render_gauge(nodes_info[:nodes].size, nodes_info[:tested_nodes].size) %></td>
+        <td style="text-align: center; vertical-align: middle;"><%= render_gauge(nodes_info[:tested_nodes].size, nodes_info[:tested_nodes].size - nodes_info[:tested_nodes_in_error].size) %></td>
+        <td style="text-align: center; vertical-align: middle;">
+          <% unless nodes_info[:tested_nodes_in_error].empty? %>
+            <ac:structured-macro ac:name="expand" ac:schema-version="1">
+              <ac:parameter ac:name="title">Nodes in error</ac:parameter>
+              <ac:rich-text-body>
+                <div style="text-align: left;">
+                  <ul>
+                    <% nodes_info[:tested_nodes_in_error].sort.each do |node| %>
+                      <li><%= node %></li>
+                    <% end %>
+                  </ul>
+                </div>
+              </ac:rich-text-body>
+            </ac:structured-macro>
+          <% end %>
+        </td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>
+<h1>Global tests</h1>
+<table>
+  <tbody>
+    <tr>
+      <th style="text-align: center; vertical-align: middle;">Test</th>
+      <% @global_test_names.each do |test_name| %>
+        <th style="text-align: center; vertical-align: middle;"><%= test_name %></th>
+      <% end %>
+    </tr>
+    <tr>
+      <td style="text-align: center; vertical-align: middle;"></td>
+      <% @global_test_names.each do |test_name| %>
+        <td style="text-align: center; vertical-align: middle;">
+          <%= render_status(test_name, {}) %>
+        </td>
+      <% end %>
+    </tr>
+  </tbody>
+</table>
+<h1>Platform tests</h1>
+<table>
+  <tbody>
+    <tr>
+      <th style="vertical-align: middle;">Platforms \ Test</th>
+      <% @platform_test_names.each do |test_name| %>
+        <th style="text-align: center; vertical-align: middle;"><%= test_name %></th>
+      <% end %>
+    </tr>
+    <% @tested_platforms.each do |platform| %>
+      <tr>
+        <td style="vertical-align: middle;">
+          <ac:structured-macro ac:name="status" ac:schema-version="1">
+            <ac:parameter ac:name="colour"><%= group_errors(platform_tests.select { |test| test.platform == platform }, :test_name).empty? ? 'Green' : 'Red' %></ac:parameter>
+          </ac:structured-macro>
+          <strong><%= platform.info[:repo_name] %></strong>
+        </td>
+        <% @platform_test_names.each do |test_name| %>
+          <td style="text-align: center; vertical-align: middle;">
+            <%= render_status(test_name, { platform: platform }) %>
+          </td>
+        <% end %>
+      </tr>
+    <% end %>
+  </tbody>
+</table>
+<h1>Node tests</h1>
+<table>
+  <tbody>
+    <tr>
+      <th style="vertical-align: middle;">Nodes \ Test</th>
+      <% @node_test_names.each do |test_name| %>
+        <th style="text-align: center; vertical-align: middle;"><%= test_name %></th>
+      <% end %>
+    </tr>
+    <% @tested_nodes.each do |node| %>
+      <tr>
+        <td style="vertical-align: middle;">
+          <ac:structured-macro ac:name="status" ac:schema-version="1">
+            <ac:parameter ac:name="colour"><%= group_errors(node_tests.select { |test| test.node == node }, :test_name).empty? ? 'Green' : 'Red' %></ac:parameter>
+          </ac:structured-macro>
+          <strong><%= node %></strong>
+        </td>
+        <% @node_test_names.each do |test_name| %>
+          <td style="text-align: center; vertical-align: middle;">
+            <%= render_status(test_name, { node: node }) %>
+          </td>
+        <% end %>
+      </tr>
+    <% end %>
+  </tbody>
+</table>
+<p>
+  <br/>
+  Generated at <%= Time.now.utc.strftime('%F %T') %> UTC by <a href="https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/browse">Hybrid Platforms Conductor</a>.
+  <br/>
+</p>

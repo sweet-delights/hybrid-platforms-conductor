@@ -1,0 +1,38 @@
+<%# Partial template used to display a gauge.
+  # Expects the following variables to be set:
+  # * *@gauge_total* (Integer): Total value
+  # * *@gauge_value* (Integer): Percentila
+%>
+<% unless @gauge_total == 0 %>
+  <%= (@gauge_value*100.0/@gauge_total).to_i %> %
+  <br/>
+  <ac:structured-macro ac:name="chart" ac:schema-version="1">
+    <ac:parameter ac:name="imageFormat">png</ac:parameter>
+    <ac:parameter ac:name="showShapes">false</ac:parameter>
+    <ac:parameter ac:name="forgive">false</ac:parameter>
+    <ac:parameter ac:name="legend">false</ac:parameter>
+    <ac:parameter ac:name="width">200</ac:parameter>
+    <ac:parameter ac:name="dataOrientation">vertical</ac:parameter>
+    <ac:parameter ac:name="colors">#14892C,#D04437</ac:parameter>
+    <ac:parameter ac:name="height">200</ac:parameter>
+    <ac:parameter ac:name="pieSectionLabel">%1%</ac:parameter>
+    <ac:rich-text-body>
+      <table>
+        <tbody>
+          <tr>
+            <th>Label</th>
+            <th>Value</th>
+          </tr>
+          <tr>
+            <td>Good</td>
+            <td><%= @gauge_value %></td>
+          </tr>
+          <tr>
+            <td>Bad</td>
+            <td><%= @gauge_total - @gauge_value %></td>
+          </tr>
+        </tbody>
+      </table>
+    </ac:rich-text-body>
+  </ac:structured-macro>
+<% end %>
