@@ -62,7 +62,7 @@ module HybridPlatformsConductor
       # * *expected_object* (Object): The object being expected
       # * *error_msg* (String): Error message to associate in case of inequality
       def assert_equal(tested_object, expected_object, error_msg)
-        error error_msg if tested_object != expected_object
+        error error_msg unless tested_object == expected_object
       end
 
       # Assert a String match
@@ -72,7 +72,7 @@ module HybridPlatformsConductor
       # * *expected_object* (Regex): The object being expected
       # * *error_msg* (String): Error message to associate in case of inequality
       def assert_match(tested_object, expected_object, error_msg)
-        error error_msg if !tested_object =~ expected_object
+        error error_msg unless tested_object =~ expected_object
       end
 
       # Register an error
