@@ -1028,9 +1028,10 @@ Deployer options:
     -e, --secrets JSON_FILE_NAME     Specify a JSON file storing secrets (can be specified several times).
 
 Tests runner options:
+    -i, --tests-list FILE_NAME       Specify a tests file name. The file should contain a list of tests name (1 per line). Can be used several times.
     -k, --skip-run                   Skip running the check-node commands for real, and just analyze existing run logs.
-    -r, --report REPORT_NAME         Specify a report name. Can be used several times. Can be all for all reports. Possible values: stdout (defaults to stdout).
-    -t, --test TEST_NAME             Specify a test name. Can be used several times. Can be all for all tests. Possible values: chef_executables, chef_success, chef_woulds, connection, deploy_freshness, executables, food_critic, group_ids, hostname, ip, obsolete_home_dirs, obsolete_users, orphan_files, private_ips, public_ips, rubocop, spectre, unused_recipes, unused_roles, user_ids, users_without_roles, veids (defaults to all).
+    -r, --report REPORT_NAME         Specify a report name. Can be used several times. Can be all for all reports. Possible values: confluence, stdout (defaults to stdout).
+    -t, --test TEST_NAME             Specify a test name. Can be used several times. Can be all for all tests. Possible values: chef_executables, chef_success, chef_woulds, connection, deploy_freshness, executables, food_critic, group_ids, hostname, ip, linear_strategy, obsolete_home_dirs, obsolete_users, orphan_files, private_ips, public_ips, rubocop, spectre, unused_recipes, unused_roles, user_ids, users_without_roles, veids (defaults to all).
 ```
 
 Usage examples:
@@ -1268,12 +1269,16 @@ Test Runner options are used to drive the running of tests.
 
 ```
 Tests runner options:
+    -i, --tests-list FILE_NAME       Specify a tests file name. The file should contain a list of tests name (1 per line). Can be used several times.
     -k, --skip-run                   Skip running the check-node commands for real, and just analyze existing run logs.
-    -t, --test TEST_NAME             Specify a test name. Can be used several times. Can be all for all tests. Possible values: chef_executables, chef_success, chef_woulds, connection, deploy_freshness, executables, food_critic, group_ids, hostname, ip, obsolete_home_dirs, obsolete_users, orphan_files, private_ips, public_ips, rubocop, spectre, unused_recipes, unused_roles, user_ids, users_without_roles, veids (defaults to all).
+    -r, --report REPORT_NAME         Specify a report name. Can be used several times. Can be all for all reports. Possible values: confluence, stdout (defaults to stdout).
+    -t, --test TEST_NAME             Specify a test name. Can be used several times. Can be all for all tests. Possible values: chef_executables, chef_success, chef_woulds, connection, deploy_freshness, executables, food_critic, group_ids, hostname, ip, linear_strategy, obsolete_home_dirs, obsolete_users, orphan_files, private_ips, public_ips, rubocop, spectre, unused_recipes, unused_roles, user_ids, users_without_roles, veids (defaults to all).
 ```
 
+* `--report REPORT_NAME`: Specify which report plugin to use.
 * `--skip-run`: Don't fetch the information from the nodes themselves, but use the previous output from the `run_logs` directory. Useful if executing the command several times.
 * `--test TEST_NAME`: Specify the test to be performed.
+* `--tests-list FILE_NAME`: Give a file containing a list of tests names. The file can also containg comment lines starting with `#`.
 
 <a name="tests_list"></a>
 # List of tests available

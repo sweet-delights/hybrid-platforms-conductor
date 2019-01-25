@@ -66,6 +66,14 @@ module HybridPlatformsConductor
     def options_parse(options_parser)
       options_parser.separator ''
       options_parser.separator 'Tests runner options:'
+      options_parser.on('-i', '--tests-list FILE_NAME', 'Specify a tests file name. The file should contain a list of tests name (1 per line). Can be used several times.') do |file_name|
+        @tests.concat(
+          File.read(file_name).
+            split("\n").
+            reject { |line| line.strip.empty? || line =~ /^#.+/ }.
+            map(&:to_sym)
+        )
+      end
       options_parser.on('-k', '--skip-run', 'Skip running the check-node commands for real, and just analyze existing run logs.') do
         @skip_run = true
       end

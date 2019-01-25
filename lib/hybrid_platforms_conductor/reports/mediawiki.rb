@@ -26,6 +26,7 @@ module HybridPlatformsConductor
           kernel: 'Kernel',
           location: 'Location',
           missing_chef_recipes: 'Missing Chef recipes',
+          missing_industrialization: 'Missing industrialization',
           non_encrypted_storage: 'Non-encrypted storage',
           openvz_specs: 'OpenVZ specifications',
           os: 'OS',
