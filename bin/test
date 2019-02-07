@@ -1,8 +1,5 @@
 #!/usr/bin/env ruby
-require 'fileutils'
 require 'optparse'
-require 'terminal-table'
-require 'time'
 require 'hybrid_platforms_conductor/cmd_runner'
 require 'hybrid_platforms_conductor/nodes_handler'
 require 'hybrid_platforms_conductor/ssh_executor'

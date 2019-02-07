@@ -1,3 +1,5 @@
+require 'terminal-table'
+
 module HybridPlatformsConductor
 
   module Tests

@@ -21,7 +21,7 @@ module HybridPlatformsConductor
             Reports.const_get(format.to_s.split('_').collect(&:capitalize).join.to_sym)
           ]
         end]
-      @format = @reports_plugins.first.first
+      @format = :stdout
       @locale = @reports_plugins[@format].supported_locales.first
     end
 
@@ -41,7 +41,7 @@ module HybridPlatformsConductor
       options_parser.on('-c', '--locale LOCALE_CODE', "Generate the report in the given format. Possible codes are formats specific. #{@reports_plugins.map { |format, klass| "[#{format}: #{klass.supported_locales.join(', ')}]" }.join(', ')}") do |str_locale|
         @locale = str_locale.to_sym
       end
-      options_parser.on('-f', '--format FORMAT', "Generate the report in the given format. Possible formats are #{@reports_plugins.keys.join(', ')}. Default: #{@format}.") do |str_format|
+      options_parser.on('-f', '--format FORMAT', "Generate the report in the given format. Possible formats are #{@reports_plugins.keys.sort.join(', ')}. Default: #{@format}.") do |str_format|
         @format = str_format.to_sym
       end
     end

@@ -699,8 +699,8 @@ Main options:
     -h, --help                       Display help and exit
 
 Reports handler options:
-    -c, --locale LOCALE_CODE         Generate the report in the given format. Possible codes are formats specific. [mediawiki: en]
-    -f, --format FORMAT              Generate the report in the given format. Possible formats are mediawiki. Default: mediawiki.
+    -c, --locale LOCALE_CODE         Generate the report in the given format. Possible codes are formats specific. [confluence: en], [stdout: en], [mediawiki: en]
+    -f, --format FORMAT              Generate the report in the given format. Possible formats are confluence, mediawiki, stdout. Default: stdout.
 
 Nodes handler options:
     -o, --show-hosts                 Display the list of possible hosts and exit
