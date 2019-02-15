@@ -152,8 +152,9 @@ module HybridPlatformsConductor
     # A host description can be:
     # * a String, being already a host name,
     # * a Hash, that can contain the following keys:
-    #   * *:list* (String): Specify the name of a hosts list.
-    #   * *:all* (Boolean): If true, specify that we want all host names known.
+    #   * *list* (String): Specify the name of a hosts list.
+    #   * *platform* (String): The platform name containing the hosts list.
+    #   * *all* (Boolean): If true, specify that we want all host names known.
     #
     # Parameters::
     # * *host_descriptions* (Array<Object>): List of host descriptions (can be a single element).
@@ -164,13 +165,14 @@ module HybridPlatformsConductor
       host_descriptions = host_descriptions.flatten
       # 1. Check for the presence of all
       return known_hostnames if host_descriptions.any? { |host_desc| host_desc.is_a?(Hash) && host_desc.key?(:all) && host_desc[:all] }
-      # 2. Expand the hosts lists contents
+      # 2. Expand the hosts lists and platform contents
       string_hosts = []
       host_descriptions.each do |host_desc|
         if host_desc.is_a?(String)
           string_hosts << host_desc
-        elsif host_desc.key?(:list)
-          string_hosts.concat(platform_for_list(host_desc[:list]).hosts_desc_from_list(host_desc[:list]))
+        else
+          string_hosts.concat(platform_for_list(host_desc[:list]).hosts_desc_from_list(host_desc[:list])) if host_desc.key?(:list)
+          string_hosts.concat(@platforms[host_desc[:platform]].known_hostnames) if host_desc.key?(:platform)
         end
       end
       # 3. Expand the Regexps
@@ -312,6 +314,9 @@ module HybridPlatformsConductor
       options_parser.separator 'Nodes selection options:'
       options_parser.on('-a', '--all-hosts', 'Select all hosts') do
         hosts << { all: true }
+      end
+      options_parser.on('-b', '--hosts-platform PLATFORM_NAME', "Select hosts belonging to a given platform name. Available platforms are: #{@platforms.keys.sort.join(', ')} (can be used several times)") do |platform_name|
+        hosts << { platform: platform_name }
       end
       options_parser.on('-l', '--hosts-list LIST_NAME', 'Select hosts defined in a hosts list (can be used several times)') do |host_list_name|
         hosts << { list: host_list_name }

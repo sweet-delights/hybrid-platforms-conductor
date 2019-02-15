@@ -50,6 +50,9 @@ module HybridPlatformsConductor
       # List of platform handler per known host list name
       # Hash<String, PlatformHandler>
       @nodes_list_platform = {}
+      # List of platform handler per platform name
+      # Hash<String, PlatformHandler>
+      @platforms = {}
       # Directory in which we have platforms handled by HPCs definition
       @hybrid_platforms_dir = File.expand_path(ENV['ti_platforms'].nil? ? '.' : ENV['ti_platforms'])
       # Directory in which platforms are cloned
@@ -87,6 +90,7 @@ module HybridPlatformsConductor
         platform_handler = platform_handler_class.new(platform_type, repository_path, self)
         @platform_handlers[platform_type] = [] unless @platform_handlers.key?(platform_type)
         @platform_handlers[platform_type] << platform_handler
+        @platforms[platform_handler.info[:repo_name]] = platform_handler
         # Register all known hostnames for this platform
         platform_handler.known_hostnames.each do |hostname|
           raise "Can't register #{hostname} to platform #{repository_path}, as it is already defined in platform #{@nodes_platform[hostname].repository_path}." if @nodes_platform.key?(hostname)
