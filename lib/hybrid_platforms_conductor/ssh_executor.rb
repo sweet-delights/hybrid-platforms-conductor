@@ -108,7 +108,7 @@ module HybridPlatformsConductor
     # * *log_to_dir* (String): Directory name to store log files. Can be nil to not store log files. [default: 'run_logs']
     # * *log_to_stdout* (Boolean): Do we log the command result on stdout? [default: true]
     # Result::
-    # * Hash<String, [String, String] or Symbol>: Standard output and error, or Symbol in case of error or dry run, for each hostname.
+    # * Hash<String, [String, String, Integer] or Symbol>: Standard output, error and exit status code, or Symbol in case of error or dry run, for each hostname.
     def run_cmd_on_hosts(actions_descriptions, timeout: nil, concurrent: false, log_to_dir: 'run_logs', log_to_stdout: true)
       # Make sure stale mutexes are removed before launching commands
       clean_stale_ssh_mutex
@@ -162,8 +162,8 @@ module HybridPlatformsConductor
                 end
                 break if hostname.nil?
                 # Handle hostname
-                execute_actions_on(hostname, actions_per_hostname[hostname], timeout: timeout, log_to_file: log_to_dir.nil? ? nil : "#{log_to_dir}/#{hostname}.stdout", log_to_stdout: log_to_stdout) do |stdout, stderr|
-                  result[hostname] = [stdout, stderr]
+                execute_actions_on(hostname, actions_per_hostname[hostname], timeout: timeout, log_to_file: log_to_dir.nil? ? nil : "#{log_to_dir}/#{hostname}.stdout", log_to_stdout: log_to_stdout) do |stdout, stderr, exit_status|
+                  result[hostname] = [stdout, stderr, exit_status]
                 end
                 pools_semaphore.synchronize do
                   pools[:processing].delete(hostname)
@@ -196,8 +196,8 @@ module HybridPlatformsConductor
         else
           # Execute synchronously
           actions_per_hostname.each do |hostname, actions|
-            execute_actions_on(hostname, actions, timeout: timeout, log_to_file: log_to_dir.nil? ? nil : "#{log_to_dir}/#{hostname}.stdout", log_to_stdout: log_to_stdout) do |stdout, stderr|
-              result[hostname] = [stdout, stderr]
+            execute_actions_on(hostname, actions, timeout: timeout, log_to_file: log_to_dir.nil? ? nil : "#{log_to_dir}/#{hostname}.stdout", log_to_stdout: log_to_stdout) do |stdout, stderr, exit_status|
+              result[hostname] = [stdout, stderr, exit_status]
             end
           end
         end
@@ -418,6 +418,7 @@ module HybridPlatformsConductor
     #   * Parameters::
     #   * *stdout* (String or Symbol): Standard output of the command, or Symbol in case of error
     #   * *stderr* (String): Standard error output of the command
+    #   * *exit_status* (Integer): Exit status of the command
     def execute_actions_on(hostname, actions, timeout: nil, log_to_file: nil, log_to_stdout: true)
       with_platforms_ssh do |ssh_exec|
         ssh_options = {
@@ -489,9 +490,10 @@ module HybridPlatformsConductor
                 log_debug "----- Commands in temporary file:\n#{File.read(actions_file.path)}\n-----\n"
                 actions_stdout = nil
                 actions_stderr = nil
+                exit_status = nil
                 if timeout.nil?
                   log_debug cmd_to_run
-                  actions_stdout, actions_stderr, _exit_status = run_local_cmd(cmd_to_run, log_to_file: log_to_file, log_to_stdout: log_to_stdout)
+                  actions_stdout, actions_stderr, exit_status = run_local_cmd(cmd_to_run, log_to_file: log_to_file, log_to_stdout: log_to_stdout)
                 else
                   cmd_to_run_with_timeout = "timeout #{timeout} #{cmd_to_run}"
                   log_debug cmd_to_run_with_timeout
@@ -501,7 +503,7 @@ module HybridPlatformsConductor
                     actions_stdout = :timeout
                   end
                 end
-                yield actions_stdout, actions_stderr
+                yield actions_stdout, actions_stderr, exit_status
               end
             end
           rescue

@@ -242,7 +242,15 @@ module HybridPlatformsConductor
         test_cmds = Hash[cmds_to_run.map do |hostname, cmds_list|
           [
             hostname,
-            { bash: cmds_list.map { |(cmd, _test_info)| ["echo '#{CMD_SEPARATOR}'", cmd] }.flatten }
+            {
+              bash: cmds_list.map do |(cmd, _test_info)|
+                [
+                  "echo '#{CMD_SEPARATOR}'",
+                  cmd,
+                  "echo \"$?\""
+                ]
+              end.flatten
+            }
           ]
         end]
         puts "========== Run nodes SSH tests #{tests_on_nodes.uniq.sort.join(', ')} (timeout to #{timeout} secs)..."
@@ -264,8 +272,11 @@ module HybridPlatformsConductor
             cmd_stdouts = stdout.split("#{CMD_SEPARATOR}\n")[1..-1]
             cmd_stdouts = [] if cmd_stdouts.nil?
             cmds_to_run[hostname].zip(cmd_stdouts).each do |(cmd, test_info), cmd_stdout|
-              cmd_stdout = '' if cmd_stdout.nil?
-              test_info[:validator].call(cmd_stdout.split("\n"))
+              stdout_lines = cmd_stdout.split("\n")
+              # Last line of stdout is the return code
+              return_code = Integer(stdout_lines.last)
+              test_info[:test].error "Command returned error code #{return_code}" unless return_code.zero?
+              test_info[:validator].call(stdout_lines[0..-2], return_code)
               test_info[:test].executed
             end
           end
@@ -301,19 +312,25 @@ module HybridPlatformsConductor
       tests_for_check_node = @tests.select { |test_name| @tests_plugins[test_name].method_defined?(:test_on_check_node) }.sort
       unless tests_for_check_node.empty?
         puts "========== Run check-nodes tests #{tests_for_check_node.join(', ')}..."
-        unless @skip_run
-          # Why-run deploy on all nodes
-          FileUtils.rm_rf 'run_logs'
-          @deployer.concurrent_execution = true
-          @deployer.use_why_run = true
-          @deployer.timeout = CHECK_NODE_TIMEOUT
-          @deployer.deploy_for(@hostnames)
-        end
-        # Analyze output run_logs
-        @hostnames.each do |hostname|
-          # Check there is a log file
-          run_log_file_name = "./run_logs/#{hostname}.stdout"
-          log = File.exists?(run_log_file_name) ? File.read(run_log_file_name).split("\n") : nil
+        outputs =
+          if @skip_run
+            Hash[@hostnames.map do |hostname|
+              run_log_file_name = "./run_logs/#{hostname}.stdout"
+              [
+                hostname,
+                # TODO: Find a way to also save stderr and the status code
+                [File.exists?(run_log_file_name) ? File.read(run_log_file_name) : nil, '', 0]
+              ]
+            end]
+          else
+            # Why-run deploy on all nodes
+            @deployer.concurrent_execution = true
+            @deployer.use_why_run = true
+            @deployer.timeout = CHECK_NODE_TIMEOUT
+            @deployer.deploy_for(@hostnames)
+          end
+        # Analyze output
+        outputs.each do |hostname, (stdout, stderr, exit_status)|
           tests_for_check_node.each do |test_name|
             if should_test_be_run_on(test_name, node: hostname)
               test = @tests_plugins[test_name].new(
@@ -323,10 +340,13 @@ module HybridPlatformsConductor
                 node: hostname,
                 debug: @ssh_executor.debug
               )
-              if log.nil?
+              if stdout.nil?
                 test.error 'No check-node log file found despite the run of check-node.'
+              elsif stdout.is_a?(Symbol)
+                test.error "Check-node run failed: #{stdout}."
               else
-                test.test_on_check_node(log)
+                test.error "Check-node returned error code #{exit_status}" unless exit_status.zero?
+                test.test_on_check_node(stdout, stderr, exit_status)
               end
               test.executed
               @tests_run << test

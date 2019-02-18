@@ -60,6 +60,7 @@ module HybridPlatformsConductor
         #     * Proc: The code block making the test given the stdout of the command. Here is the Proc description:
         #       * Parameters::
         #         * *stdout* (Array<String>): List of lines of the stdout of the command.
+        #         * *return_code* (Integer): The return code of the command.
         #     * Hash<Symbol,Object>: More complete information, that can contain the following keys:
         #       * *validator* (Proc): The proc containing the assertions to perform (as described above). This key is mandatory.
         #       * *timeout* (Integer): Timeout to wait for this command to execute.
@@ -86,7 +87,9 @@ module HybridPlatformsConductor
         #
         # Parameters::
         # * *stdout* (Array<String>): The check-node output
-        def test_on_check_node(stdout)
+        # * *stderr* (Array<String>): The check-node standard error
+        # * *exit_status* (Integer): The check-node exit status
+        def test_on_check_node(stdout, stderr, exit_status)
           # If this method is defined, the tests runner will execute a why-run deploy on the node and call this method to have assertions on the stdout of the why-run deploy.
           assert_match stdout.last, /Success/, 'check-node did not end correctly'
         end

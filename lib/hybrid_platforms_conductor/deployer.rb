@@ -142,7 +142,11 @@ module HybridPlatformsConductor
 
     # Deploy on all the nodes.
     # Prerequisite: deliver_on_artefacts has been called before.
+    #
+    # Result::
+    # * Hash<String, [String, String, Integer] or Symbol>: Standard output, error and exit status code, or Symbol in case of error or dry run, for each hostname that has been deployed.
     def deploy
+      outputs = {}
       section("#{@use_why_run ? 'Checking' : 'Deploying'} on #{@hosts.size} hosts") do
         @secrets.each do |json_file|
           secret_json = JSON.parse(File.read(json_file))
@@ -173,6 +177,7 @@ module HybridPlatformsConductor
         )
         save_logs(outputs) if !@use_why_run && !@ssh_executor.dry_run
       end
+      outputs
     end
 
     # Save some deployment logs.

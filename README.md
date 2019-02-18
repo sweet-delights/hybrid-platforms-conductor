@@ -232,7 +232,7 @@ Deployer options:
 
 Deployer options specific to platforms of type chef:
     -r, --run-list MODIFIER:PARAMS   Apply a modification to the run-list to be run on the nodes. Can be used several times. Possible modifiers are:
-                                       MODIFIER: append - Append a run_list after the node's run_list. - PARAMS: run_list to append after. Ex: debug::dump_node,git
+                                       MODIFIER: append - Append a run_list after the node's run_list. - PARAMS: run_list to append after. Ex: site_debug::dump_node,git
 ```
 
 <a name="tools_list"></a>
@@ -276,7 +276,7 @@ Deployer options:
 
 Deployer options specific to platforms of type chef:
     -r, --run-list MODIFIER:PARAMS   Apply a modification to the run-list to be run on the nodes. Can be used several times. Possible modifiers are:
-                                       MODIFIER: append - Append a run_list after the node's run_list. - PARAMS: run_list to append after. Ex: debug::dump_node,git
+                                       MODIFIER: append - Append a run_list after the node's run_list. - PARAMS: run_list to append after. Ex: site_debug::dump_node,git
 ```
 
 Usage examples:
@@ -384,7 +384,7 @@ Deployer options:
 
 Deployer options specific to platforms of type chef:
     -r, --run-list MODIFIER:PARAMS   Apply a modification to the run-list to be run on the nodes. Can be used several times. Possible modifiers are:
-                                       MODIFIER: append - Append a run_list after the node's run_list. - PARAMS: run_list to append after. Ex: debug::dump_node,git
+                                       MODIFIER: append - Append a run_list after the node's run_list. - PARAMS: run_list to append after. Ex: site_debug::dump_node,git
 ```
 
 Usage examples:
