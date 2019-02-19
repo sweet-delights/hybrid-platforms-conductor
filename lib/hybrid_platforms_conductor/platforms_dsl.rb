@@ -44,6 +44,9 @@ module HybridPlatformsConductor
       # List of gateway configurations, per gateway config name
       # Hash<Symbol, String>
       @gateways = {}
+      # List of Docker image directories, per image name
+      # Hash<Symbol, String>
+      @docker_images = {}
       # List of platform handler per known host name
       # Hash<String, PlatformHandler>
       @nodes_platform = {}
@@ -115,6 +118,16 @@ module HybridPlatformsConductor
       @gateways[gateway_conf] = ssh_def_erb
     end
 
+    # Register a new Docker image
+    #
+    # Parameters::
+    # * *image* (Symbol): Name of the Docker image
+    # * *dir* (String): Directory containing the Dockerfile defining the image
+    def docker_image(image, dir)
+      raise "Docker image #{image} already defined to #{@docker_images[image]}" if @docker_images.key?(image)
+      @docker_images[image] = dir
+    end
+
     # Get the list of known hostnames
     #
     # Result::
@@ -129,6 +142,14 @@ module HybridPlatformsConductor
     # * Array<Symbol>: List of known gateway configuration names
     def known_gateways
       @gateways.keys
+    end
+
+    # Get the list of known Docker images
+    #
+    # Result::
+    # * Array<Symbol>: List of known Docker images
+    def known_docker_images
+      @docker_images.keys
     end
 
     # Get the list of known host list names
@@ -155,6 +176,16 @@ module HybridPlatformsConductor
         erb_context.instance_variable_set("@#{var_name}".to_sym, var_value)
       end
       ERB.new(@gateways[gateway_conf]).result(erb_context.get_binding)
+    end
+
+    # Get the directory containing a Docker image
+    #
+    # Parameters::
+    # * *image* (Symbol): Image name
+    # Result::
+    # * String: Directory containing the Dockerfile of the image
+    def docker_image_dir(image)
+      @docker_images[image]
     end
 
     # Get the platform handler of a given hostname

@@ -44,4 +44,4 @@ actions = []
 actions << { bash: commands } unless commands.empty?
 actions << { interactive: true } if interactive
 
-ssh_executor.run_cmd_on_hosts({ hosts => actions }, timeout: timeout, concurrent: concurrent_execution, log_to_stdout: !concurrent_execution)
+ssh_executor.run_cmd_on_hosts({ hosts => { actions: actions } }, timeout: timeout, concurrent: concurrent_execution, log_to_stdout: !concurrent_execution)

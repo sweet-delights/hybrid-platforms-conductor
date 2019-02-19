@@ -25,12 +25,14 @@ module HybridPlatformsConductor
       #
       # Parameters::
       # * *nodes_handler* (NodesHandler): Nodes handler that can be used by tests
+      # * *deployer* (Deployer): Deployer that can be used by tests
       # * *name* (String): Name of the test being instantiated [default = 'unknown_test']
       # * *platform* (PlatformHandler): Platform handler for which the test is instantiated, or nil if global [default = nil]
       # * *node* (String): Node name for which the test is instantiated, or nil if global or platform specific [default = nil]
       # * *debug* (Boolean): Are we in debug mode? [default = false]
-      def initialize(nodes_handler, name: 'unknown_test', platform: nil, node: nil, debug: false)
+      def initialize(nodes_handler, deployer, name: 'unknown_test', platform: nil, node: nil, debug: false)
         @nodes_handler = nodes_handler
+        @deployer = deployer
         @name = name
         @platform = platform
         @node = node

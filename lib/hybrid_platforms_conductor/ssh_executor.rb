@@ -24,6 +24,10 @@ module HybridPlatformsConductor
     #   String
     attr_accessor :ssh_user_name
 
+    # Environment variables to be set before each bash commands to execute using ssh. [default: {}]
+    #   Hash<String, String>
+    attr_accessor :ssh_env
+
     # Activate debug mode? [default: false]
     #   Boolean
     attr_reader :debug
@@ -36,6 +40,14 @@ module HybridPlatformsConductor
     #   Boolean
     attr_reader :dry_run
 
+    # Set of overriding connections: real IP per host name
+    # Hash<String, String>
+    attr_accessor :override_connections
+
+    # Passwords to be used, per hostname
+    # Hash<String, String>
+    attr_accessor :passwords
+
     # Constructor
     #
     # Parameters::
@@ -47,9 +59,12 @@ module HybridPlatformsConductor
       # Default values
       @ssh_user_name = ENV['platforms_ssh_user']
       @ssh_user_name = ENV['USER'] if @ssh_user_name.nil? || @ssh_user_name.empty?
+      @ssh_env = {}
       @debug = false
       @max_threads = 16
       @dry_run = false
+      @override_connections = {}
+      @passwords = {}
       @gateways_conf = ENV['ti_gateways_conf'].nil? ? :munich : ENV['ti_gateways_conf'].to_sym
       @gateway_user = ENV['ti_gateway_user'].nil? ? 'ubradm' : ENV['ti_gateway_user']
       @platforms_ssh_dir = nil
@@ -99,10 +114,11 @@ module HybridPlatformsConductor
     # Prerequisite: Host names are valid in nodes/ directory.
     #
     # Parameters::
-    # * *actions_descriptions* (Hash<Object, Array< Hash<Symbol,Object> > or Hash<Symbol,Object> >): Ordered list of actions to be performed (or 1 single), per host description.
-    #   1 action can contain several keys (action types), that will be performed in the order of the keys population in the Hash.
+    # * *actions_descriptions* (Hash<Object, Hash<Symbol,Object> >): Actions descriptions, per host description.
     #   See resolve_hosts for details about possible hosts descriptions.
-    #   See execute_actions_on to know about the API of an action.
+    #   Each actions description can have the following attributes:
+    #   * *actions* (Array< Hash<Symbol,Object> > or Hash<Symbol,Object>): List of actions (or 1 single action). See execute_actions_on to know about the API of an action.
+    #   * *env* (Hash<String,String>): Environment to set before executing SSH commands on this host description. [default = {}]
     # * *timeout* (Integer): Timeout in seconds, or nil if none. [default: nil]
     # * *concurrent* (Boolean): Do we run the commands in parallel? If yes, then stdout of commands is stored in log files. [default: false]
     # * *log_to_dir* (String): Directory name to store log files. Can be nil to not store log files. [default: 'run_logs']
@@ -112,16 +128,19 @@ module HybridPlatformsConductor
     def run_cmd_on_hosts(actions_descriptions, timeout: nil, concurrent: false, log_to_dir: 'run_logs', log_to_stdout: true)
       # Make sure stale mutexes are removed before launching commands
       clean_stale_ssh_mutex
-      # Compute the ordered list of actions per resolved hostname
-      # Hash< String, Array<[Symbol,Object]> >
+      # Compute the ordered list of actions and environment per resolved hostname
+      # Hash< String, { env: Hash<String,String>, actions: Array<[Symbol,Object]> } >
       actions_per_hostname = {}
       actions_descriptions.each do |host_desc, host_actions|
         # Resolve actions
-        resolved_host_actions = []
-        (host_actions.is_a?(Array) ? host_actions : [host_actions]).map do |host_action|
+        resolved_host_actions = {
+          actions: [],
+          env: host_actions.key?(:env) ? host_actions[:env] : {}
+        }
+        (host_actions[:actions].is_a?(Array) ? host_actions[:actions] : [host_actions[:actions]]).each do |host_action|
           host_action.each do |action_type, action_info|
             raise 'Cannot have concurrent executions for interactive sessions' if concurrent && action_type == :interactive && action_info
-            resolved_host_actions << [
+            resolved_host_actions[:actions] << [
               action_type,
               action_info
             ]
@@ -136,7 +155,7 @@ module HybridPlatformsConductor
       log_debug "Running actions on #{actions_per_hostname.size} hosts"
 
       # Prepare the result (stdout or nil per hostname)
-      result = Hash[actions_per_hostname.map { |hostname, _actions| [hostname, nil] }]
+      result = Hash[actions_per_hostname.keys.map { |hostname| [hostname, nil] }]
       unless actions_per_hostname.empty?
         # Threads to wait for
         if concurrent
@@ -162,7 +181,13 @@ module HybridPlatformsConductor
                 end
                 break if hostname.nil?
                 # Handle hostname
-                execute_actions_on(hostname, actions_per_hostname[hostname], timeout: timeout, log_to_file: log_to_dir.nil? ? nil : "#{log_to_dir}/#{hostname}.stdout", log_to_stdout: log_to_stdout) do |stdout, stderr, exit_status|
+                execute_actions_on(
+                  hostname,
+                  actions_per_hostname[hostname][:actions],
+                  ssh_env: actions_per_hostname[hostname][:env],
+                  timeout: timeout,
+                  log_to_file: log_to_dir.nil? ? nil : "#{log_to_dir}/#{hostname}.stdout",
+                  log_to_stdout: log_to_stdout) do |stdout, stderr, exit_status|
                   result[hostname] = [stdout, stderr, exit_status]
                 end
                 pools_semaphore.synchronize do
@@ -195,8 +220,14 @@ module HybridPlatformsConductor
           end
         else
           # Execute synchronously
-          actions_per_hostname.each do |hostname, actions|
-            execute_actions_on(hostname, actions, timeout: timeout, log_to_file: log_to_dir.nil? ? nil : "#{log_to_dir}/#{hostname}.stdout", log_to_stdout: log_to_stdout) do |stdout, stderr, exit_status|
+          actions_per_hostname.each do |hostname, actions_info|
+            execute_actions_on(
+              hostname,
+              actions_info[:actions],
+              ssh_env: actions_info[:env],
+              timeout: timeout,
+              log_to_file: log_to_dir.nil? ? nil : "#{log_to_dir}/#{hostname}.stdout",
+              log_to_stdout: log_to_stdout) do |stdout, stderr, exit_status|
               result[hostname] = [stdout, stderr, exit_status]
             end
           end
@@ -244,6 +275,7 @@ module HybridPlatformsConductor
     end
 
     # Get the connection information for a given hostname accessed using one of its given IPs.
+    # Take into account possible overrides used in tests for example to route connections.
     #
     # Parameters::
     # * *hostname* (String): The hostname to access
@@ -253,25 +285,34 @@ module HybridPlatformsConductor
     # * String or nil: The gateway name to be used (should be defined by the gateways configurations), or nil if no gateway to be used.
     # * String or nil: The gateway user to be used, or nil if none.
     def connection_info_for(hostname, ip)
-      connection_settings = @nodes_handler.site_meta_for(hostname)['connection_settings']
-      gateway, gateway_user =
-        if connection_settings && connection_settings.key?('gateway')
-          [
-            connection_settings['gateway'],
-            connection_settings.key?('gateway_user') ? connection_settings['gateway_user'] : @gateway_user
-          ]
-        else
-          platform_handler = @nodes_handler.platform_for(hostname)
-          [
-            platform_handler.respond_to?(:default_gateway_for) ? platform_handler.default_gateway_for(hostname, ip) : nil,
-            @gateway_user
-          ]
-        end
-      [
-        connection_settings && connection_settings.key?('ip') ? connection_settings['ip'] : ip,
-        gateway,
-        gateway_user
-      ]
+      # If we route connections to this hostname to another IP, use the overriding values
+      if @override_connections.key?(hostname)
+        [
+          @override_connections[hostname],
+          nil,
+          nil
+        ]
+      else
+        connection_settings = @nodes_handler.site_meta_for(hostname)['connection_settings']
+        gateway, gateway_user =
+          if connection_settings && connection_settings.key?('gateway')
+            [
+              connection_settings['gateway'],
+              connection_settings.key?('gateway_user') ? connection_settings['gateway_user'] : @gateway_user
+            ]
+          else
+            platform_handler = @nodes_handler.platform_for(hostname)
+            [
+              platform_handler.respond_to?(:default_gateway_for) ? platform_handler.default_gateway_for(hostname, ip) : nil,
+              @gateway_user
+            ]
+          end
+        [
+          connection_settings && connection_settings.key?('ip') ? connection_settings['ip'] : ip,
+          gateway,
+          gateway_user
+        ]
+      end
     end
 
     # Provide a bootstrapped ssh executable that includes all the TI SSH config.
@@ -290,9 +331,12 @@ module HybridPlatformsConductor
             ssh_exec_file_name = "#{@platforms_ssh_dir}/ssh"
             File.open(ssh_exec_file_name, 'w+', 0700) do |file|
               file.puts "#!#{`which env`.strip} bash"
-              file.puts "ssh -F #{ssh_conf_file_name} $*"
+              # TODO: Make a mechanism that uses sshpass and the correct password only for the correct hostname (this requires parsing ssh parameters $*).
+              # Current implementation is much simpler: it uses sshpass if at least 1 password is needed, and always uses the first password.
+              # So far it is enough for our usage as we intend to use this only when deploying first time using root account, and all root accounts will have the same password.
+              file.puts "#{@passwords.empty? ? '' : "sshpass -p#{@passwords.first[1]} "}ssh -F #{ssh_conf_file_name} $*"
             end
-            @cmd_runner.run_hybrid_platforms_conductor_cmd "ssh_config --ssh-exec #{ssh_exec_file_name} --gateways-conf #{@gateways_conf} --gateway-user #{@gateway_user} --ssh-user #{@ssh_user_name} >#{ssh_conf_file_name}", silent: true
+            File.write(ssh_conf_file_name, ssh_config(ssh_exec: ssh_exec_file_name))
             dir_created = true
           end
           @platforms_ssh_dir_nbr_users += 1
@@ -302,6 +346,7 @@ module HybridPlatformsConductor
         @platforms_ssh_dir_semaphore.synchronize do
           @platforms_ssh_dir_nbr_users -= 1
           if @platforms_ssh_dir_nbr_users == 0
+            # It's very important to remove the directory as soon as it is useless, as it contains eventual passwords
             FileUtils.remove_entry @platforms_ssh_dir
             @platforms_ssh_dir = nil
           end
@@ -309,7 +354,76 @@ module HybridPlatformsConductor
       end
     end
 
+    # Get an SSH configuration content giving access to all nodes of the platforms with the current configuration
+    #
+    # Parameters::
+    # * *ssh_exec* (String): SSH command to be used [default = 'ssh']
+    # Result::
+    # * String: The SSH config
+    def ssh_config(ssh_exec: 'ssh')
+      open_ssh_major_version = `ssh -V 2>&1`.match(/^OpenSSH_(\d)\..+$/)[1].to_i
+
+      config_content = "
+############
+# GATEWAYS #
+############
+
+#{@nodes_handler.ssh_for_gateway(@gateways_conf, ssh_exec: ssh_exec, user: @ssh_user_name)}
+
+#############
+# ENDPOINTS #
+#############
+
+Host *
+  User #{@ssh_user_name}
+  # Default control socket path to be used when multiplexing SSH connections
+  ControlPath /tmp/ssh_executor_mux_%h_%p_%r
+  #{open_ssh_major_version >= 7 ? 'PubkeyAcceptedKeyTypes +ssh-dss' : ''}
+
+"
+      # Add each node
+      @nodes_handler.known_hostnames.sort.each do |hostname|
+        conf = @nodes_handler.site_meta_for hostname
+        unless conf.nil?
+          (conf.key?('private_ips') ? conf['private_ips'].sort : [nil]).each.with_index do |private_ip, idx|
+            # Generate the conf for the hostname
+            real_ip, gateway, gateway_user = connection_info_for(hostname, private_ip)
+            aliases = ssh_aliases_for(hostname, private_ip)
+            aliases << "hpc.#{hostname}" if idx == 0
+            config_content << "# #{hostname} - #{private_ip.nil? ? 'Unknown IP address' : private_ip} - #{@nodes_handler.platform_for(hostname).repository_path}#{conf.key?('description') ? " - #{conf['description']}" : ''}\n"
+            config_content << "Host #{aliases.join(' ')}\n"
+            config_content << "  Hostname #{real_ip}\n" unless real_ip.nil?
+            config_content << "  ProxyCommand #{ssh_exec} -q -W %h:%p #{gateway_user}@#{gateway}\n" unless gateway.nil?
+            if @passwords.key?(hostname)
+              config_content << "  PreferredAuthentications password\n"
+              config_content << "  PubkeyAuthentication no\n"
+            end
+            config_content << "\n"
+          end
+        end
+      end
+      config_content
+    end
+
     private
+
+    # Get the possible SSH aliases for a given hostname accessed through one of its IPs.
+    #
+    # Parameters::
+    # * *hostname* (String): The hostname to access
+    # * *ip* (String or nil): Corresponding IP, or nil if none available
+    # Result::
+    # * Array<String>: The list of possible SSH aliases
+    def ssh_aliases_for(hostname, ip)
+      if ip.nil?
+        []
+      else
+        aliases = ["hpc.#{ip}"]
+        split_ip = ip.split('.').map(&:to_i)
+        aliases << "hpc.#{split_ip[2..3].join('.')}" if split_ip[0..1] == [172, 16]
+        aliases
+      end
+    end
 
     # Log a message if debug is on
     #
@@ -377,7 +491,7 @@ module HybridPlatformsConductor
     # Parameters::
     # * *ssh_url* (String): The SSH URL to be used for master
     # * *ssh_options* (String): Additional SSH options [default = '']
-    # * *timeout* (Integer): Timeout in seconds, or nil if none. [default: nil]
+    # * *timeout* (Integer or nil): Timeout in seconds, or nil if none. [default: nil]
     # * Proc: Code called while the ControlMaster exists
     def with_ssh_master(ssh_url, ssh_options: '', timeout: nil)
       with_platforms_ssh do |ssh_exec|
@@ -402,15 +516,20 @@ module HybridPlatformsConductor
     #
     # Parameters::
     # * *hostname* (String): The hostname
-    # * *actions* (Array<[Symbol, Object]>): Ordered list of actions to perform. Each action is identified by an identifier (Symbol) and has associated data. Here are possible actions:
-    #   * *scp* (Hash<String or Symbol, String or Object>): Set of couples source => destination_dir to scp files or directories from the local file system to the remote file system. Additional options can be provided using symbols:
+    # * *actions* (Array<[Symbol, Object]>): Ordered list of actions to perform. Each action is identified by an identifier (Symbol) and has associated data.
+    #   1 action can contain several keys (action types), that will be performed in the order of the keys population in the Hash. Here are possible action types:
+    #   * *local_bash* (String): Bash commands to be executed locally (not on the host)
+    #   * *ruby* (String): Ruby commands to be executed locally (not on the host)
+    #   * *scp* (Hash<String or Symbol, String or Object>): Set of couples source => destination_dir to copy files or directories from the local file system to the remote file system. Additional options can be provided using symbols:
     #     * *sudo* (Boolean): Do we use sudo to make the copy?
     #     * *owner* (String): Owner to use for files
     #     * *group* (String): Group to use for files
     #   * *bash* (Array< Hash<Symbol, Object> or Array<String> or String>): List of bash actions to execute. Each action can have the following properties:
     #     * *commands* (Array<String> or String): List of bash commands to execute (can be a single one). This is the default property also that allows to not use the Hash form for brevity.
     #     * *file* (String): Name of file from which commands should be taken.
+    #     * *env* (Hash<String, String>): Environment variables to be set befre executing those commands.
     #   * *interactive* (Boolean): If true, then launch an interactive session.
+    # * *ssh_env* (Hash<String,String>): SSH environment to be set for each SSH session. [default: {}]
     # * *timeout* (Integer): Timeout in seconds, or nil if none. [default: nil]
     # * *log_to_file* (String or nil): Log file capturing stdout and stderr (or nil for none). [default: nil]
     # * *log_to_stdout* (Boolean): Do we send the output to stdout and stderr? [default: true]
@@ -419,10 +538,11 @@ module HybridPlatformsConductor
     #   * *stdout* (String or Symbol): Standard output of the command, or Symbol in case of error
     #   * *stderr* (String): Standard error output of the command
     #   * *exit_status* (Integer): Exit status of the command
-    def execute_actions_on(hostname, actions, timeout: nil, log_to_file: nil, log_to_stdout: true)
+    def execute_actions_on(hostname, actions, ssh_env: {}, timeout: nil, log_to_file: nil, log_to_stdout: true)
       with_platforms_ssh do |ssh_exec|
         ssh_options = {
-          'StrictHostKeyChecking' => 'no'
+          'StrictHostKeyChecking' => 'no',
+          'UserKnownHostsFile' => '/dev/null'
         }
         ssh_options['BatchMode'] = 'yes' unless log_to_stdout
         ssh_options_str = ssh_options.map { |opt, val| "-o #{opt}=#{val}" }.join(' ')
@@ -453,7 +573,8 @@ module HybridPlatformsConductor
               # Normalize action_info
               action_info = [action_info] if action_info.is_a?(String)
               action_info = { commands: action_info } if action_info.is_a?(Array)
-              bash_commands = action_info.key?(:commands) ? action_info[:commands].clone : []
+              bash_commands = @ssh_env.merge(ssh_env).merge(action_info[:env] || {}).map { |var_name, var_value| "export #{var_name}='#{var_value}'" }
+              bash_commands.concat(action_info[:commands].clone) if action_info.key?(:commands)
               bash_commands.concat(File.read(action_info[:file])) if action_info.key?(:file)
               log_debug "[#{hostname}] - Execute remote Bash commands \"#{bash_commands.join("\n")}\"..."
               # Redirect stderr so that we take it into the log file
@@ -472,9 +593,9 @@ module HybridPlatformsConductor
           end
           # Execute this temporary file
           actions_file.flush
+          log_debug "[#{hostname}] - Commands written in file #{actions_file.path}"
           begin
             with_ssh_master(ssh_url, ssh_options: ssh_options_str, timeout: timeout) do
-              log_debug "[#{hostname}] - Commands written in file #{actions_file.path}"
               cmd_to_run = "/bin/bash #{actions_file.path}"
               if @dry_run
                 # Here we expand the file content, as otherwise dry run would be quite useless.

@@ -243,6 +243,13 @@ module HybridPlatformsConductor
         @dump_json_mode = true
       end
 
+      # Prepare a deployment so that it can run on a local test environment.
+      # Typically useful to prepare recipes/playbooks to not fail if some connectivity to the real environment is not present locally.
+      # [API] - This method is mandatory.
+      def prepare_deploy_for_local_testing
+        @local_testing = true
+      end
+
     end
 
   end

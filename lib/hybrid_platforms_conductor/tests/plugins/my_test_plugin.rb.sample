@@ -21,6 +21,7 @@ module HybridPlatformsConductor
       #
       # In all instance methods of a test plugin, the following variables are accessible:
       # * @nodes_handler (NodesHandler): Nodes handler used to access information about the platforms
+      # * @deployer (Deployer): Deployer used to deploy or check on the platforms
       # In all instance methods of a test plugin, the following methods can be used for assertions (see their description in the file test.rb):
       # * assert_equal(tested_object, expected_object, error_msg): Check equality between 2 objects and logs an error in case of mismatch.
       # * assert_match(tested_object, expected_object, error_msg): Check string Regexp matching and logs an error in case of mismatch.

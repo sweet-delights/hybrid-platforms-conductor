@@ -149,6 +149,7 @@ module HybridPlatformsConductor
     def error(message, hostname: nil)
       global_test = Tests::Test.new(
         @nodes_handler,
+        @deployer,
         name: :global,
         platform: hostname.nil? ? nil : @nodes_handler.platform_for(hostname),
         node: hostname,
@@ -167,6 +168,7 @@ module HybridPlatformsConductor
           puts "========== Run global test #{test_name}..."
           test = @tests_plugins[test_name].new(
             @nodes_handler,
+            @deployer,
             name: test_name,
             debug: @ssh_executor.debug
           )
@@ -188,6 +190,7 @@ module HybridPlatformsConductor
               puts "========== Run platform test #{test_name} on #{platform_handler.repository_path}..."
               test = @tests_plugins[test_name].new(
                 @nodes_handler,
+                @deployer,
                 name: test_name,
                 platform: platform_handler,
                 debug: @ssh_executor.debug
@@ -213,6 +216,7 @@ module HybridPlatformsConductor
           if @tests_plugins[test_name].method_defined?(:test_on_node) && should_test_be_run_on(test_name, node: hostname)
             test = @tests_plugins[test_name].new(
               @nodes_handler,
+              @deployer,
               name: test_name,
               platform: @nodes_handler.platform_for(hostname),
               node: hostname,
@@ -243,13 +247,15 @@ module HybridPlatformsConductor
           [
             hostname,
             {
-              bash: cmds_list.map do |(cmd, _test_info)|
-                [
-                  "echo '#{CMD_SEPARATOR}'",
-                  cmd,
-                  "echo \"$?\""
-                ]
-              end.flatten
+              actions: {
+                bash: cmds_list.map do |(cmd, _test_info)|
+                  [
+                    "echo '#{CMD_SEPARATOR}'",
+                    cmd,
+                    "echo \"$?\""
+                  ]
+                end.flatten
+              }
             }
           ]
         end]
@@ -292,6 +298,7 @@ module HybridPlatformsConductor
           if @tests_plugins[test_name].method_defined?(:test_for_node) && should_test_be_run_on(test_name, node: hostname)
             test = @tests_plugins[test_name].new(
               @nodes_handler,
+              @deployer,
               name: test_name,
               platform: @nodes_handler.platform_for(hostname),
               node: hostname,
@@ -335,6 +342,7 @@ module HybridPlatformsConductor
             if should_test_be_run_on(test_name, node: hostname)
               test = @tests_plugins[test_name].new(
                 @nodes_handler,
+                @deployer,
                 name: test_name,
                 platform: @nodes_handler.platform_for(hostname),
                 node: hostname,

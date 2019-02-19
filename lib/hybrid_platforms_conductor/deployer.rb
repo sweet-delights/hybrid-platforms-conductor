@@ -3,23 +3,88 @@ require 'hybrid_platforms_conductor/ssh_executor'
 require 'hybrid_platforms_conductor/cmd_runner'
 require 'tmpdir'
 require 'time'
+require 'thread'
+require 'docker-api'
 
 module HybridPlatformsConductor
 
   # Gives ways to deploy on several nodes
   class Deployer
 
-    # Do we use why-run mode while deploying?
+    class << self
+
+      # Initialize global semaphores
+      def init_semaphores
+        # This is a global semaphore used to ensure Docker semaphores are created correctly in multithread
+        @docker_semaphore = Mutex.new
+        # The access to Docker images should be protected as it runs in multithread.
+        # Semaphore per image name
+        @docker_image_semaphores = {}
+        # The access to Docker containers should be protected as it runs in multithread
+        # Semaphore per container name
+        @docker_container_semaphores = {}
+      end
+
+      # Run a code block globally protected by a semaphore dedicated to a Docker image
+      #
+      # Parameters::
+      # * *image_tag* (String): The image tag
+      # * Proc: Code called with semaphore granted
+      def with_image_semaphore(image_tag)
+        # First, check if the semaphore exists, and create it if it does not.
+        # This part should also be thread-safe.
+        @docker_semaphore.synchronize do
+          @docker_image_semaphores[image_tag] = Mutex.new unless @docker_image_semaphores.key?(image_tag)
+        end
+        @docker_image_semaphores[image_tag].synchronize do
+          yield
+        end
+      end
+
+      # Run a code block globally protected by a semaphore dedicated to a Docker container
+      #
+      # Parameters::
+      # * *container* (String): The container name
+      # * Proc: Code called with semaphore granted
+      def with_container_semaphore(container)
+        # First, check if the semaphore exists, and create it if it does not.
+        # This part should also be thread-safe.
+        @docker_semaphore.synchronize do
+          @docker_container_semaphores[container] = Mutex.new unless @docker_container_semaphores.key?(container)
+        end
+        @docker_container_semaphores[container].synchronize do
+          yield
+        end
+      end
+
+    end
+
+    self.init_semaphores
+
+    # Do we use why-run mode while deploying? [default = false]
     #   Boolean
     attr_accessor :use_why_run
 
-    # Timeout (in seconds) to be used for each deployment
-    #   Integer
+    # Timeout (in seconds) to be used for each deployment, or nil for no timeout [default = nil]
+    #   Integer or nil
     attr_accessor :timeout
 
-    # Concurrent execution of the deployment?
+    # Concurrent execution of the deployment? [default = false]
     #   Boolean
     attr_accessor :concurrent_execution
+
+    # Do we force direct deployment without artefacts servers? [default = false]
+    #   Boolean
+    attr_accessor :force_direct_deploy
+
+    # The list of secrets JSON files
+    #   Array<String>
+    attr_accessor :secrets
+
+    # Do we allow deploying branches that are not master? [default = false]
+    # !!! This switch should only be used for testing.
+    #   Boolean
+    attr_accessor :allow_deploy_non_master
 
     # Constructor
     #
@@ -32,10 +97,12 @@ module HybridPlatformsConductor
       @cmd_runner = cmd_runner
       @ssh_executor = ssh_executor
       @secrets = []
+      @allow_deploy_non_master = false
       # Default values
       @use_why_run = false
       @timeout = nil
       @concurrent_execution = false
+      @force_direct_deploy = false
     end
 
     # Validate that parsed parameters are valid
@@ -80,6 +147,8 @@ module HybridPlatformsConductor
     #
     # Parameters::
     # * *hosts_desc* (Array<Object>): The list of hosts descriptions we will deploy to.
+    # Result::
+    # * Hash<String, [String, String, Integer] or Symbol>: Standard output, error and exit status code, or Symbol in case of error or dry run, for each hostname that has been deployed.
     def deploy_for(*hosts_desc)
       @hosts = @nodes_handler.resolve_hosts(hosts_desc.flatten)
       # Keep a track of the git origins to be used by each host that takes its package from an artefact repository.
@@ -93,7 +162,7 @@ module HybridPlatformsConductor
         platform_handler.cmd_runner = @cmd_runner
         platform_handler.ssh_executor = @ssh_executor
       end
-      if !@use_why_run
+      if !@use_why_run && !@allow_deploy_non_master
         # Check that master is checked out correctly before deploying on every platform concerned by the hostnames to deploy on
         @platforms.each do |platform_handler|
           raise "Please checkout master before deploying on #{platform_handler.repository_path}. !!! Only master should be deployed !!!" if `cd #{platform_handler.repository_path} && git status | head -n 1`.strip != 'On branch master'
@@ -102,9 +171,87 @@ module HybridPlatformsConductor
       # Package
       package
       # Deliver package on artefacts
-      deliver_on_artefacts
+      deliver_on_artefacts unless @force_direct_deploy
       # Launch deployment processes
       deploy
+    end
+
+    # Instantiate a test Docker container for a given node.
+    #
+    # Parameters::
+    # * *node* (String): The node for which we want the image
+    # * *container_id* (String): An ID to differentiate different containers for the same node [default: '']
+    # * *reuse_container* (Boolean): Do ew reuse an eventual existing container? [default: false]
+    # * Proc: Code called when the container is ready. The container will be stopped at the end of execution.
+    #   * Parameters::
+    #     * *deployer* (Deployer): A new Deployer configured to override access to the node through the Docker container
+    #     * *ip* (String): IP address of the container
+    def with_docker_container_for(node, container_id: '', reuse_container: false)
+      docker_ok = false
+      begin
+        Docker.validate_version!
+        docker_ok = true
+      rescue
+        error "Docker is not installed correctly. Please install it. Error: #{$!}"
+      end
+      if docker_ok
+        # Get the image name for this node
+        image = @nodes_handler.site_meta_for(node)['image'].to_sym
+        # Find if we have such an image registered
+        if @nodes_handler.known_docker_images.include?(image)
+          # Build the image if it does not exist
+          image_tag = "hpc_image_#{image}"
+          docker_image = nil
+          Deployer.with_image_semaphore(image_tag) do
+            docker_image = Docker::Image.all.find { |search_image| search_image.info['RepoTags'].include? "#{image_tag}:latest" }
+            unless docker_image
+              puts "Creating Docker image #{image_tag}..."
+              Excon.defaults[:read_timeout] = 600
+              docker_image = Docker::Image.build_from_dir(@nodes_handler.docker_image_dir(image))
+              docker_image.tag repo: image_tag
+            end
+          end
+          container_name = "hpc_container_#{node}_#{container_id}"
+          Deployer.with_container_semaphore(container_name) do
+            old_docker_container = Docker::Container.all(all: true).find { |container| container.info['Names'].include? "/#{container_name}" }
+            docker_container =
+              if reuse_container && old_docker_container
+                old_docker_container
+              else
+                if old_docker_container
+                  # Remove the previous container
+                  old_docker_container.stop
+                  old_docker_container.remove
+                end
+                puts "Creating Docker container #{container_name}..."
+                Docker::Container.create(name: container_name, image: image_tag)
+              end
+            # Run the container
+            docker_container.start
+            puts "Docker container #{container_name} started."
+            begin
+              container_ip = docker_container.json['NetworkSettings']['IPAddress']
+              cmd_runner = HybridPlatformsConductor::CmdRunner.new
+              ssh_executor = HybridPlatformsConductor::SshExecutor.new(nodes_handler: @nodes_handler, cmd_runner: cmd_runner)
+              ssh_executor.override_connections[node] = container_ip
+              ssh_executor.debug = @ssh_executor.debug
+              ssh_executor.ssh_user_name = 'root'
+              ssh_executor.passwords[node] = 'root_pwd'
+              deployer = HybridPlatformsConductor::Deployer.new(cmd_runner: cmd_runner, ssh_executor: ssh_executor)
+              deployer.force_direct_deploy = true
+              deployer.allow_deploy_non_master = true
+              deployer.secrets = @secrets
+              @nodes_handler.platform_for(node).prepare_deploy_for_local_testing
+              yield deployer, container_ip
+            ensure
+              docker_container.stop
+              puts "Docker container #{container_name} stopped."
+            end
+          end
+        else
+          error "Unknown Docker image #{image} defined for node #{node}"
+        end
+      end
     end
 
     private
@@ -163,12 +310,17 @@ module HybridPlatformsConductor
           Hash[@hosts.map do |hostname|
             [
               hostname,
-              [
-                {
-                  scp: { "#{File.dirname(__FILE__)}/mutex_dir" => '.' },
-                  bash: 'while ! sudo ./mutex_dir lock /tmp/hybrid_platforms_conductor_deploy_lock "$(ps -o ppid= -p $$)"; do echo -e \'Another deployment is running. Waiting for it to finish to continue...\' ; sleep 5 ; done'
-                }
-              ] + @nodes_handler.platform_for(hostname).actions_to_deploy_on(hostname, use_why_run: @use_why_run)
+              {
+                env: {
+                  'hpc_node' => hostname
+                },
+                actions: [
+                  {
+                    scp: { "#{File.dirname(__FILE__)}/mutex_dir" => '.' },
+                    bash: "while ! #{@ssh_executor.ssh_user_name == 'root' ? '' : 'sudo '}./mutex_dir lock /tmp/hybrid_platforms_conductor_deploy_lock \"$(ps -o ppid= -p $$)\"; do echo -e 'Another deployment is running. Waiting for it to finish to continue...' ; sleep 5 ; done"
+                  }
+                ] + @nodes_handler.platform_for(hostname).actions_to_deploy_on(hostname, use_why_run: @use_why_run)
+              }
             ]
           end],
           timeout: @timeout,
@@ -207,19 +359,21 @@ module HybridPlatformsConductor
                   diff_files: (platform_info[:status][:changed_files] + platform_info[:status][:added_files] + platform_info[:status][:deleted_files] + platform_info[:status][:untracked_files]).join(', ')
                 }.map { |property, value| "#{property}: #{value}" }.join("\n") +
                   "\n===== STDOUT =====\n" +
-                  stdout +
+                  (stdout.is_a?(Symbol) ? "Error: #{stdout}" : stdout) +
                   "\n===== STDERR =====\n" +
-                  stderr
+                  (stderr || '')
               )
               [
                 hostname,
                 {
-                  bash: "#{user_name == 'root' ? '' : 'sudo '}mkdir -p /var/log/deployments",
-                  scp: {
-                    log_file => '/var/log/deployments',
-                    :sudo => true,
-                    :owner => 'root',
-                    :group => 'root'
+                  actions: {
+                    bash: "#{user_name == 'root' ? '' : 'sudo '}mkdir -p /var/log/deployments",
+                    scp: {
+                      log_file => '/var/log/deployments',
+                      :sudo => user_name != 'root',
+                      :owner => 'root',
+                      :group => 'root'
+                    }
                   }
                 }
               ]
