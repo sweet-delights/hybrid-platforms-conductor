@@ -327,6 +327,22 @@ module HybridPlatformsConductor
           concurrent: @concurrent_execution,
           log_to_stdout: !@concurrent_execution
         )
+        # Free eventual locks
+        @ssh_executor.run_cmd_on_hosts(
+          Hash[@hosts.map do |hostname|
+            [
+              hostname,
+              {
+                actions: {
+                  bash: "#{@ssh_executor.ssh_user_name == 'root' ? '' : 'sudo '}./mutex_dir unlock /tmp/hybrid_platforms_conductor_deploy_lock"
+                }
+              }
+            ]
+          end],
+          timeout: 10,
+          concurrent: true,
+          log_to_dir: nil
+        )
         save_logs(outputs) if !@use_why_run && !@ssh_executor.dry_run
       end
       outputs
