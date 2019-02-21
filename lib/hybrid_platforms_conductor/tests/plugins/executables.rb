@@ -19,7 +19,7 @@ module HybridPlatformsConductor
             "#{CmdRunner.executables_prefix}free_ips",
             "#{CmdRunner.executables_prefix}free_veids",
             "#{CmdRunner.executables_prefix}last_deploys --host-name #{example_host} --show-commands",
-            "#{CmdRunner.executables_prefix}report --host-name #{example_host} --format mediawiki",
+            "#{CmdRunner.executables_prefix}report --host-name #{example_host} --format stdout",
             "#{CmdRunner.executables_prefix}ssh_config",
             "#{CmdRunner.executables_prefix}ssh_run --host-name #{example_host} --show-commands --interactive",
             "#{CmdRunner.executables_prefix}setup --help",

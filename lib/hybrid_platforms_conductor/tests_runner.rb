@@ -172,7 +172,11 @@ module HybridPlatformsConductor
             name: test_name,
             debug: @ssh_executor.debug
           )
-          test.test
+          begin
+            test.test
+          rescue
+            test.error "Uncaught exception during test: #{$!}\n#{$!.backtrace.join("\n")}"
+          end
           test.executed
           @tests_run << test
         end
@@ -195,7 +199,11 @@ module HybridPlatformsConductor
                 platform: platform_handler,
                 debug: @ssh_executor.debug
               )
-              test.test_on_platform
+              begin
+                test.test_on_platform
+              rescue
+                test.error "Uncaught exception during test: #{$!}\n#{$!.backtrace.join("\n")}"
+              end
               test.executed
               @tests_run << test
             end
@@ -222,15 +230,19 @@ module HybridPlatformsConductor
               node: hostname,
               debug: @ssh_executor.debug
             )
-            test.test_on_node.each do |cmd, test_info|
-              test_info_normalized = test_info.is_a?(Hash) ? test_info.clone : { validator: test_info }
-              test_info_normalized[:timeout] = DEFAULT_CMD_TIMEOUT unless test_info_normalized.key?(:timeout)
-              test_info_normalized[:test] = test
-              cmds_to_run[hostname] = [] unless cmds_to_run.key?(hostname)
-              cmds_to_run[hostname] << [
-                cmd,
-                test_info_normalized
-              ]
+            begin
+              test.test_on_node.each do |cmd, test_info|
+                test_info_normalized = test_info.is_a?(Hash) ? test_info.clone : { validator: test_info }
+                test_info_normalized[:timeout] = DEFAULT_CMD_TIMEOUT unless test_info_normalized.key?(:timeout)
+                test_info_normalized[:test] = test
+                cmds_to_run[hostname] = [] unless cmds_to_run.key?(hostname)
+                cmds_to_run[hostname] << [
+                  cmd,
+                  test_info_normalized
+                ]
+              end
+            rescue
+              test.error "Uncaught exception during test preparation: #{$!}\n#{$!.backtrace.join("\n")}"
             end
             @tests_run << test
             tests_on_nodes << test_name
@@ -282,7 +294,11 @@ module HybridPlatformsConductor
               # Last line of stdout is the return code
               return_code = Integer(stdout_lines.last)
               test_info[:test].error "Command returned error code #{return_code}" unless return_code.zero?
-              test_info[:validator].call(stdout_lines[0..-2], return_code)
+              begin
+                test_info[:validator].call(stdout_lines[0..-2], return_code)
+              rescue
+                test_info[:test].error "Uncaught exception during validation: #{$!}\n#{$!.backtrace.join("\n")}"
+              end
               test_info[:test].executed
             end
           end
@@ -305,7 +321,11 @@ module HybridPlatformsConductor
               debug: @ssh_executor.debug
             )
             puts "========== Run node test #{test_name} on node #{hostname}..."
-            test.test_for_node
+            begin
+              test.test_for_node
+            rescue
+              test.error "Uncaught exception during test: #{$!}\n#{$!.backtrace.join("\n")}"
+            end
             test.executed
             @tests_run << test
           end
@@ -354,7 +374,11 @@ module HybridPlatformsConductor
                 test.error "Check-node run failed: #{stdout}."
               else
                 test.error "Check-node returned error code #{exit_status}" unless exit_status.zero?
-                test.test_on_check_node(stdout, stderr, exit_status)
+                begin
+                  test.test_on_check_node(stdout, stderr, exit_status)
+                rescue
+                  test.error "Uncaught exception during test: #{$!}\n#{$!.backtrace.join("\n")}"
+                end
               end
               test.executed
               @tests_run << test
