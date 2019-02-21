@@ -16,6 +16,9 @@ module HybridPlatformsConductor
         # Confluence page ID to publish the report
         CONFLUENCE_PAGE_ID = '764722340'
 
+        # Maximum errors to be reported by item
+        MAX_ERROR_ITEMS_DISPLAYED = '10'
+
         # Handle tests reports
         def report
           # Get previous percentages for the evolution
@@ -54,6 +57,7 @@ module HybridPlatformsConductor
         def render_status(test_name, test_criteria)
           @status_test_name = test_name
           @status_test_criteria = test_criteria
+          @max_errors = MAX_ERROR_ITEMS_DISPLAYED
           render '_confluence_errors_status'
         end
 

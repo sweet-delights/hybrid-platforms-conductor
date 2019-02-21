@@ -2,6 +2,7 @@
   # Expects the following variables to be set:
   # * *@status_test_name* (String): The test name
   # * *@status_test_criteria* (Hash<Symbol,Object>): The test criteria (options to give to the signatures of methods retrieving test data, like errors_for)
+  # * *@max_errors* (Integer): Number max of errors to be displayed
 %>
 <% if should_have_been_tested?(@status_test_name, **@status_test_criteria) %>
   <%
@@ -26,8 +27,11 @@
           <ac:rich-text-body>
             <div style="text-align: left;">
               <ul>
-                <% errors.each do |error| %>
+                <% errors[0..@max_errors - 1].each do |error| %>
                   <li><%= CGI.escapeHTML(error) %></li>
+                <% end %>
+                <% if errors.size > @max_errors %>
+                  <li>...</li>
                 <% end %>
               </ul>
             </div>
