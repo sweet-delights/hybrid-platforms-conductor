@@ -191,7 +191,7 @@ module HybridPlatformsConductor
           @nodes_handler.platforms.each do |platform_handler|
             @tested_platforms << platform_handler
             if should_test_be_run_on(test_name, platform: platform_handler)
-              puts "========== Run platform test #{test_name} on #{platform_handler.repository_path}..."
+              puts "========== Run platform test #{test_name} on #{platform_handler.info[:repo_name]}..."
               test = @tests_plugins[test_name].new(
                 @nodes_handler,
                 @deployer,
