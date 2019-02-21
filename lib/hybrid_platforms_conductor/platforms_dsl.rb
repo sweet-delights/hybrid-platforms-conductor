@@ -12,7 +12,7 @@ module HybridPlatformsConductor
 
     # Directory of the definition of the platforms
     #   String
-    attr_reader :hybrid_platforms_dir
+    attr_accessor :hybrid_platforms_dir
 
     # Get the list of available platform handler plugins
     #
