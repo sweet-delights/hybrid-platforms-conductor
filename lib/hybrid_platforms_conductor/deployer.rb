@@ -203,7 +203,7 @@ module HybridPlatformsConductor
           image_tag = "hpc_image_#{image}"
           docker_image = nil
           Deployer.with_image_semaphore(image_tag) do
-            docker_image = Docker::Image.all.find { |search_image| !search_image.info['RepoTags'].nil? && search_image.info['RepoTags'].include? "#{image_tag}:latest" }
+            docker_image = Docker::Image.all.find { |search_image| !search_image.info['RepoTags'].nil? && search_image.info['RepoTags'].include?("#{image_tag}:latest") }
             unless docker_image
               puts "Creating Docker image #{image_tag}..."
               Excon.defaults[:read_timeout] = 600
