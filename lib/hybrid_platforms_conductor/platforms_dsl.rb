@@ -93,6 +93,7 @@ module HybridPlatformsConductor
         platform_handler = platform_handler_class.new(platform_type, repository_path, self)
         @platform_handlers[platform_type] = [] unless @platform_handlers.key?(platform_type)
         @platform_handlers[platform_type] << platform_handler
+        raise "Platform name #{platform_handler.info[:repo_name]} is declared several times." if @platforms.key?(platform_handler.info[:repo_name])
         @platforms[platform_handler.info[:repo_name]] = platform_handler
         # Register all known hostnames for this platform
         platform_handler.known_hostnames.each do |hostname|
@@ -160,6 +161,20 @@ module HybridPlatformsConductor
       @nodes_list_platform.keys
     end
 
+    # Get the list of known platform names
+    #
+    # Parameters::
+    # * *platform_type* (Symbol or nil): Required platform type, or nil fo all platforms [default = nil]
+    # Result::
+    # * Array<String>: List of platform names
+    def known_platforms(platform_type: nil)
+      if platform_type.nil?
+        @platforms.keys
+      else
+        (@platform_handlers[platform_type] || []).map { |platform_handler| platform_handler.info[:repo_name] }
+      end
+    end
+
     # Get the SSH configuration for a given gateway configuration name and a list of variables that could be used in the gateway template.
     #
     # Parameters::
@@ -206,6 +221,16 @@ module HybridPlatformsConductor
     # * PlatformHandler: The corresponding platform handler
     def platform_for_list(hosts_list_name)
       @nodes_list_platform[hosts_list_name]
+    end
+
+    # Return the platform handler for a given platform name
+    #
+    # Parameters::
+    # * *platform_name* (String): The platform name
+    # Result::
+    # * PlatformHandler or nil: Corresponding platform handler, or nil if none
+    def platform(platform_name)
+      @platforms[platform_name]
     end
 
     # Get the list of registered platforms.

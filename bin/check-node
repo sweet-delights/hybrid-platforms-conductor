@@ -5,6 +5,8 @@ require 'hybrid_platforms_conductor/cmd_runner'
 require 'hybrid_platforms_conductor/deployer'
 require 'optparse'
 
+# Logger.new(STDOUT)
+
 test_host = nil
 cmd_runner = HybridPlatformsConductor::CmdRunner.new
 nodes_handler = HybridPlatformsConductor::NodesHandler.new
