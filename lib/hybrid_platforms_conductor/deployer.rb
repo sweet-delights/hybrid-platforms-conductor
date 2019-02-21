@@ -192,7 +192,7 @@ module HybridPlatformsConductor
         Docker.validate_version!
         docker_ok = true
       rescue
-        error "Docker is not installed correctly. Please install it. Error: #{$!}"
+        puts "Docker is not installed correctly. Please install it. Error: #{$!}"
       end
       if docker_ok
         # Get the image name for this node
