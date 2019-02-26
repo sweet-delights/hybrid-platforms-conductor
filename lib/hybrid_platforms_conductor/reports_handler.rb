@@ -49,9 +49,9 @@ module HybridPlatformsConductor
     # Produce a report for a given list of hostnames
     #
     # Parameters::
-    # * *hostnames* (Array<String>): List of hostnames to produce report for
-    def produce_report_for(hostnames)
-      puts @reports_plugins[@format].new(nodes_handler: @nodes_handler).report_for(hostnames, @locale)
+    # * *nodes_descriptions* (Array<Object>): List of nodes descriptions to produce report for
+    def produce_report_for(nodes_descriptions)
+      puts @reports_plugins[@format].new(nodes_handler: @nodes_handler).report_for(@nodes_handler.resolve_hosts(nodes_descriptions), @locale)
     end
 
   end

@@ -1,33 +1,12 @@
 #!/usr/bin/env ruby
-require 'hybrid_platforms_conductor/nodes_handler'
-require 'hybrid_platforms_conductor/ssh_executor'
-require 'hybrid_platforms_conductor/cmd_runner'
-require 'hybrid_platforms_conductor/deployer'
-require 'optparse'
+require 'hybrid_platforms_conductor/executable'
 
-hosts = []
-cmd_runner = HybridPlatformsConductor::CmdRunner.new
-nodes_handler = HybridPlatformsConductor::NodesHandler.new
-ssh_executor = HybridPlatformsConductor::SshExecutor.new(cmd_runner: cmd_runner, nodes_handler: nodes_handler)
-deployer = HybridPlatformsConductor::Deployer.new(cmd_runner: cmd_runner, ssh_executor: ssh_executor)
-OptionParser.new do |opts|
-  opts.banner = "Usage: #{$0} [options]"
-  opts.separator ''
-  opts.separator 'Main options:'
-  opts.on('-h', '--help', 'Display help and exit') do
-    puts opts
-    exit 0
-  end
-  nodes_handler.options_parse(opts)
-  nodes_handler.options_parse_hosts(opts, hosts)
-  ssh_executor.options_parse(opts)
-  deployer.options_parse(opts, why_run_switch: true)
-end.parse!
-ssh_executor.validate_params
-deployer.validate_params
-raise "Unknown options: #{ARGV.join(' ')}" unless ARGV.empty?
+executable = HybridPlatformsConductor::Executable.new
+ssh_executor = executable.ssh_executor
+deployer = executable.deployer
+
+executable.parse_options!
 
 ssh_executor.dump_conf
-
 # Deploy all
-deployer.deploy_for(hosts)
+deployer.deploy_for(executable.selected_nodes)

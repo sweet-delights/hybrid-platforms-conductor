@@ -93,12 +93,12 @@ module HybridPlatformsConductor
     # Run the tests for a defined list of hosts description
     #
     # Parameters::
-    # * *hostnames* (Array<String>): List of host names on which tests should be run
+    # * *nodes_descriptions* (Array<Object>): List of nodes descriptions on which tests should be run
     # Result::
     # * Integer: An exit code:
     #   * 0: Successful.
     #   * 1: Some tests have failed.
-    def run_tests(hostnames)
+    def run_tests(nodes_descriptions)
       # Compute the resolved list of tests to perform
       @tests << :all if @tests.empty?
       @tests = @tests_plugins.keys if @tests.include?(:all)
@@ -110,7 +110,7 @@ module HybridPlatformsConductor
       @reports.sort!
       unknown_tests = @tests - @tests_plugins.keys
       raise "Unknown test names: #{unknown_tests.join(', ')}" unless unknown_tests.empty?
-      @hostnames = hostnames.uniq.sort
+      @hostnames = nodes_descriptions.empty? ? [] : @nodes_handler.resolve_hosts(nodes_descriptions).uniq.sort
       @tested_platforms = []
 
       # Keep a list of all tests that have run for the report

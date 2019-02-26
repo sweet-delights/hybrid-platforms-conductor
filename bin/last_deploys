@@ -1,17 +1,12 @@
 #!/usr/bin/env ruby
-require 'hybrid_platforms_conductor/nodes_handler'
-require 'hybrid_platforms_conductor/ssh_executor'
-require 'optparse'
+require 'hybrid_platforms_conductor/executable'
 require 'time'
 require 'terminal-table'
 
 POSSIBLE_STRING_SORTS = [
   :admin,
-  :git_repo,
-  :git_branch,
-  :chef_commit_id,
-  :chef_commit_comment
-  # :chef_options
+  :repo_name,
+  :commit_comment
 ]
 POSSIBLE_SORTS = {
   datetime: proc { |hostname, deploy_info| [deploy_info.key?(:error) || !deploy_info.key?(:datetime) ? 0 : deploy_info[:datetime].strftime('%Y%m%d%H%M%S').to_i, hostname] },
@@ -23,20 +18,9 @@ POSSIBLE_SORTS = {
   ]
 end])
 
-hosts = []
-nodes_handler = HybridPlatformsConductor::NodesHandler.new
-ssh_executor = HybridPlatformsConductor::SshExecutor.new(nodes_handler: nodes_handler)
-ssh_executor.max_threads = 64
 sort_by = :host
 sort_desc = false
-OptionParser.new do |opts|
-  opts.banner = "Usage: #{$0} [options]"
-  opts.separator ''
-  opts.separator 'Main options:'
-  opts.on('-h', '--help', 'Display help and exit') do
-    puts opts
-    exit 0
-  end
+executable = HybridPlatformsConductor::Executable.new do |opts|
   opts.on('-r', '--sort-by SORT', "Specify a sort. Possible values are: #{POSSIBLE_SORTS.keys.sort.join(', ')}. Each value can append _desc to specify a reverse sorting. Defaults to #{sort_by}.") do |sort_name|
     if sort_name =~ /^(.+)_desc$/
       sort_desc = true
@@ -44,17 +28,17 @@ OptionParser.new do |opts|
     end
     sort_by = sort_name.to_sym
   end
-  nodes_handler.options_parse(opts)
-  nodes_handler.options_parse_hosts(opts, hosts)
-  ssh_executor.options_parse(opts)
-end.parse!
-ssh_executor.validate_params
+end
+nodes_handler = executable.nodes_handler
+ssh_executor = executable.ssh_executor
+ssh_executor.max_threads = 64
+
+executable.parse_options!
 raise "Unknown sort name: #{sort_by}. Should be one of #{POSSIBLE_SORTS.keys.join(', ')}." unless POSSIBLE_SORTS.key?(sort_by)
-raise "Unknown options: #{ARGV.join(' ')}" unless ARGV.empty?
 
 sorted_deploy_info = Hash[ssh_executor.
   run_cmd_on_hosts(
-    Hash[nodes_handler.resolve_hosts(hosts).map do |hostname|
+    Hash[nodes_handler.resolve_hosts(executable.selected_nodes).map do |hostname|
       [
         hostname,
         { actions: { bash: "cd /var/log/deployments && ls -t | head -1 | xargs sed '/===== STDOUT =====/q'" } }

@@ -1,37 +1,16 @@
 #!/usr/bin/env ruby
-require 'optparse'
-require 'hybrid_platforms_conductor/cmd_runner'
-require 'hybrid_platforms_conductor/nodes_handler'
-require 'hybrid_platforms_conductor/ssh_executor'
-require 'hybrid_platforms_conductor/deployer'
-require 'hybrid_platforms_conductor/tests_runner'
+require 'hybrid_platforms_conductor/executable'
 
-cmd_runner = HybridPlatformsConductor::CmdRunner.new
-nodes_handler = HybridPlatformsConductor::NodesHandler.new
-ssh_executor = HybridPlatformsConductor::SshExecutor.new(cmd_runner: cmd_runner, nodes_handler: nodes_handler)
-deployer = HybridPlatformsConductor::Deployer.new(cmd_runner: cmd_runner, ssh_executor: ssh_executor)
-tests_runner = HybridPlatformsConductor::TestsRunner.new(nodes_handler: nodes_handler, ssh_executor: ssh_executor, deployer: deployer)
+executable = HybridPlatformsConductor::Executable.new(
+  check_options: false,
+  parallel_options: false,
+  plugins_options: false,
+  timeout_options: false
+)
+ssh_executor = executable.ssh_executor
+tests_runner = executable.tests_runner
 ssh_executor.max_threads = 64
-hosts = []
-# User name per hosts list
-# Hash<String, String>
-alternate_users = {}
-OptionParser.new do |opts|
-  opts.banner = "Usage: #{$0} [options]"
-  opts.separator ''
-  opts.separator 'Main options:'
-  opts.on('-h', '--help', 'Display help and exit.') do
-    puts opts
-    exit 0
-  end
-  nodes_handler.options_parse(opts)
-  nodes_handler.options_parse_hosts(opts, hosts)
-  ssh_executor.options_parse(opts)
-  deployer.options_parse(opts, parallel_switch: false, plugins_options: false, timeout_options: false)
-  tests_runner.options_parse(opts)
-end.parse!
-ssh_executor.validate_params
-deployer.validate_params
-raise "Unknown options: #{ARGV.join(' ')}" unless ARGV.empty?
 
-exit(tests_runner.run_tests(hosts.empty? ? [] : nodes_handler.resolve_hosts(hosts)))
+executable.parse_options!
+
+exit(tests_runner.run_tests(executable.selected_nodes))

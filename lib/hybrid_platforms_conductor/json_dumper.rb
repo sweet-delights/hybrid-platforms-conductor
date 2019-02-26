@@ -1,5 +1,6 @@
 require 'hybrid_platforms_conductor/nodes_handler'
 require 'hybrid_platforms_conductor/deployer'
+require 'fileutils'
 
 module HybridPlatformsConductor
 
@@ -41,8 +42,9 @@ module HybridPlatformsConductor
     # Dump JSON files containing description of the given hostnames
     #
     # Parameters::
-    # * *hostnames* (Array<String>): List of hostnames to dump files for
-    def dump_json_for(hostnames)
+    # * *nodes_descriptions* (Array<object>): List of nodes descriptions to dump files for
+    def dump_json_for(nodes_descriptions)
+      hostnames = @nodes_handler.resolve_hosts(nodes_descriptions)
       unless @skip_run
         hostnames.map { |hostname| @nodes_handler.platform_for(hostname) }.uniq.each.each do |platform_handler|
           platform_handler.prepare_why_run_deploy_for_json_dump

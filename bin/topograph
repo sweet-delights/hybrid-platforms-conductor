@@ -1,38 +1,21 @@
 #!/usr/bin/env ruby
-require 'hybrid_platforms_conductor/nodes_handler'
-require 'hybrid_platforms_conductor/cmd_runner'
-require 'hybrid_platforms_conductor/ssh_executor'
-require 'hybrid_platforms_conductor/deployer'
-require 'hybrid_platforms_conductor/json_dumper'
-require 'hybrid_platforms_conductor/topographer'
-require 'optparse'
+require 'hybrid_platforms_conductor/executable'
 
-cmd_runner = HybridPlatformsConductor::CmdRunner.new
-nodes_handler = HybridPlatformsConductor::NodesHandler.new
-ssh_executor = HybridPlatformsConductor::SshExecutor.new(cmd_runner: cmd_runner, nodes_handler: nodes_handler)
-deployer = HybridPlatformsConductor::Deployer.new(cmd_runner: cmd_runner, ssh_executor: ssh_executor)
-json_dumper = HybridPlatformsConductor::JsonDumper.new(nodes_handler: nodes_handler, deployer: deployer)
-topographer = HybridPlatformsConductor::Topographer.new(nodes_handler: nodes_handler, json_dumper: json_dumper)
+test_host = nil
+executable = HybridPlatformsConductor::Executable.new(
+  check_options: false,
+  nodes_selection_options: false,
+  parallel_options: false,
+  plugins_options: false
+)
+nodes_handler = executable.nodes_handler
+deployer = executable.deployer
 deployer.timeout = 30
 deployer.concurrent_execution = true
 deployer.use_why_run = true
-OptionParser.new do |opts|
-  opts.banner = "Usage: #{$0} [options]"
-  opts.separator ''
-  opts.separator 'Main options:'
-  opts.on('-h', '--help', 'Display help and exit') do
-    puts opts
-    exit 0
-  end
-  topographer.options_parse(opts)
-  nodes_handler.options_parse(opts)
-  ssh_executor.options_parse(opts)
-  deployer.options_parse(opts, parallel_switch: false, plugins_options: false)
-end.parse!
-ssh_executor.validate_params
-deployer.validate_params
-topographer.validate_params
-raise "Unknown options: #{ARGV.join(' ')}" unless ARGV.empty?
+topographer = executable.topographer
+
+executable.parse_options!
 
 # Initialize the topograph
 from_hostnames, to_hostnames = topographer.resolve_from_to
