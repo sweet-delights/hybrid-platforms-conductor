@@ -1,6 +1,9 @@
 #!/usr/bin/env ruby
 require 'range_operators'
 require 'hybrid_platforms_conductor/nodes_handler'
+require 'hybrid_platforms_conductor/logger_helpers'
+
+include HybridPlatformsConductor::LoggerHelpers
 
 # Group IPs per first 3 numbers
 nodes_handler = HybridPlatformsConductor::NodesHandler.new
@@ -16,5 +19,5 @@ nodes_handler.
   sort.
   map { |ip_root, ips| [ip_root, ips.map { |ip| ip.split('.').last.to_i }] }.
   each do |ip_root, ip_fourths|
-    puts "Free IPs for #{ip_root.join('.')}: #{([256] + ip_fourths).missing.rangify}"
+    out "Free IPs for #{ip_root.join('.')}: #{([256] + ip_fourths).missing.rangify}"
   end

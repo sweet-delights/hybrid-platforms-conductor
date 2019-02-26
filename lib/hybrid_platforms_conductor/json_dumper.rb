@@ -1,11 +1,15 @@
+require 'fileutils'
+require 'logger'
+require 'hybrid_platforms_conductor/logger_helpers'
 require 'hybrid_platforms_conductor/nodes_handler'
 require 'hybrid_platforms_conductor/deployer'
-require 'fileutils'
 
 module HybridPlatformsConductor
 
   # Gives ways to dump nodes info into JSON files
   class JsonDumper
+
+    include LoggerHelpers
 
     # The output JSON directory
     #   String
@@ -14,9 +18,11 @@ module HybridPlatformsConductor
     # Constructor
     #
     # Parameters::
+    # * *logger* (Logger): Logger to be used [default = Logger.new(STDOUT)]
     # * *nodes_handler* (NodesHandler): Nodes handler to be used. [default = NodesHandler.new]
     # * *deployer* (Deployer): Deployer to be used. [default = Deployer.new]
-    def initialize(nodes_handler: NodesHandler.new, deployer: Deployer.new)
+    def initialize(logger: Logger.new(STDOUT), nodes_handler: NodesHandler.new, deployer: Deployer.new)
+      @logger = logger
       @nodes_handler = nodes_handler
       @deployer = deployer
       # Default values
@@ -62,14 +68,14 @@ module HybridPlatformsConductor
           dump_begin_idx = stdout.index('===== Node JSON dump BEGIN =====')
           dump_end_idx = stdout.index('===== Node JSON dump END =====')
           if dump_begin_idx.nil? || dump_end_idx.nil?
-            puts "[ #{hostname} ] - Error while dumping JSON. Check #{stdout_file_name}"
+            out "[ #{hostname} ] - Error while dumping JSON. Check #{stdout_file_name}"
           else
             json_file_name = "#{@dump_dir}/#{hostname}.json"
             File.write(json_file_name, stdout[dump_begin_idx+1..dump_end_idx-1].join("\n"))
-            puts "[ #{hostname} ] - OK. Check #{json_file_name}"
+            out "[ #{hostname} ] - OK. Check #{json_file_name}"
           end
         else
-          puts "[ #{hostname} ] - Error while dumping JSON. File #{stdout_file_name} does not exist."
+          out "[ #{hostname} ] - Error while dumping JSON. File #{stdout_file_name} does not exist."
         end
       end
     end

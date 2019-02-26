@@ -1,3 +1,5 @@
+require 'optparse'
+require 'logger'
 require 'hybrid_platforms_conductor/nodes_handler'
 require 'hybrid_platforms_conductor/ssh_executor'
 require 'hybrid_platforms_conductor/cmd_runner'
@@ -6,12 +8,14 @@ require 'hybrid_platforms_conductor/json_dumper'
 require 'hybrid_platforms_conductor/reports_handler'
 require 'hybrid_platforms_conductor/tests_runner'
 require 'hybrid_platforms_conductor/topographer'
-require 'optparse'
+require 'hybrid_platforms_conductor/logger_helpers'
 
 module HybridPlatformsConductor
 
   # Give a common executable interface to all our executables
   class Executable
+
+    include LoggerHelpers
 
     # Give the list of selected nodes, if the option was offered. Check NodesHandler#resolve_hosts to know which kind of nodes description exist.
     #   Array<Object>
@@ -37,6 +41,8 @@ module HybridPlatformsConductor
       @opts_block = opts_block
       # List of nodes description selected
       @selected_nodes = []
+      # Logger
+      @logger = Logger.new(STDOUT, level: :info)
       # Possible Conductor components this executable can use
       @cmd_runner = nil
       @nodes_handler = nil
@@ -53,7 +59,7 @@ module HybridPlatformsConductor
     # Result::
     # * CmdRunner: The Command Runner to be used by this executable
     def cmd_runner
-      @cmd_runner = CmdRunner.new if @cmd_runner.nil?
+      @cmd_runner = CmdRunner.new(logger: @logger) if @cmd_runner.nil?
       @cmd_runner
     end
 
@@ -62,7 +68,7 @@ module HybridPlatformsConductor
     # Result::
     # * NodesHandler: The Nodes Handler to be used by this executable
     def nodes_handler
-      @nodes_handler = NodesHandler.new if @nodes_handler.nil?
+      @nodes_handler = NodesHandler.new(logger: @logger) if @nodes_handler.nil?
       @nodes_handler
     end
 
@@ -71,7 +77,7 @@ module HybridPlatformsConductor
     # Result::
     # * SshExecutor: The SSH Executor to be used by this executable
     def ssh_executor
-      @ssh_executor = SshExecutor.new(cmd_runner: cmd_runner, nodes_handler: nodes_handler) if @ssh_executor.nil?
+      @ssh_executor = SshExecutor.new(logger: @logger, cmd_runner: cmd_runner, nodes_handler: nodes_handler) if @ssh_executor.nil?
       @ssh_executor
     end
 
@@ -80,7 +86,7 @@ module HybridPlatformsConductor
     # Result::
     # * Deployer: The Deployer to be used by this executable
     def deployer
-      @deployer = Deployer.new(cmd_runner: cmd_runner, ssh_executor: ssh_executor) if @deployer.nil?
+      @deployer = Deployer.new(logger: @logger, cmd_runner: cmd_runner, nodes_handler: nodes_handler, ssh_executor: ssh_executor) if @deployer.nil?
       @deployer
     end
 
@@ -89,7 +95,7 @@ module HybridPlatformsConductor
     # Result::
     # * JsonDumper: The JSON Dumper to be used by this executable
     def json_dumper
-      @json_dumper = JsonDumper.new(nodes_handler: nodes_handler, deployer: deployer) if @json_dumper.nil?
+      @json_dumper = JsonDumper.new(logger: @logger, nodes_handler: nodes_handler, deployer: deployer) if @json_dumper.nil?
       @json_dumper
     end
 
@@ -98,7 +104,7 @@ module HybridPlatformsConductor
     # Result::
     # * ReportsHandler: The Reports Handler to be used by this executable
     def reports_handler
-      @reports_handler = ReportsHandler.new(nodes_handler: nodes_handler) if @reports_handler.nil?
+      @reports_handler = ReportsHandler.new(logger: @logger, nodes_handler: nodes_handler) if @reports_handler.nil?
       @reports_handler
     end
 
@@ -107,7 +113,7 @@ module HybridPlatformsConductor
     # Result::
     # * TestsRunner: The Reports Handler to be used by this executable
     def tests_runner
-      @tests_runner = TestsRunner.new(nodes_handler: nodes_handler, ssh_executor: ssh_executor, deployer: deployer) if @tests_runner.nil?
+      @tests_runner = TestsRunner.new(logger: @logger, nodes_handler: nodes_handler, ssh_executor: ssh_executor, deployer: deployer) if @tests_runner.nil?
       @tests_runner
     end
 
@@ -116,7 +122,7 @@ module HybridPlatformsConductor
     # Result::
     # * Topographer: The Topographer to be used by this executable
     def topographer
-      @topographer = Topographer.new(nodes_handler: nodes_handler, json_dumper: json_dumper) if @topographer.nil?
+      @topographer = Topographer.new(logger: @logger, nodes_handler: nodes_handler, json_dumper: json_dumper) if @topographer.nil?
       @topographer
     end
 
@@ -128,8 +134,11 @@ module HybridPlatformsConductor
         opts.banner = "Usage: #{$0} [options]"
         opts.separator ''
         opts.separator 'Main options:'
+        opts.on('-d', '--debug', 'Activate debug mode') do
+          self.log_level = :debug
+        end
         opts.on('-h', '--help', 'Display help and exit') do
-          puts opts
+          out opts
           exit 0
         end
         @opts_block.call(opts) if @opts_block

@@ -1,5 +1,7 @@
 require 'json'
 require 'ipaddress'
+require 'logger'
+require 'hybrid_platforms_conductor/logger_helpers'
 require 'hybrid_platforms_conductor/platforms_dsl'
 
 module HybridPlatformsConductor
@@ -7,18 +9,14 @@ module HybridPlatformsConductor
   # Provide utilities to handle Nodes configuration
   class NodesHandler
 
-    include PlatformsDsl
-
-    # Activate debug mode? [default: false]
-    #   Boolean
-    attr_accessor :debug
+    include PlatformsDsl, LoggerHelpers
 
     # Constructor
     #
     # Parameters::
-    # * *debug* (Boolean): Activate debug mode? [default: false]
-    def initialize(debug: false)
-      @debug = debug
+    # * *logger* (Logger): Logger to be used [default = Logger.new(STDOUT)]
+    def initialize(logger: Logger.new(STDOUT))
+      @logger = logger
       initialize_platforms_dsl
     end
 
@@ -289,17 +287,17 @@ module HybridPlatformsConductor
       options_parser.separator ''
       options_parser.separator 'Nodes handler options:'
       options_parser.on('-o', '--show-hosts', 'Display the list of possible hosts and exit') do
-        puts "* Known platforms:\n#{platforms.map { |platform_handler| "* #{platform_handler.platform_type}: #{platform_handler.repository_path}" }.sort.join("\n")}"
-        puts
-        puts "* Known hosts lists:\n#{known_hosts_lists.sort.join("\n")}"
-        puts
-        puts "* Known hosts:\n#{known_hostnames.sort.join("\n")}"
-        puts
-        puts "* Known hosts with description and private IP:\n#{known_hostnames.map do |hostname|
+        out "* Known platforms:\n#{platforms.map { |platform_handler| "* #{platform_handler.platform_type}: #{platform_handler.repository_path}" }.sort.join("\n")}"
+        out
+        out "* Known hosts lists:\n#{known_hosts_lists.sort.join("\n")}"
+        out
+        out "* Known hosts:\n#{known_hostnames.sort.join("\n")}"
+        out
+        out "* Known hosts with description and private IP:\n#{known_hostnames.map do |hostname|
             conf = site_meta_for(hostname)
             "#{platform_for(hostname).repository_path} - #{hostname} (#{private_ip_for(hostname)}) - #{conf.nil? || !conf.key?('description') ? '' : conf['description']}"
           end.sort.join("\n")}"
-        puts
+        out
         exit 0
       end
     end
@@ -324,16 +322,6 @@ module HybridPlatformsConductor
       options_parser.on('-n', '--host-name HOST_NAME', 'Select a specific host. Can be a regular expression if used with enclosing "/" characters. (can be used several times)') do |host_name|
         hosts << host_name
       end
-    end
-
-    private
-
-    # Log a message if debug is on
-    #
-    # Parameters::
-    # * *msg* (String): Message to give
-    def log_debug(msg)
-      puts msg if @debug
     end
 
   end

@@ -1,13 +1,20 @@
+require 'logger'
+require 'hybrid_platforms_conductor/logger_helpers'
+
 module HybridPlatformsConductor
 
   # Gives ways to produce reports
   class ReportsHandler
 
+    include LoggerHelpers
+
     # Constructor
     #
     # Parameters::
+    # * *logger* (Logger): Logger to be used [default = Logger.new(STDOUT)]
     # * *nodes_handler* (NodesHandler): Nodes handler to be used. [default = NodesHandler.new]
-    def initialize(nodes_handler: NodesHandler.new)
+    def initialize(logger: Logger.new(STDOUT), nodes_handler: NodesHandler.new)
+      @logger = logger
       @nodes_handler = nodes_handler
       # The list of reports plugins, with their associated class
       # Hash< Symbol, Class >
@@ -51,7 +58,7 @@ module HybridPlatformsConductor
     # Parameters::
     # * *nodes_descriptions* (Array<Object>): List of nodes descriptions to produce report for
     def produce_report_for(nodes_descriptions)
-      puts @reports_plugins[@format].new(nodes_handler: @nodes_handler).report_for(@nodes_handler.resolve_hosts(nodes_descriptions), @locale)
+      out @reports_plugins[@format].new(nodes_handler: @nodes_handler).report_for(@nodes_handler.resolve_hosts(nodes_descriptions), @locale)
     end
 
   end

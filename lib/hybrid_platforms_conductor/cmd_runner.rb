@@ -1,6 +1,11 @@
+require 'logger'
+require 'hybrid_platforms_conductor/logger_helpers'
+
 module HybridPlatformsConductor
 
   class CmdRunner
+
+    include LoggerHelpers
 
     # Return the executables prefix to use to execute commands
     #
@@ -10,47 +15,41 @@ module HybridPlatformsConductor
       $0.include?('/') ? "#{File.dirname($0)}/" : ''
     end
 
+    # Dry-run switch. When true, then commands are just printed out without being executed.
+    #   Boolean
     attr_accessor :dry_run
 
     # Constructor
-    def initialize
+    #
+    # Parameters::
+    # * *logger* (Logger): Logger to be used [default = Logger.new(STDOUT)]
+    def initialize(logger: Logger.new(STDOUT))
       @dry_run = false
+      @logger = logger
     end
 
     # Run an external command
     #
     # Parameters::
     # * *cmd* (String): Command to be run
-    # * *silent* (Boolean): Do we execute the command without outputing it in stdout? [default = false]
     # * *expected_code* (Integer): Return code that is expected [default = 0]
     # Result::
     # * Integer: The exit code, or expected_code if dry_run
-    def run_cmd(cmd, silent: false, expected_code: 0)
-      puts cmd if !silent || @dry_run
+    def run_cmd(cmd, expected_code: 0)
       if @dry_run
+        out cmd
         expected_code
       else
+        log_debug cmd
         ok = system cmd
         exit_code = $?.exitstatus
         if exit_code != expected_code
           error = "Command \"#{cmd}\" returned error code #{exit_code} (expected #{expected_code})."
-          puts error
+          log_error error
           raise error
         end
         exit_code
       end
-    end
-
-    # Run a Hybrid Platforms Conductor command
-    #
-    # Parameters::
-    # * *cmd* (String): Command to be run
-    # * *silent* (Boolean): Do we execute the command without outputing it in stdout? [default = false]
-    # * *expected_code* (Integer): Return code that is expected [default = 0]
-    # Result::
-    # * Integer: The exit code, or expected_code if dry_run
-    def run_hybrid_platforms_conductor_cmd(cmd, silent: false, expected_code: 0)
-      run_cmd("#{CmdRunner.executables_prefix}#{cmd}", silent: silent, expected_code: expected_code)
     end
 
   end

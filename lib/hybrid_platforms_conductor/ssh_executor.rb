@@ -1,3 +1,4 @@
+require 'logger'
 require 'thread'
 require 'fileutils'
 require 'open3'
@@ -6,11 +7,14 @@ require 'tmpdir'
 require 'tempfile'
 require 'hybrid_platforms_conductor/nodes_handler'
 require 'hybrid_platforms_conductor/cmd_runner'
+require 'hybrid_platforms_conductor/logger_helpers'
 
 module HybridPlatformsConductor
 
   # Gives ways to execute SSH commands on a list of host names defined in our nodes
   class SshExecutor
+
+    include LoggerHelpers
 
     # Name of the gateway user to be used. [default: ENV['ti_gateway_user'] or ubradm]
     #   String
@@ -27,10 +31,6 @@ module HybridPlatformsConductor
     # Environment variables to be set before each bash commands to execute using ssh. [default: {}]
     #   Hash<String, String>
     attr_accessor :ssh_env
-
-    # Activate debug mode? [default: false]
-    #   Boolean
-    attr_reader :debug
 
     # Maximum number of threads to spawn in parallel [default: 8]
     #   Integer
@@ -51,16 +51,17 @@ module HybridPlatformsConductor
     # Constructor
     #
     # Parameters::
+    # * *logger* (Logger): Logger to be used [default = Logger.new(STDOUT)]
     # * *cmd_runner* (CmdRunner): Command runner to be used. [default = CmdRunner.new]
     # * *nodes_handler* (NodesHandler): Nodes handler to be used. [default = NodesHandler.new]
-    def initialize(cmd_runner: CmdRunner.new, nodes_handler: NodesHandler.new)
+    def initialize(logger: Logger.new(STDOUT), cmd_runner: CmdRunner.new, nodes_handler: NodesHandler.new)
+      @logger = logger
       @cmd_runner = cmd_runner
       @nodes_handler = nodes_handler
       # Default values
       @ssh_user_name = ENV['platforms_ssh_user']
       @ssh_user_name = ENV['USER'] if @ssh_user_name.nil? || @ssh_user_name.empty?
       @ssh_env = {}
-      @debug = false
       @max_threads = 16
       @dry_run = false
       @override_connections = {}
@@ -80,15 +81,6 @@ module HybridPlatformsConductor
       raise "Unknown gateway configuration provided: #{@gateways_conf}. Possible values are: #{known_gateways.join(', ')}." unless known_gateways.include?(@gateways_conf)
     end
 
-    # Set debug mode
-    #
-    # Parameters::
-    # * *switch* (Boolean): Do we activate debug?
-    def debug=(switch)
-      @debug = switch
-      @nodes_handler.debug = @debug
-    end
-
     # Set dry run
     #
     # Parameters::
@@ -100,14 +92,13 @@ module HybridPlatformsConductor
 
     # Dump the current configuration for info
     def dump_conf
-      puts 'SSH executor configuration used:'
-      puts " * User: #{@ssh_user_name}"
-      puts " * Dry run: #{@dry_run}"
-      puts " * Max threads used: #{@max_threads}"
-      puts " * Gateways configuration: #{@gateways_conf}"
-      puts " * Gateway user: #{@gateway_user}"
-      puts " * Debug mode: #{@debug}"
-      puts
+      out 'SSH executor configuration used:'
+      out " * User: #{@ssh_user_name}"
+      out " * Dry run: #{@dry_run}"
+      out " * Max threads used: #{@max_threads}"
+      out " * Gateways configuration: #{@gateways_conf}"
+      out " * Gateway user: #{@gateway_user}"
+      out
     end
 
     # Run a list of commands on a list of host names.
@@ -244,9 +235,6 @@ module HybridPlatformsConductor
     def options_parse(options_parser, parallel: true)
       options_parser.separator ''
       options_parser.separator 'SSH executor options:'
-      options_parser.on('-d', '--debug', 'Activate verbose logs') do
-        self.debug = true
-      end
       options_parser.on('-g', '--gateway-user USER_NAME', "Name of the gateway user to be used by the XAE gateways (defaults to #{@gateway_user})") do |user_name|
         @gateway_user = user_name
       end
@@ -269,7 +257,7 @@ module HybridPlatformsConductor
     def clean_stale_ssh_mutex
       # Make sure no pending SSH Mutex are still present
       Dir.glob('/tmp/ssh_executor_mux_*').each do |mutex_file|
-        puts "!!! Removing stale SSH mutex file #{mutex_file}"
+        log_warn "Removing stale SSH mutex file #{mutex_file}"
         File.unlink mutex_file
       end
     end
@@ -425,14 +413,6 @@ Host *
       end
     end
 
-    # Log a message if debug is on
-    #
-    # Parameters::
-    # * *msg* (String): Message to give
-    def log_debug(msg)
-      puts msg if @debug
-    end
-
     # Run a local command and get its standard output both as a result and in stdout or in a file as a stream.
     #
     # Parameters::
@@ -476,7 +456,7 @@ Host *
         cmd_stdout = cmd_stdout_lines.join
         cmd_stderr = cmd_stderr_lines.join
       rescue
-        puts "!!! Error while executing #{cmd}: #{$!}"
+        log_error "Error while executing #{cmd}: #{$!}"
         cmd_stdout = :command_error
         cmd_stderr = ''
       ensure
@@ -498,14 +478,14 @@ Host *
         ssh_exec = "timeout #{timeout} #{ssh_exec}" unless timeout.nil?
         # Thanks to the ControlMaster option, connections are reused. So no problem to have several scp and ssh commands then in the underlying bash file.
         log_debug "[ControlMaster] - Starting ControlMaster for connection on #{ssh_url}..."
-        @cmd_runner.run_cmd "#{ssh_exec} #{ssh_options} -fMNnqT #{ssh_url}", silent: true
+        @cmd_runner.run_cmd "#{ssh_exec} #{ssh_options} -fMNnqT #{ssh_url}"
         begin
           log_debug "[ControlMaster] - ControlMaster started for connection on #{ssh_url}"
           yield
         ensure
           log_debug "[ControlMaster] - Stopping ControlMaster for connection on #{ssh_url}..."
           # Dumb verbose ssh! Tricky trick to just silence what is useless.
-          @cmd_runner.run_cmd "#{ssh_exec} -O exit #{ssh_url} 2>&1 | grep -v 'Exit request sent.'", expected_code: 1, silent: true
+          @cmd_runner.run_cmd "#{ssh_exec} -O exit #{ssh_url} 2>&1 | grep -v 'Exit request sent.'", expected_code: 1
           log_debug "[ControlMaster] - ControlMaster stopped for connection on #{ssh_url}"
         end
       end
@@ -599,7 +579,7 @@ Host *
               cmd_to_run = "/bin/bash #{actions_file.path}"
               if @dry_run
                 # Here we expand the file content, as otherwise dry run would be quite useless.
-                puts File.read(actions_file.path)
+                out File.read(actions_file.path)
                 log_debug "[#{hostname}] - No result because of dry run"
                 yield :dry_run
               elsif interactive_session

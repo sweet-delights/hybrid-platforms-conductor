@@ -1,15 +1,19 @@
-require 'hybrid_platforms_conductor/nodes_handler'
-require 'hybrid_platforms_conductor/ssh_executor'
-require 'hybrid_platforms_conductor/cmd_runner'
+require 'logger'
 require 'tmpdir'
 require 'time'
 require 'thread'
 require 'docker-api'
+require 'hybrid_platforms_conductor/logger_helpers'
+require 'hybrid_platforms_conductor/nodes_handler'
+require 'hybrid_platforms_conductor/ssh_executor'
+require 'hybrid_platforms_conductor/cmd_runner'
 
 module HybridPlatformsConductor
 
   # Gives ways to deploy on several nodes
   class Deployer
+
+    include LoggerHelpers
 
     class << self
 
@@ -89,13 +93,16 @@ module HybridPlatformsConductor
     # Constructor
     #
     # Parameters::
+    # * *logger* (Logger): Logger to be used [default = Logger.new(STDOUT)]
     # * *cmd_runner* (CmdRunner): Command executor to be used. [default = CmdRunner.new]
-    # * *ssh_executor* (SshExecutor): Ssh executor to be used. [default = SshExecutor.new(cmd_runner: cmd_runner)]
-    def initialize(cmd_runner: CmdRunner.new, ssh_executor: SshExecutor.new(cmd_runner: cmd_runner))
-      @nodes_handler = NodesHandler.new
-      @hosts = []
+    # * *nodes_handler* (NodesHandler): Nodes handler to be used. [default = NodesHandler.new]
+    # * *ssh_executor* (SshExecutor): Ssh executor to be used. [default = SshExecutor.new]
+    def initialize(logger: Logger.new(STDOUT), cmd_runner: CmdRunner.new, nodes_handler: NodesHandler.new, ssh_executor: SshExecutor.new)
+      @logger = logger
       @cmd_runner = cmd_runner
+      @nodes_handler = nodes_handler
       @ssh_executor = ssh_executor
+      @hosts = []
       @secrets = []
       @allow_deploy_non_master = false
       # Default values
@@ -205,10 +212,11 @@ module HybridPlatformsConductor
           Deployer.with_image_semaphore(image_tag) do
             docker_image = Docker::Image.all.find { |search_image| !search_image.info['RepoTags'].nil? && search_image.info['RepoTags'].include?("#{image_tag}:latest") }
             unless docker_image
-              puts "Creating Docker image #{image_tag}..."
-              Excon.defaults[:read_timeout] = 600
-              docker_image = Docker::Image.build_from_dir(@nodes_handler.docker_image_dir(image))
-              docker_image.tag repo: image_tag
+              section "Creating Docker image #{image_tag}" do
+                Excon.defaults[:read_timeout] = 600
+                docker_image = Docker::Image.build_from_dir(@nodes_handler.docker_image_dir(image))
+                docker_image.tag repo: image_tag
+              end
             end
           end
           container_name = "hpc_container_#{node}_#{container_id}"
@@ -223,18 +231,19 @@ module HybridPlatformsConductor
                   old_docker_container.stop
                   old_docker_container.remove
                 end
-                puts "Creating Docker container #{container_name}..."
-                Docker::Container.create(name: container_name, image: image_tag)
+                section "Creating Docker container #{container_name}" do
+                  Docker::Container.create(name: container_name, image: image_tag)
+                end
               end
             # Run the container
             docker_container.start
-            puts "Docker container #{container_name} started."
+            out "Docker container #{container_name} started."
             begin
               container_ip = docker_container.json['NetworkSettings']['IPAddress']
               cmd_runner = HybridPlatformsConductor::CmdRunner.new
               ssh_executor = HybridPlatformsConductor::SshExecutor.new(nodes_handler: @nodes_handler, cmd_runner: cmd_runner)
               ssh_executor.override_connections[node] = container_ip
-              ssh_executor.debug = @ssh_executor.debug
+              ssh_executor.log_level = :debug if log_debug?
               ssh_executor.ssh_user_name = 'root'
               ssh_executor.passwords[node] = 'root_pwd'
               deployer = HybridPlatformsConductor::Deployer.new(cmd_runner: cmd_runner, ssh_executor: ssh_executor)
@@ -245,7 +254,7 @@ module HybridPlatformsConductor
               yield deployer, container_ip
             ensure
               docker_container.stop
-              puts "Docker container #{container_name} stopped."
+              out "Docker container #{container_name} stopped."
             end
           end
         else
@@ -256,21 +265,9 @@ module HybridPlatformsConductor
 
     private
 
-    # Log a big processing section
-    #
-    # Parameters::
-    # * *section_title* (String): The section title
-    # * Proc: Code called when in the section
-    def section(section_title)
-      puts "===== #{section_title} ===== Begin... ====="
-      yield
-      puts "===== #{section_title} ===== ...End ====="
-      puts
-    end
-
     # Package the repository, ready to be sent to artefact repositories.
     def package
-      section('Packaging current repository') do
+      section 'Packaging current repository' do
         @platforms.each do |platform_handler|
           platform_handler.package
         end
@@ -280,7 +277,7 @@ module HybridPlatformsConductor
     # Deliver the packaged repository on all needed artefacts.
     # Prerequisite: package and hosts= have been called before.
     def deliver_on_artefacts
-      section('Delivering on artefacts repositories') do
+      section 'Delivering on artefacts repositories' do
         @hosts.each do |hostname|
           @nodes_handler.platform_for(hostname).deliver_on_artefact_for(hostname)
         end
@@ -294,7 +291,7 @@ module HybridPlatformsConductor
     # * Hash<String, [String, String, Integer] or Symbol>: Standard output, error and exit status code, or Symbol in case of error or dry run, for each hostname that has been deployed.
     def deploy
       outputs = {}
-      section("#{@use_why_run ? 'Checking' : 'Deploying'} on #{@hosts.size} hosts") do
+      section "#{@use_why_run ? 'Checking' : 'Deploying'} on #{@hosts.size} hosts" do
         @secrets.each do |json_file|
           secret_json = JSON.parse(File.read(json_file))
           @platforms.each do |platform_handler|
@@ -354,7 +351,7 @@ module HybridPlatformsConductor
     # Parameters::
     # * *logs* (Hash<String, [String, String] or Symbol>): Standard output and error, or Symbol in case of error, for each hostname.
     def save_logs(logs)
-      section("Saving deployment logs for #{logs.size} hosts") do
+      section "Saving deployment logs for #{logs.size} hosts" do
         Dir.mktmpdir('hybrid_platforms_conductor-logs') do |tmp_dir|
           @ssh_executor.run_cmd_on_hosts(
             Hash[logs.map do |hostname, (stdout, stderr)|
@@ -368,7 +365,7 @@ module HybridPlatformsConductor
                 {
                   date: now.strftime('%F %T'),
                   user: user_name,
-                  debug: @ssh_executor.debug ? 'Yes' : 'No',
+                  debug: log_debug? ? 'Yes' : 'No',
                   repo_name: platform_info[:repo_name],
                   commit_id: platform_info[:commit][:id],
                   commit_message: platform_info[:commit][:message].split("\n").first,

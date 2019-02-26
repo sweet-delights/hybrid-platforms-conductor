@@ -1,7 +1,7 @@
 #!/usr/bin/env ruby
-require 'hybrid_platforms_conductor/executable'
 require 'time'
 require 'terminal-table'
+require 'hybrid_platforms_conductor/executable'
 
 POSSIBLE_STRING_SORTS = [
   :admin,
@@ -116,7 +116,7 @@ INFO_DISPLAYED = {
   nbr_diff_files: 'Differing files',
   error: 'Error'
 }
-puts(Terminal::Table.new(headings: INFO_DISPLAYED.values) do |table|
+executable.out(Terminal::Table.new(headings: INFO_DISPLAYED.values) do |table|
   sorted_deploy_info.each do |hostname, deploy_info|
     table << INFO_DISPLAYED.keys.map { |key| deploy_info[key] }
   end

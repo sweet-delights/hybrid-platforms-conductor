@@ -1,3 +1,5 @@
+require 'hybrid_platforms_conductor/logger_helpers'
+
 module HybridPlatformsConductor
 
   module Tests
@@ -5,14 +7,18 @@ module HybridPlatformsConductor
     # Base class for reports plugins
     class ReportsPlugin
 
+      include LoggerHelpers
+
       # Constructor
       #
       # Parameters::
+      # * *logger* (Logger): Logger to be used
       # * *nodes_handler* (NodesHandler): Nodes handler that has been used by tests.
       # * *tested_nodes* (Array<String>): List of nodes tests were run on.
       # * *tested_platforms* (Array<PlatformHandler>): List of platforms tests were run on.
       # * *tests* (Array<Test>): List of tests.
-      def initialize(nodes_handler, tested_nodes, tested_platforms, tests)
+      def initialize(logger, nodes_handler, tested_nodes, tested_platforms, tests)
+        @logger = logger
         @nodes_handler = nodes_handler
         @tested_nodes = tested_nodes.uniq.sort
         @tested_platforms = tested_platforms

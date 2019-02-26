@@ -1,3 +1,5 @@
+require 'logger'
+require 'hybrid_platforms_conductor/logger_helpers'
 require 'hybrid_platforms_conductor/nodes_handler'
 require 'hybrid_platforms_conductor/ssh_executor'
 require 'hybrid_platforms_conductor/tests/test'
@@ -8,13 +10,17 @@ module HybridPlatformsConductor
   # Class running tests
   class TestsRunner
 
+    include LoggerHelpers
+
     # Constructor
     #
     # Parameters::
+    # * *logger* (Logger): Logger to be used [default = Logger.new(STDOUT)]
     # * *nodes_handler* (NodesHandler): Nodes handler to be used [default = NodesHandler.new]
     # * *ssh_executor* (SshExecutor): SSH executor to be used for the tests [default = SshExecutor.new]
     # * *deployer* (Deployer): Deployer to be used for the tests needed why-run deployments [default = Deployer.new]
-    def initialize(nodes_handler: NodesHandler.new, ssh_executor: SshExecutor.new, deployer: Deployer.new)
+    def initialize(logger: Logger.new(STDOUT), nodes_handler: NodesHandler.new, ssh_executor: SshExecutor.new, deployer: Deployer.new)
+      @logger = logger
       @nodes_handler = nodes_handler
       @ssh_executor = ssh_executor
       @deployer = deployer
@@ -126,15 +132,15 @@ module HybridPlatformsConductor
       @tested_platforms.sort_by!
 
       @reports.each do |report_name|
-        @reports_plugins[report_name].new(@nodes_handler, @hostnames, @tested_platforms, @tests_run).report
+        @reports_plugins[report_name].new(@logger, @nodes_handler, @hostnames, @tested_platforms, @tests_run).report
       end
 
-      puts
+      out
       if @tests_run.all? { |test| test.errors.empty? }
-        puts '===== No errors ====='
+        out '===== No errors ====='.green
         0
       else
-        puts '===== Some errors were found. Check output. ====='
+        out '===== Some errors were found. Check output. ====='.red
         1
       end
     end
@@ -148,12 +154,12 @@ module HybridPlatformsConductor
     # * *hostname* (String): Hostname for which the test is instantiated, or nil if global [default = nil]
     def error(message, hostname: nil)
       global_test = Tests::Test.new(
+        @logger,
         @nodes_handler,
         @deployer,
         name: :global,
         platform: hostname.nil? ? nil : @nodes_handler.platform_for(hostname),
-        node: hostname,
-        debug: @ssh_executor.debug
+        node: hostname
       )
       global_test.errors << message
       global_test.executed
@@ -162,50 +168,56 @@ module HybridPlatformsConductor
 
     # Run tests that are global
     def run_tests_global
-      # Run global tests
-      @tests.each do |test_name|
-        if @tests_plugins[test_name].method_defined?(:test)
-          puts "========== Run global test #{test_name}..."
-          test = @tests_plugins[test_name].new(
-            @nodes_handler,
-            @deployer,
-            name: test_name,
-            debug: @ssh_executor.debug
-          )
-          begin
-            test.test
-          rescue
-            test.error "Uncaught exception during test: #{$!}\n#{$!.backtrace.join("\n")}"
+      section 'Run global tests' do
+        # Run global tests
+        @tests.each do |test_name|
+          if @tests_plugins[test_name].method_defined?(:test)
+            section "Run global test #{test_name}" do
+              test = @tests_plugins[test_name].new(
+                @logger,
+                @nodes_handler,
+                @deployer,
+                name: test_name
+              )
+              begin
+                test.test
+              rescue
+                test.error "Uncaught exception during test: #{$!}\n#{$!.backtrace.join("\n")}"
+              end
+              test.executed
+              @tests_run << test
+            end
           end
-          test.executed
-          @tests_run << test
         end
       end
     end
 
     # Run tests that are platform specific
     def run_tests_platform
-      @tests.each do |test_name|
-        if @tests_plugins[test_name].method_defined?(:test_on_platform)
-          # Run this test for every platform allowed
-          @nodes_handler.platforms.each do |platform_handler|
-            @tested_platforms << platform_handler
-            if should_test_be_run_on(test_name, platform: platform_handler)
-              puts "========== Run platform test #{test_name} on #{platform_handler.info[:repo_name]}..."
-              test = @tests_plugins[test_name].new(
-                @nodes_handler,
-                @deployer,
-                name: test_name,
-                platform: platform_handler,
-                debug: @ssh_executor.debug
-              )
-              begin
-                test.test_on_platform
-              rescue
-                test.error "Uncaught exception during test: #{$!}\n#{$!.backtrace.join("\n")}"
+      section 'Run platform tests' do
+        @tests.each do |test_name|
+          if @tests_plugins[test_name].method_defined?(:test_on_platform)
+            # Run this test for every platform allowed
+            @nodes_handler.platforms.each do |platform_handler|
+              @tested_platforms << platform_handler
+              if should_test_be_run_on(test_name, platform: platform_handler)
+                section "Run platform test #{test_name} on #{platform_handler.info[:repo_name]}" do
+                  test = @tests_plugins[test_name].new(
+                    @logger,
+                    @nodes_handler,
+                    @deployer,
+                    name: test_name,
+                    platform: platform_handler
+                  )
+                  begin
+                    test.test_on_platform
+                  rescue
+                    test.error "Uncaught exception during test: #{$!}\n#{$!.backtrace.join("\n")}"
+                  end
+                  test.executed
+                  @tests_run << test
+                end
               end
-              test.executed
-              @tests_run << test
             end
           end
         end
@@ -223,12 +235,12 @@ module HybridPlatformsConductor
         @tests.each do |test_name|
           if @tests_plugins[test_name].method_defined?(:test_on_node) && should_test_be_run_on(test_name, node: hostname)
             test = @tests_plugins[test_name].new(
+              @logger,
               @nodes_handler,
               @deployer,
               name: test_name,
               platform: @nodes_handler.platform_for(hostname),
-              node: hostname,
-              debug: @ssh_executor.debug
+              node: hostname
             )
             begin
               test.test_on_node.each do |cmd, test_info|
@@ -271,39 +283,40 @@ module HybridPlatformsConductor
             }
           ]
         end]
-        puts "========== Run nodes SSH tests #{tests_on_nodes.uniq.sort.join(', ')} (timeout to #{timeout} secs)..."
-        start_time = Time.now
-        nbr_secs = nil
-        @ssh_executor.run_cmd_on_hosts(
-          test_cmds,
-          concurrent: !@ssh_executor.debug,
-          log_to_dir: nil,
-          log_to_stdout: @ssh_executor.debug,
-          timeout: timeout
-        ).each do |hostname, (stdout, stderr)|
-          nbr_secs = (Time.now - start_time).round(1) if nbr_secs.nil?
-          if stdout.is_a?(Symbol)
-            error("Error while executing tests: #{stdout}\n#{stderr}", hostname: hostname)
-          else
-            puts "----- Commands for #{hostname}:\n#{test_cmds[hostname][:bash].join("\n")}\n----- Output:\n#{stdout}\n----- Error:\n#{stderr}\n-----" if @ssh_executor.debug
-            # Skip the first section, as it can contain SSH banners
-            cmd_stdouts = stdout.split("#{CMD_SEPARATOR}\n")[1..-1]
-            cmd_stdouts = [] if cmd_stdouts.nil?
-            cmds_to_run[hostname].zip(cmd_stdouts).each do |(cmd, test_info), cmd_stdout|
-              stdout_lines = cmd_stdout.split("\n")
-              # Last line of stdout is the return code
-              return_code = Integer(stdout_lines.last)
-              test_info[:test].error "Command returned error code #{return_code}" unless return_code.zero?
-              begin
-                test_info[:validator].call(stdout_lines[0..-2], return_code)
-              rescue
-                test_info[:test].error "Uncaught exception during validation: #{$!}\n#{$!.backtrace.join("\n")}"
+        section "Run nodes SSH tests #{tests_on_nodes.uniq.sort.join(', ')} (timeout to #{timeout} secs)" do
+          start_time = Time.now
+          nbr_secs = nil
+          @ssh_executor.run_cmd_on_hosts(
+            test_cmds,
+            concurrent: !log_debug?,
+            log_to_dir: nil,
+            log_to_stdout: log_debug?,
+            timeout: timeout
+          ).each do |hostname, (stdout, stderr)|
+            nbr_secs = (Time.now - start_time).round(1) if nbr_secs.nil?
+            if stdout.is_a?(Symbol)
+              error("Error while executing tests: #{stdout}\n#{stderr}", hostname: hostname)
+            else
+              log_debug "----- Commands for #{hostname}:\n#{test_cmds[hostname][:actions][:bash].join("\n")}\n----- Output:\n#{stdout}\n----- Error:\n#{stderr}\n-----"
+              # Skip the first section, as it can contain SSH banners
+              cmd_stdouts = stdout.split("#{CMD_SEPARATOR}\n")[1..-1]
+              cmd_stdouts = [] if cmd_stdouts.nil?
+              cmds_to_run[hostname].zip(cmd_stdouts).each do |(cmd, test_info), cmd_stdout|
+                stdout_lines = cmd_stdout.split("\n")
+                # Last line of stdout is the return code
+                return_code = Integer(stdout_lines.last)
+                test_info[:test].error "Command returned error code #{return_code}" unless return_code.zero?
+                begin
+                  test_info[:validator].call(stdout_lines[0..-2], return_code)
+                rescue
+                  test_info[:test].error "Uncaught exception during validation: #{$!}\n#{$!.backtrace.join("\n")}"
+                end
+                test_info[:test].executed
               end
-              test_info[:test].executed
             end
           end
+          log_debug "----- Total commands executed in #{nbr_secs} secs"
         end
-        puts "----- Total commands executed in #{nbr_secs} secs" if @ssh_executor.debug
       end
     end
 
@@ -312,22 +325,23 @@ module HybridPlatformsConductor
       @hostnames.each do |hostname|
         @tests.each do |test_name|
           if @tests_plugins[test_name].method_defined?(:test_for_node) && should_test_be_run_on(test_name, node: hostname)
-            test = @tests_plugins[test_name].new(
-              @nodes_handler,
-              @deployer,
-              name: test_name,
-              platform: @nodes_handler.platform_for(hostname),
-              node: hostname,
-              debug: @ssh_executor.debug
-            )
-            puts "========== Run node test #{test_name} on node #{hostname}..."
-            begin
-              test.test_for_node
-            rescue
-              test.error "Uncaught exception during test: #{$!}\n#{$!.backtrace.join("\n")}"
+            section "Run node test #{test_name} on node #{hostname}" do
+              test = @tests_plugins[test_name].new(
+                @logger,
+                @nodes_handler,
+                @deployer,
+                name: test_name,
+                platform: @nodes_handler.platform_for(hostname),
+                node: hostname
+              )
+              begin
+                test.test_for_node
+              rescue
+                test.error "Uncaught exception during test: #{$!}\n#{$!.backtrace.join("\n")}"
+              end
+              test.executed
+              @tests_run << test
             end
-            test.executed
-            @tests_run << test
           end
         end
       end
@@ -338,50 +352,51 @@ module HybridPlatformsConductor
       # Group the check-node runs
       tests_for_check_node = @tests.select { |test_name| @tests_plugins[test_name].method_defined?(:test_on_check_node) }.sort
       unless tests_for_check_node.empty?
-        puts "========== Run check-nodes tests #{tests_for_check_node.join(', ')}..."
-        outputs =
-          if @skip_run
-            Hash[@hostnames.map do |hostname|
-              run_log_file_name = "./run_logs/#{hostname}.stdout"
-              [
-                hostname,
-                # TODO: Find a way to also save stderr and the status code
-                [File.exists?(run_log_file_name) ? File.read(run_log_file_name) : nil, '', 0]
-              ]
-            end]
-          else
-            # Why-run deploy on all nodes
-            @deployer.concurrent_execution = true
-            @deployer.use_why_run = true
-            @deployer.timeout = CHECK_NODE_TIMEOUT
-            @deployer.deploy_for(@hostnames)
-          end
-        # Analyze output
-        outputs.each do |hostname, (stdout, stderr, exit_status)|
-          tests_for_check_node.each do |test_name|
-            if should_test_be_run_on(test_name, node: hostname)
-              test = @tests_plugins[test_name].new(
-                @nodes_handler,
-                @deployer,
-                name: test_name,
-                platform: @nodes_handler.platform_for(hostname),
-                node: hostname,
-                debug: @ssh_executor.debug
-              )
-              if stdout.nil?
-                test.error 'No check-node log file found despite the run of check-node.'
-              elsif stdout.is_a?(Symbol)
-                test.error "Check-node run failed: #{stdout}."
-              else
-                test.error "Check-node returned error code #{exit_status}" unless exit_status.zero?
-                begin
-                  test.test_on_check_node(stdout, stderr, exit_status)
-                rescue
-                  test.error "Uncaught exception during test: #{$!}\n#{$!.backtrace.join("\n")}"
+        section "Run check-nodes tests #{tests_for_check_node.join(', ')}" do
+          outputs =
+            if @skip_run
+              Hash[@hostnames.map do |hostname|
+                run_log_file_name = "./run_logs/#{hostname}.stdout"
+                [
+                  hostname,
+                  # TODO: Find a way to also save stderr and the status code
+                  [File.exists?(run_log_file_name) ? File.read(run_log_file_name) : nil, '', 0]
+                ]
+              end]
+            else
+              # Why-run deploy on all nodes
+              @deployer.concurrent_execution = true
+              @deployer.use_why_run = true
+              @deployer.timeout = CHECK_NODE_TIMEOUT
+              @deployer.deploy_for(@hostnames)
+            end
+          # Analyze output
+          outputs.each do |hostname, (stdout, stderr, exit_status)|
+            tests_for_check_node.each do |test_name|
+              if should_test_be_run_on(test_name, node: hostname)
+                test = @tests_plugins[test_name].new(
+                  @logger,
+                  @nodes_handler,
+                  @deployer,
+                  name: test_name,
+                  platform: @nodes_handler.platform_for(hostname),
+                  node: hostname
+                )
+                if stdout.nil?
+                  test.error 'No check-node log file found despite the run of check-node.'
+                elsif stdout.is_a?(Symbol)
+                  test.error "Check-node run failed: #{stdout}."
+                else
+                  test.error "Check-node returned error code #{exit_status}" unless exit_status.zero?
+                  begin
+                    test.test_on_check_node(stdout, stderr, exit_status)
+                  rescue
+                    test.error "Uncaught exception during test: #{$!}\n#{$!.backtrace.join("\n")}"
+                  end
                 end
+                test.executed
+                @tests_run << test
               end
-              test.executed
-              @tests_run << test
             end
           end
         end

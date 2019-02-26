@@ -1,9 +1,13 @@
+require 'hybrid_platforms_conductor/logger_helpers'
+
 module HybridPlatformsConductor
 
   module Tests
 
     # Common ancestor to any test class
     class Test
+
+      include LoggerHelpers
 
       # Get errors encountered
       #   Array<String>
@@ -24,19 +28,19 @@ module HybridPlatformsConductor
       # Constructor
       #
       # Parameters::
+      # * *logger* (Logger): Logger to be used
       # * *nodes_handler* (NodesHandler): Nodes handler that can be used by tests
       # * *deployer* (Deployer): Deployer that can be used by tests
       # * *name* (String): Name of the test being instantiated [default = 'unknown_test']
       # * *platform* (PlatformHandler): Platform handler for which the test is instantiated, or nil if global [default = nil]
       # * *node* (String): Node name for which the test is instantiated, or nil if global or platform specific [default = nil]
-      # * *debug* (Boolean): Are we in debug mode? [default = false]
-      def initialize(nodes_handler, deployer, name: 'unknown_test', platform: nil, node: nil, debug: false)
+      def initialize(logger, nodes_handler, deployer, name: 'unknown_test', platform: nil, node: nil)
+        @logger = logger
         @nodes_handler = nodes_handler
         @deployer = deployer
         @name = name
         @platform = platform
         @node = node
-        @debug = debug
         @errors = []
         @executed = false
       end
@@ -82,7 +86,7 @@ module HybridPlatformsConductor
       # Parameters::
       # * *message* (String): The error message
       def error(message)
-        puts "!!! [ #{self} ] - #{message}" if @debug
+        log_debug "!!! [ #{self} ] - #{message}"
         @errors << message
       end
 

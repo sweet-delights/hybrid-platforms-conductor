@@ -83,8 +83,9 @@ module HybridPlatformsConductor
             repo_sub_dir_name = File.basename(git)[0..-File.extname(git).size - 1]
             repository_path = "#{@git_platforms_dir}/#{repo_sub_dir_name}"
             unless File.exist?(repository_path)
-              puts "Cloning #{git} into #{repository_path}..."
-              Git.clone(git, repo_sub_dir_name, path: @git_platforms_dir)
+              section "Cloning #{git} into #{repository_path}" do
+                Git.clone(git, repo_sub_dir_name, path: @git_platforms_dir)
+              end
             end
             repository_path
           else

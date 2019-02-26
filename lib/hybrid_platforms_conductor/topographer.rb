@@ -1,12 +1,16 @@
+require 'logger'
 require 'ipaddress'
 require 'hybrid_platforms_conductor/nodes_handler'
 require 'hybrid_platforms_conductor/json_dumper'
 require 'hybrid_platforms_conductor/topographer/plugin'
+require 'hybrid_platforms_conductor/logger_helpers'
 
 module HybridPlatformsConductor
 
   # Class giving an API to parse the graph of the TI network
   class Topographer
+
+    include LoggerHelpers
 
     # Give a default configuration
     #
@@ -67,12 +71,14 @@ module HybridPlatformsConductor
     # Constructor
     #
     # Parameters::
+    # * *logger* (Logger): Logger to be used [default = Logger.new(STDOUT)]
     # * *nodes_handler* (NodesHandler): The nodes handler to be used [default = NodesHandler.new]
     # * *json_dumper* (JsonDumper): The JSON Dumper to be used [default = JsonDumper.new]
     # * *config* (Hash<Symbol,Object>): Some configuration parameters that can override defaults. [default = {}] Here are the possible keys:
     #   * *json_files_dir* (String): Directory from which JSON files are taken. [default = nodes_json]
     #   * *connections_max_level* (Integer or nil): Number maximal of recursive passes to get hostname connections (nil means no limit). [default = nil]
-    def initialize(nodes_handler: NodesHandler.new, json_dumper: JsonDumper.new, config: {})
+    def initialize(logger: Logger.new(STDOUT), nodes_handler: NodesHandler.new, json_dumper: JsonDumper.new, config: {})
+      @logger = logger
       @nodes_handler = nodes_handler
       @json_dumper = json_dumper
       @config = Topographer.default_config.merge(config)
@@ -196,8 +202,9 @@ module HybridPlatformsConductor
     # Dump the graph in the desired outputs
     def dump_outputs
       @outputs.each do |(format, file_name)|
-        puts "===== Write #{format} file #{file_name}..."
-        write_graph(file_name, format)
+        section "Write #{format} file #{file_name}" do
+          write_graph(file_name, format)
+        end
       end
     end
 
@@ -421,7 +428,7 @@ module HybridPlatformsConductor
             if cluster_per_node.key?(included_node_name)
               # Found a conflict between 2 clusters
               conflicting_clusters = [node_name, cluster_per_node[included_node_name]]
-              puts "!!! Node #{included_node_name} found in both clusters #{node_name} and #{cluster_per_node[included_node_name]}"
+              log_error "Node #{included_node_name} found in both clusters #{node_name} and #{cluster_per_node[included_node_name]}"
               break
             else
               cluster_per_node[included_node_name] = node_name
@@ -607,7 +614,7 @@ module HybridPlatformsConductor
       if File.exist?(json_file_name)
         json_filter_out(JSON.parse(File.read(json_file_name)), @config[:ignore_json_keys])
       else
-        puts "!!! Missing JSON file #{json_file_name}"
+        log_error "Missing JSON file #{json_file_name}"
         {}
       end
     end

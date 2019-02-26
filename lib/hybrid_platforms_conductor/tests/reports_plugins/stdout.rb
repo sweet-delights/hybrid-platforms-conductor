@@ -11,85 +11,85 @@ module HybridPlatformsConductor
 
         # Handle tests reports
         def report
-          puts
-          puts "========== Error report of #{@tests.size} tests run on #{@tested_nodes.size} nodes"
-          puts
+          out
+          out "========== Error report of #{@tests.size} tests run on #{@tested_nodes.size} nodes"
+          out
 
           errors = group_errors(global_tests, :test_name)
-          puts "======= #{errors.size} failing global tests:"
-          puts
+          out "======= #{errors.size} failing global tests:"
+          out
           errors.each do |test_name, test_errors|
-            puts "===== #{test_name} found #{test_errors.size} errors:"
+            out "===== #{test_name} found #{test_errors.size} errors:"
             test_errors.each do |error|
-              puts "    - #{error}"
+              out "    - #{error}"
             end
-            puts
+            out
           end
-          puts
+          out
 
           errors = group_errors(platform_tests, :test_name, :platform)
-          puts "======= #{errors.size} failing platform tests:"
-          puts
+          out "======= #{errors.size} failing platform tests:"
+          out
           errors.each do |test_name, errors_by_platform|
-            puts "===== #{test_name} found #{errors_by_platform.size} platforms having errors:"
+            out "===== #{test_name} found #{errors_by_platform.size} platforms having errors:"
             errors_by_platform.each do |platform, test_errors|
-              puts "  * [ #{platform.repository_path} ] - #{test_errors.size} errors:"
+              out "  * [ #{platform.repository_path} ] - #{test_errors.size} errors:"
               test_errors.each do |error|
-                puts "    - #{error}"
+                out "    - #{error}"
               end
             end
-            puts
+            out
           end
-          puts
+          out
 
           errors = group_errors(node_tests, :test_name, :node)
-          puts "======= #{errors.size} failing node tests:"
-          puts
+          out "======= #{errors.size} failing node tests:"
+          out
           errors.each do |test_name, errors_by_node|
-            puts "===== #{test_name} found #{errors_by_node.size} nodes having errors:"
+            out "===== #{test_name} found #{errors_by_node.size} nodes having errors:"
             errors_by_node.each do |node, test_errors|
-              puts "  * [ #{node} ] - #{test_errors.size} errors:"
+              out "  * [ #{node} ] - #{test_errors.size} errors:"
               test_errors.each do |error|
-                puts "    - #{error}"
+                out "    - #{error}"
               end
             end
-            puts
+            out
           end
-          puts
+          out
 
           errors = group_errors(platform_tests, :platform, :test_name)
-          puts "======= #{errors.size} failing platforms:"
-          puts
+          out "======= #{errors.size} failing platforms:"
+          out
           errors.each do |platform, errors_by_test|
-            puts "===== #{platform.repository_path} has #{errors_by_test.size} failing tests:"
+            out "===== #{platform.repository_path} has #{errors_by_test.size} failing tests:"
             errors_by_test.each do |test_name, test_errors|
-              puts "  * [ #{test_name} ] - #{test_errors.size} errors:"
+              out "  * [ #{test_name} ] - #{test_errors.size} errors:"
               test_errors.each do |error|
-                puts "    - #{error}"
+                out "    - #{error}"
               end
             end
-            puts
+            out
           end
-          puts
+          out
 
           errors = group_errors(node_tests, :node, :test_name)
-          puts "======= #{errors.size} failing nodes:"
-          puts
+          out "======= #{errors.size} failing nodes:"
+          out
           errors.each do |node, errors_by_test|
-            puts "===== #{node} has #{errors_by_test.size} failing tests:"
+            out "===== #{node} has #{errors_by_test.size} failing tests:"
             errors_by_test.each do |test_name, test_errors|
-              puts "  * [ #{test_name} ] - #{test_errors.size} errors:"
+              out "  * [ #{test_name} ] - #{test_errors.size} errors:"
               test_errors.each do |error|
-                puts "    - #{error}"
+                out "    - #{error}"
               end
             end
-            puts
+            out
           end
-          puts
+          out
 
-          puts '========== Stats by hosts list:'
-          puts
-          puts(Terminal::Table.new(headings: ['List name', '# hosts', '% tested', '% success']) do |table|
+          out '========== Stats by hosts list:'
+          out
+          out(Terminal::Table.new(headings: ['List name', '# hosts', '% tested', '% success']) do |table|
             nodes_by_hosts_list.each do |hosts_list_name, nodes_info|
               table << [
                 hosts_list_name,

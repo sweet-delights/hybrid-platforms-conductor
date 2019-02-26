@@ -29,7 +29,7 @@ module HybridPlatformsConductor
             each_slice(2).
             to_a.
             map { |(time_str, value_str)| [Time.parse("#{time_str} UTC"), value_str.to_f] }
-          puts '!!! Unable to extract previous percentages from Confluence page' if @previous_success_percentages.empty?
+          log_error 'Unable to extract previous percentages from Confluence page' if @previous_success_percentages.empty?
           confluence_page_update(CONFLUENCE_PAGE_ID, render('confluence'))
         end
 
