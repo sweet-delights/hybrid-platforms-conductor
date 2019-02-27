@@ -13,12 +13,14 @@ module HybridPlatformsConductor
       #
       # Parameters::
       # * *logger* (Logger): Logger to be used
+      # * *logger_stderr* (Logger): Logger to be used for stderr [default = Logger.new(STDERR)]
       # * *nodes_handler* (NodesHandler): Nodes handler that has been used by tests.
       # * *tested_nodes* (Array<String>): List of nodes tests were run on.
       # * *tested_platforms* (Array<PlatformHandler>): List of platforms tests were run on.
       # * *tests* (Array<Test>): List of tests.
-      def initialize(logger, nodes_handler, tested_nodes, tested_platforms, tests)
+      def initialize(logger, logger_stderr, nodes_handler, tested_nodes, tested_platforms, tests)
         @logger = logger
+        @logger_stderr = logger_stderr
         @nodes_handler = nodes_handler
         @tested_nodes = tested_nodes.uniq.sort
         @tested_platforms = tested_platforms

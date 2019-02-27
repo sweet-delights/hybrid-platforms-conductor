@@ -7,6 +7,7 @@ require 'hybrid_platforms_conductor/logger_helpers'
 require 'hybrid_platforms_conductor/nodes_handler'
 require 'hybrid_platforms_conductor/ssh_executor'
 require 'hybrid_platforms_conductor/cmd_runner'
+require 'hybrid_platforms_conductor/executable'
 
 module HybridPlatformsConductor
 
@@ -19,14 +20,34 @@ module HybridPlatformsConductor
 
       # Initialize global semaphores
       def init_semaphores
-        # This is a global semaphore used to ensure Docker semaphores are created correctly in multithread
-        @docker_semaphore = Mutex.new
+        # This is a global semaphore used to ensure all other semaphores are created correctly in multithread
+        @global_semaphore = Mutex.new
         # The access to Docker images should be protected as it runs in multithread.
         # Semaphore per image name
         @docker_image_semaphores = {}
         # The access to Docker containers should be protected as it runs in multithread
         # Semaphore per container name
         @docker_container_semaphores = {}
+        # The access to platforms to package should be protected as it runs in multithread
+        # Semaphore per platform name
+        @platform_to_package_semaphores = {}
+      end
+
+      # Run a code block globally protected by a semaphore dedicated to a platform to be packaged
+      #
+      # Parameters::
+      # * *platform* (PlatformHandler): The platform
+      # * Proc: Code called with semaphore granted
+      def with_platform_to_package_semaphore(platform)
+        # First, check if the semaphore exists, and create it if it does not.
+        # This part should also be thread-safe.
+        platform_name = platform.info[:repo_name]
+        @global_semaphore.synchronize do
+          @platform_to_package_semaphores[platform_name] = Mutex.new unless @platform_to_package_semaphores.key?(platform_name)
+        end
+        @platform_to_package_semaphores[platform_name].synchronize do
+          yield
+        end
       end
 
       # Run a code block globally protected by a semaphore dedicated to a Docker image
@@ -37,7 +58,7 @@ module HybridPlatformsConductor
       def with_image_semaphore(image_tag)
         # First, check if the semaphore exists, and create it if it does not.
         # This part should also be thread-safe.
-        @docker_semaphore.synchronize do
+        @global_semaphore.synchronize do
           @docker_image_semaphores[image_tag] = Mutex.new unless @docker_image_semaphores.key?(image_tag)
         end
         @docker_image_semaphores[image_tag].synchronize do
@@ -53,7 +74,7 @@ module HybridPlatformsConductor
       def with_container_semaphore(container)
         # First, check if the semaphore exists, and create it if it does not.
         # This part should also be thread-safe.
-        @docker_semaphore.synchronize do
+        @global_semaphore.synchronize do
           @docker_container_semaphores[container] = Mutex.new unless @docker_container_semaphores.key?(container)
         end
         @docker_container_semaphores[container].synchronize do
@@ -61,9 +82,20 @@ module HybridPlatformsConductor
         end
       end
 
+      # List of platform names that have been packaged.
+      # Make this at class level as several Deployer instances can be used in a multi-thread environmnent.
+      #   Array<String>
+      attr_accessor :packaged_platforms
+
+      # Init class variables
+      def init_class_variables
+        init_semaphores
+        @packaged_platforms = []
+      end
+
     end
 
-    self.init_semaphores
+    self.init_class_variables
 
     # Do we use why-run mode while deploying? [default = false]
     #   Boolean
@@ -94,11 +126,13 @@ module HybridPlatformsConductor
     #
     # Parameters::
     # * *logger* (Logger): Logger to be used [default = Logger.new(STDOUT)]
+    # * *logger_stderr* (Logger): Logger to be used for stderr [default = Logger.new(STDERR)]
     # * *cmd_runner* (CmdRunner): Command executor to be used. [default = CmdRunner.new]
     # * *nodes_handler* (NodesHandler): Nodes handler to be used. [default = NodesHandler.new]
     # * *ssh_executor* (SshExecutor): Ssh executor to be used. [default = SshExecutor.new]
-    def initialize(logger: Logger.new(STDOUT), cmd_runner: CmdRunner.new, nodes_handler: NodesHandler.new, ssh_executor: SshExecutor.new)
+    def initialize(logger: Logger.new(STDOUT), logger_stderr: Logger.new(STDERR), cmd_runner: CmdRunner.new, nodes_handler: NodesHandler.new, ssh_executor: SshExecutor.new)
       @logger = logger
+      @logger_stderr = logger_stderr
       @cmd_runner = cmd_runner
       @nodes_handler = nodes_handler
       @ssh_executor = ssh_executor
@@ -212,11 +246,10 @@ module HybridPlatformsConductor
           Deployer.with_image_semaphore(image_tag) do
             docker_image = Docker::Image.all.find { |search_image| !search_image.info['RepoTags'].nil? && search_image.info['RepoTags'].include?("#{image_tag}:latest") }
             unless docker_image
-              section "Creating Docker image #{image_tag}" do
-                Excon.defaults[:read_timeout] = 600
-                docker_image = Docker::Image.build_from_dir(@nodes_handler.docker_image_dir(image))
-                docker_image.tag repo: image_tag
-              end
+              log_debug "Creating Docker image #{image_tag}..."
+              Excon.defaults[:read_timeout] = 600
+              docker_image = Docker::Image.build_from_dir(@nodes_handler.docker_image_dir(image))
+              docker_image.tag repo: image_tag
             end
           end
           container_name = "hpc_container_#{node}_#{container_id}"
@@ -231,30 +264,36 @@ module HybridPlatformsConductor
                   old_docker_container.stop
                   old_docker_container.remove
                 end
-                section "Creating Docker container #{container_name}" do
-                  Docker::Container.create(name: container_name, image: image_tag)
-                end
+                log_debug "Creating Docker container #{container_name}..."
+                Docker::Container.create(name: container_name, image: image_tag)
               end
             # Run the container
             docker_container.start
-            out "Docker container #{container_name} started."
+            log_debug "Docker container #{container_name} started."
             begin
               container_ip = docker_container.json['NetworkSettings']['IPAddress']
-              cmd_runner = HybridPlatformsConductor::CmdRunner.new
-              ssh_executor = HybridPlatformsConductor::SshExecutor.new(nodes_handler: @nodes_handler, cmd_runner: cmd_runner)
+              sub_logger, sub_logger_stderr =
+                if log_debug?
+                  [@logger, @logger_stderr]
+                else
+                  null_logger = Logger.new('/dev/null', level: :info)
+                  [null_logger, null_logger]
+                end
+              sub_executable = Executable.new(logger: sub_logger, logger_stderr: sub_logger_stderr)
+              nodes_handler = sub_executable.nodes_handler
+              ssh_executor = sub_executable.ssh_executor
+              deployer = sub_executable.deployer
               ssh_executor.override_connections[node] = container_ip
-              ssh_executor.log_level = :debug if log_debug?
               ssh_executor.ssh_user_name = 'root'
               ssh_executor.passwords[node] = 'root_pwd'
-              deployer = HybridPlatformsConductor::Deployer.new(cmd_runner: cmd_runner, ssh_executor: ssh_executor)
               deployer.force_direct_deploy = true
               deployer.allow_deploy_non_master = true
               deployer.secrets = @secrets
-              @nodes_handler.platform_for(node).prepare_deploy_for_local_testing
+              nodes_handler.platform_for(node).prepare_deploy_for_local_testing
               yield deployer, container_ip
             ensure
               docker_container.stop
-              out "Docker container #{container_name} stopped."
+              log_debug "Docker container #{container_name} stopped."
             end
           end
         else
@@ -267,9 +306,18 @@ module HybridPlatformsConductor
 
     # Package the repository, ready to be sent to artefact repositories.
     def package
-      section 'Packaging current repository' do
-        @platforms.each do |platform_handler|
-          platform_handler.package
+      section 'Packaging current repositories' do
+        @platforms.each do |platform|
+          # Don't package it twice. Make sure the check is thread-safe.
+          Deployer.with_platform_to_package_semaphore(platform) do
+            platform_name = platform.info[:repo_name]
+            if Deployer.packaged_platforms.include?(platform_name)
+              log_debug "Platform #{platform_name} has already been packaged. Won't package it another time."
+            else
+              platform.package
+              Deployer.packaged_platforms << platform_name
+            end
+          end
         end
       end
     end

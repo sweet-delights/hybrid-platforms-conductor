@@ -1,6 +1,8 @@
 require 'json'
 require 'ipaddress'
 require 'logger'
+require 'ruby-progressbar'
+require 'thread'
 require 'hybrid_platforms_conductor/logger_helpers'
 require 'hybrid_platforms_conductor/platforms_dsl'
 
@@ -15,8 +17,10 @@ module HybridPlatformsConductor
     #
     # Parameters::
     # * *logger* (Logger): Logger to be used [default = Logger.new(STDOUT)]
-    def initialize(logger: Logger.new(STDOUT))
+    # * *logger_stderr* (Logger): Logger to be used for stderr [default = Logger.new(STDERR)]
+    def initialize(logger: Logger.new(STDOUT), logger_stderr: Logger.new(STDERR))
       @logger = logger
+      @logger_stderr = logger_stderr
       initialize_platforms_dsl
     end
 
@@ -321,6 +325,86 @@ module HybridPlatformsConductor
       end
       options_parser.on('-n', '--host-name HOST_NAME', 'Select a specific host. Can be a regular expression if used with enclosing "/" characters. (can be used several times)') do |host_name|
         hosts << host_name
+      end
+    end
+
+    # Iterate over a list of nodes.
+    # Provide a mechanism to multithread this iteration (in such case the iterating code has to be thread-safe).
+    # In case of multithreaded run, a progress bar is being displayed.
+    #
+    # Parameters::
+    # * *nodes* (Array<String>): List of nodes to iterate over
+    # * *parallel* (Boolean): Iterate in a multithreaded way? [default: false]
+    # * *nbr_threads_max* (Integer or nil): Maximum number of threads to be used in case of parallel, or nil for no limit [default: nil]
+    # * Proc: The code called for each node being iterated on.
+    #   * Parameters::
+    #     * *node* (String): The node name
+    def for_each_node_in(nodes, parallel: false, nbr_threads_max: nil)
+      # Threads to wait for
+      if parallel
+        threads_to_join = []
+        # Spread hosts evenly among the threads.
+        # Use a shared pool of hostnames to be handled by threads.
+        pools = {
+          to_process: nodes.sort,
+          processing: [],
+          processed: []
+        }
+        nbr_total = nodes.size
+        # Protect access to the pools using a mutex
+        pools_semaphore = Mutex.new
+        # Spawn the threads, each one responsible for handling its list
+        (nbr_threads_max.nil? || nbr_threads_max > nbr_total ? nbr_total : nbr_threads_max).times do
+          threads_to_join << Thread.new do
+            loop do
+              # Modify the list while processing it, so that reporting can be done.
+              node = nil
+              pools_semaphore.synchronize do
+                node = pools[:to_process].shift
+                pools[:processing] << node unless node.nil?
+              end
+              break if node.nil?
+              yield node
+              pools_semaphore.synchronize do
+                pools[:processing].delete(node)
+                pools[:processed] << node
+              end
+            end
+          end
+        end
+        # Here the main thread just reports progression
+        nbr_to_process = nil
+        nbr_processing = nil
+        nbr_processed = nil
+        progress_bar = ProgressBar.create(
+          # TODO: Find a more elegant way to access the internal log device to harmonize behaviour between the progress bar and the logger
+          output: @logger.instance_variable_get(:@logdev).dev,
+          title: 'Initializing...',
+          total: nbr_total,
+          format: '[%j%%] - |%bC%i| - [ %t ]',
+          progress_mark: ' ',
+          remainder_mark: '-'
+        )
+        loop do
+          pools_semaphore.synchronize do
+            nbr_to_process = pools[:to_process].size
+            nbr_processing = pools[:processing].size
+            nbr_processed = pools[:processed].size
+          end
+          progress_bar.title = "Queue: #{nbr_to_process} - Processing: #{nbr_processing} - Done: #{nbr_processed} - Total: #{nbr_total}"
+          progress_bar.progress = nbr_processed
+          break if nbr_processed == nbr_total
+          sleep 0.5
+        end
+        # Wait for threads to be joined
+        threads_to_join.each do |thread|
+          thread.join
+        end
+      else
+        # Execute synchronously
+        nodes.each do |node|
+          yield node
+        end
       end
     end
 

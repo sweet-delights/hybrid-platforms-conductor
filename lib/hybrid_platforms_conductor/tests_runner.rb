@@ -16,11 +16,13 @@ module HybridPlatformsConductor
     #
     # Parameters::
     # * *logger* (Logger): Logger to be used [default = Logger.new(STDOUT)]
+    # * *logger_stderr* (Logger): Logger to be used for stderr [default = Logger.new(STDERR)]
     # * *nodes_handler* (NodesHandler): Nodes handler to be used [default = NodesHandler.new]
     # * *ssh_executor* (SshExecutor): SSH executor to be used for the tests [default = SshExecutor.new]
     # * *deployer* (Deployer): Deployer to be used for the tests needed why-run deployments [default = Deployer.new]
-    def initialize(logger: Logger.new(STDOUT), nodes_handler: NodesHandler.new, ssh_executor: SshExecutor.new, deployer: Deployer.new)
+    def initialize(logger: Logger.new(STDOUT), logger_stderr: Logger.new(STDERR), nodes_handler: NodesHandler.new, ssh_executor: SshExecutor.new, deployer: Deployer.new)
       @logger = logger
+      @logger_stderr = logger_stderr
       @nodes_handler = nodes_handler
       @ssh_executor = ssh_executor
       @deployer = deployer
@@ -132,15 +134,15 @@ module HybridPlatformsConductor
       @tested_platforms.sort_by!
 
       @reports.each do |report_name|
-        @reports_plugins[report_name].new(@logger, @nodes_handler, @hostnames, @tested_platforms, @tests_run).report
+        @reports_plugins[report_name].new(@logger, @logger_stderr, @nodes_handler, @hostnames, @tested_platforms, @tests_run).report
       end
 
       out
       if @tests_run.all? { |test| test.errors.empty? }
-        out '===== No errors ====='.green
+        out '===== No errors ====='.green.bold
         0
       else
-        out '===== Some errors were found. Check output. ====='.red
+        out '===== Some errors were found. Check output. ====='.red.bold
         1
       end
     end
@@ -155,6 +157,7 @@ module HybridPlatformsConductor
     def error(message, hostname: nil)
       global_test = Tests::Test.new(
         @logger,
+        @logger_stderr,
         @nodes_handler,
         @deployer,
         name: :global,
@@ -168,13 +171,14 @@ module HybridPlatformsConductor
 
     # Run tests that are global
     def run_tests_global
-      section 'Run global tests' do
-        # Run global tests
-        @tests.each do |test_name|
-          if @tests_plugins[test_name].method_defined?(:test)
+      tests_global = @tests.select { |test_name| @tests_plugins[test_name].method_defined?(:test) }.uniq.sort
+      unless tests_global.empty?
+        section "Run #{tests_global.size} global tests" do
+          tests_global.each do |test_name|
             section "Run global test #{test_name}" do
               test = @tests_plugins[test_name].new(
                 @logger,
+                @logger_stderr,
                 @nodes_handler,
                 @deployer,
                 name: test_name
@@ -194,9 +198,10 @@ module HybridPlatformsConductor
 
     # Run tests that are platform specific
     def run_tests_platform
-      section 'Run platform tests' do
-        @tests.each do |test_name|
-          if @tests_plugins[test_name].method_defined?(:test_on_platform)
+      tests_on_platform = @tests.select { |test_name| @tests_plugins[test_name].method_defined?(:test_on_platform) }.uniq.sort
+      unless tests_on_platform.empty?
+        section "Run #{tests_on_platform.size} platform tests" do
+          tests_on_platform.each do |test_name|
             # Run this test for every platform allowed
             @nodes_handler.platforms.each do |platform_handler|
               @tested_platforms << platform_handler
@@ -204,6 +209,7 @@ module HybridPlatformsConductor
                 section "Run platform test #{test_name} on #{platform_handler.info[:repo_name]}" do
                   test = @tests_plugins[test_name].new(
                     @logger,
+                    @logger_stderr,
                     @nodes_handler,
                     @deployer,
                     name: test_name,
@@ -224,6 +230,10 @@ module HybridPlatformsConductor
       end
     end
 
+    # Number of threads max to use for node ssh tests
+    #   Integer
+    MAX_THREADS_NODE_SSH_TESTS = 64
+
     # Run tests that are node specific and require commands to be run via SSH
     def run_tests_ssh_on_nodes
       # Gather the list of commands to be run on each node with their corresponding test info, per node
@@ -236,6 +246,7 @@ module HybridPlatformsConductor
           if @tests_plugins[test_name].method_defined?(:test_on_node) && should_test_be_run_on(test_name, node: hostname)
             test = @tests_plugins[test_name].new(
               @logger,
+              @logger_stderr,
               @nodes_handler,
               @deployer,
               name: test_name,
@@ -283,9 +294,12 @@ module HybridPlatformsConductor
             }
           ]
         end]
-        section "Run nodes SSH tests #{tests_on_nodes.uniq.sort.join(', ')} (timeout to #{timeout} secs)" do
+        tests_on_nodes.uniq!
+        tests_on_nodes.sort!
+        section "Run #{tests_on_nodes.size} nodes SSH tests #{tests_on_nodes.join(', ')} (timeout to #{timeout} secs)" do
           start_time = Time.now
           nbr_secs = nil
+          @ssh_executor.max_threads = MAX_THREADS_NODE_SSH_TESTS
           @ssh_executor.run_cmd_on_hosts(
             test_cmds,
             concurrent: !log_debug?,
@@ -320,27 +334,36 @@ module HybridPlatformsConductor
       end
     end
 
+    # Number of threads max to use for node tests (they include the Docker tests)
+    #   Integer
+    MAX_THREADS_NODE_TESTS = 8
+
     # Run tests that are node specific
     def run_tests_for_nodes
-      @hostnames.each do |hostname|
-        @tests.each do |test_name|
-          if @tests_plugins[test_name].method_defined?(:test_for_node) && should_test_be_run_on(test_name, node: hostname)
-            section "Run node test #{test_name} on node #{hostname}" do
-              test = @tests_plugins[test_name].new(
-                @logger,
-                @nodes_handler,
-                @deployer,
-                name: test_name,
-                platform: @nodes_handler.platform_for(hostname),
-                node: hostname
-              )
-              begin
-                test.test_for_node
-              rescue
-                test.error "Uncaught exception during test: #{$!}\n#{$!.backtrace.join("\n")}"
+      tests_for_nodes = @tests.select { |test_name| @tests_plugins[test_name].method_defined?(:test_for_node) }.uniq.sort
+      unless tests_for_nodes.empty?
+        section "Run #{tests_for_nodes.size} nodes tests #{tests_for_nodes.join(', ')}" do
+          @nodes_handler.for_each_node_in(@hostnames, parallel: !log_debug?, nbr_threads_max: MAX_THREADS_NODE_TESTS) do |node|
+            tests_for_nodes.each do |test_name|
+              if should_test_be_run_on(test_name, node: node)
+                log_debug "Run node test #{test_name} on node #{node}..."
+                test = @tests_plugins[test_name].new(
+                  @logger,
+                  @logger_stderr,
+                  @nodes_handler,
+                  @deployer,
+                  name: test_name,
+                  platform: @nodes_handler.platform_for(node),
+                  node: node
+                )
+                begin
+                  test.test_for_node
+                rescue
+                  test.error "Uncaught exception during test: #{$!}\n#{$!.backtrace.join("\n")}"
+                end
+                test.executed
+                @tests_run << test
               end
-              test.executed
-              @tests_run << test
             end
           end
         end
@@ -376,6 +399,7 @@ module HybridPlatformsConductor
               if should_test_be_run_on(test_name, node: hostname)
                 test = @tests_plugins[test_name].new(
                   @logger,
+                  @logger_stderr,
                   @nodes_handler,
                   @deployer,
                   name: test_name,

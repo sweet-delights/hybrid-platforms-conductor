@@ -24,12 +24,14 @@ module HybridPlatformsConductor
             "#{CmdRunner.executables_prefix}ssh_run --host-name #{example_host} --show-commands --interactive",
             "#{CmdRunner.executables_prefix}setup --help",
             "#{CmdRunner.executables_prefix}test --help",
-            "#{CmdRunner.executables_prefix}topograph --from \"--host-name #{example_host}\" --to \"--host-name #{example_host}\" --skip-run --output graphviz:graph.gv && rm graph.gv"
+            "#{CmdRunner.executables_prefix}topograph --from \"--host-name #{example_host}\" --to \"--host-name #{example_host}\" --skip-run --output graphviz:graph.gv"
           ].each do |cmd|
             stdout = `#{cmd} 2>&1`
             exit_status = $?.exitstatus
             assert_equal(exit_status, 0, "Command #{cmd} returned code #{exit_status}:\n#{stdout}")
           end
+          # Remove the file created by Topograph if it exists
+          File.unlink('graph.gv') if File.exist?('graph.gv')
         end
 
       end

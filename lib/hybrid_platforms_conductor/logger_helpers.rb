@@ -6,20 +6,38 @@ module HybridPlatformsConductor
   # Also define methods for UI (meaning text that should be displayed as interface, and not as logging).
   module LoggerHelpers
 
-    # Sorted list of levels and their corresponding colors.
-    LEVELS_COLORS = {
-      fatal: :red,
-      error: :red,
-      warn: :yellow,
-      info: :white,
-      debug: :white,
-      unknown: :white
+    # Sorted list of levels and their corresponding modifiers.
+    LEVELS_MODIFIERS = {
+      fatal: [:red, :bold],
+      error: [:red, :bold],
+      warn: [:yellow, :bold],
+      info: [:white],
+      debug: [:white],
+      unknown: [:white]
     }
 
-    LEVELS_COLORS.each do |level, color|
+    # List of levels that will output on stderr
+    LEVELS_TO_STDERR = %i[warn error fatal]
+
+    LEVELS_MODIFIERS.keys.each do |level|
       define_method("log_#{level}") do |message|
-        component = defined?(@log_component) ? @log_component : self.class.name.split('::').last
-        @logger.send(level, "#{component.nil? ? '' : "[ #{component} ] - "}#{message}".send(color))
+        (LEVELS_TO_STDERR.include?(level) ? @logger_stderr : @logger).send(
+          level,
+          defined?(@log_component) ? @log_component : self.class.name.split('::').last
+        ) { message }
+      end
+    end
+
+    # Set loggers to the desired format
+    def set_loggers_format
+      [@logger, @logger_stderr].each do |logger|
+        logger.formatter = proc do |severity, datetime, progname, msg|
+          message = "[#{Time.now.utc.strftime('%F %T')} (PID #{$$} / TID #{Thread.current.object_id})] #{severity.rjust(5)} - [ #{progname} ] - #{msg}\n"
+          LEVELS_MODIFIERS[severity.downcase.to_sym].each do |modifier|
+            message = message.send(modifier)
+          end
+          message
+        end
       end
     end
 
@@ -58,7 +76,7 @@ module HybridPlatformsConductor
       @out_sections = [] unless defined?(@out_sections)
       message = "#{'  ' * @out_sections.size}#{message}"
       # log_debug "<Output> - #{message}"
-      puts message
+      @logger << "#{message}\n"
     end
 
     # Display a new section in the UI, used to group a set of operations

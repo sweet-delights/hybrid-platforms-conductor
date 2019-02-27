@@ -29,13 +29,15 @@ module HybridPlatformsConductor
       #
       # Parameters::
       # * *logger* (Logger): Logger to be used
+      # * *logger_stderr* (Logger): Logger to be used for stderr [default = Logger.new(STDERR)]
       # * *nodes_handler* (NodesHandler): Nodes handler that can be used by tests
       # * *deployer* (Deployer): Deployer that can be used by tests
       # * *name* (String): Name of the test being instantiated [default = 'unknown_test']
       # * *platform* (PlatformHandler): Platform handler for which the test is instantiated, or nil if global [default = nil]
       # * *node* (String): Node name for which the test is instantiated, or nil if global or platform specific [default = nil]
-      def initialize(logger, nodes_handler, deployer, name: 'unknown_test', platform: nil, node: nil)
+      def initialize(logger, logger_stderr, nodes_handler, deployer, name: 'unknown_test', platform: nil, node: nil)
         @logger = logger
+        @logger_stderr = logger_stderr
         @nodes_handler = nodes_handler
         @deployer = deployer
         @name = name
@@ -86,7 +88,7 @@ module HybridPlatformsConductor
       # Parameters::
       # * *message* (String): The error message
       def error(message)
-        log_debug "!!! [ #{self} ] - #{message}"
+        log_error "[ #{self} ] - #{message}"
         @errors << message
       end
 

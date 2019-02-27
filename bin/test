@@ -7,9 +7,7 @@ executable = HybridPlatformsConductor::Executable.new(
   plugins_options: false,
   timeout_options: false
 )
-ssh_executor = executable.ssh_executor
 tests_runner = executable.tests_runner
-ssh_executor.max_threads = 64
 
 executable.parse_options!
 

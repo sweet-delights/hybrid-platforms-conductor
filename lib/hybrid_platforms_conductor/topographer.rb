@@ -72,13 +72,15 @@ module HybridPlatformsConductor
     #
     # Parameters::
     # * *logger* (Logger): Logger to be used [default = Logger.new(STDOUT)]
+    # * *logger_stderr* (Logger): Logger to be used for stderr [default = Logger.new(STDERR)]
     # * *nodes_handler* (NodesHandler): The nodes handler to be used [default = NodesHandler.new]
     # * *json_dumper* (JsonDumper): The JSON Dumper to be used [default = JsonDumper.new]
     # * *config* (Hash<Symbol,Object>): Some configuration parameters that can override defaults. [default = {}] Here are the possible keys:
     #   * *json_files_dir* (String): Directory from which JSON files are taken. [default = nodes_json]
     #   * *connections_max_level* (Integer or nil): Number maximal of recursive passes to get hostname connections (nil means no limit). [default = nil]
-    def initialize(logger: Logger.new(STDOUT), nodes_handler: NodesHandler.new, json_dumper: JsonDumper.new, config: {})
+    def initialize(logger: Logger.new(STDOUT), logger_stderr: Logger.new(STDERR), nodes_handler: NodesHandler.new, json_dumper: JsonDumper.new, config: {})
       @logger = logger
+      @logger_stderr = logger_stderr
       @nodes_handler = nodes_handler
       @json_dumper = json_dumper
       @config = Topographer.default_config.merge(config)
@@ -614,7 +616,7 @@ module HybridPlatformsConductor
       if File.exist?(json_file_name)
         json_filter_out(JSON.parse(File.read(json_file_name)), @config[:ignore_json_keys])
       else
-        log_error "Missing JSON file #{json_file_name}"
+        log_warn "Missing JSON file #{json_file_name}"
         {}
       end
     end

@@ -1,8 +1,5 @@
 require 'logger'
-require 'thread'
 require 'fileutils'
-require 'open3'
-require 'ruby-progressbar'
 require 'tmpdir'
 require 'tempfile'
 require 'hybrid_platforms_conductor/nodes_handler'
@@ -52,10 +49,12 @@ module HybridPlatformsConductor
     #
     # Parameters::
     # * *logger* (Logger): Logger to be used [default = Logger.new(STDOUT)]
+    # * *logger_stderr* (Logger): Logger to be used for stderr [default = Logger.new(STDERR)]
     # * *cmd_runner* (CmdRunner): Command runner to be used. [default = CmdRunner.new]
     # * *nodes_handler* (NodesHandler): Nodes handler to be used. [default = NodesHandler.new]
-    def initialize(logger: Logger.new(STDOUT), cmd_runner: CmdRunner.new, nodes_handler: NodesHandler.new)
+    def initialize(logger: Logger.new(STDOUT), logger_stderr: Logger.new(STDERR), cmd_runner: CmdRunner.new, nodes_handler: NodesHandler.new)
       @logger = logger
+      @logger_stderr = logger_stderr
       @cmd_runner = cmd_runner
       @nodes_handler = nodes_handler
       # Default values
@@ -144,83 +143,18 @@ module HybridPlatformsConductor
         end
       end
       log_debug "Running actions on #{actions_per_hostname.size} hosts"
-
       # Prepare the result (stdout or nil per hostname)
       result = Hash[actions_per_hostname.keys.map { |hostname| [hostname, nil] }]
       unless actions_per_hostname.empty?
-        # Threads to wait for
-        if concurrent
-          threads_to_join = []
-          # Spread hosts evenly among the threads.
-          # Use a shared pool of hostnames to be handled by threads.
-          pools = {
-            to_process: actions_per_hostname.keys.sort,
-            processing: [],
-            processed: []
-          }
-          # Protect access to the pools using a mutex
-          pools_semaphore = Mutex.new
-          # Spawn the threads, each one responsible for handling its list
-          [@max_threads, pools[:to_process].size].min.times do
-            threads_to_join << Thread.new do
-              loop do
-                # Modify the list while processing it, so that reporting can be done.
-                hostname = nil
-                pools_semaphore.synchronize do
-                  hostname = pools[:to_process].shift
-                  pools[:processing] << hostname unless hostname.nil?
-                end
-                break if hostname.nil?
-                # Handle hostname
-                execute_actions_on(
-                  hostname,
-                  actions_per_hostname[hostname][:actions],
-                  ssh_env: actions_per_hostname[hostname][:env],
-                  timeout: timeout,
-                  log_to_file: log_to_dir.nil? ? nil : "#{log_to_dir}/#{hostname}.stdout",
-                  log_to_stdout: log_to_stdout) do |stdout, stderr, exit_status|
-                  result[hostname] = [stdout, stderr, exit_status]
-                end
-                pools_semaphore.synchronize do
-                  pools[:processing].delete(hostname)
-                  pools[:processed] << hostname
-                end
-              end
-            end
-          end
-          # Here the main thread just reports progression
-          nbr_total = actions_per_hostname.size
-          nbr_to_process = nil
-          nbr_processing = nil
-          nbr_processed = nil
-          progress_bar = ProgressBar.create(title: 'Initializing...', total: nbr_total, format: '[%j%%] - |%B| - [ %t ]')
-          loop do
-            pools_semaphore.synchronize do
-              nbr_to_process = pools[:to_process].size
-              nbr_processing = pools[:processing].size
-              nbr_processed = pools[:processed].size
-            end
-            progress_bar.title = "Queue: #{nbr_to_process} - Processing: #{nbr_processing} - Done: #{nbr_processed} - Total: #{nbr_total}"
-            progress_bar.progress = nbr_processed
-            break if nbr_processed == nbr_total
-            sleep 0.5
-          end
-          # Wait for threads to be joined
-          threads_to_join.each do |thread|
-            thread.join
-          end
-        else
-          # Execute synchronously
-          actions_per_hostname.each do |hostname, actions_info|
-            execute_actions_on(
-              hostname,
-              actions_info[:actions],
-              ssh_env: actions_info[:env],
-              timeout: timeout,
-              log_to_file: log_to_dir.nil? ? nil : "#{log_to_dir}/#{hostname}.stdout",
-              log_to_stdout: log_to_stdout) do |stdout, stderr, exit_status|
-              result[hostname] = [stdout, stderr, exit_status]
-            end
+        @nodes_handler.for_each_node_in(actions_per_hostname.keys, parallel: concurrent, nbr_threads_max: @max_threads) do |node|
+          execute_actions_on(
+            node,
+            actions_per_hostname[node][:actions],
+            ssh_env: actions_per_hostname[node][:env],
+            timeout: timeout,
+            log_to_file: log_to_dir.nil? ? nil : "#{log_to_dir}/#{node}.stdout",
+            log_to_stdout: log_to_stdout) do |stdout, stderr, exit_status|
+            result[node] = [stdout, stderr, exit_status]
           end
         end
       end
@@ -413,58 +347,6 @@ Host *
       end
     end
 
-    # Run a local command and get its standard output both as a result and in stdout or in a file as a stream.
-    #
-    # Parameters::
-    # * *cmd* (String): Command to execute
-    # * *log_to_file* (String or nil): Log file capturing stdout or stderr (or nil for none). [default: nil]
-    # * *log_to_stdout* (Boolean): Do we send the output to stdout? [default: true]
-    # Result::
-    # * String or Symbol: Standard output, or a symbol indicating an error
-    # * String: Standard error output
-    # * Integer or nil: Exit status, or nil in case of error
-    def run_local_cmd(cmd, log_to_file: nil, log_to_stdout: true)
-      cmd_stdout = nil
-      cmd_stderr = nil
-      exit_status = nil
-      # Use Open3 so that we can output as it gets streamed
-      file_output =
-        if log_to_file
-          FileUtils.mkdir_p(File.dirname(log_to_file))
-          File.open(log_to_file, 'w')
-        else
-          nil
-        end
-      begin
-        cmd_stdout_lines = []
-        cmd_stderr_lines = []
-        Open3.popen3(cmd) do |_stdin, stdout, stderr, wait_thr|
-          while (line_stdout = stdout.gets) || (line_stderr = stderr.gets)
-            if line_stdout
-              $stdout << line_stdout if log_to_stdout
-              file_output << line_stdout unless file_output.nil?
-              cmd_stdout_lines << line_stdout
-            end
-            if line_stderr
-              $stderr << line_stderr if log_to_stdout
-              file_output << line_stderr unless file_output.nil?
-              cmd_stderr_lines << line_stderr
-            end
-          end
-          exit_status = wait_thr.value.exitstatus
-        end
-        cmd_stdout = cmd_stdout_lines.join
-        cmd_stderr = cmd_stderr_lines.join
-      rescue
-        log_error "Error while executing #{cmd}: #{$!}"
-        cmd_stdout = :command_error
-        cmd_stderr = ''
-      ensure
-        file_output.close unless file_output.nil?
-      end
-      return cmd_stdout, cmd_stderr, exit_status
-    end
-
     # Prepare an SSH control master to multiplex connections, and give a file to write commands that will use this control master.
     # Whatever commands fail from the bash file being written, the control master will be killed gracefully and temporary files removed.
     #
@@ -478,7 +360,9 @@ Host *
         ssh_exec = "timeout #{timeout} #{ssh_exec}" unless timeout.nil?
         # Thanks to the ControlMaster option, connections are reused. So no problem to have several scp and ssh commands then in the underlying bash file.
         log_debug "[ControlMaster] - Starting ControlMaster for connection on #{ssh_url}..."
-        @cmd_runner.run_cmd "#{ssh_exec} #{ssh_options} -fMNnqT #{ssh_url}"
+        # We add the stdout and stderr redirections as otherwise the ssh command does not close the descriptors correctly, and frameworks handling descriptors are waiting indefinitely from data to get back from the command.
+        # TODO: Remove those redirections when ssh will close its descriptors correctly.
+        @cmd_runner.run_cmd "#{ssh_exec} #{ssh_options} -fMNnqT #{ssh_url} >/dev/null 2>&1"
         begin
           log_debug "[ControlMaster] - ControlMaster started for connection on #{ssh_url}"
           yield
@@ -594,11 +478,11 @@ Host *
                 exit_status = nil
                 if timeout.nil?
                   log_debug cmd_to_run
-                  actions_stdout, actions_stderr, exit_status = run_local_cmd(cmd_to_run, log_to_file: log_to_file, log_to_stdout: log_to_stdout)
+                  actions_stdout, actions_stderr, exit_status = @cmd_runner.run_local_cmd(cmd_to_run, log_to_file: log_to_file, log_to_stdout: log_to_stdout)
                 else
                   cmd_to_run_with_timeout = "timeout #{timeout} #{cmd_to_run}"
                   log_debug cmd_to_run_with_timeout
-                  actions_stdout, actions_stderr, exit_status = run_local_cmd(cmd_to_run_with_timeout, log_to_file: log_to_file, log_to_stdout: log_to_stdout)
+                  actions_stdout, actions_stderr, exit_status = @cmd_runner.run_local_cmd(cmd_to_run_with_timeout, log_to_file: log_to_file, log_to_stdout: log_to_stdout)
                   if exit_status == 124
                     log_debug "[#{hostname}] - !!! Timeout after #{timeout} seconds"
                     actions_stdout = :timeout

@@ -1,12 +1,14 @@
 #!/usr/bin/env ruby
 require 'range_operators'
-require 'hybrid_platforms_conductor/nodes_handler'
-require 'hybrid_platforms_conductor/logger_helpers'
+require 'hybrid_platforms_conductor/executable'
 
-include HybridPlatformsConductor::LoggerHelpers
+executable = HybridPlatformsConductor::Executable.new(nodes_selection_options: false)
+
+nodes_handler = executable.nodes_handler
+
+executable.parse_options!
 
 # Group IPs per first 3 numbers
-nodes_handler = HybridPlatformsConductor::NodesHandler.new
 nodes_handler.
   known_hostnames.
   map do |hostname|
@@ -19,5 +21,5 @@ nodes_handler.
   sort.
   map { |ip_root, ips| [ip_root, ips.map { |ip| ip.split('.').last.to_i }] }.
   each do |ip_root, ip_fourths|
-    out "Free IPs for #{ip_root.join('.')}: #{([256] + ip_fourths).missing.rangify}"
+    executable.out "Free IPs for #{ip_root.join('.')}: #{([256] + ip_fourths).missing.rangify}"
   end

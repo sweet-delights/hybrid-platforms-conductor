@@ -1,11 +1,13 @@
 #!/usr/bin/env ruby
 require 'range_operators'
-require 'hybrid_platforms_conductor/nodes_handler'
-require 'hybrid_platforms_conductor/logger_helpers'
+require 'hybrid_platforms_conductor/executable'
 
-include HybridPlatformsConductor::LoggerHelpers
+executable = HybridPlatformsConductor::Executable.new(nodes_selection_options: false)
 
-nodes_handler = HybridPlatformsConductor::NodesHandler.new
+nodes_handler = executable.nodes_handler
+
+executable.parse_options!
+
 veids = nodes_handler.
   known_hostnames.
   map do |hostname|
@@ -14,4 +16,4 @@ veids = nodes_handler.
   end.
   compact
 
-out "Free VEIDs: #{([10_000] + veids).missing.rangify}"
+executable.out "Free VEIDs: #{([10_000] + veids).missing.rangify}"
