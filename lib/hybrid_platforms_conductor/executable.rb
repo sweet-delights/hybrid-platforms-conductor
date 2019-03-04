@@ -9,6 +9,7 @@ require 'hybrid_platforms_conductor/reports_handler'
 require 'hybrid_platforms_conductor/tests_runner'
 require 'hybrid_platforms_conductor/topographer'
 require 'hybrid_platforms_conductor/logger_helpers'
+require 'hybrid_platforms_conductor/current_dir_monitor'
 
 module HybridPlatformsConductor
 

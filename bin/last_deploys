@@ -48,7 +48,7 @@ sorted_deploy_info = Hash[ssh_executor.
     concurrent: true,
     timeout: 10
   ).
-  map do |hostname, (stdout, stderr)|
+  map do |hostname, (exit_status, stdout, stderr)|
     # Expected format for stdout:
     # Property1: Value1
     # ...
@@ -56,8 +56,8 @@ sorted_deploy_info = Hash[ssh_executor.
     # ===== STDOUT =====
     # ...
     deploy_info = { host: hostname }
-    if stdout.is_a?(Symbol)
-      deploy_info[:error] = "Error: #{stdout}\n#{stderr}"
+    if exit_status.is_a?(Symbol)
+      deploy_info[:error] = "Error: #{exit_status}\n#{stderr}"
     else
       stdout_lines = stdout.split("\n")
       if stdout_lines.first =~ /No such file or directory/

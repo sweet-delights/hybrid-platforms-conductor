@@ -130,6 +130,7 @@ module HybridPlatformsConductor
       run_tests_for_nodes
       run_tests_ssh_on_nodes
       run_tests_on_check_nodes
+
       @tested_platforms.uniq!
       @tested_platforms.sort_by!
 
@@ -306,10 +307,10 @@ module HybridPlatformsConductor
             log_to_dir: nil,
             log_to_stdout: log_debug?,
             timeout: timeout
-          ).each do |hostname, (stdout, stderr)|
+          ).each do |hostname, (exit_status, stdout, stderr)|
             nbr_secs = (Time.now - start_time).round(1) if nbr_secs.nil?
-            if stdout.is_a?(Symbol)
-              error("Error while executing tests: #{stdout}\n#{stderr}", hostname: hostname)
+            if exit_status.is_a?(Symbol)
+              error("Error while executing tests: #{exit_status}\n#{stderr}", hostname: hostname)
             else
               log_debug "----- Commands for #{hostname}:\n#{test_cmds[hostname][:actions][:bash].join("\n")}\n----- Output:\n#{stdout}\n----- Error:\n#{stderr}\n-----"
               # Skip the first section, as it can contain SSH banners

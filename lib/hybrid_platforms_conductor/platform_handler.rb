@@ -3,21 +3,6 @@ module HybridPlatformsConductor
   # Common ancestor to any platform handler
   class PlatformHandler
 
-    class << self
-
-      # Semaphore protecting Git usage to get platforms info
-      #   Mutex
-      attr_reader :platform_info_semaphore
-
-      # Initialize semaphores
-      def init_semaphores
-        @platform_info_semaphore = Mutex.new
-      end
-
-    end
-
-    self.init_semaphores
-
     # Make it so that we can sort lists of platforms
     include Comparable
 
@@ -67,31 +52,28 @@ module HybridPlatformsConductor
     def info
       # Keep info in a memory cache, so that we don't query git for nothing
       unless defined?(@info)
-        # Git gem is not thread-safe (it uses chdir internally), so make sure its usage is protected
-        PlatformHandler.platform_info_semaphore.synchronize do
-          git = Git.open(@repository_path)
-          git_status = git.status
-          git_commit = git.log.first
-          @info = {
-            repo_name: File.basename(git.remotes.first.url).gsub(/\.git$/, ''),
-            commit: {
-              id: git_commit.sha,
-              ref: git_commit.name,
-              message: git_commit.message,
-              date: git_commit.date.utc,
-              author: {
-                name: git_commit.author.name,
-                email: git_commit.author.email
-              }
-            },
-            status: {
-              changed_files: git_status.changed.keys,
-              added_files: git_status.added.keys,
-              deleted_files: git_status.deleted.keys,
-              untracked_files: git_status.untracked.keys
+        git = Git.open(@repository_path)
+        git_status = git.status
+        git_commit = git.log.first
+        @info = {
+          repo_name: File.basename(git.remotes.first.url).gsub(/\.git$/, ''),
+          commit: {
+            id: git_commit.sha,
+            ref: git_commit.name,
+            message: git_commit.message,
+            date: git_commit.date.utc,
+            author: {
+              name: git_commit.author.name,
+              email: git_commit.author.email
             }
+          },
+          status: {
+            changed_files: git_status.changed.keys,
+            added_files: git_status.added.keys,
+            deleted_files: git_status.deleted.keys,
+            untracked_files: git_status.untracked.keys
           }
-        end
+        }
       end
       @info
     end

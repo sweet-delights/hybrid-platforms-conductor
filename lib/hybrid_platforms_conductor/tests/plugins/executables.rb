@@ -26,6 +26,7 @@ module HybridPlatformsConductor
             "#{CmdRunner.executables_prefix}test --help",
             "#{CmdRunner.executables_prefix}topograph --from \"--host-name #{example_host}\" --to \"--host-name #{example_host}\" --skip-run --output graphviz:graph.gv"
           ].each do |cmd|
+            log_debug "Testing #{cmd}"
             stdout = `#{cmd} 2>&1`
             exit_status = $?.exitstatus
             assert_equal(exit_status, 0, "Command #{cmd} returned code #{exit_status}:\n#{stdout}")

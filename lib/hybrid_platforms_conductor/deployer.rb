@@ -18,21 +18,6 @@ module HybridPlatformsConductor
 
     class << self
 
-      # Initialize global semaphores
-      def init_semaphores
-        # This is a global semaphore used to ensure all other semaphores are created correctly in multithread
-        @global_semaphore = Mutex.new
-        # The access to Docker images should be protected as it runs in multithread.
-        # Semaphore per image name
-        @docker_image_semaphores = {}
-        # The access to Docker containers should be protected as it runs in multithread
-        # Semaphore per container name
-        @docker_container_semaphores = {}
-        # The access to platforms to package should be protected as it runs in multithread
-        # Semaphore per platform name
-        @platform_to_package_semaphores = {}
-      end
-
       # Run a code block globally protected by a semaphore dedicated to a platform to be packaged
       #
       # Parameters::
@@ -85,17 +70,22 @@ module HybridPlatformsConductor
       # List of platform names that have been packaged.
       # Make this at class level as several Deployer instances can be used in a multi-thread environmnent.
       #   Array<String>
-      attr_accessor :packaged_platforms
-
-      # Init class variables
-      def init_class_variables
-        init_semaphores
-        @packaged_platforms = []
-      end
+      attr_reader :packaged_platforms
 
     end
 
-    self.init_class_variables
+    @packaged_platforms = []
+    # This is a global semaphore used to ensure all other semaphores are created correctly in multithread
+    @global_semaphore = Mutex.new
+    # The access to Docker images should be protected as it runs in multithread.
+    # Semaphore per image name
+    @docker_image_semaphores = {}
+    # The access to Docker containers should be protected as it runs in multithread
+    # Semaphore per container name
+    @docker_container_semaphores = {}
+    # The access to platforms to package should be protected as it runs in multithread
+    # Semaphore per platform name
+    @platform_to_package_semaphores = {}
 
     # Do we use why-run mode while deploying? [default = false]
     #   Boolean
@@ -189,7 +179,7 @@ module HybridPlatformsConductor
     # Parameters::
     # * *hosts_desc* (Array<Object>): The list of hosts descriptions we will deploy to.
     # Result::
-    # * Hash<String, [String, String, Integer] or Symbol>: Standard output, error and exit status code, or Symbol in case of error or dry run, for each hostname that has been deployed.
+    # * Hash<String, [Integer or Symbol, String, String]>: Exit status code (or Symbol in case of error or dry run), standard output and error for each hostname that has been deployed.
     def deploy_for(*hosts_desc)
       @hosts = @nodes_handler.resolve_hosts(hosts_desc.flatten)
       # Keep a track of the git origins to be used by each host that takes its package from an artefact repository.
@@ -209,6 +199,7 @@ module HybridPlatformsConductor
           raise "Please checkout master before deploying on #{platform_handler.repository_path}. !!! Only master should be deployed !!!" if `cd #{platform_handler.repository_path} && git status | head -n 1`.strip != 'On branch master'
         end
       end
+
       # Package
       package
       # Deliver package on artefacts
@@ -269,9 +260,9 @@ module HybridPlatformsConductor
               end
             # Run the container
             docker_container.start
-            log_debug "Docker container #{container_name} started."
             begin
               container_ip = docker_container.json['NetworkSettings']['IPAddress']
+              log_debug "Docker container #{container_name} started using IP #{container_ip}."
               sub_logger, sub_logger_stderr =
                 if log_debug?
                   [@logger, @logger_stderr]
@@ -336,59 +327,62 @@ module HybridPlatformsConductor
     # Prerequisite: deliver_on_artefacts has been called before.
     #
     # Result::
-    # * Hash<String, [String, String, Integer] or Symbol>: Standard output, error and exit status code, or Symbol in case of error or dry run, for each hostname that has been deployed.
+    # * Hash<String, [Integer or Symbol, String, String]>: Exit status code (or Symbol in case of error or dry run), standard output and error for each hostname.
     def deploy
       outputs = {}
       section "#{@use_why_run ? 'Checking' : 'Deploying'} on #{@hosts.size} hosts" do
-        @secrets.each do |json_file|
-          secret_json = JSON.parse(File.read(json_file))
-          @platforms.each do |platform_handler|
-            platform_handler.register_secrets(secret_json)
+        # Prepare all the control masters here, as they will be reused for the whole process, including mutexes, deployment and logs saving
+        @ssh_executor.with_ssh_master_to(@hosts) do
+          @secrets.each do |json_file|
+            secret_json = JSON.parse(File.read(json_file))
+            @platforms.each do |platform_handler|
+              platform_handler.register_secrets(secret_json)
+            end
           end
-        end
 
-        @platforms.each do |platform_handler|
-          platform_handler.prepare_for_deploy(use_why_run: @use_why_run) if platform_handler.respond_to?(:prepare_for_deploy)
-        end
+          @platforms.each do |platform_handler|
+            platform_handler.prepare_for_deploy(use_why_run: @use_why_run) if platform_handler.respond_to?(:prepare_for_deploy)
+          end
 
-        outputs = @ssh_executor.run_cmd_on_hosts(
-          Hash[@hosts.map do |hostname|
-            [
-              hostname,
-              {
-                env: {
-                  'hpc_node' => hostname
-                },
-                actions: [
-                  {
-                    scp: { "#{File.dirname(__FILE__)}/mutex_dir" => '.' },
-                    bash: "while ! #{@ssh_executor.ssh_user_name == 'root' ? '' : 'sudo '}./mutex_dir lock /tmp/hybrid_platforms_conductor_deploy_lock \"$(ps -o ppid= -p $$)\"; do echo -e 'Another deployment is running. Waiting for it to finish to continue...' ; sleep 5 ; done"
-                  }
-                ] + @nodes_handler.platform_for(hostname).actions_to_deploy_on(hostname, use_why_run: @use_why_run)
-              }
-            ]
-          end],
-          timeout: @timeout,
-          concurrent: @concurrent_execution,
-          log_to_stdout: !@concurrent_execution
-        )
-        # Free eventual locks
-        @ssh_executor.run_cmd_on_hosts(
-          Hash[@hosts.map do |hostname|
-            [
-              hostname,
-              {
-                actions: {
-                  bash: "#{@ssh_executor.ssh_user_name == 'root' ? '' : 'sudo '}./mutex_dir unlock /tmp/hybrid_platforms_conductor_deploy_lock"
+          outputs = @ssh_executor.run_cmd_on_hosts(
+            Hash[@hosts.map do |hostname|
+              [
+                hostname,
+                {
+                  env: {
+                    'hpc_node' => hostname
+                  },
+                  actions: [
+                    {
+                      scp: { "#{File.dirname(__FILE__)}/mutex_dir" => '.' },
+                      bash: "while ! #{@ssh_executor.ssh_user_name == 'root' ? '' : 'sudo '}./mutex_dir lock /tmp/hybrid_platforms_conductor_deploy_lock \"$(ps -o ppid= -p $$)\"; do echo -e 'Another deployment is running on #{hostname}. Waiting for it to finish to continue...' ; sleep 5 ; done"
+                    }
+                  ] + @nodes_handler.platform_for(hostname).actions_to_deploy_on(hostname, use_why_run: @use_why_run)
                 }
-              }
-            ]
-          end],
-          timeout: 10,
-          concurrent: true,
-          log_to_dir: nil
-        )
-        save_logs(outputs) if !@use_why_run && !@ssh_executor.dry_run
+              ]
+            end],
+            timeout: @timeout,
+            concurrent: @concurrent_execution,
+            log_to_stdout: !@concurrent_execution
+          )
+          # Free eventual locks
+          @ssh_executor.run_cmd_on_hosts(
+            Hash[@hosts.map do |hostname|
+              [
+                hostname,
+                {
+                  actions: {
+                    bash: "#{@ssh_executor.ssh_user_name == 'root' ? '' : 'sudo '}./mutex_dir unlock /tmp/hybrid_platforms_conductor_deploy_lock"
+                  }
+                }
+              ]
+            end],
+            timeout: 10,
+            concurrent: true,
+            log_to_dir: nil
+          )
+          save_logs(outputs) if !@use_why_run && !@ssh_executor.dry_run
+        end
       end
       outputs
     end
@@ -397,12 +391,12 @@ module HybridPlatformsConductor
     # It uploads them on the nodes that have been deployed.
     #
     # Parameters::
-    # * *logs* (Hash<String, [String, String] or Symbol>): Standard output and error, or Symbol in case of error, for each hostname.
+    # * *logs* (Hash<String, [Integer or Symbol, String, String]>): Exit status code (or Symbol in case of error or dry run), standard output and error for each hostname.
     def save_logs(logs)
       section "Saving deployment logs for #{logs.size} hosts" do
         Dir.mktmpdir('hybrid_platforms_conductor-logs') do |tmp_dir|
           @ssh_executor.run_cmd_on_hosts(
-            Hash[logs.map do |hostname, (stdout, stderr)|
+            Hash[logs.map do |hostname, (exit_status, stdout, stderr)|
               # Create a log file to be scp with all relevant info
               now = Time.now.utc
               log_file = "#{tmp_dir}/#{now.strftime('%F_%H%M%S')}_#{@ssh_executor.ssh_user_name}"
@@ -420,7 +414,7 @@ module HybridPlatformsConductor
                   diff_files: (platform_info[:status][:changed_files] + platform_info[:status][:added_files] + platform_info[:status][:deleted_files] + platform_info[:status][:untracked_files]).join(', ')
                 }.map { |property, value| "#{property}: #{value}" }.join("\n") +
                   "\n===== STDOUT =====\n" +
-                  (stdout.is_a?(Symbol) ? "Error: #{stdout}" : stdout) +
+                  (exit_status.is_a?(Symbol) ? "Error: #{exit_status}" : stdout) +
                   "\n===== STDERR =====\n" +
                   (stderr || '')
               )

@@ -14,12 +14,12 @@ module HybridPlatformsConductor
             deployer.use_why_run = true
             result = deployer.deploy_for(@node)
             assert_equal result.size, 1, "Wrong number of nodes being tested: #{result.size}"
-            (tested_node, (stdout, _stderr, exit_code)) = result.first
-            if stdout.is_a?(Symbol)
-              error "Check-node could not run because of error: #{stdout}"
+            (tested_node, (exit_status, _stdout, stderr)) = result.first
+            if exit_status.is_a?(Symbol)
+              error "Check-node could not run because of error: #{exit_status}. Error: #{stderr}"
             else
               assert_equal tested_node, @node, "Wrong node being tested: #{tested_node} should be #{@node}"
-              assert_equal exit_code, 0, "Check-node returned error code #{exit_code}"
+              assert_equal exit_status, 0, "Check-node returned error code #{exit_status}"
             end
           end
         end

@@ -32,10 +32,14 @@ module HybridPlatformsConductor
     def set_loggers_format
       [@logger, @logger_stderr].each do |logger|
         logger.formatter = proc do |severity, datetime, progname, msg|
-          message = "[#{Time.now.utc.strftime('%F %T')} (PID #{$$} / TID #{Thread.current.object_id})] #{severity.rjust(5)} - [ #{progname} ] - #{msg}\n"
+          # If the message already has control characters, don't colorize it
+          keep_original_color = msg.include? "\u001b"
+          message = "[#{Time.now.utc.strftime('%F %T')} (PID #{$$} / TID #{Thread.current.object_id})] #{severity.rjust(5)} - [ #{progname} ] - "
+          message << "#{msg}\n" unless keep_original_color
           LEVELS_MODIFIERS[severity.downcase.to_sym].each do |modifier|
             message = message.send(modifier)
           end
+          message << "#{msg}\n" if keep_original_color
           message
         end
       end
@@ -76,7 +80,22 @@ module HybridPlatformsConductor
       @out_sections = [] unless defined?(@out_sections)
       message = "#{'  ' * @out_sections.size}#{message}"
       # log_debug "<Output> - #{message}"
-      @logger << "#{message}\n"
+      message = "#{message}\n" unless message.end_with?("\n")
+      @logger << message
+    end
+
+    # Print an error string to the command-line UI.
+    # This is different from logging because this is the UI of the CLI.
+    # Use sections indentation for better clarity.
+    #
+    # Parameters::
+    # * *message* (String): Message to be printed out [default = '']
+    def err(message = '')
+      @out_sections = [] unless defined?(@out_sections)
+      message = "#{'  ' * @out_sections.size}#{message}"
+      # log_debug "<Output> - #{message}"
+      message = "#{message}\n" unless message.end_with?("\n")
+      @logger_stderr << message
     end
 
     # Display a new section in the UI, used to group a set of operations
