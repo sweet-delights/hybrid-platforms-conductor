@@ -310,17 +310,18 @@ module HybridPlatformsConductor
           ).each do |hostname, (exit_status, stdout, stderr)|
             nbr_secs = (Time.now - start_time).round(1) if nbr_secs.nil?
             if exit_status.is_a?(Symbol)
-              error("Error while executing tests: #{exit_status}\n#{stderr}", hostname: hostname)
+              error("Error while executing tests: #{exit_status}: #{stderr}", hostname: hostname)
             else
               log_debug "----- Commands for #{hostname}:\n#{test_cmds[hostname][:actions][:bash].join("\n")}\n----- Output:\n#{stdout}\n----- Error:\n#{stderr}\n-----"
               # Skip the first section, as it can contain SSH banners
               cmd_stdouts = stdout.split("#{CMD_SEPARATOR}\n")[1..-1]
               cmd_stdouts = [] if cmd_stdouts.nil?
               cmds_to_run[hostname].zip(cmd_stdouts).each do |(cmd, test_info), cmd_stdout|
+                cmd_stdout = '' if cmd_stdout.nil?
                 stdout_lines = cmd_stdout.split("\n")
                 # Last line of stdout is the return code
-                return_code = Integer(stdout_lines.last)
-                test_info[:test].error "Command returned error code #{return_code}" unless return_code.zero?
+                return_code = stdout_lines.empty? ? :command_cant_run : Integer(stdout_lines.last)
+                test_info[:test].error "Command returned error code #{return_code}" unless return_code == 0
                 begin
                   test_info[:validator].call(stdout_lines[0..-2], return_code)
                 rescue

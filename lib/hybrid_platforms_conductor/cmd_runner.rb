@@ -89,7 +89,7 @@ module HybridPlatformsConductor
           cmd_stdout = cmd_result.out
           cmd_stderr = cmd_result.err
         rescue TTY::Command::TimeoutExceeded
-          log_error "Timeout of #{timeout} has been triggered while executing #{cmd}"
+          log_error "Timeout of #{timeout} seconds has been triggered while executing #{cmd}"
           exit_status = :timeout
           cmd_stdout = ''
           cmd_stderr = "Timeout of #{timeout} triggered"

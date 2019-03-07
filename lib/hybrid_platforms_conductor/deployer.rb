@@ -139,6 +139,9 @@ module HybridPlatformsConductor
     # Validate that parsed parameters are valid
     def validate_params
       raise 'Can\'t have a timeout unless why-run mode. Please don\'t use --timeout without --why-run.' if !@timeout.nil? && !@use_why_run
+      @secrets.each do |secret_file|
+        raise "Missing secret file: #{secret_file}" unless File.exist?(secret_file)
+      end
     end
 
     # Complete an option parser with options meant to control this SSH executor
@@ -153,7 +156,7 @@ module HybridPlatformsConductor
       options_parser.separator ''
       options_parser.separator 'Deployer options:'
       options_parser.on('-e', '--secrets JSON_FILE_NAME', 'Specify a JSON file storing secrets (can be specified several times).') do |json_file|
-        @secrets << json_file
+        @secrets << File.expand_path(json_file)
       end
       options_parser.on('-p', '--parallel', 'Execute the commands in parallel (put the standard output in files ./run_logs/*.stdout)') do
         @concurrent_execution = true
@@ -256,7 +259,8 @@ module HybridPlatformsConductor
                   old_docker_container.remove
                 end
                 log_debug "Creating Docker container #{container_name}..."
-                Docker::Container.create(name: container_name, image: image_tag)
+                # We add the SYS_PTRACE capability as some images need to restart services (for example postfix) and those services need the rights to ls in /proc/{PID}/exe to check if a status is running. Without SYS_PTRACE such ls returns permission denied and the service can't be stopped (as init.d always returns it as stopped even when running).
+                Docker::Container.create(name: container_name, image: image_tag, CapAdd: 'SYS_PTRACE')
               end
             # Run the container
             docker_container.start
@@ -332,7 +336,7 @@ module HybridPlatformsConductor
       outputs = {}
       section "#{@use_why_run ? 'Checking' : 'Deploying'} on #{@hosts.size} hosts" do
         # Prepare all the control masters here, as they will be reused for the whole process, including mutexes, deployment and logs saving
-        @ssh_executor.with_ssh_master_to(@hosts) do
+        @ssh_executor.with_ssh_master_to(@hosts, no_exception: true) do
           @secrets.each do |json_file|
             secret_json = JSON.parse(File.read(json_file))
             @platforms.each do |platform_handler|

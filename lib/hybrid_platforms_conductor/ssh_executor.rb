@@ -333,6 +333,9 @@ Host *
       ensure_host_key(real_ip)
     end
 
+    # Timeout in seconds to get host keys and update the host keys file.
+    TIMEOUT_HOST_KEYS = 5
+
     # Ensure that a given hostname or IP has its key correctly set in the known hosts file.
     # Prerequisite: with_platforms_ssh has been called before.
     #
@@ -340,19 +343,21 @@ Host *
     # * *host* (String): The host or IP
     def ensure_host_key(host)
       # Get the host key
-      exit_status, stdout, _stderr = @cmd_runner.run_cmd "ssh-keyscan #{host}", timeout: 1, log_to_stdout: false, no_exception: true
+      exit_status, stdout, _stderr = @cmd_runner.run_cmd "ssh-keyscan #{host}", timeout: TIMEOUT_HOST_KEYS, log_to_stdout: log_debug?, no_exception: true
       if exit_status == 0
         @platforms_ssh_dir_semaphore.synchronize do
           known_hosts_file = "#{@platforms_ssh_dir}/known_hosts"
           # Remove the previous eventually
-          @cmd_runner.run_cmd "ssh-keygen -R #{host} -f #{known_hosts_file}", timeout: 1, log_to_stdout: false
+          @cmd_runner.run_cmd "ssh-keygen -R #{host} -f #{known_hosts_file}", timeout: TIMEOUT_HOST_KEYS, log_to_stdout: log_debug?
           # Add the new one
+          host_key = stdout.strip
+          log_debug "Add new key for #{host} in #{known_hosts_file}: #{host_key}"
           File.open(known_hosts_file, 'a') do |file|
-            file.puts stdout.strip
+            file.puts host_key
           end
         end
       else
-        log_warn "Unable to get host key for #{host}. Ignoring it accessing it might require manual acceptance of its host key."
+        log_warn "Unable to get host key for #{host}. Ignoring it. Accessing #{host} might require manual acceptance of its host key."
       end
     end
 
@@ -362,14 +367,14 @@ Host *
     # Parameters::
     # * *nodes* (String or Array<String>): The nodes for which we open the Control Master.
     # * *timeout* (Integer or nil): Timeout in seconds, or nil if none. [default: nil]
-    # * Proc: Code called while the ControlMaster exists
+    # * *no_exception* (Boolean): If true, then don't raise any exception in case of impossible connection to the ControlMaster. [default: false]
+    # * Proc: Code called while the ControlMaster exists.
     #   * Parameters::
     #     * *ssh_exec* (String): The SSH command to be used
-    #     * *ssh_urls* (Hash<String,String>): Set of SSH URLs to be used, per node name
-    def with_ssh_master_to(nodes, timeout: nil)
+    #     * *ssh_urls* (Hash<String,String>): Set of SSH URLs to be used, per each node name for which the connection was successful.
+    def with_ssh_master_to(nodes, timeout: nil, no_exception: false)
       nodes = [nodes] if nodes.is_a?(String)
       with_platforms_ssh do |ssh_exec|
-        ssh_exec_with_timeout = "#{timeout.nil? ? '' : "timeout #{timeout} "}#{ssh_exec}"
         created_ssh_urls = {}
         begin
           nodes.each do |node|
@@ -386,12 +391,17 @@ Host *
                   log_warn "Removing stale SSH control file #{control_path_file}"
                   File.unlink control_path_file
                 end
-                @cmd_runner.run_cmd "#{ssh_exec_with_timeout} -o ControlMaster=yes -o ControlPersist=yes #{ssh_url} true"
+                exit_status, _stdout, _stderr = @cmd_runner.run_cmd "#{ssh_exec}#{@passwords.key?(node) ? '' : ' -o BatchMode=yes'} -o ControlMaster=yes -o ControlPersist=yes #{ssh_url} true", no_exception: no_exception, timeout: timeout
                 # Uncomment if you want to test the connection
-                # @cmd_runner.run_cmd "#{ssh_exec_with_timeout} -O check #{ssh_url}", log_to_stdout: false
-                created_ssh_urls[node] = ssh_url
-                log_debug "[ ControlMaster - #{node} ] - ControlMaster started for connection on #{ssh_url}"
-                @nodes_ssh_urls[node] = ssh_url
+                # @cmd_runner.run_cmd "#{ssh_exec} -O check #{ssh_url}", log_to_stdout: false, timeout: timeout
+                if exit_status == 0
+                  # Connection ok
+                  created_ssh_urls[node] = ssh_url
+                  log_debug "[ ControlMaster - #{node} ] - ControlMaster started for connection on #{ssh_url}"
+                  @nodes_ssh_urls[node] = ssh_url
+                else
+                  log_error "[ ControlMaster - #{node} ] - ControlMaster could not be started for connection on #{ssh_url}"
+                end
               end
             end
           end
@@ -401,10 +411,10 @@ Host *
             created_ssh_urls.each do |node, ssh_url|
               log_debug "[ ControlMaster - #{node} ] - Stopping ControlMaster for connection on #{ssh_url}..."
               # Dumb verbose ssh! Tricky trick to just silence what is useless.
-              @cmd_runner.run_cmd "#{ssh_exec_with_timeout} -O exit #{ssh_url} 2>&1 | grep -v 'Exit request sent.'", expected_code: 1
+              @cmd_runner.run_cmd "#{ssh_exec} -O exit #{ssh_url} 2>&1 | grep -v 'Exit request sent.'", expected_code: 1, timeout: timeout
               log_debug "[ ControlMaster - #{node} ] - ControlMaster stopped for connection on #{ssh_url}"
               # Uncomment if you want to test the connection
-              # @cmd_runner.run_cmd "#{ssh_exec_with_timeout} -O check #{ssh_url}", log_to_stdout: false, expected_code: 255
+              # @cmd_runner.run_cmd "#{ssh_exec} -O check #{ssh_url}", log_to_stdout: false, expected_code: 255, timeout: timeout
               @nodes_ssh_urls.delete(node)
             end
           end
@@ -514,7 +524,7 @@ Host *
             bash_commands.concat(File.read(action_info[:file])) if action_info.key?(:file)
             log_debug "[#{node}] - Execute SSH Bash commands \"#{bash_commands.join("\n")}\"..."
             with_ssh_master_to(node, timeout: remaining_timeout) do |ssh_exec, ssh_urls|
-              @cmd_runner.run_cmd(
+              action_exit_status, action_stdout, action_stderr = @cmd_runner.run_cmd(
                 "#{ssh_exec} #{ssh_urls[node]} /bin/bash <<'EOF'\n#{bash_commands.join("\n")}\nEOF",
                 timeout: remaining_timeout,
                 log_to_file: log_to_file,
