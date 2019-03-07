@@ -109,7 +109,13 @@ module HybridPlatformsConductor
     def run_tests(nodes_descriptions)
       # Compute the resolved list of tests to perform
       @tests << :all if @tests.empty?
-      @tests = @tests_plugins.keys if @tests.include?(:all)
+      all_tests =
+        if @tests.include?(:all)
+          @tests = @tests_plugins.keys
+          true
+        else
+          false
+        end
       @tests.uniq!
       @tests.sort!
       @reports = [:stdout] if @reports.empty?
@@ -133,6 +139,55 @@ module HybridPlatformsConductor
 
       @tested_platforms.uniq!
       @tested_platforms.sort_by!
+
+      # Check in the platform metadata if some tests were supposed to fail.
+      expected_failures = {}
+      @tests_run.map(&:platform).uniq.compact.each do |platform|
+        platform_expected_failures = platform.metadata.dig 'test', 'expected_failures'
+        expected_failures[platform.info[:repo_name]] = platform_expected_failures unless platform_expected_failures.nil?
+      end
+
+      # Filter out errors that were expected to fail and check that tests that were expected to fail did not succeed.
+      @tests_run.each do |test|
+        expected_failure = expected_failures.dig(
+          test.platform.nil? ? '' : test.platform.info[:repo_name],
+          test.name.to_s,
+          test.node.nil? ? '' : test.node
+        )
+        if expected_failure
+          if test.errors.empty?
+            # Should have failed
+            test.error "Test was marked to fail (#{expected_failure}) but it succeeded. Please remove it from the expected failures in case the issue has been resolved."
+          else
+            # Remove its errors so that it does not report
+            out "Expected failure for #{test} (#{expected_failure}):\n#{test.errors.map { |error| "  - #{error}" }.join("\n")}".yellow
+            test.errors.clear
+          end
+        end
+      end
+      # If all tests were executed, make sure that there are no expected failures that have not even been tested.
+      if all_tests
+        expected_failures.each do |platform, platform_expected_failures|
+          platform_expected_failures.each do |test_name, test_expected_failures|
+            test_expected_failures.each do |node, expected_failure|
+              # Check that a test has been run for this expected failure
+              unless @tests_run.find do |test|
+                  test.name.to_s == test_name &&
+                    (
+                      (test.platform.nil? && platform == '') ||
+                      (!test.platform.nil? && platform == test.platform.info[:repo_name])
+                    ) &&
+                    (
+                      (test.node.nil? && node == '') ||
+                      (!test.node.nil? && node == test.node)
+                    )
+                end
+                error("A test named #{test_name} for platform #{platform} and node #{node} was expected to fail (#{expected_failure}), but no test has been run. Please remove it from the expected failures if this expected failure is obsolete.")
+              end
+            end
+          end
+        end
+      end
 
       @reports.each do |report_name|
         @reports_plugins[report_name].new(@logger, @logger_stderr, @nodes_handler, @hostnames, @tested_platforms, @tests_run).report

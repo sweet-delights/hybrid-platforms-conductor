@@ -1,3 +1,5 @@
+require 'json'
+
 module HybridPlatformsConductor
 
   # Common ancestor to any platform handler
@@ -89,6 +91,21 @@ module HybridPlatformsConductor
         info[:repo_name] <=> other.info[:repo_name]
       else
         super
+      end
+    end
+
+    # Get platforms handled by HPCs Conductor specific metadata for this platform, if any.
+    #
+    # Result::
+    # * Hash<String,String>: The metadata information (keys are optional):
+    #   * *test* (Hash<String,String>): All information regarding testing this platform:
+    #     * *expected_failures* (Hash< String, Hash< String, String> >): Expected failure message, per node name, per test name.
+    def metadata
+      metadata_file = "#{@repository_path}/hpc.json"
+      if File.exist?(metadata_file)
+        JSON.parse(File.read(metadata_file))
+      else
+        {}
       end
     end
 
