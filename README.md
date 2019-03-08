@@ -115,6 +115,7 @@ Example of `platforms.rb`:
 # Define the known platforms
 chef_platform path: '../chef-repo'
 chef_platform git: 'https://www.site.my_company.net/git/scm/team17/xae-chef-repo.git'
+chef_platform git: 'https://www.site.my_company.net/git/scm/team17/another-chef-repo.git', branch: 'my_test_branch'
 
 # Define the gateways
 gateway :munich, '

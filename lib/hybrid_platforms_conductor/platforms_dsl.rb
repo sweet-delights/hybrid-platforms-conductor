@@ -74,7 +74,8 @@ module HybridPlatformsConductor
       # Parameters::
       # * *path* (String or nil): Path to a local repository where the platform is stored, or nil if not using this way to get it. [default: nil].
       # * *git* (String or nil): Git URL to fetch the repository where the platform is stored, or nil if not using this way to get it. [default: nil].
-      define_method("#{platform_type}_platform".to_sym) do |path: nil, git: nil|
+      # * *branch* (String): Git branch to clone from the Git repository. Used only if git is not nil. [default: 'master'].
+      define_method("#{platform_type}_platform".to_sym) do |path: nil, git: nil, branch: 'master'|
         repository_path =
           if !path.nil?
             path
@@ -83,8 +84,8 @@ module HybridPlatformsConductor
             repo_sub_dir_name = File.basename(git)[0..-File.extname(git).size - 1]
             repository_path = "#{@git_platforms_dir}/#{repo_sub_dir_name}"
             unless File.exist?(repository_path)
-              section "Cloning #{git} into #{repository_path}" do
-                Git.clone(git, repo_sub_dir_name, path: @git_platforms_dir)
+              section "Cloning #{git} (#{branch}) into #{repository_path}" do
+                Git.clone(git, repo_sub_dir_name, path: @git_platforms_dir, branch: branch)
               end
             end
             repository_path
