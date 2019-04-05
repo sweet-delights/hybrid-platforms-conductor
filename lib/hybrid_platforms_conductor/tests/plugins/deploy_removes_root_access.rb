@@ -15,20 +15,19 @@ module HybridPlatformsConductor
             # Check that we can connect with root
             ssh_ok = false
             begin
-              Net::SSH.start(ip_address, 'root', password: 'root_pwd', auth_methods: ['password']) do |ssh|
+              Net::SSH.start(ip_address, 'root', password: 'root_pwd', auth_methods: ['password'], verify_host_key: :never) do |ssh|
                 ssh_ok = ssh.exec!('echo Works').strip == 'Works'
               end
             rescue
             end
             assert_equal ssh_ok, true, 'Root does not have access from the empty image'
             if ssh_ok
-              # Execute a deploy for @node, but targeting ip_address
               deployer.deploy_for(@node)
 
               # Check that we can't connect with root
               ssh_ok = false
               begin
-                Net::SSH.start(ip_address, 'root', password: 'root_pwd', auth_methods: ['password']) do |ssh|
+                Net::SSH.start(ip_address, 'root', password: 'root_pwd', auth_methods: ['password'], verify_host_key: :never) do |ssh|
                   ssh_ok = ssh.exec!('echo Works').strip == 'Works'
                 end
               rescue

@@ -17,7 +17,10 @@ module HybridPlatformsConductor
         CONFLUENCE_PAGE_ID = '764722340'
 
         # Maximum errors to be reported by item
-        MAX_ERROR_ITEMS_DISPLAYED = '10'
+        MAX_ERROR_ITEMS_DISPLAYED = 10
+
+        # Maximal length of an error message to be reported
+        MAX_ERROR_MESSAGE_LENGTH_DISPLAYED = 4096
 
         # Handle tests reports
         def report
@@ -58,6 +61,7 @@ module HybridPlatformsConductor
           @status_test_name = test_name
           @status_test_criteria = test_criteria
           @max_errors = MAX_ERROR_ITEMS_DISPLAYED
+          @max_error_message_length = MAX_ERROR_MESSAGE_LENGTH_DISPLAYED
           render '_confluence_errors_status'
         end
 

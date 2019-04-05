@@ -1,7 +1,6 @@
 require 'logger'
 require 'fileutils'
 require 'tmpdir'
-require 'tempfile'
 require 'hybrid_platforms_conductor/nodes_handler'
 require 'hybrid_platforms_conductor/cmd_runner'
 require 'hybrid_platforms_conductor/logger_helpers'
@@ -63,6 +62,8 @@ module HybridPlatformsConductor
       @ssh_env = {}
       @max_threads = 16
       @dry_run = false
+      @use_control_master = true
+      @strict_host_key_checking = true
       @override_connections = {}
       @passwords = {}
       @gateways_conf = ENV['ti_gateways_conf'].nil? ? :munich : ENV['ti_gateways_conf'].to_sym
@@ -99,6 +100,7 @@ module HybridPlatformsConductor
       out 'SSH executor configuration used:'
       out " * User: #{@ssh_user_name}"
       out " * Dry run: #{@dry_run}"
+      out " * Use SSH control master: #{@use_control_master}"
       out " * Max threads used: #{@max_threads}"
       out " * Gateways configuration: #{@gateways_conf}"
       out " * Gateway user: #{@gateway_user}"
@@ -174,9 +176,15 @@ module HybridPlatformsConductor
       options_parser.on('-g', '--gateway-user USER_NAME', "Name of the gateway user to be used by the XAE gateways (defaults to #{@gateway_user})") do |user_name|
         @gateway_user = user_name
       end
+      options_parser.on('-j', '--no-ssh-control-master', 'If used, don\'t create SSH control masters for connections.') do
+        @use_control_master = false
+      end
       options_parser.on('-m', '--max-threads NBR', "Set the number of threads to use for concurrent queries (defaults to #{@max_threads})") do |nbr_threads|
         @max_threads = nbr_threads.to_i
       end if parallel
+      options_parser.on('-q', '--no-ssh-host-key-checking', 'If used, don\'t check for SSH host keys.') do
+        @strict_host_key_checking = false
+      end
       options_parser.on('-s', '--show-commands', 'Display the SSH commands that would be run instead of running them') do
         self.dry_run = true
       end
@@ -295,6 +303,7 @@ Host *
   User #{@ssh_user_name}
   # Default control socket path to be used when multiplexing SSH connections
   ControlPath /tmp/hpc_ssh_executor_mux_%h_%p_%r
+  #{@strict_host_key_checking ? '' : 'StrictHostKeyChecking no'}
   #{known_hosts_file.nil? ? '' : "UserKnownHostsFile #{known_hosts_file}"}
   #{open_ssh_major_version >= 7 ? 'PubkeyAcceptedKeyTypes +ssh-dss' : ''}
 
@@ -342,22 +351,24 @@ Host *
     # Parameters::
     # * *host* (String): The host or IP
     def ensure_host_key(host)
-      # Get the host key
-      exit_status, stdout, _stderr = @cmd_runner.run_cmd "ssh-keyscan #{host}", timeout: TIMEOUT_HOST_KEYS, log_to_stdout: log_debug?, no_exception: true
-      if exit_status == 0
-        @platforms_ssh_dir_semaphore.synchronize do
-          known_hosts_file = "#{@platforms_ssh_dir}/known_hosts"
-          # Remove the previous eventually
-          @cmd_runner.run_cmd "ssh-keygen -R #{host} -f #{known_hosts_file}", timeout: TIMEOUT_HOST_KEYS, log_to_stdout: log_debug?
-          # Add the new one
-          host_key = stdout.strip
-          log_debug "Add new key for #{host} in #{known_hosts_file}: #{host_key}"
-          File.open(known_hosts_file, 'a') do |file|
-            file.puts host_key
+      if @strict_host_key_checking
+        # Get the host key
+        exit_status, stdout, _stderr = @cmd_runner.run_cmd "ssh-keyscan #{host}", timeout: TIMEOUT_HOST_KEYS, log_to_stdout: log_debug?, no_exception: true
+        if exit_status == 0
+          @platforms_ssh_dir_semaphore.synchronize do
+            known_hosts_file = "#{@platforms_ssh_dir}/known_hosts"
+            # Remove the previous eventually
+            @cmd_runner.run_cmd "ssh-keygen -R #{host} -f #{known_hosts_file}", timeout: TIMEOUT_HOST_KEYS, log_to_stdout: log_debug?
+            # Add the new one
+            host_key = stdout.strip
+            log_debug "Add new key for #{host} in #{known_hosts_file}: #{host_key}"
+            File.open(known_hosts_file, 'a') do |file|
+              file.puts host_key
+            end
           end
+        else
+          log_warn "Unable to get host key for #{host}. Ignoring it. Accessing #{host} might require manual acceptance of its host key."
         end
-      else
-        log_warn "Unable to get host key for #{host}. Ignoring it. Accessing #{host} might require manual acceptance of its host key."
       end
     end
 
@@ -383,24 +394,28 @@ Host *
               unless @nodes_ssh_urls.key?(node)
                 ensure_node_host_key(node)
                 ssh_url = "#{@ssh_user_name}@hpc.#{node}"
-                # Thanks to the ControlMaster option, connections are reused. So no problem to have several scp and ssh commands later.
-                log_debug "[ ControlMaster - #{node} ] - Starting ControlMaster for connection on #{ssh_url}..."
-                real_ip, _gateway, _gateway_user = connection_info_for(node, @nodes_handler.private_ip_for(node))
-                control_path_file = "/tmp/ssh_executor_mux_#{real_ip}_22_#{@ssh_user_name}"
-                if File.exist?(control_path_file)
-                  log_warn "Removing stale SSH control file #{control_path_file}"
-                  File.unlink control_path_file
-                end
-                exit_status, _stdout, _stderr = @cmd_runner.run_cmd "#{ssh_exec}#{@passwords.key?(node) ? '' : ' -o BatchMode=yes'} -o ControlMaster=yes -o ControlPersist=yes #{ssh_url} true", no_exception: no_exception, timeout: timeout
-                # Uncomment if you want to test the connection
-                # @cmd_runner.run_cmd "#{ssh_exec} -O check #{ssh_url}", log_to_stdout: false, timeout: timeout
-                if exit_status == 0
-                  # Connection ok
-                  created_ssh_urls[node] = ssh_url
-                  log_debug "[ ControlMaster - #{node} ] - ControlMaster started for connection on #{ssh_url}"
-                  @nodes_ssh_urls[node] = ssh_url
+                if @use_control_master
+                  # Thanks to the ControlMaster option, connections are reused. So no problem to have several scp and ssh commands later.
+                  log_debug "[ ControlMaster - #{node} ] - Starting ControlMaster for connection on #{ssh_url}..."
+                  real_ip, _gateway, _gateway_user = connection_info_for(node, @nodes_handler.private_ip_for(node))
+                  control_path_file = "/tmp/ssh_executor_mux_#{real_ip}_22_#{@ssh_user_name}"
+                  if File.exist?(control_path_file)
+                    log_warn "Removing stale SSH control file #{control_path_file}"
+                    File.unlink control_path_file
+                  end
+                  exit_status, _stdout, _stderr = @cmd_runner.run_cmd "#{ssh_exec}#{@passwords.key?(node) ? '' : ' -o BatchMode=yes'} -o ControlMaster=yes -o ControlPersist=yes #{ssh_url} true", no_exception: no_exception, timeout: timeout
+                  # Uncomment if you want to test the connection
+                  # @cmd_runner.run_cmd "#{ssh_exec} -O check #{ssh_url}", log_to_stdout: false, timeout: timeout
+                  if exit_status == 0
+                    # Connection ok
+                    created_ssh_urls[node] = ssh_url
+                    log_debug "[ ControlMaster - #{node} ] - ControlMaster started for connection on #{ssh_url}"
+                    @nodes_ssh_urls[node] = ssh_url
+                  else
+                    log_error "[ ControlMaster - #{node} ] - ControlMaster could not be started for connection on #{ssh_url}"
+                  end
                 else
-                  log_error "[ ControlMaster - #{node} ] - ControlMaster could not be started for connection on #{ssh_url}"
+                  @nodes_ssh_urls[node] = ssh_url
                 end
               end
             end
@@ -411,7 +426,8 @@ Host *
             created_ssh_urls.each do |node, ssh_url|
               log_debug "[ ControlMaster - #{node} ] - Stopping ControlMaster for connection on #{ssh_url}..."
               # Dumb verbose ssh! Tricky trick to just silence what is useless.
-              @cmd_runner.run_cmd "#{ssh_exec} -O exit #{ssh_url} 2>&1 | grep -v 'Exit request sent.'", expected_code: 1, timeout: timeout
+              # Don't fail if the connection close fails (but still log the error), as it can be seen as only a warning: it means the connection was closed anyway.
+              @cmd_runner.run_cmd "#{ssh_exec} -O exit #{ssh_url} 2>&1 | grep -v 'Exit request sent.'", expected_code: 1, timeout: timeout, no_exception: true
               log_debug "[ ControlMaster - #{node} ] - ControlMaster stopped for connection on #{ssh_url}"
               # Uncomment if you want to test the connection
               # @cmd_runner.run_cmd "#{ssh_exec} -O check #{ssh_url}", log_to_stdout: false, expected_code: 255, timeout: timeout
@@ -450,7 +466,9 @@ Host *
     # * *actions* (Array<[Symbol, Object]>): Ordered list of actions to perform. Each action is identified by an identifier (Symbol) and has associated data.
     #   1 action can contain several keys (action types), that will be performed in the order of the keys population in the Hash. Here are possible action types:
     #   * *local_bash* (String): Bash commands to be executed locally (not on the node)
-    #   * *ruby* (Proc): Ruby code to be executed locally (not on the node)
+    #   * *ruby* (Proc): Ruby code to be executed locally (not on the node):
+    #     * *stdout* (IO): Stream in which stdout of this action can be completed
+    #     * *stderr* (IO): Stream in which stderr of this action can be completed
     #   * *scp* (Hash<String or Symbol, String or Object>): Set of couples source => destination_dir to copy files or directories from the local file system to the remote file system. Additional options can be provided using symbols:
     #     * *sudo* (Boolean): Do we use sudo to make the copy?
     #     * *owner* (String): Owner to use for files
@@ -492,11 +510,10 @@ Host *
           when :ruby
             log_debug "[#{node}] - Execute local Ruby commands \"#{action_info}\"..."
             # TODO: Handle timeout without using Timeout which is harmful when dealing with SSH connections and multithread.
-            # TODO: Check if there is a need to handle stdout/stderr
             if @dry_run
               log_debug "[#{node}] - Won't execute Ruby code in dry_run mode."
             else
-              action_info.call
+              action_info.call action_stdout, action_stderr
             end
           when :scp
             sudo = action_info.delete(:sudo)
@@ -553,6 +570,9 @@ Host *
           stderr.concat action_stderr
           remaining_timeout -= Time.now - start_time unless remaining_timeout.nil?
         end
+      rescue CmdRunner::UnexpectedExitCodeError
+        # Error has already been logged in stderr
+        exit_status = :failed_command
       rescue
         log_error "Uncaught exception while executing actions on #{node}: #{$!}\n#{$!.backtrace.join("\n")}"
         stderr.concat "#{$!}\n"

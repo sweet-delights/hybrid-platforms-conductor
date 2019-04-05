@@ -28,7 +28,7 @@
             <div style="text-align: left;">
               <ul>
                 <% errors[0..@max_errors - 1].each do |error| %>
-                  <li><%= CGI.escapeHTML(error) %></li>
+                  <li><%= CGI.escapeHTML(error[0..@max_error_message_length - 1]) %></li>
                 <% end %>
                 <% if errors.size > @max_errors %>
                   <li>...</li>

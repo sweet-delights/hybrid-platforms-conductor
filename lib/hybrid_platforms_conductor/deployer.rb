@@ -247,6 +247,8 @@ module HybridPlatformsConductor
             end
           end
           container_name = "hpc_container_#{node}_#{container_id}"
+          # Add PID and process start time to the ID to make sure other containers used by other runs are not being reused.
+          container_name << "_#{Process.pid}_#{(Time.now - Process.clock_gettime(Process::CLOCK_BOOTTIME)).strftime('%Y%m%d%H%M%S')}" unless reuse_container
           Deployer.with_container_semaphore(container_name) do
             old_docker_container = Docker::Container.all(all: true).find { |container| container.info['Names'].include? "/#{container_name}" }
             docker_container =
@@ -260,35 +262,56 @@ module HybridPlatformsConductor
                 end
                 log_debug "Creating Docker container #{container_name}..."
                 # We add the SYS_PTRACE capability as some images need to restart services (for example postfix) and those services need the rights to ls in /proc/{PID}/exe to check if a status is running. Without SYS_PTRACE such ls returns permission denied and the service can't be stopped (as init.d always returns it as stopped even when running).
-                Docker::Container.create(name: container_name, image: image_tag, CapAdd: 'SYS_PTRACE')
+                # We add the privileges as some containers need to install and configure the udev package, which needs RW access to /sys.
+                Docker::Container.create(
+                  name: container_name,
+                  image: image_tag,
+                  CapAdd: 'SYS_PTRACE',
+                  Privileged: true
+                )
               end
             # Run the container
             docker_container.start
             begin
               container_ip = docker_container.json['NetworkSettings']['IPAddress']
-              log_debug "Docker container #{container_name} started using IP #{container_ip}."
-              sub_logger, sub_logger_stderr =
-                if log_debug?
-                  [@logger, @logger_stderr]
-                else
-                  null_logger = Logger.new('/dev/null', level: :info)
-                  [null_logger, null_logger]
+              # Wait for the container to be up and running
+              if wait_for_port(container_ip, 22)
+                log_debug "Docker container #{container_name} started using IP #{container_ip}."
+                Dir.mktmpdir('hybrid_platforms_conductor-docker-logs') do |docker_logs_dir|
+                  sub_logger, sub_logger_stderr =
+                    if log_debug?
+                      [@logger, @logger_stderr]
+                    else
+                      FileUtils.mkdir_p docker_logs_dir
+                      stdout_file = "#{docker_logs_dir}/#{container_name}.stdout"
+                      stderr_file = "#{docker_logs_dir}/#{container_name}.stderr"
+                      [stdout_file, stderr_file].each { |file| File.unlink(file) if File.exist?(file) }
+                      log_debug "Docker logs files for #{container_name} are #{stdout_file} and #{stderr_file}"
+                      [Logger.new(stdout_file, level: :info), Logger.new(stderr_file, level: :info)]
+                    end
+                  sub_executable = Executable.new(logger: sub_logger, logger_stderr: sub_logger_stderr)
+                  nodes_handler = sub_executable.nodes_handler
+                  ssh_executor = sub_executable.ssh_executor
+                  deployer = sub_executable.deployer
+                  ssh_executor.override_connections[node] = container_ip
+                  ssh_executor.ssh_user_name = 'root'
+                  ssh_executor.passwords[node] = 'root_pwd'
+                  deployer.force_direct_deploy = true
+                  deployer.allow_deploy_non_master = true
+                  deployer.secrets = @secrets
+                  nodes_handler.platform_for(node).prepare_deploy_for_local_testing
+                  yield deployer, container_ip
                 end
-              sub_executable = Executable.new(logger: sub_logger, logger_stderr: sub_logger_stderr)
-              nodes_handler = sub_executable.nodes_handler
-              ssh_executor = sub_executable.ssh_executor
-              deployer = sub_executable.deployer
-              ssh_executor.override_connections[node] = container_ip
-              ssh_executor.ssh_user_name = 'root'
-              ssh_executor.passwords[node] = 'root_pwd'
-              deployer.force_direct_deploy = true
-              deployer.allow_deploy_non_master = true
-              deployer.secrets = @secrets
-              nodes_handler.platform_for(node).prepare_deploy_for_local_testing
-              yield deployer, container_ip
+              else
+                raise "Docker container #{container_name} was started on IP #{container_ip} but did not have its SSH server running"
+              end
             ensure
               docker_container.stop
               log_debug "Docker container #{container_name} stopped."
+              unless reuse_container
+                docker_container.remove
+                log_debug "Docker container #{container_name} removed."
+              end
             end
           end
         else
@@ -298,6 +321,36 @@ module HybridPlatformsConductor
     end
 
     private
+
+    # Wait for a given ip/port to be listening before continuing.
+    # Fail in case it timeouts.
+    #
+    # Parameters::
+    # * *host* (String): Host to reach
+    # * *port* (Integer): Port to wait for
+    # * *timeout* (Integer): Timeout before failing, in seconds [default = 30]
+    # Result::
+    # * Boolean: Is port listening?
+    def wait_for_port(host, port, timeout = 30)
+      log_debug "Wait for #{host}:#{port} to be opened (timeout #{timeout})..."
+      port_listening = false
+      remaining_timeout = timeout
+      until port_listening
+        start_time = Time.now
+        port_listening =
+          begin
+            Socket.tcp(host, port, connect_timeout: remaining_timeout) { true }
+          rescue Errno::ECONNREFUSED, Errno::EHOSTUNREACH, Errno::EADDRNOTAVAIL, Errno::ETIMEDOUT
+            log_error "Can't connect to #{host}:#{port}: #{$ERROR_INFO}"
+            false
+          end
+        sleep 1 unless port_listening
+        remaining_timeout -= Time.now - start_time
+        break if remaining_timeout <= 0
+      end
+      log_debug "#{host}:#{port} is#{port_listening ? '' : ' not'} opened."
+      port_listening
+    end
 
     # Package the repository, ready to be sent to artefact repositories.
     def package

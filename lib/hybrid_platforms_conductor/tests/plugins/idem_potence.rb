@@ -4,21 +4,24 @@ module HybridPlatformsConductor
 
     module Plugins
 
-      # Test that a check-node after a deploy returns no error
+      # Test that a check-node after a deploy returns no error.
+      # This tests also the ciadm access. Don't forget to add the ciadm private key in your SSH agent if you run this test locally.
       class IdemPotence < Tests::Test
 
         # Check my_test_plugin.rb.sample documentation for signature details.
         def test_for_node
           @deployer.with_docker_container_for(@node, container_id: 'idem_potence') do |deployer|
-            # Execute a deploy for @node, but targeting ip_address
             deployer.deploy_for(@node)
-            # Execute a check-node for @node, but targeting ip_address
+            # Now that the node has been deployed, use the ciadm user for the check-node (as root has no more access)
+            deployer.instance_variable_get(:@ssh_executor).ssh_user_name = 'ciadm'
+            deployer.instance_variable_get(:@ssh_executor).passwords.delete(@node)
             deployer.use_why_run = true
             result = deployer.deploy_for(@node)
             assert_equal result.size, 1, "Wrong number of nodes being tested: #{result.size}"
-            (tested_node, (exit_status, _stdout, stderr)) = result.first
+            tested_node, (exit_status, _stdout, _stderr) = result.first
             if exit_status.is_a?(Symbol)
-              error "Check-node could not run because of error: #{exit_status}. Error: #{stderr}"
+              # In debug mode, the logger is the normal one, already outputting the error. No need to get it back from the logs.
+              error "Check-node could not run because of error: #{exit_status}.", log_debug? ? nil : "---------- Error ----------\n#{File.read(deployer.stderr_device).strip}\n-------------------------"
             else
               assert_equal tested_node, @node, "Wrong node being tested: #{tested_node} should be #{@node}"
               assert_equal exit_status, 0, "Check-node returned error code #{exit_status}"

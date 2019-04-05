@@ -87,8 +87,9 @@ module HybridPlatformsConductor
       #
       # Parameters::
       # * *message* (String): The error message
-      def error(message)
-        log_error "[ #{self} ] - #{message}"
+      # * *details* (String or nil): Additional details, or nil if none [default = nil]
+      def error(message, details = nil)
+        log_error "[ #{self} ] - #{message}#{details.nil? ? '' : "\n#{details}"}"
         @errors << message
       end
 

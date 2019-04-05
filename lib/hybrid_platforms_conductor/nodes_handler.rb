@@ -376,25 +376,18 @@ module HybridPlatformsConductor
         nbr_to_process = nil
         nbr_processing = nil
         nbr_processed = nil
-        progress_bar = ProgressBar.create(
-          # TODO: Find a more elegant way to access the internal log device to harmonize behaviour between the progress bar and the logger
-          output: @logger.instance_variable_get(:@logdev).dev,
-          title: 'Initializing...',
-          total: nbr_total,
-          format: '[%j%%] - |%bC%i| - [ %t ]',
-          progress_mark: ' ',
-          remainder_mark: '-'
-        )
-        loop do
-          pools_semaphore.synchronize do
-            nbr_to_process = pools[:to_process].size
-            nbr_processing = pools[:processing].size
-            nbr_processed = pools[:processed].size
+        with_progress_bar(nbr_total) do |progress_bar|
+          loop do
+            pools_semaphore.synchronize do
+              nbr_to_process = pools[:to_process].size
+              nbr_processing = pools[:processing].size
+              nbr_processed = pools[:processed].size
+            end
+            progress_bar.title = "Queue: #{nbr_to_process} - Processing: #{nbr_processing} - Done: #{nbr_processed} - Total: #{nbr_total}"
+            progress_bar.progress = nbr_processed
+            break if nbr_processed == nbr_total
+            sleep 0.5
           end
-          progress_bar.title = "Queue: #{nbr_to_process} - Processing: #{nbr_processing} - Done: #{nbr_processed} - Total: #{nbr_total}"
-          progress_bar.progress = nbr_processed
-          break if nbr_processed == nbr_total
-          sleep 0.5
         end
         # Wait for threads to be joined
         threads_to_join.each do |thread|

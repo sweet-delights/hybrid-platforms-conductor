@@ -6,6 +6,9 @@ module HybridPlatformsConductor
 
   class CmdRunner
 
+    class UnexpectedExitCodeError < StandardError
+    end
+
     include LoggerHelpers
 
     # Return the executables prefix to use to execute commands
@@ -106,11 +109,13 @@ module HybridPlatformsConductor
           log_debug "Finished in #{elapsed} seconds with exit status #{exit_status} (#{(exit_status == expected_code ? 'success'.light_green : 'failure'.light_red).bold})"
         end
         if exit_status != expected_code
-          error = "Command returned error code #{exit_status} (expected #{expected_code})."
-          # Careful not to dump cmd in a non debug log_error as it can contain secrets
-          error << "\n---------- Command ----------\n#{cmd}\n---------- Output ----------\n#{cmd_stdout.strip}\n---------- Error ----------\n#{cmd_stderr.strip}\n-------------------------" if log_debug?
-          log_error error
-          raise error unless no_exception
+          error_title = "Command #{cmd.split("\n").first} returned error code #{exit_status} (expected #{expected_code})."
+          error_desc = ''
+          # Careful not to dump full cmd in a non debug log_error as it can contain secrets
+          error_desc << "---------- Command ----------\n#{cmd}\n" if log_debug?
+          error_desc << "---------- Output ----------\n#{cmd_stdout.strip}\n---------- Error ----------\n#{cmd_stderr.strip}\n-------------------------"
+          log_error "#{error_title}\n#{error_desc}"
+          raise UnexpectedExitCodeError, error_title unless no_exception
         end
         return exit_status, cmd_stdout, cmd_stderr
       end
