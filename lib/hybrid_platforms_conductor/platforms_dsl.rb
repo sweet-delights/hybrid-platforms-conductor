@@ -81,14 +81,17 @@ module HybridPlatformsConductor
             path
           elsif !git.nil?
             # Clone in a local repository
-            repo_sub_dir_name = File.basename(git)[0..-File.extname(git).size - 1]
-            repository_path = "#{@git_platforms_dir}/#{repo_sub_dir_name}"
-            unless File.exist?(repository_path)
-              section "Cloning #{git} (#{branch}) into #{repository_path}" do
-                Git.clone(git, repo_sub_dir_name, path: @git_platforms_dir, branch: branch)
+            local_repository_path = "#{@git_platforms_dir}/#{File.basename(git)[0..-File.extname(git).size - 1]}"
+            unless File.exist?(local_repository_path)
+              branch = "refs/heads/#{branch}" unless branch.include?('/')
+              local_ref = "refs/remotes/origin/#{branch.split('/').last}"
+              section "Cloning #{git} (#{branch} => #{local_ref}) into #{local_repository_path}" do
+                git_repo = Git.init(local_repository_path, )
+                git_repo.add_remote('origin', git).fetch(ref: "#{branch}:#{local_ref}")
+                git_repo.checkout local_ref
               end
             end
-            repository_path
+            local_repository_path
           else
             raise 'The platform has to be defined with either a path or a git URL'
           end
