@@ -158,6 +158,9 @@ module HybridPlatformsConductor
       options_parser.on('-e', '--secrets JSON_FILE_NAME', 'Specify a JSON file storing secrets (can be specified several times).') do |json_file|
         @secrets << File.expand_path(json_file)
       end
+      options_parser.on('-i', '--direct-deploy', 'Don\'t use artefacts servers while deploying.') do
+        @force_direct_deploy = true
+      end
       options_parser.on('-p', '--parallel', 'Execute the commands in parallel (put the standard output in files ./run_logs/*.stdout)') do
         @concurrent_execution = true
       end if parallel_switch

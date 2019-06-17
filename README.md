@@ -227,6 +227,7 @@ SSH executor options:
 
 Deployer options:
     -e, --secrets JSON_FILE_NAME     Specify a JSON file storing secrets (can be specified several times).
+    -i, --direct-deploy              Don't use artefacts servers while deploying.
     -p, --parallel                   Execute the commands in parallel (put the standard output in files ./run_logs/*.stdout)
     -t, --timeout SECS               Timeout in seconds to wait for each chef run. Only used in why-run mode. (defaults to no timeout)
     -W, --why-run                    Use the why-run mode to see what would be the result of the deploy instead of deploying it for real.
@@ -273,6 +274,7 @@ SSH executor options:
 
 Deployer options:
     -e, --secrets JSON_FILE_NAME     Specify a JSON file storing secrets (can be specified several times).
+    -i, --direct-deploy              Don't use artefacts servers while deploying.
     -t, --timeout SECS               Timeout in seconds to wait for each chef run. Only used in why-run mode. (defaults to no timeout)
 
 Deployer options specific to platforms of type chef:
@@ -379,6 +381,7 @@ SSH executor options:
 
 Deployer options:
     -e, --secrets JSON_FILE_NAME     Specify a JSON file storing secrets (can be specified several times).
+    -i, --direct-deploy              Don't use artefacts servers while deploying.
     -p, --parallel                   Execute the commands in parallel (put the standard output in files ./run_logs/*.stdout)
     -t, --timeout SECS               Timeout in seconds to wait for each chef run. Only used in why-run mode. (defaults to no timeout)
     -W, --why-run                    Use the why-run mode to see what would be the result of the deploy instead of deploying it for real.
@@ -896,6 +899,7 @@ SSH executor options:
 
 Deployer options:
     -e, --secrets JSON_FILE_NAME     Specify a JSON file storing secrets (can be specified several times).
+    -i, --direct-deploy              Don't use artefacts servers while deploying.
     -t, --timeout SECS               Timeout in seconds to wait for each chef run. Only used in why-run mode. (defaults to 30)
 ```
 
@@ -968,6 +972,7 @@ SSH executor options:
 
 Deployer options:
     -e, --secrets JSON_FILE_NAME     Specify a JSON file storing secrets (can be specified several times).
+    -i, --direct-deploy              Don't use artefacts servers while deploying.
     -t, --timeout SECS               Timeout in seconds to wait for each chef run. Only used in why-run mode. (defaults to 30)
 ```
 
@@ -1045,6 +1050,7 @@ SSH executor options:
 
 Deployer options:
     -e, --secrets JSON_FILE_NAME     Specify a JSON file storing secrets (can be specified several times).
+    -i, --direct-deploy              Don't use artefacts servers while deploying.
 
 Tests runner options:
     -i, --tests-list FILE_NAME       Specify a tests file name. The file should contain a list of tests name (1 per line). Can be used several times.
@@ -1239,12 +1245,14 @@ The Deployer options are used to drive a deployment (be it in why-run mode or no
 ```
 Deployer options:
     -e, --secrets JSON_FILE_NAME     Specify a JSON file storing secrets (can be specified several times).
+    -i, --direct-deploy              Don't use artefacts servers while deploying.
     -p, --parallel                   Execute the commands in parallel (put the standard output in files ./run_logs/*.stdout)
     -t, --timeout SECS               Timeout in seconds to wait for each chef run. Only used in why-run mode. (defaults to no timeout)
     -W, --why-run                    Use the why-run mode to see what would be the result of the deploy instead of deploying it for real.
 ```
 
 * `--secrets JSON_FILE_NAME`: Specify a JSON file storing secrets that can be used by the deployment process. Secrets are values that are needed for deployment but that should not be part of the platforms repositories (such as passwords).
+* `--direct-deploy`: When specified, don't use artefacts servers to ship the deployment deliverable. Ship directly to the target node instead.
 * `--parallel`: Specify that the deployment process should perform concurrently on the different nodes it has to deploy to.
 * `--timeout SECS`: Specify the timeout (in seconds) to apply while deploying. This can be set only in why-run mode.
 * `--why-run`: Specify the why-run mode. The why-run mode is used to simulate a deployment on the nodes, and report what a real deployment would have changed on the node.

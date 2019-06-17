@@ -447,6 +447,7 @@ module HybridPlatformsConductor
               # Why-run deploy on all nodes
               @deployer.concurrent_execution = true
               @deployer.use_why_run = true
+              @deployer.force_direct_deploy = true
               @deployer.timeout = CHECK_NODE_TIMEOUT
               @deployer.deploy_for(@hostnames)
             end
