@@ -112,8 +112,8 @@ module HybridPlatformsConductor
           error_title = "Command #{cmd.split("\n").first} returned error code #{exit_status} (expected #{expected_code})."
           error_desc = ''
           # Careful not to dump full cmd in a non debug log_error as it can contain secrets
-          error_desc << "---------- Command ----------\n#{cmd}\n" if log_debug?
-          error_desc << "---------- Output ----------\n#{cmd_stdout.strip}\n---------- Error ----------\n#{cmd_stderr.strip}\n-------------------------"
+          error_desc << "---------- COMMAND ----------\n#{cmd}\n" if log_debug?
+          error_desc << "---------- STDOUT ----------\n#{cmd_stdout.strip}\n---------- STDERR ----------\n#{cmd_stderr.strip}\n-------------------------"
           log_error "#{error_title}\n#{error_desc}"
           raise UnexpectedExitCodeError, error_title unless no_exception
         end
