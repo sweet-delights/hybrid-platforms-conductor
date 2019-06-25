@@ -8,6 +8,8 @@ module HybridPlatformsConductor
     # Make it so that we can sort lists of platforms
     include Comparable
 
+    include LoggerHelpers
+
     # Repository path
     #   String
     attr_reader :repository_path
@@ -22,10 +24,12 @@ module HybridPlatformsConductor
     # Constructor
     #
     # Parameters::
+    # * *logger* (Logger): Logger to be used
     # * *platform_type* (Symbol): Platform type
     # * *repository_path* (String): Repository path
     # * *nodes_handler* (NodesHandler): Nodes handler that can be used to get info about nodes.
-    def initialize(platform_type, repository_path, nodes_handler)
+    def initialize(logger, platform_type, repository_path, nodes_handler)
+      @logger = logger
       @platform_type = platform_type
       @repository_path = repository_path
       @nodes_handler = nodes_handler

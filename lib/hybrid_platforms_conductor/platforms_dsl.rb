@@ -95,7 +95,7 @@ module HybridPlatformsConductor
           else
             raise 'The platform has to be defined with either a path or a git URL'
           end
-        platform_handler = platform_handler_class.new(platform_type, repository_path, self)
+        platform_handler = platform_handler_class.new(@logger, platform_type, repository_path, self)
         @platform_handlers[platform_type] = [] unless @platform_handlers.key?(platform_type)
         @platform_handlers[platform_type] << platform_handler
         raise "Platform name #{platform_handler.info[:repo_name]} is declared several times." if @platforms.key?(platform_handler.info[:repo_name])
