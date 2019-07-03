@@ -121,6 +121,16 @@ module HybridPlatformsConductor
       end
     end
 
+    # Is the current user root?
+    # Look into the environment to decide.
+    #
+    # Result::
+    # Boolean: Is the current user root?
+    def root?
+      _exit_status, stdout, _stderr = run_cmd 'whoami'
+      stdout.strip == 'root'
+    end
+
   end
 
 end
