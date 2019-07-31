@@ -301,7 +301,8 @@ module HybridPlatformsConductor
                   ssh_executor.passwords[node] = 'root_pwd'
                   deployer.force_direct_deploy = true
                   deployer.allow_deploy_non_master = true
-                  deployer.secrets = @secrets
+                  # Ignore secrets that might have been given: in Docker containers we always use dummy secrets
+                  deployer.secrets = ["#{nodes_handler.hybrid_platforms_dir}/dummy_secrets.json"]
                   nodes_handler.platform_for(node).prepare_deploy_for_local_testing
                   yield deployer, container_ip
                 end
