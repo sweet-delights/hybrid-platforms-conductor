@@ -1,0 +1,2 @@
+# Don't commit Gemfile.lock in gems
+Gemfile.lock
