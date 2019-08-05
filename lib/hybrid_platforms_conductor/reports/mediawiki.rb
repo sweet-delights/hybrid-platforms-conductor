@@ -23,6 +23,7 @@ module HybridPlatformsConductor
           gui: 'GUI',
           handled_by_chef: 'Handled by Chef',
           hosted_on: 'Hosted on',
+          image: 'Image',
           kernel: 'Kernel',
           location: 'Location',
           missing_chef_recipes: 'Missing Chef recipes',

@@ -7,4 +7,4 @@ reports_handler = executable.reports_handler
 executable.parse_options!
 
 selected_nodes = executable.selected_nodes
-reports_handler.produce_report_for(selected_nodes.empty? ? { all: true } : selected_nodes)
+reports_handler.produce_report_for(selected_nodes.empty? ? [{ all: true }] : selected_nodes)
