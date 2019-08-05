@@ -1,3 +1,9 @@
+# [6.5.4](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv6.5.3&sourceBranch=refs%2Ftags%2Fv6.5.4) (2019-08-05)
+
+### Fixes
+
+* Bump to redeploy ([905c7efe](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/commits/905c7efe6922d0f1e0922556c7d7b382c7c0041f))
+
 # [6.5.3](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv6.5.2&sourceBranch=refs%2Ftags%2Fv6.5.3) (2019-08-05)
 
 ### Fixes
