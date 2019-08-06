@@ -1,3 +1,9 @@
+# [6.5.5](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv6.5.4&sourceBranch=refs%2Ftags%2Fv6.5.5) (2019-08-06)
+
+### Fixes
+
+* Hotfix to publish correctly ([74a88b38](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/commits/74a88b3854e2f86954ed7cf510ed936081884198))
+
 # [6.5.4](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv6.5.3&sourceBranch=refs%2Ftags%2Fv6.5.4) (2019-08-05)
 
 ### Fixes
