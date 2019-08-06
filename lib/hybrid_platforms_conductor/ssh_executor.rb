@@ -66,6 +66,7 @@ module HybridPlatformsConductor
       @strict_host_key_checking = true
       @override_connections = {}
       @passwords = {}
+      @auth_password = false
       @gateways_conf = ENV['ti_gateways_conf'].nil? ? :munich : ENV['ti_gateways_conf'].to_sym
       @gateway_user = ENV['ti_gateway_user'].nil? ? 'ubradm' : ENV['ti_gateway_user']
       # Global variables handling the SSH directory storing temporary SSH configuration
@@ -190,6 +191,9 @@ module HybridPlatformsConductor
       end
       options_parser.on('-u', '--ssh-user USER_NAME', 'Name of user to be used in SSH connections (defaults to platforms_ssh_user or USER environment variables)') do |user_name|
         @ssh_user_name = user_name
+      end
+      options_parser.on('-w', '--password', 'If used, then expect SSH connections to ask for a password.') do
+        @auth_password = true
       end
       options_parser.on('-y', '--gateways-conf GATEWAYS_CONF_NAME', "Name of the gateways configuration to be used. Can also be set from environment variable ti_gateways_conf. Defaults to #{@gateways_conf}.") do |gateway|
         @gateways_conf = gateway.to_sym
@@ -394,7 +398,7 @@ Host *
                     log_warn "Removing stale SSH control file #{control_path_file}"
                     File.unlink control_path_file
                   end
-                  exit_status, _stdout, _stderr = @cmd_runner.run_cmd "#{ssh_exec}#{@passwords.key?(node) ? '' : ' -o BatchMode=yes'} -o ControlMaster=yes -o ControlPersist=yes #{ssh_url} true", no_exception: no_exception, timeout: timeout
+                  exit_status, _stdout, _stderr = @cmd_runner.run_cmd "#{ssh_exec}#{@passwords.key?(node) || @auth_password ? '' : ' -o BatchMode=yes'} -o ControlMaster=yes -o ControlPersist=yes #{ssh_url} true", no_exception: no_exception, timeout: timeout
                   # Uncomment if you want to test the connection
                   # @cmd_runner.run_cmd "#{ssh_exec} -O check #{ssh_url}", log_to_stdout: false, timeout: timeout
                   if exit_status == 0
