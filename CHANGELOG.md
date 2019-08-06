@@ -1,3 +1,9 @@
+# [6.5.7](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv6.5.5&sourceBranch=refs%2Ftags%2Fv6.5.7) (2019-08-06)
+
+### Fixes
+
+* Bump to republish ([b097ed65](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/commits/b097ed654c4b3285f566289f4ae029494d8e1de0))
+
 # [6.5.5](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv6.5.4&sourceBranch=refs%2Ftags%2Fv6.5.5) (2019-08-06)
 
 ### Fixes
