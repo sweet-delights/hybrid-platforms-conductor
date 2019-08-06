@@ -1,3 +1,9 @@
+# [6.5.9](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv6.5.8&sourceBranch=refs%2Ftags%2Fv6.5.9) (2019-08-06)
+
+### Fixes
+
+* Republish ([beffa548](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/commits/beffa548cd5ff673600dce14e7729e0e51871817))
+
 # [6.5.8](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv6.5.7&sourceBranch=refs%2Ftags%2Fv6.5.8) (2019-08-06)
 
 ### Fixes
