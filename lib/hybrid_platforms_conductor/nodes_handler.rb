@@ -24,22 +24,22 @@ module HybridPlatformsConductor
       initialize_platforms_dsl
     end
 
-    # Get the list of known IPs (private and public), and return each associated hostname
+    # Get the list of known IPs (private and public), and return each associated node
     #
     # Result::
-    # * Hash<String,String>: List of hostnames per IP address
+    # * Hash<String,String>: List of nodes per IP address
     def known_ips
       # Keep a cache of it
       unless defined?(@known_ips)
         @known_ips = {}
         # Fill info from the site_meta
-        known_hostnames.each do |hostname|
-          site_meta = site_meta_for(hostname)
+        known_hostnames.each do |node|
+          site_meta = site_meta_for(node)
           ['private_ips', 'public_ips'].each do |ip_type|
             if site_meta.key?(ip_type)
               site_meta[ip_type].each do |ip|
-                raise "Conflict: #{ip} is already associated to #{@known_ips[ip]}. Cannot associate it to #{hostname}." if @known_ips.key?(ip)
-                @known_ips[ip] = hostname
+                raise "Conflict: #{ip} is already associated to #{@known_ips[ip]}. Cannot associate it to #{node}." if @known_ips.key?(ip)
+                @known_ips[ip] = node
               end
             end
           end
@@ -59,60 +59,78 @@ module HybridPlatformsConductor
       resolve_hosts(platform_for_list(hosts_list_name).hosts_desc_from_list(hosts_list_name), ignore_unknowns: ignore_unknowns)
     end
 
-    # Read the configuration of a given hostname
+    # Read the configuration of a given node
     #
     # Parameters::
-    # * *hostname* (String): Hostname to read configuration from
+    # * *node* (String): node to read configuration from
     # Result::
     # * Hash<String,Object>: The corresponding JSON configuration
-    def node_conf_for(hostname)
-      platform_for(hostname).node_conf_for(hostname)
+    def node_conf_for(node)
+      platform_for(node).node_conf_for(node)
     end
 
-    # Read the site meta of a given hostname
+    # Get the list of known service names
+    #
+    # Result::
+    # * Array<String>: List of service names
+    def known_services
+      known_hostnames.map { |node| service_for(node) }.uniq.sort
+    end
+
+    # Read the site meta of a given node
     #
     # Parameters::
-    # * *hostname* (String): Hostname to read configuration from
+    # * *node* (String): node to read configuration from
     # Result::
     # * Hash<String,Object> or nil: The corresponding JSON site_meta configuration, or nil if none
-    def site_meta_for(hostname)
-      json_conf = node_conf_for hostname
+    def site_meta_for(node)
+      json_conf = node_conf_for node
       if json_conf.key?('site_meta')
         json_conf['site_meta']
       else
-        log_debug "[#{hostname}] - No site_meta key found"
+        log_debug "[#{node}] - No site_meta key found"
         nil
       end
     end
 
-    # Return the private IP for a given hostname
+    # Return the private IP for a given node
     #
     # Parameters::
-    # * *hostname* (String): Hostname to read configuration from
+    # * *node* (String): node to read configuration from
     # Result::
     # * String or nil: The corresponding private IP, or nil if none
-    def private_ip_for(hostname)
+    def private_ip_for(node)
       ip = nil
-      site_meta_conf = site_meta_for(hostname)
+      site_meta_conf = site_meta_for(node)
       unless site_meta_conf.nil?
         if site_meta_conf.key?('private_ips')
           ip = site_meta_conf['private_ips'].first
         else
-          log_debug "[#{hostname}] - No private IPs defined"
+          log_debug "[#{node}] - No private IPs defined"
         end
       end
       ip
     end
 
-    # Return the hostname of a given private IP
+    # Return the service for a given node
+    #
+    # Parameters::
+    # * *node* (String): node to read configuration from
+    # Result::
+    # * String: The corresponding service
+    def service_for(node)
+      platform_for(node).service_for(node)
+    end
+
+    # Return the node of a given private IP
     #
     # Parameters::
     # * *ip* (String): Private IP
     # Result::
-    # * String or nil: The corresponding hostname, or nil if none
+    # * String or nil: The corresponding node, or nil if none
     def hostname_for_ip(ip)
-      known_hostnames.find do |hostname|
-        site_meta_conf = site_meta_for(hostname)
+      known_hostnames.find do |node|
+        site_meta_conf = site_meta_for(node)
         !site_meta_conf.nil? &&  site_meta_conf.key?('private_ips') && site_meta_conf['private_ips'].include?(ip)
       end
     end
@@ -150,53 +168,55 @@ module HybridPlatformsConductor
       end
     end
 
-    # Resolve a list of host descriptions into a real list of known host names.
-    # A host description can be:
-    # * a String, being already a host name,
-    # * a Hash, that can contain the following keys:
-    #   * *list* (String): Specify the name of a hosts list.
-    #   * *platform* (String): The platform name containing the hosts list.
-    #   * *all* (Boolean): If true, specify that we want all host names known.
+    # Resolve a list of nodes selectors into a real list of known nodes.
+    # A node selector can be:
+    # * String: Node name
+    # * Hash<Symbol,Object>: More complete information that can contain the following keys:
+    #   * *all* (Boolean): If true, specify that we want all known nodes.
+    #   * *list* (String): Name of a nodes list.
+    #   * *platform* (String): Name of a platform containing nodes.
+    #   * *service* (String): Name of a service implemented by nodes.
     #
     # Parameters::
-    # * *host_descriptions* (Array<Object>): List of host descriptions (can be a single element).
-    # * *ignore_unknowns* (Boolean): Do we ignore unknown host names? [default = false]
+    # * *nodes_selectors* (Array<Object>): List of node selectors (can be a single element).
+    # * *ignore_unknowns* (Boolean): Do we ignore unknown nodes? [default = false]
     # Result::
     # * Array<String>: List of host names
-    def resolve_hosts(*host_descriptions, ignore_unknowns: false)
-      host_descriptions = host_descriptions.flatten
+    def resolve_hosts(*nodes_selectors, ignore_unknowns: false)
+      nodes_selectors = nodes_selectors.flatten
       # 1. Check for the presence of all
-      return known_hostnames if host_descriptions.any? { |host_desc| host_desc.is_a?(Hash) && host_desc.key?(:all) && host_desc[:all] }
-      # 2. Expand the hosts lists and platform contents
-      string_hosts = []
-      host_descriptions.each do |host_desc|
-        if host_desc.is_a?(String)
-          string_hosts << host_desc
+      return known_hostnames if nodes_selectors.any? { |nodes_selector| nodes_selector.is_a?(Hash) && nodes_selector.key?(:all) && nodes_selector[:all] }
+      # 2. Expand the nodes lists, platforms and services contents
+      string_nodes = []
+      nodes_selectors.each do |nodes_selector|
+        if nodes_selector.is_a?(String)
+          string_nodes << nodes_selector
         else
-          string_hosts.concat(platform_for_list(host_desc[:list]).hosts_desc_from_list(host_desc[:list])) if host_desc.key?(:list)
-          string_hosts.concat(@platforms[host_desc[:platform]].known_hostnames) if host_desc.key?(:platform)
+          string_nodes.concat(platform_for_list(nodes_selector[:list]).hosts_desc_from_list(nodes_selector[:list])) if nodes_selector.key?(:list)
+          string_nodes.concat(@platforms[nodes_selector[:platform]].known_hostnames) if nodes_selector.key?(:platform)
+          string_nodes.concat(known_hostnames.select { |node| service_for(node) == nodes_selector[:service] }) if nodes_selector.key?(:service)
         end
       end
       # 3. Expand the Regexps
-      real_hosts = []
-      string_hosts.each do |hostname|
-        if hostname =~ /^\/(.+)\/$/
-          hostname_regexp = Regexp.new($1)
-          real_hosts.concat(known_hostnames.select { |known_hostname| known_hostname[hostname_regexp] })
+      real_nodes = []
+      string_nodes.each do |node|
+        if node =~ /^\/(.+)\/$/
+          node_regexp = Regexp.new($1)
+          real_nodes.concat(known_hostnames.select { |known_node| known_node[node_regexp] })
         else
-          real_hosts << hostname
+          real_nodes << node
         end
       end
       # 4. Sort them unique
-      real_hosts.uniq!
-      real_hosts.sort!
+      real_nodes.uniq!
+      real_nodes.sort!
       # Some sanity checks
-      raise 'No host specified' if real_hosts.empty?
+      raise 'No host specified' if real_nodes.empty?
       unless ignore_unknowns
-        unknown_hostnames = real_hosts - known_hostnames
-        raise "Unknown host names: #{unknown_hostnames.join(', ')}" unless unknown_hostnames.empty?
+        unknown_nodes = real_nodes - known_hostnames
+        raise "Unknown host names: #{unknown_nodes.join(', ')}" unless unknown_nodes.empty?
       end
-      real_hosts
+      real_nodes
     end
 
     # Return host names environments.
@@ -206,11 +226,11 @@ module HybridPlatformsConductor
     # Result::
     # * Hash<String,Symbol>: List of environment per real host name (see NodesHandler#ip_environment to know possible environment values).
     def hosts_envs(host_descriptions)
-      Hash[resolve_hosts(host_descriptions).map do |hostname|
-        private_ip = private_ip_for hostname
-        raise "Host #{hostname} has no private IP." if private_ip.nil?
+      Hash[resolve_hosts(host_descriptions).map do |node|
+        private_ip = private_ip_for node
+        raise "Node #{node} has no private IP." if private_ip.nil?
         [
-          hostname,
+          node,
           ip_env(private_ip)
         ]
       end]
@@ -252,7 +272,7 @@ module HybridPlatformsConductor
       @ips_mask[ip_def] = {} unless @ips_mask.key?(ip_def)
       unless @ips_mask[ip_def].key?(ip_mask)
         # For performance, keep a cache of all the IPAddress::IPv4 objects
-        @ip_v4_cache = Hash[known_ips.keys.map { |ip, _hostname| [ip, IPAddress::IPv4.new(ip)] }] unless defined?(@ip_v4_cache)
+        @ip_v4_cache = Hash[known_ips.keys.map { |ip, _node| [ip, IPAddress::IPv4.new(ip)] }] unless defined?(@ip_v4_cache)
         ip_range = IPAddress::IPv4.new("#{ip_def}/#{ip_mask}")
         @ips_mask[ip_def][ip_mask] = @ip_v4_cache.select { |_ip, ip_v4| ip_range.include?(ip_v4) }.keys
       end
@@ -291,16 +311,25 @@ module HybridPlatformsConductor
       options_parser.separator ''
       options_parser.separator 'Nodes handler options:'
       options_parser.on('-o', '--show-hosts', 'Display the list of possible hosts and exit') do
-        out "* Known platforms:\n#{platforms.map { |platform_handler| "* #{platform_handler.platform_type}: #{platform_handler.repository_path}" }.sort.join("\n")}"
+        out "* Known platforms:\n#{
+          platforms.map do |platform_handler|
+            "#{platform_handler.info[:repo_name]} - Type: #{platform_handler.platform_type} - Location: #{platform_handler.repository_path}"
+          end.sort.join("\n")
+        }"
         out
-        out "* Known hosts lists:\n#{known_hosts_lists.sort.join("\n")}"
+        out "* Known nodes lists:\n#{known_hosts_lists.sort.join("\n")}"
         out
-        out "* Known hosts:\n#{known_hostnames.sort.join("\n")}"
+        out "* Known services:\n#{known_services.sort.join("\n")}"
         out
-        out "* Known hosts with description and private IP:\n#{known_hostnames.map do |hostname|
-            conf = site_meta_for(hostname)
-            "#{platform_for(hostname).repository_path} - #{hostname} (#{private_ip_for(hostname)}) - #{conf.nil? || !conf.key?('description') ? '' : conf['description']}"
-          end.sort.join("\n")}"
+        out "* Known nodes:\n#{known_hostnames.sort.join("\n")}"
+        out
+        out "* Known nodes with description:\n#{
+          known_hostnames.map do |node|
+            conf = site_meta_for(node)
+            ip = private_ip_for(node)
+            "#{platform_for(node).info[:repo_name]} - #{node}#{ip.nil? ? '' : " (#{ip})"} - #{service_for(node)} - #{conf.nil? || !conf.key?('description') ? '' : conf['description']}"
+          end.sort.join("\n")
+        }"
         out
         exit 0
       end
@@ -310,21 +339,24 @@ module HybridPlatformsConductor
     #
     # Parameters::
     # * *options_parser* (OptionParser): The option parser to complete
-    # * *hosts* (Array): The list of hosts that will be populated by parsing the options
-    def options_parse_hosts(options_parser, hosts)
+    # * *nodes_selectors* (Array): The list of nodes selectors that will be populated by parsing the options
+    def options_parse_hosts(options_parser, nodes_selectors)
       options_parser.separator ''
       options_parser.separator 'Nodes selection options:'
-      options_parser.on('-a', '--all-hosts', 'Select all hosts') do
-        hosts << { all: true }
+      options_parser.on('-a', '--all-hosts', 'Select all nodes') do
+        nodes_selectors << { all: true }
       end
-      options_parser.on('-b', '--hosts-platform PLATFORM_NAME', "Select hosts belonging to a given platform name. Available platforms are: #{@platforms.keys.sort.join(', ')} (can be used several times)") do |platform_name|
-        hosts << { platform: platform_name }
+      options_parser.on('-b', '--hosts-platform PLATFORM_NAME', "Select nodes belonging to a given platform name. Available platforms are: #{@platforms.keys.sort.join(', ')} (can be used several times)") do |platform_name|
+        nodes_selectors << { platform: platform_name }
       end
-      options_parser.on('-l', '--hosts-list LIST_NAME', 'Select hosts defined in a hosts list (can be used several times)') do |host_list_name|
-        hosts << { list: host_list_name }
+      options_parser.on('-l', '--hosts-list LIST_NAME', 'Select nodes defined in a nodes list (can be used several times)') do |nodes_list_name|
+        nodes_selectors << { list: nodes_list_name }
       end
-      options_parser.on('-n', '--host-name HOST_NAME', 'Select a specific host. Can be a regular expression if used with enclosing "/" characters. (can be used several times)') do |host_name|
-        hosts << host_name
+      options_parser.on('-n', '--host-name NODE_NAME', 'Select a specific node. Can be a regular expression if used with enclosing "/" characters. (can be used several times)') do |node|
+        nodes_selectors << node
+      end
+      options_parser.on('-r', '--service SERVICE_NAME', 'Select nodes implementing a given service (can be used several times)') do |service|
+        nodes_selectors << { service: service }
       end
     end
 
@@ -344,7 +376,7 @@ module HybridPlatformsConductor
       if parallel
         threads_to_join = []
         # Spread hosts evenly among the threads.
-        # Use a shared pool of hostnames to be handled by threads.
+        # Use a shared pool of nodes to be handled by threads.
         pools = {
           to_process: nodes.sort,
           processing: [],

@@ -210,11 +210,12 @@ Nodes handler options:
     -o, --show-hosts                 Display the list of possible hosts and exit
 
 Nodes selection options:
-    -a, --all-hosts                  Select all hosts
-    -b PLATFORM_NAME,                Select hosts belonging to a given platform name. Available platforms are: ansible-repo, chef-repo (can be used several times)
+    -a, --all-hosts                  Select all nodes
+    -b PLATFORM_NAME,                Select nodes belonging to a given platform name. Available platforms are: ansible-repo, chef-repo (can be used several times)
         --hosts-platform
-    -l, --hosts-list LIST_NAME       Select hosts defined in a hosts list (can be used several times)
-    -n, --host-name HOST_NAME        Select a specific host. Can be a regular expression if used with enclosing "/" characters. (can be used several times)
+    -l, --hosts-list LIST_NAME       Select nodes defined in a nodes list (can be used several times)
+    -n, --host-name NODE_NAME        Select a specific node. Can be a regular expression if used with enclosing "/" characters. (can be used several times)
+        --service SERVICE_NAME       Select nodes implementing a given service (can be used several times)
 
 SSH executor options:
     -d, --debug                      Activate verbose logs
@@ -364,11 +365,12 @@ Nodes handler options:
     -o, --show-hosts                 Display the list of possible hosts and exit
 
 Nodes selection options:
-    -a, --all-hosts                  Select all hosts
-    -b PLATFORM_NAME,                Select hosts belonging to a given platform name. Available platforms are: ansible-repo, chef-repo (can be used several times)
+    -a, --all-hosts                  Select all nodes
+    -b PLATFORM_NAME,                Select nodes belonging to a given platform name. Available platforms are: ansible-repo, chef-repo (can be used several times)
         --hosts-platform
-    -l, --hosts-list LIST_NAME       Select hosts defined in a hosts list (can be used several times)
-    -n, --host-name HOST_NAME        Select a specific host. Can be a regular expression if used with enclosing "/" characters. (can be used several times)
+    -l, --hosts-list LIST_NAME       Select nodes defined in a nodes list (can be used several times)
+    -n, --host-name NODE_NAME        Select a specific node. Can be a regular expression if used with enclosing "/" characters. (can be used several times)
+        --service SERVICE_NAME       Select nodes implementing a given service (can be used several times)
 
 SSH executor options:
     -d, --debug                      Activate verbose logs
@@ -492,11 +494,12 @@ Nodes handler options:
     -o, --show-hosts                 Display the list of possible hosts and exit
 
 Nodes selection options:
-    -a, --all-hosts                  Select all hosts
-    -b PLATFORM_NAME,                Select hosts belonging to a given platform name. Available platforms are: ansible-repo, chef-repo (can be used several times)
+    -a, --all-hosts                  Select all nodes
+    -b PLATFORM_NAME,                Select nodes belonging to a given platform name. Available platforms are: ansible-repo, chef-repo (can be used several times)
         --hosts-platform
-    -l, --hosts-list LIST_NAME       Select hosts defined in a hosts list (can be used several times)
-    -n, --host-name HOST_NAME        Select a specific host. Can be a regular expression if used with enclosing "/" characters. (can be used several times)
+    -l, --hosts-list LIST_NAME       Select nodes defined in a nodes list (can be used several times)
+    -n, --host-name NODE_NAME        Select a specific node. Can be a regular expression if used with enclosing "/" characters. (can be used several times)
+    -r, --service SERVICE_NAME       Select nodes implementing a given service (can be used several times)
 
 SSH executor options:
     -d, --debug                      Activate verbose logs
@@ -716,11 +719,12 @@ Nodes handler options:
     -o, --show-hosts                 Display the list of possible hosts and exit
 
 Nodes selection options:
-    -a, --all-hosts                  Select all hosts
-    -b PLATFORM_NAME,                Select hosts belonging to a given platform name. Available platforms are: ansible-repo, chef-repo (can be used several times)
+    -a, --all-hosts                  Select all nodes
+    -b PLATFORM_NAME,                Select nodes belonging to a given platform name. Available platforms are: ansible-repo, chef-repo (can be used several times)
         --hosts-platform
-    -l, --hosts-list LIST_NAME       Select hosts defined in a hosts list (can be used several times)
-    -n, --host-name HOST_NAME        Select a specific host. Can be a regular expression if used with enclosing "/" characters. (can be used several times)
+    -l, --hosts-list LIST_NAME       Select nodes defined in a nodes list (can be used several times)
+    -n, --host-name NODE_NAME        Select a specific node. Can be a regular expression if used with enclosing "/" characters. (can be used several times)
+    -r, --service SERVICE_NAME       Select nodes implementing a given service (can be used several times)
 ```
 
 Usage examples:
@@ -811,17 +815,18 @@ Usage: ./bin/last_deploys [options]
 
 Main options:
     -h, --help                       Display help and exit
-    -r, --sort-by SORT               Specify a sort. Possible values are: admin, chef_commit_comment, chef_commit_id, datetime, git_branch, git_repo, host. Each value can append _desc to specify a reverse sorting. Defaults to host.
+        --sort-by SORT               Specify a sort. Possible values are: admin, chef_commit_comment, chef_commit_id, datetime, git_branch, git_repo, host. Each value can append _desc to specify a reverse sorting. Defaults to host.
 
 Nodes handler options:
     -o, --show-hosts                 Display the list of possible hosts and exit
 
 Nodes selection options:
-    -a, --all-hosts                  Select all hosts
-    -b PLATFORM_NAME,                Select hosts belonging to a given platform name. Available platforms are: ansible-repo, chef-repo (can be used several times)
+    -a, --all-hosts                  Select all nodes
+    -b PLATFORM_NAME,                Select nodes belonging to a given platform name. Available platforms are: ansible-repo, chef-repo (can be used several times)
         --hosts-platform
-    -l, --hosts-list LIST_NAME       Select hosts defined in a hosts list (can be used several times)
-    -n, --host-name HOST_NAME        Select a specific host. Can be a regular expression if used with enclosing "/" characters. (can be used several times)
+    -l, --hosts-list LIST_NAME       Select nodes defined in a nodes list (can be used several times)
+    -n, --host-name NODE_NAME        Select a specific node. Can be a regular expression if used with enclosing "/" characters. (can be used several times)
+    -r, --service SERVICE_NAME       Select nodes implementing a given service (can be used several times)
 
 SSH executor options:
     -d, --debug                      Activate verbose logs
@@ -878,11 +883,12 @@ Nodes handler options:
     -o, --show-hosts                 Display the list of possible hosts and exit
 
 Nodes selection options:
-    -a, --all-hosts                  Select all hosts
-    -b PLATFORM_NAME,                Select hosts belonging to a given platform name. Available platforms are: ansible-repo, chef-repo (can be used several times)
+    -a, --all-hosts                  Select all nodes
+    -b PLATFORM_NAME,                Select nodes belonging to a given platform name. Available platforms are: ansible-repo, chef-repo (can be used several times)
         --hosts-platform
-    -l, --hosts-list LIST_NAME       Select hosts defined in a hosts list (can be used several times)
-    -n, --host-name HOST_NAME        Select a specific host. Can be a regular expression if used with enclosing "/" characters. (can be used several times)
+    -l, --hosts-list LIST_NAME       Select nodes defined in a nodes list (can be used several times)
+    -n, --host-name NODE_NAME        Select a specific node. Can be a regular expression if used with enclosing "/" characters. (can be used several times)
+    -r, --service SERVICE_NAME       Select nodes implementing a given service (can be used several times)
 
 JSON dump options:
     -k, --skip-run                   Skip the actual gathering of dumps in run_logs. If set, the current run_logs content will be used.
@@ -1033,11 +1039,12 @@ Nodes handler options:
     -o, --show-hosts                 Display the list of possible hosts and exit
 
 Nodes selection options:
-    -a, --all-hosts                  Select all hosts
-    -b PLATFORM_NAME,                Select hosts belonging to a given platform name. Available platforms are: ansible-repo, chef-repo (can be used several times)
+    -a, --all-hosts                  Select all nodes
+    -b PLATFORM_NAME,                Select nodes belonging to a given platform name. Available platforms are: ansible-repo, chef-repo (can be used several times)
         --hosts-platform
-    -l, --hosts-list LIST_NAME       Select hosts defined in a hosts list (can be used several times)
-    -n, --host-name HOST_NAME        Select a specific host. Can be a regular expression if used with enclosing "/" characters. (can be used several times)
+    -l, --hosts-list LIST_NAME       Select nodes defined in a nodes list (can be used several times)
+    -n, --host-name NODE_NAME        Select a specific node. Can be a regular expression if used with enclosing "/" characters. (can be used several times)
+        --service SERVICE_NAME       Select nodes implementing a given service (can be used several times)
 
 SSH executor options:
     -d, --debug                      Activate verbose logs
@@ -1204,17 +1211,19 @@ The nodes selection options are used to select a set of nodes that the tool need
 
 ```
 Nodes selection options:
-    -a, --all-hosts                  Select all hosts
-    -b PLATFORM_NAME,                Select hosts belonging to a given platform name. Available platforms are: ansible-repo, chef-repo (can be used several times)
+    -a, --all-hosts                  Select all nodes
+    -b PLATFORM_NAME,                Select nodes belonging to a given platform name. Available platforms are: ansible-repo, chef-repo (can be used several times)
         --hosts-platform
-    -l, --hosts-list LIST_NAME       Select hosts defined in a hosts list (can be used several times)
-    -n, --host-name HOST_NAME        Select a specific host. Can be a regular expression if used with enclosing "/" characters. (can be used several times)
+    -l, --hosts-list LIST_NAME       Select nodes defined in a nodes list (can be used several times)
+    -n, --host-name NODE_NAME        Select a specific node. Can be a regular expression if used with enclosing "/" characters. (can be used several times)
+    -r, --service SERVICE_NAME       Select nodes implementing a given service (can be used several times)
 ```
 
 * `--all-hosts`: Select all the known hosts.
 * `--hosts-platform PLATFORM_NAME`: Specify the name of a platform as a selector. Can be useful to only perform checks of nodes of a given repository after merging a PR on this repository.
 * `--hosts-list LIST_NAME`: Specify a hosts list name as selector. Hosts list are a named group of hosts, and are defined by each platform if they make sense. For example all the nodes belonging to the same cluster could be part of a hosts list.
-* `--host-name HOST_NAME`: Select a single host name. A regular expression can also be used when `HOST_NAME` is enclosed with `/` character (the regular expression grammar is [the Ruby one](http://ruby-doc.org/core-2.5.0/Regexp.html)). Examples: `--host-name my_host_1`, `--host-name /my_host_.+/`.
+* `--host-name NODE_NAME`: Select a single host name. A regular expression can also be used when `HOST_NAME` is enclosed with `/` character (the regular expression grammar is [the Ruby one](http://ruby-doc.org/core-2.5.0/Regexp.html)). Examples: `--host-name my_host_1`, `--host-name /my_host_.+/`.
+* `--service SERVICE_NAME`: Select all nodes that implement a given service.
 
 ## SSH Executor options
 
