@@ -8,7 +8,7 @@ module HybridPlatformsConductor
       class LinearStrategy < Tests::Test
 
         # Number of seconds of the period after which we tolerate non-linear history in git
-        LOOKING_PERIOD = 6 * 31 * 24 * 60 * 60# 6 months
+        LOOKING_PERIOD = 6 * 31 * 24 * 60 * 60 # 6 months
 
         # Check my_test_plugin.rb.sample documentation for signature details.
         def test_on_platform
