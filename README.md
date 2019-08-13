@@ -219,7 +219,7 @@ Nodes selection options:
 
 SSH executor options:
     -d, --debug                      Activate verbose logs
-    -g, --gateway-user USER_NAME     Name of the gateway user to be used by the XAE gateways (defaults to ubradm)
+    -g, --gateway-user USER_NAME     Name of the gateway user to be used by the gateways. Can also be set from environment variable ti_gateway_user. Defaults to ubradm.
     -m, --max-threads NBR            Set the number of threads to use for concurrent queries (defaults to 16)
     -s, --show-commands              Display the SSH commands that would be run instead of running them
     -u, --ssh-user USER_NAME         Name of user to be used in SSH connections (defaults to platforms_ssh_user or USER environment variables)
@@ -268,7 +268,7 @@ Nodes handler options:
 
 SSH executor options:
     -d, --debug                      Activate verbose logs
-    -g, --gateway-user USER_NAME     Name of the gateway user to be used by the XAE gateways (defaults to ubradm)
+    -g, --gateway-user USER_NAME     Name of the gateway user to be used by the gateways. Can also be set from environment variable ti_gateway_user. Defaults to ubradm.
     -s, --show-commands              Display the SSH commands that would be run instead of running them
     -u, --ssh-user USER_NAME         Name of user to be used in SSH connections (defaults to platforms_ssh_user or USER environment variables)
     -w, --password                   If used, then expect SSH connections to ask for a password.
@@ -376,7 +376,7 @@ Nodes selection options:
 
 SSH executor options:
     -d, --debug                      Activate verbose logs
-    -g, --gateway-user USER_NAME     Name of the gateway user to be used by the XAE gateways (defaults to ubradm)
+    -g, --gateway-user USER_NAME     Name of the gateway user to be used by the gateways. Can also be set from environment variable ti_gateway_user. Defaults to ubradm.
     -m, --max-threads NBR            Set the number of threads to use for concurrent queries (defaults to 16)
     -s, --show-commands              Display the SSH commands that would be run instead of running them
     -u, --ssh-user USER_NAME         Name of user to be used in SSH connections (defaults to platforms_ssh_user or USER environment variables)
@@ -506,7 +506,7 @@ Nodes selection options:
 
 SSH executor options:
     -d, --debug                      Activate verbose logs
-    -g, --gateway-user USER_NAME     Name of the gateway user to be used by the XAE gateways (defaults to ubradm)
+    -g, --gateway-user USER_NAME     Name of the gateway user to be used by the gateways. Can also be set from environment variable ti_gateway_user. Defaults to ubradm.
     -m, --max-threads NBR            Set the number of threads to use for concurrent queries (defaults to 16)
     -s, --show-commands              Display the SSH commands that would be run instead of running them
     -u, --ssh-user USER_NAME         Name of user to be used in SSH connections (defaults to platforms_ssh_user or USER environment variables)
@@ -571,7 +571,7 @@ Nodes handler options:
 
 SSH executor options:
     -d, --debug                      Activate verbose logs
-    -g, --gateway-user USER_NAME     Name of the gateway user to be used by the XAE gateways (defaults to ubradm)
+    -g, --gateway-user USER_NAME     Name of the gateway user to be used by the gateways. Can also be set from environment variable ti_gateway_user. Defaults to ubradm.
     -s, --show-commands              Display the SSH commands that would be run instead of running them
     -u, --ssh-user USER_NAME         Name of user to be used in SSH connections (defaults to platforms_ssh_user or USER environment variables)
     -w, --password                   If used, then expect SSH connections to ask for a password.
@@ -835,7 +835,7 @@ Nodes selection options:
 
 SSH executor options:
     -d, --debug                      Activate verbose logs
-    -g, --gateway-user USER_NAME     Name of the gateway user to be used by the XAE gateways (defaults to ubradm)
+    -g, --gateway-user USER_NAME     Name of the gateway user to be used by the gateways. Can also be set from environment variable ti_gateway_user. Defaults to ubradm.
     -m, --max-threads NBR            Set the number of threads to use for concurrent queries (defaults to 64)
     -s, --show-commands              Display the SSH commands that would be run instead of running them
     -u, --ssh-user USER_NAME         Name of user to be used in SSH connections (defaults to platforms_ssh_user or USER environment variables)
@@ -902,7 +902,7 @@ JSON dump options:
 
 SSH executor options:
     -d, --debug                      Activate verbose logs
-    -g, --gateway-user USER_NAME     Name of the gateway user to be used by the XAE gateways (defaults to ubradm)
+    -g, --gateway-user USER_NAME     Name of the gateway user to be used by the gateways. Can also be set from environment variable ti_gateway_user. Defaults to ubradm.
     -m, --max-threads NBR            Set the number of threads to use for concurrent queries (defaults to 16)
     -s, --show-commands              Display the SSH commands that would be run instead of running them
     -u, --ssh-user USER_NAME         Name of user to be used in SSH connections (defaults to platforms_ssh_user or USER environment variables)
@@ -976,7 +976,7 @@ Nodes handler options:
 
 SSH executor options:
     -d, --debug                      Activate verbose logs
-    -g, --gateway-user USER_NAME     Name of the gateway user to be used by the XAE gateways (defaults to ubradm)
+    -g, --gateway-user USER_NAME     Name of the gateway user to be used by the gateways. Can also be set from environment variable ti_gateway_user. Defaults to ubradm.
     -m, --max-threads NBR            Set the number of threads to use for concurrent queries (defaults to 16)
     -s, --show-commands              Display the SSH commands that would be run instead of running them
     -u, --ssh-user USER_NAME         Name of user to be used in SSH connections (defaults to platforms_ssh_user or USER environment variables)
@@ -1056,7 +1056,7 @@ Nodes selection options:
 
 SSH executor options:
     -d, --debug                      Activate verbose logs
-    -g, --gateway-user USER_NAME     Name of the gateway user to be used by the XAE gateways (defaults to ubradm)
+    -g, --gateway-user USER_NAME     Name of the gateway user to be used by the gateways. Can also be set from environment variable ti_gateway_user. Defaults to ubradm.
     -m, --max-threads NBR            Set the number of threads to use for concurrent queries (defaults to 64)
     -s, --show-commands              Display the SSH commands that would be run instead of running them
     -u, --ssh-user USER_NAME         Name of user to be used in SSH connections (defaults to platforms_ssh_user or USER environment variables)
@@ -1241,7 +1241,7 @@ The SSH Executor options are used to drive how SSH commands are executed.
 ```
 SSH executor options:
     -d, --debug                      Activate verbose logs
-    -g, --gateway-user USER_NAME     Name of the gateway user to be used by the XAE gateways (defaults to ubradm)
+    -g, --gateway-user USER_NAME     Name of the gateway user to be used by the gateways. Can also be set from environment variable ti_gateway_user. Defaults to ubradm.
     -m, --max-threads NBR            Set the number of threads to use for concurrent queries (defaults to 64)
     -s, --show-commands              Display the SSH commands that would be run instead of running them
     -u, --ssh-user USER_NAME         Name of user to be used in SSH connections (defaults to platforms_ssh_user or USER environment variables)

@@ -95,7 +95,7 @@ module HybridPlatformsConductor
           else
             raise 'The platform has to be defined with either a path or a git URL'
           end
-        platform_handler = platform_handler_class.new(@logger, platform_type, repository_path, self)
+        platform_handler = platform_handler_class.new(@logger, @logger_stderr, platform_type, repository_path, self)
         @platform_handlers[platform_type] = [] unless @platform_handlers.key?(platform_type)
         @platform_handlers[platform_type] << platform_handler
         raise "Platform name #{platform_handler.info[:repo_name]} is declared several times." if @platforms.key?(platform_handler.info[:repo_name])
@@ -169,7 +169,7 @@ module HybridPlatformsConductor
     # Get the list of known platform names
     #
     # Parameters::
-    # * *platform_type* (Symbol or nil): Required platform type, or nil fo all platforms [default = nil]
+    # * *platform_type* (Symbol or nil): Required platform type, or nil fo all platforms [default: nil]
     # Result::
     # * Array<String>: List of platform names
     def known_platforms(platform_type: nil)
