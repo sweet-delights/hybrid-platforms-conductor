@@ -1,6 +1,6 @@
 describe HybridPlatformsConductor::SshExecutor do
 
-  context 'Checking parallel runs' do
+  context 'checking parallel runs' do
 
     it 'executes a simple command on several nodes in parallel' do
       with_test_platform(nodes: { 'node1' => {}, 'node2' => {}, 'node3' => {} }) do

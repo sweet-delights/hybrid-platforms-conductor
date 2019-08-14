@@ -19,19 +19,11 @@ describe HybridPlatformsConductor::PlatformHandler do
   end
 
   it 'returns the correct info when platform is a Git repository' do
-    with_repository do |repository|
+    with_repository(as_git: true) do |repository|
       with_platforms "test_platform path: '#{repository}'" do
         register_platform_handlers test: HybridPlatformsConductorTest::TestPlatformHandler
-        HybridPlatformsConductorTest::TestPlatformHandler.platforms_info = { 'my_remote_platform' => {} }
-        # Make the repository be a Git repository
-        git = Git.init(repository)
-        FileUtils.touch("#{repository}/test_file")
-        git.add('test_file')
-        git.config('user.name', 'Thats Me')
-        git.config('user.email', 'email@email.com')
-        git.commit('Test commit')
-        git.add_remote('origin', 'https://my_remote.com/path/to/my_remote_platform.git')
-        commit = git.log.first
+        self.test_platforms_info = { 'my_remote_platform' => {} }
+        commit = Git.open(repository).log.first
         expect(test_nodes_handler.platform('my_remote_platform').info).to eq(
           repo_name: 'my_remote_platform',
           status: {
@@ -51,25 +43,21 @@ describe HybridPlatformsConductor::PlatformHandler do
             ref: 'master'
           }
         )
-        HybridPlatformsConductorTest::TestPlatformHandler.reset
       end
     end
   end
 
   it 'returns the differing files in the info when platform is a Git repository' do
-    with_repository do |repository|
+    with_repository(as_git: true) do |repository|
       with_platforms "test_platform path: '#{repository}'" do
         register_platform_handlers test: HybridPlatformsConductorTest::TestPlatformHandler
-        HybridPlatformsConductorTest::TestPlatformHandler.platforms_info = { 'my_remote_platform' => {} }
+        self.test_platforms_info = { 'my_remote_platform' => {} }
         # Make the repository be a Git repository
-        git = Git.init(repository)
+        git = Git.open(repository)
         FileUtils.touch("#{repository}/test_file_1")
         FileUtils.touch("#{repository}/test_file_2")
         git.add(['test_file_1', 'test_file_2'])
-        git.config('user.name', 'Thats Me')
-        git.config('user.email', 'email@email.com')
         git.commit('Test commit')
-        git.add_remote('origin', 'https://my_remote.com/path/to/my_remote_platform.git')
         # Make some diffs
         FileUtils.touch("#{repository}/new_file")
         FileUtils.touch("#{repository}/added_file")
@@ -82,7 +70,6 @@ describe HybridPlatformsConductor::PlatformHandler do
           deleted_files: ['test_file_1'],
           untracked_files: ['new_file']
         )
-        HybridPlatformsConductorTest::TestPlatformHandler.reset
       end
     end
   end
@@ -91,10 +78,9 @@ describe HybridPlatformsConductor::PlatformHandler do
     with_repository('platform') do |repository|
       with_platforms "test_platform path: '#{repository}'" do
         register_platform_handlers test: HybridPlatformsConductorTest::TestPlatformHandler
-        HybridPlatformsConductorTest::TestPlatformHandler.platforms_info = { 'platform' => {} }
+        self.test_platforms_info = { 'platform' => {} }
         File.write("#{repository}/hpc.json", '{ "metadata": "content" }')
         expect(test_nodes_handler.platform('platform').metadata).to eq('metadata' => 'content')
-        HybridPlatformsConductorTest::TestPlatformHandler.reset
       end
     end
   end

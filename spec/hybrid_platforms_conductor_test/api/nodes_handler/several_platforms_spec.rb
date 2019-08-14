@@ -25,9 +25,8 @@ describe HybridPlatformsConductor::NodesHandler do
             test: HybridPlatformsConductorTest::TestPlatformHandler,
             test2: HybridPlatformsConductorTest::TestPlatformHandler
           )
-          HybridPlatformsConductorTest::TestPlatformHandler.platforms_info = { 'platform1' => {}, 'platform2' => {}, 'platform3' => {} }
+          self.test_platforms_info = { 'platform1' => {}, 'platform2' => {}, 'platform3' => {} }
           expect(test_nodes_handler.known_platforms(platform_type: :test2).sort).to eq ['platform2']
-          HybridPlatformsConductorTest::TestPlatformHandler.reset
         end
       end
     end

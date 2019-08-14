@@ -1,6 +1,6 @@
 describe HybridPlatformsConductor::SshExecutor do
 
-  context 'Checking timeouts' do
+  context 'checking timeouts' do
 
     it 'executes a simple command on 1 node with timeout' do
       with_test_platform(nodes: { 'node1' => {} }) do

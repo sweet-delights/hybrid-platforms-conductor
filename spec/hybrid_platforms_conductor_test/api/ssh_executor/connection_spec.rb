@@ -1,6 +1,6 @@
 describe HybridPlatformsConductor::SshExecutor do
 
-  context 'Checking connections handling' do
+  context 'checking connections handling' do
 
     it 'connects on a node before executing commands' do
       with_test_platform(nodes: { 'node1' => { meta: { 'site_meta' => { 'connection_settings' => { 'ip' => 'node1_connection' } } } } }) do
