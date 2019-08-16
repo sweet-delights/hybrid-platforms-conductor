@@ -1,3 +1,13 @@
+# [6.8.0](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv6.7.0&sourceBranch=refs%2Ftags%2Fv6.8.0) (2019-08-16)
+
+### New features
+
+* [Feature] Added --password option to use optional interactive mode when we need passwords on SSH connections ([fd1e50cf](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/commits/fd1e50cff21227994671ba0be1fe0b4166d178ce))
+
+### Fixes
+
+* Bug corrections on report tool ([c1a4266a](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/commits/c1a4266a93d99153b268c91762670b2e12285511))
+
 # [6.7.0](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv6.6.0&sourceBranch=refs%2Ftags%2Fv6.7.0) (2019-08-16)
 
 ### New features
