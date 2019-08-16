@@ -1,3 +1,9 @@
+# [6.6.0](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv6.5.9&sourceBranch=refs%2Ftags%2Fv6.6.0) (2019-08-16)
+
+### New features
+
+* [Feature] More intelligent linear strategy test that handles linear strategies with explicit merge commits ([dee6438a](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/commits/dee6438a7251ffa6d3b6330e99a214c47bc5a4f1))
+
 # [6.5.9](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv6.5.8&sourceBranch=refs%2Ftags%2Fv6.5.9) (2019-08-06)
 
 ### Fixes
