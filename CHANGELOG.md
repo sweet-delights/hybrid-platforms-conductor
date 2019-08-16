@@ -1,3 +1,9 @@
+# [6.7.0](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv6.6.0&sourceBranch=refs%2Ftags%2Fv6.7.0) (2019-08-16)
+
+### New features
+
+* [Feature] Add the concept of services associated to nodes + Select nodes by service ([70a87f15](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/commits/70a87f15befc704b446e9107dc23e475f6553a7b))
+
 # [6.6.0](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv6.5.9&sourceBranch=refs%2Ftags%2Fv6.6.0) (2019-08-16)
 
 ### New features
