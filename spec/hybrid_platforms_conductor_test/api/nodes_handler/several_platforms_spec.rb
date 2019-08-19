@@ -15,19 +15,8 @@ describe HybridPlatformsConductor::NodesHandler do
     end
 
     it 'returns platforms of a given platform type' do
-      with_repositories(['platform1', 'platform2', 'platform3']) do |repositories|
-        with_platforms "
-          test_platform path: \'#{repositories['platform1']}\'
-          test2_platform path: \'#{repositories['platform2']}\'
-          test_platform path: \'#{repositories['platform3']}\'
-        " do
-          register_platform_handlers(
-            test: HybridPlatformsConductorTest::TestPlatformHandler,
-            test2: HybridPlatformsConductorTest::TestPlatformHandler
-          )
-          self.test_platforms_info = { 'platform1' => {}, 'platform2' => {}, 'platform3' => {} }
-          expect(test_nodes_handler.known_platforms(platform_type: :test2).sort).to eq ['platform2']
-        end
+      with_test_platforms('platform1' => {}, 'platform2' => { platform_type: :test2 }, 'platform3' => {}) do
+        expect(test_nodes_handler.known_platforms(platform_type: :test2).sort).to eq ['platform2']
       end
     end
 

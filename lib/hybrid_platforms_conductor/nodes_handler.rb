@@ -211,7 +211,6 @@ module HybridPlatformsConductor
       real_nodes.uniq!
       real_nodes.sort!
       # Some sanity checks
-      raise 'No host specified' if real_nodes.empty?
       unless ignore_unknowns
         unknown_nodes = real_nodes - known_hostnames
         raise "Unknown host names: #{unknown_nodes.join(', ')}" unless unknown_nodes.empty?

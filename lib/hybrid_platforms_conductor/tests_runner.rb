@@ -12,6 +12,10 @@ module HybridPlatformsConductor
 
     include LoggerHelpers
 
+    # List of tests to execute
+    # Array<Symbol>
+    attr_accessor :tests
+
     # Constructor
     #
     # Parameters::
@@ -30,7 +34,7 @@ module HybridPlatformsConductor
       # The list of tests plugins, with their associated class
       # Hash< Symbol, Class >
       @tests_plugins = Hash[Dir.
-        glob("#{File.dirname(__FILE__)}/tests/plugins/*.rb").
+        glob("#{__dir__}/tests/plugins/*.rb").
         map do |file_name|
           test_name = File.basename(file_name)[0..-4].to_sym
           require file_name
@@ -42,7 +46,7 @@ module HybridPlatformsConductor
       # The list of tests reports plugins, with their associated class
       # Hash< Symbol, Class >
       @reports_plugins = Hash[Dir.
-        glob("#{File.dirname(__FILE__)}/tests/reports_plugins/*.rb").
+        glob("#{__dir__}/tests/reports_plugins/*.rb").
         map do |file_name|
           plugin_name = File.basename(file_name)[0..-4].to_sym
           require file_name

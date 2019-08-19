@@ -122,7 +122,6 @@ module HybridPlatformsConductor
     # * *ssh_executor* (SshExecutor): Ssh executor to be used. [default = SshExecutor.new]
     def initialize(logger: Logger.new(STDOUT), logger_stderr: Logger.new(STDERR), cmd_runner: CmdRunner.new, nodes_handler: NodesHandler.new, ssh_executor: SshExecutor.new)
       @logger = logger
-      require 'byebug' ; byebug
       @logger_stderr = logger_stderr
       @cmd_runner = cmd_runner
       @nodes_handler = nodes_handler

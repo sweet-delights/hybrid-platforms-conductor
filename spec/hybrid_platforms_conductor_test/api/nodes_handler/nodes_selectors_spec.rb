@@ -20,6 +20,12 @@ describe HybridPlatformsConductor::NodesHandler do
       end
     end
 
+    it 'selects no node' do
+      with_test_platform_for_nodes do
+        expect(test_nodes_handler.resolve_hosts([])).to eq []
+      end
+    end
+
     it 'selects all nodes' do
       with_test_platform_for_nodes do
         expect(test_nodes_handler.resolve_hosts([{ all: true }]).sort).to eq %w[node1 node2 node3 node4 node5 node6].sort
