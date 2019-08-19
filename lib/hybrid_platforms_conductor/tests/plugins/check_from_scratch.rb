@@ -7,6 +7,18 @@ module HybridPlatformsConductor
       # Test that check-node returns no error on an empty image
       class CheckFromScratch < Tests::Test
 
+        # Limit the list of nodes for these tests.
+        #
+        # Result::
+        # * Array<String or Regex> or nil: List of nodes allowed for this test, or nil for all. Regular expressions matching node names can also be used.
+        def self.only_on_nodes
+          # Just 1 node per service and platform
+          Tests::Test.nodes_handler.
+            known_hostnames.
+            group_by { |node| [Tests::Test.nodes_handler.service_for(node), Tests::Test.nodes_handler.platform_for(node).info[:repo_name]] }.
+            map { |(_service, _platform), nodes| nodes.first }
+        end
+
         # Check my_test_plugin.rb.sample documentation for signature details.
         def test_for_node
           @deployer.with_docker_container_for(@node, container_id: 'check_from_scratch') do |deployer|

@@ -7,6 +7,13 @@ module HybridPlatformsConductor
     # Common ancestor to any test class
     class Test
 
+      class << self
+
+        # A NodesHandler instance that can be useful for test classes that need to access nodes information
+        attr_accessor :nodes_handler
+
+      end
+
       include LoggerHelpers
 
       # Get errors encountered

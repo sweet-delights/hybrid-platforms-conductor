@@ -24,6 +24,7 @@ module HybridPlatformsConductor
       @logger = logger
       @logger_stderr = logger_stderr
       @nodes_handler = nodes_handler
+      Tests::Test.nodes_handler = nodes_handler
       @ssh_executor = ssh_executor
       @deployer = deployer
       # The list of tests plugins, with their associated class
