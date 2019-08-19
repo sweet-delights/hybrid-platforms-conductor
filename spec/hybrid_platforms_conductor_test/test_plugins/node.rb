@@ -12,8 +12,8 @@ module HybridPlatformsConductorTest
         # Array< [ test_name, node   ] >
         attr_accessor :runs
 
-        # List of nodes for which we fail
-        # Array<String>
+        # List of nodes for which we fail, per test name
+        # Hash<Symbol, Array<String> >
         attr_accessor :fail_for
 
         # List of platform types that should only be concerned by this test
@@ -28,7 +28,7 @@ module HybridPlatformsConductorTest
 
       # Check my_test_plugin.rb.sample documentation for signature details.
       def test_for_node
-        raise 'Failing test' if Node.fail_for.include? @node
+        raise "Failing test #{@name} for #{@node}" if Node.fail_for.key?(@name) && Node.fail_for[@name].include?(@node)
         Node.runs << [@name, @node]
       end
 

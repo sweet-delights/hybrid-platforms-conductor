@@ -16,6 +16,10 @@ module HybridPlatformsConductor
     # Array<Symbol>
     attr_accessor :tests
 
+    # List of reports to use
+    # Array<Symbol>
+    attr_accessor :reports
+
     # Constructor
     #
     # Parameters::
@@ -438,9 +442,11 @@ module HybridPlatformsConductor
       tests_for_check_node = @tests.select { |test_name| @tests_plugins[test_name].method_defined?(:test_on_check_node) }.sort
       unless tests_for_check_node.empty?
         section "Run check-nodes tests #{tests_for_check_node.join(', ')}" do
+          # Compute the real list of hstnames that need check-node to be run, considering the filtering done by should_test_be_run_on.
+          nodes_to_test = @hostnames.select { |node| tests_for_check_node.any? { |test_name| should_test_be_run_on(test_name, node: node) } }
           outputs =
             if @skip_run
-              Hash[@hostnames.map do |hostname|
+              Hash[nodes_to_test.map do |hostname|
                 run_log_file_name = "./run_logs/#{hostname}.stdout"
                 [
                   hostname,
@@ -454,7 +460,7 @@ module HybridPlatformsConductor
               @deployer.use_why_run = true
               @deployer.force_direct_deploy = true
               @deployer.timeout = CHECK_NODE_TIMEOUT
-              @deployer.deploy_for(@hostnames)
+              @deployer.deploy_for(nodes_to_test)
             end
           # Analyze output
           outputs.each do |hostname, (exit_status, stdout, stderr)|

@@ -7,18 +7,21 @@ require 'hybrid_platforms_conductor/ssh_executor'
 require 'hybrid_platforms_conductor/deployer'
 require 'hybrid_platforms_conductor/tests_runner'
 require 'hybrid_platforms_conductor/tests/test'
+require 'hybrid_platforms_conductor/tests/reports_plugin'
 require 'hybrid_platforms_conductor_test/test_platform_handler'
-require 'hybrid_platforms_conductor_test/platform_handler_helpers'
-require 'hybrid_platforms_conductor_test/cmd_runner_helpers'
-require 'hybrid_platforms_conductor_test/nodes_handler_helpers'
-require 'hybrid_platforms_conductor_test/ssh_executor_helpers'
-require 'hybrid_platforms_conductor_test/deployer_helpers'
-require 'hybrid_platforms_conductor_test/tests_runner_helpers'
+require 'hybrid_platforms_conductor_test/tests_report_plugin'
+require 'hybrid_platforms_conductor_test/helpers/platform_handler_helpers'
+require 'hybrid_platforms_conductor_test/helpers/cmd_runner_helpers'
+require 'hybrid_platforms_conductor_test/helpers/nodes_handler_helpers'
+require 'hybrid_platforms_conductor_test/helpers/ssh_executor_helpers'
+require 'hybrid_platforms_conductor_test/helpers/deployer_helpers'
+require 'hybrid_platforms_conductor_test/helpers/tests_runner_helpers'
 require 'hybrid_platforms_conductor_test/test_plugins/global'
 require 'hybrid_platforms_conductor_test/test_plugins/platform'
 require 'hybrid_platforms_conductor_test/test_plugins/node'
 require 'hybrid_platforms_conductor_test/test_plugins/node_ssh'
 require 'hybrid_platforms_conductor_test/test_plugins/node_check'
+require 'hybrid_platforms_conductor_test/test_plugins/several_checks'
 
 module HybridPlatformsConductorTest
 
@@ -45,13 +48,14 @@ module HybridPlatformsConductorTest
         ENV.delete 'platforms_ssh_user'
         HybridPlatformsConductor::Deployer.packaged_platforms.clear
         HybridPlatformsConductorTest::TestPlatformHandler.reset
+        HybridPlatformsConductorTest::TestsReportPlugin.reports = nil
         HybridPlatformsConductorTest::TestPlugins::Global.nbr_runs = 0
         HybridPlatformsConductorTest::TestPlugins::Global.fail = false
         HybridPlatformsConductorTest::TestPlugins::Platform.runs = []
         HybridPlatformsConductorTest::TestPlugins::Platform.fail_for = []
         HybridPlatformsConductorTest::TestPlugins::Platform.only_on_platform_types = nil
         HybridPlatformsConductorTest::TestPlugins::Node.runs = []
-        HybridPlatformsConductorTest::TestPlugins::Node.fail_for = []
+        HybridPlatformsConductorTest::TestPlugins::Node.fail_for = {}
         HybridPlatformsConductorTest::TestPlugins::Node.only_on_platform_types = nil
         HybridPlatformsConductorTest::TestPlugins::Node.only_on_nodes = nil
         HybridPlatformsConductorTest::TestPlugins::NodeSsh.node_tests = {}
@@ -61,6 +65,7 @@ module HybridPlatformsConductorTest
         HybridPlatformsConductorTest::TestPlugins::NodeCheck.fail_for = []
         HybridPlatformsConductorTest::TestPlugins::NodeCheck.only_on_platform_types = nil
         HybridPlatformsConductorTest::TestPlugins::NodeCheck.only_on_nodes = nil
+        HybridPlatformsConductorTest::TestPlugins::SeveralChecks.runs = []
       end
     end
 
