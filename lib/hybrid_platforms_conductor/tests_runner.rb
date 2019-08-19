@@ -440,7 +440,7 @@ module HybridPlatformsConductor
                 [
                   hostname,
                   # TODO: Find a way to also save stderr and the status code
-                  [File.exists?(run_log_file_name) ? File.read(run_log_file_name) : nil, '', 0]
+                  [0, File.exists?(run_log_file_name) ? File.read(run_log_file_name) : nil, '']
                 ]
               end]
             else
@@ -452,7 +452,7 @@ module HybridPlatformsConductor
               @deployer.deploy_for(@hostnames)
             end
           # Analyze output
-          outputs.each do |hostname, (stdout, stderr, exit_status)|
+          outputs.each do |hostname, (exit_status, stdout, stderr)|
             tests_for_check_node.each do |test_name|
               if should_test_be_run_on(test_name, node: hostname)
                 test = @tests_plugins[test_name].new(
@@ -469,7 +469,7 @@ module HybridPlatformsConductor
                 elsif stdout.is_a?(Symbol)
                   test.error "Check-node run failed: #{stdout}."
                 else
-                  test.error "Check-node returned error code #{exit_status}" unless exit_status.zero?
+                  test.error "Check-node returned error code #{exit_status}" unless exit_status == 0
                   begin
                     test.test_on_check_node(stdout, stderr, exit_status)
                   rescue
