@@ -7,7 +7,7 @@ module HybridPlatformsConductorTest
       # Register test plugins in a tests runner instance
       #
       # Parameters::
-      # * *tests_runner* (TestsRunner): The Tests Runner instance that need the plugin
+      # * *tests_runner* (TestsRunner): The Tests Runner instance that need the plugins
       # * *tests_plugins* (Hash<Symbol, Class>): List of tests plugins, per test name
       def register_test_plugins(tests_runner, tests_plugins)
         tests_runner.instance_variable_set(:@tests_plugins, tests_plugins)

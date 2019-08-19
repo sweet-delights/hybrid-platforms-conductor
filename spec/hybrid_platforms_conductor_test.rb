@@ -6,16 +6,20 @@ require 'hybrid_platforms_conductor/cmd_runner'
 require 'hybrid_platforms_conductor/ssh_executor'
 require 'hybrid_platforms_conductor/deployer'
 require 'hybrid_platforms_conductor/tests_runner'
+require 'hybrid_platforms_conductor/reports_handler'
+require 'hybrid_platforms_conductor/report_plugin'
 require 'hybrid_platforms_conductor/tests/test'
 require 'hybrid_platforms_conductor/tests/reports_plugin'
 require 'hybrid_platforms_conductor_test/test_platform_handler'
 require 'hybrid_platforms_conductor_test/tests_report_plugin'
+require 'hybrid_platforms_conductor_test/report_plugin'
 require 'hybrid_platforms_conductor_test/helpers/platform_handler_helpers'
 require 'hybrid_platforms_conductor_test/helpers/cmd_runner_helpers'
 require 'hybrid_platforms_conductor_test/helpers/nodes_handler_helpers'
 require 'hybrid_platforms_conductor_test/helpers/ssh_executor_helpers'
 require 'hybrid_platforms_conductor_test/helpers/deployer_helpers'
 require 'hybrid_platforms_conductor_test/helpers/tests_runner_helpers'
+require 'hybrid_platforms_conductor_test/helpers/reports_handler_helpers'
 require 'hybrid_platforms_conductor_test/test_plugins/global'
 require 'hybrid_platforms_conductor_test/test_plugins/platform'
 require 'hybrid_platforms_conductor_test/test_plugins/node'
@@ -34,6 +38,7 @@ module HybridPlatformsConductorTest
     include SshExecutorHelpers
     include DeployerHelpers
     include TestsRunnerHelpers
+    include ReportsHandlerHelpers
 
     # Make sure the tested components are being reset before each test case
     RSpec.configure do |config|
@@ -49,6 +54,7 @@ module HybridPlatformsConductorTest
         HybridPlatformsConductor::Deployer.packaged_platforms.clear
         HybridPlatformsConductorTest::TestPlatformHandler.reset
         HybridPlatformsConductorTest::TestsReportPlugin.reports = nil
+        HybridPlatformsConductorTest::ReportPlugin.generated_reports = []
         HybridPlatformsConductorTest::TestPlugins::Global.nbr_runs = 0
         HybridPlatformsConductorTest::TestPlugins::Global.fail = false
         HybridPlatformsConductorTest::TestPlugins::Platform.runs = []

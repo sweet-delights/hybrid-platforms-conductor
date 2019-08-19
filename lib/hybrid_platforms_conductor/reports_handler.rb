@@ -8,6 +8,14 @@ module HybridPlatformsConductor
 
     include LoggerHelpers
 
+    # Format in which the reports handler will provide reports
+    # Symbol
+    attr_accessor :format
+
+    # Locale in which the reports handler will provide reports
+    # Symbol
+    attr_accessor :locale
+
     # Constructor
     #
     # Parameters::
@@ -37,7 +45,6 @@ module HybridPlatformsConductor
     # Validate that parsed parameters are valid
     def validate_params
       raise "Unknown format: #{@format}" unless @reports_plugins.keys.include? @format
-      raise "Unknown locale for format #{@format}: #{@locale}" unless @reports_plugins[@format].supported_locales.include? @locale
     end
 
     # Complete an option parser with options meant to control this Reports handler
@@ -60,6 +67,7 @@ module HybridPlatformsConductor
     # Parameters::
     # * *nodes_descriptions* (Array<Object>): List of nodes descriptions to produce report for
     def produce_report_for(nodes_descriptions)
+      raise "Unknown locale for format #{@format}: #{@locale}" unless @reports_plugins[@format].supported_locales.include? @locale
       out @reports_plugins[@format].new(nodes_handler: @nodes_handler).report_for(@nodes_handler.resolve_hosts(nodes_descriptions), @locale)
     end
 
