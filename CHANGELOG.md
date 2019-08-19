@@ -1,3 +1,10 @@
+# [6.8.1](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv6.8.0&sourceBranch=refs%2Ftags%2Fv6.8.1) (2019-08-19)
+
+### Fixes
+
+* Make Docker tests be run only on 1 node per service and platform ([b4a52dd5](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/commits/b4a52dd5ec10cd0da22b699b6e2bb89809961e01))
+* Bug correction on check-node tests result gathering ([dd9cca5e](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/commits/dd9cca5e4ffe6c98d9af784175717f204cdc03b1))
+
 # [6.8.0](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv6.7.0&sourceBranch=refs%2Ftags%2Fv6.8.0) (2019-08-16)
 
 ### New features
