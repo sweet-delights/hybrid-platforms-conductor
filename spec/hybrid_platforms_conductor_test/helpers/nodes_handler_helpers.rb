@@ -76,17 +76,18 @@ module HybridPlatformsConductorTest
       # Parameters::
       # * *platforms_info* (Hash<String,Object>): Platforms info for the test platform [default = {}]
       # * *as_git* (Boolean): Do we initialize those repositories as Git repositories? [default = false]
+      # * *additional_platforms_content* (String): Additional platforms content to be added [default = '']
       # * Proc: Code called with the environment ready
       #   * Parameters::
       #     * *repositories* (Hash<String,String>): Path to the repositories, per repository name
-      def with_test_platforms(platforms_info = {}, as_git = false)
+      def with_test_platforms(platforms_info = {}, as_git = false, additional_platforms_content = '')
         with_repositories(platforms_info.keys, as_git: as_git) do |repositories|
           platform_types = []
           with_platforms(repositories.map do |platform, dir|
             platform_type = platforms_info[platform].key?(:platform_type) ? platforms_info[platform][:platform_type] : :test
             platform_types << platform_type unless platform_types.include?(platform_type)
             "#{platform_type}_platform path: '#{dir}'"
-          end.join("\n")) do
+          end.join("\n") + "\n#{additional_platforms_content}") do
             register_platform_handlers(Hash[platform_types.map { |platform_type| [platform_type, HybridPlatformsConductorTest::TestPlatformHandler] }])
             self.test_platforms_info = platforms_info
             yield repositories
@@ -100,12 +101,13 @@ module HybridPlatformsConductorTest
       # Parameters::
       # * *platform_info* (Hash<Symbol,Object>): Platform info for the test platform [default = {}]
       # * *as_git* (Boolean): Do we initialize those repositories as Git repositories? [default = false]
+      # * *additional_platforms_content* (String): Additional platforms content to be added [default = '']
       # * Proc: Code called with the environment ready
       #   * Parameters::
       #     * *repository* (String): Path to the repository
-      def with_test_platform(platform_info = {}, as_git = false)
+      def with_test_platform(platform_info = {}, as_git = false, additional_platforms_content = '')
         platform_name = as_git ? 'my_remote_platform' : 'platform'
-        with_test_platforms({ platform_name => platform_info }, as_git) do |repositories|
+        with_test_platforms({ platform_name => platform_info }, as_git, additional_platforms_content) do |repositories|
           yield repositories[platform_name]
         end
       end
