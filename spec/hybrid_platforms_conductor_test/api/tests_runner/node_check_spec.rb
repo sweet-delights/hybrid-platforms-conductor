@@ -129,6 +129,45 @@ describe HybridPlatformsConductor::TestsRunner do
       end
     end
 
+    it 'reuses run_logs logs instead of running check-node when we ask for it' do
+      with_test_platform_for_node_check_tests do
+        FileUtils.mkdir_p './run_logs'
+        File.write('./run_logs/node11.stdout', 'node11 check ok from logs')
+        File.write('./run_logs/node12.stdout', 'node12 check ok from logs')
+        File.write('./run_logs/node21.stdout', 'node21 check ok from logs')
+        File.write('./run_logs/node22.stdout', 'node22 check ok from logs')
+        test_tests_runner.tests = [:node_check_test]
+        expect(test_deployer).not_to receive(:deploy_for)
+        test_tests_runner.skip_run = true
+        expect(test_tests_runner.run_tests([{ all: true }])).to eq 0
+        expect(HybridPlatformsConductorTest::TestPlugins::NodeCheck.runs.sort).to eq [
+          [:node_check_test, 'node11', 'node11 check ok from logs', '', 0],
+          [:node_check_test, 'node12', 'node12 check ok from logs', '', 0],
+          [:node_check_test, 'node21', 'node21 check ok from logs', '', 0],
+          [:node_check_test, 'node22', 'node22 check ok from logs', '', 0]
+        ].sort
+      end
+    end
+
+    it 'fails when some run_logs are missing' do
+      with_test_platform_for_node_check_tests do
+        FileUtils.mkdir_p './run_logs'
+        File.write('./run_logs/node11.stdout', 'node11 check ok from logs')
+        File.write('./run_logs/node12.stdout', 'node12 check ok from logs')
+        FileUtils.rm_f './run_logs/node21.stdout'
+        File.write('./run_logs/node22.stdout', 'node22 check ok from logs')
+        test_tests_runner.tests = [:node_check_test]
+        expect(test_deployer).not_to receive(:deploy_for)
+        test_tests_runner.skip_run = true
+        expect(test_tests_runner.run_tests([{ all: true }])).to eq 1
+        expect(HybridPlatformsConductorTest::TestPlugins::NodeCheck.runs.sort).to eq [
+          [:node_check_test, 'node11', 'node11 check ok from logs', '', 0],
+          [:node_check_test, 'node12', 'node12 check ok from logs', '', 0],
+          [:node_check_test, 'node22', 'node22 check ok from logs', '', 0]
+        ].sort
+      end
+    end
+
     it 'executes check node tests only on valid platform types' do
       with_test_platform_for_node_check_tests do
         HybridPlatformsConductorTest::TestPlugins::NodeCheck.only_on_platform_types = %i[test2]

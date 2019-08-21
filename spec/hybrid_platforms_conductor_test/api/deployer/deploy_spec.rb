@@ -226,7 +226,7 @@ describe HybridPlatformsConductor::Deployer do
               expect_logs_to_be(File.read(local_log_file), 'Deploy successful', '',
                 date: /\d\d\d\d-\d\d-\d\d \d\d:\d\d:\d\d/,
                 user: 'test_user',
-                debug: 'Yes',
+                debug: 'No',
                 repo_name: 'my_remote_platform',
                 commit_id: Git.open(repository).log.first.sha,
                 commit_message: 'Test commit',

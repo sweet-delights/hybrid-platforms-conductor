@@ -12,13 +12,17 @@ module HybridPlatformsConductor
 
     include LoggerHelpers
 
-    # List of tests to execute
+    # List of tests to execute [default: []]
     # Array<Symbol>
     attr_accessor :tests
 
-    # List of reports to use
+    # List of reports to use [default: []]
     # Array<Symbol>
     attr_accessor :reports
+
+    # Do we skip running check-node? [default: false]
+    # Boolean
+    attr_accessor :skip_run
 
     # Constructor
     #

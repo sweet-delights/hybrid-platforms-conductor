@@ -35,6 +35,7 @@ module HybridPlatformsConductorTest
       def with_repositories(names = [], as_git: false)
         repositories = Hash[names.map { |name| [name, "#{Dir.tmpdir}/hpc_test/#{name}"] }]
         repositories.values.each do |dir|
+          FileUtils.rm_rf dir
           FileUtils.mkdir_p dir
           if as_git
             git = Git.init(dir)

@@ -34,19 +34,27 @@ module HybridPlatformsConductor
 
     # Do we display SSH commands instead of executing them? [default: false]
     #   Boolean
-    attr_reader :dry_run
+    attr_accessor :dry_run
 
-    # Set of overriding connections: real IP per node
+    # Set of overriding connections: real IP per node [default: {}]
     # Hash<String, String>
     attr_accessor :override_connections
 
-    # Passwords to be used, per hostname
+    # Passwords to be used, per hostname [default: {}]
     # Hash<String, String>
     attr_accessor :passwords
 
-    # Do we use strict host key checking in our SSH commands?
+    # Do we use strict host key checking in our SSH commands? [default: true]
     # Boolean
     attr_accessor :strict_host_key_checking
+
+    # Do we use the control master? [default: true]
+    # Boolean
+    attr_accessor :use_control_master
+
+    # Do we expect some connections to require password authentication? [default: false]
+    # Boolean
+    attr_accessor :auth_password
 
     # Constructor
     #

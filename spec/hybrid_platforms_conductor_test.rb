@@ -55,7 +55,7 @@ module HybridPlatformsConductorTest
         ENV.delete 'platforms_ssh_user'
         HybridPlatformsConductor::Deployer.packaged_platforms.clear
         HybridPlatformsConductorTest::TestPlatformHandler.reset
-        HybridPlatformsConductorTest::TestsReportPlugin.reports = nil
+        HybridPlatformsConductorTest::TestsReportPlugin.reports = []
         HybridPlatformsConductorTest::ReportPlugin.generated_reports = []
         HybridPlatformsConductorTest::TestPlugins::Global.nbr_runs = 0
         HybridPlatformsConductorTest::TestPlugins::Global.fail = false
@@ -89,7 +89,8 @@ module HybridPlatformsConductorTest
         logger.level = Logger::DEBUG
         logger
       else
-        Logger.new('/dev/null')
+        # Still put the level, as when testing executables we switch the device from /dev/null to a file
+        Logger.new('/dev/null', level: :info)
       end
     end
 

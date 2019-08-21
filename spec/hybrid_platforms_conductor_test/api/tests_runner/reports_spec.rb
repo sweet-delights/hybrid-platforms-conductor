@@ -30,7 +30,8 @@ describe HybridPlatformsConductor::TestsRunner do
       with_test_platforms_for_reports_test do
         test_tests_runner.tests = [:global_test]
         test_tests_runner.run_tests [{ all: true }]
-        expect(HybridPlatformsConductorTest::TestsReportPlugin.reports[:global_tests].sort).to eq [
+        expect(HybridPlatformsConductorTest::TestsReportPlugin.reports.size).to eq 1
+        expect(HybridPlatformsConductorTest::TestsReportPlugin.reports.first[:global_tests].sort).to eq [
           [:global_test, true]
         ].sort
       end
@@ -41,7 +42,8 @@ describe HybridPlatformsConductor::TestsRunner do
         HybridPlatformsConductorTest::TestPlugins::Global.fail = true
         test_tests_runner.tests = [:global_test]
         test_tests_runner.run_tests [{ all: true }]
-        expect(HybridPlatformsConductorTest::TestsReportPlugin.reports[:global_tests].sort).to eq [
+        expect(HybridPlatformsConductorTest::TestsReportPlugin.reports.size).to eq 1
+        expect(HybridPlatformsConductorTest::TestsReportPlugin.reports.first[:global_tests].sort).to eq [
           [:global_test, true, ['Uncaught exception during test: Failing test']]
         ].sort
       end
@@ -51,7 +53,8 @@ describe HybridPlatformsConductor::TestsRunner do
       with_test_platforms_for_reports_test do
         test_tests_runner.tests = [:platform_test]
         test_tests_runner.run_tests [{ all: true }]
-        expect(HybridPlatformsConductorTest::TestsReportPlugin.reports[:platform_tests].sort).to eq [
+        expect(HybridPlatformsConductorTest::TestsReportPlugin.reports.size).to eq 1
+        expect(HybridPlatformsConductorTest::TestsReportPlugin.reports.first[:platform_tests].sort).to eq [
           [:platform_test, true, 'platform1'],
           [:platform_test, true, 'platform2']
         ].sort
@@ -63,7 +66,8 @@ describe HybridPlatformsConductor::TestsRunner do
         HybridPlatformsConductorTest::TestPlugins::Platform.fail_for = ['platform1']
         test_tests_runner.tests = [:platform_test]
         test_tests_runner.run_tests [{ all: true }]
-        expect(HybridPlatformsConductorTest::TestsReportPlugin.reports[:platform_tests].sort).to eq [
+        expect(HybridPlatformsConductorTest::TestsReportPlugin.reports.size).to eq 1
+        expect(HybridPlatformsConductorTest::TestsReportPlugin.reports.first[:platform_tests].sort).to eq [
           [:platform_test, true, 'platform1', ['Uncaught exception during test: Failing test']],
           [:platform_test, true, 'platform2']
         ].sort
@@ -74,7 +78,8 @@ describe HybridPlatformsConductor::TestsRunner do
       with_test_platforms_for_reports_test do
         test_tests_runner.tests = [:node_test]
         test_tests_runner.run_tests [{ all: true }]
-        expect(HybridPlatformsConductorTest::TestsReportPlugin.reports[:node_tests].sort).to eq [
+        expect(HybridPlatformsConductorTest::TestsReportPlugin.reports.size).to eq 1
+        expect(HybridPlatformsConductorTest::TestsReportPlugin.reports.first[:node_tests].sort).to eq [
           [:node_test, true, 'platform1', 'node11'],
           [:node_test, true, 'platform1', 'node12'],
           [:node_test, true, 'platform2', 'node21'],
@@ -88,7 +93,8 @@ describe HybridPlatformsConductor::TestsRunner do
         HybridPlatformsConductorTest::TestPlugins::Node.fail_for = { node_test: %w[node12 node22] }
         test_tests_runner.tests = [:node_test]
         test_tests_runner.run_tests [{ all: true }]
-        expect(HybridPlatformsConductorTest::TestsReportPlugin.reports[:node_tests].sort).to eq [
+        expect(HybridPlatformsConductorTest::TestsReportPlugin.reports.size).to eq 1
+        expect(HybridPlatformsConductorTest::TestsReportPlugin.reports.first[:node_tests].sort).to eq [
           [:node_test, true, 'platform1', 'node11'],
           [:node_test, true, 'platform1', 'node12', ['Uncaught exception during test: Failing test node_test for node12']],
           [:node_test, true, 'platform2', 'node21'],
@@ -115,7 +121,8 @@ describe HybridPlatformsConductor::TestsRunner do
         end])
         test_tests_runner.tests = [:node_ssh_test]
         test_tests_runner.run_tests [{ all: true }]
-        expect(HybridPlatformsConductorTest::TestsReportPlugin.reports[:node_tests].sort).to eq [
+        expect(HybridPlatformsConductorTest::TestsReportPlugin.reports.size).to eq 1
+        expect(HybridPlatformsConductorTest::TestsReportPlugin.reports.first[:node_tests].sort).to eq [
           [:node_ssh_test, true, 'platform1', 'node11'],
           [:node_ssh_test, true, 'platform1', 'node12'],
           [:node_ssh_test, true, 'platform2', 'node21'],
@@ -142,7 +149,8 @@ describe HybridPlatformsConductor::TestsRunner do
         end])
         test_tests_runner.tests = [:node_ssh_test]
         test_tests_runner.run_tests [{ all: true }]
-        expect(HybridPlatformsConductorTest::TestsReportPlugin.reports[:node_tests].sort).to eq [
+        expect(HybridPlatformsConductorTest::TestsReportPlugin.reports.size).to eq 1
+        expect(HybridPlatformsConductorTest::TestsReportPlugin.reports.first[:node_tests].sort).to eq [
           [:node_ssh_test, true, 'platform1', 'node11'],
           [:node_ssh_test, true, 'platform1', 'node12', ['Command returned error code 1']],
           [:node_ssh_test, true, 'platform2', 'node21'],
@@ -163,7 +171,8 @@ describe HybridPlatformsConductor::TestsRunner do
         end
         test_tests_runner.tests = [:node_check_test]
         test_tests_runner.run_tests [{ all: true }]
-        expect(HybridPlatformsConductorTest::TestsReportPlugin.reports[:node_tests].sort).to eq [
+        expect(HybridPlatformsConductorTest::TestsReportPlugin.reports.size).to eq 1
+        expect(HybridPlatformsConductorTest::TestsReportPlugin.reports.first[:node_tests].sort).to eq [
           [:node_check_test, true, 'platform1', 'node11'],
           [:node_check_test, true, 'platform1', 'node12'],
           [:node_check_test, true, 'platform2', 'node21'],
@@ -184,7 +193,8 @@ describe HybridPlatformsConductor::TestsRunner do
         end
         test_tests_runner.tests = [:node_check_test]
         test_tests_runner.run_tests [{ all: true }]
-        expect(HybridPlatformsConductorTest::TestsReportPlugin.reports[:node_tests].sort).to eq [
+        expect(HybridPlatformsConductorTest::TestsReportPlugin.reports.size).to eq 1
+        expect(HybridPlatformsConductorTest::TestsReportPlugin.reports.first[:node_tests].sort).to eq [
           [:node_check_test, true, 'platform1', 'node11'],
           [:node_check_test, true, 'platform1', 'node12', ['Check-node returned error code 1']],
           [:node_check_test, true, 'platform2', 'node21', ['Check-node returned error code 2']],
@@ -232,15 +242,17 @@ describe HybridPlatformsConductor::TestsRunner do
         # Run everything
         test_tests_runner.tests = [:several_tests]
         expect(test_tests_runner.run_tests([{ all: true }])).to eq 0
-        expect(HybridPlatformsConductorTest::TestsReportPlugin.reports[:global_tests].sort).to eq [
+        expect(HybridPlatformsConductorTest::TestsReportPlugin.reports.size).to eq 1
+        first_report = HybridPlatformsConductorTest::TestsReportPlugin.reports.first
+        expect(first_report[:global_tests].sort).to eq [
           [:several_tests, true]
         ].sort
-        expect(HybridPlatformsConductorTest::TestsReportPlugin.reports[:platform_tests].sort).to eq [
+        expect(first_report[:platform_tests].sort).to eq [
           [:several_tests, true, 'platform1'],
           [:several_tests, true, 'platform2']
         ].sort
         # There are 3 node tests for each node: 1 for SSH, 1 for check-node and 1 normal
-        expect(HybridPlatformsConductorTest::TestsReportPlugin.reports[:node_tests].sort).to eq [
+        expect(first_report[:node_tests].sort).to eq [
           [:several_tests, true, 'platform1', 'node11'],
           [:several_tests, true, 'platform1', 'node12'],
           [:several_tests, true, 'platform2', 'node21'],
@@ -265,16 +277,18 @@ describe HybridPlatformsConductor::TestsRunner do
           node_test_2: %w[node21 node22]
         }
         test_tests_runner.run_tests [{ all: true }]
-        expect(HybridPlatformsConductorTest::TestsReportPlugin.reports[:errors_per_platform_and_test].size).to eq 2
-        expect(HybridPlatformsConductorTest::TestsReportPlugin.reports[:errors_per_platform_and_test]['platform1'].size).to eq 1
-        expect(HybridPlatformsConductorTest::TestsReportPlugin.reports[:errors_per_platform_and_test]['platform1'][:node_test].sort).to eq [
+        expect(HybridPlatformsConductorTest::TestsReportPlugin.reports.size).to eq 1
+        errors_per_platform_and_test = HybridPlatformsConductorTest::TestsReportPlugin.reports.first[:errors_per_platform_and_test]
+        expect(errors_per_platform_and_test.size).to eq 2
+        expect(errors_per_platform_and_test['platform1'].size).to eq 1
+        expect(errors_per_platform_and_test['platform1'][:node_test].sort).to eq [
           'Uncaught exception during test: Failing test node_test for node12'
         ].sort
-        expect(HybridPlatformsConductorTest::TestsReportPlugin.reports[:errors_per_platform_and_test]['platform2'].size).to eq 2
-        expect(HybridPlatformsConductorTest::TestsReportPlugin.reports[:errors_per_platform_and_test]['platform2'][:node_test].sort).to eq [
+        expect(errors_per_platform_and_test['platform2'].size).to eq 2
+        expect(errors_per_platform_and_test['platform2'][:node_test].sort).to eq [
           'Uncaught exception during test: Failing test node_test for node22'
         ].sort
-        expect(HybridPlatformsConductorTest::TestsReportPlugin.reports[:errors_per_platform_and_test]['platform2'][:node_test_2].sort).to eq [
+        expect(errors_per_platform_and_test['platform2'][:node_test_2].sort).to eq [
           'Uncaught exception during test: Failing test node_test_2 for node21',
           'Uncaught exception during test: Failing test node_test_2 for node22'
         ].sort
@@ -295,19 +309,40 @@ describe HybridPlatformsConductor::TestsRunner do
         test_tests_runner.reports = [:report]
         test_tests_runner.tests = [:node_test]
         test_tests_runner.run_tests %w[node1 node2 node3 node5]
-        expect(HybridPlatformsConductorTest::TestsReportPlugin.reports[:nodes_by_hosts_list].size).to eq 4
-        expect(HybridPlatformsConductorTest::TestsReportPlugin.reports[:nodes_by_hosts_list]['nodes_list1'][:nodes].sort).to eq %w[node1 node3].sort
-        expect(HybridPlatformsConductorTest::TestsReportPlugin.reports[:nodes_by_hosts_list]['nodes_list1'][:tested_nodes].sort).to eq %w[node1 node3].sort
-        expect(HybridPlatformsConductorTest::TestsReportPlugin.reports[:nodes_by_hosts_list]['nodes_list1'][:tested_nodes_in_error].sort).to eq %w[node1].sort
-        expect(HybridPlatformsConductorTest::TestsReportPlugin.reports[:nodes_by_hosts_list]['nodes_list2'][:nodes].sort).to eq %w[node2 node3 node4].sort
-        expect(HybridPlatformsConductorTest::TestsReportPlugin.reports[:nodes_by_hosts_list]['nodes_list2'][:tested_nodes].sort).to eq %w[node2 node3].sort
-        expect(HybridPlatformsConductorTest::TestsReportPlugin.reports[:nodes_by_hosts_list]['nodes_list2'][:tested_nodes_in_error].sort).to eq %w[].sort
-        expect(HybridPlatformsConductorTest::TestsReportPlugin.reports[:nodes_by_hosts_list]['No list'][:nodes].sort).to eq %w[node5].sort
-        expect(HybridPlatformsConductorTest::TestsReportPlugin.reports[:nodes_by_hosts_list]['No list'][:tested_nodes].sort).to eq %w[node5].sort
-        expect(HybridPlatformsConductorTest::TestsReportPlugin.reports[:nodes_by_hosts_list]['No list'][:tested_nodes_in_error].sort).to eq %w[node5].sort
-        expect(HybridPlatformsConductorTest::TestsReportPlugin.reports[:nodes_by_hosts_list]['All'][:nodes].sort).to eq %w[node1 node2 node3 node4 node5].sort
-        expect(HybridPlatformsConductorTest::TestsReportPlugin.reports[:nodes_by_hosts_list]['All'][:tested_nodes].sort).to eq %w[node1 node2 node3 node5].sort
-        expect(HybridPlatformsConductorTest::TestsReportPlugin.reports[:nodes_by_hosts_list]['All'][:tested_nodes_in_error].sort).to eq %w[node1 node5].sort
+        expect(HybridPlatformsConductorTest::TestsReportPlugin.reports.size).to eq 1
+        nodes_by_hosts_list = HybridPlatformsConductorTest::TestsReportPlugin.reports.first[:nodes_by_hosts_list]
+        expect(nodes_by_hosts_list.size).to eq 4
+        expect(nodes_by_hosts_list['nodes_list1'][:nodes].sort).to eq %w[node1 node3].sort
+        expect(nodes_by_hosts_list['nodes_list1'][:tested_nodes].sort).to eq %w[node1 node3].sort
+        expect(nodes_by_hosts_list['nodes_list1'][:tested_nodes_in_error].sort).to eq %w[node1].sort
+        expect(nodes_by_hosts_list['nodes_list2'][:nodes].sort).to eq %w[node2 node3 node4].sort
+        expect(nodes_by_hosts_list['nodes_list2'][:tested_nodes].sort).to eq %w[node2 node3].sort
+        expect(nodes_by_hosts_list['nodes_list2'][:tested_nodes_in_error].sort).to eq %w[].sort
+        expect(nodes_by_hosts_list['No list'][:nodes].sort).to eq %w[node5].sort
+        expect(nodes_by_hosts_list['No list'][:tested_nodes].sort).to eq %w[node5].sort
+        expect(nodes_by_hosts_list['No list'][:tested_nodes_in_error].sort).to eq %w[node5].sort
+        expect(nodes_by_hosts_list['All'][:nodes].sort).to eq %w[node1 node2 node3 node4 node5].sort
+        expect(nodes_by_hosts_list['All'][:tested_nodes].sort).to eq %w[node1 node2 node3 node5].sort
+        expect(nodes_by_hosts_list['All'][:tested_nodes_in_error].sort).to eq %w[node1 node5].sort
+      end
+    end
+
+    it 'can report on several reports' do
+      with_test_platforms_for_reports_test do
+        register_tests_report_plugins(test_tests_runner,
+          report1: HybridPlatformsConductorTest::TestsReportPlugin,
+          report2: HybridPlatformsConductorTest::TestsReportPlugin
+        )
+        test_tests_runner.reports = %i[report1 report2]
+        test_tests_runner.tests = [:global_test]
+        test_tests_runner.run_tests [{ all: true }]
+        expect(HybridPlatformsConductorTest::TestsReportPlugin.reports.size).to eq 2
+        expect(HybridPlatformsConductorTest::TestsReportPlugin.reports[0][:global_tests].sort).to eq [
+          [:global_test, true]
+        ].sort
+        expect(HybridPlatformsConductorTest::TestsReportPlugin.reports[1][:global_tests].sort).to eq [
+          [:global_test, true]
+        ].sort
       end
     end
 

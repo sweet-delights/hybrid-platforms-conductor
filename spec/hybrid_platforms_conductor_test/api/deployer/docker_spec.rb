@@ -82,7 +82,7 @@ describe HybridPlatformsConductor::Deployer do
         expect_logs_to_be(logs_content, "Real deployment done on node\n", '',
           date: /\d\d\d\d-\d\d-\d\d \d\d:\d\d:\d\d/,
           user: 'root',
-          debug: 'Yes',
+          debug: 'No',
           repo_name: 'my_remote_platform',
           commit_id: Git.open(repository).log.first.sha,
           commit_message: 'Test commit',

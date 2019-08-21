@@ -16,7 +16,7 @@ ssh_executor = executable.ssh_executor
 deployer = executable.deployer
 
 executable.parse_options!
-raise 'No test host specified. Please use --host option to set it.' if test_host.nil? || test_host.empty?
+raise 'No node selected. Please use --host-name option to set at least one.' if test_host.nil? || test_host.empty?
 raise "Unknown host name: #{test_host}" unless nodes_handler.known_hostnames.include?(test_host)
 
 ssh_executor.dump_conf

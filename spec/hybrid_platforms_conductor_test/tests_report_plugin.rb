@@ -4,14 +4,14 @@ module HybridPlatformsConductorTest
   class TestsReportPlugin < HybridPlatformsConductor::Tests::ReportsPlugin
 
     class << self
-      # Reports (taht can be compared), per report name
-      # Hash<Symbol, Object>
+      # Reports (that can be compared), per report name
+      # Array< Hash<Symbol, Object> >
       attr_accessor :reports
     end
 
     # Handle tests reports
     def report
-      TestsReportPlugin.reports = {
+      TestsReportPlugin.reports << {
         global_tests: report_from(global_tests),
         platform_tests: report_from(platform_tests),
         node_tests: report_from(node_tests),

@@ -8,6 +8,31 @@ describe HybridPlatformsConductor::SshExecutor do
     end
   end
 
+  it 'displays commands instead of executing them' do
+    with_test_platform(nodes: { 'node1' => { meta: { 'site_meta' => { 'connection_settings' => { 'ip' => 'node1_connection' } } } } }) do |repository|
+      executed = false
+      test_ssh_executor.dry_run = true
+      stdout_file = "#{repository}/run.stdout"
+      File.open(stdout_file, 'w') { |f| f.truncate(0) }
+      test_cmd_runner.stdout_device = stdout_file
+      test_nodes_handler.stdout_device = stdout_file
+      test_ssh_executor.stdout_device = stdout_file
+      test_ssh_executor.run_cmd_on_hosts('node1' => { actions: [
+        { ruby: proc { executed = true } },
+        { bash: 'echo Hello' },
+      ] })
+      expect(executed).to eq false
+      lines = File.read(stdout_file).split("\n")
+      expect(lines[0]).to eq 'ssh-keyscan node1_connection'
+      expect(lines[1]).to match /^ssh-keygen -R node1_connection -f .+\/known_hosts$/
+      expect(lines[2]).to match /^.+\/ssh -o BatchMode=yes -o ControlMaster=yes -o ControlPersist=yes muriel@ti\.node1 true$/
+      expect(lines[3]).to match /^.+\/ssh muriel@ti\.node1 \/bin\/bash <<'EOF'$/
+      expect(lines[4]).to eq 'echo Hello'
+      expect(lines[5]).to eq 'EOF'
+      expect(lines[6]).to match /^.+\/ssh -O exit muriel@ti\.node1 2>&1 \| grep -v 'Exit request sent\.'$/
+    end
+  end
+
   it 'executes a simple command on several nodes' do
     with_test_platform(nodes: { 'node1' => {}, 'node2' => {}, 'node3' => {} }) do
       nodes_executed = []
@@ -68,6 +93,21 @@ describe HybridPlatformsConductor::SshExecutor do
     with_test_platform(nodes: { 'node1' => {} }) do
       executed = false
       expect { test_ssh_executor.run_cmd_on_hosts('node2' => { actions: { ruby: proc { executed = true } } }) }.to raise_error(RuntimeError, 'Unknown host names: node2')
+    end
+  end
+
+  it 'fails to execute actions being interactive in parallel' do
+    with_test_platform(nodes: { 'node1' => {}, 'node2' => {} }) do
+      executed = false
+      expect do
+        test_ssh_executor.run_cmd_on_hosts(
+          {
+            'node1' => { actions: { ruby: proc { executed = true } } },
+            'node2' => { actions: { interactive: true } }
+          },
+          concurrent: true
+        )
+      end.to raise_error(RuntimeError, 'Cannot have concurrent executions for interactive sessions')
     end
   end
 

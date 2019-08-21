@@ -26,12 +26,10 @@ module HybridPlatformsConductor
       # Parameters::
       # * *hosts* (Array<String>): List of hosts
       # * *locale_code* (Symbol): The locale code
-      # Result::
-      # * String: The report
       def report_for(hosts, locale_code)
         @hosts = hosts
         confluence_page_update('763977681', render('confluence_inventory'))
-        'Confluence page updated. Please visit https://www.site.my_company.net/confluence/display/TIU/Platforms+inventory'
+        out 'Confluence page updated. Please visit https://www.site.my_company.net/confluence/display/TIU/Platforms+inventory'
       end
 
       private

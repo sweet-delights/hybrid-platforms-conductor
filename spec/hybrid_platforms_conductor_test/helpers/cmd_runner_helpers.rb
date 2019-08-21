@@ -10,14 +10,16 @@ module HybridPlatformsConductorTest
       # Parameters::
       # * *commands* (nil or Array< [String or Regexp, Proc] >): Expected commands that should be called on CmdRunner: the command name or regexp and the corresponding mocked code, or nil if no mocking to be done [default: nil]
       # * *nodes_connections* (Hash<String, Hash<Symbol,Object> >): Nodes' connections info, per node name (check ssh_expected_commands_for to know about properties) [default: {}]
+      # * *with_control_master* (Boolean): Do we use the control master? [default: true]
+      # * *with_strict_host_key_checking* (Boolean): Do we use strict host key checking? [default: true]
       # * Proc: Code called to mock behaviour
       #   * Parameters::
       #     * Same parameters as CmdRunner@run_cmd
-      def with_cmd_runner_mocked(commands: nil, nodes_connections: {})
+      def with_cmd_runner_mocked(commands: nil, nodes_connections: {}, with_control_master: true, with_strict_host_key_checking: true)
         # Mock the calls to CmdRunner made by the SSH connections
         unexpected_commands = []
         unless commands.nil?
-          remaining_expected_commands = ssh_expected_commands_for(nodes_connections) + commands
+          remaining_expected_commands = ssh_expected_commands_for(nodes_connections, with_control_master, with_strict_host_key_checking) + commands
           allow(test_cmd_runner).to receive(:run_cmd) do |cmd, log_to_file: nil, log_to_stdout: true, expected_code: 0, timeout: nil, no_exception: false|
             # Check the remaining expected commands
             found_command = nil

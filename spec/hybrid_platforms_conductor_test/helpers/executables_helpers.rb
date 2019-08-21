@@ -41,15 +41,25 @@ module HybridPlatformsConductorTest
             &opts_block
           )
         end
-        # Mock the SSH Executor creation to mock it to our test one
-        expect(HybridPlatformsConductor::SshExecutor).to receive(:new).once do |logger: Logger.new(STDOUT),
-          logger_stderr: Logger.new(STDERR),
-          cmd_runner: CmdRunner.new,
-          nodes_handler: NodesHandler.new|
-          test_ssh_executor.stdout_device = stdout_file
-          test_ssh_executor.stderr_device = stderr_file
-          test_ssh_executor
+        # Get a simple list of all the components that should be mocked when being used by the executables, per class to be mocked.
+        components_to_mock = {
+          HybridPlatformsConductor::CmdRunner => test_cmd_runner,
+          HybridPlatformsConductor::Deployer => test_deployer,
+          HybridPlatformsConductor::NodesHandler => test_nodes_handler,
+          HybridPlatformsConductor::ReportsHandler => test_reports_handler,
+          HybridPlatformsConductor::SshExecutor => test_ssh_executor,
+          HybridPlatformsConductor::TestsRunner => test_tests_runner
+        }
+        # Make sure the tested components use the same loggers as the executable.
+        components_to_mock.values.each do |component|
+          component.stdout_device = stdout_file
+          component.stderr_device = stderr_file
         end
+        # Make sure that when the executable creates components it uses ours
+        components_to_mock.each do |component_class, component|
+          allow(component_class).to receive(:new).once { component }
+        end
+        # Run the executable
         args.concat(['--debug']) if ENV['TEST_DEBUG'] == '1'
         ARGV.replace(args)
         $0.replace(executable)

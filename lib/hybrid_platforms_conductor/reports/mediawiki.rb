@@ -65,8 +65,6 @@ module HybridPlatformsConductor
       # Parameters::
       # * *hosts* (Array<String>): List of hosts
       # * *locale_code* (Symbol): The locale code
-      # Result::
-      # * String: The report
       def report_for(hosts, locale_code)
         output = ''
         locale = TRANSLATIONS[locale_code]
@@ -144,7 +142,7 @@ This page has been generated using <code>./bin/report --format mediawiki</code> 
 [[Category:Configuration]]
 [[Category:Chef]]
 '
-        output
+        out output
       end
 
     end
