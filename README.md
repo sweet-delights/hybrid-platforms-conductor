@@ -1709,3 +1709,7 @@ The detailed development workflow can be found on [Confluence](https://www.site.
 ## Tests
 
 The whole tests suite can be run by using `bundle exec rspec`.
+
+A subset of tests (or even a single test) can be run by using a part of their name this way: `bundle exec rspec -e "HybridPlatformsConductor::Deployer checking the docker images provisioning"`
+
+To enable debugging logs during tests run, set the environment variable `TEST_DEBUG` to `1`: `TEST_DEBUG=1 bundle exec rspec -e "HybridPlatformsConductor::Deployer checking the docker images provisioning"`
