@@ -419,6 +419,11 @@ Host *
             ssh_conf_file = "#{@platforms_ssh_dir}/ssh_config"
             ssh_exec_file = "#{@platforms_ssh_dir}/ssh"
             known_hosts_file = "#{@platforms_ssh_dir}/known_hosts"
+            unless @passwords.empty?
+              # Check that sshpass is installed correctly
+              exit_code, _stdout, _stderr = @cmd_runner.run_cmd 'sshpass -V', no_exception: true
+              raise 'sshpass is not installed. Can\'t use automatic passwords handling without it. Please install it.' unless exit_code == 0
+            end
             FileUtils.touch known_hosts_file
             File.open(ssh_exec_file, 'w+', 0700) do |file|
               file.puts "#!#{`which env`.strip} bash"
