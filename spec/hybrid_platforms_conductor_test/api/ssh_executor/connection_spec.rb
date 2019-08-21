@@ -231,11 +231,11 @@ describe HybridPlatformsConductor::SshExecutor do
         expect(lines[0]).to eq 'ssh-keyscan node1_connection'
         expect(lines[1]).to match /^ssh-keygen -R node1_connection -f .+\/known_hosts$/
         # Here we should not have -o BatchMode=yes 
-        expect(lines[2]).to match /^.+\/ssh -o ControlMaster=yes -o ControlPersist=yes muriel@ti\.node1 true$/
-        expect(lines[3]).to match /^.+\/ssh muriel@ti\.node1 \/bin\/bash <<'EOF'$/
+        expect(lines[2]).to match /^.+\/ssh -o ControlMaster=yes -o ControlPersist=yes test_user@ti\.node1 true$/
+        expect(lines[3]).to match /^.+\/ssh test_user@ti\.node1 \/bin\/bash <<'EOF'$/
         expect(lines[4]).to eq 'echo Hello'
         expect(lines[5]).to eq 'EOF'
-        expect(lines[6]).to match /^.+\/ssh -O exit muriel@ti\.node1 2>&1 \| grep -v 'Exit request sent\.'$/
+        expect(lines[6]).to match /^.+\/ssh -O exit test_user@ti\.node1 2>&1 \| grep -v 'Exit request sent\.'$/
       end
     end
 
