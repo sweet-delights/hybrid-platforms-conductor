@@ -18,7 +18,7 @@ module HybridPlatformsConductor
 
     include LoggerHelpers
 
-    # Give the list of selected nodes, if the option was offered. Check NodesHandler#resolve_hosts to know which kind of nodes description exist.
+    # Give the list of selected nodes, if the option was offered. Check NodesHandler#select_nodes to know which kind of nodes description exist.
     #   Array<Object>
     attr_reader :selected_nodes
 

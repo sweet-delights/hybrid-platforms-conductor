@@ -35,7 +35,7 @@ describe HybridPlatformsConductor::NodesHandler do
 
       it "selects nodes correctly: #{nodes_selectors} resolves to #{expected_nodes}" do
         with_test_platform_for_nodes do
-          expect(test_nodes_handler.resolve_hosts([])).to eq []
+          expect(test_nodes_handler.select_nodes([])).to eq []
         end
       end
 
@@ -43,13 +43,13 @@ describe HybridPlatformsConductor::NodesHandler do
 
     it 'fails when selecting unknown nodes' do
       with_test_platform_for_nodes do
-        expect { test_nodes_handler.resolve_hosts('node1', 'node7') }.to raise_error(RuntimeError, 'Unknown host names: node7')
+        expect { test_nodes_handler.select_nodes('node1', 'node7') }.to raise_error(RuntimeError, 'Unknown host names: node7')
       end
     end
 
     it 'ignore unknown nodes when asked' do
       with_test_platform_for_nodes do
-        expect(test_nodes_handler.resolve_hosts(['node1', 'node7'], ignore_unknowns: true).sort).to eq %w[node1 node7].sort
+        expect(test_nodes_handler.select_nodes(['node1', 'node7'], ignore_unknowns: true).sort).to eq %w[node1 node7].sort
       end
     end
 

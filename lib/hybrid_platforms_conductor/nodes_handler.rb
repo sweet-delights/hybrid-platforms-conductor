@@ -32,7 +32,7 @@ module HybridPlatformsConductor
     # Result::
     # * Array<String>: List of nodes
     def nodes_from_list(nodes_list, ignore_unknowns: false)
-      resolve_hosts(platform_for_list(nodes_list).hosts_desc_from_list(nodes_list), ignore_unknowns: ignore_unknowns)
+      select_nodes(platform_for_list(nodes_list).hosts_desc_from_list(nodes_list), ignore_unknowns: ignore_unknowns)
     end
 
     # Get the list of known service names
@@ -88,7 +88,7 @@ module HybridPlatformsConductor
     # * *ignore_unknowns* (Boolean): Do we ignore unknown nodes? [default = false]
     # Result::
     # * Array<String>: List of host names
-    def resolve_hosts(*nodes_selectors, ignore_unknowns: false)
+    def select_nodes(*nodes_selectors, ignore_unknowns: false)
       nodes_selectors = nodes_selectors.flatten
       # 1. Check for the presence of all
       return known_hostnames if nodes_selectors.any? { |nodes_selector| nodes_selector.is_a?(Hash) && nodes_selector.key?(:all) && nodes_selector[:all] }

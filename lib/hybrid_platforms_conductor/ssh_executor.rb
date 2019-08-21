@@ -125,7 +125,7 @@ module HybridPlatformsConductor
     #
     # Parameters::
     # * *actions_descriptions* (Hash<Object, Hash<Symbol,Object> >): Actions descriptions, per host description.
-    #   See resolve_hosts for details about possible hosts descriptions.
+    #   See select_nodes for details about possible hosts descriptions.
     #   Each actions description can have the following attributes:
     #   * *actions* (Array< Hash<Symbol,Object> > or Hash<Symbol,Object>): List of actions (or 1 single action). See execute_actions_on to know about the API of an action.
     #   * *env* (Hash<String,String>): Environment to set before executing SSH commands on this host description. [default = {}]
@@ -155,7 +155,7 @@ module HybridPlatformsConductor
           end
         end
         # Resolve hosts
-        @nodes_handler.resolve_hosts(host_desc).each do |hostname|
+        @nodes_handler.select_nodes(host_desc).each do |hostname|
           raise "Hostname #{hostname} has been specified for different actions" if actions_per_hostname.key?(hostname)
           actions_per_hostname[hostname] = resolved_host_actions
         end

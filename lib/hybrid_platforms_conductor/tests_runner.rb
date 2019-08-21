@@ -139,7 +139,7 @@ module HybridPlatformsConductor
       @reports.sort!
       unknown_tests = @tests - @tests_plugins.keys
       raise "Unknown test names: #{unknown_tests.join(', ')}" unless unknown_tests.empty?
-      @hostnames = nodes_descriptions.empty? ? [] : @nodes_handler.resolve_hosts(nodes_descriptions).uniq.sort
+      @hostnames = nodes_descriptions.empty? ? [] : @nodes_handler.select_nodes(nodes_descriptions).uniq.sort
       @tested_platforms = []
 
       # Keep a list of all tests that have run for the report

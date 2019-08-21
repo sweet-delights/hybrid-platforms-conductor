@@ -187,7 +187,7 @@ module HybridPlatformsConductor
     # Result::
     # * Hash<String, [Integer or Symbol, String, String]>: Exit status code (or Symbol in case of error or dry run), standard output and error for each hostname that has been deployed.
     def deploy_for(*nodes_selectors)
-      @hosts = @nodes_handler.resolve_hosts(nodes_selectors.flatten)
+      @hosts = @nodes_handler.select_nodes(nodes_selectors.flatten)
       # Keep a track of the git origins to be used by each host that takes its package from an artefact repository.
       @git_origins_per_host = {}
       # Keep track of the locations being deployed
