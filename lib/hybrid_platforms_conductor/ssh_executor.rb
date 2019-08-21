@@ -555,6 +555,7 @@ Host *
             else
               action_info.call action_stdout, action_stderr
               if log_to_file
+                FileUtils.mkdir_p File.dirname(log_to_file)
                 File.open(log_to_file, 'a') do |log_file|
                   log_file.puts action_stdout unless action_stdout.empty?
                   log_file.puts action_stderr unless action_stderr.empty?

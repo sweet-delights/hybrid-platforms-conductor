@@ -75,6 +75,7 @@ module HybridPlatformsConductorTest
         HybridPlatformsConductorTest::TestPlugins::NodeCheck.only_on_platform_types = nil
         HybridPlatformsConductorTest::TestPlugins::NodeCheck.only_on_nodes = nil
         HybridPlatformsConductorTest::TestPlugins::SeveralChecks.runs = []
+        FileUtils.rm_rf './run_logs'
       end
     end
 
