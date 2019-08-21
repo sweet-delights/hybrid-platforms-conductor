@@ -104,18 +104,6 @@ module HybridPlatformsConductor
         end
       end
 
-      # Get the configuration of a given hostname.
-      # [API] - This method is mandatory.
-      #
-      # Parameters::
-      # * *hostname* (String): Hostname to read configuration from
-      # Result::
-      # * Hash<String,Object>: The corresponding JSON configuration
-      def node_conf_for(hostname)
-        # This method should return the host configuration, among which site_meta data is present.
-        JSON.parse(File.read("#{@repository_path}/nodes/#{hostname}.json"))
-      end
-
       # Get the default gateway name to be used for a given hostname.
       # [API] - This method is optional.
       #

@@ -244,7 +244,7 @@ Host *
 "
       # Add each node
       @nodes_handler.known_hostnames.sort.each do |node|
-        conf = @nodes_handler.site_meta_for node
+        conf = @nodes_handler.metadata_for node
         unless conf.nil?
           (conf.key?('private_ips') ? conf['private_ips'].sort : [nil]).each.with_index do |private_ip, idx|
             # Generate the conf for the node
@@ -462,8 +462,7 @@ Host *
     # * String or nil: The gateway name to be used (should be defined by the gateways configurations), or nil if no gateway to be used.
     # * String or nil: The gateway user to be used, or nil if none.
     def inventory_connection_info_for(node, ip = nil)
-      site_meta = @nodes_handler.site_meta_for(node)
-      connection_settings = site_meta.nil? ? nil : site_meta['connection_settings']
+      connection_settings = @nodes_handler.metadata_for(node)['connection_settings']
       gateway, gateway_user =
         if connection_settings && connection_settings.key?('gateway')
           [

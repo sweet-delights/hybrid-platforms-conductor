@@ -77,7 +77,7 @@ This page has been generated using <code>./bin/report --format mediawiki</code> 
         # Get all confs
         hosts.
           map do |hostname|
-            { 'hostname' => hostname }.merge(@nodes_handler.site_meta_for(hostname))
+            { 'hostname' => hostname }.merge(@nodes_handler.metadata_for(hostname))
           end.
           # Group them by physical / VMs
           group_by do |host_info|

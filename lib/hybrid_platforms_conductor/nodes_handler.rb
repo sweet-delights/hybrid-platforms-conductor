@@ -35,16 +35,6 @@ module HybridPlatformsConductor
       resolve_hosts(platform_for_list(nodes_list).hosts_desc_from_list(nodes_list), ignore_unknowns: ignore_unknowns)
     end
 
-    # Read the configuration of a given node
-    #
-    # Parameters::
-    # * *node* (String): node to read configuration from
-    # Result::
-    # * Hash<String,Object>: The corresponding JSON configuration
-    def node_conf_for(node)
-      platform_for(node).node_conf_for(node)
-    end
-
     # Get the list of known service names
     #
     # Result::
@@ -53,20 +43,14 @@ module HybridPlatformsConductor
       known_hostnames.map { |node| service_for(node) }.uniq.sort
     end
 
-    # Read the site meta of a given node
+    # Get the metadata of a given hostname.
     #
     # Parameters::
-    # * *node* (String): node to read configuration from
+    # * *node* (String): Node to read mtadata from
     # Result::
-    # * Hash<String,Object> or nil: The corresponding JSON site_meta configuration, or nil if none
-    def site_meta_for(node)
-      json_conf = node_conf_for node
-      if json_conf.key?('site_meta')
-        json_conf['site_meta']
-      else
-        log_debug "[#{node}] - No site_meta key found"
-        nil
-      end
+    # * Hash<String,Object>: The corresponding metadata (as a JSON object)
+    def metadata_for(node)
+      platform_for(node).metadata_for(node)
     end
 
     # Return the private IP for a given node
@@ -77,13 +61,11 @@ module HybridPlatformsConductor
     # * String or nil: The corresponding private IP, or nil if none
     def private_ip_for(node)
       ip = nil
-      site_meta_conf = site_meta_for(node)
-      unless site_meta_conf.nil?
-        if site_meta_conf.key?('private_ips')
-          ip = site_meta_conf['private_ips'].first
-        else
-          log_debug "[#{node}] - No private IPs defined"
-        end
+      metadata = metadata_for(node)
+      if metadata.key?('private_ips')
+        ip = metadata['private_ips'].first
+      else
+        log_debug "[#{node}] - No private IPs defined"
       end
       ip
     end
@@ -191,9 +173,9 @@ module HybridPlatformsConductor
         out
         out "* Known nodes with description:\n#{
           known_hostnames.map do |node|
-            conf = site_meta_for(node)
+            conf = metadata_for(node)
             ip = private_ip_for(node)
-            "#{platform_for(node).info[:repo_name]} - #{node}#{ip.nil? ? '' : " (#{ip})"} - #{service_for(node)} - #{conf.nil? || !conf.key?('description') ? '' : conf['description']}"
+            "#{platform_for(node).info[:repo_name]} - #{node}#{ip.nil? ? '' : " (#{ip})"} - #{service_for(node)} - #{conf.key?('description') ? conf['description'] : ''}"
           end.sort.join("\n")
         }"
         out

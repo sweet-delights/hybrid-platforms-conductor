@@ -10,8 +10,8 @@ describe 'last_deploys executable' do
     with_test_platform(
       {
         nodes: {
-          'node1' => { meta: { 'site_meta' => { 'connection_settings' => { 'ip' => 'node1_connection' } } } },
-          'node2' => { meta: { 'site_meta' => { 'connection_settings' => { 'ip' => 'node2_connection' } } } }
+          'node1' => { meta: { 'connection_settings' => { 'ip' => 'node1_connection' } } },
+          'node2' => { meta: { 'connection_settings' => { 'ip' => 'node2_connection' } } }
         }
       },
       true,

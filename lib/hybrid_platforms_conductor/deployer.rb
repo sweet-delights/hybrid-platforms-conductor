@@ -234,7 +234,7 @@ module HybridPlatformsConductor
       end
       if docker_ok
         # Get the image name for this node
-        image = @nodes_handler.site_meta_for(node)['image'].to_sym
+        image = @nodes_handler.metadata_for(node)['image'].to_sym
         # Find if we have such an image registered
         if @nodes_handler.known_docker_images.include?(image)
           # Build the image if it does not exist

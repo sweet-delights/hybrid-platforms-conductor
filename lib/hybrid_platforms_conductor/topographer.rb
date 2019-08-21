@@ -66,7 +66,7 @@ module HybridPlatformsConductor
     end
 
     # Some getters that can be useful for clients of the Topographer
-    attr_reader :nodes_graph, :config, :node_site_meta
+    attr_reader :nodes_graph, :config, :node_metadata
 
     # Constructor
     #
@@ -84,9 +84,9 @@ module HybridPlatformsConductor
       @nodes_handler = nodes_handler
       @json_dumper = json_dumper
       @config = Topographer.default_config.merge(config)
-      # Get the site_meta of each node, per hostname
+      # Get the metadata of each node, per hostname
       # Hash<String,Hash>
-      @node_site_meta = {}
+      @node_metadata = {}
       # Know for each IP what is the hostname it belongs to
       # Hash<String,String>
       @ips_to_host = {}
@@ -125,9 +125,9 @@ module HybridPlatformsConductor
 
       @ips_to_host = known_ips.clone
 
-      # Fill info from the site_meta
+      # Fill info from the metadata
       @nodes_handler.known_hostnames.each do |hostname|
-        @node_site_meta[hostname] = @nodes_handler.site_meta_for(hostname)
+        @node_metadata[hostname] = @nodes_handler.metadata_for(hostname)
       end
 
       # Small cache of hostnames used a lot to parse JSON
@@ -296,8 +296,8 @@ module HybridPlatformsConductor
     # Define clusters of ips with 24 bits ranges.
     def define_clusters_ip_24
       @nodes_graph.keys.each do |node_name|
-        if @nodes_graph[node_name][:type] == :node && !@node_site_meta[node_name]['private_ips'].nil? && !@node_site_meta[node_name]['private_ips'].empty?
-          ip_24 = "#{@node_site_meta[node_name]['private_ips'].first.split('.')[0..2].join('.')}.0/24"
+        if @nodes_graph[node_name][:type] == :node && !@node_metadata[node_name]['private_ips'].nil? && !@node_metadata[node_name]['private_ips'].empty?
+          ip_24 = "#{@node_metadata[node_name]['private_ips'].first.split('.')[0..2].join('.')}.0/24"
           @nodes_graph[ip_24] = ip_range_graph_info(ip_24) unless @nodes_graph.key?(ip_24)
           @nodes_graph[ip_24][:includes] << node_name unless @nodes_graph[ip_24][:includes].include?(node_name)
         end
@@ -499,7 +499,7 @@ module HybridPlatformsConductor
     # Result::
     # * Boolean: Is the node a physical node?
     def is_node_physical?(node_name)
-      @nodes_graph[node_name][:type] == :node && @node_site_meta[node_name]['physical_node']
+      @nodes_graph[node_name][:type] == :node && @node_metadata[node_name]['physical_node']
     end
 
     # Output the graph to a given file at a given format
@@ -524,7 +524,7 @@ module HybridPlatformsConductor
     def title_for(node_name)
       case @nodes_graph[node_name][:type]
       when :node
-        "#{node_name} - #{@node_site_meta[node_name]['private_ips'].nil? || @node_site_meta[node_name]['private_ips'].empty? ? 'No IP' : @node_site_meta[node_name]['private_ips'].first}"
+        "#{node_name} - #{@node_metadata[node_name]['private_ips'].nil? || @node_metadata[node_name]['private_ips'].empty? ? 'No IP' : @node_metadata[node_name]['private_ips'].first}"
       when :cluster
         "#{node_name} (#{@nodes_graph[node_name][:includes].size} nodes)"
       when :unknown
@@ -543,7 +543,7 @@ module HybridPlatformsConductor
       byebug if node_name == 'xaesbghad51'
       case @nodes_graph[node_name][:type]
       when :node
-        @node_site_meta[node_name]['description']
+        @node_metadata[node_name]['description']
       when :cluster
         nil
       when :unknown
@@ -561,12 +561,12 @@ module HybridPlatformsConductor
       # Keep a cache of it
       unless defined?(@known_ips)
         @known_ips = {}
-        # Fill info from the site_meta
+        # Fill info from the metadata
         @nodes_handler.known_hostnames.each do |node|
-          site_meta = @nodes_handler.site_meta_for(node)
+          metadata = @nodes_handler.metadata_for(node)
           ['private_ips', 'public_ips'].each do |ip_type|
-            if site_meta.key?(ip_type)
-              site_meta[ip_type].each do |ip|
+            if metadata.key?(ip_type)
+              metadata[ip_type].each do |ip|
                 raise "Conflict: #{ip} is already associated to #{@known_ips[ip]}. Cannot associate it to #{node}." if @known_ips.key?(ip)
                 @known_ips[ip] = node
               end
@@ -838,7 +838,7 @@ module HybridPlatformsConductor
           connections: connections_from_json(node_json_for(hostname)),
           includes: []
         }
-        @nodes_graph[hostname][:ipv4] = IPAddress::IPv4.new(@node_site_meta[hostname]['private_ips'].first) if !@node_site_meta[hostname]['private_ips'].nil? && !@node_site_meta[hostname]['private_ips'].empty?
+        @nodes_graph[hostname][:ipv4] = IPAddress::IPv4.new(@node_metadata[hostname]['private_ips'].first) if !@node_metadata[hostname]['private_ips'].nil? && !@node_metadata[hostname]['private_ips'].empty?
         sub_max_level = max_level.nil? ? nil : max_level - 1
         if sub_max_level != -1
           @nodes_graph[hostname][:connections].keys.each do |connected_hostname|

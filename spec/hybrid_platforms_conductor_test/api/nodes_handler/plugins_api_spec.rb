@@ -43,7 +43,7 @@ describe HybridPlatformsConductor::NodesHandler do
 
     it 'returns nodes metadata' do
       with_test_platform(nodes: { 'test_node' => { meta: { 'metadata_name' => 'value' } } }) do
-        expect(test_nodes_handler.node_conf_for('test_node')).to eq({ 'metadata_name' => 'value' })
+        expect(test_nodes_handler.metadata_for('test_node')).to eq({ 'metadata_name' => 'value' })
       end
     end
 

@@ -25,7 +25,7 @@ describe HybridPlatformsConductor::Deployer do
           register_platform_handlers test: HybridPlatformsConductorTest::TestPlatformHandler
           prepared_for_local_testing = false
           self.test_platforms_info = { 'my_remote_platform' => {
-            nodes: { 'node' => { meta: { 'site_meta' => { 'image' => 'test_image' } } } },
+            nodes: { 'node' => { meta: { 'image' => 'test_image' } } },
             prepare_deploy_for_local_testing: proc { prepared_for_local_testing = true }
           } }
           File.write("#{test_nodes_handler.hybrid_platforms_dir}/dummy_secrets.json", '{}')

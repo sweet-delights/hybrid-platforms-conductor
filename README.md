@@ -1448,10 +1448,10 @@ hosts = nodes_handler.known_hostnames
 # Get the private IP of node23hst-nn2
 ip = nodes_handler.private_ip_for 'node23hst-nn2'
 
-# Get the node configuration of node23hst-nn2, as a JSON Hash object
-conf = nodes_handler.node_conf_for 'node23hst-nn2'
-# Display its description from its site_meta data
-puts conf['site_meta']['description']
+# Get the node metadata of node23hst-nn2, as a JSON Hash object
+conf = nodes_handler.metadata_for 'node23hst-nn2'
+# Display its description from its metadata
+puts conf['description']
 ```
 
 ## SshExecutor

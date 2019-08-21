@@ -15,7 +15,7 @@
       <th>Missing industrialization?</th>
     </tr>
     <% @hosts.sort.each do |node| %>
-      <% node_info = @nodes_handler.site_meta_for(node) %>
+      <% node_info = @nodes_handler.metadata_for(node) %>
       <tr style="vertical-align: middle;">
         <td><strong><%= node %></strong></td>
         <td><%= @nodes_handler.platform_for(node).info[:repo_name] %></td>

@@ -13,7 +13,7 @@ module HybridPlatformsConductor
           private_ips = Hash[@nodes_handler.
             known_hostnames.
             map do |hostname|
-              conf = @nodes_handler.site_meta_for hostname
+              conf = @nodes_handler.metadata_for hostname
               [
                 hostname,
                 conf.key?('private_ips') ? conf['private_ips'] : []

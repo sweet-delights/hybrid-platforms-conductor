@@ -59,14 +59,14 @@ module HybridPlatformsConductorTest
       platform_info[:nodes_lists][nodes_list_name]
     end
 
-    # Get the configuration of a given hostname.
+    # Get the metadata of a given hostname.
     # [API] - This method is mandatory.
     #
     # Parameters::
-    # * *node* (String): Node to read configuration from
+    # * *node* (String): Node to read mtadata from
     # Result::
-    # * Hash<String,Object>: The corresponding JSON configuration
-    def node_conf_for(node)
+    # * Hash<String,Object>: The corresponding metadata (as a JSON object)
+    def metadata_for(node)
       node_info(node)[:meta]
     end
 
