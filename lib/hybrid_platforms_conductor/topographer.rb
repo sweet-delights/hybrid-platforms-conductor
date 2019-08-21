@@ -123,7 +123,7 @@ module HybridPlatformsConductor
           ]
         end]
 
-      @ips_to_host = @nodes_handler.known_ips.clone
+      @ips_to_host = known_ips.clone
 
       # Fill info from the site_meta
       @nodes_handler.known_hostnames.each do |hostname|
@@ -553,6 +553,76 @@ module HybridPlatformsConductor
 
     private
 
+    # Get the list of known IPs (private and public), and return each associated node
+    #
+    # Result::
+    # * Hash<String,String>: List of nodes per IP address
+    def known_ips
+      # Keep a cache of it
+      unless defined?(@known_ips)
+        @known_ips = {}
+        # Fill info from the site_meta
+        @nodes_handler.known_hostnames.each do |node|
+          site_meta = @nodes_handler.site_meta_for(node)
+          ['private_ips', 'public_ips'].each do |ip_type|
+            if site_meta.key?(ip_type)
+              site_meta[ip_type].each do |ip|
+                raise "Conflict: #{ip} is already associated to #{@known_ips[ip]}. Cannot associate it to #{node}." if @known_ips.key?(ip)
+                @known_ips[ip] = node
+              end
+            end
+          end
+        end
+      end
+      @known_ips
+    end
+
+    # Get the list of known IP addresses matching a given IP mask
+    #
+    # Parameters::
+    # * *ip_def* (String): The ip definition (without mask).
+    # * *ip_mask* (Integer): The IP mask in bits.
+    # Result::
+    # * Array<String>: The list of IP addresses matching this mask
+    def ips_matching_mask(ip_def, ip_mask)
+      # Keep a cache of it
+      # Hash<String, Hash<Integer, Array<String> > >
+      # Hash<ip_def,      ip_mask,       ip
+      @ips_mask = {} unless defined?(@ips_mask)
+      @ips_mask[ip_def] = {} unless @ips_mask.key?(ip_def)
+      unless @ips_mask[ip_def].key?(ip_mask)
+        # For performance, keep a cache of all the IPAddress::IPv4 objects
+        @ip_v4_cache = Hash[known_ips.keys.map { |ip, _node| [ip, IPAddress::IPv4.new(ip)] }] unless defined?(@ip_v4_cache)
+        ip_range = IPAddress::IPv4.new("#{ip_def}/#{ip_mask}")
+        @ips_mask[ip_def][ip_mask] = @ip_v4_cache.select { |_ip, ip_v4| ip_range.include?(ip_v4) }.keys
+      end
+      @ips_mask[ip_def][ip_mask]
+    end
+
+    # Get the list of 24 bits IP addresses matching a given IP mask
+    #
+    # Parameters::
+    # * *ip_def* (String): The ip definition (without mask).
+    # * *ip_mask* (Integer): The IP mask in bits.
+    # Result::
+    # * Array<String>: The list of 24 bits IP addresses matching this mask
+    def ips_24_matching_mask(ip_def, ip_mask)
+      # Keep a cache of it
+      # Hash<String, Hash<Integer, Array<String> > >
+      # Hash<ip_def,      ip_mask,       ip_24
+      @ips_24_mask = {} unless defined?(@ips_24_mask)
+      @ips_24_mask[ip_def] = {} unless @ips_24_mask.key?(ip_def)
+      unless @ips_24_mask[ip_def].key?(ip_mask)
+        ip_range = IPAddress::IPv4.new("#{ip_def}/#{ip_mask}")
+        @ips_24_mask[ip_def][ip_mask] = []
+        (0..255).each do |ip_third|
+          ip_24 = "172.16.#{ip_third}.0/24"
+          @ips_24_mask[ip_def][ip_mask] << ip_24 if ip_range.include?(IPAddress::IPv4.new(ip_24))
+        end
+      end
+      @ips_24_mask[ip_def][ip_mask]
+    end
+
     # Create a cluster of type IP range
     #
     # Parameters::
@@ -662,7 +732,7 @@ module HybridPlatformsConductor
                     if ip_mask == 24
                       [ip_str]
                     else
-                      @nodes_handler.ips_24_matching_mask(ip_def, ip_mask).select do |ip|
+                      ips_24_matching_mask(ip_def, ip_mask).select do |ip|
                         unless @ips_ignored.key?(ip_str)
                           # Check if we should ignore it.
                           @ips_ignored[ip] = nil if @config[:ignore_ips].any? { |ip_regexp| ip =~ ip_regexp }
@@ -694,7 +764,7 @@ module HybridPlatformsConductor
                     if ip_mask == 32
                       [ip_def]
                     else
-                      @nodes_handler.ips_matching_mask(ip_def, ip_mask).select do |ip|
+                      ips_matching_mask(ip_def, ip_mask).select do |ip|
                         unless @ips_ignored.key?(ip_str)
                           # Check if we should ignore it.
                           @ips_ignored[ip] = nil if @config[:ignore_ips].any? { |ip_regexp| ip =~ ip_regexp }

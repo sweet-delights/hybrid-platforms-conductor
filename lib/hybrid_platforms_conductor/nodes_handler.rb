@@ -24,30 +24,6 @@ module HybridPlatformsConductor
       initialize_platforms_dsl
     end
 
-    # Get the list of known IPs (private and public), and return each associated node
-    #
-    # Result::
-    # * Hash<String,String>: List of nodes per IP address
-    def known_ips
-      # Keep a cache of it
-      unless defined?(@known_ips)
-        @known_ips = {}
-        # Fill info from the site_meta
-        known_hostnames.each do |node|
-          site_meta = site_meta_for(node)
-          ['private_ips', 'public_ips'].each do |ip_type|
-            if site_meta.key?(ip_type)
-              site_meta[ip_type].each do |ip|
-                raise "Conflict: #{ip} is already associated to #{@known_ips[ip]}. Cannot associate it to #{node}." if @known_ips.key?(ip)
-                @known_ips[ip] = node
-              end
-            end
-          end
-        end
-      end
-      @known_ips
-    end
-
     # Get the list of host names (resolved) belonging to a hosts list
     #
     # Parameters::
@@ -122,52 +98,6 @@ module HybridPlatformsConductor
       platform_for(node).service_for(node)
     end
 
-    # Return the node of a given private IP
-    #
-    # Parameters::
-    # * *ip* (String): Private IP
-    # Result::
-    # * String or nil: The corresponding node, or nil if none
-    def hostname_for_ip(ip)
-      known_hostnames.find do |node|
-        site_meta_conf = site_meta_for(node)
-        !site_meta_conf.nil? &&  site_meta_conf.key?('private_ips') && site_meta_conf['private_ips'].include?(ip)
-      end
-    end
-
-    # Get the IP environment
-    #
-    # Parameters::
-    # * *ip* (String): IP to know location
-    # Result::
-    # * Symbol: The environment. Can be one of the following:
-    #   * :production: Belongs to the Production environment.
-    #   * :test: Belongs to the Test environment.
-    #   * :all: No information on the environment.
-    #   * :unknown: Unknown IP. Should not exist in our networks.
-    #   * :outside: IP outside of our networks.
-    def ip_env(ip)
-      ip1, ip2, ip3, _ip4 = ip.split('.').map(&:to_i)
-      case ip1
-      when 172
-        case ip2
-        when 16
-          case ip3
-          when 0,
-            :production
-          when 16
-            :test
-          else
-            :all
-          end
-        else
-          :unknown
-        end
-      else
-        :outside
-      end
-    end
-
     # Resolve a list of nodes selectors into a real list of known nodes.
     # A node selector can be:
     # * String: Node name
@@ -218,23 +148,6 @@ module HybridPlatformsConductor
       real_nodes
     end
 
-    # Return host names environments.
-    #
-    # Parameters::
-    # * *host_descriptions* (Array<Object>): List of host descriptions (see resolve_hosts for the details of a host description).
-    # Result::
-    # * Hash<String,Symbol>: List of environment per real host name (see NodesHandler#ip_environment to know possible environment values).
-    def hosts_envs(host_descriptions)
-      Hash[resolve_hosts(host_descriptions).map do |node|
-        private_ip = private_ip_for node
-        raise "Node #{node} has no private IP." if private_ip.nil?
-        [
-          node,
-          ip_env(private_ip)
-        ]
-      end]
-    end
-
     # Get the Artefact repository to be used for a given location
     #
     # Parameters::
@@ -254,52 +167,6 @@ module HybridPlatformsConductor
       else
         raise "No artefact repository for location: #{location}."
       end
-    end
-
-    # Get the list of known IP addresses matching a given IP mask
-    #
-    # Parameters::
-    # * *ip_def* (String): The ip definition (without mask).
-    # * *ip_mask* (Integer): The IP mask in bits.
-    # Result::
-    # * Array<String>: The list of IP addresses matching this mask
-    def ips_matching_mask(ip_def, ip_mask)
-      # Keep a cache of it
-      # Hash<String, Hash<Integer, Array<String> > >
-      # Hash<ip_def,      ip_mask,       ip
-      @ips_mask = {} unless defined?(@ips_mask)
-      @ips_mask[ip_def] = {} unless @ips_mask.key?(ip_def)
-      unless @ips_mask[ip_def].key?(ip_mask)
-        # For performance, keep a cache of all the IPAddress::IPv4 objects
-        @ip_v4_cache = Hash[known_ips.keys.map { |ip, _node| [ip, IPAddress::IPv4.new(ip)] }] unless defined?(@ip_v4_cache)
-        ip_range = IPAddress::IPv4.new("#{ip_def}/#{ip_mask}")
-        @ips_mask[ip_def][ip_mask] = @ip_v4_cache.select { |_ip, ip_v4| ip_range.include?(ip_v4) }.keys
-      end
-      @ips_mask[ip_def][ip_mask]
-    end
-
-    # Get the list of 24 bits IP addresses matching a given IP mask
-    #
-    # Parameters::
-    # * *ip_def* (String): The ip definition (without mask).
-    # * *ip_mask* (Integer): The IP mask in bits.
-    # Result::
-    # * Array<String>: The list of 24 bits IP addresses matching this mask
-    def ips_24_matching_mask(ip_def, ip_mask)
-      # Keep a cache of it
-      # Hash<String, Hash<Integer, Array<String> > >
-      # Hash<ip_def,      ip_mask,       ip_24
-      @ips_24_mask = {} unless defined?(@ips_24_mask)
-      @ips_24_mask[ip_def] = {} unless @ips_24_mask.key?(ip_def)
-      unless @ips_24_mask[ip_def].key?(ip_mask)
-        ip_range = IPAddress::IPv4.new("#{ip_def}/#{ip_mask}")
-        @ips_24_mask[ip_def][ip_mask] = []
-        (0..255).each do |ip_third|
-          ip_24 = "172.16.#{ip_third}.0/24"
-          @ips_24_mask[ip_def][ip_mask] << ip_24 if ip_range.include?(IPAddress::IPv4.new(ip_24))
-        end
-      end
-      @ips_24_mask[ip_def][ip_mask]
     end
 
     # Complete an option parser with options meant to control this Nodes Handler
