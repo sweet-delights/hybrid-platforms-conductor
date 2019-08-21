@@ -24,15 +24,15 @@ module HybridPlatformsConductor
       initialize_platforms_dsl
     end
 
-    # Get the list of host names (resolved) belonging to a hosts list
+    # Get the list of nodes (resolved) belonging to a nodes list
     #
     # Parameters::
-    # * *hosts_list_name* (String): Name of the hosts list
-    # * *ignore_unknowns* (Boolean): Do we ignore unknown host names? [default = false]
+    # * *nodes_list* (String): Nodes list name
+    # * *ignore_unknowns* (Boolean): Do we ignore unknown nodes? [default = false]
     # Result::
-    # * Array<String>: List of host names
-    def host_names_from_list(hosts_list_name, ignore_unknowns: false)
-      resolve_hosts(platform_for_list(hosts_list_name).hosts_desc_from_list(hosts_list_name), ignore_unknowns: ignore_unknowns)
+    # * Array<String>: List of nodes
+    def nodes_from_list(nodes_list, ignore_unknowns: false)
+      resolve_hosts(platform_for_list(nodes_list).hosts_desc_from_list(nodes_list), ignore_unknowns: ignore_unknowns)
     end
 
     # Read the configuration of a given node

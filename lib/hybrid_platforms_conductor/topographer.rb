@@ -236,7 +236,7 @@ module HybridPlatformsConductor
     # * *only_add_cluster* (Boolean): If true, then don't add missing nodes from this graph to the graph [default = false]
     def graph_for_hostlists(hosts_list_names, only_add_cluster: false)
       hosts_list_names.each do |hosts_list_name|
-        hosts_list = @nodes_handler.resolve_hosts(@nodes_handler.host_names_from_list(hosts_list_name))
+        hosts_list = @nodes_handler.resolve_hosts(@nodes_handler.nodes_from_list(hosts_list_name))
         if only_add_cluster
           # Select only the hosts list we know about
           hosts_list.select! { |hostname| @nodes_graph.key?(hostname) }

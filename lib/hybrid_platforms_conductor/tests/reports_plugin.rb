@@ -177,7 +177,7 @@ module HybridPlatformsConductor
         no_list_nodes = @nodes_handler.known_hostnames
         Hash[(
           @nodes_handler.known_hosts_lists.sort.map do |hosts_list_name|
-            hosts_from_list = @nodes_handler.host_names_from_list(hosts_list_name, ignore_unknowns: true)
+            hosts_from_list = @nodes_handler.nodes_from_list(hosts_list_name, ignore_unknowns: true)
             no_list_nodes -= hosts_from_list
             [hosts_list_name, hosts_from_list]
           end + [

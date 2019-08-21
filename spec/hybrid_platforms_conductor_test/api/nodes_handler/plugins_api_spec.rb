@@ -19,7 +19,7 @@ describe HybridPlatformsConductor::NodesHandler do
         nodes: { 'node1' => {}, 'node2' => {} },
         nodes_lists: { 'test_nodes_list' => %w[node1 node2] }
       ) do
-        expect(test_nodes_handler.host_names_from_list('test_nodes_list').sort).to eq %w[node1 node2].sort
+        expect(test_nodes_handler.nodes_from_list('test_nodes_list').sort).to eq %w[node1 node2].sort
       end
     end
 
@@ -28,7 +28,7 @@ describe HybridPlatformsConductor::NodesHandler do
         nodes: { 'node1' => {} },
         nodes_lists: { 'test_nodes_list' => %w[node1 node2] }
       ) do
-        expect(test_nodes_handler.host_names_from_list('test_nodes_list', ignore_unknowns: true).sort).to eq %w[node1 node2].sort
+        expect(test_nodes_handler.nodes_from_list('test_nodes_list', ignore_unknowns: true).sort).to eq %w[node1 node2].sort
       end
     end
 
@@ -37,7 +37,7 @@ describe HybridPlatformsConductor::NodesHandler do
         nodes: { 'node1' => {} },
         nodes_lists: { 'test_nodes_list' => %w[node1 node2] }
       ) do
-        expect { test_nodes_handler.host_names_from_list('test_nodes_list') }.to raise_error(RuntimeError, 'Unknown host names: node2')
+        expect { test_nodes_handler.nodes_from_list('test_nodes_list') }.to raise_error(RuntimeError, 'Unknown host names: node2')
       end
     end
 
