@@ -1445,8 +1445,8 @@ Examples:
 # Get the list of hostnames in a list
 hosts = nodes_handler.known_hostnames
 
-# Get the private IP of node23hst-nn2
-ip = nodes_handler.private_ip_for 'node23hst-nn2'
+# Get the IP or hostname of node23hst-nn2
+ip = nodes_handler.connection_for 'node23hst-nn2'
 
 # Get the node metadata of node23hst-nn2, as a JSON Hash object
 conf = nodes_handler.metadata_for 'node23hst-nn2'

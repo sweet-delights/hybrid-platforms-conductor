@@ -104,6 +104,42 @@ module HybridPlatformsConductor
         end
       end
 
+      # Get the metadata of a given hostname.
+      # [API] - This method is mandatory.
+      #
+      # Parameters::
+      # * *node* (String): Node to read metadata from
+      # Result::
+      # * Hash<String,Object>: The corresponding metadata (as a JSON object)
+      def metadata_for(node)
+        {
+          'french_name' => "Le noeud #{node}"
+        }
+      end
+
+      # Return the connection string for a given node
+      # This is a real IP or hostname that can then be used with ssh...
+      # [API] - This method is mandatory.
+      #
+      # Parameters::
+      # * *node* (String): node to get connection info from
+      # Result::
+      # * String: The corresponding connection string
+      def connection_for(node)
+        "#{node}.my_domain.com"
+      end
+
+      # Return the service for a given node
+      # [API] - This method is mandatory.
+      #
+      # Parameters::
+      # * *node* (String): node to read configuration from
+      # Result::
+      # * String: The corresponding service
+      def service_for(node)
+        'hadoop_worker'
+      end
+
       # Get the default gateway name to be used for a given hostname.
       # [API] - This method is optional.
       #

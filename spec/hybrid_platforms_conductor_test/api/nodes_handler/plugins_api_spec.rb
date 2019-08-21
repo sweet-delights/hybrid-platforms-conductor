@@ -47,6 +47,12 @@ describe HybridPlatformsConductor::NodesHandler do
       end
     end
 
+    it 'returns nodes connection' do
+      with_test_platform(nodes: { 'test_node' => { connection: 'test_node.my_host.com' } }) do
+        expect(test_nodes_handler.connection_for('test_node')).to eq 'test_node.my_host.com'
+      end
+    end
+
     it 'returns nodes service' do
       with_test_platform(nodes: { 'test_node' => { service: 'test_service' } }) do
         expect(test_nodes_handler.service_for('test_node')).to eq('test_service')

@@ -70,6 +70,18 @@ module HybridPlatformsConductorTest
       node_info(node)[:meta]
     end
 
+    # Return the connection string for a given node
+    # This is a real IP or hostname that can then be used with ssh...
+    # [API] - This method is mandatory.
+    #
+    # Parameters::
+    # * *node* (String): node to get connection info from
+    # Result::
+    # * String: The corresponding connection string
+    def connection_for(node)
+      node_info(node)[:connection]
+    end
+
     # Return the service for a given node
     # [API] - This method is mandatory.
     #

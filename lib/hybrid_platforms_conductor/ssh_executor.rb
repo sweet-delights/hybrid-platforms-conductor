@@ -298,7 +298,7 @@ Host *
                 if @use_control_master
                   # Thanks to the ControlMaster option, connections are reused. So no problem to have several scp and ssh commands later.
                   log_debug "[ ControlMaster - #{node} ] - Starting ControlMaster for connection on #{ssh_url}..."
-                  real_ip, _gateway, _gateway_user = connection_info_for(node, @nodes_handler.private_ip_for(node))
+                  real_ip, _gateway, _gateway_user = connection_info_for(node, @nodes_handler.connection_for(node))
                   control_path_file = "/tmp/ssh_executor_mux_#{real_ip}_22_#{@ssh_user_name}"
                   if File.exist?(control_path_file)
                     log_warn "Removing stale SSH control file #{control_path_file}"
@@ -423,7 +423,7 @@ Host *
     # Parameters::
     # * *node* (String): The node
     def ensure_node_host_key(node)
-      real_ip, _gateway, _gateway_user = connection_info_for(node, @nodes_handler.private_ip_for(node))
+      real_ip, _gateway, _gateway_user = connection_info_for(node, @nodes_handler.connection_for(node))
       ensure_host_key(real_ip)
     end
 

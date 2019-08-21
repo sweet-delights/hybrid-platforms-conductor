@@ -53,21 +53,15 @@ module HybridPlatformsConductor
       platform_for(node).metadata_for(node)
     end
 
-    # Return the private IP for a given node
+    # Return the connection string for a given node
+    # This is a real IP or hostname that can then be used with ssh...
     #
     # Parameters::
-    # * *node* (String): node to read configuration from
+    # * *node* (String): node to get connection info from
     # Result::
-    # * String or nil: The corresponding private IP, or nil if none
-    def private_ip_for(node)
-      ip = nil
-      metadata = metadata_for(node)
-      if metadata.key?('private_ips')
-        ip = metadata['private_ips'].first
-      else
-        log_debug "[#{node}] - No private IPs defined"
-      end
-      ip
+    # * String: The corresponding connection string
+    def connection_for(node)
+      platform_for(node).connection_for(node)
     end
 
     # Return the service for a given node
@@ -174,7 +168,7 @@ module HybridPlatformsConductor
         out "* Known nodes with description:\n#{
           known_hostnames.map do |node|
             conf = metadata_for(node)
-            ip = private_ip_for(node)
+            ip = connection_for(node)
             "#{platform_for(node).info[:repo_name]} - #{node}#{ip.nil? ? '' : " (#{ip})"} - #{service_for(node)} - #{conf.key?('description') ? conf['description'] : ''}"
           end.sort.join("\n")
         }"
