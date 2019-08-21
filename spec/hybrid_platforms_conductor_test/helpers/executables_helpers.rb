@@ -62,7 +62,7 @@ module HybridPlatformsConductorTest
         # Run the executable
         args.concat(['--debug']) if ENV['TEST_DEBUG'] == '1'
         ARGV.replace(args)
-        $0.replace(executable)
+        $0 = executable
         exit_code = nil
         begin
           load "#{__dir__}/../../../bin/#{executable}"
