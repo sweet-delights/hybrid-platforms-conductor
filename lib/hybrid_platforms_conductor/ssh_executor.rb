@@ -291,12 +291,12 @@ Host *
             existing_control_master = false
             @control_master_nodes_semaphore.synchronize do
               unless @nodes_ssh_urls.key?(node)
-                ensure_node_host_key(node)
+                connection, _gateway, _gateway_user = connection_info_for(node)
+                ensure_host_key(connection)
                 ssh_url = "#{@ssh_user_name}@hpc.#{node}"
                 if @use_control_master
                   # Thanks to the ControlMaster option, connections are reused. So no problem to have several scp and ssh commands later.
                   log_debug "[ ControlMaster - #{node} ] - Starting ControlMaster for connection on #{ssh_url}..."
-                  connection, _gateway, _gateway_user = connection_info_for(node)
                   control_path_file = "/tmp/ssh_executor_mux_#{connection}_22_#{@ssh_user_name}"
                   if File.exist?(control_path_file)
                     log_warn "Removing stale SSH control file #{control_path_file}"
@@ -413,16 +413,6 @@ Host *
           log_warn "Unable to get host key for #{host}. Ignoring it. Accessing #{host} might require manual acceptance of its host key."
         end
       end
-    end
-
-    # Ensure that a given node has its key correctly set in the known hosts file.
-    # Prerequisite: with_platforms_ssh has been called before.
-    #
-    # Parameters::
-    # * *node* (String): The node
-    def ensure_node_host_key(node)
-      connection, _gateway, _gateway_user = connection_info_for(node)
-      ensure_host_key(connection)
     end
 
     private

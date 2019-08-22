@@ -47,7 +47,8 @@ module HybridPlatformsConductor
         out "* Known nodes with description:\n#{
           known_hostnames.map do |node|
             conf = metadata_for(node)
-            "#{platform_for(node).info[:repo_name]} - #{node} (#{connection_for(node)[0]}) - #{service_for(node)} - #{conf.key?('description') ? conf['description'] : ''}"
+            connection, _gateway, _gateway_user = connection_for(node)
+            "#{platform_for(node).info[:repo_name]} - #{node} (#{connection}) - #{service_for(node)} - #{conf.key?('description') ? conf['description'] : ''}"
           end.sort.join("\n")
         }"
         out
