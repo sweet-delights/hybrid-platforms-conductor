@@ -182,27 +182,6 @@ module HybridPlatformsConductor
       real_nodes
     end
 
-    # Get the Artefact repository to be used for a given location
-    #
-    # Parameters::
-    # * *location* (Symbol): The location
-    # Result::
-    # * String: The artefact repository IP or host
-    def artefact_for(location)
-      case location
-      when :dmz
-        '172.16.0.46'
-      when :data
-        '172.16.1.104'
-      when :nce
-        '172.16.110.42'
-      when :adp
-        '172.16.110.42'
-      else
-        raise "No artefact repository for location: #{location}."
-      end
-    end
-
     # Iterate over a list of nodes.
     # Provide a mechanism to multithread this iteration (in such case the iterating code has to be thread-safe).
     # In case of multithreaded run, a progress bar is being displayed.
