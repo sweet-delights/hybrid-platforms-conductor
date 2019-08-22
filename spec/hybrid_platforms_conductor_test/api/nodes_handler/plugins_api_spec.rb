@@ -49,7 +49,13 @@ describe HybridPlatformsConductor::NodesHandler do
 
     it 'returns nodes connection' do
       with_test_platform(nodes: { 'test_node' => { connection: 'test_node.my_host.com' } }) do
-        expect(test_nodes_handler.connection_for('test_node')).to eq 'test_node.my_host.com'
+        expect(test_nodes_handler.connection_for('test_node')).to eq ['test_node.my_host.com', nil, nil]
+      end
+    end
+
+    it 'returns nodes connection with gateways information' do
+      with_test_platform(nodes: { 'test_node' => { connection: { connection: 'test_node.my_host.com', gateway: 'test_gateway', gateway_user: 'test_gateway_user' } } }) do
+        expect(test_nodes_handler.connection_for('test_node')).to eq ['test_node.my_host.com', 'test_gateway', 'test_gateway_user']
       end
     end
 

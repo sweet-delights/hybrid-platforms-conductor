@@ -145,10 +145,10 @@ module HybridPlatformsConductor
     # * *options_parser* (OptionParser): The option parser to complete
     def options_parse(options_parser)
       from_hosts_opts_parser = OptionParser.new do |opts|
-        @nodes_handler.options_parse_hosts(opts, @from_hosts)
+        @nodes_handler.options_parse_nodes_selectors(opts, @from_hosts)
       end
       to_hosts_opts_parser = OptionParser.new do |opts|
-        @nodes_handler.options_parse_hosts(opts, @to_hosts)
+        @nodes_handler.options_parse_nodes_selectors(opts, @to_hosts)
       end
       options_parser.separator ''
       options_parser.separator 'Topographer options:'

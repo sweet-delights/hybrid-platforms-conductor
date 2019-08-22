@@ -12,7 +12,6 @@ module HybridPlatformsConductor
         en: {
           alias: 'Alias',
           comment: 'Comment',
-          connection_settings: 'Connection settings',
           daily_backup: 'Daily backup',
           direct_deploy: 'Direct deployment',
           encrypted_storage: 'Encrypted storage',

@@ -7,16 +7,7 @@ describe 'check-node executable' do
   #   * Parameters::
   #     * *repository* (String): Platform's repository
   def with_test_platform_for_check_node
-    with_test_platform(
-      {
-        nodes: {
-          'node1' => { meta: { 'connection_settings' => { 'ip' => 'node1_connection' } } },
-          'node2' => { meta: { 'connection_settings' => { 'ip' => 'node2_connection' } } }
-        }
-      },
-      true,
-      'gateway :test_gateway, \'Host test_gateway\''
-    ) do |repository|
+    with_test_platform({ nodes: { 'node' => {} } }, false, 'gateway :test_gateway, \'Host test_gateway\'') do |repository|
       ENV['ti_gateways_conf'] = 'test_gateway'
       yield repository
     end
@@ -24,12 +15,12 @@ describe 'check-node executable' do
 
   it 'checks a given node' do
     with_test_platform_for_check_node do
-      expect(test_deployer).to receive(:deploy_for).with('node1') do
+      expect(test_deployer).to receive(:deploy_for).with('node') do
         expect(test_deployer.use_why_run).to eq true
         test_deployer.stdout_device << "Check ok\n"
-        { 'node1' => [0, "Check ok\n", ''] }
+        { 'node' => [0, "Check ok\n", ''] }
       end
-      exit_code, stdout, stderr = run 'check-node', '--host-name', 'node1'
+      exit_code, stdout, stderr = run 'check-node', '--host-name', 'node'
       expect(exit_code).to eq 0
       expect(stdout).to match /Check ok/
       expect(stderr).to eq ''

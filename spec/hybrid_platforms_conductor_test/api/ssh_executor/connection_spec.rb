@@ -3,7 +3,7 @@ describe HybridPlatformsConductor::SshExecutor do
   context 'checking connections handling' do
 
     it 'connects on a node before executing commands' do
-      with_test_platform(nodes: { 'node1' => { meta: { 'connection_settings' => { 'ip' => 'node1_connection' } } } }) do
+      with_test_platform(nodes: { 'node1' => { connection: 'node1_connection' } }) do
         test_ssh_executor.ssh_user_name = 'test_user'
         with_cmd_runner_mocked(
           commands: [[remote_bash_for('echo Hello1', node: 'node1', user: 'test_user'), proc { [0, "Hello1\n", ''] }]],
@@ -16,9 +16,9 @@ describe HybridPlatformsConductor::SshExecutor do
 
     it 'connects on several nodes before executing commands' do
       with_test_platform(nodes: {
-        'node1' => { meta: { 'connection_settings' => { 'ip' => 'node1_connection' } } },
-        'node2' => { meta: { 'connection_settings' => { 'ip' => 'node2_connection' } } },
-        'node3' => { meta: { 'connection_settings' => { 'ip' => 'node3_connection' } } }
+        'node1' => { connection: 'node1_connection' },
+        'node2' => { connection: 'node2_connection' },
+        'node3' => { connection: 'node3_connection' }
       }) do
         test_ssh_executor.ssh_user_name = 'test_user'
         with_cmd_runner_mocked(
@@ -47,7 +47,7 @@ describe HybridPlatformsConductor::SshExecutor do
     end
 
     it 'can override connection settings to a node' do
-      with_test_platform(nodes: { 'node1' => { meta: { 'connection_settings' => { 'ip' => 'node1_connection' } } } }) do
+      with_test_platform(nodes: { 'node1' => { connection: 'node1_connection' } }) do
         test_ssh_executor.ssh_user_name = 'test_user'
         test_ssh_executor.override_connections['node1'] = 'node1_connection_new'
         with_cmd_runner_mocked(
@@ -60,7 +60,7 @@ describe HybridPlatformsConductor::SshExecutor do
     end
 
     it 'creates an SSH master to 1 node' do
-      with_test_platform(nodes: { 'node1' => { meta: { 'connection_settings' => { 'ip' => 'node1_connection' } } } }) do
+      with_test_platform(nodes: { 'node1' => { connection: 'node1_connection' } }) do
         test_ssh_executor.ssh_user_name = 'test_user'
         with_cmd_runner_mocked(
           commands: [],
@@ -75,7 +75,7 @@ describe HybridPlatformsConductor::SshExecutor do
     end
 
     it 'reuses SSH master already created to 1 node' do
-      with_test_platform(nodes: { 'node1' => { meta: { 'connection_settings' => { 'ip' => 'node1_connection' } } } }) do
+      with_test_platform(nodes: { 'node1' => { connection: 'node1_connection' } }) do
         test_ssh_executor.ssh_user_name = 'test_user'
         with_cmd_runner_mocked(
           commands: [[remote_bash_for('echo Hello1', node: 'node1', user: 'test_user'), proc { [0, "Hello1\n", ''] }]],
@@ -90,9 +90,9 @@ describe HybridPlatformsConductor::SshExecutor do
 
     it 'creates SSH master to several nodes' do
       with_test_platform(nodes: {
-        'node1' => { meta: { 'connection_settings' => { 'ip' => 'node1_connection' } } },
-        'node2' => { meta: { 'connection_settings' => { 'ip' => 'node2_connection' } } },
-        'node3' => { meta: { 'connection_settings' => { 'ip' => 'node3_connection' } } }
+        'node1' => { connection: 'node1_connection' },
+        'node2' => { connection: 'node2_connection' },
+        'node3' => { connection: 'node3_connection' }
       }) do
         test_ssh_executor.ssh_user_name = 'test_user'
         with_cmd_runner_mocked(
@@ -117,10 +117,10 @@ describe HybridPlatformsConductor::SshExecutor do
 
     it 'reuses SSH masters already created to some nodes and create new ones if needed' do
       with_test_platform(nodes: {
-        'node1' => { meta: { 'connection_settings' => { 'ip' => 'node1_connection' } } },
-        'node2' => { meta: { 'connection_settings' => { 'ip' => 'node2_connection' } } },
-        'node3' => { meta: { 'connection_settings' => { 'ip' => 'node3_connection' } } },
-        'node4' => { meta: { 'connection_settings' => { 'ip' => 'node4_connection' } } }
+        'node1' => { connection: 'node1_connection' },
+        'node2' => { connection: 'node2_connection' },
+        'node3' => { connection: 'node3_connection' },
+        'node4' => { connection: 'node4_connection' }
       }) do
         test_ssh_executor.ssh_user_name = 'test_user'
         with_cmd_runner_mocked(
@@ -161,9 +161,9 @@ describe HybridPlatformsConductor::SshExecutor do
 
     it 'does not create SSH master if asked' do
       with_test_platform(nodes: {
-        'node1' => { meta: { 'connection_settings' => { 'ip' => 'node1_connection' } } },
-        'node2' => { meta: { 'connection_settings' => { 'ip' => 'node2_connection' } } },
-        'node3' => { meta: { 'connection_settings' => { 'ip' => 'node3_connection' } } }
+        'node1' => { connection: 'node1_connection' },
+        'node2' => { connection: 'node2_connection' },
+        'node3' => { connection: 'node3_connection' }
       }) do
         test_ssh_executor.use_control_master = false
         test_ssh_executor.ssh_user_name = 'test_user'
@@ -190,9 +190,9 @@ describe HybridPlatformsConductor::SshExecutor do
 
     it 'does not check host keys if asked' do
       with_test_platform(nodes: {
-        'node1' => { meta: { 'connection_settings' => { 'ip' => 'node1_connection' } } },
-        'node2' => { meta: { 'connection_settings' => { 'ip' => 'node2_connection' } } },
-        'node3' => { meta: { 'connection_settings' => { 'ip' => 'node3_connection' } } }
+        'node1' => { connection: 'node1_connection' },
+        'node2' => { connection: 'node2_connection' },
+        'node3' => { connection: 'node3_connection' }
       }) do
         test_ssh_executor.strict_host_key_checking = false
         test_ssh_executor.ssh_user_name = 'test_user'
@@ -218,7 +218,7 @@ describe HybridPlatformsConductor::SshExecutor do
     end
 
     it 'does not use batch mode when passwords are to be expected' do
-      with_test_platform(nodes: { 'node1' => { meta: { 'connection_settings' => { 'ip' => 'node1_connection' } } } }) do |repository|
+      with_test_platform(nodes: { 'node1' => { connection: 'node1_connection' } }) do |repository|
         test_ssh_executor.dry_run = true
         test_ssh_executor.auth_password = true
         stdout_file = "#{repository}/run.stdout"

@@ -11,31 +11,16 @@ describe 'executables\' nodes selection options' do
       {
         'platform_1' => {
           nodes: {
-            'node11' => {
-               meta: { 'connection_settings' => { 'ip' => 'node11_connection' } },
-               service: 'service1'
-             },
-            'node12' => {
-               meta: { 'connection_settings' => { 'ip' => 'node12_connection' }, 'description' => 'Node12 description' },
-               service: 'service1'
-             },
-            'node13' => {
-               meta: { 'connection_settings' => { 'ip' => 'node13_connection' } },
-               service: 'service2'
-             }
+            'node11' => { service: 'service1' },
+            'node12' => { service: 'service1' },
+            'node13' => { service: 'service2' }
           },
           nodes_lists: { 'my_list' => ['node11', 'node13'] }
         },
         'platform_2' => {
           nodes: {
-            'node21' => {
-               meta: { 'connection_settings' => { 'ip' => 'node21_connection' } },
-               service: 'service2'
-             },
-            'node22' => {
-               meta: { 'connection_settings' => { 'ip' => 'node22_connection' } },
-               service: 'service1'
-             }
+            'node21' => { service: 'service2' },
+            'node22' => { service: 'service1' }
           }
         }
       },

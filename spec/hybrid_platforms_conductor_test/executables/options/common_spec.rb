@@ -8,7 +8,7 @@ describe 'executables\' common options' do
   #     * *repository* (String): Platform's repository
   def with_test_platform_for_common_options
     with_test_platform(
-      { nodes: { 'node1' => { meta: { 'connection_settings' => { 'ip' => 'node1_connection' } } } } },
+      { nodes: { 'node1' => { connection: 'node1_connection' } } },
       true,
       'gateway :test_gateway, \'Host test_gateway\''
     ) do |repository|

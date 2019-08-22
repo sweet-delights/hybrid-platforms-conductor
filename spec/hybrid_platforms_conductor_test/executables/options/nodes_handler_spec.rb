@@ -12,15 +12,16 @@ describe 'executables\' Nodes Handler options' do
         'platform_1' => {
           nodes: {
             'node11' => {
-               meta: { 'connection_settings' => { 'ip' => 'node11_connection' } },
+               connection: 'node11_connection',
                service: 'service1'
              },
             'node12' => {
-               meta: { 'connection_settings' => { 'ip' => 'node12_connection' }, 'description' => 'Node12 description' },
+              connection: 'node12_connection',
+               meta: { 'description' => 'Node12 description' },
                service: 'service1'
              },
             'node13' => {
-               meta: { 'connection_settings' => { 'ip' => 'node13_connection' } },
+               connection: 'node13_connection',
                service: 'service2'
              }
           },
@@ -29,11 +30,11 @@ describe 'executables\' Nodes Handler options' do
         'platform_2' => {
           nodes: {
             'node21' => {
-               meta: { 'connection_settings' => { 'ip' => 'node21_connection' } },
+               connection: 'node21_connection',
                service: 'service2'
              },
             'node22' => {
-               meta: { 'connection_settings' => { 'ip' => 'node22_connection' } },
+               connection: 'node22_connection',
                service: 'service1'
              }
           }
@@ -71,11 +72,11 @@ node21
 node22
 
 * Known nodes with description:
-platform_1 - node11 - service1 - 
-platform_1 - node12 - service1 - Node12 description
-platform_1 - node13 - service2 - 
-platform_2 - node21 - service2 - 
-platform_2 - node22 - service1 - 
+platform_1 - node11 (node11_connection) - service1 - 
+platform_1 - node12 (node12_connection) - service1 - Node12 description
+platform_1 - node13 (node13_connection) - service2 - 
+platform_2 - node21 (node21_connection) - service2 - 
+platform_2 - node22 (node22_connection) - service1 - 
 
 '
       )

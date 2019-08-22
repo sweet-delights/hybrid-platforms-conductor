@@ -125,8 +125,10 @@ module HybridPlatformsConductor
       # * *node* (String): node to get connection info from
       # Result::
       # * String: The corresponding connection string
+      # * String or nil: The corresponding gateway to be used, or nil if none
+      # * String or nil: The corresponding gateway user to be used, or nil if none
       def connection_for(node)
-        "#{node}.my_domain.com"
+        ["#{node}.my_domain.com", nil, nil]
       end
 
       # Return the service for a given node
@@ -138,26 +140,6 @@ module HybridPlatformsConductor
       # * String: The corresponding service
       def service_for(node)
         'hadoop_worker'
-      end
-
-      # Get the default gateway name to be used for a given hostname.
-      # [API] - This method is optional.
-      #
-      # Parameters::
-      # * *hostname* (String): Hostname we want to connect to.
-      # * *ip* (String): IP of the hostname we want to use for connection.
-      # Result::
-      # * String or nil: Name of the gateway (should be defined by the gateways configurations), or nil if no gateway.
-      def default_gateway_for(hostname, ip)
-        # This method is used to generate the proper SSH configuration file.
-        # Depending on the hosts to be reached, different gateway names could be used.
-        # The gateway names should be defined in the SSH gateways of the platforms configuration (in ti_platforms/platforms.rb).
-        case hostname
-        when 'my_host_2'
-          'gateway_adp.ti'
-        else
-          nil
-        end
       end
 
       # Package the repository, ready to be deployed on artefacts.

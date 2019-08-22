@@ -24,6 +24,62 @@ module HybridPlatformsConductor
       initialize_platforms_dsl
     end
 
+    # Complete an option parser with options meant to control this Nodes Handler
+    #
+    # Parameters::
+    # * *options_parser* (OptionParser): The option parser to complete
+    def options_parse(options_parser, parallel: true)
+      options_parser.separator ''
+      options_parser.separator 'Nodes handler options:'
+      options_parser.on('-o', '--show-hosts', 'Display the list of possible hosts and exit') do
+        out "* Known platforms:\n#{
+          platforms.map do |platform_handler|
+            "#{platform_handler.info[:repo_name]} - Type: #{platform_handler.platform_type} - Location: #{platform_handler.repository_path}"
+          end.sort.join("\n")
+        }"
+        out
+        out "* Known nodes lists:\n#{known_hosts_lists.sort.join("\n")}"
+        out
+        out "* Known services:\n#{known_services.sort.join("\n")}"
+        out
+        out "* Known nodes:\n#{known_hostnames.sort.join("\n")}"
+        out
+        out "* Known nodes with description:\n#{
+          known_hostnames.map do |node|
+            conf = metadata_for(node)
+            "#{platform_for(node).info[:repo_name]} - #{node} (#{connection_for(node)[0]}) - #{service_for(node)} - #{conf.key?('description') ? conf['description'] : ''}"
+          end.sort.join("\n")
+        }"
+        out
+        exit 0
+      end
+    end
+
+    # Complete an option parser with ways to select nodes in parameters
+    #
+    # Parameters::
+    # * *options_parser* (OptionParser): The option parser to complete
+    # * *nodes_selectors* (Array): The list of nodes selectors that will be populated by parsing the options
+    def options_parse_nodes_selectors(options_parser, nodes_selectors)
+      options_parser.separator ''
+      options_parser.separator 'Nodes selection options:'
+      options_parser.on('-a', '--all-hosts', 'Select all nodes') do
+        nodes_selectors << { all: true }
+      end
+      options_parser.on('-b', '--hosts-platform PLATFORM_NAME', "Select nodes belonging to a given platform name. Available platforms are: #{@platforms.keys.sort.join(', ')} (can be used several times)") do |platform_name|
+        nodes_selectors << { platform: platform_name }
+      end
+      options_parser.on('-l', '--hosts-list LIST_NAME', 'Select nodes defined in a nodes list (can be used several times)') do |nodes_list_name|
+        nodes_selectors << { list: nodes_list_name }
+      end
+      options_parser.on('-n', '--host-name NODE_NAME', 'Select a specific node. Can be a regular expression if used with enclosing "/" characters. (can be used several times)') do |node|
+        nodes_selectors << node
+      end
+      options_parser.on('-r', '--service SERVICE_NAME', 'Select nodes implementing a given service (can be used several times)') do |service|
+        nodes_selectors << { service: service }
+      end
+    end
+
     # Get the list of nodes (resolved) belonging to a nodes list
     #
     # Parameters::
@@ -60,6 +116,8 @@ module HybridPlatformsConductor
     # * *node* (String): node to get connection info from
     # Result::
     # * String: The corresponding connection string
+    # * String or nil: The corresponding gateway to be used, or nil if none
+    # * String or nil: The corresponding gateway user to be used, or nil if none
     def connection_for(node)
       platform_for(node).connection_for(node)
     end
@@ -142,63 +200,6 @@ module HybridPlatformsConductor
         '172.16.110.42'
       else
         raise "No artefact repository for location: #{location}."
-      end
-    end
-
-    # Complete an option parser with options meant to control this Nodes Handler
-    #
-    # Parameters::
-    # * *options_parser* (OptionParser): The option parser to complete
-    def options_parse(options_parser, parallel: true)
-      options_parser.separator ''
-      options_parser.separator 'Nodes handler options:'
-      options_parser.on('-o', '--show-hosts', 'Display the list of possible hosts and exit') do
-        out "* Known platforms:\n#{
-          platforms.map do |platform_handler|
-            "#{platform_handler.info[:repo_name]} - Type: #{platform_handler.platform_type} - Location: #{platform_handler.repository_path}"
-          end.sort.join("\n")
-        }"
-        out
-        out "* Known nodes lists:\n#{known_hosts_lists.sort.join("\n")}"
-        out
-        out "* Known services:\n#{known_services.sort.join("\n")}"
-        out
-        out "* Known nodes:\n#{known_hostnames.sort.join("\n")}"
-        out
-        out "* Known nodes with description:\n#{
-          known_hostnames.map do |node|
-            conf = metadata_for(node)
-            ip = connection_for(node)
-            "#{platform_for(node).info[:repo_name]} - #{node}#{ip.nil? ? '' : " (#{ip})"} - #{service_for(node)} - #{conf.key?('description') ? conf['description'] : ''}"
-          end.sort.join("\n")
-        }"
-        out
-        exit 0
-      end
-    end
-
-    # Complete an option parser with ways to give host names in parameters
-    #
-    # Parameters::
-    # * *options_parser* (OptionParser): The option parser to complete
-    # * *nodes_selectors* (Array): The list of nodes selectors that will be populated by parsing the options
-    def options_parse_hosts(options_parser, nodes_selectors)
-      options_parser.separator ''
-      options_parser.separator 'Nodes selection options:'
-      options_parser.on('-a', '--all-hosts', 'Select all nodes') do
-        nodes_selectors << { all: true }
-      end
-      options_parser.on('-b', '--hosts-platform PLATFORM_NAME', "Select nodes belonging to a given platform name. Available platforms are: #{@platforms.keys.sort.join(', ')} (can be used several times)") do |platform_name|
-        nodes_selectors << { platform: platform_name }
-      end
-      options_parser.on('-l', '--hosts-list LIST_NAME', 'Select nodes defined in a nodes list (can be used several times)') do |nodes_list_name|
-        nodes_selectors << { list: nodes_list_name }
-      end
-      options_parser.on('-n', '--host-name NODE_NAME', 'Select a specific node. Can be a regular expression if used with enclosing "/" characters. (can be used several times)') do |node|
-        nodes_selectors << node
-      end
-      options_parser.on('-r', '--service SERVICE_NAME', 'Select nodes implementing a given service (can be used several times)') do |service|
-        nodes_selectors << { service: service }
       end
     end
 
