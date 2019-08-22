@@ -302,10 +302,11 @@ describe HybridPlatformsConductor::TestsRunner do
           'nodes_list1' => %w[node1 node3],
           'nodes_list2' => %w[node2 node3 node4]
         }
-      ) do
+      ) do |repository|
         register_tests_report_plugins(test_tests_runner, report: HybridPlatformsConductorTest::TestsReportPlugin)
         register_test_plugins(test_tests_runner, node_test: HybridPlatformsConductorTest::TestPlugins::Node)
         HybridPlatformsConductorTest::TestPlugins::Node.fail_for = { node_test: %w[node1 node5] }
+        File.write("#{repository}/hpc.json", '{ "test": { "expected_failures": { "node_test": { "node1": "Expected failure" } } } }')
         test_tests_runner.reports = [:report]
         test_tests_runner.tests = [:node_test]
         test_tests_runner.run_tests %w[node1 node2 node3 node5]
@@ -315,15 +316,19 @@ describe HybridPlatformsConductor::TestsRunner do
         expect(nodes_by_hosts_list['nodes_list1'][:nodes].sort).to eq %w[node1 node3].sort
         expect(nodes_by_hosts_list['nodes_list1'][:tested_nodes].sort).to eq %w[node1 node3].sort
         expect(nodes_by_hosts_list['nodes_list1'][:tested_nodes_in_error].sort).to eq %w[node1].sort
+        expect(nodes_by_hosts_list['nodes_list1'][:tested_nodes_in_error_as_expected].sort).to eq %w[node1].sort
         expect(nodes_by_hosts_list['nodes_list2'][:nodes].sort).to eq %w[node2 node3 node4].sort
         expect(nodes_by_hosts_list['nodes_list2'][:tested_nodes].sort).to eq %w[node2 node3].sort
         expect(nodes_by_hosts_list['nodes_list2'][:tested_nodes_in_error].sort).to eq %w[].sort
+        expect(nodes_by_hosts_list['nodes_list2'][:tested_nodes_in_error_as_expected].sort).to eq %w[].sort
         expect(nodes_by_hosts_list['No list'][:nodes].sort).to eq %w[node5].sort
         expect(nodes_by_hosts_list['No list'][:tested_nodes].sort).to eq %w[node5].sort
         expect(nodes_by_hosts_list['No list'][:tested_nodes_in_error].sort).to eq %w[node5].sort
+        expect(nodes_by_hosts_list['No list'][:tested_nodes_in_error_as_expected].sort).to eq %w[].sort
         expect(nodes_by_hosts_list['All'][:nodes].sort).to eq %w[node1 node2 node3 node4 node5].sort
         expect(nodes_by_hosts_list['All'][:tested_nodes].sort).to eq %w[node1 node2 node3 node5].sort
         expect(nodes_by_hosts_list['All'][:tested_nodes_in_error].sort).to eq %w[node1 node5].sort
+        expect(nodes_by_hosts_list['All'][:tested_nodes_in_error_as_expected].sort).to eq %w[node1].sort
       end
     end
 

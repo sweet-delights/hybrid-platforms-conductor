@@ -78,6 +78,8 @@ module HybridPlatformsConductor
       @tests = []
       # List of reports to be used
       @reports = []
+      # Cache of expected failures
+      @cache_expected_failures = {}
     end
 
     # Complete an option parser with options meant to control this tests runner
@@ -153,49 +155,41 @@ module HybridPlatformsConductor
       @tested_platforms.uniq!
       @tested_platforms.sort_by!
 
-      # Check in the platform metadata if some tests were supposed to fail.
-      expected_failures = {}
-      @tests_run.map(&:platform).uniq.compact.each do |platform|
-        platform_expected_failures = platform.metadata.dig 'test', 'expected_failures'
-        expected_failures[platform.info[:repo_name]] = platform_expected_failures unless platform_expected_failures.nil?
-      end
-
       # Filter out errors that were expected to fail and check that tests that were expected to fail did not succeed.
       @tests_run.each do |test|
-        expected_failure = expected_failures.dig(
-          test.platform.nil? ? '' : test.platform.info[:repo_name],
-          test.name.to_s,
-          test.node.nil? ? '' : test.node
-        )
+        expected_failure = test.expected_failure
         if expected_failure
           if test.errors.empty?
             # Should have failed
-            test.error "Test was marked to fail (#{expected_failure}) but it succeeded. Please remove it from the expected failures in case the issue has been resolved."
+            error(
+              "Test #{test} was marked to fail (#{expected_failure}) but it succeeded. Please remove it from the expected failures in case the issue has been resolved.",
+              platform: test.platform,
+              hostname: test.node
+            )
           else
-            # Remove its errors so that it does not report
             out "Expected failure for #{test} (#{expected_failure}):\n#{test.errors.map { |error| "  - #{error}" }.join("\n")}".yellow
-            test.errors.clear
           end
         end
       end
       # If all tests were executed, make sure that there are no expected failures that have not even been tested.
       if all_tests
-        expected_failures.each do |platform, platform_expected_failures|
-          platform_expected_failures.each do |test_name, test_expected_failures|
+        @tests_run.map(&:platform).uniq.compact.each do |platform|
+          platform_name = platform.nil? ? '' : platform.info[:repo_name]
+          (expected_failures_for(platform) || {}).each do |test_name, test_expected_failures|
             test_expected_failures.each do |node, expected_failure|
               # Check that a test has been run for this expected failure
               unless @tests_run.find do |test|
                   test.name.to_s == test_name &&
                     (
-                      (test.platform.nil? && platform == '') ||
-                      (!test.platform.nil? && platform == test.platform.info[:repo_name])
+                      (test.platform.nil? && platform_name == '') ||
+                      (!test.platform.nil? && platform_name == test.platform.info[:repo_name])
                     ) &&
                     (
                       (test.node.nil? && node == '') ||
                       (!test.node.nil? && node == test.node)
                     )
                 end
-                error("A test named #{test_name} for platform #{platform} and node #{node} was expected to fail (#{expected_failure}), but no test has been run. Please remove it from the expected failures if this expected failure is obsolete.")
+                error("A test named #{test_name} for platform #{platform_name} and node #{node} was expected to fail (#{expected_failure}), but no test has been run. Please remove it from the expected failures if this expected failure is obsolete.")
               end
             end
           end
@@ -207,8 +201,8 @@ module HybridPlatformsConductor
       end
 
       out
-      if @tests_run.all? { |test| test.errors.empty? }
-        out '===== No errors ====='.green.bold
+      if @tests_run.all? { |test| test.errors.empty? || !test.expected_failure.nil? }
+        out '===== No unexpected errors ====='.green.bold
         0
       else
         out '===== Some errors were found. Check output. ====='.red.bold
@@ -218,24 +212,65 @@ module HybridPlatformsConductor
 
     private
 
+    # Get the expected failures for a given platform.
+    # Keep them in cache for performance.
+    #
+    # Parameters::
+    # * *platform* (PlatformHandler): The platform
+    # Result::
+    # * Hash: The expected failures
+    def expected_failures_for(platform)
+      @cache_expected_failures[platform] = platform.metadata.dig 'test', 'expected_failures' unless @cache_expected_failures.key?(platform)
+      @cache_expected_failures[platform]
+    end
+
     # Register a global error for a given repository path and hostname
     #
     # Parameters::
     # * *message* (String): Error to be logged
-    # * *hostname* (String): Hostname for which the test is instantiated, or nil if global [default = nil]
-    def error(message, hostname: nil)
+    # * *platform* (PlatformHandler or nil): PlatformHandler for a platform's test, or nil for a global or node test [default: nil]
+    # * *hostname* (String): Hostname for which the test is instantiated, or nil if global or platform [default = nil]
+    def error(message, platform: nil, hostname: nil)
+      platform = @nodes_handler.platform_for(hostname) unless hostname.nil?
       global_test = Tests::Test.new(
         @logger,
         @logger_stderr,
         @nodes_handler,
         @deployer,
         name: :global,
-        platform: hostname.nil? ? nil : @nodes_handler.platform_for(hostname),
+        platform: platform,
         node: hostname
       )
       global_test.errors << message
       global_test.executed
       @tests_run << global_test
+    end
+
+    # Instantiate a new test
+    #
+    # Parameters::
+    # * *test_name* (Symbol): Test name to instantiate
+    # * *platform* (PlatformHandler or nil): PlatformHandler for a platform's test, or nil for a global or node test [default: nil]
+    # * *node* (String or nil): Node for a node's test, or nil for a global or platform test [default: nil]
+    # Result::
+    # * Test: Corresponding test
+    def new_test(test_name, platform: nil, node: nil)
+      platform = @nodes_handler.platform_for(node) unless node.nil?
+      @tests_plugins[test_name].new(
+        @logger,
+        @logger_stderr,
+        @nodes_handler,
+        @deployer,
+        name: test_name,
+        platform: platform,
+        node: node,
+        expected_failure: if platform.nil?
+                            nil
+                          else
+                            expected_failures = expected_failures_for(platform)
+                            expected_failures.nil? ? nil : expected_failures.dig(test_name.to_s, node || '')
+                          end
+      )
     end
 
     # Run tests that are global
@@ -245,13 +280,7 @@ module HybridPlatformsConductor
         section "Run #{tests_global.size} global tests" do
           tests_global.each do |test_name|
             section "Run global test #{test_name}" do
-              test = @tests_plugins[test_name].new(
-                @logger,
-                @logger_stderr,
-                @nodes_handler,
-                @deployer,
-                name: test_name
-              )
+              test = new_test(test_name)
               begin
                 test.test
               rescue
@@ -276,14 +305,7 @@ module HybridPlatformsConductor
               @tested_platforms << platform_handler
               if should_test_be_run_on(test_name, platform: platform_handler)
                 section "Run platform test #{test_name} on #{platform_handler.info[:repo_name]}" do
-                  test = @tests_plugins[test_name].new(
-                    @logger,
-                    @logger_stderr,
-                    @nodes_handler,
-                    @deployer,
-                    name: test_name,
-                    platform: platform_handler
-                  )
+                  test = new_test(test_name, platform: platform_handler)
                   begin
                     test.test_on_platform
                   rescue
@@ -313,15 +335,7 @@ module HybridPlatformsConductor
       @hostnames.each do |hostname|
         @tests.each do |test_name|
           if @tests_plugins[test_name].method_defined?(:test_on_node) && should_test_be_run_on(test_name, node: hostname)
-            test = @tests_plugins[test_name].new(
-              @logger,
-              @logger_stderr,
-              @nodes_handler,
-              @deployer,
-              name: test_name,
-              platform: @nodes_handler.platform_for(hostname),
-              node: hostname
-            )
+            test = new_test(test_name, node: hostname)
             begin
               test.test_on_node.each do |cmd, test_info|
                 test_info_normalized = test_info.is_a?(Hash) ? test_info.clone : { validator: test_info }
@@ -412,20 +426,12 @@ module HybridPlatformsConductor
     def run_tests_for_nodes
       tests_for_nodes = @tests.select { |test_name| @tests_plugins[test_name].method_defined?(:test_for_node) }.uniq.sort
       unless tests_for_nodes.empty?
-        section "Run #{tests_for_nodes.size} nodes tests #{tests_for_nodes.join(', ')}" do
+        section "Run #{tests_for_nodes.size} nodes tests #{tests_for_nodes.join(', ')} on #{@hostnames.size} nodes" do
           @nodes_handler.for_each_node_in(@hostnames, parallel: !log_debug?, nbr_threads_max: MAX_THREADS_NODE_TESTS) do |node|
             tests_for_nodes.each do |test_name|
               if should_test_be_run_on(test_name, node: node)
                 log_debug "Run node test #{test_name} on node #{node}..."
-                test = @tests_plugins[test_name].new(
-                  @logger,
-                  @logger_stderr,
-                  @nodes_handler,
-                  @deployer,
-                  name: test_name,
-                  platform: @nodes_handler.platform_for(node),
-                  node: node
-                )
+                test = new_test(test_name, node: node)
                 begin
                   test.test_for_node
                 rescue
@@ -470,15 +476,7 @@ module HybridPlatformsConductor
           outputs.each do |hostname, (exit_status, stdout, stderr)|
             tests_for_check_node.each do |test_name|
               if should_test_be_run_on(test_name, node: hostname)
-                test = @tests_plugins[test_name].new(
-                  @logger,
-                  @logger_stderr,
-                  @nodes_handler,
-                  @deployer,
-                  name: test_name,
-                  platform: @nodes_handler.platform_for(hostname),
-                  node: hostname
-                )
+                test = new_test(test_name, node: hostname)
                 if stdout.nil?
                   test.error 'No check-node log file found despite the run of check-node.'
                 elsif stdout.is_a?(Symbol)
