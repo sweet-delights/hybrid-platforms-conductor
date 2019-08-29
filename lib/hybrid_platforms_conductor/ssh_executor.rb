@@ -339,6 +339,54 @@ Host *
       end
     end
 
+    # Provide a bootstrapped ssh executable that includes all the TI SSH config.
+    #
+    # Parameters::
+    # * CodeBlock: Code called with the given ssh executable to be used to get TI config
+    #   * Parameters::
+    #     * *ssh_exec* (String): SSH command to be used
+    #     * *ssh_config* (String): SSH configuration file to be used
+    def with_platforms_ssh
+      begin
+        @platforms_ssh_dir_semaphore.synchronize do
+          if @platforms_ssh_dir.nil?
+            @platforms_ssh_dir = Dir.mktmpdir("platforms_ssh_#{self.object_id}")
+            ssh_conf_file = "#{@platforms_ssh_dir}/ssh_config"
+            ssh_exec_file = "#{@platforms_ssh_dir}/ssh"
+            known_hosts_file = "#{@platforms_ssh_dir}/known_hosts"
+            unless @passwords.empty?
+              # Check that sshpass is installed correctly
+              exit_code, _stdout, _stderr = @cmd_runner.run_cmd 'sshpass -V', no_exception: true
+              raise 'sshpass is not installed. Can\'t use automatic passwords handling without it. Please install it.' unless exit_code == 0
+            end
+            FileUtils.touch known_hosts_file
+            File.open(ssh_exec_file, 'w+', 0700) do |file|
+              file.puts "#!#{`which env`.strip} bash"
+              # TODO: Make a mechanism that uses sshpass and the correct password only for the correct hostname (this requires parsing ssh parameters $*).
+              # Current implementation is much simpler: it uses sshpass if at least 1 password is needed, and always uses the first password.
+              # So far it is enough for our usage as we intend to use this only when deploying first time using root account, and all root accounts will have the same password.
+              file.puts "#{@passwords.empty? ? '' : "sshpass -p#{@passwords.first[1]} "}ssh -F #{ssh_conf_file} $*"
+            end
+            File.write(ssh_conf_file, ssh_config(ssh_exec: ssh_exec_file, known_hosts_file: known_hosts_file))
+            ENV['hpc_ssh_dir'] = @platforms_ssh_dir
+            dir_created = true
+          end
+          @platforms_ssh_dir_nbr_users += 1
+        end
+        yield "#{@platforms_ssh_dir}/ssh", "#{@platforms_ssh_dir}/ssh_config"
+      ensure
+        @platforms_ssh_dir_semaphore.synchronize do
+          @platforms_ssh_dir_nbr_users -= 1
+          if @platforms_ssh_dir_nbr_users == 0
+            # It's very important to remove the directory as soon as it is useless, as it contains eventual passwords
+            FileUtils.remove_entry @platforms_ssh_dir
+            @platforms_ssh_dir = nil
+            ENV.delete 'hpc_ssh_dir'
+          end
+        end
+      end
+    end
+
     private
 
     # Ensure that a given node has its key correctly set in the known hosts file.
@@ -401,54 +449,6 @@ Host *
         ]
       else
         inventory_connection_info_for(node, ip)
-      end
-    end
-
-    # Provide a bootstrapped ssh executable that includes all the TI SSH config.
-    #
-    # Parameters::
-    # * CodeBlock: Code called with the given ssh executable to be used to get TI config
-    #   * Parameters::
-    #     * *ssh_exec* (String): SSH command to be used
-    #     * *ssh_config* (String): SSH configuration file to be used
-    def with_platforms_ssh
-      begin
-        @platforms_ssh_dir_semaphore.synchronize do
-          if @platforms_ssh_dir.nil?
-            @platforms_ssh_dir = Dir.mktmpdir("platforms_ssh_#{self.object_id}")
-            ssh_conf_file = "#{@platforms_ssh_dir}/ssh_config"
-            ssh_exec_file = "#{@platforms_ssh_dir}/ssh"
-            known_hosts_file = "#{@platforms_ssh_dir}/known_hosts"
-            unless @passwords.empty?
-              # Check that sshpass is installed correctly
-              exit_code, _stdout, _stderr = @cmd_runner.run_cmd 'sshpass -V', no_exception: true
-              raise 'sshpass is not installed. Can\'t use automatic passwords handling without it. Please install it.' unless exit_code == 0
-            end
-            FileUtils.touch known_hosts_file
-            File.open(ssh_exec_file, 'w+', 0700) do |file|
-              file.puts "#!#{`which env`.strip} bash"
-              # TODO: Make a mechanism that uses sshpass and the correct password only for the correct hostname (this requires parsing ssh parameters $*).
-              # Current implementation is much simpler: it uses sshpass if at least 1 password is needed, and always uses the first password.
-              # So far it is enough for our usage as we intend to use this only when deploying first time using root account, and all root accounts will have the same password.
-              file.puts "#{@passwords.empty? ? '' : "sshpass -p#{@passwords.first[1]} "}ssh -F #{ssh_conf_file} $*"
-            end
-            File.write(ssh_conf_file, ssh_config(ssh_exec: ssh_exec_file, known_hosts_file: known_hosts_file))
-            ENV['hpc_ssh_dir'] = @platforms_ssh_dir
-            dir_created = true
-          end
-          @platforms_ssh_dir_nbr_users += 1
-        end
-        yield "#{@platforms_ssh_dir}/ssh", "#{@platforms_ssh_dir}/ssh_config"
-      ensure
-        @platforms_ssh_dir_semaphore.synchronize do
-          @platforms_ssh_dir_nbr_users -= 1
-          if @platforms_ssh_dir_nbr_users == 0
-            # It's very important to remove the directory as soon as it is useless, as it contains eventual passwords
-            FileUtils.remove_entry @platforms_ssh_dir
-            @platforms_ssh_dir = nil
-            ENV.delete 'hpc_ssh_dir'
-          end
-        end
       end
     end
 

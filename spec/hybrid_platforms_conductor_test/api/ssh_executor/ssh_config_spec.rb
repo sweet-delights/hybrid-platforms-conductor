@@ -2,29 +2,6 @@ describe HybridPlatformsConductor::SshExecutor do
 
   context 'checking SSH config' do
 
-    # Get the SSH config for a given node.
-    # Don't return comments and empty lines.
-    #
-    # Parameters::
-    # * *node* (String or nil): The node we look the SSH config for, or nil for the global configuration
-    # * *ssh_exec* (String or nil): SSH executable, or nil to keep default [default: nil]
-    # * *known_hosts_file* (String or nil): Known host file to give [default: nil]
-    # Result::
-    # * String or nil: Corresponding SSH config, or nil if none
-    def ssh_config_for(node, ssh_exec: nil, known_hosts_file: nil)
-      ssh_config = (ssh_exec.nil? ? test_ssh_executor.ssh_config(known_hosts_file: known_hosts_file) : test_ssh_executor.ssh_config(ssh_exec: ssh_exec, known_hosts_file: known_hosts_file)).split("\n")
-      begin_marker = node.nil? ? /^Host \*$/ : /^# #{Regexp.escape(node)} - .+$/
-      start_idx = ssh_config.index { |line| line =~ begin_marker }
-      return nil if start_idx.nil?
-      end_marker = /^# \w+ - .+$/
-      end_idx = ssh_config[start_idx + 1..-1].index { |line| line =~ end_marker }
-      end_idx = end_idx.nil? ? -1 : start_idx + end_idx
-      ssh_config[start_idx..end_idx].select do |line|
-        stripped_line = line.strip
-        !stripped_line.empty? && stripped_line[0] != '#'
-      end.join("\n")
-    end
-
     it 'generates a global configuration with user from environment' do
       with_test_platform do
         ENV['platforms_ssh_user'] = 'test_user'

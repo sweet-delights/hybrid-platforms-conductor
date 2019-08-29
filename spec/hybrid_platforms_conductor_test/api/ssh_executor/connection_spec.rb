@@ -239,6 +239,62 @@ describe HybridPlatformsConductor::SshExecutor do
       end
     end
 
+    it 'provides an SSH executable path that contains the whole SSH config, along with an SSH config file to be used as well' do
+      with_test_platform(nodes: { 'node' => { meta: { 'site_meta' => { 'connection_settings' => { 'ip' => 'node_connection' } } } } }) do
+        test_ssh_executor.with_platforms_ssh do |ssh_exec, ssh_config|
+          expect(`#{ssh_exec} -V 2>&1`).to eq `ssh -V 2>&1`
+          expect(`#{ssh_exec} -G hpc.node`.split("\n").find { |line| line =~ /^hostname .+$/ }).to eq 'hostname node_connection'
+          expect(ssh_config_for('node', ssh_config: File.read(ssh_config))).to eq 'Host hpc.node
+  Hostname node_connection'
+        end
+      end
+    end
+
+    it 'uses sshpass correctly if needed by the provided SSH executable' do
+      with_test_platform(nodes: { 'node' => { meta: { 'site_meta' => { 'connection_settings' => { 'ip' => 'node_connection' } } } } }) do
+        test_ssh_executor.passwords['node'] = 'PaSsWoRd'
+        test_ssh_executor.with_platforms_ssh do |ssh_exec, ssh_config|
+          expect(`#{ssh_exec} -V 2>&1`).to eq `ssh -V 2>&1`
+          expect(`#{ssh_exec} -G hpc.node`.split("\n").find { |line| line =~ /^hostname .+$/ }).to eq 'hostname node_connection'
+          expect(File.read(ssh_exec)).to match /^sshpass -pPaSsWoRd ssh .+$/
+          expect(ssh_config_for('node', ssh_config: File.read(ssh_config))).to eq 'Host hpc.node
+  Hostname node_connection
+  PreferredAuthentications password
+  PubkeyAuthentication no'
+        end
+      end
+    end
+
+    it 'reuses provided SSH executables and configs' do
+      with_test_platform(nodes: { 'node' => { meta: { 'site_meta' => { 'connection_settings' => { 'ip' => 'node_connection' } } } } }) do
+        test_ssh_executor.with_platforms_ssh do |first_ssh_exec, first_ssh_config|
+          test_ssh_executor.with_platforms_ssh do |second_ssh_exec, second_ssh_config|
+            expect(second_ssh_exec).to eq first_ssh_exec
+            expect(second_ssh_config).to eq first_ssh_config
+          end
+        end
+      end
+    end
+
+    it 'cleans provided SSH executables and configs after last user has finished using them' do
+      with_test_platform(nodes: { 'node' => { meta: { 'site_meta' => { 'connection_settings' => { 'ip' => 'node_connection' } } } } }) do
+        ssh_exec_file = nil
+        ssh_config_file = nil
+        test_ssh_executor.with_platforms_ssh do |ssh_exec, ssh_config|
+          ssh_exec_file = ssh_exec
+          ssh_config_file = ssh_config
+          test_ssh_executor.with_platforms_ssh do
+            expect(File.exist?(ssh_exec_file)).to eq true
+            expect(File.exist?(ssh_config_file)).to eq true
+          end
+          expect(File.exist?(ssh_exec_file)).to eq true
+          expect(File.exist?(ssh_config_file)).to eq true
+        end
+        expect(File.exist?(ssh_exec_file)).to eq false
+        expect(File.exist?(ssh_config_file)).to eq false
+      end
+    end
+
   end
 
 end

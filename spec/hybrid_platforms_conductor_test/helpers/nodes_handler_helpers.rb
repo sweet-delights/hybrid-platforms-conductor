@@ -4,25 +4,6 @@ module HybridPlatformsConductorTest
 
     module NodesHandlerHelpers
 
-      # Setup a platforms.rb with a given content and call code when it's ready.
-      # Automatically sets the ti_platforms env variable so that processes can then use it.
-      # Clean-up at the end.
-      #
-      # Parameters::
-      # * *content* (String): Platforms.rb's content
-      # * Proc: Code called with the platforms.rb file created.
-      def with_platforms(content)
-        hybrid_platforms_dir = "#{Dir.tmpdir}/hpc_test/hybrid-platforms"
-        FileUtils.mkdir_p hybrid_platforms_dir
-        File.write("#{hybrid_platforms_dir}/platforms.rb", content)
-        ENV['ti_platforms'] = hybrid_platforms_dir
-        begin
-          yield
-        ensure
-          FileUtils.rm_rf hybrid_platforms_dir
-        end
-      end
-
       # Setup several test repositories.
       # Clean-up at the end.
       #
@@ -68,6 +49,21 @@ module HybridPlatformsConductorTest
       def with_repository(name = 'platform_repo', as_git: false)
         with_repositories([name], as_git: as_git) do |repositories|
           yield repositories[name]
+        end
+      end
+
+      # Setup a platforms.rb with a given content and call code when it's ready.
+      # Automatically sets the ti_platforms env variable so that processes can then use it.
+      # Clean-up at the end.
+      #
+      # Parameters::
+      # * *content* (String): Platforms.rb's content
+      # * Proc: Code called with the platforms.rb file created.
+      def with_platforms(content)
+        with_repository('hybrid-platforms') do |hybrid_platforms_dir|
+          File.write("#{hybrid_platforms_dir}/platforms.rb", content)
+          ENV['ti_platforms'] = hybrid_platforms_dir
+          yield
         end
       end
 
