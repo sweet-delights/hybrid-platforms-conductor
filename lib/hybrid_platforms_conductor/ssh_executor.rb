@@ -387,18 +387,6 @@ Host *
       end
     end
 
-    private
-
-    # Ensure that a given node has its key correctly set in the known hosts file.
-    # Prerequisite: with_platforms_ssh has been called before.
-    #
-    # Parameters::
-    # * *node* (String): The node
-    def ensure_node_host_key(node)
-      real_ip, _gateway, _gateway_user = connection_info_for(node, @nodes_handler.private_ip_for(node))
-      ensure_host_key(real_ip)
-    end
-
     # Timeout in seconds to get host keys and update the host keys file.
     TIMEOUT_HOST_KEYS = 5
 
@@ -427,6 +415,18 @@ Host *
           log_warn "Unable to get host key for #{host}. Ignoring it. Accessing #{host} might require manual acceptance of its host key."
         end
       end
+    end
+
+    private
+
+    # Ensure that a given node has its key correctly set in the known hosts file.
+    # Prerequisite: with_platforms_ssh has been called before.
+    #
+    # Parameters::
+    # * *node* (String): The node
+    def ensure_node_host_key(node)
+      real_ip, _gateway, _gateway_user = connection_info_for(node, @nodes_handler.private_ip_for(node))
+      ensure_host_key(real_ip)
     end
 
     # Get the connection information for a given node accessed using one of its given IPs.

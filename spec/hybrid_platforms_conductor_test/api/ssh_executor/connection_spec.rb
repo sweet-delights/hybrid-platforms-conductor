@@ -295,6 +295,21 @@ describe HybridPlatformsConductor::SshExecutor do
       end
     end
 
+    it 'ensures a host key is registered' do
+      with_test_platform do
+        with_cmd_runner_mocked(
+          commands: [],
+          nodes_connections: { 'node' => { connection: 'node_connection', user: 'test_user' } },
+          with_control_master: false
+        ) do
+          test_ssh_executor.with_platforms_ssh do |ssh_exec|
+            test_ssh_executor.ensure_host_key('node_connection')
+            expect(File.read("#{File.dirname(ssh_exec)}/known_hosts")).to eq "fake_host_key\n"
+          end
+        end
+      end
+    end
+
   end
 
 end
