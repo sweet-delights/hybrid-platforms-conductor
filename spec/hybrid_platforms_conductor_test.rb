@@ -76,6 +76,7 @@ module HybridPlatformsConductorTest
         HybridPlatformsConductorTest::TestPlugins::NodeCheck.only_on_nodes = nil
         HybridPlatformsConductorTest::TestPlugins::SeveralChecks.runs = []
         FileUtils.rm_rf './run_logs'
+        FileUtils.rm_rf './testadmin.key.pub'
       end
     end
 
