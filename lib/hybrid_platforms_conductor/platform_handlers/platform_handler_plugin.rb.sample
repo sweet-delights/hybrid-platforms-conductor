@@ -1,7 +1,7 @@
 # This file is an example of a platform handler plugin.
 # Platform handler plugins should be stored in a separate Git repository, and packaged as Rubygems that are then included in Gemfile.
 # This way their discovery is automatic.
-# The PlatformHandlerPlugin example contains example of code that could be used to write a plugin for a new kind of platform handler.
+# The PlatformHandlerPlugin example contains example of code that could be used to write a plugin for a new platform type.
 require 'hybrid_platforms_conductor/platform_handler'
 
 module HybridPlatformsConductor
@@ -40,7 +40,7 @@ module HybridPlatformsConductor
       # [API] - This method is optional.
       def init
         # This method is called when initializing a new instance of this platform handler, for a given repository.
-        @my_instance_variable = initial_value
+        @my_instance_variable = :initial_value
       end
 
       # Setup the platform, install dependencies...
@@ -80,16 +80,16 @@ module HybridPlatformsConductor
         ]
       end
 
-      # Get the list of host descriptions belonging to a hosts list
+      # Get the list of nodes selectors belonging to a nodes list
       # [API] - This method is optional unless known_nodes_lists has been defined.
       #
       # Parameters::
-      # * *hosts_list_name* (String): Name of the hosts list
+      # * *nodes_list* (String): Name of the nodes list
       # Result::
-      # * Array<Object>: List of host descriptions
-      def hosts_desc_from_list(hosts_list_name)
+      # * Array<Object>: List of nodes selectors
+      def nodes_selectors_from_nodes_list(nodes_list)
         # If known_nodes_lists has been defined, then this method should return the list of hosts descriptions of a given host list.
-        case hosts_list_name
+        case nodes_list
         when 'my_host_list_1'
           [
             'my_host_1',
@@ -100,11 +100,11 @@ module HybridPlatformsConductor
             '/my_host.*/'
           ]
         else
-          raise "Unknown list name #{hosts_list_name}"
+          raise "Unknown list name #{nodes_list}"
         end
       end
 
-      # Get the metadata of a given hostname.
+      # Get the metadata of a given node.
       # [API] - This method is mandatory.
       #
       # Parameters::

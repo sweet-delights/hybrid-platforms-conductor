@@ -23,6 +23,20 @@ describe HybridPlatformsConductor::NodesHandler do
       end
     end
 
+    it 'returns nodes selectors defined in a nodes lists' do
+      with_test_platform(
+        nodes: {
+          'node10' => { service: 'test_service' },
+          'node11' => { service: 'test_service_2' },
+          'node20' => { service: 'test_service' },
+          'node21' => { service: 'test_service_2' },
+        },
+        nodes_lists: { 'test_nodes_list' => ['/node1.+/', { service: 'test_service' }] }
+      ) do
+        expect(test_nodes_handler.nodes_from_list('test_nodes_list').sort).to eq %w[node10 node11 node20].sort
+      end
+    end
+
     it 'returns nodes defined in a nodes lists while ignoring unknown ones' do
       with_test_platform(
         nodes: { 'node1' => {} },

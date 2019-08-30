@@ -30,40 +30,40 @@ module HybridPlatformsConductorTest
 
     end
 
-    # Get the list of known hostnames.
+    # Get the list of known nodes.
     # [API] - This method is mandatory.
     #
     # Result::
-    # * Array<String>: List of hostnames
+    # * Array<String>: List of node names
     def known_nodes
       platform_info[:nodes].keys
     end
 
-    # Get the list of known host list names
+    # Get the list of known nodes lists names.
     # [API] - This method is optional.
     #
     # Result::
-    # * Array<String>: List of hosts list names
+    # * Array<String>: List of nodes lists' names
     def known_nodes_lists
       platform_info[:nodes_lists].keys
     end
 
-    # Get the list of host descriptions belonging to a hosts list
+    # Get the list of nodes selectors belonging to a nodes list
     # [API] - This method is optional unless known_nodes_lists has been defined.
     #
     # Parameters::
-    # * *nodes_list_name* (String): Name of the nodes list
+    # * *nodes_list* (String): Name of the nodes list
     # Result::
-    # * Array<Object>: List of host descriptions
-    def hosts_desc_from_list(nodes_list_name)
+    # * Array<Object>: List of nodes selectors
+    def nodes_selectors_from_nodes_list(nodes_list_name)
       platform_info[:nodes_lists][nodes_list_name]
     end
 
-    # Get the metadata of a given hostname.
+    # Get the metadata of a given node.
     # [API] - This method is mandatory.
     #
     # Parameters::
-    # * *node* (String): Node to read mtadata from
+    # * *node* (String): Node to read metadata from
     # Result::
     # * Hash<String,Object>: The corresponding metadata (as a JSON object)
     def metadata_for(node)

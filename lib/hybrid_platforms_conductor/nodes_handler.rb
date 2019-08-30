@@ -203,7 +203,7 @@ module HybridPlatformsConductor
     # Result::
     # * Array<String>: List of nodes
     def nodes_from_list(nodes_list, ignore_unknowns: false)
-      select_nodes(platform_for_list(nodes_list).hosts_desc_from_list(nodes_list), ignore_unknowns: ignore_unknowns)
+      select_nodes(platform_for_list(nodes_list).nodes_selectors_from_nodes_list(nodes_list), ignore_unknowns: ignore_unknowns)
     end
 
     # Get the list of known service names
@@ -269,7 +269,7 @@ module HybridPlatformsConductor
 
     # Resolve a list of nodes selectors into a real list of known nodes.
     # A node selector can be:
-    # * String: Node name
+    # * String: Node name, or a node regexp if enclosed within '/' character (ex: '/.+worker.+/')
     # * Hash<Symbol,Object>: More complete information that can contain the following keys:
     #   * *all* (Boolean): If true, specify that we want all known nodes.
     #   * *list* (String): Name of a nodes list.
@@ -291,7 +291,7 @@ module HybridPlatformsConductor
         if nodes_selector.is_a?(String)
           string_nodes << nodes_selector
         else
-          string_nodes.concat(platform_for_list(nodes_selector[:list]).hosts_desc_from_list(nodes_selector[:list])) if nodes_selector.key?(:list)
+          string_nodes.concat(platform_for_list(nodes_selector[:list]).nodes_selectors_from_nodes_list(nodes_selector[:list])) if nodes_selector.key?(:list)
           string_nodes.concat(@platforms[nodes_selector[:platform]].known_nodes) if nodes_selector.key?(:platform)
           string_nodes.concat(known_nodes.select { |node| service_for(node) == nodes_selector[:service] }) if nodes_selector.key?(:service)
         end
