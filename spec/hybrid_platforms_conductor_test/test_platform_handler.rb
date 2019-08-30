@@ -133,14 +133,14 @@ module HybridPlatformsConductorTest
       self.global_info[:options_parse_for_deploy].call(options_parser) if self.global_info.key?(:options_parse_for_deploy)
     end
 
-    # Get the list of actions to perform to deploy on a given hostname.
+    # Get the list of actions to perform to deploy on a given node.
     # Those actions can be executed in parallel with other deployments on other hostnames. They must be thread safe.
     # [API] - This method is mandatory.
     # [API] - @cmd_runner is accessible.
     # [API] - @ssh_executor is accessible.
     #
     # Parameters::
-    # * *node* (String): Node to deploy on
+    # * *node* (String): Hostname to deploy on
     # * *use_why_run* (Boolean): Do we use a why-run mode? [default = true]
     # Result::
     # * Array< Hash<Symbol,Object> >: List of actions to be done

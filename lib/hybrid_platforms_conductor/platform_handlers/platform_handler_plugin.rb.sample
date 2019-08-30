@@ -212,19 +212,19 @@ module HybridPlatformsConductor
         ENV['deploy_time'] = Time.now.to_s
       end
 
-      # Get the list of actions to perform to deploy on a given hostname.
+      # Get the list of actions to perform to deploy on a given node.
       # Those actions can be executed in parallel with other deployments on other hostnames. They must be thread safe.
       # [API] - This method is mandatory.
       # [API] - @cmd_runner is accessible.
       # [API] - @ssh_executor is accessible.
       #
       # Parameters::
-      # * *hostname* (String): Hostname to deploy on
+      # * *node* (String): Hostname to deploy on
       # * *use_why_run* (Boolean): Do we use a why-run mode? [default = true]
       # Result::
       # * Array< Hash<Symbol,Object> >: List of actions to be done
-      def actions_to_deploy_on(hostname, use_why_run: true)
-        # This method returns all the actions to execute to deploy on a hostname.
+      def actions_to_deploy_on(node, use_why_run: true)
+        # This method returns all the actions to execute to deploy on a node.
         # The use_why_run switch is on if the deployment should just be simulated.
         # Those actions (bash commands, scp of files, ruby code...) should be thread safe as they can be executed in parallel with other deployment actions for other hosts in case of a concurrent deployment on several nodes.
         # The complete description of an action can be found in ssh_executor.rb file, in the execute_actions_on method description.
