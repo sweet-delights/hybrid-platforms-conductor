@@ -417,8 +417,6 @@ Host *
       end
     end
 
-    private
-
     # Ensure that a given node has its key correctly set in the known hosts file.
     # Prerequisite: with_platforms_ssh has been called before.
     #
@@ -428,6 +426,8 @@ Host *
       real_ip, _gateway, _gateway_user = connection_info_for(node, @nodes_handler.private_ip_for(node))
       ensure_host_key(real_ip)
     end
+
+    private
 
     # Get the connection information for a given node accessed using one of its given IPs.
     # Take into account possible overrides used in tests for example to route connections.

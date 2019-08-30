@@ -385,7 +385,7 @@ module HybridPlatformsConductor
     end
 
     # Deploy on all the nodes.
-    # Prerequisite: deliver_on_artefacts has been called before.
+    # Prerequisite: deliver_on_artefacts has been called before in case of non-direct deployment.
     #
     # Result::
     # * Hash<String, [Integer or Symbol, String, String]>: Exit status code (or Symbol in case of error or dry run), standard output and error for each hostname.
