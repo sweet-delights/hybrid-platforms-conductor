@@ -6,14 +6,6 @@ module HybridPlatformsConductor
   # Provide the DSL that can be used in platforms configuration files
   module PlatformsDsl
 
-    # The list of registered platform handler classes, per platform type.
-    #   Hash<Symbol,Class>
-    attr_reader :platform_types
-
-    # Directory of the definition of the platforms
-    #   String
-    attr_reader :hybrid_platforms_dir
-
     # Get the list of available platform handler plugins
     #
     # Result::
@@ -35,9 +27,12 @@ module HybridPlatformsConductor
       @platform_types
     end
 
+    # Directory of the definition of the platforms
+    #   String
+    attr_reader :hybrid_platforms_dir
+
     # Initialize the module variables
     def initialize_platforms_dsl
-      @platform_types = PlatformsDsl.platform_types
       # Directory in which we have platforms handled by HPCs definition
       @hybrid_platforms_dir = File.expand_path(ENV['ti_platforms'].nil? ? '.' : ENV['ti_platforms'])
       # Directory in which platforms are cloned
@@ -48,7 +43,7 @@ module HybridPlatformsConductor
 
     # Dynamically define the platform methods allowing to register a new platform.
     # They are named <plugin_name>_platform.
-    PlatformsDsl.platform_types.each do |platform_type, platform_handler_class|
+    self.platform_types.each do |platform_type, platform_handler_class|
 
       # Register a new platform of type platform_type.
       # The platform can be taken from a local path, or from a git repository to be cloned.

@@ -13,6 +13,10 @@ module HybridPlatformsConductor
 
     include PlatformsDsl, LoggerHelpers
 
+    # The list of registered platform handler classes, per platform type.
+    #   Hash<Symbol,Class>
+    attr_reader :platform_types
+
     # Constructor
     #
     # Parameters::
@@ -21,6 +25,7 @@ module HybridPlatformsConductor
     def initialize(logger: Logger.new(STDOUT), logger_stderr: Logger.new(STDERR))
       @logger = logger
       @logger_stderr = logger_stderr
+      @platform_types = PlatformsDsl.platform_types
       # Keep a list of instantiated platform handlers per platform type
       # Hash<Symbol, Array<PlatformHandler> >
       @platform_handlers = {}
