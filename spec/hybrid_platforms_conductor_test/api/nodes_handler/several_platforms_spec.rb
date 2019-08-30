@@ -34,7 +34,7 @@ describe HybridPlatformsConductor::NodesHandler do
         'platform1' => { nodes: { 'node1' => {}, 'node2' => {} } },
         'platform2' => { nodes: { 'node3' => {}, 'node4' => {} } }
       ) do
-        expect(test_nodes_handler.known_hostnames.sort).to eq %w[node1 node2 node3 node4].sort
+        expect(test_nodes_handler.known_nodes.sort).to eq %w[node1 node2 node3 node4].sort
       end
     end
 
@@ -43,7 +43,7 @@ describe HybridPlatformsConductor::NodesHandler do
         'platform1' => { nodes: { 'node1' => {}, 'node2' => {} } },
         'platform2' => { nodes: { 'node1' => {}, 'node4' => {} } }
       ) do
-        expect { test_nodes_handler.known_hostnames }.to raise_error(RuntimeError, /Can\'t register node1/)
+        expect { test_nodes_handler.known_nodes }.to raise_error(RuntimeError, /Can\'t register node1/)
       end
     end
 

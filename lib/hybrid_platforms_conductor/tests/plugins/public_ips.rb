@@ -11,7 +11,7 @@ module HybridPlatformsConductor
         def test
           # Get a map of public IPs per hostname
           public_ips = Hash[@nodes_handler.
-            known_hostnames.
+            known_nodes.
             map do |hostname|
               conf = @nodes_handler.metadata_for hostname
               [

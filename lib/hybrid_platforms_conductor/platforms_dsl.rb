@@ -101,7 +101,7 @@ module HybridPlatformsConductor
         raise "Platform name #{platform_handler.info[:repo_name]} is declared several times." if @platforms.key?(platform_handler.info[:repo_name])
         @platforms[platform_handler.info[:repo_name]] = platform_handler
         # Register all known hostnames for this platform
-        platform_handler.known_hostnames.each do |hostname|
+        platform_handler.known_nodes.each do |hostname|
           raise "Can't register #{hostname} to platform #{repository_path}, as it is already defined in platform #{@nodes_platform[hostname].repository_path}." if @nodes_platform.key?(hostname)
           @nodes_platform[hostname] = platform_handler
         end
@@ -132,14 +132,6 @@ module HybridPlatformsConductor
     def docker_image(image, dir)
       raise "Docker image #{image} already defined to #{@docker_images[image]}" if @docker_images.key?(image)
       @docker_images[image] = dir
-    end
-
-    # Get the list of known hostnames
-    #
-    # Result::
-    # * Array<String>: List of hostnames
-    def known_hostnames
-      @nodes_platform.keys
     end
 
     # Get the list of known gateway configurations

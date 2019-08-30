@@ -44,7 +44,7 @@ module HybridPlatformsConductor
         end
         @nodes_handler.platforms.each do |platform_handler|
           output << "= Report for platform #{platform_handler.repository_path} of type #{platform_handler.platform_type}:"
-          platform_handler.known_hostnames.each do |hostname|
+          platform_handler.known_nodes.each do |hostname|
             output << "== Report for hostname #{hostname}:"
             output << @nodes_handler.metadata_for(hostname).to_s
           end

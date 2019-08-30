@@ -35,7 +35,7 @@ module HybridPlatformsConductorTest
     #
     # Result::
     # * Array<String>: List of hostnames
-    def known_hostnames
+    def known_nodes
       platform_info[:nodes].keys
     end
 

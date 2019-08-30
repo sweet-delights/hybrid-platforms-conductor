@@ -126,12 +126,12 @@ module HybridPlatformsConductor
       @ips_to_host = known_ips.clone
 
       # Fill info from the metadata
-      @nodes_handler.known_hostnames.each do |hostname|
+      @nodes_handler.known_nodes.each do |hostname|
         @node_metadata[hostname] = @nodes_handler.metadata_for(hostname)
       end
 
       # Small cache of hostnames used a lot to parse JSON
-      @known_hostnames = Hash[@nodes_handler.known_hostnames.map { |hostname| [hostname, nil] }]
+      @known_nodes = Hash[@nodes_handler.known_nodes.map { |hostname| [hostname, nil] }]
       # Cache of objects being used a lot in parsing for performance
       @non_word_regexp = /\W+/
       @ip_regexp = /(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})(\/(\d{1,2})|[^\d\/]|$)/
@@ -197,7 +197,7 @@ module HybridPlatformsConductor
       unless @skip_run
         @json_dumper.dump_dir = @config[:json_files_dir]
         # Generate all the jsons, even if 1 hostname is given, as it might be useful for the rest of the graph.
-        @json_dumper.dump_json_for(@nodes_handler.known_hostnames)
+        @json_dumper.dump_json_for(@nodes_handler.known_nodes)
       end
     end
 
@@ -562,7 +562,7 @@ module HybridPlatformsConductor
       unless defined?(@known_ips)
         @known_ips = {}
         # Fill info from the metadata
-        @nodes_handler.known_hostnames.each do |node|
+        @nodes_handler.known_nodes.each do |node|
           metadata = @nodes_handler.metadata_for(node)
           ['private_ips', 'public_ips'].each do |ip_type|
             if metadata.key?(ip_type)
@@ -807,7 +807,7 @@ module HybridPlatformsConductor
         end
         # Look for any known hostname
         json.split(@non_word_regexp).each do |hostname|
-          if @known_hostnames.key?(hostname)
+          if @known_nodes.key?(hostname)
             nodes[hostname] = [] unless nodes.key?(hostname)
             nodes[hostname] << current_ref
           end

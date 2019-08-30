@@ -4,7 +4,7 @@ describe HybridPlatformsConductor::NodesHandler do
 
     it 'returns nodes' do
       with_test_platform(nodes: { 'node1' => {}, 'node2' => {} }) do
-        expect(test_nodes_handler.known_hostnames.sort).to eq %w[node1 node2].sort
+        expect(test_nodes_handler.known_nodes.sort).to eq %w[node1 node2].sort
       end
     end
 

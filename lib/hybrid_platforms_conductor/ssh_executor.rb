@@ -243,7 +243,7 @@ Host *
 
 "
       # Add each node
-      @nodes_handler.known_hostnames.sort.each do |node|
+      @nodes_handler.known_nodes.sort.each do |node|
         conf = @nodes_handler.metadata_for node
         (conf.key?('private_ips') ? conf['private_ips'].sort : [nil]).each.with_index do |private_ip, idx|
           # Generate the conf for the node

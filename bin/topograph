@@ -25,7 +25,7 @@ topographer.get_json_files
 known_hosts_lists = nodes_handler.known_hosts_lists
 
 executable.section 'Compute graph' do
-  topographer.graph_for(nodes_handler.known_hostnames)
+  topographer.graph_for(nodes_handler.known_nodes)
 end
 executable.section 'Add hosts lists clusters' do
   topographer.graph_for_hostlists(known_hosts_lists)

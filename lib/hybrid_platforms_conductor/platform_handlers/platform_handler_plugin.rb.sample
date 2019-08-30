@@ -52,13 +52,13 @@ module HybridPlatformsConductor
         @cmd_runner.run_cmd "cd #{@repository_path} && bundle install --path vendor/bundle --binstubs"
       end
 
-      # Get the list of known hostnames.
+      # Get the list of known nodes.
       # [API] - This method is mandatory.
       #
       # Result::
-      # * Array<String>: List of hostnames
-      def known_hostnames
-        # This method is used to get the list of hostnames that are handled by the platform
+      # * Array<String>: List of node names
+      def known_nodes
+        # This method is used to get the list of nodes that are handled by the platform
         [
           'my_host_1',
           'my_host_2',

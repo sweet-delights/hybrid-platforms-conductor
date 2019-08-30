@@ -2,7 +2,7 @@ describe HybridPlatformsConductor::NodesHandler do
 
   it 'initializes with no platform' do
     with_platforms '' do
-      expect(test_nodes_handler.known_hostnames).to eq []
+      expect(test_nodes_handler.known_nodes).to eq []
     end
   end
 
@@ -14,7 +14,7 @@ describe HybridPlatformsConductor::NodesHandler do
 
   it 'initializes with a platform having no node' do
     with_test_platform do
-      expect(test_nodes_handler.known_hostnames).to eq []
+      expect(test_nodes_handler.known_nodes).to eq []
     end
   end
 

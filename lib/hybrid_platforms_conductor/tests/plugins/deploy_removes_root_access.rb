@@ -16,7 +16,7 @@ module HybridPlatformsConductor
         def self.only_on_nodes
           # Just 1 node per service and platform
           Tests::Test.nodes_handler.
-            known_hostnames.
+            known_nodes.
             group_by { |node| [Tests::Test.nodes_handler.service_for(node), Tests::Test.nodes_handler.platform_for(node).info[:repo_name]] }.
             map { |(_service, _platform), nodes| nodes.first }
         end

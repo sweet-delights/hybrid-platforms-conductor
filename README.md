@@ -1443,7 +1443,7 @@ Check the [NodesHandler public methods](https://www.site.my_company.net/git/proj
 Examples:
 ```ruby
 # Get the list of hostnames in a list
-hosts = nodes_handler.known_hostnames
+hosts = nodes_handler.known_nodes
 
 # Get the IP or hostname of node23hst-nn2, along with eventual gateway and gateway's user to be used to connect to it
 ip, gateway, gateway_user = nodes_handler.connection_for 'node23hst-nn2'

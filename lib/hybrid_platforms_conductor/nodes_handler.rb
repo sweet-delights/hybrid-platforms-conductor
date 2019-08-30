@@ -42,10 +42,10 @@ module HybridPlatformsConductor
         out
         out "* Known services:\n#{known_services.sort.join("\n")}"
         out
-        out "* Known nodes:\n#{known_hostnames.sort.join("\n")}"
+        out "* Known nodes:\n#{known_nodes.sort.join("\n")}"
         out
         out "* Known nodes with description:\n#{
-          known_hostnames.map do |node|
+          known_nodes.map do |node|
             conf = metadata_for(node)
             connection, _gateway, _gateway_user = connection_for(node)
             "#{platform_for(node).info[:repo_name]} - #{node} (#{connection}) - #{service_for(node)} - #{conf.key?('description') ? conf['description'] : ''}"
@@ -81,6 +81,14 @@ module HybridPlatformsConductor
       end
     end
 
+    # Get the list of known nodes
+    #
+    # Result::
+    # * Array<String>: List of nodes
+    def known_nodes
+      @nodes_platform.keys
+    end
+
     # Get the list of nodes (resolved) belonging to a nodes list
     #
     # Parameters::
@@ -97,7 +105,7 @@ module HybridPlatformsConductor
     # Result::
     # * Array<String>: List of service names
     def known_services
-      known_hostnames.map { |node| service_for(node) }.uniq.sort
+      known_nodes.map { |node| service_for(node) }.uniq.sort
     end
 
     # Get the metadata of a given hostname.
@@ -150,7 +158,7 @@ module HybridPlatformsConductor
     def select_nodes(*nodes_selectors, ignore_unknowns: false)
       nodes_selectors = nodes_selectors.flatten
       # 1. Check for the presence of all
-      return known_hostnames if nodes_selectors.any? { |nodes_selector| nodes_selector.is_a?(Hash) && nodes_selector.key?(:all) && nodes_selector[:all] }
+      return known_nodes if nodes_selectors.any? { |nodes_selector| nodes_selector.is_a?(Hash) && nodes_selector.key?(:all) && nodes_selector[:all] }
       # 2. Expand the nodes lists, platforms and services contents
       string_nodes = []
       nodes_selectors.each do |nodes_selector|
@@ -158,8 +166,8 @@ module HybridPlatformsConductor
           string_nodes << nodes_selector
         else
           string_nodes.concat(platform_for_list(nodes_selector[:list]).hosts_desc_from_list(nodes_selector[:list])) if nodes_selector.key?(:list)
-          string_nodes.concat(@platforms[nodes_selector[:platform]].known_hostnames) if nodes_selector.key?(:platform)
-          string_nodes.concat(known_hostnames.select { |node| service_for(node) == nodes_selector[:service] }) if nodes_selector.key?(:service)
+          string_nodes.concat(@platforms[nodes_selector[:platform]].known_nodes) if nodes_selector.key?(:platform)
+          string_nodes.concat(known_nodes.select { |node| service_for(node) == nodes_selector[:service] }) if nodes_selector.key?(:service)
         end
       end
       # 3. Expand the Regexps
@@ -167,7 +175,7 @@ module HybridPlatformsConductor
       string_nodes.each do |node|
         if node =~ /^\/(.+)\/$/
           node_regexp = Regexp.new($1)
-          real_nodes.concat(known_hostnames.select { |known_node| known_node[node_regexp] })
+          real_nodes.concat(known_nodes.select { |known_node| known_node[node_regexp] })
         else
           real_nodes << node
         end
@@ -177,7 +185,7 @@ module HybridPlatformsConductor
       real_nodes.sort!
       # Some sanity checks
       unless ignore_unknowns
-        unknown_nodes = real_nodes - known_hostnames
+        unknown_nodes = real_nodes - known_nodes
         raise "Unknown host names: #{unknown_nodes.join(', ')}" unless unknown_nodes.empty?
       end
       real_nodes
