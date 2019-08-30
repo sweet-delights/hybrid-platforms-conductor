@@ -1,5 +1,5 @@
 module HybridPlatformsConductorTest
-  
+
   # Fake PlatformHandler that tests can pilot to check that the components of the Conductor behave correctly with plugins
   class TestPlatformHandler < HybridPlatformsConductor::PlatformHandler
 
