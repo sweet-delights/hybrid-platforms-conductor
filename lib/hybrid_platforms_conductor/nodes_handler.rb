@@ -21,6 +21,24 @@ module HybridPlatformsConductor
     def initialize(logger: Logger.new(STDOUT), logger_stderr: Logger.new(STDERR))
       @logger = logger
       @logger_stderr = logger_stderr
+      # Keep a list of instantiated platform handlers per platform type
+      # Hash<Symbol, Array<PlatformHandler> >
+      @platform_handlers = {}
+      # List of gateway configurations, per gateway config name
+      # Hash<Symbol, String>
+      @gateways = {}
+      # List of Docker image directories, per image name
+      # Hash<Symbol, String>
+      @docker_images = {}
+      # List of platform handler per known host name
+      # Hash<String, PlatformHandler>
+      @nodes_platform = {}
+      # List of platform handler per known host list name
+      # Hash<String, PlatformHandler>
+      @nodes_list_platform = {}
+      # List of platform handler per platform name
+      # Hash<String, PlatformHandler>
+      @platforms = {}
       initialize_platforms_dsl
     end
 
