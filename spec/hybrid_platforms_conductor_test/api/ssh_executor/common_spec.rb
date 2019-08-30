@@ -92,7 +92,7 @@ describe HybridPlatformsConductor::SshExecutor do
   it 'fails to execute a command on an unknown host' do
     with_test_platform(nodes: { 'node1' => {} }) do
       executed = false
-      expect { test_ssh_executor.run_cmd_on_hosts('node2' => { actions: { ruby: proc { executed = true } } }) }.to raise_error(RuntimeError, 'Unknown host names: node2')
+      expect { test_ssh_executor.run_cmd_on_hosts('node2' => { actions: { ruby: proc { executed = true } } }) }.to raise_error(RuntimeError, 'Unknown nodes: node2')
     end
   end
 

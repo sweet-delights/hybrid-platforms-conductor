@@ -41,10 +41,10 @@ module HybridPlatformsConductor
       # List of Docker image directories, per image name
       # Hash<Symbol, String>
       @docker_images = {}
-      # List of platform handler per known host name
+      # List of platform handler per known node
       # Hash<String, PlatformHandler>
       @nodes_platform = {}
-      # List of platform handler per known host list name
+      # List of platform handler per known nodes list
       # Hash<String, PlatformHandler>
       @nodes_list_platform = {}
       # List of platform handler per platform name
@@ -234,7 +234,7 @@ module HybridPlatformsConductor
       @nodes_list_platform[nodes_list]
     end
 
-    # Get the metadata of a given hostname.
+    # Get the metadata of a given node.
     #
     # Parameters::
     # * *node* (String): Node to read mtadata from
@@ -280,7 +280,7 @@ module HybridPlatformsConductor
     # * *nodes_selectors* (Array<Object>): List of node selectors (can be a single element).
     # * *ignore_unknowns* (Boolean): Do we ignore unknown nodes? [default = false]
     # Result::
-    # * Array<String>: List of host names
+    # * Array<String>: List of nodes
     def select_nodes(*nodes_selectors, ignore_unknowns: false)
       nodes_selectors = nodes_selectors.flatten
       # 1. Check for the presence of all
@@ -312,7 +312,7 @@ module HybridPlatformsConductor
       # Some sanity checks
       unless ignore_unknowns
         unknown_nodes = real_nodes - known_nodes
-        raise "Unknown host names: #{unknown_nodes.join(', ')}" unless unknown_nodes.empty?
+        raise "Unknown nodes: #{unknown_nodes.join(', ')}" unless unknown_nodes.empty?
       end
       real_nodes
     end
@@ -332,7 +332,7 @@ module HybridPlatformsConductor
       # Threads to wait for
       if parallel
         threads_to_join = []
-        # Spread hosts evenly among the threads.
+        # Spread nodes evenly among the threads.
         # Use a shared pool of nodes to be handled by threads.
         pools = {
           to_process: nodes.sort,

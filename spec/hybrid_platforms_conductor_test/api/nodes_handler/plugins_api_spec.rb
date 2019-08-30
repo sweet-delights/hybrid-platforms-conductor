@@ -37,7 +37,7 @@ describe HybridPlatformsConductor::NodesHandler do
         nodes: { 'node1' => {} },
         nodes_lists: { 'test_nodes_list' => %w[node1 node2] }
       ) do
-        expect { test_nodes_handler.nodes_from_list('test_nodes_list') }.to raise_error(RuntimeError, 'Unknown host names: node2')
+        expect { test_nodes_handler.nodes_from_list('test_nodes_list') }.to raise_error(RuntimeError, 'Unknown nodes: node2')
       end
     end
 

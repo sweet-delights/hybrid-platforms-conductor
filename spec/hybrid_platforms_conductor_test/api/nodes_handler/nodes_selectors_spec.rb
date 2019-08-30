@@ -43,7 +43,7 @@ describe HybridPlatformsConductor::NodesHandler do
 
     it 'fails when selecting unknown nodes' do
       with_test_platform_for_nodes do
-        expect { test_nodes_handler.select_nodes('node1', 'node7') }.to raise_error(RuntimeError, 'Unknown host names: node7')
+        expect { test_nodes_handler.select_nodes('node1', 'node7') }.to raise_error(RuntimeError, 'Unknown nodes: node7')
       end
     end
 
