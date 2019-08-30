@@ -14,6 +14,15 @@ describe HybridPlatformsConductor::NodesHandler do
       end
     end
 
+    it 'returns different platform types with their corresponding PlatformHandler classes' do
+      with_test_platforms('platform1' => {}, 'platform2' => { platform_type: :test2 }) do
+        expect(test_nodes_handler.platform_types).to eq(
+          test: HybridPlatformsConductorTest::TestPlatformHandler,
+          test2: HybridPlatformsConductorTest::TestPlatformHandler
+        )
+      end
+    end
+
     it 'returns platforms of a given platform type' do
       with_test_platforms('platform1' => {}, 'platform2' => { platform_type: :test2 }, 'platform3' => {}) do
         expect(test_nodes_handler.known_platforms(platform_type: :test2).sort).to eq ['platform2']
