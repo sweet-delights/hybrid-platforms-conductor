@@ -301,7 +301,8 @@ module HybridPlatformsConductor
         section "Run #{tests_on_platform.size} platform tests" do
           tests_on_platform.each do |test_name|
             # Run this test for every platform allowed
-            @nodes_handler.platforms.each do |platform_handler|
+            @nodes_handler.known_platforms.each do |platform|
+              platform_handler = @nodes_handler.platform(platform)
               @tested_platforms << platform_handler
               if should_test_be_run_on(test_name, platform: platform_handler)
                 section "Run platform test #{test_name} on #{platform_handler.info[:repo_name]}" do

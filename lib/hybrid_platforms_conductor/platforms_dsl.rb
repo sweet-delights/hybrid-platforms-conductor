@@ -116,20 +116,6 @@ module HybridPlatformsConductor
       @docker_images[image] = dir
     end
 
-    # Get the list of registered platforms.
-    #
-    # Parameters::
-    # * *platform_type* (Symbol or nil): Required platform type, or nil fo all platforms [default = nil]
-    # Result::
-    # * Array<PlatformHandler>: List of platform handlers
-    def platforms(platform_type: nil)
-      if platform_type.nil?
-        @platform_handlers.values.flatten
-      else
-        @platform_handlers[platform_type] || []
-      end
-    end
-
   end
 
 end

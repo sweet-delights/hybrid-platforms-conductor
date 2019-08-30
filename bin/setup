@@ -7,7 +7,8 @@ nodes_handler = executable.nodes_handler
 
 executable.parse_options!
 
-nodes_handler.platforms.each do |platform_handler|
+nodes_handler.known_platforms.each do |platform|
+  platform_handler = nodes_handler.platform(platform)
   platform_handler.cmd_runner = cmd_runner
   platform_handler.setup
 end

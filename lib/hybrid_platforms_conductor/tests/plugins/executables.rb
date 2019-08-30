@@ -11,7 +11,8 @@ module HybridPlatformsConductor
 
         # Check my_test_plugin.rb.sample documentation for signature details.
         def test
-          example_host = NodesHandler.new.platforms.first.known_nodes.first
+          nodes_handler = NodesHandler.new
+          example_host = nodes_handler.platform(nodes_handler.known_platforms.first).known_nodes.first
         	[
             "#{CmdRunner.executables_prefix}check-node --host-name #{example_host} --show-commands",
             "#{CmdRunner.executables_prefix}deploy --host-name #{example_host} --show-commands --why-run",

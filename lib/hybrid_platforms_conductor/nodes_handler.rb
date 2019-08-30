@@ -51,7 +51,8 @@ module HybridPlatformsConductor
       options_parser.separator 'Nodes handler options:'
       options_parser.on('-o', '--show-hosts', 'Display the list of possible hosts and exit') do
         out "* Known platforms:\n#{
-          platforms.map do |platform_handler|
+          known_platforms.map do |platform|
+            platform_handler = platform(platform)
             "#{platform_handler.info[:repo_name]} - Type: #{platform_handler.platform_type} - Location: #{platform_handler.repository_path}"
           end.sort.join("\n")
         }"
