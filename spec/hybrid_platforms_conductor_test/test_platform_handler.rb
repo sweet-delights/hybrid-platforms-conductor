@@ -44,12 +44,12 @@ module HybridPlatformsConductorTest
     #
     # Result::
     # * Array<String>: List of hosts list names
-    def known_hosts_lists
+    def known_nodes_lists
       platform_info[:nodes_lists].keys
     end
 
     # Get the list of host descriptions belonging to a hosts list
-    # [API] - This method is optional unless known_hosts_lists has been defined.
+    # [API] - This method is optional unless known_nodes_lists has been defined.
     #
     # Parameters::
     # * *nodes_list_name* (String): Name of the nodes list

@@ -10,7 +10,7 @@ describe HybridPlatformsConductor::NodesHandler do
 
     it 'returns nodes lists' do
       with_test_platform(nodes_lists: { 'test_nodes_list' => [] }) do
-        expect(test_nodes_handler.known_hosts_lists).to eq ['test_nodes_list']
+        expect(test_nodes_handler.known_nodes_lists).to eq ['test_nodes_list']
       end
     end
 

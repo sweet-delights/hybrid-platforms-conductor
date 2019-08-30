@@ -38,7 +38,7 @@ module HybridPlatformsConductor
           end.sort.join("\n")
         }"
         out
-        out "* Known nodes lists:\n#{known_hosts_lists.sort.join("\n")}"
+        out "* Known nodes lists:\n#{known_nodes_lists.sort.join("\n")}"
         out
         out "* Known services:\n#{known_services.sort.join("\n")}"
         out
@@ -87,6 +87,30 @@ module HybridPlatformsConductor
     # * Array<String>: List of nodes
     def known_nodes
       @nodes_platform.keys
+    end
+
+    # Get the list of known gateway configurations
+    #
+    # Result::
+    # * Array<Symbol>: List of known gateway configuration names
+    def known_gateways
+      @gateways.keys
+    end
+
+    # Get the list of known Docker images
+    #
+    # Result::
+    # * Array<Symbol>: List of known Docker images
+    def known_docker_images
+      @docker_images.keys
+    end
+
+    # Get the list of known nodes lists
+    #
+    # Result::
+    # * Array<String>: List of nodes lists' names
+    def known_nodes_lists
+      @nodes_list_platform.keys
     end
 
     # Get the list of nodes (resolved) belonging to a nodes list

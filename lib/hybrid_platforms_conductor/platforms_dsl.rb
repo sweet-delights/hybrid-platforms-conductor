@@ -106,10 +106,10 @@ module HybridPlatformsConductor
           @nodes_platform[hostname] = platform_handler
         end
         # Register all known hosts list
-        platform_handler.known_hosts_lists.each do |hosts_list_name|
+        platform_handler.known_nodes_lists.each do |hosts_list_name|
           raise "Can't register hosts list #{hosts_list_name} to platform #{repository_path}, as it is already defined in platform #{@nodes_list_platform[hosts_list_name].repository_path}." if @nodes_list_platform.key?(hosts_list_name)
           @nodes_list_platform[hosts_list_name] = platform_handler
-        end if platform_handler.respond_to?(:known_hosts_lists)
+        end if platform_handler.respond_to?(:known_nodes_lists)
       end
 
     end
@@ -132,30 +132,6 @@ module HybridPlatformsConductor
     def docker_image(image, dir)
       raise "Docker image #{image} already defined to #{@docker_images[image]}" if @docker_images.key?(image)
       @docker_images[image] = dir
-    end
-
-    # Get the list of known gateway configurations
-    #
-    # Result::
-    # * Array<Symbol>: List of known gateway configuration names
-    def known_gateways
-      @gateways.keys
-    end
-
-    # Get the list of known Docker images
-    #
-    # Result::
-    # * Array<Symbol>: List of known Docker images
-    def known_docker_images
-      @docker_images.keys
-    end
-
-    # Get the list of known host list names
-    #
-    # Result::
-    # * Array<String>: List of hosts list names
-    def known_hosts_lists
-      @nodes_list_platform.keys
     end
 
     # Get the list of known platform names
