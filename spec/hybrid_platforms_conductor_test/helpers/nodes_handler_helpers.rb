@@ -59,11 +59,13 @@ module HybridPlatformsConductorTest
       # Parameters::
       # * *content* (String): Platforms.rb's content
       # * Proc: Code called with the platforms.rb file created.
+      #   * Parameters::
+      #     * *hybrid_platforms_dir* (String): The hybrid-platforms directory
       def with_platforms(content)
         with_repository('hybrid-platforms') do |hybrid_platforms_dir|
           File.write("#{hybrid_platforms_dir}/platforms.rb", content)
           ENV['ti_platforms'] = hybrid_platforms_dir
-          yield
+          yield hybrid_platforms_dir
         end
       end
 
