@@ -71,15 +71,15 @@ module HybridPlatformsConductor
         @platform_handlers[platform_type] << platform_handler
         raise "Platform name #{platform_handler.info[:repo_name]} is declared several times." if @platforms.key?(platform_handler.info[:repo_name])
         @platforms[platform_handler.info[:repo_name]] = platform_handler
-        # Register all known hostnames for this platform
-        platform_handler.known_nodes.each do |hostname|
-          raise "Can't register #{hostname} to platform #{repository_path}, as it is already defined in platform #{@nodes_platform[hostname].repository_path}." if @nodes_platform.key?(hostname)
-          @nodes_platform[hostname] = platform_handler
+        # Register all known nodes for this platform
+        platform_handler.known_nodes.each do |node|
+          raise "Can't register #{node} to platform #{repository_path}, as it is already defined in platform #{@nodes_platform[node].repository_path}." if @nodes_platform.key?(node)
+          @nodes_platform[node] = platform_handler
         end
-        # Register all known hosts list
-        platform_handler.known_nodes_lists.each do |hosts_list_name|
-          raise "Can't register hosts list #{hosts_list_name} to platform #{repository_path}, as it is already defined in platform #{@nodes_list_platform[hosts_list_name].repository_path}." if @nodes_list_platform.key?(hosts_list_name)
-          @nodes_list_platform[hosts_list_name] = platform_handler
+        # Register all known nodes lists
+        platform_handler.known_nodes_lists.each do |nodes_list|
+          raise "Can't register nodes list #{nodes_list} to platform #{repository_path}, as it is already defined in platform #{@nodes_list_platform[nodes_list].repository_path}." if @nodes_list_platform.key?(nodes_list)
+          @nodes_list_platform[nodes_list] = platform_handler
         end if platform_handler.respond_to?(:known_nodes_lists)
       end
 
