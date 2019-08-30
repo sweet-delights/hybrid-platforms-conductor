@@ -119,7 +119,7 @@ module HybridPlatformsConductorTest
     # [API] - @ssh_executor is accessible.
     #
     # Parameters::
-    # * *node* (String): Hostname to deliver for
+    # * *node* (String): Node to deliver for
     def deliver_on_artefact_for(node)
       node_info(node)[:deliver_on_artefact_for].call if node_info(node).key?(:deliver_on_artefact_for)
     end
@@ -134,13 +134,13 @@ module HybridPlatformsConductorTest
     end
 
     # Get the list of actions to perform to deploy on a given node.
-    # Those actions can be executed in parallel with other deployments on other hostnames. They must be thread safe.
+    # Those actions can be executed in parallel with other deployments on other nodes. They must be thread safe.
     # [API] - This method is mandatory.
     # [API] - @cmd_runner is accessible.
     # [API] - @ssh_executor is accessible.
     #
     # Parameters::
-    # * *node* (String): Hostname to deploy on
+    # * *node* (String): Node to deploy on
     # * *use_why_run* (Boolean): Do we use a why-run mode? [default = true]
     # Result::
     # * Array< Hash<Symbol,Object> >: List of actions to be done
