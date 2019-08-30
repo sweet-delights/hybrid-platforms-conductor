@@ -27,14 +27,8 @@ module HybridPlatformsConductor
       @platform_types
     end
 
-    # Directory of the definition of the platforms
-    #   String
-    attr_reader :hybrid_platforms_dir
-
     # Initialize the module variables
     def initialize_platforms_dsl
-      # Directory in which we have platforms handled by HPCs definition
-      @hybrid_platforms_dir = File.expand_path(ENV['ti_platforms'].nil? ? '.' : ENV['ti_platforms'])
       # Directory in which platforms are cloned
       @git_platforms_dir = "#{hybrid_platforms_dir}/cloned_platforms"
       # Read platforms file

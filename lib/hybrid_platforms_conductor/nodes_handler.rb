@@ -17,6 +17,10 @@ module HybridPlatformsConductor
     #   Hash<Symbol,Class>
     attr_reader :platform_types
 
+    # Directory of the definition of the platforms
+    #   String
+    attr_reader :hybrid_platforms_dir
+
     # Constructor
     #
     # Parameters::
@@ -25,6 +29,8 @@ module HybridPlatformsConductor
     def initialize(logger: Logger.new(STDOUT), logger_stderr: Logger.new(STDERR))
       @logger = logger
       @logger_stderr = logger_stderr
+      # Directory in which we have platforms handled by HPCs definition
+      @hybrid_platforms_dir = File.expand_path(ENV['ti_platforms'].nil? ? '.' : ENV['ti_platforms'])
       @platform_types = PlatformsDsl.platform_types
       # Keep a list of instantiated platform handlers per platform type
       # Hash<Symbol, Array<PlatformHandler> >
