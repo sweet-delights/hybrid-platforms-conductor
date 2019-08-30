@@ -1,5 +1,5 @@
 module HybridPlatformsConductorTest
-
+  
   # Fake PlatformHandler that tests can pilot to check that the components of the Conductor behave correctly with plugins
   class TestPlatformHandler < HybridPlatformsConductor::PlatformHandler
 
@@ -23,9 +23,15 @@ module HybridPlatformsConductorTest
       # Hash<String, Hash<Symbol,Object> >
       attr_accessor :platforms_info
 
+      # Global properties.
+      # Properties can be:
+      # * *options_parse_for_deploy* (Proc or nil): Code called to populate an options parser, as a feature of the platform handler, or nil fo none [default = nil]
+      attr_accessor :global_info
+
       # Reset variables, so that they don't interfere between tests
       def reset
         @platforms_info = {}
+        @global_info = {}
       end
 
     end
@@ -97,7 +103,7 @@ module HybridPlatformsConductorTest
       service
     end
 
-    # Package the repository, ready to be deployed on artefacts.
+    # Package the repository, ready to be deployed on artefacts or directly to a node.
     # [API] - This method is mandatory.
     # [API] - @cmd_runner is accessible.
     # [API] - @ssh_executor is accessible.
@@ -105,15 +111,26 @@ module HybridPlatformsConductorTest
       platform_info[:package].call if platform_info.key?(:package)
     end
 
-    # Deliver what has been packaged for a given hostname.
+    # Deliver what has been packaged to the artefacts server for a given node.
+    # package has been called prior to this method.
+    # This method won't be called in case of a direct deploy to the node.
     # [API] - This method is mandatory.
     # [API] - @cmd_runner is accessible.
     # [API] - @ssh_executor is accessible.
     #
     # Parameters::
-    # * *node* (String): Node to deliver for
+    # * *node* (String): Hostname to deliver for
     def deliver_on_artefact_for(node)
       node_info(node)[:deliver_on_artefact_for].call if node_info(node).key?(:deliver_on_artefact_for)
+    end
+
+    # Complete an option parser with options meant to control the deployment of such a platform.
+    # [API] - This method is optional.
+    #
+    # Parameters::
+    # * *options_parser* (OptionParser): The option parser to complete
+    def self.options_parse_for_deploy(options_parser)
+      self.global_info[:options_parse_for_deploy].call(options_parser) if self.global_info.key?(:options_parse_for_deploy)
     end
 
     # Get the list of actions to perform to deploy on a given hostname.
