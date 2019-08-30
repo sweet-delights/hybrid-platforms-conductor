@@ -81,6 +81,30 @@ module HybridPlatformsConductor
       end
     end
 
+    # Get the list of known platform names
+    #
+    # Parameters::
+    # * *platform_type* (Symbol or nil): Required platform type, or nil fo all platforms [default: nil]
+    # Result::
+    # * Array<String>: List of platform names
+    def known_platforms(platform_type: nil)
+      if platform_type.nil?
+        @platforms.keys
+      else
+        (@platform_handlers[platform_type] || []).map { |platform_handler| platform_handler.info[:repo_name] }
+      end
+    end
+
+    # Return the platform handler for a given platform name
+    #
+    # Parameters::
+    # * *platform_name* (String): The platform name
+    # Result::
+    # * PlatformHandler or nil: Corresponding platform handler, or nil if none
+    def platform(platform_name)
+      @platforms[platform_name]
+    end
+
     # Get the list of known nodes
     #
     # Result::
@@ -97,12 +121,40 @@ module HybridPlatformsConductor
       @gateways.keys
     end
 
+    # Get the SSH configuration for a given gateway configuration name and a list of variables that could be used in the gateway template.
+    #
+    # Parameters::
+    # * *gateway_conf* (Symbol): Name of the gateway configuration.
+    # * *variables* (Hash<Symbol,Object>): The possible variables to interpolate in the ERB gateway template [default = {}].
+    # Result::
+    # * String: The corresponding SSH configuration
+    def ssh_for_gateway(gateway_conf, variables = {})
+      erb_context = self.clone
+      def erb_context.get_binding
+        binding
+      end
+      variables.each do |var_name, var_value|
+        erb_context.instance_variable_set("@#{var_name}".to_sym, var_value)
+      end
+      ERB.new(@gateways[gateway_conf]).result(erb_context.get_binding)
+    end
+
     # Get the list of known Docker images
     #
     # Result::
     # * Array<Symbol>: List of known Docker images
     def known_docker_images
       @docker_images.keys
+    end
+
+    # Get the directory containing a Docker image
+    #
+    # Parameters::
+    # * *image* (Symbol): Image name
+    # Result::
+    # * String: Directory containing the Dockerfile of the image
+    def docker_image_dir(image)
+      @docker_images[image]
     end
 
     # Get the list of known nodes lists
@@ -130,6 +182,26 @@ module HybridPlatformsConductor
     # * Array<String>: List of service names
     def known_services
       known_nodes.map { |node| service_for(node) }.uniq.sort
+    end
+
+    # Get the platform handler of a given node
+    #
+    # Parameters::
+    # * *node* (String): Node to get the platform for
+    # Result::
+    # * PlatformHandler: The corresponding platform handler
+    def platform_for(node)
+      @nodes_platform[node]
+    end
+
+    # Get the platform handler of a given nodes list
+    #
+    # Parameters::
+    # * *nodes_list* (String): Nodes list name
+    # Result::
+    # * PlatformHandler: The corresponding platform handler
+    def platform_for_list(nodes_list)
+      @nodes_list_platform[nodes_list]
     end
 
     # Get the metadata of a given hostname.
