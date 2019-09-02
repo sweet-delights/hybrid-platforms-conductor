@@ -27,7 +27,7 @@ describe HybridPlatformsConductor::Deployer do
     it 'deploys on 1 node using root' do
       with_test_platform({ nodes: { 'node' => {} } }, true) do
         with_ssh_master_mocked_on ['node'] do
-          test_ssh_executor.ssh_user_name = 'root'
+          test_ssh_executor.ssh_user = 'root'
           packaged = false
           delivered = false
           test_platforms_info['my_remote_platform'][:package] = proc { packaged = true }
@@ -212,7 +212,7 @@ describe HybridPlatformsConductor::Deployer do
       with_test_platform({ nodes: { 'node' => {} } }, true) do |repository|
         FileUtils.touch "#{repository}/new_file"
         with_ssh_master_mocked_on ['node'] do
-          test_ssh_executor.ssh_user_name = 'test_user'
+          test_ssh_executor.ssh_user = 'test_user'
           expect_ssh_executor_runs([
             # First run, we expect the mutex to be setup, and the deployment actions to be run
             proc { |actions_descriptions| expect_actions_to_deploy_on(actions_descriptions, 'node') },

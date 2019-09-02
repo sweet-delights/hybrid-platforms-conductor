@@ -26,7 +26,7 @@ describe HybridPlatformsConductor::Deployer do
     it 'checks on 1 node using root' do
       with_test_platform(nodes: { 'node' => {} }) do
         with_ssh_master_mocked_on ['node'] do
-          test_ssh_executor.ssh_user_name = 'root'
+          test_ssh_executor.ssh_user = 'root'
           packaged = false
           delivered = false
           test_platforms_info['platform'][:package] = proc { packaged = true }

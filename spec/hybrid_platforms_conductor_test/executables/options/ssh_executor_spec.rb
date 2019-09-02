@@ -101,7 +101,7 @@ describe 'executables\' SSH Executor options' do
   it 'uses a different SSH user name' do
     with_test_platform_for_ssh_executor_options do
       expect_ssh_executor_runs([proc do |actions, timeout: nil, concurrent: false, log_to_dir: 'run_logs', log_to_stdout: true|
-        expect(test_ssh_executor.ssh_user_name).to eq 'ssh_new_user'
+        expect(test_ssh_executor.ssh_user).to eq 'ssh_new_user'
         {}
       end])
       exit_code, stdout, stderr = run 'ssh_run', '--host-name', 'node', '--command', 'echo Hello', '--ssh-user', 'ssh_new_user'

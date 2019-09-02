@@ -4,7 +4,7 @@ describe HybridPlatformsConductor::SshExecutor do
 
     it 'connects on a node before executing commands' do
       with_test_platform(nodes: { 'node' => { connection: 'node_connection' } }) do
-        test_ssh_executor.ssh_user_name = 'test_user'
+        test_ssh_executor.ssh_user = 'test_user'
         with_cmd_runner_mocked(
           commands: [[remote_bash_for('echo Hello1', node: 'node', user: 'test_user'), proc { [0, "Hello1\n", ''] }]],
           nodes_connections: { 'node' => { connection: 'node_connection', user: 'test_user' } }
@@ -20,7 +20,7 @@ describe HybridPlatformsConductor::SshExecutor do
         'node2' => { connection: 'node2_connection' },
         'node3' => { connection: 'node3_connection' }
       }) do
-        test_ssh_executor.ssh_user_name = 'test_user'
+        test_ssh_executor.ssh_user = 'test_user'
         with_cmd_runner_mocked(
           commands: [
             [remote_bash_for('echo Hello1', node: 'node1', user: 'test_user'), proc { [0, "Hello1\n", ''] }],
@@ -48,7 +48,7 @@ describe HybridPlatformsConductor::SshExecutor do
 
     it 'can override connection settings to a node' do
       with_test_platform(nodes: { 'node' => { connection: 'node_connection' } }) do
-        test_ssh_executor.ssh_user_name = 'test_user'
+        test_ssh_executor.ssh_user = 'test_user'
         test_ssh_executor.override_connections['node'] = 'node_connection_new'
         with_cmd_runner_mocked(
           commands: [[remote_bash_for('echo Hello1', node: 'node', user: 'test_user'), proc { [0, "Hello1\n", ''] }]],
@@ -61,7 +61,7 @@ describe HybridPlatformsConductor::SshExecutor do
 
     it 'creates an SSH master to 1 node' do
       with_test_platform(nodes: { 'node' => { connection: 'node_connection' } }) do
-        test_ssh_executor.ssh_user_name = 'test_user'
+        test_ssh_executor.ssh_user = 'test_user'
         with_cmd_runner_mocked(
           commands: [],
           nodes_connections: { 'node' => { connection: 'node_connection', user: 'test_user' } }
@@ -76,7 +76,7 @@ describe HybridPlatformsConductor::SshExecutor do
 
     it 'reuses SSH master already created to 1 node' do
       with_test_platform(nodes: { 'node' => { connection: 'node_connection' } }) do
-        test_ssh_executor.ssh_user_name = 'test_user'
+        test_ssh_executor.ssh_user = 'test_user'
         with_cmd_runner_mocked(
           commands: [[remote_bash_for('echo Hello1', node: 'node', user: 'test_user'), proc { [0, "Hello1\n", ''] }]],
           nodes_connections: { 'node' => { connection: 'node_connection', user: 'test_user' } }
@@ -94,7 +94,7 @@ describe HybridPlatformsConductor::SshExecutor do
         'node2' => { connection: 'node2_connection' },
         'node3' => { connection: 'node3_connection' }
       }) do
-        test_ssh_executor.ssh_user_name = 'test_user'
+        test_ssh_executor.ssh_user = 'test_user'
         with_cmd_runner_mocked(
           commands: [],
           nodes_connections: {
@@ -122,7 +122,7 @@ describe HybridPlatformsConductor::SshExecutor do
         'node3' => { connection: 'node3_connection' },
         'node4' => { connection: 'node4_connection' }
       }) do
-        test_ssh_executor.ssh_user_name = 'test_user'
+        test_ssh_executor.ssh_user = 'test_user'
         with_cmd_runner_mocked(
           commands: [
             [remote_bash_for('echo Hello1', node: 'node1', user: 'test_user'), proc { [0, "Hello1\n", ''] }],
@@ -166,7 +166,7 @@ describe HybridPlatformsConductor::SshExecutor do
         'node3' => { connection: 'node3_connection' }
       }) do
         test_ssh_executor.use_control_master = false
-        test_ssh_executor.ssh_user_name = 'test_user'
+        test_ssh_executor.ssh_user = 'test_user'
         with_cmd_runner_mocked(
           commands: [],
           nodes_connections: {
@@ -195,7 +195,7 @@ describe HybridPlatformsConductor::SshExecutor do
         'node3' => { connection: 'node3_connection' }
       }) do
         test_ssh_executor.strict_host_key_checking = false
-        test_ssh_executor.ssh_user_name = 'test_user'
+        test_ssh_executor.ssh_user = 'test_user'
         with_cmd_runner_mocked(
           commands: [],
           nodes_connections: {

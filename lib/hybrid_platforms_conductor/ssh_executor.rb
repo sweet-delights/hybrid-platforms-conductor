@@ -22,7 +22,7 @@ module HybridPlatformsConductor
 
     # User name used in SSH connections. [default: ENV['platforms_ssh_user'] or ENV['USER']]
     #   String
-    attr_accessor :ssh_user_name
+    attr_accessor :ssh_user
 
     # Environment variables to be set before each bash commands to execute using ssh. [default: {}]
     #   Hash<String, String>
@@ -69,8 +69,8 @@ module HybridPlatformsConductor
       @cmd_runner = cmd_runner
       @nodes_handler = nodes_handler
       # Default values
-      @ssh_user_name = ENV['platforms_ssh_user']
-      @ssh_user_name = ENV['USER'] if @ssh_user_name.nil? || @ssh_user_name.empty?
+      @ssh_user = ENV['platforms_ssh_user']
+      @ssh_user = ENV['USER'] if @ssh_user.nil? || @ssh_user.empty?
       @ssh_env = {}
       @max_threads = 16
       @dry_run = false
@@ -116,7 +116,7 @@ module HybridPlatformsConductor
         self.dry_run = true
       end
       options_parser.on('-u', '--ssh-user USER_NAME', 'Name of user to be used in SSH connections (defaults to platforms_ssh_user or USER environment variables)') do |user_name|
-        @ssh_user_name = user_name
+        @ssh_user = user_name
       end
       options_parser.on('-w', '--password', 'If used, then expect SSH connections to ask for a password.') do
         @auth_password = true
@@ -128,7 +128,7 @@ module HybridPlatformsConductor
 
     # Validate that parsed parameters are valid
     def validate_params
-      raise 'No SSH user name specified. Please use --ssh-user option or platforms_ssh_user environment variable to set it.' if @ssh_user_name.nil? || @ssh_user_name.empty?
+      raise 'No SSH user name specified. Please use --ssh-user option or platforms_ssh_user environment variable to set it.' if @ssh_user.nil? || @ssh_user.empty?
       known_gateways = @nodes_handler.known_gateways
       raise "Unknown gateway configuration provided: #{@ssh_gateways_conf}. Possible values are: #{known_gateways.join(', ')}." unless known_gateways.include?(@ssh_gateways_conf)
     end
@@ -145,7 +145,7 @@ module HybridPlatformsConductor
     # Dump the current configuration for info
     def dump_conf
       out 'SSH executor configuration used:'
-      out " * User: #{@ssh_user_name}"
+      out " * User: #{@ssh_user}"
       out " * Dry run: #{@dry_run}"
       out " * Use SSH control master: #{@use_control_master}"
       out " * Max threads used: #{@max_threads}"
@@ -227,14 +227,14 @@ module HybridPlatformsConductor
 # GATEWAYS #
 ############
 
-#{@nodes_handler.known_gateways.include?(@ssh_gateways_conf) ? @nodes_handler.ssh_for_gateway(@ssh_gateways_conf, ssh_exec: ssh_exec, user: @ssh_user_name) : ''}
+#{@nodes_handler.known_gateways.include?(@ssh_gateways_conf) ? @nodes_handler.ssh_for_gateway(@ssh_gateways_conf, ssh_exec: ssh_exec, user: @ssh_user) : ''}
 
 #############
 # ENDPOINTS #
 #############
 
 Host *
-  User #{@ssh_user_name}
+  User #{@ssh_user}
   # Default control socket path to be used when multiplexing SSH connections
   ControlPath /tmp/hpc_ssh_executor_mux_%h_%p_%r
   #{@strict_host_key_checking ? '' : 'StrictHostKeyChecking no'}
@@ -293,11 +293,11 @@ Host *
               unless @nodes_ssh_urls.key?(node)
                 connection, _gateway, _gateway_user = connection_info_for(node)
                 ensure_host_key(connection)
-                ssh_url = "#{@ssh_user_name}@hpc.#{node}"
+                ssh_url = "#{@ssh_user}@hpc.#{node}"
                 if @use_control_master
                   # Thanks to the ControlMaster option, connections are reused. So no problem to have several scp and ssh commands later.
                   log_debug "[ ControlMaster - #{node} ] - Starting ControlMaster for connection on #{ssh_url}..."
-                  control_path_file = "/tmp/ssh_executor_mux_#{connection}_22_#{@ssh_user_name}"
+                  control_path_file = "/tmp/ssh_executor_mux_#{connection}_22_#{@ssh_user}"
                   if File.exist?(control_path_file)
                     log_warn "Removing stale SSH control file #{control_path_file}"
                     File.unlink control_path_file

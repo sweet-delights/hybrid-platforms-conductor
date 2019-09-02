@@ -297,7 +297,7 @@ module HybridPlatformsConductor
                   ssh_executor = sub_executable.ssh_executor
                   deployer = sub_executable.deployer
                   ssh_executor.override_connections[node] = container_ip
-                  ssh_executor.ssh_user_name = 'root'
+                  ssh_executor.ssh_user = 'root'
                   ssh_executor.passwords[node] = 'root_pwd'
                   deployer.force_direct_deploy = true
                   deployer.allow_deploy_non_master = true
@@ -416,7 +416,7 @@ module HybridPlatformsConductor
                   actions: [
                     {
                       scp: { "#{__dir__}/mutex_dir" => '.' },
-                      bash: "while ! #{@ssh_executor.ssh_user_name == 'root' ? '' : 'sudo '}./mutex_dir lock /tmp/hybrid_platforms_conductor_deploy_lock \"$(ps -o ppid= -p $$)\"; do echo -e 'Another deployment is running on #{hostname}. Waiting for it to finish to continue...' ; sleep 5 ; done"
+                      bash: "while ! #{@ssh_executor.ssh_user == 'root' ? '' : 'sudo '}./mutex_dir lock /tmp/hybrid_platforms_conductor_deploy_lock \"$(ps -o ppid= -p $$)\"; do echo -e 'Another deployment is running on #{hostname}. Waiting for it to finish to continue...' ; sleep 5 ; done"
                     }
                   ] + @nodes_handler.platform_for(hostname).actions_to_deploy_on(hostname, use_why_run: @use_why_run)
                 }
@@ -433,7 +433,7 @@ module HybridPlatformsConductor
                 hostname,
                 {
                   actions: {
-                    bash: "#{@ssh_executor.ssh_user_name == 'root' ? '' : 'sudo '}./mutex_dir unlock /tmp/hybrid_platforms_conductor_deploy_lock"
+                    bash: "#{@ssh_executor.ssh_user == 'root' ? '' : 'sudo '}./mutex_dir unlock /tmp/hybrid_platforms_conductor_deploy_lock"
                   }
                 }
               ]
@@ -460,9 +460,9 @@ module HybridPlatformsConductor
             Hash[logs.map do |hostname, (exit_status, stdout, stderr)|
               # Create a log file to be scp with all relevant info
               now = Time.now.utc
-              log_file = "#{tmp_dir}/#{now.strftime('%F_%H%M%S')}_#{@ssh_executor.ssh_user_name}"
+              log_file = "#{tmp_dir}/#{now.strftime('%F_%H%M%S')}_#{@ssh_executor.ssh_user}"
               platform_info = @nodes_handler.platform_for(hostname).info
-              user_name = @ssh_executor.ssh_user_name
+              user_name = @ssh_executor.ssh_user
               File.write(
                 log_file,
                 {
