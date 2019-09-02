@@ -230,7 +230,7 @@ Nodes handler options:
 Nodes selection options:
     -a, --all-nodes                  Select all nodes
     -b, --nodes-platform PLATFORM    Select nodes belonging to a given platform name. Available platforms are: ansible-repo, chef-repo (can be used several times)
-    -l, --hosts-list LIST_NAME       Select nodes defined in a nodes list (can be used several times)
+    -l, --nodes-list LIST            Select nodes defined in a nodes list (can be used several times)
     -n, --node NODE                  Select a specific node. Can be a regular expression to select several nodes if used with enclosing "/" characters. (can be used several times).
         --nodes-service SERVICE      Select nodes implementing a given service (can be used several times)
 
@@ -386,7 +386,7 @@ Nodes handler options:
 Nodes selection options:
     -a, --all-nodes                  Select all nodes
     -b, --nodes-platform PLATFORM    Select nodes belonging to a given platform name. Available platforms are: ansible-repo, chef-repo (can be used several times)
-    -l, --hosts-list LIST_NAME       Select nodes defined in a nodes list (can be used several times)
+    -l, --nodes-list LIST            Select nodes defined in a nodes list (can be used several times)
     -n, --node NODE                  Select a specific node. Can be a regular expression to select several nodes if used with enclosing "/" characters. (can be used several times).
         --nodes-service SERVICE      Select nodes implementing a given service (can be used several times)
 
@@ -436,10 +436,10 @@ Usage examples:
 ./bin/deploy --node /xae/ --parallel --max-threads 32
 
 # Deploy master on all nodes defined in the list xaebhsone (from ./hosts_lists/xaebhsone)
-./bin/deploy --hosts-list xaebhsone
+./bin/deploy --nodes-list xaebhsone
 
 # Deploy master on all nodes defined in the list xaebhsone and also node12hst-nn1 and node12hst-nn2
-./bin/deploy --hosts-list xaebhsone --node node12hst-nn1 --node node12hst-nn2
+./bin/deploy --nodes-list xaebhsone --node node12hst-nn1 --node node12hst-nn2
 
 # Deploy master on all nodes
 ./bin/deploy --all-nodes
@@ -515,7 +515,7 @@ Nodes handler options:
 Nodes selection options:
     -a, --all-nodes                  Select all nodes
     -b, --nodes-platform PLATFORM    Select nodes belonging to a given platform name. Available platforms are: ansible-repo, chef-repo (can be used several times)
-    -l, --hosts-list LIST_NAME       Select nodes defined in a nodes list (can be used several times)
+    -l, --nodes-list LIST            Select nodes defined in a nodes list (can be used several times)
     -n, --node NODE                  Select a specific node. Can be a regular expression to select several nodes if used with enclosing "/" characters. (can be used several times).
     -r, --nodes-service SERVICE      Select nodes implementing a given service (can be used several times)
 
@@ -741,7 +741,7 @@ Nodes handler options:
 Nodes selection options:
     -a, --all-nodes                  Select all nodes
     -b, --nodes-platform PLATFORM    Select nodes belonging to a given platform name. Available platforms are: ansible-repo, chef-repo (can be used several times)
-    -l, --hosts-list LIST_NAME       Select nodes defined in a nodes list (can be used several times)
+    -l, --nodes-list LIST            Select nodes defined in a nodes list (can be used several times)
     -n, --node NODE                  Select a specific node. Can be a regular expression to select several nodes if used with enclosing "/" characters. (can be used several times).
     -r, --nodes-service SERVICE      Select nodes implementing a given service (can be used several times)
 ```
@@ -842,7 +842,7 @@ Nodes handler options:
 Nodes selection options:
     -a, --all-nodes                  Select all nodes
     -b, --nodes-platform PLATFORM    Select nodes belonging to a given platform name. Available platforms are: ansible-repo, chef-repo (can be used several times)
-    -l, --hosts-list LIST_NAME       Select nodes defined in a nodes list (can be used several times)
+    -l, --nodes-list LIST            Select nodes defined in a nodes list (can be used several times)
     -n, --node NODE                  Select a specific node. Can be a regular expression to select several nodes if used with enclosing "/" characters. (can be used several times).
     -r, --nodes-service SERVICE      Select nodes implementing a given service (can be used several times)
 
@@ -904,7 +904,7 @@ Nodes handler options:
 Nodes selection options:
     -a, --all-nodes                  Select all nodes
     -b, --nodes-platform PLATFORM    Select nodes belonging to a given platform name. Available platforms are: ansible-repo, chef-repo (can be used several times)
-    -l, --hosts-list LIST_NAME       Select nodes defined in a nodes list (can be used several times)
+    -l, --nodes-list LIST            Select nodes defined in a nodes list (can be used several times)
     -n, --node NODE                  Select a specific node. Can be a regular expression to select several nodes if used with enclosing "/" characters. (can be used several times).
     -r, --nodes-service SERVICE      Select nodes implementing a given service (can be used several times)
 
@@ -971,14 +971,14 @@ Topographer options:
     -F, --from HOSTS_OPTIONS         Specify options for the set of nodes to start from (enclose them with ""). Default: all nodes. HOSTS_OPTIONS follows the following:
                                          -a, --all-nodes                  Select all nodes
                                          -b, --nodes-platform PLATFORM    Select nodes belonging to a given platform name. Available platforms are: ansible-repo, chef-repo (can be used several times)
-                                         -l, --hosts-list LIST_NAME       Select hosts defined in a hosts list (can be used several times)
+                                         -l, --nodes-list LIST            Select hosts defined in a nodes list (can be used several times)
                                          -n, --node NODE                  Select a specific node. Can be a regular expression to select several nodes if used with enclosing "/" characters. (can be used several times).
     -k, --skip-run                   Skip the actual gathering of JSON node files. If set, the current files in nodes_json will be used.
     -p, --output FORMAT:FILE_NAME    Specify a format and file name. Can be used several times. FORMAT can be one of graphviz, json, svg. Ex.: graphviz:graph.gv
     -T, --to HOSTS_OPTIONS           Specify options for the set of nodes to get to (enclose them with ""). Default: all nodes. HOSTS_OPTIONS follows the following:
                                          -a, --all-nodes                  Select all nodes
                                          -b, --nodes-platform PLATFORM    Select nodes belonging to a given platform name. Available platforms are: ansible-repo, chef-repo (can be used several times)
-                                         -l, --hosts-list LIST_NAME       Select hosts defined in a hosts list (can be used several times)
+                                         -l, --nodes-list LIST            Select hosts defined in a nodes list (can be used several times)
                                          -n, --node NODE                  Select a specific node. Can be a regular expression to select several nodes if used with enclosing "/" characters. (can be used several times).
 
 Nodes handler options:
@@ -1009,13 +1009,13 @@ Usage examples:
 ./bin/topograph --output json:graph.json --output svg:graph.svg
 
 # Dump the network starting from any node belonging to the node12had hosts list
-./bin/topograph --output json:graph.json --from "--hosts-list node12had"
+./bin/topograph --output json:graph.json --from "--nodes-list node12had"
 
 # Dump the network getting to nodes xaeprjcttlbd01 and xaeprjctplbd01
 ./bin/topograph --output json:graph.json --to "--node xaeprjcttlbd01 --node xaeprjctplbd01"
 
 # Dump the network getting from any node belonging to the node12had hosts list and to nodes xaeprjcttlbd01 and xaeprjctplbd01
-./bin/topograph --output json:graph.json --from "--hosts-list node12had" --to "--node xaeprjcttlbd01 --node xaeprjctplbd01"
+./bin/topograph --output json:graph.json --from "--nodes-list node12had" --to "--node xaeprjcttlbd01 --node xaeprjctplbd01"
 
 # Dump the whole network in JSON format, reusing existing JSON files from nodes_json (won't call dump_nodes_json)
 ./bin/topograph --output json:graph.json --skip-run
@@ -1059,7 +1059,7 @@ Nodes handler options:
 Nodes selection options:
     -a, --all-nodes                  Select all nodes
     -b, --nodes-platform PLATFORM    Select nodes belonging to a given platform name. Available platforms are: ansible-repo, chef-repo (can be used several times)
-    -l, --hosts-list LIST_NAME       Select nodes defined in a nodes list (can be used several times)
+    -l, --nodes-list LIST            Select nodes defined in a nodes list (can be used several times)
     -n, --node NODE                  Select a specific node. Can be a regular expression to select several nodes if used with enclosing "/" characters. (can be used several times).
         --nodes-service SERVICE      Select nodes implementing a given service (can be used several times)
 
@@ -1231,14 +1231,14 @@ The nodes selection options are used to select a set of nodes that the tool need
 Nodes selection options:
     -a, --all-nodes                  Select all nodes
     -b, --nodes-platform PLATFORM    Select nodes belonging to a given platform name. Available platforms are: ansible-repo, chef-repo (can be used several times)
-    -l, --hosts-list LIST_NAME       Select nodes defined in a nodes list (can be used several times)
+    -l, --nodes-list LIST            Select nodes defined in a nodes list (can be used several times)
     -n, --node NODE                  Select a specific node. Can be a regular expression to select several nodes if used with enclosing "/" characters. (can be used several times).
     -r, --nodes-service SERVICE      Select nodes implementing a given service (can be used several times)
 ```
 
 * `--all-nodes`: Select all the known nodes.
 * `--nodes-platform PLATFORM`: Specify the name of a platform as a selector. Can be useful to only perform checks of nodes of a given repository after merging a PR on this repository.
-* `--hosts-list LIST_NAME`: Specify a hosts list name as selector. Hosts list are a named group of hosts, and are defined by each platform if they make sense. For example all the nodes belonging to the same cluster could be part of a hosts list.
+* `--nodes-list LIST`: Specify a hosts list name as selector. Hosts list are a named group of hosts, and are defined by each platform if they make sense. For example all the nodes belonging to the same cluster could be part of a nodes list.
 * `--node NODE`: Select a single node. A regular expression can also be used when `NODE` is enclosed with `/` character (the regular expression grammar is [the Ruby one](http://ruby-doc.org/core-2.5.0/Regexp.html)). Examples: `--node my_node_1`, `--node /my_node_.+/`.
 * `--nodes-service SERVICE`: Select all nodes that implement a given service.
 
@@ -1307,14 +1307,14 @@ Topographer options:
     -F, --from HOSTS_OPTIONS         Specify options for the set of nodes to start from (enclose them with ""). Default: all nodes. HOSTS_OPTIONS follows the following:
                                          -a, --all-nodes                  Select all nodes
                                          -b, --nodes-platform PLATFORM    Select nodes belonging to a given platform name. Available platforms are: ansible-repo, chef-repo (can be used several times)
-                                         -l, --hosts-list LIST_NAME       Select hosts defined in a hosts list (can be used several times)
+                                         -l, --nodes-list LIST            Select hosts defined in a nodes list (can be used several times)
                                          -n, --node NODE                  Select a specific node. Can be a regular expression to select several nodes if used with enclosing "/" characters. (can be used several times).
     -k, --skip-run                   Skip the actual gathering of JSON node files. If set, the current files in nodes_json will be used.
     -p, --output FORMAT:FILE_NAME    Specify a format and file name. Can be used several times. FORMAT can be one of graphviz, json, svg. Ex.: graphviz:graph.gv
     -T, --to HOSTS_OPTIONS           Specify options for the set of nodes to get to (enclose them with ""). Default: all nodes. HOSTS_OPTIONS follows the following:
                                          -a, --all-nodes                  Select all nodes
                                          -b, --nodes-platform PLATFORM    Select nodes belonging to a given platform name. Available platforms are: ansible-repo, chef-repo (can be used several times)
-                                         -l, --hosts-list LIST_NAME       Select hosts defined in a hosts list (can be used several times)
+                                         -l, --nodes-list LIST            Select hosts defined in a nodes list (can be used several times)
                                          -n, --node NODE                  Select a specific node. Can be a regular expression to select several nodes if used with enclosing "/" characters. (can be used several times).
 ```
 

@@ -37,7 +37,7 @@ describe 'executables\' nodes selection options' do
     ['--all-nodes'] => [{ all: true }],
     ['--node', 'node11'] => ['node11'],
     ['--node', '/node1.+/'] => [/node1.+/],
-    ['--hosts-list', 'my_list'] => [{ list: 'my_list' }],
+    ['--nodes-list', 'my_list'] => [{ list: 'my_list' }],
     ['--nodes-platform', 'platform_2'] => [{ platform: 'platform_2' }],
     ['--nodes-service', 'service1'] => [{ service: 'service1' }],
     ['--node', 'node11', '--node', 'node12'] => %w[node11 node12],

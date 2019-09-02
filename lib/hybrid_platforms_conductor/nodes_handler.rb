@@ -100,8 +100,8 @@ module HybridPlatformsConductor
       options_parser.on('-b', '--nodes-platform PLATFORM', "Select nodes belonging to a given platform name. Available platforms are: #{@platforms.keys.sort.join(', ')} (can be used several times)") do |platform|
         nodes_selectors << { platform: platform }
       end
-      options_parser.on('-l', '--hosts-list LIST_NAME', 'Select nodes defined in a nodes list (can be used several times)') do |nodes_list_name|
-        nodes_selectors << { list: nodes_list_name }
+      options_parser.on('-l', '--nodes-list LIST', 'Select nodes defined in a nodes list (can be used several times)') do |nodes_list|
+        nodes_selectors << { list: nodes_list }
       end
       options_parser.on('-n', '--node NODE', 'Select a specific node. Can be a regular expression to select several nodes if used with enclosing "/" characters. (can be used several times).') do |node|
         nodes_selectors << node
