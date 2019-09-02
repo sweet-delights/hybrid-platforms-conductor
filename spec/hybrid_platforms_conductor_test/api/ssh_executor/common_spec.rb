@@ -19,7 +19,7 @@ describe HybridPlatformsConductor::SshExecutor do
       test_ssh_executor.stdout_device = stdout_file
       test_ssh_executor.execute_actions('node1' => [
         { ruby: proc { executed = true } },
-        { bash: 'echo Hello' },
+        { remote_bash: 'echo Hello' },
       ])
       expect(executed).to eq false
       lines = File.read(stdout_file).split("\n")

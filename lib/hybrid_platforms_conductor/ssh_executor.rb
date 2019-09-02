@@ -453,13 +453,12 @@ Host *
       end
     end
 
-    # Execute a list of actions for a node, and give the result to a given block.
-    # Prerequisite: The node exists among the nodes.
+    # Execute a list of actions for a node, and return exit codes, stdout and stderr of those actions.
     #
     # Parameters::
     # * *node* (String): The node
     # * *actions* (Array<[Symbol, Object]>): Ordered list of actions to perform. Each action is identified by an identifier (Symbol) and has associated data.
-    #   1 action can contain several keys (action types), that will be performed in the order of the keys population in the Hash. Here are possible action types:
+    #   Here are the possible action types and their corresponding data:
     #   * *local_bash* (String): Bash commands to be executed locally (not on the node)
     #   * *ruby* (Proc): Ruby code to be executed locally (not on the node):
     #     * Parameters::
@@ -469,7 +468,7 @@ Host *
     #     * *sudo* (Boolean): Do we use sudo to make the copy?
     #     * *owner* (String): Owner to use for files
     #     * *group* (String): Group to use for files
-    #   * *bash* (Array< Hash<Symbol, Object> or Array<String> or String>): List of bash actions to execute. Each action can have the following properties:
+    #   * *remote_bash* (Array< Hash<Symbol, Object> or Array<String> or String>): List of bash actions to execute. Each action can have the following properties:
     #     * *commands* (Array<String> or String): List of bash commands to execute (can be a single one). This is the default property also that allows to not use the Hash form for brevity.
     #     * *file* (String): Name of file from which commands should be taken.
     #     * *env* (Hash<String, String>): Environment variables to be set before executing those commands.
@@ -480,7 +479,7 @@ Host *
     # Result::
     # * Integer or Symbol: Exit status of the last command, or Symbol in case of error
     # * String: Standard output of the commands
-    # * String: Standard error output of the commands (can be a descriptive message of the error in case of error)
+    # * String: Standard error output of the commands
     def execute_actions_on(node, actions, timeout: nil, log_to_file: nil, log_to_stdout: true)
       remaining_timeout = timeout
       exit_status = 0
@@ -534,7 +533,7 @@ Host *
                 action_stderr.concat copy_action_stderr
               end
             end
-          when :bash
+          when :remote_bash
             # Normalize action_info
             action_info = [action_info] if action_info.is_a?(String)
             action_info = { commands: action_info } if action_info.is_a?(Array)

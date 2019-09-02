@@ -14,7 +14,7 @@ module HybridPlatformsConductorTest
         expect(action[:scp].size).to eq 1
         expect(action[:scp].first[0]).to match /^.+\/mutex_dir$/
         expect(action[:scp].first[1]).to eq '.'
-        expect(action[:bash]).to eq "while ! #{sudo ? 'sudo ' : ''}./mutex_dir lock /tmp/hybrid_platforms_conductor_deploy_lock \"$(ps -o ppid= -p $$)\"; do echo -e 'Another deployment is running on #{node}. Waiting for it to finish to continue...' ; sleep 5 ; done"
+        expect(action[:remote_bash]).to eq "while ! #{sudo ? 'sudo ' : ''}./mutex_dir lock /tmp/hybrid_platforms_conductor_deploy_lock \"$(ps -o ppid= -p $$)\"; do echo -e 'Another deployment is running on #{node}. Waiting for it to finish to continue...' ; sleep 5 ; done"
       end
 
       # Expect a given action to be releasing the mutex on a given node
@@ -24,7 +24,7 @@ module HybridPlatformsConductorTest
       # * *node* (String): The concerned node
       # * *sudo* (Boolean): Is sudo supposed to be used? [default: true]
       def expect_action_to_unlock_node(action, node, sudo: true)
-        expect(action).to eq(bash: "#{sudo ? 'sudo ' : ''}./mutex_dir unlock /tmp/hybrid_platforms_conductor_deploy_lock")
+        expect(action).to eq(remote_bash: "#{sudo ? 'sudo ' : ''}./mutex_dir unlock /tmp/hybrid_platforms_conductor_deploy_lock")
       end
 
       # Expect a given set of actions to be a check node
@@ -75,7 +75,7 @@ module HybridPlatformsConductorTest
         expect(actions.size).to eq nodes.size
         nodes.each do |node|
           expect(actions.key?(node)).to eq true
-          expect(actions[node][:bash]).to eq "#{sudo ? 'sudo ' : ''}mkdir -p /var/log/deployments"
+          expect(actions[node][:remote_bash]).to eq "#{sudo ? 'sudo ' : ''}mkdir -p /var/log/deployments"
           expect(actions[node][:scp].first[1]).to eq '/var/log/deployments'
           expect(actions[node][:scp][:group]).to eq 'root'
           expect(actions[node][:scp][:owner]).to eq 'root'

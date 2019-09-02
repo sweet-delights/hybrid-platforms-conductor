@@ -42,7 +42,7 @@ sorted_deploy_info = Hash[ssh_executor.
     Hash[nodes_handler.select_nodes(nodes).map do |hostname|
       [
         hostname,
-        { bash: "cd /var/log/deployments && ls -t | head -1 | xargs sed '/===== STDOUT =====/q'" }
+        { remote_bash: "cd /var/log/deployments && ls -t | head -1 | xargs sed '/===== STDOUT =====/q'" }
       ]
     end],
     log_to_stdout: false,

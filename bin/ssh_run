@@ -29,7 +29,7 @@ raise '--interactive or --command options have to be present' if commands.empty?
 raise 'No node selected. Please use --host-name option to set at least one.' if executable.selected_nodes.empty?
 
 actions = []
-actions << { bash: commands } unless commands.empty?
+actions << { remote_bash: commands } unless commands.empty?
 actions << { interactive: true } if interactive
 ssh_executor.execute_actions(
   { executable.selected_nodes => actions },

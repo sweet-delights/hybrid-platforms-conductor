@@ -366,7 +366,7 @@ module HybridPlatformsConductor
           [
             hostname,
             {
-              bash: cmds_list.map do |(cmd, _test_info)|
+              remote_bash: cmds_list.map do |(cmd, _test_info)|
                 [
                   "echo '#{CMD_SEPARATOR}'",
                   cmd,
@@ -393,7 +393,7 @@ module HybridPlatformsConductor
             if exit_status.is_a?(Symbol)
               error("Error while executing tests: #{exit_status}: #{stderr}", hostname: hostname)
             else
-              log_debug "----- Commands for #{hostname}:\n#{test_cmds[hostname][:bash].join("\n")}\n----- STDOUT:\n#{stdout}\n----- STDERR:\n#{stderr}\n-----"
+              log_debug "----- Commands for #{hostname}:\n#{test_cmds[hostname][:remote_bash].join("\n")}\n----- STDOUT:\n#{stdout}\n----- STDERR:\n#{stderr}\n-----"
               # Skip the first section, as it can contain SSH banners
               cmd_stdouts = stdout.split("#{CMD_SEPARATOR}\n")[1..-1]
               cmd_stdouts = [] if cmd_stdouts.nil?

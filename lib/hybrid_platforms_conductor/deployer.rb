@@ -412,7 +412,7 @@ module HybridPlatformsConductor
                 [
                   {
                     scp: { "#{__dir__}/mutex_dir" => '.' },
-                    bash: "while ! #{@ssh_executor.ssh_user == 'root' ? '' : 'sudo '}./mutex_dir lock /tmp/hybrid_platforms_conductor_deploy_lock \"$(ps -o ppid= -p $$)\"; do echo -e 'Another deployment is running on #{hostname}. Waiting for it to finish to continue...' ; sleep 5 ; done"
+                    remote_bash: "while ! #{@ssh_executor.ssh_user == 'root' ? '' : 'sudo '}./mutex_dir lock /tmp/hybrid_platforms_conductor_deploy_lock \"$(ps -o ppid= -p $$)\"; do echo -e 'Another deployment is running on #{hostname}. Waiting for it to finish to continue...' ; sleep 5 ; done"
                   }
                 ] + @nodes_handler.platform_for(hostname).actions_to_deploy_on(hostname, use_why_run: @use_why_run)
               ]
@@ -426,7 +426,7 @@ module HybridPlatformsConductor
             Hash[@hosts.map do |hostname|
               [
                 hostname,
-                { bash: "#{@ssh_executor.ssh_user == 'root' ? '' : 'sudo '}./mutex_dir unlock /tmp/hybrid_platforms_conductor_deploy_lock" }
+                { remote_bash: "#{@ssh_executor.ssh_user == 'root' ? '' : 'sudo '}./mutex_dir unlock /tmp/hybrid_platforms_conductor_deploy_lock" }
               ]
             end],
             timeout: 10,
@@ -473,7 +473,7 @@ module HybridPlatformsConductor
               [
                 hostname,
                 {
-                  bash: "#{user_name == 'root' ? '' : 'sudo '}mkdir -p /var/log/deployments",
+                  remote_bash: "#{user_name == 'root' ? '' : 'sudo '}mkdir -p /var/log/deployments",
                   scp: {
                     log_file => '/var/log/deployments',
                     :sudo => user_name != 'root',

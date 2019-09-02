@@ -17,8 +17,8 @@ describe 'last_deploys executable' do
     with_test_platform_for_last_deploys do
       expect_ssh_executor_runs([proc do |actions, timeout: nil, concurrent: false, log_to_dir: 'run_logs', log_to_stdout: true|
         expect(actions).to eq(
-          'node1' => { bash: "cd /var/log/deployments && ls -t | head -1 | xargs sed '/===== STDOUT =====/q'" },
-          'node2' => { bash: "cd /var/log/deployments && ls -t | head -1 | xargs sed '/===== STDOUT =====/q'" }
+          'node1' => { remote_bash: "cd /var/log/deployments && ls -t | head -1 | xargs sed '/===== STDOUT =====/q'" },
+          'node2' => { remote_bash: "cd /var/log/deployments && ls -t | head -1 | xargs sed '/===== STDOUT =====/q'" }
         )
         {
           'node1' => [0, "
@@ -59,8 +59,8 @@ diff_files: some_file
     with_test_platform_for_last_deploys do
       expect_ssh_executor_runs([proc do |actions, timeout: nil, concurrent: false, log_to_dir: 'run_logs', log_to_stdout: true|
         expect(actions).to eq(
-          'node1' => { bash: "cd /var/log/deployments && ls -t | head -1 | xargs sed '/===== STDOUT =====/q'" },
-          'node2' => { bash: "cd /var/log/deployments && ls -t | head -1 | xargs sed '/===== STDOUT =====/q'" }
+          'node1' => { remote_bash: "cd /var/log/deployments && ls -t | head -1 | xargs sed '/===== STDOUT =====/q'" },
+          'node2' => { remote_bash: "cd /var/log/deployments && ls -t | head -1 | xargs sed '/===== STDOUT =====/q'" }
         )
         {
           'node1' => [0, "
@@ -101,8 +101,8 @@ diff_files: some_file
     with_test_platform_for_last_deploys do
       expect_ssh_executor_runs([proc do |actions, timeout: nil, concurrent: false, log_to_dir: 'run_logs', log_to_stdout: true|
         expect(actions).to eq(
-          'node1' => { bash: "cd /var/log/deployments && ls -t | head -1 | xargs sed '/===== STDOUT =====/q'" },
-          'node2' => { bash: "cd /var/log/deployments && ls -t | head -1 | xargs sed '/===== STDOUT =====/q'" }
+          'node1' => { remote_bash: "cd /var/log/deployments && ls -t | head -1 | xargs sed '/===== STDOUT =====/q'" },
+          'node2' => { remote_bash: "cd /var/log/deployments && ls -t | head -1 | xargs sed '/===== STDOUT =====/q'" }
         )
         {
           'node1' => [0, "
@@ -142,7 +142,7 @@ diff_files: some_file
   it 'checks the selected nodes' do
     with_test_platform_for_last_deploys do
       expect_ssh_executor_runs([proc do |actions, timeout: nil, concurrent: false, log_to_dir: 'run_logs', log_to_stdout: true|
-        expect(actions).to eq('node1' => { bash: "cd /var/log/deployments && ls -t | head -1 | xargs sed '/===== STDOUT =====/q'" })
+        expect(actions).to eq('node1' => { remote_bash: "cd /var/log/deployments && ls -t | head -1 | xargs sed '/===== STDOUT =====/q'" })
         {
           'node1' => [0, "
 date: 2019-08-21 10:12:15
