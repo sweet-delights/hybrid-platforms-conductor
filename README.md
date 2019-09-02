@@ -233,7 +233,7 @@ Nodes selection options:
         --hosts-platform
     -l, --hosts-list LIST_NAME       Select nodes defined in a nodes list (can be used several times)
     -n, --node NODE                  Select a specific node. Can be a regular expression to select several nodes if used with enclosing "/" characters. (can be used several times).
-        --service SERVICE_NAME       Select nodes implementing a given service (can be used several times)
+        --nodes-service SERVICE      Select nodes implementing a given service (can be used several times)
 
 SSH executor options:
     -d, --debug                      Activate verbose logs
@@ -390,7 +390,7 @@ Nodes selection options:
         --hosts-platform
     -l, --hosts-list LIST_NAME       Select nodes defined in a nodes list (can be used several times)
     -n, --node NODE                  Select a specific node. Can be a regular expression to select several nodes if used with enclosing "/" characters. (can be used several times).
-        --service SERVICE_NAME       Select nodes implementing a given service (can be used several times)
+        --nodes-service SERVICE      Select nodes implementing a given service (can be used several times)
 
 SSH executor options:
     -d, --debug                      Activate verbose logs
@@ -520,7 +520,7 @@ Nodes selection options:
         --hosts-platform
     -l, --hosts-list LIST_NAME       Select nodes defined in a nodes list (can be used several times)
     -n, --node NODE                  Select a specific node. Can be a regular expression to select several nodes if used with enclosing "/" characters. (can be used several times).
-    -r, --service SERVICE_NAME       Select nodes implementing a given service (can be used several times)
+    -r, --nodes-service SERVICE      Select nodes implementing a given service (can be used several times)
 
 SSH executor options:
     -d, --debug                      Activate verbose logs
@@ -747,7 +747,7 @@ Nodes selection options:
         --hosts-platform
     -l, --hosts-list LIST_NAME       Select nodes defined in a nodes list (can be used several times)
     -n, --node NODE                  Select a specific node. Can be a regular expression to select several nodes if used with enclosing "/" characters. (can be used several times).
-    -r, --service SERVICE_NAME       Select nodes implementing a given service (can be used several times)
+    -r, --nodes-service SERVICE      Select nodes implementing a given service (can be used several times)
 ```
 
 Usage examples:
@@ -849,7 +849,7 @@ Nodes selection options:
         --hosts-platform
     -l, --hosts-list LIST_NAME       Select nodes defined in a nodes list (can be used several times)
     -n, --node NODE                  Select a specific node. Can be a regular expression to select several nodes if used with enclosing "/" characters. (can be used several times).
-    -r, --service SERVICE_NAME       Select nodes implementing a given service (can be used several times)
+    -r, --nodes-service SERVICE      Select nodes implementing a given service (can be used several times)
 
 SSH executor options:
     -d, --debug                      Activate verbose logs
@@ -912,7 +912,7 @@ Nodes selection options:
         --hosts-platform
     -l, --hosts-list LIST_NAME       Select nodes defined in a nodes list (can be used several times)
     -n, --node NODE                  Select a specific node. Can be a regular expression to select several nodes if used with enclosing "/" characters. (can be used several times).
-    -r, --service SERVICE_NAME       Select nodes implementing a given service (can be used several times)
+    -r, --nodes-service SERVICE      Select nodes implementing a given service (can be used several times)
 
 JSON dump options:
     -k, --skip-run                   Skip the actual gathering of dumps in run_logs. If set, the current run_logs content will be used.
@@ -1070,7 +1070,7 @@ Nodes selection options:
         --hosts-platform
     -l, --hosts-list LIST_NAME       Select nodes defined in a nodes list (can be used several times)
     -n, --node NODE                  Select a specific node. Can be a regular expression to select several nodes if used with enclosing "/" characters. (can be used several times).
-        --service SERVICE_NAME       Select nodes implementing a given service (can be used several times)
+        --nodes-service SERVICE      Select nodes implementing a given service (can be used several times)
 
 SSH executor options:
     -d, --debug                      Activate verbose logs
@@ -1243,14 +1243,14 @@ Nodes selection options:
         --hosts-platform
     -l, --hosts-list LIST_NAME       Select nodes defined in a nodes list (can be used several times)
     -n, --node NODE                  Select a specific node. Can be a regular expression to select several nodes if used with enclosing "/" characters. (can be used several times).
-    -r, --service SERVICE_NAME       Select nodes implementing a given service (can be used several times)
+    -r, --nodes-service SERVICE      Select nodes implementing a given service (can be used several times)
 ```
 
 * `--all-nodes`: Select all the known nodes.
 * `--hosts-platform PLATFORM_NAME`: Specify the name of a platform as a selector. Can be useful to only perform checks of nodes of a given repository after merging a PR on this repository.
 * `--hosts-list LIST_NAME`: Specify a hosts list name as selector. Hosts list are a named group of hosts, and are defined by each platform if they make sense. For example all the nodes belonging to the same cluster could be part of a hosts list.
 * `--node NODE`: Select a single node. A regular expression can also be used when `NODE` is enclosed with `/` character (the regular expression grammar is [the Ruby one](http://ruby-doc.org/core-2.5.0/Regexp.html)). Examples: `--node my_node_1`, `--node /my_node_.+/`.
-* `--service SERVICE_NAME`: Select all nodes that implement a given service.
+* `--nodes-service SERVICE`: Select all nodes that implement a given service.
 
 ## SSH Executor options
 

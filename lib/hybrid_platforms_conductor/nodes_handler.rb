@@ -106,7 +106,7 @@ module HybridPlatformsConductor
       options_parser.on('-n', '--node NODE', 'Select a specific node. Can be a regular expression to select several nodes if used with enclosing "/" characters. (can be used several times).') do |node|
         nodes_selectors << node
       end
-      options_parser.on('-r', '--service SERVICE_NAME', 'Select nodes implementing a given service (can be used several times)') do |service|
+      options_parser.on('-r', '--nodes-service SERVICE', 'Select nodes implementing a given service (can be used several times)') do |service|
         nodes_selectors << { service: service }
       end
     end

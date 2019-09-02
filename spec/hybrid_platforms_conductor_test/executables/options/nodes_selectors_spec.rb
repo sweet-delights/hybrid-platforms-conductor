@@ -39,9 +39,9 @@ describe 'executables\' nodes selection options' do
     ['--node', '/node1.+/'] => [/node1.+/],
     ['--hosts-list', 'my_list'] => [{ list: 'my_list' }],
     ['--hosts-platform', 'platform_2'] => [{ platform: 'platform_2' }],
-    ['--service', 'service1'] => [{ service: 'service1' }],
+    ['--nodes-service', 'service1'] => [{ service: 'service1' }],
     ['--node', 'node11', '--node', 'node12'] => %w[node11 node12],
-    ['--service', 'service1', '--hosts-platform', 'platform_2'] => [{ service: 'service1' }, { platform: 'platform_2' }]
+    ['--nodes-service', 'service1', '--hosts-platform', 'platform_2'] => [{ service: 'service1' }, { platform: 'platform_2' }]
   }.each do |args, expected_nodes|
 
     it "resolves '#{args.join(' ')}' into #{expected_nodes.join(', ')}" do
