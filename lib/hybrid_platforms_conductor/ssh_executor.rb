@@ -109,7 +109,7 @@ module HybridPlatformsConductor
       options_parser.on('-m', '--max-threads NBR', "Set the number of threads to use for concurrent queries (defaults to #{@max_threads})") do |nbr_threads|
         @max_threads = nbr_threads.to_i
       end if parallel
-      options_parser.on('-q', '--no-ssh-host-key-checking', 'If used, don\'t check for SSH host keys.') do
+      options_parser.on('-q', '--ssh-no-host-key-checking', 'If used, don\'t check for SSH host keys.') do
         @ssh_strict_host_key_checking = false
       end
       options_parser.on('-s', '--show-commands', 'Display the SSH commands that would be run instead of running them') do

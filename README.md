@@ -222,6 +222,7 @@ Example:
 Usage: ./bin/deploy [options]
 
 Main options:
+    -d, --debug                      Activate debug mode
     -h, --help                       Display help and exit
 
 Nodes handler options:
@@ -235,10 +236,10 @@ Nodes selection options:
         --nodes-service SERVICE      Select nodes implementing a given service (can be used several times)
 
 SSH executor options:
-    -d, --debug                      Activate verbose logs
     -g, --ssh-gateway-user USER      Name of the gateway user to be used by the gateways. Can also be set from environment variable ti_gateway_user. Defaults to ubradm.
     -j, --ssh-no-control-master      If used, don't create SSH control masters for connections.
     -m, --max-threads NBR            Set the number of threads to use for concurrent queries (defaults to 16)
+    -q, --ssh-no-host-key-checking   If used, don't check for SSH host keys.
     -s, --show-commands              Display the SSH commands that would be run instead of running them
     -u, --ssh-user USER              Name of user to be used in SSH connections (defaults to platforms_ssh_user or USER environment variables)
     -w, --password                   If used, then expect SSH connections to ask for a password.
@@ -278,6 +279,7 @@ It will:
 Usage: ./bin/check-node [options]
 
 Main options:
+    -d, --debug                      Activate debug mode
     -h, --help                       Display help and exit
     -n, --node NODE                  Run the command on a specific node.
 
@@ -285,7 +287,6 @@ Nodes handler options:
     -o, --show-nodes                 Display the list of possible nodes and exit
 
 SSH executor options:
-    -d, --debug                      Activate verbose logs
     -g, --ssh-gateway-user USER      Name of the gateway user to be used by the gateways. Can also be set from environment variable ti_gateway_user. Defaults to ubradm.
     -j, --ssh-no-control-master      If used, don't create SSH control masters for connections.
     -s, --show-commands              Display the SSH commands that would be run instead of running them
@@ -380,6 +381,7 @@ It will:
 Usage: ./bin/deploy [options]
 
 Main options:
+    -d, --debug                      Activate debug mode
     -h, --help                       Display help and exit
 
 Nodes handler options:
@@ -393,10 +395,10 @@ Nodes selection options:
         --nodes-service SERVICE      Select nodes implementing a given service (can be used several times)
 
 SSH executor options:
-    -d, --debug                      Activate verbose logs
     -g, --ssh-gateway-user USER      Name of the gateway user to be used by the gateways. Can also be set from environment variable ti_gateway_user. Defaults to ubradm.
     -j, --ssh-no-control-master      If used, don't create SSH control masters for connections.
     -m, --max-threads NBR            Set the number of threads to use for concurrent queries (defaults to 16)
+    -q, --ssh-no-host-key-checking   If used, don't check for SSH host keys.
     -s, --show-commands              Display the SSH commands that would be run instead of running them
     -u, --ssh-user USER              Name of user to be used in SSH connections (defaults to platforms_ssh_user or USER environment variables)
     -w, --password                   If used, then expect SSH connections to ask for a password.
@@ -506,6 +508,7 @@ Usage: ./bin/ssh_run [options]
 
 Main options:
     -c, --command CMD                Command to execute (can't be used with --interactive) (can be used several times, commands will be executed sequentially)
+    -d, --debug                      Activate debug mode
     -f, --commands-file FILE_NAME    Execute commands taken from a file (can't be used with --interactive) (can be used several times, commands will be executed sequentially)
     -h, --help                       Display help and exit
     -i, --interactive                Run an interactive SSH session instead of executing a command (can't be used with --command or --commands-file)
@@ -523,10 +526,10 @@ Nodes selection options:
     -r, --nodes-service SERVICE      Select nodes implementing a given service (can be used several times)
 
 SSH executor options:
-    -d, --debug                      Activate verbose logs
     -g, --ssh-gateway-user USER      Name of the gateway user to be used by the gateways. Can also be set from environment variable ti_gateway_user. Defaults to ubradm.
     -j, --ssh-no-control-master      If used, don't create SSH control masters for connections.
     -m, --max-threads NBR            Set the number of threads to use for concurrent queries (defaults to 16)
+    -q, --ssh-no-host-key-checking   If used, don't check for SSH host keys.
     -s, --show-commands              Display the SSH commands that would be run instead of running them
     -u, --ssh-user USER              Name of user to be used in SSH connections (defaults to platforms_ssh_user or USER environment variables)
     -w, --password                   If used, then expect SSH connections to ask for a password.
@@ -582,6 +585,7 @@ This executable is also used internally by other tools of Hybrid Platforms Condu
 Usage: ./bin/ssh_config [options]
 
 Main options:
+    -d, --debug                      Activate debug mode
     -h, --help                       Display help and exit
     -x, --ssh-exec FILE_PATH         Path to the SSH executable to be used. Useful to give default options (especially with GIT_SSH). Defaults to ssh.
 
@@ -589,7 +593,6 @@ Nodes handler options:
     -o, --show-nodes                 Display the list of possible nodes and exit
 
 SSH executor options:
-    -d, --debug                      Activate verbose logs
     -g, --ssh-gateway-user USER      Name of the gateway user to be used by the gateways. Can also be set from environment variable ti_gateway_user. Defaults to ubradm.
     -j, --ssh-no-control-master      If used, don't create SSH control masters for connections.
     -s, --show-commands              Display the SSH commands that would be run instead of running them
@@ -734,6 +737,7 @@ This executable is using report generators plugins stored in `./lib/hybrid_platf
 Usage: ./bin/report [options]
 
 Main options:
+    -d, --debug                      Activate debug mode
     -h, --help                       Display help and exit
 
 Reports handler options:
@@ -838,6 +842,7 @@ The `last_deploys` executable will fetch the last deployments information for a 
 Usage: ./bin/last_deploys [options]
 
 Main options:
+    -d, --debug                      Activate debug mode
     -h, --help                       Display help and exit
         --sort-by SORT               Specify a sort. Possible values are: admin, chef_commit_comment, chef_commit_id, datetime, git_branch, git_repo, host. Each value can append _desc to specify a reverse sorting. Defaults to host.
 
@@ -852,10 +857,10 @@ Nodes selection options:
     -r, --nodes-service SERVICE      Select nodes implementing a given service (can be used several times)
 
 SSH executor options:
-    -d, --debug                      Activate verbose logs
     -g, --ssh-gateway-user USER      Name of the gateway user to be used by the gateways. Can also be set from environment variable ti_gateway_user. Defaults to ubradm.
     -j, --ssh-no-control-master      If used, don't create SSH control masters for connections.
     -m, --max-threads NBR            Set the number of threads to use for concurrent queries (defaults to 64)
+    -q, --ssh-no-host-key-checking   If used, don't check for SSH host keys.
     -s, --show-commands              Display the SSH commands that would be run instead of running them
     -u, --ssh-user USER              Name of user to be used in SSH connections (defaults to platforms_ssh_user or USER environment variables)
     -w, --password                   If used, then expect SSH connections to ask for a password.
@@ -902,6 +907,7 @@ Those JSON files can then be used for several purposes:
 Usage: ./bin/dump_nodes_json [options]
 
 Main options:
+    -d, --debug                      Activate debug mode
     -h, --help                       Display help and exit
 
 Nodes handler options:
@@ -919,10 +925,10 @@ JSON dump options:
     -j, --json-dir DIRECTORY         Specify the output directory in which JSON files are being written. Defaults to nodes_json.
 
 SSH executor options:
-    -d, --debug                      Activate verbose logs
     -g, --ssh-gateway-user USER      Name of the gateway user to be used by the gateways. Can also be set from environment variable ti_gateway_user. Defaults to ubradm.
     -j, --ssh-no-control-master      If used, don't create SSH control masters for connections.
     -m, --max-threads NBR            Set the number of threads to use for concurrent queries (defaults to 16)
+    -q, --ssh-no-host-key-checking   If used, don't check for SSH host keys.
     -s, --show-commands              Display the SSH commands that would be run instead of running them
     -u, --ssh-user USER              Name of user to be used in SSH connections (defaults to platforms_ssh_user or USER environment variables)
     -w, --password                   If used, then expect SSH connections to ask for a password.
@@ -972,6 +978,7 @@ Prerequisites before running `topograph`:
 Usage: ./bin/topograph [options]
 
 Main options:
+    -d, --debug                      Activate debug mode
     -h, --help                       Display help and exit
 
 Topographer options:
@@ -992,10 +999,10 @@ Nodes handler options:
     -o, --show-nodes                 Display the list of possible nodes and exit
 
 SSH executor options:
-    -d, --debug                      Activate verbose logs
     -g, --ssh-gateway-user USER      Name of the gateway user to be used by the gateways. Can also be set from environment variable ti_gateway_user. Defaults to ubradm.
     -j, --ssh-no-control-master      If used, don't create SSH control masters for connections.
     -m, --max-threads NBR            Set the number of threads to use for concurrent queries (defaults to 16)
+    -q, --ssh-no-host-key-checking   If used, don't check for SSH host keys.
     -s, --show-commands              Display the SSH commands that would be run instead of running them
     -u, --ssh-user USER              Name of user to be used in SSH connections (defaults to platforms_ssh_user or USER environment variables)
     -w, --password                   If used, then expect SSH connections to ask for a password.
@@ -1059,6 +1066,7 @@ This executable is perfectly suited to be integrated in a continuous integration
 Usage: ./bin/test [options]
 
 Main options:
+    -d, --debug                      Activate debug mode
     -h, --help                       Display help and exit.
 
 Nodes handler options:
@@ -1072,10 +1080,10 @@ Nodes selection options:
         --nodes-service SERVICE      Select nodes implementing a given service (can be used several times)
 
 SSH executor options:
-    -d, --debug                      Activate verbose logs
     -g, --ssh-gateway-user USER      Name of the gateway user to be used by the gateways. Can also be set from environment variable ti_gateway_user. Defaults to ubradm.
     -j, --ssh-no-control-master      If used, don't create SSH control masters for connections.
     -m, --max-threads NBR            Set the number of threads to use for concurrent queries (defaults to 64)
+    -q, --ssh-no-host-key-checking   If used, don't check for SSH host keys.
     -s, --show-commands              Display the SSH commands that would be run instead of running them
     -u, --ssh-user USER              Name of user to be used in SSH connections (defaults to platforms_ssh_user or USER environment variables)
     -w, --password                   If used, then expect SSH connections to ask for a password.
@@ -1177,6 +1185,7 @@ It is intended to be run only for the initial setup or when such dependencies ch
 Usage: ./bin/setup [options]
 
 Main options:
+    -d, --debug                      Activate debug mode
     -h, --help                       Display help and exit
 
 Nodes handler options:
@@ -1261,6 +1270,7 @@ SSH executor options:
     -g, --ssh-gateway-user USER      Name of the gateway user to be used by the gateways. Can also be set from environment variable ti_gateway_user. Defaults to ubradm.
     -j, --ssh-no-control-master      If used, don't create SSH control masters for connections.
     -m, --max-threads NBR            Set the number of threads to use for concurrent queries (defaults to 64)
+    -q, --ssh-no-host-key-checking   If used, don't check for SSH host keys.
     -s, --show-commands              Display the SSH commands that would be run instead of running them
     -u, --ssh-user USER              Name of user to be used in SSH connections (defaults to platforms_ssh_user or USER environment variables)
     -w, --password                   If used, then expect SSH connections to ask for a password.
@@ -1272,6 +1282,7 @@ SSH executor options:
 * `--ssh-gateway-user USER`: Specify the user to be used through the gateway accessing the nodes.
 * `--ssh-no-control-master`: If specified, don't use an SSH control master: it will open/close an SSH connection for every command it needs to run.
 * `--max-threads NBR`: Specify the maximal number of threads to use when concurrent SSH execution is performed.
+* `--ssh-no-host-key-checking`: If specified, make sure SSH connections don't check for host keys.
 * `--show-commands`: Display the commands the tool would execute, without executing them. Useful to understand or debug the tool's behaviour.
 * `--ssh-user USER`: Specify the user to be used on the node being accessed by the tool. It is recommended to set the default value of this option in the `platforms_ssh_user` environment variable. If both this option and the `platforms_ssh_user` variables are omitted, then the `USER` environment variable is used.
 * `--password`: When specified, then don't use `-o BatchMode=yes` on SSH commands so that if connection needs a password it will be asked. Useful to deploy on accounts not having key authentication yet.

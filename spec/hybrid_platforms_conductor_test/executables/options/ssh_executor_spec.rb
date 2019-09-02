@@ -78,7 +78,7 @@ describe 'executables\' SSH Executor options' do
         expect(test_ssh_executor.ssh_strict_host_key_checking).to eq false
         {}
       end])
-      exit_code, stdout, stderr = run 'ssh_run', '--node', 'node', '--command', 'echo Hello', '--no-ssh-host-key-checking'
+      exit_code, stdout, stderr = run 'ssh_run', '--node', 'node', '--command', 'echo Hello', '--ssh-no-host-key-checking'
       expect(exit_code).to eq 0
       expect(stdout).to eq ''
       expect(stderr).to eq ''
