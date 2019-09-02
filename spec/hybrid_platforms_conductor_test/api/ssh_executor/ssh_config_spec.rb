@@ -36,7 +36,7 @@ describe HybridPlatformsConductor::SshExecutor do
     it 'generates a global configuration without strict host key checking' do
       with_test_platform do
         test_ssh_executor.ssh_user = 'test_user'
-        test_ssh_executor.strict_host_key_checking = false
+        test_ssh_executor.ssh_strict_host_key_checking = false
         expect(ssh_config_for(nil)).to eq "Host *
   User test_user
   ControlPath #{Dir.tmpdir}/hpc_ssh_executor_mux_%h_%p_%r

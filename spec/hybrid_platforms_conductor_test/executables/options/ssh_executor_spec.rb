@@ -75,7 +75,7 @@ describe 'executables\' SSH Executor options' do
   it 'does not use strict host key checking' do
     with_test_platform_for_ssh_executor_options do
       expect_ssh_executor_runs([proc do |actions, timeout: nil, concurrent: false, log_to_dir: 'run_logs', log_to_stdout: true|
-        expect(test_ssh_executor.strict_host_key_checking).to eq false
+        expect(test_ssh_executor.ssh_strict_host_key_checking).to eq false
         {}
       end])
       exit_code, stdout, stderr = run 'ssh_run', '--host-name', 'node', '--command', 'echo Hello', '--no-ssh-host-key-checking'

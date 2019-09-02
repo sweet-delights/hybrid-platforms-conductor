@@ -28,6 +28,10 @@ module HybridPlatformsConductor
     #   Hash<String, String>
     attr_accessor :ssh_env
 
+    # Do we use strict host key checking in our SSH commands? [default: true]
+    # Boolean
+    attr_accessor :ssh_strict_host_key_checking
+
     # Maximum number of threads to spawn in parallel [default: 8]
     #   Integer
     attr_accessor :max_threads
@@ -43,10 +47,6 @@ module HybridPlatformsConductor
     # Passwords to be used, per hostname [default: {}]
     # Hash<String, String>
     attr_accessor :passwords
-
-    # Do we use strict host key checking in our SSH commands? [default: true]
-    # Boolean
-    attr_accessor :strict_host_key_checking
 
     # Do we use the control master? [default: true]
     # Boolean
@@ -75,7 +75,7 @@ module HybridPlatformsConductor
       @max_threads = 16
       @dry_run = false
       @use_control_master = true
-      @strict_host_key_checking = true
+      @ssh_strict_host_key_checking = true
       @override_connections = {}
       @passwords = {}
       @auth_password = false
@@ -110,7 +110,7 @@ module HybridPlatformsConductor
         @max_threads = nbr_threads.to_i
       end if parallel
       options_parser.on('-q', '--no-ssh-host-key-checking', 'If used, don\'t check for SSH host keys.') do
-        @strict_host_key_checking = false
+        @ssh_strict_host_key_checking = false
       end
       options_parser.on('-s', '--show-commands', 'Display the SSH commands that would be run instead of running them') do
         self.dry_run = true
@@ -237,7 +237,7 @@ Host *
   User #{@ssh_user}
   # Default control socket path to be used when multiplexing SSH connections
   ControlPath /tmp/hpc_ssh_executor_mux_%h_%p_%r
-  #{@strict_host_key_checking ? '' : 'StrictHostKeyChecking no'}
+  #{@ssh_strict_host_key_checking ? '' : 'StrictHostKeyChecking no'}
   #{known_hosts_file.nil? ? '' : "UserKnownHostsFile #{known_hosts_file}"}
   #{open_ssh_major_version >= 7 ? 'PubkeyAcceptedKeyTypes +ssh-dss' : ''}
 
@@ -394,7 +394,7 @@ Host *
     # Parameters::
     # * *host* (String): The host or IP
     def ensure_host_key(host)
-      if @strict_host_key_checking
+      if @ssh_strict_host_key_checking
         # Get the host key
         exit_status, stdout, _stderr = @cmd_runner.run_cmd "ssh-keyscan #{host}", timeout: TIMEOUT_HOST_KEYS, log_to_stdout: log_debug?, no_exception: true
         if exit_status == 0
