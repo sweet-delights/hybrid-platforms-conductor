@@ -36,7 +36,7 @@ describe 'executables\' SSH Executor options' do
   it 'selects the correct gateway conf' do
     with_test_platform_for_ssh_executor_options do
       expect_ssh_executor_runs([proc do |actions, timeout: nil, concurrent: false, log_to_dir: 'run_logs', log_to_stdout: true|
-        expect(test_ssh_executor.gateways_conf).to eq :test_gateway2
+        expect(test_ssh_executor.ssh_gateways_conf).to eq :test_gateway2
         {}
       end])
       exit_code, stdout, stderr = run 'ssh_run', '--host-name', 'node', '--command', 'echo Hello', '--gateways-conf', 'test_gateway2'

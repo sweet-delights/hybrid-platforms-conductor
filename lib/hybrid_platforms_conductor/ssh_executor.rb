@@ -18,7 +18,7 @@ module HybridPlatformsConductor
 
     # Name of the gateways configuration. [default: ENV['ti_gateways_conf'] or munich]
     #   Symbol
-    attr_accessor :gateways_conf
+    attr_accessor :ssh_gateways_conf
 
     # User name used in SSH connections. [default: ENV['platforms_ssh_user'] or ENV['USER']]
     #   String
@@ -79,7 +79,7 @@ module HybridPlatformsConductor
       @override_connections = {}
       @passwords = {}
       @auth_password = false
-      @gateways_conf = ENV['ti_gateways_conf'].nil? ? :munich : ENV['ti_gateways_conf'].to_sym
+      @ssh_gateways_conf = ENV['ti_gateways_conf'].nil? ? :munich : ENV['ti_gateways_conf'].to_sym
       @ssh_gateway_user = ENV['ti_gateway_user'].nil? ? 'ubradm' : ENV['ti_gateway_user']
       # Global variables handling the SSH directory storing temporary SSH configuration
       # Those variables are not shared between different instances of SshExecutor as the SSH configuration depends on the SshExecutor configuration.
@@ -121,8 +121,8 @@ module HybridPlatformsConductor
       options_parser.on('-w', '--password', 'If used, then expect SSH connections to ask for a password.') do
         @auth_password = true
       end
-      options_parser.on('-y', '--gateways-conf GATEWAYS_CONF_NAME', "Name of the gateways configuration to be used. Can also be set from environment variable ti_gateways_conf. Defaults to #{@gateways_conf}.") do |gateway|
-        @gateways_conf = gateway.to_sym
+      options_parser.on('-y', '--gateways-conf GATEWAYS_CONF_NAME', "Name of the gateways configuration to be used. Can also be set from environment variable ti_gateways_conf. Defaults to #{@ssh_gateways_conf}.") do |gateway|
+        @ssh_gateways_conf = gateway.to_sym
       end
     end
 
@@ -130,7 +130,7 @@ module HybridPlatformsConductor
     def validate_params
       raise 'No SSH user name specified. Please use --ssh-user option or platforms_ssh_user environment variable to set it.' if @ssh_user_name.nil? || @ssh_user_name.empty?
       known_gateways = @nodes_handler.known_gateways
-      raise "Unknown gateway configuration provided: #{@gateways_conf}. Possible values are: #{known_gateways.join(', ')}." unless known_gateways.include?(@gateways_conf)
+      raise "Unknown gateway configuration provided: #{@ssh_gateways_conf}. Possible values are: #{known_gateways.join(', ')}." unless known_gateways.include?(@ssh_gateways_conf)
     end
 
     # Set dry run
@@ -149,7 +149,7 @@ module HybridPlatformsConductor
       out " * Dry run: #{@dry_run}"
       out " * Use SSH control master: #{@use_control_master}"
       out " * Max threads used: #{@max_threads}"
-      out " * Gateways configuration: #{@gateways_conf}"
+      out " * Gateways configuration: #{@ssh_gateways_conf}"
       out " * Gateway user: #{@ssh_gateway_user}"
       out
     end
@@ -227,7 +227,7 @@ module HybridPlatformsConductor
 # GATEWAYS #
 ############
 
-#{@nodes_handler.known_gateways.include?(@gateways_conf) ? @nodes_handler.ssh_for_gateway(@gateways_conf, ssh_exec: ssh_exec, user: @ssh_user_name) : ''}
+#{@nodes_handler.known_gateways.include?(@ssh_gateways_conf) ? @nodes_handler.ssh_for_gateway(@ssh_gateways_conf, ssh_exec: ssh_exec, user: @ssh_user_name) : ''}
 
 #############
 # ENDPOINTS #
