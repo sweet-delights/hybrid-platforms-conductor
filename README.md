@@ -236,10 +236,10 @@ Nodes selection options:
 
 SSH executor options:
     -d, --debug                      Activate verbose logs
-    -g, --gateway-user USER_NAME     Name of the gateway user to be used by the gateways. Can also be set from environment variable ti_gateway_user. Defaults to ubradm.
+    -g, --ssh-gateway-user USER      Name of the gateway user to be used by the gateways. Can also be set from environment variable ti_gateway_user. Defaults to ubradm.
     -m, --max-threads NBR            Set the number of threads to use for concurrent queries (defaults to 16)
     -s, --show-commands              Display the SSH commands that would be run instead of running them
-    -u, --ssh-user USER_NAME         Name of user to be used in SSH connections (defaults to platforms_ssh_user or USER environment variables)
+    -u, --ssh-user USER              Name of user to be used in SSH connections (defaults to platforms_ssh_user or USER environment variables)
     -w, --password                   If used, then expect SSH connections to ask for a password.
     -y GATEWAYS_CONF_NAME,           Name of the gateways configuration to be used. Can also be set from environment variable ti_gateways_conf. Defaults to munich.
         --gateways-conf
@@ -285,9 +285,9 @@ Nodes handler options:
 
 SSH executor options:
     -d, --debug                      Activate verbose logs
-    -g, --gateway-user USER_NAME     Name of the gateway user to be used by the gateways. Can also be set from environment variable ti_gateway_user. Defaults to ubradm.
+    -g, --ssh-gateway-user USER      Name of the gateway user to be used by the gateways. Can also be set from environment variable ti_gateway_user. Defaults to ubradm.
     -s, --show-commands              Display the SSH commands that would be run instead of running them
-    -u, --ssh-user USER_NAME         Name of user to be used in SSH connections (defaults to platforms_ssh_user or USER environment variables)
+    -u, --ssh-user USER              Name of user to be used in SSH connections (defaults to platforms_ssh_user or USER environment variables)
     -w, --password                   If used, then expect SSH connections to ask for a password.
     -y GATEWAYS_CONF_NAME,           Name of the gateways configuration to be used. Can also be set from environment variable ti_gateways_conf. Defaults to munich.
         --gateways-conf
@@ -311,7 +311,7 @@ Usage examples:
 ./bin/check-node --node node23hst-nn1 --ssh-user a_usernme
 
 # Test on node23hst-nn1 using the gateway user tipadm
-./bin/check-node --node node23hst-nn1 --gateway-user tipadm
+./bin/check-node --node node23hst-nn1 --ssh-gateway-user tipadm
 
 # Test on node23hst-nn1 using a secrets file
 ./bin/check-node --node node23hst-nn1 --secrets passwords.json
@@ -392,10 +392,10 @@ Nodes selection options:
 
 SSH executor options:
     -d, --debug                      Activate verbose logs
-    -g, --gateway-user USER_NAME     Name of the gateway user to be used by the gateways. Can also be set from environment variable ti_gateway_user. Defaults to ubradm.
+    -g, --ssh-gateway-user USER      Name of the gateway user to be used by the gateways. Can also be set from environment variable ti_gateway_user. Defaults to ubradm.
     -m, --max-threads NBR            Set the number of threads to use for concurrent queries (defaults to 16)
     -s, --show-commands              Display the SSH commands that would be run instead of running them
-    -u, --ssh-user USER_NAME         Name of user to be used in SSH connections (defaults to platforms_ssh_user or USER environment variables)
+    -u, --ssh-user USER              Name of user to be used in SSH connections (defaults to platforms_ssh_user or USER environment variables)
     -w, --password                   If used, then expect SSH connections to ask for a password.
     -y GATEWAYS_CONF_NAME,           Name of the gateways configuration to be used. Can also be set from environment variable ti_gateways_conf. Defaults to munich.
         --gateways-conf
@@ -521,10 +521,10 @@ Nodes selection options:
 
 SSH executor options:
     -d, --debug                      Activate verbose logs
-    -g, --gateway-user USER_NAME     Name of the gateway user to be used by the gateways. Can also be set from environment variable ti_gateway_user. Defaults to ubradm.
+    -g, --ssh-gateway-user USER      Name of the gateway user to be used by the gateways. Can also be set from environment variable ti_gateway_user. Defaults to ubradm.
     -m, --max-threads NBR            Set the number of threads to use for concurrent queries (defaults to 16)
     -s, --show-commands              Display the SSH commands that would be run instead of running them
-    -u, --ssh-user USER_NAME         Name of user to be used in SSH connections (defaults to platforms_ssh_user or USER environment variables)
+    -u, --ssh-user USER              Name of user to be used in SSH connections (defaults to platforms_ssh_user or USER environment variables)
     -w, --password                   If used, then expect SSH connections to ask for a password.
     -y GATEWAYS_CONF_NAME,           Name of the gateways configuration to be used. Can also be set from environment variable ti_gateways_conf. Defaults to munich.
         --gateways-conf
@@ -586,9 +586,9 @@ Nodes handler options:
 
 SSH executor options:
     -d, --debug                      Activate verbose logs
-    -g, --gateway-user USER_NAME     Name of the gateway user to be used by the gateways. Can also be set from environment variable ti_gateway_user. Defaults to ubradm.
+    -g, --ssh-gateway-user USER      Name of the gateway user to be used by the gateways. Can also be set from environment variable ti_gateway_user. Defaults to ubradm.
     -s, --show-commands              Display the SSH commands that would be run instead of running them
-    -u, --ssh-user USER_NAME         Name of user to be used in SSH connections (defaults to platforms_ssh_user or USER environment variables)
+    -u, --ssh-user USER              Name of user to be used in SSH connections (defaults to platforms_ssh_user or USER environment variables)
     -w, --password                   If used, then expect SSH connections to ask for a password.
     -y GATEWAYS_CONF_NAME,           Name of the gateways configuration to be used. Can also be set from environment variable ti_gateways_conf. Defaults to munich.
         --gateways-conf
@@ -607,7 +607,7 @@ Usage examples:
 ./bin/ssh_config >~/.ssh/platforms_config
 
 # Dump in stdout, using hadcli as gateway user
-./bin/ssh_config --gateway-user hadcli
+./bin/ssh_config --ssh-gateway-user hadcli
 
 # Dump in stdout, using /my/other/ssh instead of ssh
 ./bin/ssh_config --ssh-exec /my/other/ssh
@@ -848,10 +848,10 @@ Nodes selection options:
 
 SSH executor options:
     -d, --debug                      Activate verbose logs
-    -g, --gateway-user USER_NAME     Name of the gateway user to be used by the gateways. Can also be set from environment variable ti_gateway_user. Defaults to ubradm.
+    -g, --ssh-gateway-user USER      Name of the gateway user to be used by the gateways. Can also be set from environment variable ti_gateway_user. Defaults to ubradm.
     -m, --max-threads NBR            Set the number of threads to use for concurrent queries (defaults to 64)
     -s, --show-commands              Display the SSH commands that would be run instead of running them
-    -u, --ssh-user USER_NAME         Name of user to be used in SSH connections (defaults to platforms_ssh_user or USER environment variables)
+    -u, --ssh-user USER              Name of user to be used in SSH connections (defaults to platforms_ssh_user or USER environment variables)
     -w, --password                   If used, then expect SSH connections to ask for a password.
     -y GATEWAYS_CONF_NAME,           Name of the gateways configuration to be used. Can also be set from environment variable ti_gateways_conf. Defaults to munich.
         --gateways-conf
@@ -914,10 +914,10 @@ JSON dump options:
 
 SSH executor options:
     -d, --debug                      Activate verbose logs
-    -g, --gateway-user USER_NAME     Name of the gateway user to be used by the gateways. Can also be set from environment variable ti_gateway_user. Defaults to ubradm.
+    -g, --ssh-gateway-user USER      Name of the gateway user to be used by the gateways. Can also be set from environment variable ti_gateway_user. Defaults to ubradm.
     -m, --max-threads NBR            Set the number of threads to use for concurrent queries (defaults to 16)
     -s, --show-commands              Display the SSH commands that would be run instead of running them
-    -u, --ssh-user USER_NAME         Name of user to be used in SSH connections (defaults to platforms_ssh_user or USER environment variables)
+    -u, --ssh-user USER              Name of user to be used in SSH connections (defaults to platforms_ssh_user or USER environment variables)
     -w, --password                   If used, then expect SSH connections to ask for a password.
     -y GATEWAYS_CONF_NAME,           Name of the gateways configuration to be used. Can also be set from environment variable ti_gateways_conf. Defaults to munich.
         --gateways-conf
@@ -986,10 +986,10 @@ Nodes handler options:
 
 SSH executor options:
     -d, --debug                      Activate verbose logs
-    -g, --gateway-user USER_NAME     Name of the gateway user to be used by the gateways. Can also be set from environment variable ti_gateway_user. Defaults to ubradm.
+    -g, --ssh-gateway-user USER      Name of the gateway user to be used by the gateways. Can also be set from environment variable ti_gateway_user. Defaults to ubradm.
     -m, --max-threads NBR            Set the number of threads to use for concurrent queries (defaults to 16)
     -s, --show-commands              Display the SSH commands that would be run instead of running them
-    -u, --ssh-user USER_NAME         Name of user to be used in SSH connections (defaults to platforms_ssh_user or USER environment variables)
+    -u, --ssh-user USER              Name of user to be used in SSH connections (defaults to platforms_ssh_user or USER environment variables)
     -w, --password                   If used, then expect SSH connections to ask for a password.
     -y GATEWAYS_CONF_NAME,           Name of the gateways configuration to be used. Can also be set from environment variable ti_gateways_conf. Defaults to munich.
         --gateways-conf
@@ -1065,10 +1065,10 @@ Nodes selection options:
 
 SSH executor options:
     -d, --debug                      Activate verbose logs
-    -g, --gateway-user USER_NAME     Name of the gateway user to be used by the gateways. Can also be set from environment variable ti_gateway_user. Defaults to ubradm.
+    -g, --ssh-gateway-user USER      Name of the gateway user to be used by the gateways. Can also be set from environment variable ti_gateway_user. Defaults to ubradm.
     -m, --max-threads NBR            Set the number of threads to use for concurrent queries (defaults to 64)
     -s, --show-commands              Display the SSH commands that would be run instead of running them
-    -u, --ssh-user USER_NAME         Name of user to be used in SSH connections (defaults to platforms_ssh_user or USER environment variables)
+    -u, --ssh-user USER              Name of user to be used in SSH connections (defaults to platforms_ssh_user or USER environment variables)
     -w, --password                   If used, then expect SSH connections to ask for a password.
     -y GATEWAYS_CONF_NAME,           Name of the gateways configuration to be used. Can also be set from environment variable ti_gateways_conf. Defaults to munich.
         --gateways-conf
@@ -1249,20 +1249,20 @@ The SSH Executor options are used to drive how SSH commands are executed.
 ```
 SSH executor options:
     -d, --debug                      Activate verbose logs
-    -g, --gateway-user USER_NAME     Name of the gateway user to be used by the gateways. Can also be set from environment variable ti_gateway_user. Defaults to ubradm.
+    -g, --ssh-gateway-user USER      Name of the gateway user to be used by the gateways. Can also be set from environment variable ti_gateway_user. Defaults to ubradm.
     -m, --max-threads NBR            Set the number of threads to use for concurrent queries (defaults to 64)
     -s, --show-commands              Display the SSH commands that would be run instead of running them
-    -u, --ssh-user USER_NAME         Name of user to be used in SSH connections (defaults to platforms_ssh_user or USER environment variables)
+    -u, --ssh-user USER              Name of user to be used in SSH connections (defaults to platforms_ssh_user or USER environment variables)
     -w, --password                   If used, then expect SSH connections to ask for a password.
     -y GATEWAYS_CONF_NAME,           Name of the gateways configuration to be used. Can also be set from environment variable ti_gateways_conf. Defaults to munich.
         --gateways-conf
 ```
 
 * `--debug`: Activate verbose logging.
-* `--gateway-user USER_NAME`: Specify the user to be used through the gateway accessing the nodes.
+* `--ssh-gateway-user USER`: Specify the user to be used through the gateway accessing the nodes.
 * `--max-threads NBR`: Specify the maximal number of threads to use when concurrent SSH execution is performed.
 * `--show-commands`: Display the commands the tool would execute, without executing them. Useful to understand or debug the tool's behaviour.
-* `--ssh-user USER_NAME`: Specify the user to be used on the node being accessed by the tool. It is recommended to set the default value of this option in the `platforms_ssh_user` environment variable. If both this option and the `platforms_ssh_user` variables are omitted, then the `USER` environment variable is used.
+* `--ssh-user USER`: Specify the user to be used on the node being accessed by the tool. It is recommended to set the default value of this option in the `platforms_ssh_user` environment variable. If both this option and the `platforms_ssh_user` variables are omitted, then the `USER` environment variable is used.
 * `--password`: When specified, then don't use `-o BatchMode=yes` on SSH commands so that if connection needs a password it will be asked. Useful to deploy on accounts not having key authentication yet.
 * `--gateways-conf GATEWAYS_CONF_NAME`: Specify the gateway configuration name to be used. Gateway configurations are defined in the platforms definition file (`./platforms.rb`). It is recommended to set the default value of this option in the `ti_gateways_conf` environment variable.
 

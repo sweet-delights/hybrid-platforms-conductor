@@ -26,7 +26,7 @@ describe 'executables\' SSH Executor options' do
         expect(test_ssh_executor.ssh_gateway_user).to eq 'another_user'
         {}
       end])
-      exit_code, stdout, stderr = run 'ssh_run', '--node', 'node', '--command', 'echo Hello', '--gateway-user', 'another_user'
+      exit_code, stdout, stderr = run 'ssh_run', '--node', 'node', '--command', 'echo Hello', '--ssh-gateway-user', 'another_user'
       expect(exit_code).to eq 0
       expect(stdout).to eq ''
       expect(stderr).to eq ''

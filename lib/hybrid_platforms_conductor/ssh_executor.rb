@@ -100,8 +100,8 @@ module HybridPlatformsConductor
     def options_parse(options_parser, parallel: true)
       options_parser.separator ''
       options_parser.separator 'SSH executor options:'
-      options_parser.on('-g', '--gateway-user USER_NAME', "Name of the gateway user to be used by the gateways. Can also be set from environment variable ti_gateway_user. Defaults to #{@ssh_gateway_user}.") do |user_name|
-        @ssh_gateway_user = user_name
+      options_parser.on('-g', '--ssh-gateway-user USER', "Name of the gateway user to be used by the gateways. Can also be set from environment variable ti_gateway_user. Defaults to #{@ssh_gateway_user}.") do |user|
+        @ssh_gateway_user = user
       end
       options_parser.on('-j', '--no-ssh-control-master', 'If used, don\'t create SSH control masters for connections.') do
         @ssh_use_control_master = false
@@ -115,8 +115,8 @@ module HybridPlatformsConductor
       options_parser.on('-s', '--show-commands', 'Display the SSH commands that would be run instead of running them') do
         self.dry_run = true
       end
-      options_parser.on('-u', '--ssh-user USER_NAME', 'Name of user to be used in SSH connections (defaults to platforms_ssh_user or USER environment variables)') do |user_name|
-        @ssh_user = user_name
+      options_parser.on('-u', '--ssh-user USER', 'Name of user to be used in SSH connections (defaults to platforms_ssh_user or USER environment variables)') do |user|
+        @ssh_user = user
       end
       options_parser.on('-w', '--password', 'If used, then expect SSH connections to ask for a password.') do
         @auth_password = true
