@@ -165,7 +165,7 @@ describe HybridPlatformsConductor::SshExecutor do
         'node2' => { connection: 'node2_connection' },
         'node3' => { connection: 'node3_connection' }
       }) do
-        test_ssh_executor.use_control_master = false
+        test_ssh_executor.ssh_use_control_master = false
         test_ssh_executor.ssh_user = 'test_user'
         with_cmd_runner_mocked(
           commands: [],

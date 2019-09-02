@@ -49,7 +49,7 @@ describe 'executables\' SSH Executor options' do
   it 'does not use the SSH control master' do
     with_test_platform_for_ssh_executor_options do
       expect_ssh_executor_runs([proc do |actions, timeout: nil, concurrent: false, log_to_dir: 'run_logs', log_to_stdout: true|
-        expect(test_ssh_executor.use_control_master).to eq false
+        expect(test_ssh_executor.ssh_use_control_master).to eq false
         {}
       end])
       exit_code, stdout, stderr = run 'ssh_run', '--host-name', 'node', '--command', 'echo Hello', '--no-ssh-control-master'

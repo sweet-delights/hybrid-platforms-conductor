@@ -32,6 +32,10 @@ module HybridPlatformsConductor
     # Boolean
     attr_accessor :ssh_strict_host_key_checking
 
+    # Do we use the control master? [default: true]
+    # Boolean
+    attr_accessor :ssh_use_control_master
+
     # Maximum number of threads to spawn in parallel [default: 8]
     #   Integer
     attr_accessor :max_threads
@@ -47,10 +51,6 @@ module HybridPlatformsConductor
     # Passwords to be used, per hostname [default: {}]
     # Hash<String, String>
     attr_accessor :passwords
-
-    # Do we use the control master? [default: true]
-    # Boolean
-    attr_accessor :use_control_master
 
     # Do we expect some connections to require password authentication? [default: false]
     # Boolean
@@ -74,7 +74,7 @@ module HybridPlatformsConductor
       @ssh_env = {}
       @max_threads = 16
       @dry_run = false
-      @use_control_master = true
+      @ssh_use_control_master = true
       @ssh_strict_host_key_checking = true
       @override_connections = {}
       @passwords = {}
@@ -104,7 +104,7 @@ module HybridPlatformsConductor
         @ssh_gateway_user = user_name
       end
       options_parser.on('-j', '--no-ssh-control-master', 'If used, don\'t create SSH control masters for connections.') do
-        @use_control_master = false
+        @ssh_use_control_master = false
       end
       options_parser.on('-m', '--max-threads NBR', "Set the number of threads to use for concurrent queries (defaults to #{@max_threads})") do |nbr_threads|
         @max_threads = nbr_threads.to_i
@@ -147,7 +147,7 @@ module HybridPlatformsConductor
       out 'SSH executor configuration used:'
       out " * User: #{@ssh_user}"
       out " * Dry run: #{@dry_run}"
-      out " * Use SSH control master: #{@use_control_master}"
+      out " * Use SSH control master: #{@ssh_use_control_master}"
       out " * Max threads used: #{@max_threads}"
       out " * Gateways configuration: #{@ssh_gateways_conf}"
       out " * Gateway user: #{@ssh_gateway_user}"
@@ -294,7 +294,7 @@ Host *
                 connection, _gateway, _gateway_user = connection_info_for(node)
                 ensure_host_key(connection)
                 ssh_url = "#{@ssh_user}@hpc.#{node}"
-                if @use_control_master
+                if @ssh_use_control_master
                   # Thanks to the ControlMaster option, connections are reused. So no problem to have several scp and ssh commands later.
                   log_debug "[ ControlMaster - #{node} ] - Starting ControlMaster for connection on #{ssh_url}..."
                   control_path_file = "/tmp/ssh_executor_mux_#{connection}_22_#{@ssh_user}"
