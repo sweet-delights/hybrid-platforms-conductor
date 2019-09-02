@@ -103,7 +103,7 @@ module HybridPlatformsConductor
       options_parser.on('-g', '--ssh-gateway-user USER', "Name of the gateway user to be used by the gateways. Can also be set from environment variable ti_gateway_user. Defaults to #{@ssh_gateway_user}.") do |user|
         @ssh_gateway_user = user
       end
-      options_parser.on('-j', '--no-ssh-control-master', 'If used, don\'t create SSH control masters for connections.') do
+      options_parser.on('-j', '--ssh-no-control-master', 'If used, don\'t create SSH control masters for connections.') do
         @ssh_use_control_master = false
       end
       options_parser.on('-m', '--max-threads NBR', "Set the number of threads to use for concurrent queries (defaults to #{@max_threads})") do |nbr_threads|

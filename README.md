@@ -237,6 +237,7 @@ Nodes selection options:
 SSH executor options:
     -d, --debug                      Activate verbose logs
     -g, --ssh-gateway-user USER      Name of the gateway user to be used by the gateways. Can also be set from environment variable ti_gateway_user. Defaults to ubradm.
+    -j, --ssh-no-control-master      If used, don't create SSH control masters for connections.
     -m, --max-threads NBR            Set the number of threads to use for concurrent queries (defaults to 16)
     -s, --show-commands              Display the SSH commands that would be run instead of running them
     -u, --ssh-user USER              Name of user to be used in SSH connections (defaults to platforms_ssh_user or USER environment variables)
@@ -286,6 +287,7 @@ Nodes handler options:
 SSH executor options:
     -d, --debug                      Activate verbose logs
     -g, --ssh-gateway-user USER      Name of the gateway user to be used by the gateways. Can also be set from environment variable ti_gateway_user. Defaults to ubradm.
+    -j, --ssh-no-control-master      If used, don't create SSH control masters for connections.
     -s, --show-commands              Display the SSH commands that would be run instead of running them
     -u, --ssh-user USER              Name of user to be used in SSH connections (defaults to platforms_ssh_user or USER environment variables)
     -w, --password                   If used, then expect SSH connections to ask for a password.
@@ -393,6 +395,7 @@ Nodes selection options:
 SSH executor options:
     -d, --debug                      Activate verbose logs
     -g, --ssh-gateway-user USER      Name of the gateway user to be used by the gateways. Can also be set from environment variable ti_gateway_user. Defaults to ubradm.
+    -j, --ssh-no-control-master      If used, don't create SSH control masters for connections.
     -m, --max-threads NBR            Set the number of threads to use for concurrent queries (defaults to 16)
     -s, --show-commands              Display the SSH commands that would be run instead of running them
     -u, --ssh-user USER              Name of user to be used in SSH connections (defaults to platforms_ssh_user or USER environment variables)
@@ -522,6 +525,7 @@ Nodes selection options:
 SSH executor options:
     -d, --debug                      Activate verbose logs
     -g, --ssh-gateway-user USER      Name of the gateway user to be used by the gateways. Can also be set from environment variable ti_gateway_user. Defaults to ubradm.
+    -j, --ssh-no-control-master      If used, don't create SSH control masters for connections.
     -m, --max-threads NBR            Set the number of threads to use for concurrent queries (defaults to 16)
     -s, --show-commands              Display the SSH commands that would be run instead of running them
     -u, --ssh-user USER              Name of user to be used in SSH connections (defaults to platforms_ssh_user or USER environment variables)
@@ -587,6 +591,7 @@ Nodes handler options:
 SSH executor options:
     -d, --debug                      Activate verbose logs
     -g, --ssh-gateway-user USER      Name of the gateway user to be used by the gateways. Can also be set from environment variable ti_gateway_user. Defaults to ubradm.
+    -j, --ssh-no-control-master      If used, don't create SSH control masters for connections.
     -s, --show-commands              Display the SSH commands that would be run instead of running them
     -u, --ssh-user USER              Name of user to be used in SSH connections (defaults to platforms_ssh_user or USER environment variables)
     -w, --password                   If used, then expect SSH connections to ask for a password.
@@ -849,6 +854,7 @@ Nodes selection options:
 SSH executor options:
     -d, --debug                      Activate verbose logs
     -g, --ssh-gateway-user USER      Name of the gateway user to be used by the gateways. Can also be set from environment variable ti_gateway_user. Defaults to ubradm.
+    -j, --ssh-no-control-master      If used, don't create SSH control masters for connections.
     -m, --max-threads NBR            Set the number of threads to use for concurrent queries (defaults to 64)
     -s, --show-commands              Display the SSH commands that would be run instead of running them
     -u, --ssh-user USER              Name of user to be used in SSH connections (defaults to platforms_ssh_user or USER environment variables)
@@ -915,6 +921,7 @@ JSON dump options:
 SSH executor options:
     -d, --debug                      Activate verbose logs
     -g, --ssh-gateway-user USER      Name of the gateway user to be used by the gateways. Can also be set from environment variable ti_gateway_user. Defaults to ubradm.
+    -j, --ssh-no-control-master      If used, don't create SSH control masters for connections.
     -m, --max-threads NBR            Set the number of threads to use for concurrent queries (defaults to 16)
     -s, --show-commands              Display the SSH commands that would be run instead of running them
     -u, --ssh-user USER              Name of user to be used in SSH connections (defaults to platforms_ssh_user or USER environment variables)
@@ -987,6 +994,7 @@ Nodes handler options:
 SSH executor options:
     -d, --debug                      Activate verbose logs
     -g, --ssh-gateway-user USER      Name of the gateway user to be used by the gateways. Can also be set from environment variable ti_gateway_user. Defaults to ubradm.
+    -j, --ssh-no-control-master      If used, don't create SSH control masters for connections.
     -m, --max-threads NBR            Set the number of threads to use for concurrent queries (defaults to 16)
     -s, --show-commands              Display the SSH commands that would be run instead of running them
     -u, --ssh-user USER              Name of user to be used in SSH connections (defaults to platforms_ssh_user or USER environment variables)
@@ -1066,6 +1074,7 @@ Nodes selection options:
 SSH executor options:
     -d, --debug                      Activate verbose logs
     -g, --ssh-gateway-user USER      Name of the gateway user to be used by the gateways. Can also be set from environment variable ti_gateway_user. Defaults to ubradm.
+    -j, --ssh-no-control-master      If used, don't create SSH control masters for connections.
     -m, --max-threads NBR            Set the number of threads to use for concurrent queries (defaults to 64)
     -s, --show-commands              Display the SSH commands that would be run instead of running them
     -u, --ssh-user USER              Name of user to be used in SSH connections (defaults to platforms_ssh_user or USER environment variables)
@@ -1250,6 +1259,7 @@ The SSH Executor options are used to drive how SSH commands are executed.
 SSH executor options:
     -d, --debug                      Activate verbose logs
     -g, --ssh-gateway-user USER      Name of the gateway user to be used by the gateways. Can also be set from environment variable ti_gateway_user. Defaults to ubradm.
+    -j, --ssh-no-control-master      If used, don't create SSH control masters for connections.
     -m, --max-threads NBR            Set the number of threads to use for concurrent queries (defaults to 64)
     -s, --show-commands              Display the SSH commands that would be run instead of running them
     -u, --ssh-user USER              Name of user to be used in SSH connections (defaults to platforms_ssh_user or USER environment variables)
@@ -1260,6 +1270,7 @@ SSH executor options:
 
 * `--debug`: Activate verbose logging.
 * `--ssh-gateway-user USER`: Specify the user to be used through the gateway accessing the nodes.
+* `--ssh-no-control-master`: If specified, don't use an SSH control master: it will open/close an SSH connection for every command it needs to run.
 * `--max-threads NBR`: Specify the maximal number of threads to use when concurrent SSH execution is performed.
 * `--show-commands`: Display the commands the tool would execute, without executing them. Useful to understand or debug the tool's behaviour.
 * `--ssh-user USER`: Specify the user to be used on the node being accessed by the tool. It is recommended to set the default value of this option in the `platforms_ssh_user` environment variable. If both this option and the `platforms_ssh_user` variables are omitted, then the `USER` environment variable is used.

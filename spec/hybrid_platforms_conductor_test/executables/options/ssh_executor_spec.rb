@@ -52,7 +52,7 @@ describe 'executables\' SSH Executor options' do
         expect(test_ssh_executor.ssh_use_control_master).to eq false
         {}
       end])
-      exit_code, stdout, stderr = run 'ssh_run', '--node', 'node', '--command', 'echo Hello', '--no-ssh-control-master'
+      exit_code, stdout, stderr = run 'ssh_run', '--node', 'node', '--command', 'echo Hello', '--ssh-no-control-master'
       expect(exit_code).to eq 0
       expect(stdout).to eq ''
       expect(stderr).to eq ''
