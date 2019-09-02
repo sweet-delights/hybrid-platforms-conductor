@@ -114,7 +114,7 @@ describe HybridPlatformsConductor::SshExecutor do
 
     it 'uses node default gateway information and user from setting' do
       with_test_platform(nodes: { 'node' => { connection: { connection: 'node_connection', gateway: 'test_gateway' } } }) do
-        test_ssh_executor.gateway_user = 'test_gateway_user'
+        test_ssh_executor.ssh_gateway_user = 'test_gateway_user'
         expect(ssh_config_for('node')).to eq 'Host hpc.node
   Hostname node_connection
   ProxyCommand ssh -q -W %h:%p test_gateway_user@test_gateway'
@@ -131,7 +131,7 @@ describe HybridPlatformsConductor::SshExecutor do
 
     it 'uses node default gateway information with a different ssh executable' do
       with_test_platform(nodes: { 'node' => { connection: { connection: 'node_connection', gateway: 'test_gateway' } } }) do
-        test_ssh_executor.gateway_user = 'test_gateway_user'
+        test_ssh_executor.ssh_gateway_user = 'test_gateway_user'
         expect(ssh_config_for('node', ssh_exec: 'new_ssh')).to eq 'Host hpc.node
   Hostname node_connection
   ProxyCommand new_ssh -q -W %h:%p test_gateway_user@test_gateway'

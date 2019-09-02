@@ -14,7 +14,7 @@ module HybridPlatformsConductor
 
     # Name of the gateway user to be used. [default: ENV['ti_gateway_user'] or ubradm]
     #   String
-    attr_accessor :gateway_user
+    attr_accessor :ssh_gateway_user
 
     # Name of the gateways configuration. [default: ENV['ti_gateways_conf'] or munich]
     #   Symbol
@@ -80,7 +80,7 @@ module HybridPlatformsConductor
       @passwords = {}
       @auth_password = false
       @gateways_conf = ENV['ti_gateways_conf'].nil? ? :munich : ENV['ti_gateways_conf'].to_sym
-      @gateway_user = ENV['ti_gateway_user'].nil? ? 'ubradm' : ENV['ti_gateway_user']
+      @ssh_gateway_user = ENV['ti_gateway_user'].nil? ? 'ubradm' : ENV['ti_gateway_user']
       # Global variables handling the SSH directory storing temporary SSH configuration
       # Those variables are not shared between different instances of SshExecutor as the SSH configuration depends on the SshExecutor configuration.
       @platforms_ssh_dir = nil
@@ -90,6 +90,40 @@ module HybridPlatformsConductor
       # List of nodes already having their ControlMaster created, with their corresponding SSH URL
       @nodes_ssh_urls = {}
       @control_master_nodes_semaphore = Mutex.new
+    end
+
+    # Complete an option parser with options meant to control this SSH executor
+    #
+    # Parameters::
+    # * *options_parser* (OptionParser): The option parser to complete
+    # * *parallel* (Boolean): Do we activate options regarding parallel execution? [default = true]
+    def options_parse(options_parser, parallel: true)
+      options_parser.separator ''
+      options_parser.separator 'SSH executor options:'
+      options_parser.on('-g', '--gateway-user USER_NAME', "Name of the gateway user to be used by the gateways. Can also be set from environment variable ti_gateway_user. Defaults to #{@ssh_gateway_user}.") do |user_name|
+        @ssh_gateway_user = user_name
+      end
+      options_parser.on('-j', '--no-ssh-control-master', 'If used, don\'t create SSH control masters for connections.') do
+        @use_control_master = false
+      end
+      options_parser.on('-m', '--max-threads NBR', "Set the number of threads to use for concurrent queries (defaults to #{@max_threads})") do |nbr_threads|
+        @max_threads = nbr_threads.to_i
+      end if parallel
+      options_parser.on('-q', '--no-ssh-host-key-checking', 'If used, don\'t check for SSH host keys.') do
+        @strict_host_key_checking = false
+      end
+      options_parser.on('-s', '--show-commands', 'Display the SSH commands that would be run instead of running them') do
+        self.dry_run = true
+      end
+      options_parser.on('-u', '--ssh-user USER_NAME', 'Name of user to be used in SSH connections (defaults to platforms_ssh_user or USER environment variables)') do |user_name|
+        @ssh_user_name = user_name
+      end
+      options_parser.on('-w', '--password', 'If used, then expect SSH connections to ask for a password.') do
+        @auth_password = true
+      end
+      options_parser.on('-y', '--gateways-conf GATEWAYS_CONF_NAME', "Name of the gateways configuration to be used. Can also be set from environment variable ti_gateways_conf. Defaults to #{@gateways_conf}.") do |gateway|
+        @gateways_conf = gateway.to_sym
+      end
     end
 
     # Validate that parsed parameters are valid
@@ -116,7 +150,7 @@ module HybridPlatformsConductor
       out " * Use SSH control master: #{@use_control_master}"
       out " * Max threads used: #{@max_threads}"
       out " * Gateways configuration: #{@gateways_conf}"
-      out " * Gateway user: #{@gateway_user}"
+      out " * Gateway user: #{@ssh_gateway_user}"
       out
     end
 
@@ -176,40 +210,6 @@ module HybridPlatformsConductor
         end
       end
       result
-    end
-
-    # Complete an option parser with options meant to control this SSH executor
-    #
-    # Parameters::
-    # * *options_parser* (OptionParser): The option parser to complete
-    # * *parallel* (Boolean): Do we activate options regarding parallel execution? [default = true]
-    def options_parse(options_parser, parallel: true)
-      options_parser.separator ''
-      options_parser.separator 'SSH executor options:'
-      options_parser.on('-g', '--gateway-user USER_NAME', "Name of the gateway user to be used by the gateways. Can also be set from environment variable ti_gateway_user. Defaults to #{@gateway_user}.") do |user_name|
-        @gateway_user = user_name
-      end
-      options_parser.on('-j', '--no-ssh-control-master', 'If used, don\'t create SSH control masters for connections.') do
-        @use_control_master = false
-      end
-      options_parser.on('-m', '--max-threads NBR', "Set the number of threads to use for concurrent queries (defaults to #{@max_threads})") do |nbr_threads|
-        @max_threads = nbr_threads.to_i
-      end if parallel
-      options_parser.on('-q', '--no-ssh-host-key-checking', 'If used, don\'t check for SSH host keys.') do
-        @strict_host_key_checking = false
-      end
-      options_parser.on('-s', '--show-commands', 'Display the SSH commands that would be run instead of running them') do
-        self.dry_run = true
-      end
-      options_parser.on('-u', '--ssh-user USER_NAME', 'Name of user to be used in SSH connections (defaults to platforms_ssh_user or USER environment variables)') do |user_name|
-        @ssh_user_name = user_name
-      end
-      options_parser.on('-w', '--password', 'If used, then expect SSH connections to ask for a password.') do
-        @auth_password = true
-      end
-      options_parser.on('-y', '--gateways-conf GATEWAYS_CONF_NAME', "Name of the gateways configuration to be used. Can also be set from environment variable ti_gateways_conf. Defaults to #{@gateways_conf}.") do |gateway|
-        @gateways_conf = gateway.to_sym
-      end
     end
 
     # Get an SSH configuration content giving access to all nodes of the platforms with the current configuration
@@ -436,7 +436,7 @@ Host *
         ]
       else
         connection, gateway, gateway_user = @nodes_handler.connection_for(node)
-        gateway_user = @gateway_user if !gateway.nil? && gateway_user.nil?
+        gateway_user = @ssh_gateway_user if !gateway.nil? && gateway_user.nil?
         [connection, gateway, gateway_user]
       end
     end

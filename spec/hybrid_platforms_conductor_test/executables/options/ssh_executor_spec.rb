@@ -23,7 +23,7 @@ describe 'executables\' SSH Executor options' do
   it 'selects the correct gateway user' do
     with_test_platform_for_ssh_executor_options do
       expect_ssh_executor_runs([proc do |actions, timeout: nil, concurrent: false, log_to_dir: 'run_logs', log_to_stdout: true|
-        expect(test_ssh_executor.gateway_user).to eq 'another_user'
+        expect(test_ssh_executor.ssh_gateway_user).to eq 'another_user'
         {}
       end])
       exit_code, stdout, stderr = run 'ssh_run', '--host-name', 'node', '--command', 'echo Hello', '--gateway-user', 'another_user'
