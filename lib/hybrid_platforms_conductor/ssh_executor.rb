@@ -121,7 +121,7 @@ module HybridPlatformsConductor
       options_parser.on('-w', '--password', 'If used, then expect SSH connections to ask for a password.') do
         @auth_password = true
       end
-      options_parser.on('-y', '--gateways-conf GATEWAYS_CONF_NAME', "Name of the gateways configuration to be used. Can also be set from environment variable ti_gateways_conf. Defaults to #{@ssh_gateways_conf}.") do |gateway|
+      options_parser.on('-y', '--ssh-gateways-conf GATEWAYS_CONF', "Name of the gateways configuration to be used. Can also be set from environment variable ti_gateways_conf. Defaults to #{@ssh_gateways_conf}.") do |gateway|
         @ssh_gateways_conf = gateway.to_sym
       end
     end

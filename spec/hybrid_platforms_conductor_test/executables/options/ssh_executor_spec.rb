@@ -39,7 +39,7 @@ describe 'executables\' SSH Executor options' do
         expect(test_ssh_executor.ssh_gateways_conf).to eq :test_gateway2
         {}
       end])
-      exit_code, stdout, stderr = run 'ssh_run', '--node', 'node', '--command', 'echo Hello', '--gateways-conf', 'test_gateway2'
+      exit_code, stdout, stderr = run 'ssh_run', '--node', 'node', '--command', 'echo Hello', '--ssh-gateways-conf', 'test_gateway2'
       expect(exit_code).to eq 0
       expect(stdout).to eq ''
       expect(stderr).to eq ''

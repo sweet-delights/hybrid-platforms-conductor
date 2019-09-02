@@ -243,8 +243,8 @@ SSH executor options:
     -s, --show-commands              Display the SSH commands that would be run instead of running them
     -u, --ssh-user USER              Name of user to be used in SSH connections (defaults to platforms_ssh_user or USER environment variables)
     -w, --password                   If used, then expect SSH connections to ask for a password.
-    -y GATEWAYS_CONF_NAME,           Name of the gateways configuration to be used. Can also be set from environment variable ti_gateways_conf. Defaults to munich.
-        --gateways-conf
+    -y GATEWAYS_CONF,                Name of the gateways configuration to be used. Can also be set from environment variable ti_gateways_conf. Defaults to munich.
+        --ssh-gateways-conf
 
 Deployer options:
     -e, --secrets JSON_FILE_NAME     Specify a JSON file storing secrets (can be specified several times).
@@ -292,8 +292,8 @@ SSH executor options:
     -s, --show-commands              Display the SSH commands that would be run instead of running them
     -u, --ssh-user USER              Name of user to be used in SSH connections (defaults to platforms_ssh_user or USER environment variables)
     -w, --password                   If used, then expect SSH connections to ask for a password.
-    -y GATEWAYS_CONF_NAME,           Name of the gateways configuration to be used. Can also be set from environment variable ti_gateways_conf. Defaults to munich.
-        --gateways-conf
+    -y GATEWAYS_CONF,                Name of the gateways configuration to be used. Can also be set from environment variable ti_gateways_conf. Defaults to munich.
+        --ssh-gateways-conf
 
 Deployer options:
     -e, --secrets JSON_FILE_NAME     Specify a JSON file storing secrets (can be specified several times).
@@ -402,8 +402,8 @@ SSH executor options:
     -s, --show-commands              Display the SSH commands that would be run instead of running them
     -u, --ssh-user USER              Name of user to be used in SSH connections (defaults to platforms_ssh_user or USER environment variables)
     -w, --password                   If used, then expect SSH connections to ask for a password.
-    -y GATEWAYS_CONF_NAME,           Name of the gateways configuration to be used. Can also be set from environment variable ti_gateways_conf. Defaults to munich.
-        --gateways-conf
+    -y GATEWAYS_CONF,                Name of the gateways configuration to be used. Can also be set from environment variable ti_gateways_conf. Defaults to munich.
+        --ssh-gateways-conf
 
 Deployer options:
     -e, --secrets JSON_FILE_NAME     Specify a JSON file storing secrets (can be specified several times).
@@ -533,8 +533,8 @@ SSH executor options:
     -s, --show-commands              Display the SSH commands that would be run instead of running them
     -u, --ssh-user USER              Name of user to be used in SSH connections (defaults to platforms_ssh_user or USER environment variables)
     -w, --password                   If used, then expect SSH connections to ask for a password.
-    -y GATEWAYS_CONF_NAME,           Name of the gateways configuration to be used. Can also be set from environment variable ti_gateways_conf. Defaults to munich.
-        --gateways-conf
+    -y GATEWAYS_CONF,                Name of the gateways configuration to be used. Can also be set from environment variable ti_gateways_conf. Defaults to munich.
+        --ssh-gateways-conf
 ```
 
 Usage examples:
@@ -598,8 +598,8 @@ SSH executor options:
     -s, --show-commands              Display the SSH commands that would be run instead of running them
     -u, --ssh-user USER              Name of user to be used in SSH connections (defaults to platforms_ssh_user or USER environment variables)
     -w, --password                   If used, then expect SSH connections to ask for a password.
-    -y GATEWAYS_CONF_NAME,           Name of the gateways configuration to be used. Can also be set from environment variable ti_gateways_conf. Defaults to munich.
-        --gateways-conf
+    -y GATEWAYS_CONF,                Name of the gateways configuration to be used. Can also be set from environment variable ti_gateways_conf. Defaults to munich.
+        --ssh-gateways-conf
 ```
 
 Usage examples:
@@ -621,7 +621,7 @@ Usage examples:
 ./bin/ssh_config --ssh-exec /my/other/ssh
 
 # Dump in stdout, using the madrid SSH gateways configuration
-./bin/ssh_config --gateways-conf madrid
+./bin/ssh_config --ssh-gateways-conf madrid
 ```
 
 Example of output:
@@ -864,8 +864,8 @@ SSH executor options:
     -s, --show-commands              Display the SSH commands that would be run instead of running them
     -u, --ssh-user USER              Name of user to be used in SSH connections (defaults to platforms_ssh_user or USER environment variables)
     -w, --password                   If used, then expect SSH connections to ask for a password.
-    -y GATEWAYS_CONF_NAME,           Name of the gateways configuration to be used. Can also be set from environment variable ti_gateways_conf. Defaults to munich.
-        --gateways-conf
+    -y GATEWAYS_CONF,                Name of the gateways configuration to be used. Can also be set from environment variable ti_gateways_conf. Defaults to munich.
+        --ssh-gateways-conf
 ```
 
 Usage examples:
@@ -932,8 +932,8 @@ SSH executor options:
     -s, --show-commands              Display the SSH commands that would be run instead of running them
     -u, --ssh-user USER              Name of user to be used in SSH connections (defaults to platforms_ssh_user or USER environment variables)
     -w, --password                   If used, then expect SSH connections to ask for a password.
-    -y GATEWAYS_CONF_NAME,           Name of the gateways configuration to be used. Can also be set from environment variable ti_gateways_conf. Defaults to munich.
-        --gateways-conf
+    -y GATEWAYS_CONF,                Name of the gateways configuration to be used. Can also be set from environment variable ti_gateways_conf. Defaults to munich.
+        --ssh-gateways-conf
 
 Deployer options:
     -e, --secrets JSON_FILE_NAME     Specify a JSON file storing secrets (can be specified several times).
@@ -1006,8 +1006,8 @@ SSH executor options:
     -s, --show-commands              Display the SSH commands that would be run instead of running them
     -u, --ssh-user USER              Name of user to be used in SSH connections (defaults to platforms_ssh_user or USER environment variables)
     -w, --password                   If used, then expect SSH connections to ask for a password.
-    -y GATEWAYS_CONF_NAME,           Name of the gateways configuration to be used. Can also be set from environment variable ti_gateways_conf. Defaults to munich.
-        --gateways-conf
+    -y GATEWAYS_CONF,                Name of the gateways configuration to be used. Can also be set from environment variable ti_gateways_conf. Defaults to munich.
+        --ssh-gateways-conf
 
 Deployer options:
     -e, --secrets JSON_FILE_NAME     Specify a JSON file storing secrets (can be specified several times).
@@ -1087,8 +1087,8 @@ SSH executor options:
     -s, --show-commands              Display the SSH commands that would be run instead of running them
     -u, --ssh-user USER              Name of user to be used in SSH connections (defaults to platforms_ssh_user or USER environment variables)
     -w, --password                   If used, then expect SSH connections to ask for a password.
-    -y GATEWAYS_CONF_NAME,           Name of the gateways configuration to be used. Can also be set from environment variable ti_gateways_conf. Defaults to munich.
-        --gateways-conf
+    -y GATEWAYS_CONF,                Name of the gateways configuration to be used. Can also be set from environment variable ti_gateways_conf. Defaults to munich.
+        --ssh-gateways-conf
 
 Deployer options:
     -e, --secrets JSON_FILE_NAME     Specify a JSON file storing secrets (can be specified several times).
@@ -1274,8 +1274,8 @@ SSH executor options:
     -s, --show-commands              Display the SSH commands that would be run instead of running them
     -u, --ssh-user USER              Name of user to be used in SSH connections (defaults to platforms_ssh_user or USER environment variables)
     -w, --password                   If used, then expect SSH connections to ask for a password.
-    -y GATEWAYS_CONF_NAME,           Name of the gateways configuration to be used. Can also be set from environment variable ti_gateways_conf. Defaults to munich.
-        --gateways-conf
+    -y GATEWAYS_CONF,                Name of the gateways configuration to be used. Can also be set from environment variable ti_gateways_conf. Defaults to munich.
+        --ssh-gateways-conf
 ```
 
 * `--debug`: Activate verbose logging.
@@ -1286,7 +1286,7 @@ SSH executor options:
 * `--show-commands`: Display the commands the tool would execute, without executing them. Useful to understand or debug the tool's behaviour.
 * `--ssh-user USER`: Specify the user to be used on the node being accessed by the tool. It is recommended to set the default value of this option in the `platforms_ssh_user` environment variable. If both this option and the `platforms_ssh_user` variables are omitted, then the `USER` environment variable is used.
 * `--password`: When specified, then don't use `-o BatchMode=yes` on SSH commands so that if connection needs a password it will be asked. Useful to deploy on accounts not having key authentication yet.
-* `--gateways-conf GATEWAYS_CONF_NAME`: Specify the gateway configuration name to be used. Gateway configurations are defined in the platforms definition file (`./platforms.rb`). It is recommended to set the default value of this option in the `ti_gateways_conf` environment variable.
+* `--ssh-gateways-conf GATEWAYS_CONF`: Specify the gateway configuration name to be used. Gateway configurations are defined in the platforms definition file (`./platforms.rb`). It is recommended to set the default value of this option in the `ti_gateways_conf` environment variable.
 
 ## Deployer options
 
