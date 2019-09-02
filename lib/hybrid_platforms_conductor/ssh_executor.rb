@@ -7,7 +7,7 @@ require 'hybrid_platforms_conductor/logger_helpers'
 
 module HybridPlatformsConductor
 
-  # Gives ways to execute SSH commands on a list of host names defined in our nodes
+  # Gives ways to execute SSH commands on the nodes
   class SshExecutor
 
     include LoggerHelpers
@@ -48,7 +48,7 @@ module HybridPlatformsConductor
     # Hash<String, String>
     attr_accessor :override_connections
 
-    # Passwords to be used, per hostname [default: {}]
+    # Passwords to be used, per node [default: {}]
     # Hash<String, String>
     attr_accessor :passwords
 
@@ -183,13 +183,13 @@ module HybridPlatformsConductor
             ]
           end
         end
-        # Resolve hosts
+        # Resolve nodes
         @nodes_handler.select_nodes(nodes_selector).each do |node|
           actions_per_node[node] = [] unless actions_per_node.key?(node)
           actions_per_node[node].concat(resolved_nodes_actions)
         end
       end
-      log_debug "Running actions on #{actions_per_node.size} hosts#{log_to_dir.nil? ? '' : " (logs dumped in #{log_to_dir})"}"
+      log_debug "Running actions on #{actions_per_node.size} nodes#{log_to_dir.nil? ? '' : " (logs dumped in #{log_to_dir})"}"
       # Prepare the result (stdout or nil per node)
       result = Hash[actions_per_node.keys.map { |node| [node, nil] }]
       unless actions_per_node.empty?
@@ -269,7 +269,7 @@ Host *
     # This method is re-entrant and reuses the same control masters.
     #
     # Parameters::
-    # * *nodes* (String or Array<String>): The nodes for which we open the Control Master.
+    # * *nodes* (String or Array<String>): The nodes (or single node) for which we open the Control Master.
     # * *timeout* (Integer or nil): Timeout in seconds, or nil if none. [default: nil]
     # * *no_exception* (Boolean): If true, then don't raise any exception in case of impossible connection to the ControlMaster. [default: false]
     # * Proc: Code called while the ControlMaster exists.
@@ -334,7 +334,7 @@ Host *
     # Provide a bootstrapped ssh executable that includes all the TI SSH config.
     #
     # Parameters::
-    # * CodeBlock: Code called with the given ssh executable to be used to get TI config
+    # * Proc: Code called with the given ssh executable to be used to get TI config
     #   * Parameters::
     #     * *ssh_exec* (String): SSH command to be used
     #     * *ssh_config* (String): SSH configuration file to be used
