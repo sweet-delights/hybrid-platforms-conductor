@@ -26,7 +26,7 @@ ssh_executor = executable.ssh_executor
 
 executable.parse_options!
 raise '--interactive or --command options have to be present' if commands.empty? && !interactive
-raise 'No node selected. Please use --host-name option to set at least one.' if executable.selected_nodes.empty?
+raise 'No node selected. Please use --node option to set at least one.' if executable.selected_nodes.empty?
 
 actions = []
 actions << { remote_bash: commands } unless commands.empty?

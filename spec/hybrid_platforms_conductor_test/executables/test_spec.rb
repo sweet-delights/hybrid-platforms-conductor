@@ -19,7 +19,7 @@ describe 'test executable' do
         expect(test_tests_runner.tests).to eq [:my_test]
         0
       end
-      exit_code, stdout, stderr = run 'test', '--host-name', 'node', '--test', 'my_test'
+      exit_code, stdout, stderr = run 'test', '--node', 'node', '--test', 'my_test'
       expect(exit_code).to eq 0
       expect(stdout).to eq ''
       expect(stderr).to eq ''
@@ -32,7 +32,7 @@ describe 'test executable' do
         expect(test_tests_runner.tests).to eq [:my_test]
         1
       end
-      exit_code, stdout, stderr = run 'test', '--host-name', 'node', '--test', 'my_test'
+      exit_code, stdout, stderr = run 'test', '--node', 'node', '--test', 'my_test'
       expect(exit_code).to eq 1
       expect(stdout).to eq ''
       expect(stderr).to eq ''

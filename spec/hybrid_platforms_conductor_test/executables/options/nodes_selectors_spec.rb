@@ -35,12 +35,12 @@ describe 'executables\' nodes selection options' do
   # Enumerate all command-line selectors to test, and the corresponding nodes list
   {
     ['--all-hosts'] => [{ all: true }],
-    ['--host-name', 'node11'] => ['node11'],
-    ['--host-name', '/node1.+/'] => [/node1.+/],
+    ['--node', 'node11'] => ['node11'],
+    ['--node', '/node1.+/'] => [/node1.+/],
     ['--hosts-list', 'my_list'] => [{ list: 'my_list' }],
     ['--hosts-platform', 'platform_2'] => [{ platform: 'platform_2' }],
     ['--service', 'service1'] => [{ service: 'service1' }],
-    ['--host-name', 'node11', '--host-name', 'node12'] => %w[node11 node12],
+    ['--node', 'node11', '--node', 'node12'] => %w[node11 node12],
     ['--service', 'service1', '--hosts-platform', 'platform_2'] => [{ service: 'service1' }, { platform: 'platform_2' }]
   }.each do |args, expected_nodes|
 

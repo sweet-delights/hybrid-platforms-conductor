@@ -232,7 +232,7 @@ Nodes selection options:
     -b PLATFORM_NAME,                Select nodes belonging to a given platform name. Available platforms are: ansible-repo, chef-repo (can be used several times)
         --hosts-platform
     -l, --hosts-list LIST_NAME       Select nodes defined in a nodes list (can be used several times)
-    -n, --host-name NODE_NAME        Select a specific node. Can be a regular expression if used with enclosing "/" characters. (can be used several times)
+    -n, --node NODE                  Select a specific node. Can be a regular expression to select several nodes if used with enclosing "/" characters. (can be used several times).
         --service SERVICE_NAME       Select nodes implementing a given service (can be used several times)
 
 SSH executor options:
@@ -279,7 +279,7 @@ Usage: ./bin/check-node [options]
 
 Main options:
     -h, --help                       Display help and exit
-    -n, --host-name HOST_NAME        Run the command on a specific host.
+    -n, --node NODE                  Run the command on a specific node.
 
 Nodes handler options:
     -o, --show-hosts                 Display the list of possible hosts and exit
@@ -306,21 +306,21 @@ Deployer options specific to platforms of type chef:
 Usage examples:
 ```
 # Test on node23hst-nn1
-./bin/check-node --host-name node23hst-nn1
+./bin/check-node --node node23hst-nn1
 
 # Test on node23hst-nn1 using admin user a_usernme
-./bin/check-node --host-name node23hst-nn1 --ssh-user a_usernme
+./bin/check-node --node node23hst-nn1 --ssh-user a_usernme
 
 # Test on node23hst-nn1 using the gateway user tipadm
-./bin/check-node --host-name node23hst-nn1 --gateway-user tipadm
+./bin/check-node --node node23hst-nn1 --gateway-user tipadm
 
 # Test on node23hst-nn1 using a secrets file
-./bin/check-node --host-name node23hst-nn1 --secrets passwords.json
+./bin/check-node --node node23hst-nn1 --secrets passwords.json
 ```
 
 Example of output:
 ```
-=> ./bin/check-node --host-name node12had01
+=> ./bin/check-node --node node12had01
 SSH executor configuration used:
  * User: a_usernme
  * Dry run: false
@@ -389,7 +389,7 @@ Nodes selection options:
     -b PLATFORM_NAME,                Select nodes belonging to a given platform name. Available platforms are: ansible-repo, chef-repo (can be used several times)
         --hosts-platform
     -l, --hosts-list LIST_NAME       Select nodes defined in a nodes list (can be used several times)
-    -n, --host-name NODE_NAME        Select a specific node. Can be a regular expression if used with enclosing "/" characters. (can be used several times)
+    -n, --node NODE                  Select a specific node. Can be a regular expression to select several nodes if used with enclosing "/" characters. (can be used several times).
         --service SERVICE_NAME       Select nodes implementing a given service (can be used several times)
 
 SSH executor options:
@@ -417,31 +417,31 @@ Deployer options specific to platforms of type chef:
 Usage examples:
 ```
 # Deploy master on node23hst-nn1
-./bin/deploy --host-name node23hst-nn1
+./bin/deploy --node node23hst-nn1
 
-# Check in "why run" mode the deployment of master on node23hst-nn1 (equivalent to ./bin/check-node --host-name node23hst-nn1)
-./bin/deploy --host-name node23hst-nn1 --why-run
+# Check in "why run" mode the deployment of master on node23hst-nn1 (equivalent to ./bin/check-node --node node23hst-nn1)
+./bin/deploy --node node23hst-nn1 --why-run
 
 # Check in "why run" mode the deployment of master on node23hst-nn1 with a timeout of 1 minute
-./bin/deploy --host-name node23hst-nn1 --why-run --timeout 60
+./bin/deploy --node node23hst-nn1 --why-run --timeout 60
 
 # Deploy master using a file containing secrets on node23hst-nn1
-./bin/deploy --host-name node23hst-nn1 --secrets passwords.json
+./bin/deploy --node node23hst-nn1 --secrets passwords.json
 
 # Deploy master on all nodes containing xae in their name
-./bin/deploy --host-name /xae/
+./bin/deploy --node /xae/
 
 # Deploy master on all nodes containing xae in their name in parallel (and send each standard output in log files in ./run_logs/*.stdout)
-./bin/deploy --host-name /xae/ --parallel
+./bin/deploy --node /xae/ --parallel
 
 # Deploy master on all nodes containing xae in their name in parallel and using 32 threads in parallel
-./bin/deploy --host-name /xae/ --parallel --max-threads 32
+./bin/deploy --node /xae/ --parallel --max-threads 32
 
 # Deploy master on all nodes defined in the list xaebhsone (from ./hosts_lists/xaebhsone)
 ./bin/deploy --hosts-list xaebhsone
 
 # Deploy master on all nodes defined in the list xaebhsone and also node12hst-nn1 and node12hst-nn2
-./bin/deploy --hosts-list xaebhsone --host-name node12hst-nn1 --host-name node12hst-nn2
+./bin/deploy --hosts-list xaebhsone --node node12hst-nn1 --node node12hst-nn2
 
 # Deploy master on all nodes
 ./bin/deploy --all-hosts
@@ -449,7 +449,7 @@ Usage examples:
 
 Example of output:
 ```
-=> ./bin/deploy --host-name node12had01 --why-run
+=> ./bin/deploy --node node12had01 --why-run
 SSH executor configuration used:
  * User: a_usernme
  * Dry run: false
@@ -519,7 +519,7 @@ Nodes selection options:
     -b PLATFORM_NAME,                Select nodes belonging to a given platform name. Available platforms are: ansible-repo, chef-repo (can be used several times)
         --hosts-platform
     -l, --hosts-list LIST_NAME       Select nodes defined in a nodes list (can be used several times)
-    -n, --host-name NODE_NAME        Select a specific node. Can be a regular expression if used with enclosing "/" characters. (can be used several times)
+    -n, --node NODE                  Select a specific node. Can be a regular expression to select several nodes if used with enclosing "/" characters. (can be used several times).
     -r, --service SERVICE_NAME       Select nodes implementing a given service (can be used several times)
 
 SSH executor options:
@@ -539,30 +539,30 @@ Usage examples:
 ./bin/ssh_run --show-hosts
 
 # Run an interactive SSH session on node23hst-nn1
-./bin/ssh_run --host-name node23hst-nn1 --interactive
+./bin/ssh_run --node node23hst-nn1 --interactive
 
 # Run the hostname command on node23hst-nn1
-./bin/ssh_run --host-name node23hst-nn1 --command hostname
+./bin/ssh_run --node node23hst-nn1 --command hostname
 
 # Run the hostname and ls commands on node23hst-nn1
-./bin/ssh_run --host-name node23hst-nn1 --command hostname --command ls
+./bin/ssh_run --node node23hst-nn1 --command hostname --command ls
 
 # Run a list of commands (taken from the file cmds.list) on node23hst-nn1
-./bin/ssh_run --host-name node23hst-nn1 --commands-file cmds.list
+./bin/ssh_run --node node23hst-nn1 --commands-file cmds.list
 
 # Run a list of commands (taken from the file cmds.list) and the hostname command on node23hst-nn1
-./bin/ssh_run --host-name node23hst-nn1 --commands-file cmds.list --command hostname
+./bin/ssh_run --node node23hst-nn1 --commands-file cmds.list --command hostname
 
 # Run the hostname command on node23hst-nn1 with a timeout of 5 seconds that would interrupt the command if it does not end before
-./bin/ssh_run --host-name node23hst-nn1 --command hostname --timeout 5
+./bin/ssh_run --node node23hst-nn1 --command hostname --timeout 5
 
 # Run the hostname command on all nodes containing xae in parallel (and send each standard output in log files in ./run_logs/*.stdout)
-./bin/ssh_run --host-name /xae/ --command hostname --parallel
+./bin/ssh_run --node /xae/ --command hostname --parallel
 ```
 
 Example of output:
 ```
-=> ./bin/ssh_run --host-name node12had01 --command hostname
+=> ./bin/ssh_run --node node12had01 --command hostname
 node12host.site.my_company.net
 ```
 
@@ -746,7 +746,7 @@ Nodes selection options:
     -b PLATFORM_NAME,                Select nodes belonging to a given platform name. Available platforms are: ansible-repo, chef-repo (can be used several times)
         --hosts-platform
     -l, --hosts-list LIST_NAME       Select nodes defined in a nodes list (can be used several times)
-    -n, --host-name NODE_NAME        Select a specific node. Can be a regular expression if used with enclosing "/" characters. (can be used several times)
+    -n, --node NODE                  Select a specific node. Can be a regular expression to select several nodes if used with enclosing "/" characters. (can be used several times).
     -r, --service SERVICE_NAME       Select nodes implementing a given service (can be used several times)
 ```
 
@@ -759,7 +759,7 @@ Usage examples:
 ./bin/report --format mediawiki --locale en
 
 # Output all nodes containing /xae/ in their names using mediawiki format
-./bin/report --host-name /xae/ --format mediawiki
+./bin/report --node /xae/ --format mediawiki
 ```
 
 Example of output:
@@ -848,7 +848,7 @@ Nodes selection options:
     -b PLATFORM_NAME,                Select nodes belonging to a given platform name. Available platforms are: ansible-repo, chef-repo (can be used several times)
         --hosts-platform
     -l, --hosts-list LIST_NAME       Select nodes defined in a nodes list (can be used several times)
-    -n, --host-name NODE_NAME        Select a specific node. Can be a regular expression if used with enclosing "/" characters. (can be used several times)
+    -n, --node NODE                  Select a specific node. Can be a regular expression to select several nodes if used with enclosing "/" characters. (can be used several times).
     -r, --service SERVICE_NAME       Select nodes implementing a given service (can be used several times)
 
 SSH executor options:
@@ -911,7 +911,7 @@ Nodes selection options:
     -b PLATFORM_NAME,                Select nodes belonging to a given platform name. Available platforms are: ansible-repo, chef-repo (can be used several times)
         --hosts-platform
     -l, --hosts-list LIST_NAME       Select nodes defined in a nodes list (can be used several times)
-    -n, --host-name NODE_NAME        Select a specific node. Can be a regular expression if used with enclosing "/" characters. (can be used several times)
+    -n, --node NODE                  Select a specific node. Can be a regular expression to select several nodes if used with enclosing "/" characters. (can be used several times).
     -r, --service SERVICE_NAME       Select nodes implementing a given service (can be used several times)
 
 JSON dump options:
@@ -937,10 +937,10 @@ Deployer options:
 Usage examples:
 ```
 # Dump JSON for the node named xaeprjcttlbd01
-./bin/dump_nodes_json --host-name xaeprjcttlbd01
+./bin/dump_nodes_json --node xaeprjcttlbd01
 
 # Dump JSON for the node named xaeprjcttlbd01, but reuse the actual files in run_logs.
-./bin/dump_nodes_json --host-name xaeprjcttlbd01 --skip-run
+./bin/dump_nodes_json --node xaeprjcttlbd01 --skip-run
 ```
 
 Example of output:
@@ -979,7 +979,7 @@ Topographer options:
                                          -b PLATFORM_NAME,                Select hosts belonging to a given platform name. Available platforms are: ansible-repo, chef-repo (can be used several times)
                                              --hosts-platform
                                          -l, --hosts-list LIST_NAME       Select hosts defined in a hosts list (can be used several times)
-                                         -n, --host-name HOST_NAME        Select a specific host. Can be a regular expression if used with enclosing "/" characters. (can be used several times)
+                                         -n, --node NODE                  Select a specific node. Can be a regular expression to select several nodes if used with enclosing "/" characters. (can be used several times).
     -k, --skip-run                   Skip the actual gathering of JSON node files. If set, the current files in nodes_json will be used.
     -p, --output FORMAT:FILE_NAME    Specify a format and file name. Can be used several times. FORMAT can be one of graphviz, json, svg. Ex.: graphviz:graph.gv
     -T, --to HOSTS_OPTIONS           Specify options for the set of nodes to get to (enclose them with ""). Default: all nodes. HOSTS_OPTIONS follows the following:
@@ -987,7 +987,7 @@ Topographer options:
                                          -b PLATFORM_NAME,                Select hosts belonging to a given platform name. Available platforms are: ansible-repo, chef-repo (can be used several times)
                                              --hosts-platform
                                          -l, --hosts-list LIST_NAME       Select hosts defined in a hosts list (can be used several times)
-                                         -n, --host-name HOST_NAME        Select a specific host. Can be a regular expression if used with enclosing "/" characters. (can be used several times)
+                                         -n, --node NODE                  Select a specific node. Can be a regular expression to select several nodes if used with enclosing "/" characters. (can be used several times).
 
 Nodes handler options:
     -o, --show-hosts                 Display the list of possible hosts and exit
@@ -1020,10 +1020,10 @@ Usage examples:
 ./bin/topograph --output json:graph.json --from "--hosts-list node12had"
 
 # Dump the network getting to nodes xaeprjcttlbd01 and xaeprjctplbd01
-./bin/topograph --output json:graph.json --to "--host-name xaeprjcttlbd01 --host-name xaeprjctplbd01"
+./bin/topograph --output json:graph.json --to "--node xaeprjcttlbd01 --node xaeprjctplbd01"
 
 # Dump the network getting from any node belonging to the node12had hosts list and to nodes xaeprjcttlbd01 and xaeprjctplbd01
-./bin/topograph --output json:graph.json --from "--hosts-list node12had" --to "--host-name xaeprjcttlbd01 --host-name xaeprjctplbd01"
+./bin/topograph --output json:graph.json --from "--hosts-list node12had" --to "--node xaeprjcttlbd01 --node xaeprjctplbd01"
 
 # Dump the whole network in JSON format, reusing existing JSON files from nodes_json (won't call dump_nodes_json)
 ./bin/topograph --output json:graph.json --skip-run
@@ -1069,7 +1069,7 @@ Nodes selection options:
     -b PLATFORM_NAME,                Select nodes belonging to a given platform name. Available platforms are: ansible-repo, chef-repo (can be used several times)
         --hosts-platform
     -l, --hosts-list LIST_NAME       Select nodes defined in a nodes list (can be used several times)
-    -n, --host-name NODE_NAME        Select a specific node. Can be a regular expression if used with enclosing "/" characters. (can be used several times)
+    -n, --node NODE                  Select a specific node. Can be a regular expression to select several nodes if used with enclosing "/" characters. (can be used several times).
         --service SERVICE_NAME       Select nodes implementing a given service (can be used several times)
 
 SSH executor options:
@@ -1099,7 +1099,7 @@ Usage examples:
 ./bin/test --all-hosts
 
 # Execute only the tests named hostname and ip on all nodes whose names contain xae
-./bin/test --test hostname --test ip --host-name /xae/
+./bin/test --test hostname --test ip --node /xae/
 
 # Execute all tests on all nodes, but reuse the content of run_logs instead of why-run deployments
 ./bin/test --all-hosts --skip-run
@@ -1242,14 +1242,14 @@ Nodes selection options:
     -b PLATFORM_NAME,                Select nodes belonging to a given platform name. Available platforms are: ansible-repo, chef-repo (can be used several times)
         --hosts-platform
     -l, --hosts-list LIST_NAME       Select nodes defined in a nodes list (can be used several times)
-    -n, --host-name NODE_NAME        Select a specific node. Can be a regular expression if used with enclosing "/" characters. (can be used several times)
+    -n, --node NODE                  Select a specific node. Can be a regular expression to select several nodes if used with enclosing "/" characters. (can be used several times).
     -r, --service SERVICE_NAME       Select nodes implementing a given service (can be used several times)
 ```
 
 * `--all-hosts`: Select all the known hosts.
 * `--hosts-platform PLATFORM_NAME`: Specify the name of a platform as a selector. Can be useful to only perform checks of nodes of a given repository after merging a PR on this repository.
 * `--hosts-list LIST_NAME`: Specify a hosts list name as selector. Hosts list are a named group of hosts, and are defined by each platform if they make sense. For example all the nodes belonging to the same cluster could be part of a hosts list.
-* `--host-name NODE_NAME`: Select a single host name. A regular expression can also be used when `HOST_NAME` is enclosed with `/` character (the regular expression grammar is [the Ruby one](http://ruby-doc.org/core-2.5.0/Regexp.html)). Examples: `--host-name my_host_1`, `--host-name /my_host_.+/`.
+* `--node NODE`: Select a single node. A regular expression can also be used when `NODE` is enclosed with `/` character (the regular expression grammar is [the Ruby one](http://ruby-doc.org/core-2.5.0/Regexp.html)). Examples: `--node my_node_1`, `--node /my_node_.+/`.
 * `--service SERVICE_NAME`: Select all nodes that implement a given service.
 
 ## SSH Executor options
@@ -1319,7 +1319,7 @@ Topographer options:
                                          -b PLATFORM_NAME,                Select hosts belonging to a given platform name. Available platforms are: ansible-repo, chef-repo (can be used several times)
                                              --hosts-platform
                                          -l, --hosts-list LIST_NAME       Select hosts defined in a hosts list (can be used several times)
-                                         -n, --host-name HOST_NAME        Select a specific host. Can be a regular expression if used with enclosing "/" characters. (can be used several times)
+                                         -n, --node NODE                  Select a specific node. Can be a regular expression to select several nodes if used with enclosing "/" characters. (can be used several times).
     -k, --skip-run                   Skip the actual gathering of JSON node files. If set, the current files in nodes_json will be used.
     -p, --output FORMAT:FILE_NAME    Specify a format and file name. Can be used several times. FORMAT can be one of graphviz, json, svg. Ex.: graphviz:graph.gv
     -T, --to HOSTS_OPTIONS           Specify options for the set of nodes to get to (enclose them with ""). Default: all nodes. HOSTS_OPTIONS follows the following:
@@ -1327,7 +1327,7 @@ Topographer options:
                                          -b PLATFORM_NAME,                Select hosts belonging to a given platform name. Available platforms are: ansible-repo, chef-repo (can be used several times)
                                              --hosts-platform
                                          -l, --hosts-list LIST_NAME       Select hosts defined in a hosts list (can be used several times)
-                                         -n, --host-name HOST_NAME        Select a specific host. Can be a regular expression if used with enclosing "/" characters. (can be used several times)
+                                         -n, --node NODE                  Select a specific node. Can be a regular expression to select several nodes if used with enclosing "/" characters. (can be used several times).
 ```
 
 * `--from HOSTS_OPTIONS`: Specify the set of source nodes that we want to graph from.

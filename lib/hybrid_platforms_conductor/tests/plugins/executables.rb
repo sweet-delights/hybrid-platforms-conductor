@@ -14,18 +14,18 @@ module HybridPlatformsConductor
           nodes_handler = NodesHandler.new
           example_node = nodes_handler.platform(nodes_handler.known_platforms.first).known_nodes.first
         	[
-            "#{CmdRunner.executables_prefix}check-node --host-name #{example_node} --show-commands",
-            "#{CmdRunner.executables_prefix}deploy --host-name #{example_node} --show-commands --why-run",
+            "#{CmdRunner.executables_prefix}check-node --node #{example_node} --show-commands",
+            "#{CmdRunner.executables_prefix}deploy --node #{example_node} --show-commands --why-run",
             "#{CmdRunner.executables_prefix}dump_nodes_json --help",
             "#{CmdRunner.executables_prefix}free_ips",
             "#{CmdRunner.executables_prefix}free_veids",
-            "#{CmdRunner.executables_prefix}last_deploys --host-name #{example_node} --show-commands",
-            "#{CmdRunner.executables_prefix}report --host-name #{example_node} --format stdout",
+            "#{CmdRunner.executables_prefix}last_deploys --node #{example_node} --show-commands",
+            "#{CmdRunner.executables_prefix}report --node #{example_node} --format stdout",
             "#{CmdRunner.executables_prefix}ssh_config",
-            "#{CmdRunner.executables_prefix}ssh_run --host-name #{example_node} --show-commands --interactive",
+            "#{CmdRunner.executables_prefix}ssh_run --node #{example_node} --show-commands --interactive",
             "#{CmdRunner.executables_prefix}setup --help",
             "#{CmdRunner.executables_prefix}test --help",
-            "#{CmdRunner.executables_prefix}topograph --from \"--host-name #{example_node}\" --to \"--host-name #{example_node}\" --skip-run --output graphviz:graph.gv"
+            "#{CmdRunner.executables_prefix}topograph --from \"--node #{example_node}\" --to \"--node #{example_node}\" --skip-run --output graphviz:graph.gv"
           ].each do |cmd|
             log_debug "Testing #{cmd}"
             stdout = `#{cmd} 2>&1`

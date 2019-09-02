@@ -18,7 +18,7 @@ describe 'report executable' do
 
   it 'reports on given nodes only' do
     with_test_platform(nodes: { 'node1' => {}, 'node2' => {} }) do
-      exit_code, stdout, stderr = run 'report', '--host-name', 'node2'
+      exit_code, stdout, stderr = run 'report', '--node', 'node2'
       expect(exit_code).to eq 0
       expect(stdout).to eq(
         "+-----------+----------+-------------+------------+----------------+----+---------+----------+---------+-------------+----------------------------+\n" +
@@ -38,7 +38,7 @@ describe 'report executable' do
       'os' => 'Windows 3.1',
       'description' => 'A great server'
     } } }) do
-      exit_code, stdout, stderr = run 'report', '--host-name', 'node'
+      exit_code, stdout, stderr = run 'report', '--node', 'node'
       expect(exit_code).to eq 0
       expect(stdout).to eq(
         "+-----------+----------+-------------------------+------------+----------------+-------------+---------+-------------+---------+----------------+----------------------------+\n" +

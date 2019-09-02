@@ -155,7 +155,7 @@ diff_files:
 ", '']
         }
       end])
-      exit_code, stdout, stderr = run 'last_deploys', '--host-name', 'node1'
+      exit_code, stdout, stderr = run 'last_deploys', '--node', 'node1'
       expect(exit_code).to eq 0
       expect(stdout).to eq(
         "+-------+---------------------+-------------+------------+------------------+-----------------+-------+\n" +
