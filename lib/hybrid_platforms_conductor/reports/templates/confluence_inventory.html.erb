@@ -14,7 +14,7 @@
       <th>Description</th>
       <th>Missing industrialization?</th>
     </tr>
-    <% @hosts.sort.each do |node| %>
+    <% @nodes.sort.each do |node| %>
       <% node_info = @nodes_handler.metadata_for(node) %>
       <tr style="vertical-align: middle;">
         <td><strong><%= node %></strong></td>

@@ -229,14 +229,14 @@ module HybridPlatformsConductor
       end
     end
 
-    # Add to the graph a given set of hosts lists and their connected nodes.
+    # Add to the graph a given set of nodes lists and their connected nodes.
     #
     # Parameters::
-    # * *hosts_list_names* (Array<String>): List of hosts list names
+    # * *nodes_lists* (Array<String>): List of nodes lists
     # * *only_add_cluster* (Boolean): If true, then don't add missing nodes from this graph to the graph [default = false]
-    def graph_for_hostlists(hosts_list_names, only_add_cluster: false)
-      hosts_list_names.each do |hosts_list_name|
-        hosts_list = @nodes_handler.select_nodes(@nodes_handler.nodes_from_list(hosts_list_name))
+    def graph_for_nodes_lists(nodes_lists, only_add_cluster: false)
+      nodes_lists.each do |nodes_list|
+        hosts_list = @nodes_handler.select_nodes(@nodes_handler.nodes_from_list(nodes_list))
         if only_add_cluster
           # Select only the hosts list we know about
           hosts_list.select! { |hostname| @nodes_graph.key?(hostname) }
@@ -246,14 +246,14 @@ module HybridPlatformsConductor
             parse_connections_for(hostname, @config[:connections_max_level])
           end
         end
-        @nodes_graph[hosts_list_name] = {
+        @nodes_graph[nodes_list] = {
           type: :cluster,
           connections: {},
           includes: [],
           includes_proc: proc { |node_name| hosts_list.include?(node_name) }
-        } unless @nodes_graph.key?(hosts_list_name)
-        @nodes_graph[hosts_list_name][:includes].concat(hosts_list)
-        @nodes_graph[hosts_list_name][:includes].uniq!
+        } unless @nodes_graph.key?(nodes_list)
+        @nodes_graph[nodes_list][:includes].concat(hosts_list)
+        @nodes_graph[nodes_list][:includes].uniq!
       end
     end
 

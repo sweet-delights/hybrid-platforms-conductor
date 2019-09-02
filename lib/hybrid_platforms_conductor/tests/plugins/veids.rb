@@ -9,21 +9,21 @@ module HybridPlatformsConductor
 
         # Check my_test_plugin.rb.sample documentation for signature details.
         def test
-          # Get a map of VEIDs per hostname
+          # Get a map of VEIDs per node
           veids = Hash[@nodes_handler.
             known_nodes.
-            map do |hostname|
-              conf = @nodes_handler.metadata_for hostname
+            map do |node|
+              conf = @nodes_handler.metadata_for node
               [
-                hostname,
+                node,
                 conf.key?('veid') ? conf['veid'].to_i : nil
               ]
             end
           ]
 
           # Check there are no duplicates
-          veids.group_by { |_hostname, veid| veid }.each do |veid, hostnames|
-            error "VEID #{veid} is used by the following nodes: #{hostnames.map { |hostname, _veid| hostname }.join(', ')}" if !veid.nil? && hostnames.size > 1
+          veids.group_by { |_hostname, veid| veid }.each do |veid, nodes|
+            error "VEID #{veid} is used by the following nodes: #{nodes.map { |node, _veid| node }.join(', ')}" if !veid.nil? && nodes.size > 1
           end
         end
 

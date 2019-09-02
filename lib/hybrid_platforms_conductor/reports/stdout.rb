@@ -17,13 +17,13 @@ module HybridPlatformsConductor
         [:en]
       end
 
-      # Create a report for a list of hostnames, in a given locale
+      # Create a report for a list of nodes, in a given locale
       # [API] - This method is mandatory.
       #
       # Parameters::
-      # * *hosts* (Array<String>): List of hosts
+      # * *nodes* (Array<String>): List of nodes
       # * *locale_code* (Symbol): The locale code
-      def report_for(hosts, locale_code)
+      def report_for(nodes, locale_code)
         out(Terminal::Table.new(headings: [
           'Node name',
           'Platform',
@@ -37,7 +37,7 @@ module HybridPlatformsConductor
           'Description',
           'Missing industrialization?'
         ]) do |table|
-          hosts.sort.each do |node|
+          nodes.sort.each do |node|
             node_info = @nodes_handler.metadata_for(node)
             table << [
               node,

@@ -50,7 +50,7 @@ module HybridPlatformsConductor
             '/remote/orishare',
             '/remote/tmp'
           ],
-          # Root directories of VMs for Proxmox containers contain files whose UIDs make sense only inseide the VM itself.
+          # Root directories of VMs for Proxmox containers contain files whose UIDs make sense only inside the VM itself.
           ['node12lnx10', 'node12lnx11', 'node12lnx12', 'node12lnx13'] => [
             '/var/lib/vz/root',
             '/var/lib/vz/private'
@@ -59,11 +59,11 @@ module HybridPlatformsConductor
 
         # Normalized version of the directories to ignore (convert list keys)
         DIRECTORIES_TO_IGNORE_NORMALIZED = {}
-        DIRECTORIES_TO_IGNORE.each do |hostnames, dirs_to_ignore|
-          hostnames = [hostnames] unless hostnames.is_a?(Array)
+        DIRECTORIES_TO_IGNORE.each do |nodes, dirs_to_ignore|
+          nodes = [nodes] unless nodes.is_a?(Array)
           dirs_to_ignore = [dirs_to_ignore] unless dirs_to_ignore.is_a?(Array)
-          hostnames.each do |hostname|
-            DIRECTORIES_TO_IGNORE_NORMALIZED[hostname] = dirs_to_ignore
+          nodes.each do |node|
+            DIRECTORIES_TO_IGNORE_NORMALIZED[node] = dirs_to_ignore
           end
         end
 

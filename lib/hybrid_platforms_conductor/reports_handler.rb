@@ -42,11 +42,6 @@ module HybridPlatformsConductor
       @locale = @reports_plugins[@format].supported_locales.first
     end
 
-    # Validate that parsed parameters are valid
-    def validate_params
-      raise "Unknown format: #{@format}" unless @reports_plugins.keys.include? @format
-    end
-
     # Complete an option parser with options meant to control this Reports handler
     #
     # Parameters::
@@ -62,13 +57,18 @@ module HybridPlatformsConductor
       end
     end
 
-    # Produce a report for a given list of hostnames
+    # Validate that parsed parameters are valid
+    def validate_params
+      raise "Unknown format: #{@format}" unless @reports_plugins.keys.include? @format
+    end
+
+    # Produce a report for a given list of nodes selectors
     #
     # Parameters::
-    # * *nodes_descriptions* (Array<Object>): List of nodes descriptions to produce report for
-    def produce_report_for(nodes_descriptions)
+    # * *nodes_selectors* (Array<Object>): List of nodes selectors to produce report for
+    def produce_report_for(nodes_selectors)
       raise "Unknown locale for format #{@format}: #{@locale}" unless @reports_plugins[@format].supported_locales.include? @locale
-      @reports_plugins[@format].new(@logger, @logger_stderr, nodes_handler: @nodes_handler).report_for(@nodes_handler.select_nodes(nodes_descriptions), @locale)
+      @reports_plugins[@format].new(@logger, @logger_stderr, nodes_handler: @nodes_handler).report_for(@nodes_handler.select_nodes(nodes_selectors), @locale)
     end
 
   end

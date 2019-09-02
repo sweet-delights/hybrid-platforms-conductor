@@ -10,8 +10,8 @@ executable.parse_options!
 
 veids = nodes_handler.
   known_nodes.
-  map do |hostname|
-    conf = nodes_handler.metadata_for hostname
+  map do |node|
+    conf = nodes_handler.metadata_for node
     conf.key?('veid') ? conf['veid'].to_i : nil
   end.
   compact

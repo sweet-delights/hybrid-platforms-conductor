@@ -165,7 +165,7 @@ module HybridPlatformsConductor
         end
       end
 
-      # Get nodes associated to hosts list.
+      # Get nodes associated to nodes lists.
       # Also include 2 special lists: 'No list' and 'All'.
       #
       # Result::
@@ -173,7 +173,8 @@ module HybridPlatformsConductor
       #   * *nodes* (Array<String>): Nodes in the list
       #   * *tested_nodes* (Array<String>): Tested nodes in the list
       #   * *tested_nodes_in_error* (Array<String>): Tested nodes in error in the list
-      def nodes_by_hosts_list
+      #   * *tested_nodes_in_error_as_expected* (Array<String>): Tested nodes in error in the list that are part of the expected failures
+      def nodes_by_nodes_list
         no_list_nodes = @nodes_handler.known_nodes
         Hash[(
           @nodes_handler.known_nodes_lists.sort.map do |hosts_list_name|

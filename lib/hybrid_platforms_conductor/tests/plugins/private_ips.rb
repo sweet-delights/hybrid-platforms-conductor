@@ -9,28 +9,28 @@ module HybridPlatformsConductor
 
         # Check my_test_plugin.rb.sample documentation for signature details.
         def test
-          # Get a map of private IPs per hostname
+          # Get a map of private IPs per node
           private_ips = Hash[@nodes_handler.
             known_nodes.
-            map do |hostname|
-              conf = @nodes_handler.metadata_for hostname
+            map do |node|
+              conf = @nodes_handler.metadata_for node
               [
-                hostname,
+                node,
                 conf.key?('private_ips') ? conf['private_ips'] : []
               ]
             end
           ]
 
           # Check there are no duplicates
-          hostnames_per_private_ip = {}
-          private_ips.each do |hostname, private_ips|
+          nodenames_per_private_ip = {}
+          private_ips.each do |node, private_ips|
             private_ips.each do |private_ip|
-              hostnames_per_private_ip[private_ip] = [] unless hostnames_per_private_ip.key?(private_ip)
-              hostnames_per_private_ip[private_ip] << hostname
+              nodes_per_private_ip[private_ip] = [] unless nodes_per_private_ip.key?(private_ip)
+              nodes_per_private_ip[private_ip] << node
             end
           end
-          hostnames_per_private_ip.each do |private_ip, hostnames|
-            error "Private IP #{private_ip} is used by the following nodes: #{hostnames.join(', ')}" if hostnames.size > 1
+          nodes_per_private_ip.each do |private_ip, nodes|
+            error "Private IP #{private_ip} is used by the following nodes: #{nodes.join(', ')}" if nodes.size > 1
           end
         end
 

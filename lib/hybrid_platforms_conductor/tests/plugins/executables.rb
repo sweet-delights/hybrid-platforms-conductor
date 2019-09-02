@@ -12,20 +12,20 @@ module HybridPlatformsConductor
         # Check my_test_plugin.rb.sample documentation for signature details.
         def test
           nodes_handler = NodesHandler.new
-          example_host = nodes_handler.platform(nodes_handler.known_platforms.first).known_nodes.first
+          example_node = nodes_handler.platform(nodes_handler.known_platforms.first).known_nodes.first
         	[
-            "#{CmdRunner.executables_prefix}check-node --host-name #{example_host} --show-commands",
-            "#{CmdRunner.executables_prefix}deploy --host-name #{example_host} --show-commands --why-run",
+            "#{CmdRunner.executables_prefix}check-node --host-name #{example_node} --show-commands",
+            "#{CmdRunner.executables_prefix}deploy --host-name #{example_node} --show-commands --why-run",
             "#{CmdRunner.executables_prefix}dump_nodes_json --help",
             "#{CmdRunner.executables_prefix}free_ips",
             "#{CmdRunner.executables_prefix}free_veids",
-            "#{CmdRunner.executables_prefix}last_deploys --host-name #{example_host} --show-commands",
-            "#{CmdRunner.executables_prefix}report --host-name #{example_host} --format stdout",
+            "#{CmdRunner.executables_prefix}last_deploys --host-name #{example_node} --show-commands",
+            "#{CmdRunner.executables_prefix}report --host-name #{example_node} --format stdout",
             "#{CmdRunner.executables_prefix}ssh_config",
-            "#{CmdRunner.executables_prefix}ssh_run --host-name #{example_host} --show-commands --interactive",
+            "#{CmdRunner.executables_prefix}ssh_run --host-name #{example_node} --show-commands --interactive",
             "#{CmdRunner.executables_prefix}setup --help",
             "#{CmdRunner.executables_prefix}test --help",
-            "#{CmdRunner.executables_prefix}topograph --from \"--host-name #{example_host}\" --to \"--host-name #{example_host}\" --skip-run --output graphviz:graph.gv"
+            "#{CmdRunner.executables_prefix}topograph --from \"--host-name #{example_node}\" --to \"--host-name #{example_node}\" --skip-run --output graphviz:graph.gv"
           ].each do |cmd|
             log_debug "Testing #{cmd}"
             stdout = `#{cmd} 2>&1`
