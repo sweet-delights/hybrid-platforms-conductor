@@ -60,7 +60,7 @@ module HybridPlatformsConductor
     def options_parse(options_parser, parallel: true)
       options_parser.separator ''
       options_parser.separator 'Nodes handler options:'
-      options_parser.on('-o', '--show-hosts', 'Display the list of possible hosts and exit') do
+      options_parser.on('-o', '--show-nodes', 'Display the list of possible nodes and exit') do
         out "* Known platforms:\n#{
           known_platforms.map do |platform|
             platform_handler = platform(platform)

@@ -207,7 +207,7 @@ This command will run the tests of platforms handled by HPCs Conductor executabl
 
 This command will list all the nodes that could be found in the platforms.
 ```
-./bin/check-node --show-hosts
+./bin/check-node --show-nodes
 ```
 
 <a name="how_to"></a>
@@ -225,7 +225,7 @@ Main options:
     -h, --help                       Display help and exit
 
 Nodes handler options:
-    -o, --show-hosts                 Display the list of possible hosts and exit
+    -o, --show-nodes                 Display the list of possible nodes and exit
 
 Nodes selection options:
     -a, --all-nodes                  Select all nodes
@@ -281,7 +281,7 @@ Main options:
     -n, --node NODE                  Run the command on a specific node.
 
 Nodes handler options:
-    -o, --show-hosts                 Display the list of possible hosts and exit
+    -o, --show-nodes                 Display the list of possible nodes and exit
 
 SSH executor options:
     -d, --debug                      Activate verbose logs
@@ -381,7 +381,7 @@ Main options:
     -h, --help                       Display help and exit
 
 Nodes handler options:
-    -o, --show-hosts                 Display the list of possible hosts and exit
+    -o, --show-nodes                 Display the list of possible nodes and exit
 
 Nodes selection options:
     -a, --all-nodes                  Select all nodes
@@ -510,7 +510,7 @@ Main options:
     -t, --timeout SECS               Timeout in seconds to wait for each command (defaults to no timeout)
 
 Nodes handler options:
-    -o, --show-hosts                 Display the list of possible hosts and exit
+    -o, --show-nodes                 Display the list of possible nodes and exit
 
 Nodes selection options:
     -a, --all-nodes                  Select all nodes
@@ -533,7 +533,7 @@ SSH executor options:
 Usage examples:
 ```
 # Display the possible nodes we can run commands on (also outputs the possible hosts lists)
-./bin/ssh_run --show-hosts
+./bin/ssh_run --show-nodes
 
 # Run an interactive SSH session on node23hst-nn1
 ./bin/ssh_run --node node23hst-nn1 --interactive
@@ -582,7 +582,7 @@ Main options:
     -x, --ssh-exec FILE_PATH         Path to the SSH executable to be used. Useful to give default options (especially with GIT_SSH). Defaults to ssh.
 
 Nodes handler options:
-    -o, --show-hosts                 Display the list of possible hosts and exit
+    -o, --show-nodes                 Display the list of possible nodes and exit
 
 SSH executor options:
     -d, --debug                      Activate verbose logs
@@ -736,7 +736,7 @@ Reports handler options:
     -f, --format FORMAT              Generate the report in the given format. Possible formats are confluence, mediawiki, stdout. Default: stdout.
 
 Nodes handler options:
-    -o, --show-hosts                 Display the list of possible hosts and exit
+    -o, --show-nodes                 Display the list of possible nodes and exit
 
 Nodes selection options:
     -a, --all-nodes                  Select all nodes
@@ -837,7 +837,7 @@ Main options:
         --sort-by SORT               Specify a sort. Possible values are: admin, chef_commit_comment, chef_commit_id, datetime, git_branch, git_repo, host. Each value can append _desc to specify a reverse sorting. Defaults to host.
 
 Nodes handler options:
-    -o, --show-hosts                 Display the list of possible hosts and exit
+    -o, --show-nodes                 Display the list of possible nodes and exit
 
 Nodes selection options:
     -a, --all-nodes                  Select all nodes
@@ -899,7 +899,7 @@ Main options:
     -h, --help                       Display help and exit
 
 Nodes handler options:
-    -o, --show-hosts                 Display the list of possible hosts and exit
+    -o, --show-nodes                 Display the list of possible nodes and exit
 
 Nodes selection options:
     -a, --all-nodes                  Select all nodes
@@ -982,7 +982,7 @@ Topographer options:
                                          -n, --node NODE                  Select a specific node. Can be a regular expression to select several nodes if used with enclosing "/" characters. (can be used several times).
 
 Nodes handler options:
-    -o, --show-hosts                 Display the list of possible hosts and exit
+    -o, --show-nodes                 Display the list of possible nodes and exit
 
 SSH executor options:
     -d, --debug                      Activate verbose logs
@@ -1054,7 +1054,7 @@ Main options:
     -h, --help                       Display help and exit.
 
 Nodes handler options:
-    -o, --show-hosts                 Display the list of possible hosts and exit
+    -o, --show-nodes                 Display the list of possible nodes and exit
 
 Nodes selection options:
     -a, --all-nodes                  Select all nodes
@@ -1171,7 +1171,7 @@ Main options:
     -h, --help                       Display help and exit
 
 Nodes handler options:
-    -o, --show-hosts                 Display the list of possible hosts and exit
+    -o, --show-nodes                 Display the list of possible nodes and exit
 ```
 
 Usage examples:
@@ -1218,10 +1218,10 @@ The nodes handler options add functionality about nodes information.
 
 ```
 Nodes handler options:
-    -o, --show-hosts                 Display the list of possible hosts and exit
+    -o, --show-nodes                 Display the list of possible nodes and exit
 ```
 
-* `--show-hosts`: Display the list of known hosts, hosts lists and platforms, and exit.
+* `--show-nodes`: Display the list of known nodes, nodes lists, platforms, services, description... and exit.
 
 ## Nodes selection options
 
@@ -1624,12 +1624,12 @@ Now your Platform Handler plugin should be ready to use.
 It should appear when you issue the following command:
 
 ```
-./bin/setup --show-hosts
+./bin/setup --show-nodes
 ```
 
 Example of output:
 ```
-=> ./bin/setup --show-hosts
+=> ./bin/setup --show-nodes
 * Known platforms:
 * <platform_type_name>: /path/to/hybrid_platforms_conductor-<platform_type_name>
 * chef: ./cloned_platforms/xae-chef-repo
