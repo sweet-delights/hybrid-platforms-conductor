@@ -228,7 +228,7 @@ Nodes handler options:
     -o, --show-hosts                 Display the list of possible hosts and exit
 
 Nodes selection options:
-    -a, --all-hosts                  Select all nodes
+    -a, --all-nodes                  Select all nodes
     -b PLATFORM_NAME,                Select nodes belonging to a given platform name. Available platforms are: ansible-repo, chef-repo (can be used several times)
         --hosts-platform
     -l, --hosts-list LIST_NAME       Select nodes defined in a nodes list (can be used several times)
@@ -385,7 +385,7 @@ Nodes handler options:
     -o, --show-hosts                 Display the list of possible hosts and exit
 
 Nodes selection options:
-    -a, --all-hosts                  Select all nodes
+    -a, --all-nodes                  Select all nodes
     -b PLATFORM_NAME,                Select nodes belonging to a given platform name. Available platforms are: ansible-repo, chef-repo (can be used several times)
         --hosts-platform
     -l, --hosts-list LIST_NAME       Select nodes defined in a nodes list (can be used several times)
@@ -444,7 +444,7 @@ Usage examples:
 ./bin/deploy --hosts-list xaebhsone --node node12hst-nn1 --node node12hst-nn2
 
 # Deploy master on all nodes
-./bin/deploy --all-hosts
+./bin/deploy --all-nodes
 ```
 
 Example of output:
@@ -515,7 +515,7 @@ Nodes handler options:
     -o, --show-hosts                 Display the list of possible hosts and exit
 
 Nodes selection options:
-    -a, --all-hosts                  Select all nodes
+    -a, --all-nodes                  Select all nodes
     -b PLATFORM_NAME,                Select nodes belonging to a given platform name. Available platforms are: ansible-repo, chef-repo (can be used several times)
         --hosts-platform
     -l, --hosts-list LIST_NAME       Select nodes defined in a nodes list (can be used several times)
@@ -742,7 +742,7 @@ Nodes handler options:
     -o, --show-hosts                 Display the list of possible hosts and exit
 
 Nodes selection options:
-    -a, --all-hosts                  Select all nodes
+    -a, --all-nodes                  Select all nodes
     -b PLATFORM_NAME,                Select nodes belonging to a given platform name. Available platforms are: ansible-repo, chef-repo (can be used several times)
         --hosts-platform
     -l, --hosts-list LIST_NAME       Select nodes defined in a nodes list (can be used several times)
@@ -844,7 +844,7 @@ Nodes handler options:
     -o, --show-hosts                 Display the list of possible hosts and exit
 
 Nodes selection options:
-    -a, --all-hosts                  Select all nodes
+    -a, --all-nodes                  Select all nodes
     -b PLATFORM_NAME,                Select nodes belonging to a given platform name. Available platforms are: ansible-repo, chef-repo (can be used several times)
         --hosts-platform
     -l, --hosts-list LIST_NAME       Select nodes defined in a nodes list (can be used several times)
@@ -865,10 +865,10 @@ SSH executor options:
 Usage examples:
 ```
 # Check deployments for all nodes
-./bin/last_deploys --all-hosts
+./bin/last_deploys --all-nodes
 
 # Check deployments for all nodes, sorted by date descending
-./bin/last_deploys --all-hosts --sort-by datetime_desc
+./bin/last_deploys --all-nodes --sort-by datetime_desc
 ```
 
 Example of output:
@@ -907,7 +907,7 @@ Nodes handler options:
     -o, --show-hosts                 Display the list of possible hosts and exit
 
 Nodes selection options:
-    -a, --all-hosts                  Select all nodes
+    -a, --all-nodes                  Select all nodes
     -b PLATFORM_NAME,                Select nodes belonging to a given platform name. Available platforms are: ansible-repo, chef-repo (can be used several times)
         --hosts-platform
     -l, --hosts-list LIST_NAME       Select nodes defined in a nodes list (can be used several times)
@@ -975,7 +975,7 @@ Main options:
 
 Topographer options:
     -F, --from HOSTS_OPTIONS         Specify options for the set of nodes to start from (enclose them with ""). Default: all nodes. HOSTS_OPTIONS follows the following:
-                                         -a, --all-hosts                  Select all hosts
+                                         -a, --all-nodes                  Select all nodes
                                          -b PLATFORM_NAME,                Select hosts belonging to a given platform name. Available platforms are: ansible-repo, chef-repo (can be used several times)
                                              --hosts-platform
                                          -l, --hosts-list LIST_NAME       Select hosts defined in a hosts list (can be used several times)
@@ -983,7 +983,7 @@ Topographer options:
     -k, --skip-run                   Skip the actual gathering of JSON node files. If set, the current files in nodes_json will be used.
     -p, --output FORMAT:FILE_NAME    Specify a format and file name. Can be used several times. FORMAT can be one of graphviz, json, svg. Ex.: graphviz:graph.gv
     -T, --to HOSTS_OPTIONS           Specify options for the set of nodes to get to (enclose them with ""). Default: all nodes. HOSTS_OPTIONS follows the following:
-                                         -a, --all-hosts                  Select all hosts
+                                         -a, --all-nodes                  Select all nodes
                                          -b PLATFORM_NAME,                Select hosts belonging to a given platform name. Available platforms are: ansible-repo, chef-repo (can be used several times)
                                              --hosts-platform
                                          -l, --hosts-list LIST_NAME       Select hosts defined in a hosts list (can be used several times)
@@ -1065,7 +1065,7 @@ Nodes handler options:
     -o, --show-hosts                 Display the list of possible hosts and exit
 
 Nodes selection options:
-    -a, --all-hosts                  Select all nodes
+    -a, --all-nodes                  Select all nodes
     -b PLATFORM_NAME,                Select nodes belonging to a given platform name. Available platforms are: ansible-repo, chef-repo (can be used several times)
         --hosts-platform
     -l, --hosts-list LIST_NAME       Select nodes defined in a nodes list (can be used several times)
@@ -1096,13 +1096,13 @@ Tests runner options:
 Usage examples:
 ```
 # Execute all tests on all nodes
-./bin/test --all-hosts
+./bin/test --all-nodes
 
 # Execute only the tests named hostname and ip on all nodes whose names contain xae
 ./bin/test --test hostname --test ip --node /xae/
 
 # Execute all tests on all nodes, but reuse the content of run_logs instead of why-run deployments
-./bin/test --all-hosts --skip-run
+./bin/test --all-nodes --skip-run
 ```
 
 Here is an example of output:
@@ -1238,7 +1238,7 @@ The nodes selection options are used to select a set of nodes that the tool need
 
 ```
 Nodes selection options:
-    -a, --all-hosts                  Select all nodes
+    -a, --all-nodes                  Select all nodes
     -b PLATFORM_NAME,                Select nodes belonging to a given platform name. Available platforms are: ansible-repo, chef-repo (can be used several times)
         --hosts-platform
     -l, --hosts-list LIST_NAME       Select nodes defined in a nodes list (can be used several times)
@@ -1246,7 +1246,7 @@ Nodes selection options:
     -r, --service SERVICE_NAME       Select nodes implementing a given service (can be used several times)
 ```
 
-* `--all-hosts`: Select all the known hosts.
+* `--all-nodes`: Select all the known nodes.
 * `--hosts-platform PLATFORM_NAME`: Specify the name of a platform as a selector. Can be useful to only perform checks of nodes of a given repository after merging a PR on this repository.
 * `--hosts-list LIST_NAME`: Specify a hosts list name as selector. Hosts list are a named group of hosts, and are defined by each platform if they make sense. For example all the nodes belonging to the same cluster could be part of a hosts list.
 * `--node NODE`: Select a single node. A regular expression can also be used when `NODE` is enclosed with `/` character (the regular expression grammar is [the Ruby one](http://ruby-doc.org/core-2.5.0/Regexp.html)). Examples: `--node my_node_1`, `--node /my_node_.+/`.
@@ -1315,7 +1315,7 @@ The Topographer options drive the way the topographer works. The Topographer is 
 ```
 Topographer options:
     -F, --from HOSTS_OPTIONS         Specify options for the set of nodes to start from (enclose them with ""). Default: all nodes. HOSTS_OPTIONS follows the following:
-                                         -a, --all-hosts                  Select all hosts
+                                         -a, --all-nodes                  Select all nodes
                                          -b PLATFORM_NAME,                Select hosts belonging to a given platform name. Available platforms are: ansible-repo, chef-repo (can be used several times)
                                              --hosts-platform
                                          -l, --hosts-list LIST_NAME       Select hosts defined in a hosts list (can be used several times)
@@ -1323,7 +1323,7 @@ Topographer options:
     -k, --skip-run                   Skip the actual gathering of JSON node files. If set, the current files in nodes_json will be used.
     -p, --output FORMAT:FILE_NAME    Specify a format and file name. Can be used several times. FORMAT can be one of graphviz, json, svg. Ex.: graphviz:graph.gv
     -T, --to HOSTS_OPTIONS           Specify options for the set of nodes to get to (enclose them with ""). Default: all nodes. HOSTS_OPTIONS follows the following:
-                                         -a, --all-hosts                  Select all hosts
+                                         -a, --all-nodes                  Select all nodes
                                          -b PLATFORM_NAME,                Select hosts belonging to a given platform name. Available platforms are: ansible-repo, chef-repo (can be used several times)
                                              --hosts-platform
                                          -l, --hosts-list LIST_NAME       Select hosts defined in a hosts list (can be used several times)

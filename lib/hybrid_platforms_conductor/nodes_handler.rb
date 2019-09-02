@@ -94,7 +94,7 @@ module HybridPlatformsConductor
     def options_parse_nodes_selectors(options_parser, nodes_selectors)
       options_parser.separator ''
       options_parser.separator 'Nodes selection options:'
-      options_parser.on('-a', '--all-hosts', 'Select all nodes') do
+      options_parser.on('-a', '--all-nodes', 'Select all nodes') do
         nodes_selectors << { all: true }
       end
       options_parser.on('-b', '--hosts-platform PLATFORM_NAME', "Select nodes belonging to a given platform name. Available platforms are: #{@platforms.keys.sort.join(', ')} (can be used several times)") do |platform_name|

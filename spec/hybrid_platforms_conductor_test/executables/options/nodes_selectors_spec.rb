@@ -34,7 +34,7 @@ describe 'executables\' nodes selection options' do
 
   # Enumerate all command-line selectors to test, and the corresponding nodes list
   {
-    ['--all-hosts'] => [{ all: true }],
+    ['--all-nodes'] => [{ all: true }],
     ['--node', 'node11'] => ['node11'],
     ['--node', '/node1.+/'] => [/node1.+/],
     ['--hosts-list', 'my_list'] => [{ list: 'my_list' }],
