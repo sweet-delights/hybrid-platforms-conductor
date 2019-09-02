@@ -136,20 +136,12 @@ module HybridPlatformsConductor
       @force_direct_deploy = false
     end
 
-    # Validate that parsed parameters are valid
-    def validate_params
-      raise 'Can\'t have a timeout unless why-run mode. Please don\'t use --timeout without --why-run.' if !@timeout.nil? && !@use_why_run
-      @secrets.each do |secret_file|
-        raise "Missing secret file: #{secret_file}" unless File.exist?(secret_file)
-      end
-    end
-
-    # Complete an option parser with options meant to control this SSH executor
+    # Complete an option parser with options meant to control this Deployer
     #
     # Parameters::
     # * *options_parser* (OptionParser): The option parser to complete
     # * *parallel_switch* (Boolean): Do we allow parallel execution to be switched? [default = true]
-    # * *why_run_switch* (Boolean): Do we allow the why run to be switched? [default = false]
+    # * *why_run_switch* (Boolean): Do we allow the why-run mode to be switched? [default = false]
     # * *plugins_options* (Boolean): Do we allow plugins options? [default = true]
     # * *timeout_options* (Boolean): Do we allow timeout options? [default = true]
     def options_parse(options_parser, parallel_switch: true, why_run_switch: false, plugins_options: true, timeout_options: true)
@@ -180,13 +172,27 @@ module HybridPlatformsConductor
       end if plugins_options
     end
 
-    # Deploy for a given list of nodes selectors
+    # Validate that parsed parameters are valid
+    def validate_params
+      raise 'Can\'t have a timeout unless why-run mode. Please don\'t use --timeout without --why-run.' if !@timeout.nil? && !@use_why_run
+      @secrets.each do |secret_file|
+        raise "Missing secret file: #{secret_file}" unless File.exist?(secret_file)
+      end
+    end
+
+    # Deploy on a given list of nodes selectors.
+    # The workflow is the following:
+    # 1. Package the platform to be deployed (once per platform)
+    # 2. Deliver the packaged platform on artefacts server unless we perform direct deployments to the nodes (once per node to be deployed)
+    # 3. Register the secrets (once per platform)
+    # 4. Prepare the platform for deployment if the Platform Handler needs it (once per platform) 
+    # 5. Deploy on the nodes (once per node to be deployed)
     #
     # Parameters::
     # * *nodes_selectors* (Array<Object>): The list of nodes selectors we will deploy to.
     # Result::
-    # * Hash<String, [Integer or Symbol, String, String]>: Exit status code (or Symbol in case of error or dry run), standard output and error for each hostname that has been deployed.
-    def deploy_for(*nodes_selectors)
+    # * Hash<String, [Integer or Symbol, String, String]>: Exit status code (or Symbol in case of error or dry run), standard output and error for each node that has been deployed.
+    def deploy_on(*nodes_selectors)
       @hosts = @nodes_handler.select_nodes(nodes_selectors.flatten)
       # Keep a track of the git origins to be used by each host that takes its package from an artefact repository.
       @git_origins_per_host = {}

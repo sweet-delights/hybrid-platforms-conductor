@@ -59,7 +59,7 @@ module HybridPlatformsConductor
         end
         @deployer.concurrent_execution = true
         @deployer.use_why_run = true
-        @deployer.deploy_for(hostnames)
+        @deployer.deploy_on(hostnames)
       end
       # Parse the logs
       FileUtils.mkdir_p @dump_dir

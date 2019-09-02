@@ -34,7 +34,7 @@ module HybridPlatformsConductor
             end
             assert_equal ssh_ok, true, 'Root does not have access from the empty image'
             if ssh_ok
-              deployer.deploy_for(@node)
+              deployer.deploy_on(@node)
 
               # Check that we can't connect with root
               ssh_ok = false

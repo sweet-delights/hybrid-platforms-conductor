@@ -161,7 +161,7 @@ describe HybridPlatformsConductor::TestsRunner do
 
     it 'reports correctly a node check test' do
       with_test_platforms_for_reports_test do
-        expect(test_deployer).to receive(:deploy_for).with(%w[node11 node12 node21 node22]).once do
+        expect(test_deployer).to receive(:deploy_on).with(%w[node11 node12 node21 node22]).once do
           {
             'node11' => [0, 'node11 check ok', ''],
             'node12' => [0, 'node12 check ok', ''],
@@ -183,7 +183,7 @@ describe HybridPlatformsConductor::TestsRunner do
 
     it 'reports correctly a node check test that is failing' do
       with_test_platforms_for_reports_test do
-        expect(test_deployer).to receive(:deploy_for).with(%w[node11 node12 node21 node22]).once do
+        expect(test_deployer).to receive(:deploy_on).with(%w[node11 node12 node21 node22]).once do
           {
             'node11' => [0, 'node11 check ok', ''],
             'node12' => [1, 'node12 check ok', 'Error for node12'],
@@ -206,7 +206,7 @@ describe HybridPlatformsConductor::TestsRunner do
     it 'receives information about all levels being tested' do
       with_test_platforms_for_reports_test do
         # Mock the SSH Executor and Deployer expected calls
-        expect(test_deployer).to receive(:deploy_for).with(%w[node11 node12 node21 node22]).once do
+        expect(test_deployer).to receive(:deploy_on).with(%w[node11 node12 node21 node22]).once do
           expect(test_deployer.use_why_run).to eq true
           {
             'node11' => [0, 'node11 check ok', 'node11 stderr'],

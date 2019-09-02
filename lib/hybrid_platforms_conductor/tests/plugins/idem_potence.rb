@@ -23,12 +23,12 @@ module HybridPlatformsConductor
         # Check my_test_plugin.rb.sample documentation for signature details.
         def test_for_node
           @deployer.with_docker_container_for(@node, container_id: 'idem_potence') do |deployer|
-            deployer.deploy_for(@node)
+            deployer.deploy_on(@node)
             # Now that the node has been deployed, use the a_testadmin user for the check-node (as root has no more access)
             deployer.instance_variable_get(:@ssh_executor).ssh_user = 'a_testadmin'
             deployer.instance_variable_get(:@ssh_executor).passwords.delete(@node)
             deployer.use_why_run = true
-            result = deployer.deploy_for(@node)
+            result = deployer.deploy_on(@node)
             assert_equal result.size, 1, "Wrong number of nodes being tested: #{result.size}"
             tested_node, (exit_status, _stdout, _stderr) = result.first
             if exit_status.is_a?(Symbol)

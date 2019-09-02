@@ -53,7 +53,7 @@ describe HybridPlatformsConductor::Deployer do
         data = SecureRandom.hex
         test_platforms_info['my_remote_platform'][:nodes]['node'][:deploy_data] = data
         # Deploy
-        expect(docker_deployer.deploy_for('node')).to eq('node' => [0, "Real deployment done on node\n", ''])
+        expect(docker_deployer.deploy_on('node')).to eq('node' => [0, "Real deployment done on node\n", ''])
         # Check deployed data
         data_read = nil
         Net::SSH.start(docker_ip, 'root', password: 'root_pwd', auth_methods: ['password']) do |ssh|
@@ -67,7 +67,7 @@ describe HybridPlatformsConductor::Deployer do
       with_test_docker_platform do |docker_deployer, docker_ip, repository|
         test_platforms_info['my_remote_platform'][:nodes]['node'][:deploy_data] = 'DeployedData'
         # Deploy
-        expect(docker_deployer.deploy_for('node')).to eq('node' => [0, "Real deployment done on node\n", ''])
+        expect(docker_deployer.deploy_on('node')).to eq('node' => [0, "Real deployment done on node\n", ''])
         # Check deployed logs
         # Hash<String, String>: Log content, per log file name
         logs = {}

@@ -22,4 +22,4 @@ raise "Unknown host name: #{test_host}" unless nodes_handler.known_nodes.include
 ssh_executor.dump_conf
 # Make sure we always use why-run
 deployer.use_why_run = true
-deployer.deploy_for(test_host)
+deployer.deploy_on(test_host)

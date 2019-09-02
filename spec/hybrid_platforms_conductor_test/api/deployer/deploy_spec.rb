@@ -17,7 +17,7 @@ describe HybridPlatformsConductor::Deployer do
             # Third run, we expect logs to be uploaded on the node
             proc { |actions_per_nodes| expect_actions_to_upload_logs(actions_per_nodes, 'node') }
           ])
-          expect(test_deployer.deploy_for('node')).to eq('node' => [0, 'Deploy successful', ''])
+          expect(test_deployer.deploy_on('node')).to eq('node' => [0, 'Deploy successful', ''])
           expect(packaged).to eq true
           expect(delivered).to eq true
         end
@@ -40,7 +40,7 @@ describe HybridPlatformsConductor::Deployer do
             # Third run, we expect logs to be uploaded on the node
             proc { |actions_per_nodes| expect_actions_to_upload_logs(actions_per_nodes, 'node', sudo: false) }
           ])
-          expect(test_deployer.deploy_for('node')).to eq('node' => [0, 'Deploy successful', ''])
+          expect(test_deployer.deploy_on('node')).to eq('node' => [0, 'Deploy successful', ''])
           expect(packaged).to eq true
           expect(delivered).to eq true
         end
@@ -63,7 +63,7 @@ describe HybridPlatformsConductor::Deployer do
             proc { |actions_per_nodes| expect_actions_to_upload_logs(actions_per_nodes, 'node') }
           ])
           test_deployer.force_direct_deploy = true
-          expect(test_deployer.deploy_for('node')).to eq('node' => [0, 'Deploy successful', ''])
+          expect(test_deployer.deploy_on('node')).to eq('node' => [0, 'Deploy successful', ''])
           expect(packaged).to eq true
           expect(delivered).to eq false
         end
@@ -90,7 +90,7 @@ describe HybridPlatformsConductor::Deployer do
           secret_file = "#{repository}/secrets.json"
           File.write(secret_file, '{ "secret1": "password1" }')
           test_deployer.secrets = [secret_file]
-          expect(test_deployer.deploy_for('node')).to eq('node' => [0, 'Deploy successful', ''])
+          expect(test_deployer.deploy_on('node')).to eq('node' => [0, 'Deploy successful', ''])
           expect(packaged).to eq true
           expect(delivered).to eq true
           expect(registered_secrets).to eq('secret1' => 'password1')
@@ -120,7 +120,7 @@ describe HybridPlatformsConductor::Deployer do
           File.write(secret_file1, '{ "secret1": "password1" }')
           File.write(secret_file2, '{ "secret2": "password2" }')
           test_deployer.secrets = [secret_file1, secret_file2]
-          expect(test_deployer.deploy_for('node')).to eq('node' => [0, 'Deploy successful', ''])
+          expect(test_deployer.deploy_on('node')).to eq('node' => [0, 'Deploy successful', ''])
           expect(packaged).to eq true
           expect(delivered).to eq true
           expect(registered_secrets).to eq([
@@ -148,7 +148,7 @@ describe HybridPlatformsConductor::Deployer do
             # Third run, we expect logs to be uploaded on the node
             proc { |actions_per_nodes| expect_actions_to_upload_logs(actions_per_nodes, %w[node1 node2 node3]) }
           ])
-          expect(test_deployer.deploy_for(%w[node1 node2 node3])).to eq(
+          expect(test_deployer.deploy_on(%w[node1 node2 node3])).to eq(
             'node1' => [0, 'Deploy successful', ''],
             'node2' => [0, 'Deploy successful', ''],
             'node3' => [0, 'Deploy successful', '']
@@ -175,7 +175,7 @@ describe HybridPlatformsConductor::Deployer do
             proc { |actions_per_nodes| expect_actions_to_upload_logs(actions_per_nodes, %w[node1 node2 node3]) }
           ])
           test_deployer.concurrent_execution = true
-          expect(test_deployer.deploy_for(%w[node1 node2 node3])).to eq(
+          expect(test_deployer.deploy_on(%w[node1 node2 node3])).to eq(
             'node1' => [0, 'Deploy successful', ''],
             'node2' => [0, 'Deploy successful', ''],
             'node3' => [0, 'Deploy successful', '']
@@ -199,7 +199,7 @@ describe HybridPlatformsConductor::Deployer do
             proc { |actions_per_nodes| expect_actions_to_upload_logs(actions_per_nodes, %w[node1 node2 node3]) }
           ])
           test_deployer.timeout = 5
-          expect(test_deployer.deploy_for(%w[node1 node2 node3])).to eq(
+          expect(test_deployer.deploy_on(%w[node1 node2 node3])).to eq(
             'node1' => [0, 'Deploy successful', ''],
             'node2' => [0, 'Deploy successful', ''],
             'node3' => [0, 'Deploy successful', '']
@@ -235,7 +235,7 @@ describe HybridPlatformsConductor::Deployer do
               expect_actions_to_upload_logs(actions_per_nodes, 'node')
             end
           ])
-          expect(test_deployer.deploy_for('node')).to eq('node' => [0, 'Deploy successful', ''])
+          expect(test_deployer.deploy_on('node')).to eq('node' => [0, 'Deploy successful', ''])
         end
       end
     end
