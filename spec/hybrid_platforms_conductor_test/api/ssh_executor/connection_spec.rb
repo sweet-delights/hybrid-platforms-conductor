@@ -9,7 +9,7 @@ describe HybridPlatformsConductor::SshExecutor do
           commands: [[remote_bash_for('echo Hello1', node: 'node', user: 'test_user'), proc { [0, "Hello1\n", ''] }]],
           nodes_connections: { 'node' => { connection: 'node_connection', user: 'test_user' } }
         ) do
-          expect(test_ssh_executor.run_cmd_on_hosts('node' => { actions: { bash: 'echo Hello1' } })['node']).to eq [0, "Hello1\n", '']
+          expect(test_ssh_executor.execute_actions('node' => { bash: 'echo Hello1' })['node']).to eq [0, "Hello1\n", '']
         end
       end
     end
@@ -33,10 +33,10 @@ describe HybridPlatformsConductor::SshExecutor do
             'node3' => { connection: 'node3_connection', user: 'test_user' }
           }
         ) do
-          expect(test_ssh_executor.run_cmd_on_hosts(
-            'node1' => { actions: { bash: 'echo Hello1' } },
-            'node2' => { actions: { bash: 'echo Hello2' } },
-            'node3' => { actions: { bash: 'echo Hello3' } }
+          expect(test_ssh_executor.execute_actions(
+            'node1' => { bash: 'echo Hello1' },
+            'node2' => { bash: 'echo Hello2' },
+            'node3' => { bash: 'echo Hello3' }
           )).to eq(
             'node1' => [0, "Hello1\n", ''],
             'node2' => [0, "Hello2\n", ''],
@@ -54,7 +54,7 @@ describe HybridPlatformsConductor::SshExecutor do
           commands: [[remote_bash_for('echo Hello1', node: 'node', user: 'test_user'), proc { [0, "Hello1\n", ''] }]],
           nodes_connections: { 'node' => { connection: 'node_connection_new', user: 'test_user' } }
         ) do
-          expect(test_ssh_executor.run_cmd_on_hosts('node' => { actions: { bash: 'echo Hello1' } })['node']).to eq [0, "Hello1\n", '']
+          expect(test_ssh_executor.execute_actions('node' => { bash: 'echo Hello1' })['node']).to eq [0, "Hello1\n", '']
         end
       end
     end
@@ -82,7 +82,7 @@ describe HybridPlatformsConductor::SshExecutor do
           nodes_connections: { 'node' => { connection: 'node_connection', user: 'test_user' } }
         ) do
           test_ssh_executor.with_ssh_master_to(['node']) do
-            expect(test_ssh_executor.run_cmd_on_hosts('node' => { actions: { bash: 'echo Hello1' } })['node']).to eq [0, "Hello1\n", '']
+            expect(test_ssh_executor.execute_actions('node' => { bash: 'echo Hello1' })['node']).to eq [0, "Hello1\n", '']
           end
         end
       end
@@ -143,11 +143,11 @@ describe HybridPlatformsConductor::SshExecutor do
               'node1' => 'test_user@hpc.node1',
               'node3' => 'test_user@hpc.node3'
             )
-            expect(test_ssh_executor.run_cmd_on_hosts(
-              'node1' => { actions: { bash: 'echo Hello1' } },
-              'node2' => { actions: { bash: 'echo Hello2' } },
-              'node3' => { actions: { bash: 'echo Hello3' } },
-              'node4' => { actions: { bash: 'echo Hello4' } }
+            expect(test_ssh_executor.execute_actions(
+              'node1' => { bash: 'echo Hello1' },
+              'node2' => { bash: 'echo Hello2' },
+              'node3' => { bash: 'echo Hello3' },
+              'node4' => { bash: 'echo Hello4' }
             )).to eq(
               'node1' => [0, "Hello1\n", ''],
               'node2' => [0, "Hello2\n", ''],
@@ -226,7 +226,7 @@ describe HybridPlatformsConductor::SshExecutor do
         test_cmd_runner.stdout_device = stdout_file
         test_nodes_handler.stdout_device = stdout_file
         test_ssh_executor.stdout_device = stdout_file
-        test_ssh_executor.run_cmd_on_hosts('node' => { actions: { bash: 'echo Hello' } })
+        test_ssh_executor.execute_actions('node' => { bash: 'echo Hello' })
         lines = File.read(stdout_file).split("\n")
         expect(lines[0]).to eq 'ssh-keyscan node_connection'
         expect(lines[1]).to match /^ssh-keygen -R node_connection -f .+\/known_hosts$/

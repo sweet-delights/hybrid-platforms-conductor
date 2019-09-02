@@ -41,10 +41,9 @@ module HybridPlatformsConductorTest
         expect(actions.size).to eq nodes.size
         nodes.each do |node|
           expect(actions.key?(node)).to eq true
-          expect(actions[node][:env]).to eq('hpc_node' => node)
-          expect(actions[node][:actions].size).to eq 2
-          expect_action_to_lock_node(actions[node][:actions][0], node, sudo: sudo)
-          expect(actions[node][:actions][1]).to eq(local_bash: "echo \"#{check ? 'Checking' : 'Deploying'} on #{node}\"")
+          expect(actions[node].size).to eq 2
+          expect_action_to_lock_node(actions[node][0], node, sudo: sudo)
+          expect(actions[node][1]).to eq(local_bash: "echo \"#{check ? 'Checking' : 'Deploying'} on #{node}\"")
         end
         Hash[nodes.map { |node| [node, [0, "#{check ? 'Check' : 'Deploy'} successful", '']] }]
       end
@@ -60,7 +59,7 @@ module HybridPlatformsConductorTest
         expect(actions.size).to eq nodes.size
         nodes.each do |node|
           expect(actions.key?(node)).to eq true
-          expect_action_to_unlock_node(actions[node][:actions], node, sudo: sudo)
+          expect_action_to_unlock_node(actions[node], node, sudo: sudo)
         end
         Hash[nodes.map { |node| [node, [0, 'Release mutex successful', '']] }]
       end
@@ -76,11 +75,11 @@ module HybridPlatformsConductorTest
         expect(actions.size).to eq nodes.size
         nodes.each do |node|
           expect(actions.key?(node)).to eq true
-          expect(actions[node][:actions][:bash]).to eq "#{sudo ? 'sudo ' : ''}mkdir -p /var/log/deployments"
-          expect(actions[node][:actions][:scp].first[1]).to eq '/var/log/deployments'
-          expect(actions[node][:actions][:scp][:group]).to eq 'root'
-          expect(actions[node][:actions][:scp][:owner]).to eq 'root'
-          expect(actions[node][:actions][:scp][:sudo]).to eq sudo
+          expect(actions[node][:bash]).to eq "#{sudo ? 'sudo ' : ''}mkdir -p /var/log/deployments"
+          expect(actions[node][:scp].first[1]).to eq '/var/log/deployments'
+          expect(actions[node][:scp][:group]).to eq 'root'
+          expect(actions[node][:scp][:owner]).to eq 'root'
+          expect(actions[node][:scp][:sudo]).to eq sudo
         end
         Hash[nodes.map { |node| [node, [0, 'Logs uploaded', '']] }]
       end

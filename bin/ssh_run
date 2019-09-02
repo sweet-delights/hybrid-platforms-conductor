@@ -31,8 +31,8 @@ raise 'No node selected. Please use --host-name option to set at least one.' if 
 actions = []
 actions << { bash: commands } unless commands.empty?
 actions << { interactive: true } if interactive
-ssh_executor.run_cmd_on_hosts(
-  { executable.selected_nodes => { actions: actions } },
+ssh_executor.execute_actions(
+  { executable.selected_nodes => actions },
   timeout: timeout,
   concurrent: concurrent_execution,
   log_to_stdout: !concurrent_execution

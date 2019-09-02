@@ -405,21 +405,16 @@ module HybridPlatformsConductor
             platform_handler.prepare_for_deploy(use_why_run: @use_why_run) if platform_handler.respond_to?(:prepare_for_deploy)
           end
 
-          outputs = @ssh_executor.run_cmd_on_hosts(
+          outputs = @ssh_executor.execute_actions(
             Hash[@hosts.map do |hostname|
               [
                 hostname,
-                {
-                  env: {
-                    'hpc_node' => hostname
-                  },
-                  actions: [
-                    {
-                      scp: { "#{__dir__}/mutex_dir" => '.' },
-                      bash: "while ! #{@ssh_executor.ssh_user == 'root' ? '' : 'sudo '}./mutex_dir lock /tmp/hybrid_platforms_conductor_deploy_lock \"$(ps -o ppid= -p $$)\"; do echo -e 'Another deployment is running on #{hostname}. Waiting for it to finish to continue...' ; sleep 5 ; done"
-                    }
-                  ] + @nodes_handler.platform_for(hostname).actions_to_deploy_on(hostname, use_why_run: @use_why_run)
-                }
+                [
+                  {
+                    scp: { "#{__dir__}/mutex_dir" => '.' },
+                    bash: "while ! #{@ssh_executor.ssh_user == 'root' ? '' : 'sudo '}./mutex_dir lock /tmp/hybrid_platforms_conductor_deploy_lock \"$(ps -o ppid= -p $$)\"; do echo -e 'Another deployment is running on #{hostname}. Waiting for it to finish to continue...' ; sleep 5 ; done"
+                  }
+                ] + @nodes_handler.platform_for(hostname).actions_to_deploy_on(hostname, use_why_run: @use_why_run)
               ]
             end],
             timeout: @timeout,
@@ -427,15 +422,11 @@ module HybridPlatformsConductor
             log_to_stdout: !@concurrent_execution
           )
           # Free eventual locks
-          @ssh_executor.run_cmd_on_hosts(
+          @ssh_executor.execute_actions(
             Hash[@hosts.map do |hostname|
               [
                 hostname,
-                {
-                  actions: {
-                    bash: "#{@ssh_executor.ssh_user == 'root' ? '' : 'sudo '}./mutex_dir unlock /tmp/hybrid_platforms_conductor_deploy_lock"
-                  }
-                }
+                { bash: "#{@ssh_executor.ssh_user == 'root' ? '' : 'sudo '}./mutex_dir unlock /tmp/hybrid_platforms_conductor_deploy_lock" }
               ]
             end],
             timeout: 10,
@@ -456,7 +447,7 @@ module HybridPlatformsConductor
     def save_logs(logs)
       section "Saving deployment logs for #{logs.size} hosts" do
         Dir.mktmpdir('hybrid_platforms_conductor-logs') do |tmp_dir|
-          @ssh_executor.run_cmd_on_hosts(
+          @ssh_executor.execute_actions(
             Hash[logs.map do |hostname, (exit_status, stdout, stderr)|
               # Create a log file to be scp with all relevant info
               now = Time.now.utc
@@ -482,14 +473,12 @@ module HybridPlatformsConductor
               [
                 hostname,
                 {
-                  actions: {
-                    bash: "#{user_name == 'root' ? '' : 'sudo '}mkdir -p /var/log/deployments",
-                    scp: {
-                      log_file => '/var/log/deployments',
-                      :sudo => user_name != 'root',
-                      :owner => 'root',
-                      :group => 'root'
-                    }
+                  bash: "#{user_name == 'root' ? '' : 'sudo '}mkdir -p /var/log/deployments",
+                  scp: {
+                    log_file => '/var/log/deployments',
+                    :sudo => user_name != 'root',
+                    :owner => 'root',
+                    :group => 'root'
                   }
                 }
               ]

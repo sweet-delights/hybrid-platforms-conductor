@@ -75,19 +75,19 @@ module HybridPlatformsConductorTest
         yield
       end
 
-      # Expect SSH Executor run_cmd_on_hosts to be called for a given sequence of actions, and provide mocking code to execute
+      # Expect SSH Executor execute_actions to be called for a given sequence of actions, and provide mocking code to execute
       #
       # Parameters::
-      # * *expected_runs* (Array<Proc>): List of mocking codes that should be run. Each Proc has the same signature as SshExecutor#run_cmd_on_hosts
+      # * *expected_runs* (Array<Proc>): List of mocking codes that should be run. Each Proc has the same signature as SshExecutor#execute_actions
       def expect_ssh_executor_runs(expected_runs)
         idx_ssh_executor_run = 0
-        expect(test_ssh_executor).to receive(:run_cmd_on_hosts).exactly(expected_runs.size).times do |actions_descriptions, timeout: nil, concurrent: false, log_to_dir: 'run_logs', log_to_stdout: true|
-          logger.debug "[ Mocked SshExecutor ] - Run actions: #{actions_descriptions}"
+        expect(test_ssh_executor).to receive(:execute_actions).exactly(expected_runs.size).times do |actions_per_nodes, timeout: nil, concurrent: false, log_to_dir: 'run_logs', log_to_stdout: true|
+          logger.debug "[ Mocked SshExecutor ] - Run actions: #{actions_per_nodes}"
           result =
             if idx_ssh_executor_run >= expected_runs.size
-              raise "SshExecutor#run_cmd_on_hosts has been used #{idx_ssh_executor_run + 1} times, but was expected only #{expected_runs.size} times"
+              raise "SshExecutor#execute_actions has been used #{idx_ssh_executor_run + 1} times, but was expected only #{expected_runs.size} times"
             else
-              expected_runs[idx_ssh_executor_run].call actions_descriptions, timeout: timeout, concurrent: concurrent, log_to_dir: log_to_dir, log_to_stdout: log_to_stdout
+              expected_runs[idx_ssh_executor_run].call actions_per_nodes, timeout: timeout, concurrent: concurrent, log_to_dir: log_to_dir, log_to_stdout: log_to_stdout
             end
           idx_ssh_executor_run += 1
           result

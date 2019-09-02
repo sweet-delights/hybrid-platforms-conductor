@@ -154,55 +154,49 @@ module HybridPlatformsConductor
       out
     end
 
-    # Run a list of commands on a list of host names.
-    # Prerequisite: Host names are valid in nodes/ directory.
+    # Execute actions on nodes.
     #
     # Parameters::
-    # * *actions_descriptions* (Hash<Object, Hash<Symbol,Object> >): Actions descriptions, per host description.
-    #   See select_nodes for details about possible hosts descriptions.
-    #   Each actions description can have the following attributes:
-    #   * *actions* (Array< Hash<Symbol,Object> > or Hash<Symbol,Object>): List of actions (or 1 single action). See execute_actions_on to know about the API of an action.
-    #   * *env* (Hash<String,String>): Environment to set before executing SSH commands on this host description. [default = {}]
+    # * *actions_per_nodes* (Hash<Object, Hash<Symbol,Object> or Array< Hash<Symbol,Object> >): Actions (as a Hash of actions or a list of Hash), per nodes selector.
+    #   See NodesHandler#select_nodes for details about possible nodes selectors.
+    #   See execute_actions_on to know about the possible action types and data.
     # * *timeout* (Integer): Timeout in seconds, or nil if none. [default: nil]
     # * *concurrent* (Boolean): Do we run the commands in parallel? If yes, then stdout of commands is stored in log files. [default: false]
     # * *log_to_dir* (String): Directory name to store log files. Can be nil to not store log files. [default: 'run_logs']
     # * *log_to_stdout* (Boolean): Do we log the command result on stdout? [default: true]
     # Result::
-    # * Hash<String, [Integer or Symbol, String, String]>: Exit status code (or Symbol in case of error or dry run), standard output and error for each hostname.
-    def run_cmd_on_hosts(actions_descriptions, timeout: nil, concurrent: false, log_to_dir: 'run_logs', log_to_stdout: true)
-      # Compute the ordered list of actions and environment per resolved hostname
-      # Hash< String, { env: Hash<String,String>, actions: Array<[Symbol,Object]> } >
-      actions_per_hostname = {}
-      actions_descriptions.each do |host_desc, host_actions|
+    # * Hash<String, [Integer or Symbol, String, String]>: Exit status code (or Symbol in case of error or dry run), standard output and error for each node.
+    def execute_actions(actions_per_nodes, timeout: nil, concurrent: false, log_to_dir: 'run_logs', log_to_stdout: true)
+      # Compute the ordered list of actions per selected node
+      # Hash< String, Array< [Symbol,      Object     ]> >
+      # Hash< node,   Array< [action_type, action_data]> >
+      actions_per_node = {}
+      actions_per_nodes.each do |nodes_selector, nodes_actions|
         # Resolve actions
-        resolved_host_actions = {
-          actions: [],
-          env: host_actions.key?(:env) ? host_actions[:env] : {}
-        }
-        (host_actions[:actions].is_a?(Array) ? host_actions[:actions] : [host_actions[:actions]]).each do |host_action|
-          host_action.each do |action_type, action_info|
+        resolved_nodes_actions = []
+        (nodes_actions.is_a?(Array) ? nodes_actions : [nodes_actions]).each do |nodes_actions_set|
+          nodes_actions_set.each do |action_type, action_info|
             raise 'Cannot have concurrent executions for interactive sessions' if concurrent && action_type == :interactive && action_info
-            resolved_host_actions[:actions] << [
+            resolved_nodes_actions << [
               action_type,
               action_info
             ]
           end
         end
         # Resolve hosts
-        @nodes_handler.select_nodes(host_desc).each do |hostname|
-          raise "Hostname #{hostname} has been specified for different actions" if actions_per_hostname.key?(hostname)
-          actions_per_hostname[hostname] = resolved_host_actions
+        @nodes_handler.select_nodes(nodes_selector).each do |node|
+          actions_per_node[node] = [] unless actions_per_node.key?(node)
+          actions_per_node[node].concat(resolved_nodes_actions)
         end
       end
-      log_debug "Running actions on #{actions_per_hostname.size} hosts#{log_to_dir.nil? ? '' : " (logs dumped in #{log_to_dir})"}"
-      # Prepare the result (stdout or nil per hostname)
-      result = Hash[actions_per_hostname.keys.map { |hostname| [hostname, nil] }]
-      unless actions_per_hostname.empty?
-        @nodes_handler.for_each_node_in(actions_per_hostname.keys, parallel: concurrent, nbr_threads_max: @max_threads) do |node|
+      log_debug "Running actions on #{actions_per_node.size} hosts#{log_to_dir.nil? ? '' : " (logs dumped in #{log_to_dir})"}"
+      # Prepare the result (stdout or nil per node)
+      result = Hash[actions_per_node.keys.map { |node| [node, nil] }]
+      unless actions_per_node.empty?
+        @nodes_handler.for_each_node_in(actions_per_node.keys, parallel: concurrent, nbr_threads_max: @max_threads) do |node|
           result[node] = execute_actions_on(
             node,
-            actions_per_hostname[node][:actions],
-            ssh_env: actions_per_hostname[node][:env],
+            actions_per_node[node],
             timeout: timeout,
             log_to_file: log_to_dir.nil? ? nil : "#{log_to_dir}/#{node}.stdout",
             log_to_stdout: log_to_stdout
@@ -480,7 +474,6 @@ Host *
     #     * *file* (String): Name of file from which commands should be taken.
     #     * *env* (Hash<String, String>): Environment variables to be set before executing those commands.
     #   * *interactive* (Boolean): If true, then launch an interactive session.
-    # * *ssh_env* (Hash<String,String>): SSH environment to be set for each SSH session. [default: {}]
     # * *timeout* (Integer): Timeout in seconds, or nil if none. [default: nil]
     # * *log_to_file* (String or nil): Log file capturing stdout and stderr (or nil for none). [default: nil]
     # * *log_to_stdout* (Boolean): Do we send the output to stdout and stderr? [default: true]
@@ -488,7 +481,7 @@ Host *
     # * Integer or Symbol: Exit status of the last command, or Symbol in case of error
     # * String: Standard output of the commands
     # * String: Standard error output of the commands (can be a descriptive message of the error in case of error)
-    def execute_actions_on(node, actions, ssh_env: {}, timeout: nil, log_to_file: nil, log_to_stdout: true)
+    def execute_actions_on(node, actions, timeout: nil, log_to_file: nil, log_to_stdout: true)
       remaining_timeout = timeout
       exit_status = 0
       stdout = ''
@@ -546,7 +539,7 @@ Host *
             action_info = [action_info] if action_info.is_a?(String)
             action_info = { commands: action_info } if action_info.is_a?(Array)
             action_info[:commands] = [action_info[:commands]] if action_info[:commands].is_a?(String)
-            bash_commands = @ssh_env.merge(ssh_env).merge(action_info[:env] || {}).map { |var_name, var_value| "export #{var_name}='#{var_value}'" }
+            bash_commands = @ssh_env.merge(action_info[:env] || {}).map { |var_name, var_value| "export #{var_name}='#{var_value}'" }
             bash_commands.concat(action_info[:commands].clone) if action_info.key?(:commands)
             bash_commands << File.read(action_info[:file]) if action_info.key?(:file)
             log_debug "[#{node}] - Execute SSH Bash commands \"#{bash_commands.join("\n")}\"..."

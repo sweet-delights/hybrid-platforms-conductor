@@ -30,7 +30,7 @@ describe HybridPlatformsConductor::SshExecutor do
     def execute(actions, expected_commands: nil, nbr_connections: 1, timeout: nil, log_to_dir: nil)
       run_result = nil
       with_cmd_runner_mocked(commands: expected_commands, nodes_connections: { 'node' => { connection: 'node_connection', user: 'test_user', times: nbr_connections } }) do
-        run_result = test_ssh_executor.run_cmd_on_hosts({ 'node' => { actions: actions } }, timeout: timeout, log_to_dir: log_to_dir)['node']
+        run_result = test_ssh_executor.execute_actions({ 'node' => actions }, timeout: timeout, log_to_dir: log_to_dir)['node']
       end
       run_result
     end

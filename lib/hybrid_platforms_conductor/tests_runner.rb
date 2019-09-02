@@ -366,15 +366,13 @@ module HybridPlatformsConductor
           [
             hostname,
             {
-              actions: {
-                bash: cmds_list.map do |(cmd, _test_info)|
-                  [
-                    "echo '#{CMD_SEPARATOR}'",
-                    cmd,
-                    "echo \"$?\""
-                  ]
-                end.flatten
-              }
+              bash: cmds_list.map do |(cmd, _test_info)|
+                [
+                  "echo '#{CMD_SEPARATOR}'",
+                  cmd,
+                  "echo \"$?\""
+                ]
+              end.flatten
             }
           ]
         end]
@@ -384,7 +382,7 @@ module HybridPlatformsConductor
           start_time = Time.now
           nbr_secs = nil
           @ssh_executor.max_threads = MAX_THREADS_NODE_SSH_TESTS
-          @ssh_executor.run_cmd_on_hosts(
+          @ssh_executor.execute_actions(
             test_cmds,
             concurrent: !log_debug?,
             log_to_dir: nil,
@@ -395,7 +393,7 @@ module HybridPlatformsConductor
             if exit_status.is_a?(Symbol)
               error("Error while executing tests: #{exit_status}: #{stderr}", hostname: hostname)
             else
-              log_debug "----- Commands for #{hostname}:\n#{test_cmds[hostname][:actions][:bash].join("\n")}\n----- STDOUT:\n#{stdout}\n----- STDERR:\n#{stderr}\n-----"
+              log_debug "----- Commands for #{hostname}:\n#{test_cmds[hostname][:bash].join("\n")}\n----- STDOUT:\n#{stdout}\n----- STDERR:\n#{stderr}\n-----"
               # Skip the first section, as it can contain SSH banners
               cmd_stdouts = stdout.split("#{CMD_SEPARATOR}\n")[1..-1]
               cmd_stdouts = [] if cmd_stdouts.nil?
