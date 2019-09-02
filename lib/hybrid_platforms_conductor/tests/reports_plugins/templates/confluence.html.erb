@@ -91,23 +91,23 @@
     <% end %>
   </tbody>
 </table>
-<h1>Stats by hosts list</h1>
+<h1>Stats by nodes list</h1>
 <table>
   <tbody>
     <tr>
-      <th style="vertical-align: middle;">Hosts list</th>
+      <th style="vertical-align: middle;">Nodes list</th>
       <th style="text-align: center; vertical-align: middle;">Number of nodes</th>
       <th style="text-align: center; vertical-align: middle;">% tested</th>
       <th style="text-align: center; vertical-align: middle;">% success</th>
       <th style="text-align: center; vertical-align: middle;">Nodes in error</th>
     </tr>
-    <% nodes_by_nodes_list.each do |hosts_list_name, nodes_info| %>
+    <% nodes_by_nodes_list.each do |nodes_list, nodes_info| %>
       <tr>
         <td style="vertical-align: middle;">
           <ac:structured-macro ac:name="status" ac:schema-version="1">
             <ac:parameter ac:name="colour"><%= nodes_info[:tested_nodes_in_error].empty? ? 'Green' : 'Red' %></ac:parameter>
           </ac:structured-macro>
-          <strong><%= hosts_list_name %></strong>
+          <strong><%= nodes_list %></strong>
         </td>
         <td style="text-align: center; vertical-align: middle;"><%= nodes_info[:nodes].size %></td>
         <td style="text-align: center; vertical-align: middle;"><%= render_gauge(nodes_info[:nodes].size, nodes_info[:tested_nodes].size) %></td>

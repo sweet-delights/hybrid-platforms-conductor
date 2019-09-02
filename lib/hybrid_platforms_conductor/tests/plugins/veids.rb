@@ -22,7 +22,7 @@ module HybridPlatformsConductor
           ]
 
           # Check there are no duplicates
-          veids.group_by { |_hostname, veid| veid }.each do |veid, nodes|
+          veids.group_by { |_node, veid| veid }.each do |veid, nodes|
             error "VEID #{veid} is used by the following nodes: #{nodes.map { |node, _veid| node }.join(', ')}" if !veid.nil? && nodes.size > 1
           end
         end

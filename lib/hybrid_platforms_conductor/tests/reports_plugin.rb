@@ -169,7 +169,7 @@ module HybridPlatformsConductor
       # Also include 2 special lists: 'No list' and 'All'.
       #
       # Result::
-      # * Hash< String, Hash<Symbol,Object> >: For each hosts list name, we have the following properties:
+      # * Hash< String, Hash<Symbol,Object> >: For each nodes list, we have the following properties:
       #   * *nodes* (Array<String>): Nodes in the list
       #   * *tested_nodes* (Array<String>): Tested nodes in the list
       #   * *tested_nodes_in_error* (Array<String>): Tested nodes in error in the list
@@ -177,10 +177,10 @@ module HybridPlatformsConductor
       def nodes_by_nodes_list
         no_list_nodes = @nodes_handler.known_nodes
         Hash[(
-          @nodes_handler.known_nodes_lists.sort.map do |hosts_list_name|
-            hosts_from_list = @nodes_handler.nodes_from_list(hosts_list_name, ignore_unknowns: true)
-            no_list_nodes -= hosts_from_list
-            [hosts_list_name, hosts_from_list]
+          @nodes_handler.known_nodes_lists.sort.map do |nodes_list|
+            nodes_from_list = @nodes_handler.nodes_from_list(nodes_list, ignore_unknowns: true)
+            no_list_nodes -= nodes_from_list
+            [nodes_list, nodes_from_list]
           end + [
             ['No list', no_list_nodes],
             ['All', @nodes_handler.known_nodes]

@@ -295,7 +295,7 @@ describe HybridPlatformsConductor::TestsRunner do
       end
     end
 
-    it 'returns correctly nodes by hosts lists' do
+    it 'returns correctly nodes by nodes lists' do
       with_test_platform(
         nodes: { 'node1' => {}, 'node2' => {}, 'node3' => {}, 'node4' => {}, 'node5' => {} },
         nodes_lists: {

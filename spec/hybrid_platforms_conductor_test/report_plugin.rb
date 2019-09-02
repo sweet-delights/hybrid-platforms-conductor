@@ -20,16 +20,14 @@ module HybridPlatformsConductorTest
       %i[en fr]
     end
 
-    # Create a report for a list of hostnames, in a given locale
+    # Create a report for a list of nodes, in a given locale
     # [API] - This method is mandatory.
     #
     # Parameters::
-    # * *hosts* (Array<String>): List of hosts
+    # * *nodes* (Array<String>): List of nodes
     # * *locale_code* (Symbol): The locale code
-    # Result::
-    # * String: The report
-    def report_for(hosts, locale_code)
-      ReportPlugin.generated_reports << "Report generated for #{hosts.join(', ')} in #{locale_code}"
+    def report_for(nodes, locale_code)
+      ReportPlugin.generated_reports << "Report generated for #{nodes.join(', ')} in #{locale_code}"
     end
 
   end

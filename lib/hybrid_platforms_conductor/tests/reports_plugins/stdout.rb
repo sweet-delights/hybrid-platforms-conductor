@@ -87,12 +87,12 @@ module HybridPlatformsConductor
           end
           out
 
-          out '========== Stats by hosts list:'
+          out '========== Stats by nodes list:'
           out
-          out(Terminal::Table.new(headings: ['List name', '# hosts', '% tested', '% success']) do |table|
-            nodes_by_nodes_list.each do |hosts_list_name, nodes_info|
+          out(Terminal::Table.new(headings: ['List name', '# nodes', '% tested', '% success']) do |table|
+            nodes_by_nodes_list.each do |nodes_list, nodes_info|
               table << [
-                hosts_list_name,
+                nodes_list,
                 nodes_info[:nodes].size,
                 nodes_info[:nodes].empty? ? '' : "#{(nodes_info[:tested_nodes].size*100.0/nodes_info[:nodes].size).to_i} %",
                 nodes_info[:tested_nodes].empty? ? '' : "#{((nodes_info[:tested_nodes].size - nodes_info[:tested_nodes_in_error].size) * 100.0 / nodes_info[:tested_nodes].size).to_i} %"
