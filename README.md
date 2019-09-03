@@ -181,7 +181,7 @@ This README considers that executables are installed in the `./bin` directory an
 
 Those values can always be overridden by the tools command lines options if needed (always check `--help` options for details).
 ```
-export platforms_ssh_user=<your_default_ssh_user_name>
+export hpc_ssh_user=<your_default_ssh_user_name>
 export hpc_ssh_gateways_conf=<your_default_gateway_configuration>
 ```
 
@@ -241,7 +241,7 @@ SSH executor options:
     -m, --max-threads NBR            Set the number of threads to use for concurrent queries (defaults to 16)
     -q, --ssh-no-host-key-checking   If used, don't check for SSH host keys.
     -s, --show-commands              Display the SSH commands that would be run instead of running them
-    -u, --ssh-user USER              Name of user to be used in SSH connections (defaults to platforms_ssh_user or USER environment variables)
+    -u, --ssh-user USER              Name of user to be used in SSH connections (defaults to hpc_ssh_user or USER environment variables)
     -w, --password                   If used, then expect SSH connections to ask for a password.
     -y GATEWAYS_CONF,                Name of the gateways configuration to be used. Can also be set from environment variable hpc_ssh_gateways_conf. Defaults to munich.
         --ssh-gateways-conf
@@ -290,7 +290,7 @@ SSH executor options:
     -g, --ssh-gateway-user USER      Name of the gateway user to be used by the gateways. Can also be set from environment variable hpc_ssh_gateway_user. Defaults to ubradm.
     -j, --ssh-no-control-master      If used, don't create SSH control masters for connections.
     -s, --show-commands              Display the SSH commands that would be run instead of running them
-    -u, --ssh-user USER              Name of user to be used in SSH connections (defaults to platforms_ssh_user or USER environment variables)
+    -u, --ssh-user USER              Name of user to be used in SSH connections (defaults to hpc_ssh_user or USER environment variables)
     -w, --password                   If used, then expect SSH connections to ask for a password.
     -y GATEWAYS_CONF,                Name of the gateways configuration to be used. Can also be set from environment variable hpc_ssh_gateways_conf. Defaults to munich.
         --ssh-gateways-conf
@@ -400,7 +400,7 @@ SSH executor options:
     -m, --max-threads NBR            Set the number of threads to use for concurrent queries (defaults to 16)
     -q, --ssh-no-host-key-checking   If used, don't check for SSH host keys.
     -s, --show-commands              Display the SSH commands that would be run instead of running them
-    -u, --ssh-user USER              Name of user to be used in SSH connections (defaults to platforms_ssh_user or USER environment variables)
+    -u, --ssh-user USER              Name of user to be used in SSH connections (defaults to hpc_ssh_user or USER environment variables)
     -w, --password                   If used, then expect SSH connections to ask for a password.
     -y GATEWAYS_CONF,                Name of the gateways configuration to be used. Can also be set from environment variable hpc_ssh_gateways_conf. Defaults to munich.
         --ssh-gateways-conf
@@ -531,7 +531,7 @@ SSH executor options:
     -m, --max-threads NBR            Set the number of threads to use for concurrent queries (defaults to 16)
     -q, --ssh-no-host-key-checking   If used, don't check for SSH host keys.
     -s, --show-commands              Display the SSH commands that would be run instead of running them
-    -u, --ssh-user USER              Name of user to be used in SSH connections (defaults to platforms_ssh_user or USER environment variables)
+    -u, --ssh-user USER              Name of user to be used in SSH connections (defaults to hpc_ssh_user or USER environment variables)
     -w, --password                   If used, then expect SSH connections to ask for a password.
     -y GATEWAYS_CONF,                Name of the gateways configuration to be used. Can also be set from environment variable hpc_ssh_gateways_conf. Defaults to munich.
         --ssh-gateways-conf
@@ -596,7 +596,7 @@ SSH executor options:
     -g, --ssh-gateway-user USER      Name of the gateway user to be used by the gateways. Can also be set from environment variable hpc_ssh_gateway_user. Defaults to ubradm.
     -j, --ssh-no-control-master      If used, don't create SSH control masters for connections.
     -s, --show-commands              Display the SSH commands that would be run instead of running them
-    -u, --ssh-user USER              Name of user to be used in SSH connections (defaults to platforms_ssh_user or USER environment variables)
+    -u, --ssh-user USER              Name of user to be used in SSH connections (defaults to hpc_ssh_user or USER environment variables)
     -w, --password                   If used, then expect SSH connections to ask for a password.
     -y GATEWAYS_CONF,                Name of the gateways configuration to be used. Can also be set from environment variable hpc_ssh_gateways_conf. Defaults to munich.
         --ssh-gateways-conf
@@ -862,7 +862,7 @@ SSH executor options:
     -m, --max-threads NBR            Set the number of threads to use for concurrent queries (defaults to 64)
     -q, --ssh-no-host-key-checking   If used, don't check for SSH host keys.
     -s, --show-commands              Display the SSH commands that would be run instead of running them
-    -u, --ssh-user USER              Name of user to be used in SSH connections (defaults to platforms_ssh_user or USER environment variables)
+    -u, --ssh-user USER              Name of user to be used in SSH connections (defaults to hpc_ssh_user or USER environment variables)
     -w, --password                   If used, then expect SSH connections to ask for a password.
     -y GATEWAYS_CONF,                Name of the gateways configuration to be used. Can also be set from environment variable hpc_ssh_gateways_conf. Defaults to munich.
         --ssh-gateways-conf
@@ -930,7 +930,7 @@ SSH executor options:
     -m, --max-threads NBR            Set the number of threads to use for concurrent queries (defaults to 16)
     -q, --ssh-no-host-key-checking   If used, don't check for SSH host keys.
     -s, --show-commands              Display the SSH commands that would be run instead of running them
-    -u, --ssh-user USER              Name of user to be used in SSH connections (defaults to platforms_ssh_user or USER environment variables)
+    -u, --ssh-user USER              Name of user to be used in SSH connections (defaults to hpc_ssh_user or USER environment variables)
     -w, --password                   If used, then expect SSH connections to ask for a password.
     -y GATEWAYS_CONF,                Name of the gateways configuration to be used. Can also be set from environment variable hpc_ssh_gateways_conf. Defaults to munich.
         --ssh-gateways-conf
@@ -1004,7 +1004,7 @@ SSH executor options:
     -m, --max-threads NBR            Set the number of threads to use for concurrent queries (defaults to 16)
     -q, --ssh-no-host-key-checking   If used, don't check for SSH host keys.
     -s, --show-commands              Display the SSH commands that would be run instead of running them
-    -u, --ssh-user USER              Name of user to be used in SSH connections (defaults to platforms_ssh_user or USER environment variables)
+    -u, --ssh-user USER              Name of user to be used in SSH connections (defaults to hpc_ssh_user or USER environment variables)
     -w, --password                   If used, then expect SSH connections to ask for a password.
     -y GATEWAYS_CONF,                Name of the gateways configuration to be used. Can also be set from environment variable hpc_ssh_gateways_conf. Defaults to munich.
         --ssh-gateways-conf
@@ -1085,7 +1085,7 @@ SSH executor options:
     -m, --max-threads NBR            Set the number of threads to use for concurrent queries (defaults to 64)
     -q, --ssh-no-host-key-checking   If used, don't check for SSH host keys.
     -s, --show-commands              Display the SSH commands that would be run instead of running them
-    -u, --ssh-user USER              Name of user to be used in SSH connections (defaults to platforms_ssh_user or USER environment variables)
+    -u, --ssh-user USER              Name of user to be used in SSH connections (defaults to hpc_ssh_user or USER environment variables)
     -w, --password                   If used, then expect SSH connections to ask for a password.
     -y GATEWAYS_CONF,                Name of the gateways configuration to be used. Can also be set from environment variable hpc_ssh_gateways_conf. Defaults to munich.
         --ssh-gateways-conf
@@ -1272,7 +1272,7 @@ SSH executor options:
     -m, --max-threads NBR            Set the number of threads to use for concurrent queries (defaults to 64)
     -q, --ssh-no-host-key-checking   If used, don't check for SSH host keys.
     -s, --show-commands              Display the SSH commands that would be run instead of running them
-    -u, --ssh-user USER              Name of user to be used in SSH connections (defaults to platforms_ssh_user or USER environment variables)
+    -u, --ssh-user USER              Name of user to be used in SSH connections (defaults to hpc_ssh_user or USER environment variables)
     -w, --password                   If used, then expect SSH connections to ask for a password.
     -y GATEWAYS_CONF,                Name of the gateways configuration to be used. Can also be set from environment variable hpc_ssh_gateways_conf. Defaults to munich.
         --ssh-gateways-conf
@@ -1284,7 +1284,7 @@ SSH executor options:
 * `--max-threads NBR`: Specify the maximal number of threads to use when concurrent SSH execution is performed.
 * `--ssh-no-host-key-checking`: If specified, make sure SSH connections don't check for host keys.
 * `--show-commands`: Display the commands the tool would execute, without executing them. Useful to understand or debug the tool's behaviour.
-* `--ssh-user USER`: Specify the user to be used on the node being accessed by the tool. It is recommended to set the default value of this option in the `platforms_ssh_user` environment variable. If both this option and the `platforms_ssh_user` variables are omitted, then the `USER` environment variable is used.
+* `--ssh-user USER`: Specify the user to be used on the node being accessed by the tool. It is recommended to set the default value of this option in the `hpc_ssh_user` environment variable. If both this option and the `hpc_ssh_user` variables are omitted, then the `USER` environment variable is used.
 * `--password`: When specified, then don't use `-o BatchMode=yes` on SSH commands so that if connection needs a password it will be asked. Useful to deploy on accounts not having key authentication yet.
 * `--ssh-gateways-conf GATEWAYS_CONF`: Specify the gateway configuration name to be used. Gateway configurations are defined in the platforms definition file (`./platforms.rb`). It is recommended to set the default value of this option in the `hpc_ssh_gateways_conf` environment variable.
 

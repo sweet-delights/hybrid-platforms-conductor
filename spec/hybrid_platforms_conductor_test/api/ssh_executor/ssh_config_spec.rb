@@ -4,7 +4,7 @@ describe HybridPlatformsConductor::SshExecutor do
 
     it 'generates a global configuration with user from environment' do
       with_test_platform do
-        ENV['platforms_ssh_user'] = 'test_user'
+        ENV['hpc_ssh_user'] = 'test_user'
         expect(ssh_config_for(nil)).to eq "Host *
   User test_user
   ControlPath #{Dir.tmpdir}/hpc_ssh_executor_mux_%h_%p_%r

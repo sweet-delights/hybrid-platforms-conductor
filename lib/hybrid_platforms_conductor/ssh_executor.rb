@@ -20,7 +20,7 @@ module HybridPlatformsConductor
     #   Symbol
     attr_accessor :ssh_gateways_conf
 
-    # User name used in SSH connections. [default: ENV['platforms_ssh_user'] or ENV['USER']]
+    # User name used in SSH connections. [default: ENV['hpc_ssh_user'] or ENV['USER']]
     #   String
     attr_accessor :ssh_user
 
@@ -69,7 +69,7 @@ module HybridPlatformsConductor
       @cmd_runner = cmd_runner
       @nodes_handler = nodes_handler
       # Default values
-      @ssh_user = ENV['platforms_ssh_user']
+      @ssh_user = ENV['hpc_ssh_user']
       @ssh_user = ENV['USER'] if @ssh_user.nil? || @ssh_user.empty?
       @ssh_env = {}
       @max_threads = 16
@@ -115,7 +115,7 @@ module HybridPlatformsConductor
       options_parser.on('-s', '--show-commands', 'Display the SSH commands that would be run instead of running them') do
         self.dry_run = true
       end
-      options_parser.on('-u', '--ssh-user USER', 'Name of user to be used in SSH connections (defaults to platforms_ssh_user or USER environment variables)') do |user|
+      options_parser.on('-u', '--ssh-user USER', 'Name of user to be used in SSH connections (defaults to hpc_ssh_user or USER environment variables)') do |user|
         @ssh_user = user
       end
       options_parser.on('-w', '--password', 'If used, then expect SSH connections to ask for a password.') do
@@ -128,7 +128,7 @@ module HybridPlatformsConductor
 
     # Validate that parsed parameters are valid
     def validate_params
-      raise 'No SSH user name specified. Please use --ssh-user option or platforms_ssh_user environment variable to set it.' if @ssh_user.nil? || @ssh_user.empty?
+      raise 'No SSH user name specified. Please use --ssh-user option or hpc_ssh_user environment variable to set it.' if @ssh_user.nil? || @ssh_user.empty?
       known_gateways = @nodes_handler.known_gateways
       raise "Unknown gateway configuration provided: #{@ssh_gateways_conf}. Possible values are: #{known_gateways.join(', ')}." unless known_gateways.include?(@ssh_gateways_conf)
     end

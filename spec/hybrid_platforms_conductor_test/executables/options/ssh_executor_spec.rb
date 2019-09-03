@@ -112,10 +112,10 @@ describe 'executables\' SSH Executor options' do
   end
 
   it 'fails if no user name has been given, either through environment or command-line' do
-    ENV.delete 'platforms_ssh_user'
+    ENV.delete 'hpc_ssh_user'
     ENV.delete 'USER'
     with_test_platform_for_ssh_executor_options do
-      expect { run 'ssh_run', '--node', 'node', '--command', 'echo Hello' }.to raise_error(RuntimeError, 'No SSH user name specified. Please use --ssh-user option or platforms_ssh_user environment variable to set it.')
+      expect { run 'ssh_run', '--node', 'node', '--command', 'echo Hello' }.to raise_error(RuntimeError, 'No SSH user name specified. Please use --ssh-user option or hpc_ssh_user environment variable to set it.')
     end
   end
 
