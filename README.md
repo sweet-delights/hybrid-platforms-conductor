@@ -185,10 +185,10 @@ export platforms_ssh_user=<your_default_ssh_user_name>
 export ti_gateways_conf=<your_default_gateway_configuration>
 ```
 
-Unless you use the commands from directory containing the file `platforms.rb`, you'll have to set the `ti_platforms` environment variable to the path containing the `platforms.rb` file.
+Unless you use the commands from directory containing the file `platforms.rb`, you'll have to set the `hpc_platforms` environment variable to the path containing the `platforms.rb` file.
 For example if the file `/path/to/hybrid-platforms/platforms.rb` exists:
 ```
-export ti_platforms=/path/to/hybrid-platforms
+export hpc_platforms=/path/to/hybrid-platforms
 ```
 
 ## 4. Setup the platform repositories

@@ -30,7 +30,7 @@ module HybridPlatformsConductor
       @logger = logger
       @logger_stderr = logger_stderr
       # Directory in which we have platforms handled by HPCs definition
-      @hybrid_platforms_dir = File.expand_path(ENV['ti_platforms'].nil? ? '.' : ENV['ti_platforms'])
+      @hybrid_platforms_dir = File.expand_path(ENV['hpc_platforms'].nil? ? '.' : ENV['hpc_platforms'])
       @platform_types = PlatformsDsl.platform_types
       # Keep a list of instantiated platform handlers per platform type
       # Hash<Symbol, Array<PlatformHandler> >
