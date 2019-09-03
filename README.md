@@ -236,7 +236,7 @@ Nodes selection options:
         --nodes-service SERVICE      Select nodes implementing a given service (can be used several times)
 
 SSH executor options:
-    -g, --ssh-gateway-user USER      Name of the gateway user to be used by the gateways. Can also be set from environment variable ti_gateway_user. Defaults to ubradm.
+    -g, --ssh-gateway-user USER      Name of the gateway user to be used by the gateways. Can also be set from environment variable hpc_ssh_gateway_user. Defaults to ubradm.
     -j, --ssh-no-control-master      If used, don't create SSH control masters for connections.
     -m, --max-threads NBR            Set the number of threads to use for concurrent queries (defaults to 16)
     -q, --ssh-no-host-key-checking   If used, don't check for SSH host keys.
@@ -287,7 +287,7 @@ Nodes handler options:
     -o, --show-nodes                 Display the list of possible nodes and exit
 
 SSH executor options:
-    -g, --ssh-gateway-user USER      Name of the gateway user to be used by the gateways. Can also be set from environment variable ti_gateway_user. Defaults to ubradm.
+    -g, --ssh-gateway-user USER      Name of the gateway user to be used by the gateways. Can also be set from environment variable hpc_ssh_gateway_user. Defaults to ubradm.
     -j, --ssh-no-control-master      If used, don't create SSH control masters for connections.
     -s, --show-commands              Display the SSH commands that would be run instead of running them
     -u, --ssh-user USER              Name of user to be used in SSH connections (defaults to platforms_ssh_user or USER environment variables)
@@ -395,7 +395,7 @@ Nodes selection options:
         --nodes-service SERVICE      Select nodes implementing a given service (can be used several times)
 
 SSH executor options:
-    -g, --ssh-gateway-user USER      Name of the gateway user to be used by the gateways. Can also be set from environment variable ti_gateway_user. Defaults to ubradm.
+    -g, --ssh-gateway-user USER      Name of the gateway user to be used by the gateways. Can also be set from environment variable hpc_ssh_gateway_user. Defaults to ubradm.
     -j, --ssh-no-control-master      If used, don't create SSH control masters for connections.
     -m, --max-threads NBR            Set the number of threads to use for concurrent queries (defaults to 16)
     -q, --ssh-no-host-key-checking   If used, don't check for SSH host keys.
@@ -526,7 +526,7 @@ Nodes selection options:
     -r, --nodes-service SERVICE      Select nodes implementing a given service (can be used several times)
 
 SSH executor options:
-    -g, --ssh-gateway-user USER      Name of the gateway user to be used by the gateways. Can also be set from environment variable ti_gateway_user. Defaults to ubradm.
+    -g, --ssh-gateway-user USER      Name of the gateway user to be used by the gateways. Can also be set from environment variable hpc_ssh_gateway_user. Defaults to ubradm.
     -j, --ssh-no-control-master      If used, don't create SSH control masters for connections.
     -m, --max-threads NBR            Set the number of threads to use for concurrent queries (defaults to 16)
     -q, --ssh-no-host-key-checking   If used, don't check for SSH host keys.
@@ -593,7 +593,7 @@ Nodes handler options:
     -o, --show-nodes                 Display the list of possible nodes and exit
 
 SSH executor options:
-    -g, --ssh-gateway-user USER      Name of the gateway user to be used by the gateways. Can also be set from environment variable ti_gateway_user. Defaults to ubradm.
+    -g, --ssh-gateway-user USER      Name of the gateway user to be used by the gateways. Can also be set from environment variable hpc_ssh_gateway_user. Defaults to ubradm.
     -j, --ssh-no-control-master      If used, don't create SSH control masters for connections.
     -s, --show-commands              Display the SSH commands that would be run instead of running them
     -u, --ssh-user USER              Name of user to be used in SSH connections (defaults to platforms_ssh_user or USER environment variables)
@@ -857,7 +857,7 @@ Nodes selection options:
     -r, --nodes-service SERVICE      Select nodes implementing a given service (can be used several times)
 
 SSH executor options:
-    -g, --ssh-gateway-user USER      Name of the gateway user to be used by the gateways. Can also be set from environment variable ti_gateway_user. Defaults to ubradm.
+    -g, --ssh-gateway-user USER      Name of the gateway user to be used by the gateways. Can also be set from environment variable hpc_ssh_gateway_user. Defaults to ubradm.
     -j, --ssh-no-control-master      If used, don't create SSH control masters for connections.
     -m, --max-threads NBR            Set the number of threads to use for concurrent queries (defaults to 64)
     -q, --ssh-no-host-key-checking   If used, don't check for SSH host keys.
@@ -925,7 +925,7 @@ JSON dump options:
     -j, --json-dir DIRECTORY         Specify the output directory in which JSON files are being written. Defaults to nodes_json.
 
 SSH executor options:
-    -g, --ssh-gateway-user USER      Name of the gateway user to be used by the gateways. Can also be set from environment variable ti_gateway_user. Defaults to ubradm.
+    -g, --ssh-gateway-user USER      Name of the gateway user to be used by the gateways. Can also be set from environment variable hpc_ssh_gateway_user. Defaults to ubradm.
     -j, --ssh-no-control-master      If used, don't create SSH control masters for connections.
     -m, --max-threads NBR            Set the number of threads to use for concurrent queries (defaults to 16)
     -q, --ssh-no-host-key-checking   If used, don't check for SSH host keys.
@@ -999,7 +999,7 @@ Nodes handler options:
     -o, --show-nodes                 Display the list of possible nodes and exit
 
 SSH executor options:
-    -g, --ssh-gateway-user USER      Name of the gateway user to be used by the gateways. Can also be set from environment variable ti_gateway_user. Defaults to ubradm.
+    -g, --ssh-gateway-user USER      Name of the gateway user to be used by the gateways. Can also be set from environment variable hpc_ssh_gateway_user. Defaults to ubradm.
     -j, --ssh-no-control-master      If used, don't create SSH control masters for connections.
     -m, --max-threads NBR            Set the number of threads to use for concurrent queries (defaults to 16)
     -q, --ssh-no-host-key-checking   If used, don't check for SSH host keys.
@@ -1080,7 +1080,7 @@ Nodes selection options:
         --nodes-service SERVICE      Select nodes implementing a given service (can be used several times)
 
 SSH executor options:
-    -g, --ssh-gateway-user USER      Name of the gateway user to be used by the gateways. Can also be set from environment variable ti_gateway_user. Defaults to ubradm.
+    -g, --ssh-gateway-user USER      Name of the gateway user to be used by the gateways. Can also be set from environment variable hpc_ssh_gateway_user. Defaults to ubradm.
     -j, --ssh-no-control-master      If used, don't create SSH control masters for connections.
     -m, --max-threads NBR            Set the number of threads to use for concurrent queries (defaults to 64)
     -q, --ssh-no-host-key-checking   If used, don't check for SSH host keys.
@@ -1267,7 +1267,7 @@ The SSH Executor options are used to drive how SSH commands are executed.
 ```
 SSH executor options:
     -d, --debug                      Activate verbose logs
-    -g, --ssh-gateway-user USER      Name of the gateway user to be used by the gateways. Can also be set from environment variable ti_gateway_user. Defaults to ubradm.
+    -g, --ssh-gateway-user USER      Name of the gateway user to be used by the gateways. Can also be set from environment variable hpc_ssh_gateway_user. Defaults to ubradm.
     -j, --ssh-no-control-master      If used, don't create SSH control masters for connections.
     -m, --max-threads NBR            Set the number of threads to use for concurrent queries (defaults to 64)
     -q, --ssh-no-host-key-checking   If used, don't check for SSH host keys.

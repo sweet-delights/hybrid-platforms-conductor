@@ -12,7 +12,7 @@ module HybridPlatformsConductor
 
     include LoggerHelpers
 
-    # Name of the gateway user to be used. [default: ENV['ti_gateway_user'] or ubradm]
+    # Name of the gateway user to be used. [default: ENV['hpc_ssh_gateway_user'] or ubradm]
     #   String
     attr_accessor :ssh_gateway_user
 
@@ -80,7 +80,7 @@ module HybridPlatformsConductor
       @passwords = {}
       @auth_password = false
       @ssh_gateways_conf = ENV['ti_gateways_conf'].nil? ? :munich : ENV['ti_gateways_conf'].to_sym
-      @ssh_gateway_user = ENV['ti_gateway_user'].nil? ? 'ubradm' : ENV['ti_gateway_user']
+      @ssh_gateway_user = ENV['hpc_ssh_gateway_user'].nil? ? 'ubradm' : ENV['hpc_ssh_gateway_user']
       # Global variables handling the SSH directory storing temporary SSH configuration
       # Those variables are not shared between different instances of SshExecutor as the SSH configuration depends on the SshExecutor configuration.
       @platforms_ssh_dir = nil
@@ -100,7 +100,7 @@ module HybridPlatformsConductor
     def options_parse(options_parser, parallel: true)
       options_parser.separator ''
       options_parser.separator 'SSH executor options:'
-      options_parser.on('-g', '--ssh-gateway-user USER', "Name of the gateway user to be used by the gateways. Can also be set from environment variable ti_gateway_user. Defaults to #{@ssh_gateway_user}.") do |user|
+      options_parser.on('-g', '--ssh-gateway-user USER', "Name of the gateway user to be used by the gateways. Can also be set from environment variable hpc_ssh_gateway_user. Defaults to #{@ssh_gateway_user}.") do |user|
         @ssh_gateway_user = user
       end
       options_parser.on('-j', '--ssh-no-control-master', 'If used, don\'t create SSH control masters for connections.') do

@@ -105,7 +105,7 @@ describe HybridPlatformsConductor::SshExecutor do
 
     it 'uses node default gateway information and user from environment' do
       with_test_platform(nodes: { 'node' => { connection: { connection: 'node_connection', gateway: 'test_gateway' } } }) do
-        ENV['ti_gateway_user'] = 'test_gateway_user'
+        ENV['hpc_ssh_gateway_user'] = 'test_gateway_user'
         expect(ssh_config_for('node')).to eq 'Host hpc.node
   Hostname node_connection
   ProxyCommand ssh -q -W %h:%p test_gateway_user@test_gateway'
