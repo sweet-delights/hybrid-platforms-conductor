@@ -47,7 +47,7 @@ describe HybridPlatformsConductor::SshExecutor do
 
     it 'includes the gateway definition from environment' do
       with_test_platform({}, false, 'gateway :gateway1, \'Host my_gateway\'') do
-        ENV['ti_gateways_conf'] = 'gateway1'
+        ENV['hpc_ssh_gateways_conf'] = 'gateway1'
         expect(test_ssh_executor.ssh_config).to match /^Host my_gateway$/
       end
     end

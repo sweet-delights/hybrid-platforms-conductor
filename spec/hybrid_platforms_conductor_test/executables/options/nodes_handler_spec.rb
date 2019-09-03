@@ -43,7 +43,7 @@ describe 'executables\' Nodes Handler options' do
       false,
       'gateway :test_gateway, \'Host test_gateway\''
     ) do |repository|
-      ENV['ti_gateways_conf'] = 'test_gateway'
+      ENV['hpc_ssh_gateways_conf'] = 'test_gateway'
       yield repository
     end
   end

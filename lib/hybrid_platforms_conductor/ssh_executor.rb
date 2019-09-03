@@ -16,7 +16,7 @@ module HybridPlatformsConductor
     #   String
     attr_accessor :ssh_gateway_user
 
-    # Name of the gateways configuration. [default: ENV['ti_gateways_conf'] or munich]
+    # Name of the gateways configuration. [default: ENV['hpc_ssh_gateways_conf'] or munich]
     #   Symbol
     attr_accessor :ssh_gateways_conf
 
@@ -79,7 +79,7 @@ module HybridPlatformsConductor
       @override_connections = {}
       @passwords = {}
       @auth_password = false
-      @ssh_gateways_conf = ENV['ti_gateways_conf'].nil? ? :munich : ENV['ti_gateways_conf'].to_sym
+      @ssh_gateways_conf = ENV['hpc_ssh_gateways_conf'].nil? ? :munich : ENV['hpc_ssh_gateways_conf'].to_sym
       @ssh_gateway_user = ENV['hpc_ssh_gateway_user'].nil? ? 'ubradm' : ENV['hpc_ssh_gateway_user']
       # Global variables handling the SSH directory storing temporary SSH configuration
       # Those variables are not shared between different instances of SshExecutor as the SSH configuration depends on the SshExecutor configuration.
@@ -121,7 +121,7 @@ module HybridPlatformsConductor
       options_parser.on('-w', '--password', 'If used, then expect SSH connections to ask for a password.') do
         @auth_password = true
       end
-      options_parser.on('-y', '--ssh-gateways-conf GATEWAYS_CONF', "Name of the gateways configuration to be used. Can also be set from environment variable ti_gateways_conf. Defaults to #{@ssh_gateways_conf}.") do |gateway|
+      options_parser.on('-y', '--ssh-gateways-conf GATEWAYS_CONF', "Name of the gateways configuration to be used. Can also be set from environment variable hpc_ssh_gateways_conf. Defaults to #{@ssh_gateways_conf}.") do |gateway|
         @ssh_gateways_conf = gateway.to_sym
       end
     end

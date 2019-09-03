@@ -15,7 +15,7 @@ describe 'executables\' SSH Executor options' do
         gateway :test_gateway2, 'Host test_gateway2'
       "
     ) do |repository|
-      ENV['ti_gateways_conf'] = 'test_gateway'
+      ENV['hpc_ssh_gateways_conf'] = 'test_gateway'
       yield repository
     end
   end

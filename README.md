@@ -182,7 +182,7 @@ This README considers that executables are installed in the `./bin` directory an
 Those values can always be overridden by the tools command lines options if needed (always check `--help` options for details).
 ```
 export platforms_ssh_user=<your_default_ssh_user_name>
-export ti_gateways_conf=<your_default_gateway_configuration>
+export hpc_ssh_gateways_conf=<your_default_gateway_configuration>
 ```
 
 Unless you use the commands from directory containing the file `platforms.rb`, you'll have to set the `hpc_platforms` environment variable to the path containing the `platforms.rb` file.
@@ -243,7 +243,7 @@ SSH executor options:
     -s, --show-commands              Display the SSH commands that would be run instead of running them
     -u, --ssh-user USER              Name of user to be used in SSH connections (defaults to platforms_ssh_user or USER environment variables)
     -w, --password                   If used, then expect SSH connections to ask for a password.
-    -y GATEWAYS_CONF,                Name of the gateways configuration to be used. Can also be set from environment variable ti_gateways_conf. Defaults to munich.
+    -y GATEWAYS_CONF,                Name of the gateways configuration to be used. Can also be set from environment variable hpc_ssh_gateways_conf. Defaults to munich.
         --ssh-gateways-conf
 
 Deployer options:
@@ -292,7 +292,7 @@ SSH executor options:
     -s, --show-commands              Display the SSH commands that would be run instead of running them
     -u, --ssh-user USER              Name of user to be used in SSH connections (defaults to platforms_ssh_user or USER environment variables)
     -w, --password                   If used, then expect SSH connections to ask for a password.
-    -y GATEWAYS_CONF,                Name of the gateways configuration to be used. Can also be set from environment variable ti_gateways_conf. Defaults to munich.
+    -y GATEWAYS_CONF,                Name of the gateways configuration to be used. Can also be set from environment variable hpc_ssh_gateways_conf. Defaults to munich.
         --ssh-gateways-conf
 
 Deployer options:
@@ -402,7 +402,7 @@ SSH executor options:
     -s, --show-commands              Display the SSH commands that would be run instead of running them
     -u, --ssh-user USER              Name of user to be used in SSH connections (defaults to platforms_ssh_user or USER environment variables)
     -w, --password                   If used, then expect SSH connections to ask for a password.
-    -y GATEWAYS_CONF,                Name of the gateways configuration to be used. Can also be set from environment variable ti_gateways_conf. Defaults to munich.
+    -y GATEWAYS_CONF,                Name of the gateways configuration to be used. Can also be set from environment variable hpc_ssh_gateways_conf. Defaults to munich.
         --ssh-gateways-conf
 
 Deployer options:
@@ -533,7 +533,7 @@ SSH executor options:
     -s, --show-commands              Display the SSH commands that would be run instead of running them
     -u, --ssh-user USER              Name of user to be used in SSH connections (defaults to platforms_ssh_user or USER environment variables)
     -w, --password                   If used, then expect SSH connections to ask for a password.
-    -y GATEWAYS_CONF,                Name of the gateways configuration to be used. Can also be set from environment variable ti_gateways_conf. Defaults to munich.
+    -y GATEWAYS_CONF,                Name of the gateways configuration to be used. Can also be set from environment variable hpc_ssh_gateways_conf. Defaults to munich.
         --ssh-gateways-conf
 ```
 
@@ -598,7 +598,7 @@ SSH executor options:
     -s, --show-commands              Display the SSH commands that would be run instead of running them
     -u, --ssh-user USER              Name of user to be used in SSH connections (defaults to platforms_ssh_user or USER environment variables)
     -w, --password                   If used, then expect SSH connections to ask for a password.
-    -y GATEWAYS_CONF,                Name of the gateways configuration to be used. Can also be set from environment variable ti_gateways_conf. Defaults to munich.
+    -y GATEWAYS_CONF,                Name of the gateways configuration to be used. Can also be set from environment variable hpc_ssh_gateways_conf. Defaults to munich.
         --ssh-gateways-conf
 ```
 
@@ -864,7 +864,7 @@ SSH executor options:
     -s, --show-commands              Display the SSH commands that would be run instead of running them
     -u, --ssh-user USER              Name of user to be used in SSH connections (defaults to platforms_ssh_user or USER environment variables)
     -w, --password                   If used, then expect SSH connections to ask for a password.
-    -y GATEWAYS_CONF,                Name of the gateways configuration to be used. Can also be set from environment variable ti_gateways_conf. Defaults to munich.
+    -y GATEWAYS_CONF,                Name of the gateways configuration to be used. Can also be set from environment variable hpc_ssh_gateways_conf. Defaults to munich.
         --ssh-gateways-conf
 ```
 
@@ -932,7 +932,7 @@ SSH executor options:
     -s, --show-commands              Display the SSH commands that would be run instead of running them
     -u, --ssh-user USER              Name of user to be used in SSH connections (defaults to platforms_ssh_user or USER environment variables)
     -w, --password                   If used, then expect SSH connections to ask for a password.
-    -y GATEWAYS_CONF,                Name of the gateways configuration to be used. Can also be set from environment variable ti_gateways_conf. Defaults to munich.
+    -y GATEWAYS_CONF,                Name of the gateways configuration to be used. Can also be set from environment variable hpc_ssh_gateways_conf. Defaults to munich.
         --ssh-gateways-conf
 
 Deployer options:
@@ -1006,7 +1006,7 @@ SSH executor options:
     -s, --show-commands              Display the SSH commands that would be run instead of running them
     -u, --ssh-user USER              Name of user to be used in SSH connections (defaults to platforms_ssh_user or USER environment variables)
     -w, --password                   If used, then expect SSH connections to ask for a password.
-    -y GATEWAYS_CONF,                Name of the gateways configuration to be used. Can also be set from environment variable ti_gateways_conf. Defaults to munich.
+    -y GATEWAYS_CONF,                Name of the gateways configuration to be used. Can also be set from environment variable hpc_ssh_gateways_conf. Defaults to munich.
         --ssh-gateways-conf
 
 Deployer options:
@@ -1087,7 +1087,7 @@ SSH executor options:
     -s, --show-commands              Display the SSH commands that would be run instead of running them
     -u, --ssh-user USER              Name of user to be used in SSH connections (defaults to platforms_ssh_user or USER environment variables)
     -w, --password                   If used, then expect SSH connections to ask for a password.
-    -y GATEWAYS_CONF,                Name of the gateways configuration to be used. Can also be set from environment variable ti_gateways_conf. Defaults to munich.
+    -y GATEWAYS_CONF,                Name of the gateways configuration to be used. Can also be set from environment variable hpc_ssh_gateways_conf. Defaults to munich.
         --ssh-gateways-conf
 
 Deployer options:
@@ -1274,7 +1274,7 @@ SSH executor options:
     -s, --show-commands              Display the SSH commands that would be run instead of running them
     -u, --ssh-user USER              Name of user to be used in SSH connections (defaults to platforms_ssh_user or USER environment variables)
     -w, --password                   If used, then expect SSH connections to ask for a password.
-    -y GATEWAYS_CONF,                Name of the gateways configuration to be used. Can also be set from environment variable ti_gateways_conf. Defaults to munich.
+    -y GATEWAYS_CONF,                Name of the gateways configuration to be used. Can also be set from environment variable hpc_ssh_gateways_conf. Defaults to munich.
         --ssh-gateways-conf
 ```
 
@@ -1286,7 +1286,7 @@ SSH executor options:
 * `--show-commands`: Display the commands the tool would execute, without executing them. Useful to understand or debug the tool's behaviour.
 * `--ssh-user USER`: Specify the user to be used on the node being accessed by the tool. It is recommended to set the default value of this option in the `platforms_ssh_user` environment variable. If both this option and the `platforms_ssh_user` variables are omitted, then the `USER` environment variable is used.
 * `--password`: When specified, then don't use `-o BatchMode=yes` on SSH commands so that if connection needs a password it will be asked. Useful to deploy on accounts not having key authentication yet.
-* `--ssh-gateways-conf GATEWAYS_CONF`: Specify the gateway configuration name to be used. Gateway configurations are defined in the platforms definition file (`./platforms.rb`). It is recommended to set the default value of this option in the `ti_gateways_conf` environment variable.
+* `--ssh-gateways-conf GATEWAYS_CONF`: Specify the gateway configuration name to be used. Gateway configurations are defined in the platforms definition file (`./platforms.rb`). It is recommended to set the default value of this option in the `hpc_ssh_gateways_conf` environment variable.
 
 ## Deployer options
 

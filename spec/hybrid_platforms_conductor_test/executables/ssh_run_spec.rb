@@ -8,7 +8,7 @@ describe 'ssh_run executable' do
   #     * *repository* (String): Platform's repository
   def with_test_platform_for_ssh_run
     with_test_platform({ nodes: { 'node1' => {}, 'node2' => {} } }, false, 'gateway :test_gateway, \'Host test_gateway\'') do |repository|
-      ENV['ti_gateways_conf'] = 'test_gateway'
+      ENV['hpc_ssh_gateways_conf'] = 'test_gateway'
       yield repository
     end
   end
