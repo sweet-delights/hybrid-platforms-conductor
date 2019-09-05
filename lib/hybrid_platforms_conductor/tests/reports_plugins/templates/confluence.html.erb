@@ -83,10 +83,10 @@
       <% platform_info = platform.info %>
       <tr>
         <td><strong><%= platform_info[:repo_name] %></strong></td>
-        <td><%= platform_info[:commit][:message] %></td>
+        <td><%= CGI.escapeHTML(platform_info[:commit][:message]) %></td>
         <td><%= platform_info[:commit][:date].strftime('%F %T') %></td>
         <td><%= platform_info[:commit][:id] %></td>
-        <td><%= platform_info[:commit][:author][:name] %> (<%= platform_info[:commit][:author][:email] %>)</td>
+        <td><%= CGI.escapeHTML(platform_info[:commit][:author][:name]) %> (<%= CGI.escapeHTML(platform_info[:commit][:author][:email]) %>)</td>
       </tr>
     <% end %>
   </tbody>
