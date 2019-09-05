@@ -476,7 +476,12 @@ module HybridPlatformsConductor
               @deployer.use_why_run = true
               @deployer.force_direct_deploy = true
               @deployer.timeout = CHECK_NODE_TIMEOUT
-              @deployer.deploy_on(nodes_to_test)
+              begin
+                @deployer.deploy_on(nodes_to_test)
+              rescue
+                error "Error while checking check-node output: #{$!}"
+                {}
+              end
             end
           # Analyze output
           outputs.each do |node, (exit_status, stdout, stderr)|
