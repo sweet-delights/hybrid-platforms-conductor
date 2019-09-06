@@ -278,7 +278,7 @@ module HybridPlatformsConductor
               begin
                 test.test
               rescue
-                test.error "Uncaught exception during test: #{$!}\n#{$!.backtrace.join("\n")}"
+                test.error "Uncaught exception during test: #{$!}#{log_debug? ? "\n#{$!.backtrace.join("\n")}" : ''}"
               end
               test.executed
               @tests_run << test
@@ -304,7 +304,7 @@ module HybridPlatformsConductor
                   begin
                     test.test_on_platform
                   rescue
-                    test.error "Uncaught exception during test: #{$!}\n#{$!.backtrace.join("\n")}"
+                    test.error "Uncaught exception during test: #{$!}#{log_debug? ? "\n#{$!.backtrace.join("\n")}" : ''}"
                   end
                   test.executed
                   @tests_run << test
@@ -356,7 +356,7 @@ module HybridPlatformsConductor
                 ]
               end
             rescue
-              test.error "Uncaught exception during test preparation: #{$!}\n#{$!.backtrace.join("\n")}"
+              test.error "Uncaught exception during test preparation: #{$!}#{log_debug? ? "\n#{$!.backtrace.join("\n")}" : ''}"
             end
             @tests_run << test
             tests_on_nodes << test_name
@@ -413,7 +413,7 @@ module HybridPlatformsConductor
                 begin
                   test_info[:validator].call(stdout_lines[0..-2], return_code)
                 rescue
-                  test_info[:test].error "Uncaught exception during validation: #{$!}\n#{$!.backtrace.join("\n")}"
+                  test_info[:test].error "Uncaught exception during validation: #{$!}#{log_debug? ? "\n#{$!.backtrace.join("\n")}" : ''}"
                 end
                 test_info[:test].executed
               end
@@ -441,7 +441,7 @@ module HybridPlatformsConductor
                 begin
                   test.test_for_node
                 rescue
-                  test.error "Uncaught exception during test: #{$!}\n#{$!.backtrace.join("\n")}"
+                  test.error "Uncaught exception during test: #{$!}#{log_debug? ? "\n#{$!.backtrace.join("\n")}" : ''}"
                 end
                 test.executed
                 @tests_run << test
@@ -501,7 +501,7 @@ module HybridPlatformsConductor
                   begin
                     test.test_on_check_node(stdout, stderr, exit_status)
                   rescue
-                    test.error "Uncaught exception during test: #{$!}\n#{$!.backtrace.join("\n")}"
+                    test.error "Uncaught exception during test: #{$!}#{log_debug? ? "\n#{$!.backtrace.join("\n")}" : ''}"
                   end
                 end
                 test.executed
