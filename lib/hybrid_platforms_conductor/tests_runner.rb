@@ -228,15 +228,7 @@ module HybridPlatformsConductor
     # * *node* (String): Node for which the test is instantiated, or nil if global or platform [default = nil]
     def error(message, platform: nil, node: nil)
       platform = @nodes_handler.platform_for(node) unless node.nil?
-      global_test = Tests::Test.new(
-        @logger,
-        @logger_stderr,
-        @nodes_handler,
-        @deployer,
-        name: :global,
-        platform: platform,
-        node: node
-      )
+      global_test = new_test(nil, platform: platform, node: node)
       global_test.errors << message
       global_test.executed
       @tests_run << global_test
@@ -245,26 +237,26 @@ module HybridPlatformsConductor
     # Instantiate a new test
     #
     # Parameters::
-    # * *test_name* (Symbol): Test name to instantiate
+    # * *test_name* (Symbol or nil): Test name to instantiate, or nil for unnamed tests
     # * *platform* (PlatformHandler or nil): PlatformHandler for a platform's test, or nil for a global or node test [default: nil]
     # * *node* (String or nil): Node for a node's test, or nil for a global or platform test [default: nil]
     # Result::
     # * Test: Corresponding test
     def new_test(test_name, platform: nil, node: nil)
       platform = @nodes_handler.platform_for(node) unless node.nil?
-      @tests_plugins[test_name].new(
+      (test_name.nil? ? Tests::Test : @tests_plugins[test_name]).new(
         @logger,
         @logger_stderr,
         @nodes_handler,
         @deployer,
-        name: test_name,
+        name: test_name.nil? ? :global : test_name,
         platform: platform,
         node: node,
         expected_failure: if platform.nil?
                             nil
                           else
                             expected_failures = expected_failures_for(platform)
-                            expected_failures.nil? ? nil : expected_failures.dig(test_name.to_s, node || '')
+                            expected_failures.nil? ? nil : expected_failures.dig(test_name.nil? ? 'global' : test_name, node || '')
                           end
       )
     end

@@ -9,6 +9,9 @@ module HybridPlatformsConductor
       # Report tests results on stdout
       class Stdout < Tests::ReportsPlugin
 
+        # Size of the progress bar, in characters
+        PROGRESS_BAR_SIZE = 41
+
         # Handle tests reports
         def report
           out
@@ -89,14 +92,19 @@ module HybridPlatformsConductor
 
           out '========== Stats by nodes list:'
           out
-          out(Terminal::Table.new(headings: ['List name', '# nodes', '% tested', '% expected success', '% success']) do |table|
+          out(Terminal::Table.new(headings: ['List name', '# nodes', '% tested', '% expected success', '% success', '[Expected] '.yellow.bold + '[Error] '.red.bold + '[Success] '.green.bold + '[Non tested]'.white.bold]) do |table|
             nodes_by_nodes_list.each do |nodes_list, nodes_info|
               table << [
                 nodes_list,
                 nodes_info[:nodes].size,
                 nodes_info[:nodes].empty? ? '' : "#{(nodes_info[:tested_nodes].size*100.0/nodes_info[:nodes].size).to_i} %",
-                nodes_info[:tested_nodes].empty? ? '' : "#{100 - ((nodes_info[:tested_nodes].size - nodes_info[:tested_nodes_in_error_as_expected].size) * 100.0 / nodes_info[:tested_nodes].size).to_i} %",
-                nodes_info[:tested_nodes].empty? ? '' : "#{((nodes_info[:tested_nodes].size - nodes_info[:tested_nodes_in_error].size) * 100.0 / nodes_info[:tested_nodes].size).to_i} %"
+                nodes_info[:tested_nodes].empty? ? '' : "#{((nodes_info[:tested_nodes].size - nodes_info[:tested_nodes_in_error_as_expected].size) * 100.0 / nodes_info[:tested_nodes].size).to_i} %",
+                nodes_info[:tested_nodes].empty? ? '' : "#{((nodes_info[:tested_nodes].size - nodes_info[:tested_nodes_in_error].size) * 100.0 / nodes_info[:tested_nodes].size).to_i} %",
+                nodes_info[:nodes].empty? ? '' :
+                  ('=' * ((nodes_info[:tested_nodes_in_error_as_expected].size * PROGRESS_BAR_SIZE.to_f) / nodes_info[:nodes].size).round).yellow.bold +
+                  ('=' * (((nodes_info[:tested_nodes_in_error].size - nodes_info[:tested_nodes_in_error_as_expected].size).abs * PROGRESS_BAR_SIZE.to_f) / nodes_info[:nodes].size).round).red.bold +
+                  ('=' * (((nodes_info[:tested_nodes].size - nodes_info[:tested_nodes_in_error].size) * PROGRESS_BAR_SIZE.to_f) / nodes_info[:nodes].size).round).green.bold +
+                  ('=' * (((nodes_info[:nodes].size - nodes_info[:tested_nodes].size) * PROGRESS_BAR_SIZE.to_f) / nodes_info[:nodes].size).round).white.bold
               ]
             end
           end)
