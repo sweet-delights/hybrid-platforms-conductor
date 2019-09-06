@@ -256,7 +256,7 @@ module HybridPlatformsConductor
                             nil
                           else
                             expected_failures = expected_failures_for(platform)
-                            expected_failures.nil? ? nil : expected_failures.dig(test_name.nil? ? 'global' : test_name, node || '')
+                            expected_failures.nil? ? nil : expected_failures.dig(test_name.nil? ? 'global' : test_name.to_s, node || '')
                           end
       )
     end
