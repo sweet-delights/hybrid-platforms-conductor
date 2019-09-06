@@ -146,17 +146,19 @@ module HybridPlatformsConductor
 
       # Check that tests that were expected to fail did not succeed.
       @tests_run.each do |test|
-        expected_failure = test.expected_failure
-        if expected_failure
-          if test.errors.empty?
-            # Should have failed
-            error(
-              "Test #{test} was marked to fail (#{expected_failure}) but it succeeded. Please remove it from the expected failures in case the issue has been resolved.",
-              platform: test.platform,
-              node: test.node
-            )
-          else
-            out "Expected failure for #{test} (#{expected_failure}):\n#{test.errors.map { |error| "  - #{error}" }.join("\n")}".yellow
+        if test.executed?
+          expected_failure = test.expected_failure
+          if expected_failure
+            if test.errors.empty?
+              # Should have failed
+              error(
+                "Test #{test} was marked to fail (#{expected_failure}) but it succeeded. Please remove it from the expected failures in case the issue has been resolved.",
+                platform: test.platform,
+                node: test.node
+              )
+            else
+              out "Expected failure for #{test} (#{expected_failure}):\n#{test.errors.map { |error| "  - #{error}" }.join("\n")}".yellow
+            end
           end
         end
       end
