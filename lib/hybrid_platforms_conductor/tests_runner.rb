@@ -100,10 +100,10 @@ module HybridPlatformsConductor
       options_parser.on('-k', '--skip-run', 'Skip running the check-node commands for real, and just analyze existing run logs.') do
         @skip_run = true
       end
-      options_parser.on('-r', '--report REPORT_NAME', "Specify a report name. Can be used several times. Can be all for all reports. Possible values: #{@reports_plugins.keys.sort.join(', ')} (defaults to stdout).") do |report_name|
-        @reports << report_name.to_sym
+      options_parser.on('-r', '--report REPORT', "Specify a report name. Can be used several times. Can be all for all reports. Possible values: #{@reports_plugins.keys.sort.join(', ')} (defaults to stdout).") do |report|
+        @reports << report.to_sym
       end
-      options_parser.on('-t', '--test TEST_NAME', "Specify a test name. Can be used several times. Can be all for all tests. Possible values: #{@tests_plugins.keys.sort.join(', ')} (defaults to all).") do |test_name|
+      options_parser.on('-t', '--test TEST', "Specify a test name. Can be used several times. Can be all for all tests. Possible values: #{@tests_plugins.keys.sort.join(', ')} (defaults to all).") do |test_name|
         @tests << test_name.to_sym
       end
     end
@@ -186,8 +186,12 @@ module HybridPlatformsConductor
       end
 
       # Produce reports
-      @reports.each do |report_name|
-        @reports_plugins[report_name].new(@logger, @logger_stderr, @nodes_handler, @nodes, @tested_platforms, @tests_run).report
+      @reports.each do |report|
+        begin
+          @reports_plugins[report].new(@logger, @logger_stderr, @nodes_handler, @nodes, @tested_platforms, @tests_run).report
+        rescue
+          error "Uncaught exception while producing report #{report}: #{$!}"
+        end
       end
 
       out

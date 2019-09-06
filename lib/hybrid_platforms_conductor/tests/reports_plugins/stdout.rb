@@ -15,7 +15,7 @@ module HybridPlatformsConductor
           out "========== Error report of #{@tests.size} tests run on #{@tested_nodes.size} nodes"
           out
 
-          errors = group_errors(global_tests, :test_name)
+          errors = group_errors(global_tests, :test_name, only_as_expected: true)
           out "======= #{errors.size} failing global tests:"
           out
           errors.each do |test_name, test_errors|
@@ -27,7 +27,7 @@ module HybridPlatformsConductor
           end
           out
 
-          errors = group_errors(platform_tests, :test_name, :platform)
+          errors = group_errors(platform_tests, :test_name, :platform, only_as_expected: true)
           out "======= #{errors.size} failing platform tests:"
           out
           errors.each do |test_name, errors_by_platform|
@@ -42,7 +42,7 @@ module HybridPlatformsConductor
           end
           out
 
-          errors = group_errors(node_tests, :test_name, :node)
+          errors = group_errors(node_tests, :test_name, :node, only_as_expected: true)
           out "======= #{errors.size} failing node tests:"
           out
           errors.each do |test_name, errors_by_node|
@@ -57,7 +57,7 @@ module HybridPlatformsConductor
           end
           out
 
-          errors = group_errors(platform_tests, :platform, :test_name)
+          errors = group_errors(platform_tests, :platform, :test_name, only_as_expected: true)
           out "======= #{errors.size} failing platforms:"
           out
           errors.each do |platform, errors_by_test|
@@ -72,7 +72,7 @@ module HybridPlatformsConductor
           end
           out
 
-          errors = group_errors(node_tests, :node, :test_name)
+          errors = group_errors(node_tests, :node, :test_name, only_as_expected: true)
           out "======= #{errors.size} failing nodes:"
           out
           errors.each do |node, errors_by_test|
@@ -89,12 +89,13 @@ module HybridPlatformsConductor
 
           out '========== Stats by nodes list:'
           out
-          out(Terminal::Table.new(headings: ['List name', '# nodes', '% tested', '% success']) do |table|
+          out(Terminal::Table.new(headings: ['List name', '# nodes', '% tested', '% expected failures', '% success']) do |table|
             nodes_by_nodes_list.each do |nodes_list, nodes_info|
               table << [
                 nodes_list,
                 nodes_info[:nodes].size,
                 nodes_info[:nodes].empty? ? '' : "#{(nodes_info[:tested_nodes].size*100.0/nodes_info[:nodes].size).to_i} %",
+                nodes_info[:tested_nodes].empty? ? '' : "#{((nodes_info[:tested_nodes].size - nodes_info[:tested_nodes_in_error_as_expected].size) * 100.0 / nodes_info[:tested_nodes].size).to_i} %",
                 nodes_info[:tested_nodes].empty? ? '' : "#{((nodes_info[:tested_nodes].size - nodes_info[:tested_nodes_in_error].size) * 100.0 / nodes_info[:tested_nodes].size).to_i} %"
               ]
             end
