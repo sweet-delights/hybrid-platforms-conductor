@@ -477,7 +477,10 @@ module HybridPlatformsConductor
               begin
                 @deployer.deploy_on(nodes_to_test)
               rescue
-                error "Error while checking check-node output: #{$!}"
+                # If an exception occurred, make sure all concerned nodes are reporting the error
+                nodes_to_test.each do |node|
+                  error "Error while checking check-node output: #{$!}", node: node
+                end
                 {}
               end
             end
