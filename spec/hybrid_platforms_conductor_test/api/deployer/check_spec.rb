@@ -11,9 +11,9 @@ describe HybridPlatformsConductor::Deployer do
           test_platforms_info['platform'][:nodes]['node'][:deliver_on_artefact_for] = proc { delivered = true }
           expect_ssh_executor_runs([
             # First run, we expect the mutex to be setup, and the deployment actions to be run
-            proc { |actions_descriptions| expect_actions_to_deploy_on(actions_descriptions, 'node', check: true) },
+            proc { |actions_per_nodes| expect_actions_to_deploy_on(actions_per_nodes, 'node', check: true) },
             # Second run, we expect the mutex to be released
-            proc { |actions_descriptions| expect_actions_to_unlock(actions_descriptions, 'node') }
+            proc { |actions_per_nodes| expect_actions_to_unlock(actions_per_nodes, 'node') }
           ])
           test_deployer.use_why_run = true
           expect(test_deployer.deploy_for('node')).to eq('node' => [0, 'Check successful', ''])
@@ -26,16 +26,16 @@ describe HybridPlatformsConductor::Deployer do
     it 'checks on 1 node using root' do
       with_test_platform(nodes: { 'node' => {} }) do
         with_ssh_master_mocked_on ['node'] do
-          test_ssh_executor.ssh_user_name = 'root'
+          test_ssh_executor.ssh_user = 'root'
           packaged = false
           delivered = false
           test_platforms_info['platform'][:package] = proc { packaged = true }
           test_platforms_info['platform'][:nodes]['node'][:deliver_on_artefact_for] = proc { delivered = true }
           expect_ssh_executor_runs([
             # First run, we expect the mutex to be setup, and the deployment actions to be run
-            proc { |actions_descriptions| expect_actions_to_deploy_on(actions_descriptions, 'node', check: true, sudo: false) },
+            proc { |actions_per_nodes| expect_actions_to_deploy_on(actions_per_nodes, 'node', check: true, sudo: false) },
             # Second run, we expect the mutex to be released
-            proc { |actions_descriptions| expect_actions_to_unlock(actions_descriptions, 'node', sudo: false) }
+            proc { |actions_per_nodes| expect_actions_to_unlock(actions_per_nodes, 'node', sudo: false) }
           ])
           test_deployer.use_why_run = true
           expect(test_deployer.deploy_for('node')).to eq('node' => [0, 'Check successful', ''])
@@ -54,9 +54,9 @@ describe HybridPlatformsConductor::Deployer do
           test_platforms_info['platform'][:nodes]['node'][:deliver_on_artefact_for] = proc { delivered = true }
           expect_ssh_executor_runs([
             # First run, we expect the mutex to be setup, and the deployment actions to be run
-            proc { |actions_descriptions| expect_actions_to_deploy_on(actions_descriptions, 'node', check: true) },
+            proc { |actions_per_nodes| expect_actions_to_deploy_on(actions_per_nodes, 'node', check: true) },
             # Second run, we expect the mutex to be released
-            proc { |actions_descriptions| expect_actions_to_unlock(actions_descriptions, 'node') }
+            proc { |actions_per_nodes| expect_actions_to_unlock(actions_per_nodes, 'node') }
           ])
           test_deployer.use_why_run = true
           test_deployer.force_direct_deploy = true
@@ -78,9 +78,9 @@ describe HybridPlatformsConductor::Deployer do
           test_platforms_info['platform'][:register_secrets] = proc { |secrets| registered_secrets = secrets }
           expect_ssh_executor_runs([
             # First run, we expect the mutex to be setup, and the deployment actions to be run
-            proc { |actions_descriptions| expect_actions_to_deploy_on(actions_descriptions, 'node', check: true) },
+            proc { |actions_per_nodes| expect_actions_to_deploy_on(actions_per_nodes, 'node', check: true) },
             # Second run, we expect the mutex to be released
-            proc { |actions_descriptions| expect_actions_to_unlock(actions_descriptions, 'node') }
+            proc { |actions_per_nodes| expect_actions_to_unlock(actions_per_nodes, 'node') }
           ])
           test_deployer.use_why_run = true
           secret_file = "#{repository}/secrets.json"
@@ -105,9 +105,9 @@ describe HybridPlatformsConductor::Deployer do
           test_platforms_info['platform'][:register_secrets] = proc { |secrets| registered_secrets << secrets }
           expect_ssh_executor_runs([
             # First run, we expect the mutex to be setup, and the deployment actions to be run
-            proc { |actions_descriptions| expect_actions_to_deploy_on(actions_descriptions, 'node', check: true) },
+            proc { |actions_per_nodes| expect_actions_to_deploy_on(actions_per_nodes, 'node', check: true) },
             # Second run, we expect the mutex to be released
-            proc { |actions_descriptions| expect_actions_to_unlock(actions_descriptions, 'node') }
+            proc { |actions_per_nodes| expect_actions_to_unlock(actions_per_nodes, 'node') }
           ])
           test_deployer.use_why_run = true
           secret_file1 = "#{repository}/secrets1.json"
@@ -137,9 +137,9 @@ describe HybridPlatformsConductor::Deployer do
           test_platforms_info['platform'][:nodes]['node3'][:deliver_on_artefact_for] = proc { delivered_nodes << 'node3' }
           expect_ssh_executor_runs([
             # First run, we expect the mutex to be setup, and the deployment actions to be run
-            proc { |actions_descriptions| expect_actions_to_deploy_on(actions_descriptions, %w[node1 node2 node3], check: true) },
+            proc { |actions_per_nodes| expect_actions_to_deploy_on(actions_per_nodes, %w[node1 node2 node3], check: true) },
             # Second run, we expect the mutex to be released
-            proc { |actions_descriptions| expect_actions_to_unlock(actions_descriptions, %w[node1 node2 node3]) }
+            proc { |actions_per_nodes| expect_actions_to_unlock(actions_per_nodes, %w[node1 node2 node3]) }
           ])
           test_deployer.use_why_run = true
           expect(test_deployer.deploy_for(%w[node1 node2 node3])).to eq(
@@ -158,13 +158,13 @@ describe HybridPlatformsConductor::Deployer do
         with_ssh_master_mocked_on %w[node1 node2 node3] do
           expect_ssh_executor_runs([
             # First run, we expect the mutex to be setup, and the deployment actions to be run
-            proc do |actions_descriptions, timeout: nil, concurrent: false, log_to_dir: 'run_logs', log_to_stdout: true|
+            proc do |actions_per_nodes, timeout: nil, concurrent: false, log_to_dir: 'run_logs', log_to_stdout: true|
               expect(concurrent).to eq true
               expect(log_to_dir).to eq 'run_logs'
-              expect_actions_to_deploy_on(actions_descriptions, %w[node1 node2 node3], check: true)
+              expect_actions_to_deploy_on(actions_per_nodes, %w[node1 node2 node3], check: true)
             end,
             # Second run, we expect the mutex to be released
-            proc { |actions_descriptions| expect_actions_to_unlock(actions_descriptions, %w[node1 node2 node3]) }
+            proc { |actions_per_nodes| expect_actions_to_unlock(actions_per_nodes, %w[node1 node2 node3]) }
           ])
           test_deployer.use_why_run = true
           test_deployer.concurrent_execution = true
@@ -182,12 +182,12 @@ describe HybridPlatformsConductor::Deployer do
         with_ssh_master_mocked_on %w[node1 node2 node3] do
           expect_ssh_executor_runs([
             # First run, we expect the mutex to be setup, and the deployment actions to be run
-            proc do |actions_descriptions, timeout: nil, concurrent: false, log_to_dir: 'run_logs', log_to_stdout: true|
+            proc do |actions_per_nodes, timeout: nil, concurrent: false, log_to_dir: 'run_logs', log_to_stdout: true|
               expect(timeout).to eq 5
-              expect_actions_to_deploy_on(actions_descriptions, %w[node1 node2 node3], check: true)
+              expect_actions_to_deploy_on(actions_per_nodes, %w[node1 node2 node3], check: true)
             end,
             # Second run, we expect the mutex to be released
-            proc { |actions_descriptions| expect_actions_to_unlock(actions_descriptions, %w[node1 node2 node3]) }
+            proc { |actions_per_nodes| expect_actions_to_unlock(actions_per_nodes, %w[node1 node2 node3]) }
           ])
           test_deployer.use_why_run = true
           test_deployer.timeout = 5

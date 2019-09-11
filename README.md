@@ -1472,7 +1472,7 @@ Check the [SshExecutor public methods](https://www.site.my_company.net/git/proje
 Examples:
 ```ruby
 # Set the SSH user name to be used in SSH connections
-ssh_executor.ssh_user_name = 'a_usernme'
+ssh_executor.ssh_user = 'a_usernme'
 
 # Set the "Dry run" flag that will display SSH commands without actually executing them
 ssh_executor.dry_run = true
@@ -1481,49 +1481,49 @@ ssh_executor.dry_run = true
 ssh_executor.debug = true
 
 # Run the hostname command on node23hst-nn1
-ssh_executor.run_cmd_on_hosts('node23hst-nn1' => { actions: { bash: 'hostname' } })
+ssh_executor.execute_actions('node23hst-nn1' => { remote_bash: 'hostname' })
 
 # Run the echo command on node23hst-nn1 by first setting environment variables
-ssh_executor.run_cmd_on_hosts('node23hst-nn1' => { env: { 'MY_ENV' => 'value' }, actions: { bash: 'echo "${MY_ENV}"' } })
+ssh_executor.execute_actions('node23hst-nn1' => { remote_bash: { env: { 'MY_ENV' => 'value' }, commands: 'echo "${MY_ENV}"' } })
 
 # Run the commands defined in file my_cmds.list on node23hst-nn1
-ssh_executor.run_cmd_on_hosts('node23hst-nn1' => { actions: { bash: { file: 'my_cmds.list' } } })
+ssh_executor.execute_actions('node23hst-nn1' => { remote_bash: { file: 'my_cmds.list' } })
 
 # Run the hostname command on both node23hst-nn1 and node23hst-nn2 with timeout of 5 seconds
-ssh_executor.run_cmd_on_hosts({ ['node23hst-nn1', 'node23hst-nn2'] => { actions: { bash: 'hostname' } } }, timeout: 5)
+ssh_executor.execute_actions({ ['node23hst-nn1', 'node23hst-nn2'] => { remote_bash: 'hostname' } }, timeout: 5)
 
 # Run the hostname and ls commands on both node23hst-nn1 and node23hst-nn2
-ssh_executor.run_cmd_on_hosts(['node23hst-nn1', 'node23hst-nn2'] => { actions: { bash: ['hostname', 'ls'] } })
+ssh_executor.execute_actions(['node23hst-nn1', 'node23hst-nn2'] => { remote_bash: ['hostname', 'ls'] })
 
 # Run the commands hostname and the ones specified in my_cmds.list file on node23hst-nn1
-ssh_executor.run_cmd_on_hosts('node23hst-nn1' => { actions: { bash: ['hostname', { file: 'my_cmds.list' }] } })
+ssh_executor.execute_actions('node23hst-nn1' => { remote_bash: ['hostname', { file: 'my_cmds.list' }] })
 
 # Run the hostname command on node23hst-nn1 and the ls command on node23hst-nn2
-ssh_executor.run_cmd_on_hosts('node23hst-nn1' => { actions: { bash: 'hostname' } }, 'node23hst-nn2' => { actions: { bash: 'ls' } )
+ssh_executor.execute_actions('node23hst-nn1' => { remote_bash: 'hostname' }, 'node23hst-nn2' => { remote_bash: 'ls' } )
 
 # Run an interactive shell on node23hst-nn1
-ssh_executor.run_cmd_on_hosts('node23hst-nn1' => { actions: { interactive: true } })
+ssh_executor.execute_actions('node23hst-nn1' => { interactive: true })
 
 # Run an scp command on node23hst-nn1
-ssh_executor.run_cmd_on_hosts('node23hst-nn1' => { actions: { scp: [['my/local_file', 'my/remote_file']] } })
+ssh_executor.execute_actions('node23hst-nn1' => { scp: [['my/local_file', 'my/remote_file']] })
 
 # Run 2 scp commands on node23hst-nn1
-ssh_executor.run_cmd_on_hosts('node23hst-nn1' => { actions: { scp: [['my/local_file1', 'my/remote_file1'], ['my/local_file2', 'my/remote_file2']] } })
+ssh_executor.execute_actions('node23hst-nn1' => { scp: [['my/local_file1', 'my/remote_file1'], ['my/local_file2', 'my/remote_file2']] })
 
 # Run 1 scp command + 1 hostname command on node23hst-nn1
-ssh_executor.run_cmd_on_hosts('node23hst-nn1' => { actions: [{ scp: [['my/local_file', 'my/remote_file']] }, { bash: 'hostname'}] })
+ssh_executor.execute_actions('node23hst-nn1' => [{ scp: [['my/local_file', 'my/remote_file']] }, { remote_bash: 'hostname'}])
 
 # Run the hostname command on all hosts
-ssh_executor.run_cmd_on_hosts({ all: true } => { actions: { bash: 'hostname'} })
+ssh_executor.execute_actions({ all: true } => { remote_bash: 'hostname' })
 
 # Run the hostname command on all hosts containing xae
-ssh_executor.run_cmd_on_hosts('/xae/' => { actions: { bash: 'hostname'} })
+ssh_executor.execute_actions('/xae/' => { remote_bash: 'hostname' })
 
 # Run the hostname command on all hosts defined in the hosts list named my_host_list (file present in hosts_lists/my_host_list)
-ssh_executor.run_cmd_on_hosts({ list: 'my_host_list' } => { actions: { bash: 'hostname'} })
+ssh_executor.execute_actions({ list: 'my_host_list' } => { remote_bash: 'hostname' })
 
 # Run the hostname command on all hosts containing xae, using parallel execution (log files will be output in run_logs/*.stdout)
-ssh_executor.run_cmd_on_hosts({ '/xae/' => { actions: { bash: 'hostname' } } }, concurrent: true)
+ssh_executor.execute_actions({ '/xae/' => { remote_bash: 'hostname' } }, concurrent: true)
 ```
 
 <a name="extending"></a>

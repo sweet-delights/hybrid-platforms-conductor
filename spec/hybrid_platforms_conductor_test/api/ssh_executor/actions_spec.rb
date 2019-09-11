@@ -10,7 +10,7 @@ describe HybridPlatformsConductor::SshExecutor do
     #     * *repository* (String): Path to the repository
     def with_test_platform_for_actions
       with_test_platform(nodes: { 'node' => { connection: 'node_connection' } }) do |repository|
-        test_ssh_executor.ssh_user_name = 'test_user'
+        test_ssh_executor.ssh_user = 'test_user'
         yield repository
       end
     end
@@ -30,7 +30,7 @@ describe HybridPlatformsConductor::SshExecutor do
     def execute(actions, expected_commands: nil, nbr_connections: 1, timeout: nil, log_to_dir: nil)
       run_result = nil
       with_cmd_runner_mocked(commands: expected_commands, nodes_connections: { 'node' => { connection: 'node_connection', user: 'test_user', times: nbr_connections } }) do
-        run_result = test_ssh_executor.run_cmd_on_hosts({ 'node' => { actions: actions } }, timeout: timeout, log_to_dir: log_to_dir)['node']
+        run_result = test_ssh_executor.execute_actions({ 'node' => actions }, timeout: timeout, log_to_dir: log_to_dir)['node']
       end
       run_result
     end
@@ -104,7 +104,7 @@ describe HybridPlatformsConductor::SshExecutor do
     it 'executes remote Bash code' do
       with_test_platform_for_actions do |repository|
         expect(execute(
-          { bash: 'echo TestContent >test_file ; echo TestStdout ; echo TestStderr 1>&2' },
+          { remote_bash: 'echo TestContent >test_file ; echo TestStdout ; echo TestStderr 1>&2' },
           expected_commands: [
             [remote_bash_for('echo TestContent >test_file ; echo TestStdout ; echo TestStderr 1>&2', node: 'node', user: 'test_user'), proc do
               [0, "TestStdout\n", "TestStderr\n"]
@@ -117,7 +117,7 @@ describe HybridPlatformsConductor::SshExecutor do
     it 'executes remote Bash code with timeout' do
       with_test_platform_for_actions do |repository|
         expect(execute(
-          { bash: 'sleep 5 ; echo ShouldNotReach' },
+          { remote_bash: 'sleep 5 ; echo ShouldNotReach' },
           expected_commands: [
             [remote_bash_for('sleep 5 ; echo ShouldNotReach', node: 'node', user: 'test_user'), proc do
               sleep 1
@@ -133,7 +133,7 @@ describe HybridPlatformsConductor::SshExecutor do
       with_repository 'logs' do |logs_dir|
         with_test_platform_for_actions do |repository|
           execute(
-            { bash: 'echo TestStdout ; echo TestStderr 1>&2' },
+            { remote_bash: 'echo TestStdout ; echo TestStderr 1>&2' },
             expected_commands: [
               [remote_bash_for('echo TestStdout ; echo TestStderr 1>&2', node: 'node', user: 'test_user'), proc do |cmd, log_to_file: nil, log_to_stdout: true, expected_code: 0, timeout: nil, no_exception: false|
                 expect(log_to_file).to eq "#{logs_dir}/node.stdout"
@@ -149,7 +149,7 @@ describe HybridPlatformsConductor::SshExecutor do
     it 'executes remote Bash code in several lines' do
       with_test_platform_for_actions do |repository|
         expect(execute(
-          { bash: ['echo TestContent >test_file', 'echo TestStdout', 'echo TestStderr 1>&2'] },
+          { remote_bash: ['echo TestContent >test_file', 'echo TestStdout', 'echo TestStderr 1>&2'] },
           expected_commands: [
             [remote_bash_for("echo TestContent >test_file\necho TestStdout\necho TestStderr 1>&2", node: 'node', user: 'test_user'), proc do
               [0, "TestStdout\n", "TestStderr\n"]
@@ -162,7 +162,7 @@ describe HybridPlatformsConductor::SshExecutor do
     it 'executes remote Bash code using the commands syntax' do
       with_test_platform_for_actions do |repository|
         expect(execute(
-          { bash: { commands: 'echo TestContent >test_file ; echo TestStdout ; echo TestStderr 1>&2' } },
+          { remote_bash: { commands: 'echo TestContent >test_file ; echo TestStdout ; echo TestStderr 1>&2' } },
           expected_commands: [
             [remote_bash_for('echo TestContent >test_file ; echo TestStdout ; echo TestStderr 1>&2', node: 'node', user: 'test_user'), proc do
               [0, "TestStdout\n", "TestStderr\n"]
@@ -176,7 +176,7 @@ describe HybridPlatformsConductor::SshExecutor do
       with_test_platform_for_actions do |repository|
         File.write("#{repository}/commands.txt", "echo TestContent >test_file ; echo TestStdout\necho TestStderr 1>&2")
         expect(execute(
-          { bash: { file: "#{repository}/commands.txt" } },
+          { remote_bash: { file: "#{repository}/commands.txt" } },
           expected_commands: [
             [remote_bash_for("echo TestContent >test_file ; echo TestStdout\necho TestStderr 1>&2", node: 'node', user: 'test_user'), proc do
               [0, "TestStdout\n", "TestStderr\n"]
@@ -190,7 +190,7 @@ describe HybridPlatformsConductor::SshExecutor do
       with_test_platform_for_actions do |repository|
         File.write("#{repository}/commands.txt", 'echo TestContent >test_file ; echo TestStdout ; echo TestStderr 1>&2')
         expect(execute(
-          { bash: {
+          { remote_bash: {
             commands: ['echo 1', 'echo 2'],
             file: "#{repository}/commands.txt"
           } },
@@ -206,7 +206,7 @@ describe HybridPlatformsConductor::SshExecutor do
     it 'executes remote Bash code with environment variables set at the action level' do
       with_test_platform_for_actions do |repository|
         expect(execute(
-          { bash: { 
+          { remote_bash: { 
             commands: 'echo TestContent >test_file ; echo TestStdout ; echo TestStderr 1>&2',
             env: {
               'var1' => 'value1',
@@ -229,7 +229,7 @@ describe HybridPlatformsConductor::SshExecutor do
           'var2' => 'value2'
         }
         expect(execute(
-          { bash: { 
+          { remote_bash: { 
             commands: 'echo TestContent >test_file ; echo TestStdout ; echo TestStderr 1>&2'
           } },
           expected_commands: [
@@ -248,7 +248,7 @@ describe HybridPlatformsConductor::SshExecutor do
           'var2' => 'value2'
         }
         expect(execute(
-          { bash: { 
+          { remote_bash: { 
             commands: 'echo TestContent >test_file ; echo TestStdout ; echo TestStderr 1>&2',
             env: {
               'var2' => 'value3',

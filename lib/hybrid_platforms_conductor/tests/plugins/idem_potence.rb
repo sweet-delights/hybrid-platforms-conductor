@@ -25,7 +25,7 @@ module HybridPlatformsConductor
           @deployer.with_docker_container_for(@node, container_id: 'idem_potence') do |deployer|
             deployer.deploy_for(@node)
             # Now that the node has been deployed, use the a_testadmin user for the check-node (as root has no more access)
-            deployer.instance_variable_get(:@ssh_executor).ssh_user_name = 'a_testadmin'
+            deployer.instance_variable_get(:@ssh_executor).ssh_user = 'a_testadmin'
             deployer.instance_variable_get(:@ssh_executor).passwords.delete(@node)
             deployer.use_why_run = true
             result = deployer.deploy_for(@node)

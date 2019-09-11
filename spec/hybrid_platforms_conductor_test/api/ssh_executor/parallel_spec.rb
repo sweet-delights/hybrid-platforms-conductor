@@ -5,19 +5,19 @@ describe HybridPlatformsConductor::SshExecutor do
     it 'executes a simple command on several nodes in parallel' do
       with_test_platform(nodes: { 'node1' => {}, 'node2' => {}, 'node3' => {} }) do
         nodes_executed = []
-        test_ssh_executor.run_cmd_on_hosts({
-          'node1' => { actions: { ruby: proc do
+        test_ssh_executor.execute_actions({
+          'node1' => { ruby: proc do
             sleep 2
             nodes_executed << 'node1'
-          end } },
-          'node2' => { actions: { ruby: proc do
+          end },
+          'node2' => { ruby: proc do
             sleep 3
             nodes_executed << 'node2'
-          end } },
-          'node3' => { actions: { ruby: proc do
+          end },
+          'node3' => { ruby: proc do
             sleep 1
             nodes_executed << 'node3'
-          end } }
+          end }
         }, concurrent: true)
         expect(nodes_executed).to eq %w[node3 node1 node2]
       end
@@ -31,81 +31,75 @@ describe HybridPlatformsConductor::SshExecutor do
         # * node2: 1---2-----3
         # * node3: ------1-2-----3
         # * Time : 0 1 2 3 4 5 6 7 8
-        expect(test_ssh_executor.run_cmd_on_hosts({
-          'node1' => {
-            actions: [
-              {
-                ruby: proc do |stdout, stderr|
-                  sleep 1
-                  stdout << 'node1_action1 '
-                  actions_executed << 'node1_action1'
-                end
-              },
-              {
-                ruby: proc do |stdout, stderr|
-                  sleep 5
-                  stdout << 'node1_action2 '
-                  actions_executed << 'node1_action2'
-                end
-              },
-              {
-                ruby: proc do |stdout, stderr|
-                  sleep 2
-                  stdout << 'node1_action3'
-                  actions_executed << 'node1_action3'
-                end
-              }
-            ]
-          },
-          'node2' => {
-            actions: [
-              {
-                ruby: proc do |stdout, stderr|
-                  stdout << 'node2_action1 '
-                  actions_executed << 'node2_action1'
-                end
-              },
-              {
-                ruby: proc do |stdout, stderr|
-                  sleep 2
-                  stdout << 'node2_action2 '
-                  actions_executed << 'node2_action2'
-                end
-              },
-              {
-                ruby: proc do |stdout, stderr|
-                  sleep 3
-                  stdout << 'node2_action3'
-                  actions_executed << 'node2_action3'
-                end
-              }
-            ]
-          },
-          'node3' => {
-            actions: [
-              {
-                ruby: proc do |stdout, stderr|
-                  sleep 3
-                  stdout << 'node3_action1 '
-                  actions_executed << 'node3_action1'
-                end
-              },
-              {
-                ruby: proc do |stdout, stderr|
-                  sleep 1
-                  stdout << 'node3_action2 '
-                  actions_executed << 'node3_action2'
-                end
-              },
-              {
-                ruby: proc do |stdout, stderr|
-                  sleep 3
-                  stdout << 'node3_action3'
-                  actions_executed << 'node3_action3'
-                end
-              }
-            ]
-          }
+        expect(test_ssh_executor.execute_actions({
+          'node1' => [
+            {
+              ruby: proc do |stdout, stderr|
+                sleep 1
+                stdout << 'node1_action1 '
+                actions_executed << 'node1_action1'
+              end
+            },
+            {
+              ruby: proc do |stdout, stderr|
+                sleep 5
+                stdout << 'node1_action2 '
+                actions_executed << 'node1_action2'
+              end
+            },
+            {
+              ruby: proc do |stdout, stderr|
+                sleep 2
+                stdout << 'node1_action3'
+                actions_executed << 'node1_action3'
+              end
+            }
+          ],
+          'node2' => [
+            {
+              ruby: proc do |stdout, stderr|
+                stdout << 'node2_action1 '
+                actions_executed << 'node2_action1'
+              end
+            },
+            {
+              ruby: proc do |stdout, stderr|
+                sleep 2
+                stdout << 'node2_action2 '
+                actions_executed << 'node2_action2'
+              end
+            },
+            {
+              ruby: proc do |stdout, stderr|
+                sleep 3
+                stdout << 'node2_action3'
+                actions_executed << 'node2_action3'
+              end
+            }
+          ],
+          'node3' => [
+            {
+              ruby: proc do |stdout, stderr|
+                sleep 3
+                stdout << 'node3_action1 '
+                actions_executed << 'node3_action1'
+              end
+            },
+            {
+              ruby: proc do |stdout, stderr|
+                sleep 1
+                stdout << 'node3_action2 '
+                actions_executed << 'node3_action2'
+              end
+            },
+            {
+              ruby: proc do |stdout, stderr|
+                sleep 3
+                stdout << 'node3_action3'
+                actions_executed << 'node3_action3'
+              end
+            }
+          ]
         }, concurrent: true)).to eq(
           'node1' => [0, 'node1_action1 node1_action2 node1_action3', ''],
           'node2' => [0, 'node2_action1 node2_action2 node2_action3', ''],
@@ -127,24 +121,24 @@ describe HybridPlatformsConductor::SshExecutor do
 
     it 'executes several commands on several nodes with timeout on different actions depending on the node, in parallel' do
       with_test_platform(nodes: { 'node1' => {}, 'node2' => {}, 'node3' => {}, 'node4' => {} }) do
-        expect(test_ssh_executor.run_cmd_on_hosts(
+        expect(test_ssh_executor.execute_actions(
           {
-            'node1' => { actions: [
+            'node1' => [
               { local_bash: 'sleep 1 && echo Node11' },
               { local_bash: 'sleep 5 && echo Node12' }
-            ] },
-            'node2' => { actions: [
+            ],
+            'node2' => [
               { local_bash: 'echo Node21' },
               { local_bash: 'sleep 1 && echo Node22' }
-            ] },
-            'node3' => { actions: [
+            ],
+            'node3' => [
               { local_bash: 'sleep 1 && echo Node31' },
               { local_bash: 'sleep 1 && echo Node32' },
               { local_bash: 'sleep 5 && echo Node33' }
-            ] },
-            'node4' => { actions: [
+            ],
+            'node4' => [
               { local_bash: 'sleep 5 && echo Node41' }
-            ] }
+            ]
           },
           timeout: 3,
           concurrent: true
@@ -159,8 +153,8 @@ describe HybridPlatformsConductor::SshExecutor do
 
     it 'executes several actions on several nodes and returns the corresponding stdout and stderr correctly in parallel' do
       with_test_platform(nodes: { 'node1' => {}, 'node2' => {}, 'node3' => {} }) do
-        expect(test_ssh_executor.run_cmd_on_hosts({
-          'node1' => { actions: [
+        expect(test_ssh_executor.execute_actions({
+          'node1' => [
             { ruby: proc do |stdout, stderr|
               stdout << 'node1_action1_stdout '
               stderr << 'node1_action1_stderr '
@@ -173,8 +167,8 @@ describe HybridPlatformsConductor::SshExecutor do
               stdout << 'node1_action3_stdout'
               stderr << 'node1_action3_stderr'
             end }
-          ] },
-          'node2' => { actions: [
+          ],
+          'node2' => [
             { ruby: proc do |stdout, stderr|
               stdout << 'node2_action1_stdout '
               stderr << 'node2_action1_stderr '
@@ -187,8 +181,8 @@ describe HybridPlatformsConductor::SshExecutor do
               stdout << 'node2_action3_stdout'
               stderr << 'node2_action3_stderr'
             end }
-          ] },
-          'node3' => { actions: [
+          ],
+          'node3' => [
             { ruby: proc do |stdout, stderr|
               stdout << 'node3_action1_stdout '
               stderr << 'node3_action1_stderr '
@@ -201,7 +195,7 @@ describe HybridPlatformsConductor::SshExecutor do
               stdout << 'node3_action3_stdout'
               stderr << 'node3_action3_stderr'
             end }
-          ] }
+          ]
         }, concurrent: true)).to eq(
           'node1' => [0, 'node1_action1_stdout node1_action2_stdout node1_action3_stdout', 'node1_action1_stderr node1_action2_stderr node1_action3_stderr'],
           'node2' => [0, 'node2_action1_stdout node2_action2_stdout node2_action3_stdout', 'node2_action1_stderr node2_action2_stderr node2_action3_stderr'],
@@ -213,8 +207,8 @@ describe HybridPlatformsConductor::SshExecutor do
     it 'executes several actions on several nodes and returns the corresponding stdout and stderr correctly in parallel and in files' do
       with_repository do |logs_repository|
         with_test_platform(nodes: { 'node1' => {}, 'node2' => {}, 'node3' => {} }) do
-          expect(test_ssh_executor.run_cmd_on_hosts({
-            'node1' => { actions: [
+          expect(test_ssh_executor.execute_actions({
+            'node1' => [
               { ruby: proc do |stdout, stderr|
                 stdout << 'node1_action1_stdout '
                 stderr << 'node1_action1_stderr '
@@ -227,8 +221,8 @@ describe HybridPlatformsConductor::SshExecutor do
                 stdout << 'node1_action3_stdout'
                 stderr << 'node1_action3_stderr'
               end }
-            ] },
-            'node2' => { actions: [
+            ],
+            'node2' => [
               { ruby: proc do |stdout, stderr|
                 stdout << 'node2_action1_stdout '
                 stderr << 'node2_action1_stderr '
@@ -241,8 +235,8 @@ describe HybridPlatformsConductor::SshExecutor do
                 stdout << 'node2_action3_stdout'
                 stderr << 'node2_action3_stderr'
               end }
-            ] },
-            'node3' => { actions: [
+            ],
+            'node3' => [
               { ruby: proc do |stdout, stderr|
                 stdout << 'node3_action1_stdout '
                 stderr << 'node3_action1_stderr '
@@ -255,7 +249,7 @@ describe HybridPlatformsConductor::SshExecutor do
                 stdout << 'node3_action3_stdout'
                 stderr << 'node3_action3_stderr'
               end }
-            ] }
+            ]
           }, concurrent: true, log_to_dir: logs_repository)).to eq(
             'node1' => [0, 'node1_action1_stdout node1_action2_stdout node1_action3_stdout', 'node1_action1_stderr node1_action2_stderr node1_action3_stderr'],
             'node2' => [0, 'node2_action1_stdout node2_action2_stdout node2_action3_stdout', 'node2_action1_stderr node2_action2_stderr node2_action3_stderr'],

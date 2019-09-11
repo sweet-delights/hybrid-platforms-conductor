@@ -234,7 +234,7 @@ module HybridPlatformsConductor
               "#{File.dirname(__FILE__)}/platform_handler_plugin/scripts" => './deploy_scripts',
               'temporary_secrets_to_be_deployed.json' => './temporary_secrets_to_be_deployed.json'
             },
-            bash: [
+            remote_bash: [
               'cd ./deploy_scripts',
               './deploy_everything',
               'rm temporary_secrets_to_be_deployed.json'

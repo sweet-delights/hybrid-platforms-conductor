@@ -23,7 +23,7 @@ describe 'executables\' SSH Executor options' do
   it 'selects the correct gateway user' do
     with_test_platform_for_ssh_executor_options do
       expect_ssh_executor_runs([proc do |actions, timeout: nil, concurrent: false, log_to_dir: 'run_logs', log_to_stdout: true|
-        expect(test_ssh_executor.gateway_user).to eq 'another_user'
+        expect(test_ssh_executor.ssh_gateway_user).to eq 'another_user'
         {}
       end])
       exit_code, stdout, stderr = run 'ssh_run', '--host-name', 'node', '--command', 'echo Hello', '--gateway-user', 'another_user'
@@ -36,7 +36,7 @@ describe 'executables\' SSH Executor options' do
   it 'selects the correct gateway conf' do
     with_test_platform_for_ssh_executor_options do
       expect_ssh_executor_runs([proc do |actions, timeout: nil, concurrent: false, log_to_dir: 'run_logs', log_to_stdout: true|
-        expect(test_ssh_executor.gateways_conf).to eq :test_gateway2
+        expect(test_ssh_executor.ssh_gateways_conf).to eq :test_gateway2
         {}
       end])
       exit_code, stdout, stderr = run 'ssh_run', '--host-name', 'node', '--command', 'echo Hello', '--gateways-conf', 'test_gateway2'
@@ -49,7 +49,7 @@ describe 'executables\' SSH Executor options' do
   it 'does not use the SSH control master' do
     with_test_platform_for_ssh_executor_options do
       expect_ssh_executor_runs([proc do |actions, timeout: nil, concurrent: false, log_to_dir: 'run_logs', log_to_stdout: true|
-        expect(test_ssh_executor.use_control_master).to eq false
+        expect(test_ssh_executor.ssh_use_control_master).to eq false
         {}
       end])
       exit_code, stdout, stderr = run 'ssh_run', '--host-name', 'node', '--command', 'echo Hello', '--no-ssh-control-master'
@@ -75,7 +75,7 @@ describe 'executables\' SSH Executor options' do
   it 'does not use strict host key checking' do
     with_test_platform_for_ssh_executor_options do
       expect_ssh_executor_runs([proc do |actions, timeout: nil, concurrent: false, log_to_dir: 'run_logs', log_to_stdout: true|
-        expect(test_ssh_executor.strict_host_key_checking).to eq false
+        expect(test_ssh_executor.ssh_strict_host_key_checking).to eq false
         {}
       end])
       exit_code, stdout, stderr = run 'ssh_run', '--host-name', 'node', '--command', 'echo Hello', '--no-ssh-host-key-checking'
@@ -101,7 +101,7 @@ describe 'executables\' SSH Executor options' do
   it 'uses a different SSH user name' do
     with_test_platform_for_ssh_executor_options do
       expect_ssh_executor_runs([proc do |actions, timeout: nil, concurrent: false, log_to_dir: 'run_logs', log_to_stdout: true|
-        expect(test_ssh_executor.ssh_user_name).to eq 'ssh_new_user'
+        expect(test_ssh_executor.ssh_user).to eq 'ssh_new_user'
         {}
       end])
       exit_code, stdout, stderr = run 'ssh_run', '--host-name', 'node', '--command', 'echo Hello', '--ssh-user', 'ssh_new_user'

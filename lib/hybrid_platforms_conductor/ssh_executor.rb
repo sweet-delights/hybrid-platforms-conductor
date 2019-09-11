@@ -7,26 +7,34 @@ require 'hybrid_platforms_conductor/logger_helpers'
 
 module HybridPlatformsConductor
 
-  # Gives ways to execute SSH commands on a list of host names defined in our nodes
+  # Gives ways to execute SSH commands on the nodes
   class SshExecutor
 
     include LoggerHelpers
 
     # Name of the gateway user to be used. [default: ENV['ti_gateway_user'] or ubradm]
     #   String
-    attr_accessor :gateway_user
+    attr_accessor :ssh_gateway_user
 
     # Name of the gateways configuration. [default: ENV['ti_gateways_conf'] or munich]
     #   Symbol
-    attr_accessor :gateways_conf
+    attr_accessor :ssh_gateways_conf
 
     # User name used in SSH connections. [default: ENV['platforms_ssh_user'] or ENV['USER']]
     #   String
-    attr_accessor :ssh_user_name
+    attr_accessor :ssh_user
 
     # Environment variables to be set before each bash commands to execute using ssh. [default: {}]
     #   Hash<String, String>
     attr_accessor :ssh_env
+
+    # Do we use strict host key checking in our SSH commands? [default: true]
+    # Boolean
+    attr_accessor :ssh_strict_host_key_checking
+
+    # Do we use the control master? [default: true]
+    # Boolean
+    attr_accessor :ssh_use_control_master
 
     # Maximum number of threads to spawn in parallel [default: 8]
     #   Integer
@@ -40,17 +48,9 @@ module HybridPlatformsConductor
     # Hash<String, String>
     attr_accessor :override_connections
 
-    # Passwords to be used, per hostname [default: {}]
+    # Passwords to be used, per node [default: {}]
     # Hash<String, String>
     attr_accessor :passwords
-
-    # Do we use strict host key checking in our SSH commands? [default: true]
-    # Boolean
-    attr_accessor :strict_host_key_checking
-
-    # Do we use the control master? [default: true]
-    # Boolean
-    attr_accessor :use_control_master
 
     # Do we expect some connections to require password authentication? [default: false]
     # Boolean
@@ -69,18 +69,18 @@ module HybridPlatformsConductor
       @cmd_runner = cmd_runner
       @nodes_handler = nodes_handler
       # Default values
-      @ssh_user_name = ENV['platforms_ssh_user']
-      @ssh_user_name = ENV['USER'] if @ssh_user_name.nil? || @ssh_user_name.empty?
+      @ssh_user = ENV['platforms_ssh_user']
+      @ssh_user = ENV['USER'] if @ssh_user.nil? || @ssh_user.empty?
       @ssh_env = {}
       @max_threads = 16
       @dry_run = false
-      @use_control_master = true
-      @strict_host_key_checking = true
+      @ssh_use_control_master = true
+      @ssh_strict_host_key_checking = true
       @override_connections = {}
       @passwords = {}
       @auth_password = false
-      @gateways_conf = ENV['ti_gateways_conf'].nil? ? :munich : ENV['ti_gateways_conf'].to_sym
-      @gateway_user = ENV['ti_gateway_user'].nil? ? 'ubradm' : ENV['ti_gateway_user']
+      @ssh_gateways_conf = ENV['ti_gateways_conf'].nil? ? :munich : ENV['ti_gateways_conf'].to_sym
+      @ssh_gateway_user = ENV['ti_gateway_user'].nil? ? 'ubradm' : ENV['ti_gateway_user']
       # Global variables handling the SSH directory storing temporary SSH configuration
       # Those variables are not shared between different instances of SshExecutor as the SSH configuration depends on the SshExecutor configuration.
       @platforms_ssh_dir = nil
@@ -92,11 +92,45 @@ module HybridPlatformsConductor
       @control_master_nodes_semaphore = Mutex.new
     end
 
+    # Complete an option parser with options meant to control this SSH executor
+    #
+    # Parameters::
+    # * *options_parser* (OptionParser): The option parser to complete
+    # * *parallel* (Boolean): Do we activate options regarding parallel execution? [default = true]
+    def options_parse(options_parser, parallel: true)
+      options_parser.separator ''
+      options_parser.separator 'SSH executor options:'
+      options_parser.on('-g', '--gateway-user USER_NAME', "Name of the gateway user to be used by the gateways. Can also be set from environment variable ti_gateway_user. Defaults to #{@ssh_gateway_user}.") do |user_name|
+        @ssh_gateway_user = user_name
+      end
+      options_parser.on('-j', '--no-ssh-control-master', 'If used, don\'t create SSH control masters for connections.') do
+        @ssh_use_control_master = false
+      end
+      options_parser.on('-m', '--max-threads NBR', "Set the number of threads to use for concurrent queries (defaults to #{@max_threads})") do |nbr_threads|
+        @max_threads = nbr_threads.to_i
+      end if parallel
+      options_parser.on('-q', '--no-ssh-host-key-checking', 'If used, don\'t check for SSH host keys.') do
+        @ssh_strict_host_key_checking = false
+      end
+      options_parser.on('-s', '--show-commands', 'Display the SSH commands that would be run instead of running them') do
+        self.dry_run = true
+      end
+      options_parser.on('-u', '--ssh-user USER_NAME', 'Name of user to be used in SSH connections (defaults to platforms_ssh_user or USER environment variables)') do |user_name|
+        @ssh_user = user_name
+      end
+      options_parser.on('-w', '--password', 'If used, then expect SSH connections to ask for a password.') do
+        @auth_password = true
+      end
+      options_parser.on('-y', '--gateways-conf GATEWAYS_CONF_NAME', "Name of the gateways configuration to be used. Can also be set from environment variable ti_gateways_conf. Defaults to #{@ssh_gateways_conf}.") do |gateway|
+        @ssh_gateways_conf = gateway.to_sym
+      end
+    end
+
     # Validate that parsed parameters are valid
     def validate_params
-      raise 'No SSH user name specified. Please use --ssh-user option or platforms_ssh_user environment variable to set it.' if @ssh_user_name.nil? || @ssh_user_name.empty?
+      raise 'No SSH user name specified. Please use --ssh-user option or platforms_ssh_user environment variable to set it.' if @ssh_user.nil? || @ssh_user.empty?
       known_gateways = @nodes_handler.known_gateways
-      raise "Unknown gateway configuration provided: #{@gateways_conf}. Possible values are: #{known_gateways.join(', ')}." unless known_gateways.include?(@gateways_conf)
+      raise "Unknown gateway configuration provided: #{@ssh_gateways_conf}. Possible values are: #{known_gateways.join(', ')}." unless known_gateways.include?(@ssh_gateways_conf)
     end
 
     # Set dry run
@@ -111,64 +145,58 @@ module HybridPlatformsConductor
     # Dump the current configuration for info
     def dump_conf
       out 'SSH executor configuration used:'
-      out " * User: #{@ssh_user_name}"
+      out " * User: #{@ssh_user}"
       out " * Dry run: #{@dry_run}"
-      out " * Use SSH control master: #{@use_control_master}"
+      out " * Use SSH control master: #{@ssh_use_control_master}"
       out " * Max threads used: #{@max_threads}"
-      out " * Gateways configuration: #{@gateways_conf}"
-      out " * Gateway user: #{@gateway_user}"
+      out " * Gateways configuration: #{@ssh_gateways_conf}"
+      out " * Gateway user: #{@ssh_gateway_user}"
       out
     end
 
-    # Run a list of commands on a list of host names.
-    # Prerequisite: Host names are valid in nodes/ directory.
+    # Execute actions on nodes.
     #
     # Parameters::
-    # * *actions_descriptions* (Hash<Object, Hash<Symbol,Object> >): Actions descriptions, per host description.
-    #   See select_nodes for details about possible hosts descriptions.
-    #   Each actions description can have the following attributes:
-    #   * *actions* (Array< Hash<Symbol,Object> > or Hash<Symbol,Object>): List of actions (or 1 single action). See execute_actions_on to know about the API of an action.
-    #   * *env* (Hash<String,String>): Environment to set before executing SSH commands on this host description. [default = {}]
+    # * *actions_per_nodes* (Hash<Object, Hash<Symbol,Object> or Array< Hash<Symbol,Object> >): Actions (as a Hash of actions or a list of Hash), per nodes selector.
+    #   See NodesHandler#select_nodes for details about possible nodes selectors.
+    #   See execute_actions_on to know about the possible action types and data.
     # * *timeout* (Integer): Timeout in seconds, or nil if none. [default: nil]
     # * *concurrent* (Boolean): Do we run the commands in parallel? If yes, then stdout of commands is stored in log files. [default: false]
     # * *log_to_dir* (String): Directory name to store log files. Can be nil to not store log files. [default: 'run_logs']
     # * *log_to_stdout* (Boolean): Do we log the command result on stdout? [default: true]
     # Result::
-    # * Hash<String, [Integer or Symbol, String, String]>: Exit status code (or Symbol in case of error or dry run), standard output and error for each hostname.
-    def run_cmd_on_hosts(actions_descriptions, timeout: nil, concurrent: false, log_to_dir: 'run_logs', log_to_stdout: true)
-      # Compute the ordered list of actions and environment per resolved hostname
-      # Hash< String, { env: Hash<String,String>, actions: Array<[Symbol,Object]> } >
-      actions_per_hostname = {}
-      actions_descriptions.each do |host_desc, host_actions|
+    # * Hash<String, [Integer or Symbol, String, String]>: Exit status code (or Symbol in case of error or dry run), standard output and error for each node.
+    def execute_actions(actions_per_nodes, timeout: nil, concurrent: false, log_to_dir: 'run_logs', log_to_stdout: true)
+      # Compute the ordered list of actions per selected node
+      # Hash< String, Array< [Symbol,      Object     ]> >
+      # Hash< node,   Array< [action_type, action_data]> >
+      actions_per_node = {}
+      actions_per_nodes.each do |nodes_selector, nodes_actions|
         # Resolve actions
-        resolved_host_actions = {
-          actions: [],
-          env: host_actions.key?(:env) ? host_actions[:env] : {}
-        }
-        (host_actions[:actions].is_a?(Array) ? host_actions[:actions] : [host_actions[:actions]]).each do |host_action|
-          host_action.each do |action_type, action_info|
+        resolved_nodes_actions = []
+        (nodes_actions.is_a?(Array) ? nodes_actions : [nodes_actions]).each do |nodes_actions_set|
+          nodes_actions_set.each do |action_type, action_info|
             raise 'Cannot have concurrent executions for interactive sessions' if concurrent && action_type == :interactive && action_info
-            resolved_host_actions[:actions] << [
+            resolved_nodes_actions << [
               action_type,
               action_info
             ]
           end
         end
-        # Resolve hosts
-        @nodes_handler.select_nodes(host_desc).each do |hostname|
-          raise "Hostname #{hostname} has been specified for different actions" if actions_per_hostname.key?(hostname)
-          actions_per_hostname[hostname] = resolved_host_actions
+        # Resolve nodes
+        @nodes_handler.select_nodes(nodes_selector).each do |node|
+          actions_per_node[node] = [] unless actions_per_node.key?(node)
+          actions_per_node[node].concat(resolved_nodes_actions)
         end
       end
-      log_debug "Running actions on #{actions_per_hostname.size} hosts#{log_to_dir.nil? ? '' : " (logs dumped in #{log_to_dir})"}"
-      # Prepare the result (stdout or nil per hostname)
-      result = Hash[actions_per_hostname.keys.map { |hostname| [hostname, nil] }]
-      unless actions_per_hostname.empty?
-        @nodes_handler.for_each_node_in(actions_per_hostname.keys, parallel: concurrent, nbr_threads_max: @max_threads) do |node|
+      log_debug "Running actions on #{actions_per_node.size} nodes#{log_to_dir.nil? ? '' : " (logs dumped in #{log_to_dir})"}"
+      # Prepare the result (stdout or nil per node)
+      result = Hash[actions_per_node.keys.map { |node| [node, nil] }]
+      unless actions_per_node.empty?
+        @nodes_handler.for_each_node_in(actions_per_node.keys, parallel: concurrent, nbr_threads_max: @max_threads) do |node|
           result[node] = execute_actions_on(
             node,
-            actions_per_hostname[node][:actions],
-            ssh_env: actions_per_hostname[node][:env],
+            actions_per_node[node],
             timeout: timeout,
             log_to_file: log_to_dir.nil? ? nil : "#{log_to_dir}/#{node}.stdout",
             log_to_stdout: log_to_stdout
@@ -176,40 +204,6 @@ module HybridPlatformsConductor
         end
       end
       result
-    end
-
-    # Complete an option parser with options meant to control this SSH executor
-    #
-    # Parameters::
-    # * *options_parser* (OptionParser): The option parser to complete
-    # * *parallel* (Boolean): Do we activate options regarding parallel execution? [default = true]
-    def options_parse(options_parser, parallel: true)
-      options_parser.separator ''
-      options_parser.separator 'SSH executor options:'
-      options_parser.on('-g', '--gateway-user USER_NAME', "Name of the gateway user to be used by the gateways. Can also be set from environment variable ti_gateway_user. Defaults to #{@gateway_user}.") do |user_name|
-        @gateway_user = user_name
-      end
-      options_parser.on('-j', '--no-ssh-control-master', 'If used, don\'t create SSH control masters for connections.') do
-        @use_control_master = false
-      end
-      options_parser.on('-m', '--max-threads NBR', "Set the number of threads to use for concurrent queries (defaults to #{@max_threads})") do |nbr_threads|
-        @max_threads = nbr_threads.to_i
-      end if parallel
-      options_parser.on('-q', '--no-ssh-host-key-checking', 'If used, don\'t check for SSH host keys.') do
-        @strict_host_key_checking = false
-      end
-      options_parser.on('-s', '--show-commands', 'Display the SSH commands that would be run instead of running them') do
-        self.dry_run = true
-      end
-      options_parser.on('-u', '--ssh-user USER_NAME', 'Name of user to be used in SSH connections (defaults to platforms_ssh_user or USER environment variables)') do |user_name|
-        @ssh_user_name = user_name
-      end
-      options_parser.on('-w', '--password', 'If used, then expect SSH connections to ask for a password.') do
-        @auth_password = true
-      end
-      options_parser.on('-y', '--gateways-conf GATEWAYS_CONF_NAME', "Name of the gateways configuration to be used. Can also be set from environment variable ti_gateways_conf. Defaults to #{@gateways_conf}.") do |gateway|
-        @gateways_conf = gateway.to_sym
-      end
     end
 
     # Get an SSH configuration content giving access to all nodes of the platforms with the current configuration
@@ -227,17 +221,17 @@ module HybridPlatformsConductor
 # GATEWAYS #
 ############
 
-#{@nodes_handler.known_gateways.include?(@gateways_conf) ? @nodes_handler.ssh_for_gateway(@gateways_conf, ssh_exec: ssh_exec, user: @ssh_user_name) : ''}
+#{@nodes_handler.known_gateways.include?(@ssh_gateways_conf) ? @nodes_handler.ssh_for_gateway(@ssh_gateways_conf, ssh_exec: ssh_exec, user: @ssh_user) : ''}
 
 #############
 # ENDPOINTS #
 #############
 
 Host *
-  User #{@ssh_user_name}
+  User #{@ssh_user}
   # Default control socket path to be used when multiplexing SSH connections
   ControlPath /tmp/hpc_ssh_executor_mux_%h_%p_%r
-  #{@strict_host_key_checking ? '' : 'StrictHostKeyChecking no'}
+  #{@ssh_strict_host_key_checking ? '' : 'StrictHostKeyChecking no'}
   #{known_hosts_file.nil? ? '' : "UserKnownHostsFile #{known_hosts_file}"}
   #{open_ssh_major_version >= 7 ? 'PubkeyAcceptedKeyTypes +ssh-dss' : ''}
 
@@ -275,7 +269,7 @@ Host *
     # This method is re-entrant and reuses the same control masters.
     #
     # Parameters::
-    # * *nodes* (String or Array<String>): The nodes for which we open the Control Master.
+    # * *nodes* (String or Array<String>): The nodes (or single node) for which we open the Control Master.
     # * *timeout* (Integer or nil): Timeout in seconds, or nil if none. [default: nil]
     # * *no_exception* (Boolean): If true, then don't raise any exception in case of impossible connection to the ControlMaster. [default: false]
     # * Proc: Code called while the ControlMaster exists.
@@ -293,11 +287,11 @@ Host *
               unless @nodes_ssh_urls.key?(node)
                 connection, _gateway, _gateway_user = connection_info_for(node)
                 ensure_host_key(connection)
-                ssh_url = "#{@ssh_user_name}@hpc.#{node}"
-                if @use_control_master
+                ssh_url = "#{@ssh_user}@hpc.#{node}"
+                if @ssh_use_control_master
                   # Thanks to the ControlMaster option, connections are reused. So no problem to have several scp and ssh commands later.
                   log_debug "[ ControlMaster - #{node} ] - Starting ControlMaster for connection on #{ssh_url}..."
-                  control_path_file = "/tmp/ssh_executor_mux_#{connection}_22_#{@ssh_user_name}"
+                  control_path_file = "/tmp/ssh_executor_mux_#{connection}_22_#{@ssh_user}"
                   if File.exist?(control_path_file)
                     log_warn "Removing stale SSH control file #{control_path_file}"
                     File.unlink control_path_file
@@ -340,7 +334,7 @@ Host *
     # Provide a bootstrapped ssh executable that includes all the TI SSH config.
     #
     # Parameters::
-    # * CodeBlock: Code called with the given ssh executable to be used to get TI config
+    # * Proc: Code called with the given ssh executable to be used to get TI config
     #   * Parameters::
     #     * *ssh_exec* (String): SSH command to be used
     #     * *ssh_config* (String): SSH configuration file to be used
@@ -394,7 +388,7 @@ Host *
     # Parameters::
     # * *host* (String): The host or IP
     def ensure_host_key(host)
-      if @strict_host_key_checking
+      if @ssh_strict_host_key_checking
         # Get the host key
         exit_status, stdout, _stderr = @cmd_runner.run_cmd "ssh-keyscan #{host}", timeout: TIMEOUT_HOST_KEYS, log_to_stdout: log_debug?, no_exception: true
         if exit_status == 0
@@ -436,7 +430,7 @@ Host *
         ]
       else
         connection, gateway, gateway_user = @nodes_handler.connection_for(node)
-        gateway_user = @gateway_user if !gateway.nil? && gateway_user.nil?
+        gateway_user = @ssh_gateway_user if !gateway.nil? && gateway_user.nil?
         [connection, gateway, gateway_user]
       end
     end
@@ -459,13 +453,12 @@ Host *
       end
     end
 
-    # Execute a list of actions for a node, and give the result to a given block.
-    # Prerequisite: The node exists among the nodes.
+    # Execute a list of actions for a node, and return exit codes, stdout and stderr of those actions.
     #
     # Parameters::
     # * *node* (String): The node
     # * *actions* (Array<[Symbol, Object]>): Ordered list of actions to perform. Each action is identified by an identifier (Symbol) and has associated data.
-    #   1 action can contain several keys (action types), that will be performed in the order of the keys population in the Hash. Here are possible action types:
+    #   Here are the possible action types and their corresponding data:
     #   * *local_bash* (String): Bash commands to be executed locally (not on the node)
     #   * *ruby* (Proc): Ruby code to be executed locally (not on the node):
     #     * Parameters::
@@ -475,20 +468,19 @@ Host *
     #     * *sudo* (Boolean): Do we use sudo to make the copy?
     #     * *owner* (String): Owner to use for files
     #     * *group* (String): Group to use for files
-    #   * *bash* (Array< Hash<Symbol, Object> or Array<String> or String>): List of bash actions to execute. Each action can have the following properties:
+    #   * *remote_bash* (Array< Hash<Symbol, Object> or Array<String> or String>): List of bash actions to execute. Each action can have the following properties:
     #     * *commands* (Array<String> or String): List of bash commands to execute (can be a single one). This is the default property also that allows to not use the Hash form for brevity.
     #     * *file* (String): Name of file from which commands should be taken.
     #     * *env* (Hash<String, String>): Environment variables to be set before executing those commands.
     #   * *interactive* (Boolean): If true, then launch an interactive session.
-    # * *ssh_env* (Hash<String,String>): SSH environment to be set for each SSH session. [default: {}]
     # * *timeout* (Integer): Timeout in seconds, or nil if none. [default: nil]
     # * *log_to_file* (String or nil): Log file capturing stdout and stderr (or nil for none). [default: nil]
     # * *log_to_stdout* (Boolean): Do we send the output to stdout and stderr? [default: true]
     # Result::
     # * Integer or Symbol: Exit status of the last command, or Symbol in case of error
     # * String: Standard output of the commands
-    # * String: Standard error output of the commands (can be a descriptive message of the error in case of error)
-    def execute_actions_on(node, actions, ssh_env: {}, timeout: nil, log_to_file: nil, log_to_stdout: true)
+    # * String: Standard error output of the commands
+    def execute_actions_on(node, actions, timeout: nil, log_to_file: nil, log_to_stdout: true)
       remaining_timeout = timeout
       exit_status = 0
       stdout = ''
@@ -541,12 +533,12 @@ Host *
                 action_stderr.concat copy_action_stderr
               end
             end
-          when :bash
+          when :remote_bash
             # Normalize action_info
             action_info = [action_info] if action_info.is_a?(String)
             action_info = { commands: action_info } if action_info.is_a?(Array)
             action_info[:commands] = [action_info[:commands]] if action_info[:commands].is_a?(String)
-            bash_commands = @ssh_env.merge(ssh_env).merge(action_info[:env] || {}).map { |var_name, var_value| "export #{var_name}='#{var_value}'" }
+            bash_commands = @ssh_env.merge(action_info[:env] || {}).map { |var_name, var_value| "export #{var_name}='#{var_value}'" }
             bash_commands.concat(action_info[:commands].clone) if action_info.key?(:commands)
             bash_commands << File.read(action_info[:file]) if action_info.key?(:file)
             log_debug "[#{node}] - Execute SSH Bash commands \"#{bash_commands.join("\n")}\"..."

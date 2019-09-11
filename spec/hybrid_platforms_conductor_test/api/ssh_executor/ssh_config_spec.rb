@@ -14,7 +14,7 @@ describe HybridPlatformsConductor::SshExecutor do
 
     it 'generates a global configuration with user from setting' do
       with_test_platform do
-        test_ssh_executor.ssh_user_name = 'test_user'
+        test_ssh_executor.ssh_user = 'test_user'
         expect(ssh_config_for(nil)).to eq "Host *
   User test_user
   ControlPath #{Dir.tmpdir}/hpc_ssh_executor_mux_%h_%p_%r
@@ -24,7 +24,7 @@ describe HybridPlatformsConductor::SshExecutor do
 
     it 'generates a global configuration with known hosts file' do
       with_test_platform do
-        test_ssh_executor.ssh_user_name = 'test_user'
+        test_ssh_executor.ssh_user = 'test_user'
         expect(ssh_config_for(nil, known_hosts_file: '/path/to/known_hosts')).to eq "Host *
   User test_user
   ControlPath #{Dir.tmpdir}/hpc_ssh_executor_mux_%h_%p_%r
@@ -35,8 +35,8 @@ describe HybridPlatformsConductor::SshExecutor do
 
     it 'generates a global configuration without strict host key checking' do
       with_test_platform do
-        test_ssh_executor.ssh_user_name = 'test_user'
-        test_ssh_executor.strict_host_key_checking = false
+        test_ssh_executor.ssh_user = 'test_user'
+        test_ssh_executor.ssh_strict_host_key_checking = false
         expect(ssh_config_for(nil)).to eq "Host *
   User test_user
   ControlPath #{Dir.tmpdir}/hpc_ssh_executor_mux_%h_%p_%r
@@ -54,21 +54,21 @@ describe HybridPlatformsConductor::SshExecutor do
 
     it 'includes the gateway definition from setting' do
       with_test_platform({}, false, 'gateway :gateway1, \'Host my_gateway\'') do
-        test_ssh_executor.gateways_conf = :gateway1
+        test_ssh_executor.ssh_gateways_conf = :gateway1
         expect(test_ssh_executor.ssh_config).to match /^Host my_gateway$/
       end
     end
 
     it 'includes the gateway definition with a different ssh executable' do
       with_test_platform({}, false, 'gateway :gateway1, \'Host my_gateway_<%= @ssh_exec %>\'') do
-        test_ssh_executor.gateways_conf = :gateway1
+        test_ssh_executor.ssh_gateways_conf = :gateway1
         expect(test_ssh_executor.ssh_config(ssh_exec: 'new_ssh')).to match /^Host my_gateway_new_ssh$/
       end
     end
 
     it 'does not include the gateway definition if it is not selected' do
       with_test_platform({}, false, 'gateway :gateway2, \'Host my_gateway\'') do
-        test_ssh_executor.gateways_conf = :gateway1
+        test_ssh_executor.ssh_gateways_conf = :gateway1
         expect(test_ssh_executor.ssh_config).not_to match /^Host my_gateway$/
       end
     end
@@ -114,7 +114,7 @@ describe HybridPlatformsConductor::SshExecutor do
 
     it 'uses node default gateway information and user from setting' do
       with_test_platform(nodes: { 'node' => { connection: { connection: 'node_connection', gateway: 'test_gateway' } } }) do
-        test_ssh_executor.gateway_user = 'test_gateway_user'
+        test_ssh_executor.ssh_gateway_user = 'test_gateway_user'
         expect(ssh_config_for('node')).to eq 'Host hpc.node
   Hostname node_connection
   ProxyCommand ssh -q -W %h:%p test_gateway_user@test_gateway'
@@ -131,7 +131,7 @@ describe HybridPlatformsConductor::SshExecutor do
 
     it 'uses node default gateway information with a different ssh executable' do
       with_test_platform(nodes: { 'node' => { connection: { connection: 'node_connection', gateway: 'test_gateway' } } }) do
-        test_ssh_executor.gateway_user = 'test_gateway_user'
+        test_ssh_executor.ssh_gateway_user = 'test_gateway_user'
         expect(ssh_config_for('node', ssh_exec: 'new_ssh')).to eq 'Host hpc.node
   Hostname node_connection
   ProxyCommand new_ssh -q -W %h:%p test_gateway_user@test_gateway'
