@@ -154,7 +154,8 @@ module HybridPlatformsConductor
               error(
                 "Test #{test} was marked to fail (#{expected_failure}) but it succeeded. Please remove it from the expected failures in case the issue has been resolved.",
                 platform: test.platform,
-                node: test.node
+                node: test.node,
+                force_failure: true
               )
             else
               out "Expected failure for #{test} (#{expected_failure}):\n#{test.errors.map { |error| "  - #{error}" }.join("\n")}".yellow
@@ -192,7 +193,7 @@ module HybridPlatformsConductor
         begin
           @reports_plugins[report].new(@logger, @logger_stderr, @nodes_handler, @nodes, @tested_platforms, @tests_run).report
         rescue
-          error "Uncaught exception while producing report #{report}: #{$!}"
+          log_error "Uncaught exception while producing report #{report}: #{$!}"
         end
       end
 
@@ -225,10 +226,11 @@ module HybridPlatformsConductor
     # Parameters::
     # * *message* (String): Error to be logged
     # * *platform* (PlatformHandler or nil): PlatformHandler for a platform's test, or nil for a global or node test [default: nil]
-    # * *node* (String): Node for which the test is instantiated, or nil if global or platform [default = nil]
-    def error(message, platform: nil, node: nil)
+    # * *node* (String): Node for which the test is instantiated, or nil if global or platform [default: nil]
+    # * *force_failure* (Boolean): If true, then ignore expected failures for this error [default: false]
+    def error(message, platform: nil, node: nil, force_failure: false)
       platform = @nodes_handler.platform_for(node) unless node.nil?
-      global_test = new_test(nil, platform: platform, node: node)
+      global_test = new_test(nil, platform: platform, node: node, ignore_expected_failure: force_failure)
       global_test.errors << message
       global_test.executed
       @tests_run << global_test
@@ -240,9 +242,10 @@ module HybridPlatformsConductor
     # * *test_name* (Symbol or nil): Test name to instantiate, or nil for unnamed tests
     # * *platform* (PlatformHandler or nil): PlatformHandler for a platform's test, or nil for a global or node test [default: nil]
     # * *node* (String or nil): Node for a node's test, or nil for a global or platform test [default: nil]
+    # * *ignore_expected_failure* (Boolean): If true, then ignore expected failures for this error [default: false]
     # Result::
     # * Test: Corresponding test
-    def new_test(test_name, platform: nil, node: nil)
+    def new_test(test_name, platform: nil, node: nil, ignore_expected_failure: false)
       platform = @nodes_handler.platform_for(node) unless node.nil?
       (test_name.nil? ? Tests::Test : @tests_plugins[test_name]).new(
         @logger,
@@ -252,7 +255,7 @@ module HybridPlatformsConductor
         name: test_name.nil? ? :global : test_name,
         platform: platform,
         node: node,
-        expected_failure: if platform.nil?
+        expected_failure: if platform.nil? || ignore_expected_failure
                             nil
                           else
                             expected_failures = expected_failures_for(platform)

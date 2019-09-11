@@ -96,30 +96,58 @@
   <tbody>
     <tr>
       <th style="vertical-align: middle;">Nodes list</th>
-      <th style="text-align: center; vertical-align: middle;">Number of nodes</th>
-      <th style="text-align: center; vertical-align: middle;">% tested</th>
-      <th style="text-align: center; vertical-align: middle;">% success</th>
-      <th style="text-align: center; vertical-align: middle;">Nodes in error</th>
+      <th style="text-align: center; vertical-align: middle;">Status</th>
+      <th style="text-align: center; vertical-align: middle;"></th>
     </tr>
     <% nodes_by_nodes_list.each do |nodes_list, nodes_info| %>
       <tr>
         <td style="vertical-align: middle;">
+          <strong><%= nodes_list %></strong>
+          <br/>
           <ac:structured-macro ac:name="status" ac:schema-version="1">
             <ac:parameter ac:name="colour"><%= nodes_info[:tested_nodes_in_error].empty? ? 'Green' : 'Red' %></ac:parameter>
           </ac:structured-macro>
-          <strong><%= nodes_list %></strong>
         </td>
-        <td style="text-align: center; vertical-align: middle;"><%= nodes_info[:nodes].size %></td>
-        <td style="text-align: center; vertical-align: middle;"><%= render_gauge(nodes_info[:nodes].size, nodes_info[:tested_nodes].size) %></td>
-        <td style="text-align: center; vertical-align: middle;"><%= render_gauge(nodes_info[:tested_nodes].size, nodes_info[:tested_nodes].size - nodes_info[:tested_nodes_in_error].size) %></td>
         <td style="text-align: center; vertical-align: middle;">
-          <% unless nodes_info[:tested_nodes_in_error].empty? %>
+          Total: <%= nodes_info[:nodes].size %> (<%= nodes_info[:tested_nodes].size %> tested) / Errors: <%= nodes_info[:tested_nodes_in_error].size %> (<%= nodes_info[:tested_nodes_in_error_as_expected].size %> expected)
+          <br/>
+          <% unless nodes_info[:nodes].empty? %>
+            <table>
+              <tbody>
+                <tr>
+                  <% ((nodes_info[:tested_nodes_in_error_as_expected].size * @nbr_cells_in_status_bars.to_f) / nodes_info[:nodes].size).round.times do %>
+                    <td bgcolor="#FFD351">
+                      <br/>
+                    </td>
+                  <% end %>
+                  <% (((nodes_info[:tested_nodes_in_error].size - nodes_info[:tested_nodes_in_error_as_expected].size).abs * @nbr_cells_in_status_bars.to_f) / nodes_info[:nodes].size).round.times do %>
+                    <td bgcolor="#D04437">
+                      <br/>
+                    </td>
+                  <% end %>
+                  <% (((nodes_info[:tested_nodes].size - nodes_info[:tested_nodes_in_error].size) * @nbr_cells_in_status_bars.to_f) / nodes_info[:nodes].size).round.times do %>
+                    <td bgcolor="#14892C">
+                      <br/>
+                    </td>
+                  <% end %>
+                  <% (((nodes_info[:nodes].size - nodes_info[:tested_nodes].size) * @nbr_cells_in_status_bars.to_f) / nodes_info[:nodes].size).round.times do %>
+                    <td bgcolor="#CCCCCC">
+                      <br/>
+                    </td>
+                  <% end %>
+                </tr>
+              </tbody>
+            </table>
+          <% end %>
+        </td>
+        <td style="text-align: center; vertical-align: middle;">
+          <% unless (nodes_info[:tested_nodes_in_error] - nodes_info[:tested_nodes_in_error_as_expected]).empty? %>
             <ac:structured-macro ac:name="expand" ac:schema-version="1">
-              <ac:parameter ac:name="title">Nodes in error</ac:parameter>
+              <ac:parameter ac:name="title">Unexpected nodes in error</ac:parameter>
               <ac:rich-text-body>
                 <div style="text-align: left;">
                   <ul>
-                    <% nodes_info[:tested_nodes_in_error].sort.each do |node| %>
+                    <% (nodes_info[:tested_nodes_in_error] - nodes_info[:tested_nodes_in_error_as_expected]).sort.each do |node| %>
                       <li><%= node %></li>
                     <% end %>
                   </ul>

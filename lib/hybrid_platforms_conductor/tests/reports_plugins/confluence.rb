@@ -22,16 +22,21 @@ module HybridPlatformsConductor
         # Maximal length of an error message to be reported
         MAX_ERROR_MESSAGE_LENGTH_DISPLAYED = 4096
 
+        # Number of cells in the nodes list's progress status bars
+        NBR_CELLS_IN_STATUS_BARS = 28
+
         # Handle tests reports
         def report
           # Get previous percentages for the evolution
           @previous_success_percentages = confluence_page_storage_format(CONFLUENCE_PAGE_ID).
             at('h1:contains("Evolution")').
-            next_element.css('table td').
+            search('~ structured-macro:first-of-type').
+            css('table td').
             map { |td_element| td_element.text }.
             each_slice(2).
             to_a.
             map { |(time_str, value_str)| [Time.parse("#{time_str} UTC"), value_str.to_f] }
+          @nbr_cells_in_status_bars = NBR_CELLS_IN_STATUS_BARS
           log_error 'Unable to extract previous percentages from Confluence page' if @previous_success_percentages.empty?
           confluence_page_update(CONFLUENCE_PAGE_ID, render('confluence'))
         end
