@@ -1,3 +1,9 @@
+# [8.0.0](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv7.0.1&sourceBranch=refs%2Ftags%2Fv8.0.0) (2019-09-11)
+
+### Breaking changes
+
+* Clean up API of SSH Executor ([8a215ee3](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/commits/8a215ee397360b24be58799d2185c38c7e6a6e9e))
+
 # [7.0.1](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv7.0.0&sourceBranch=refs%2Ftags%2Fv7.0.1) (2019-09-11)
 
 ### Fixes
