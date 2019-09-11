@@ -180,14 +180,14 @@ module HybridPlatformsConductor
       end if plugins_options
     end
 
-    # Deploy for a given list of hosts descriptions
+    # Deploy for a given list of nodes selectors
     #
     # Parameters::
-    # * *hosts_desc* (Array<Object>): The list of hosts descriptions we will deploy to.
+    # * *nodes_selectors* (Array<Object>): The list of nodes selectors we will deploy to.
     # Result::
     # * Hash<String, [Integer or Symbol, String, String]>: Exit status code (or Symbol in case of error or dry run), standard output and error for each hostname that has been deployed.
-    def deploy_for(*hosts_desc)
-      @hosts = @nodes_handler.resolve_hosts(hosts_desc.flatten)
+    def deploy_for(*nodes_selectors)
+      @hosts = @nodes_handler.resolve_hosts(nodes_selectors.flatten)
       # Keep a track of the git origins to be used by each host that takes its package from an artefact repository.
       @git_origins_per_host = {}
       # Keep track of the locations being deployed
@@ -385,7 +385,7 @@ module HybridPlatformsConductor
     end
 
     # Deploy on all the nodes.
-    # Prerequisite: deliver_on_artefacts has been called before.
+    # Prerequisite: deliver_on_artefacts has been called before in case of non-direct deployment.
     #
     # Result::
     # * Hash<String, [Integer or Symbol, String, String]>: Exit status code (or Symbol in case of error or dry run), standard output and error for each hostname.
@@ -415,7 +415,7 @@ module HybridPlatformsConductor
                   },
                   actions: [
                     {
-                      scp: { "#{File.dirname(__FILE__)}/mutex_dir" => '.' },
+                      scp: { "#{__dir__}/mutex_dir" => '.' },
                       bash: "while ! #{@ssh_executor.ssh_user_name == 'root' ? '' : 'sudo '}./mutex_dir lock /tmp/hybrid_platforms_conductor_deploy_lock \"$(ps -o ppid= -p $$)\"; do echo -e 'Another deployment is running on #{hostname}. Waiting for it to finish to continue...' ; sleep 5 ; done"
                     }
                   ] + @nodes_handler.platform_for(hostname).actions_to_deploy_on(hostname, use_why_run: @use_why_run)

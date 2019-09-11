@@ -6,6 +6,7 @@ ssh_executor = executable.ssh_executor
 deployer = executable.deployer
 
 executable.parse_options!
+raise 'No node selected. Please use --host-name option to set at least one.' if executable.selected_nodes.empty?
 
 ssh_executor.dump_conf
 # Deploy all

@@ -34,15 +34,27 @@ module HybridPlatformsConductor
 
     # Do we display SSH commands instead of executing them? [default: false]
     #   Boolean
-    attr_reader :dry_run
+    attr_accessor :dry_run
 
-    # Set of overriding connections: real IP per host name
+    # Set of overriding connections: real IP per node [default: {}]
     # Hash<String, String>
     attr_accessor :override_connections
 
-    # Passwords to be used, per hostname
+    # Passwords to be used, per hostname [default: {}]
     # Hash<String, String>
     attr_accessor :passwords
+
+    # Do we use strict host key checking in our SSH commands? [default: true]
+    # Boolean
+    attr_accessor :strict_host_key_checking
+
+    # Do we use the control master? [default: true]
+    # Boolean
+    attr_accessor :use_control_master
+
+    # Do we expect some connections to require password authentication? [default: false]
+    # Boolean
+    attr_accessor :auth_password
 
     # Constructor
     #
@@ -148,7 +160,7 @@ module HybridPlatformsConductor
           actions_per_hostname[hostname] = resolved_host_actions
         end
       end
-      log_debug "Running actions on #{actions_per_hostname.size} hosts"
+      log_debug "Running actions on #{actions_per_hostname.size} hosts#{log_to_dir.nil? ? '' : " (logs dumped in #{log_to_dir})"}"
       # Prepare the result (stdout or nil per hostname)
       result = Hash[actions_per_hostname.keys.map { |hostname| [hostname, nil] }]
       unless actions_per_hostname.empty?
@@ -174,7 +186,7 @@ module HybridPlatformsConductor
     def options_parse(options_parser, parallel: true)
       options_parser.separator ''
       options_parser.separator 'SSH executor options:'
-      options_parser.on('-g', '--gateway-user USER_NAME', "Name of the gateway user to be used by the XAE gateways (defaults to #{@gateway_user})") do |user_name|
+      options_parser.on('-g', '--gateway-user USER_NAME', "Name of the gateway user to be used by the gateways. Can also be set from environment variable ti_gateway_user. Defaults to #{@gateway_user}.") do |user_name|
         @gateway_user = user_name
       end
       options_parser.on('-j', '--no-ssh-control-master', 'If used, don\'t create SSH control masters for connections.') do
@@ -200,72 +212,6 @@ module HybridPlatformsConductor
       end
     end
 
-    # Get the connection information for a given node accessed using one of its given IPs.
-    # Take into account possible overrides used in tests for example to route connections.
-    #
-    # Parameters::
-    # * *node* (String): The node to access
-    # * *ip* (String or nil): Corresponding IP (can be nil if no IP information given) [default = nil]
-    # Result::
-    # * String: The real hostname or IP to be used to connect
-    # * String or nil: The gateway name to be used (should be defined by the gateways configurations), or nil if no gateway to be used.
-    # * String or nil: The gateway user to be used, or nil if none.
-    def connection_info_for(node, ip = nil)
-      # If we route connections to this node to another IP, use the overriding values
-      if @override_connections.key?(node)
-        [
-          @override_connections[node],
-          nil,
-          nil
-        ]
-      else
-        inventory_connection_info_for(node, ip)
-      end
-    end
-
-    # Provide a bootstrapped ssh executable that includes all the TI SSH config.
-    #
-    # Parameters::
-    # * CodeBlock: Code called with the given ssh executable to be used to get TI config
-    #   * Parameters::
-    #     * *ssh_exec* (String): SSH command to be used
-    #     * *ssh_config* (String): SSH configuration file to be used
-    def with_platforms_ssh
-      begin
-        @platforms_ssh_dir_semaphore.synchronize do
-          if @platforms_ssh_dir.nil?
-            @platforms_ssh_dir = Dir.mktmpdir("platforms_ssh_#{self.object_id}")
-            ssh_conf_file = "#{@platforms_ssh_dir}/ssh_config"
-            ssh_exec_file = "#{@platforms_ssh_dir}/ssh"
-            known_hosts_file = "#{@platforms_ssh_dir}/known_hosts"
-            FileUtils.touch known_hosts_file
-            File.open(ssh_exec_file, 'w+', 0700) do |file|
-              file.puts "#!#{`which env`.strip} bash"
-              # TODO: Make a mechanism that uses sshpass and the correct password only for the correct hostname (this requires parsing ssh parameters $*).
-              # Current implementation is much simpler: it uses sshpass if at least 1 password is needed, and always uses the first password.
-              # So far it is enough for our usage as we intend to use this only when deploying first time using root account, and all root accounts will have the same password.
-              file.puts "#{@passwords.empty? ? '' : "sshpass -p#{@passwords.first[1]} "}ssh -F #{ssh_conf_file} $*"
-            end
-            File.write(ssh_conf_file, ssh_config(ssh_exec: ssh_exec_file, known_hosts_file: known_hosts_file))
-            ENV['hpc_ssh_dir'] = @platforms_ssh_dir
-            dir_created = true
-          end
-          @platforms_ssh_dir_nbr_users += 1
-        end
-        yield "#{@platforms_ssh_dir}/ssh", "#{@platforms_ssh_dir}/ssh_config"
-      ensure
-        @platforms_ssh_dir_semaphore.synchronize do
-          @platforms_ssh_dir_nbr_users -= 1
-          if @platforms_ssh_dir_nbr_users == 0
-            # It's very important to remove the directory as soon as it is useless, as it contains eventual passwords
-            FileUtils.remove_entry @platforms_ssh_dir
-            @platforms_ssh_dir = nil
-            ENV.delete 'hpc_ssh_dir'
-          end
-        end
-      end
-    end
-
     # Get an SSH configuration content giving access to all nodes of the platforms with the current configuration
     #
     # Parameters::
@@ -281,7 +227,7 @@ module HybridPlatformsConductor
 # GATEWAYS #
 ############
 
-#{@nodes_handler.ssh_for_gateway(@gateways_conf, ssh_exec: ssh_exec, user: @ssh_user_name)}
+#{@nodes_handler.known_gateways.include?(@gateways_conf) ? @nodes_handler.ssh_for_gateway(@gateways_conf, ssh_exec: ssh_exec, user: @ssh_user_name) : ''}
 
 #############
 # ENDPOINTS #
@@ -325,46 +271,6 @@ Host *
         end
       end
       config_content
-    end
-
-    # Ensure that a given node has its key correctly set in the known hosts file.
-    # Prerequisite: with_platforms_ssh has been called before.
-    #
-    # Parameters::
-    # * *node* (String): The node
-    def ensure_node_host_key(node)
-      real_ip, _gateway, _gateway_user = connection_info_for(node, @nodes_handler.private_ip_for(node))
-      ensure_host_key(real_ip)
-    end
-
-    # Timeout in seconds to get host keys and update the host keys file.
-    TIMEOUT_HOST_KEYS = 5
-
-    # Ensure that a given hostname or IP has its key correctly set in the known hosts file.
-    # Prerequisite: with_platforms_ssh has been called before.
-    #
-    # Parameters::
-    # * *host* (String): The host or IP
-    def ensure_host_key(host)
-      if @strict_host_key_checking
-        # Get the host key
-        exit_status, stdout, _stderr = @cmd_runner.run_cmd "ssh-keyscan #{host}", timeout: TIMEOUT_HOST_KEYS, log_to_stdout: log_debug?, no_exception: true
-        if exit_status == 0
-          @platforms_ssh_dir_semaphore.synchronize do
-            known_hosts_file = "#{@platforms_ssh_dir}/known_hosts"
-            # Remove the previous eventually
-            @cmd_runner.run_cmd "ssh-keygen -R #{host} -f #{known_hosts_file}", timeout: TIMEOUT_HOST_KEYS, log_to_stdout: log_debug?
-            # Add the new one
-            host_key = stdout.strip
-            log_debug "Add new key for #{host} in #{known_hosts_file}: #{host_key}"
-            File.open(known_hosts_file, 'a') do |file|
-              file.puts host_key
-            end
-          end
-        else
-          log_warn "Unable to get host key for #{host}. Ignoring it. Accessing #{host} might require manual acceptance of its host key."
-        end
-      end
     end
 
     # Open an SSH control master to multiplex connections to a given list of nodes.
@@ -433,7 +339,118 @@ Host *
       end
     end
 
+    # Provide a bootstrapped ssh executable that includes all the TI SSH config.
+    #
+    # Parameters::
+    # * CodeBlock: Code called with the given ssh executable to be used to get TI config
+    #   * Parameters::
+    #     * *ssh_exec* (String): SSH command to be used
+    #     * *ssh_config* (String): SSH configuration file to be used
+    def with_platforms_ssh
+      begin
+        @platforms_ssh_dir_semaphore.synchronize do
+          if @platforms_ssh_dir.nil?
+            @platforms_ssh_dir = Dir.mktmpdir("platforms_ssh_#{self.object_id}")
+            ssh_conf_file = "#{@platforms_ssh_dir}/ssh_config"
+            ssh_exec_file = "#{@platforms_ssh_dir}/ssh"
+            known_hosts_file = "#{@platforms_ssh_dir}/known_hosts"
+            unless @passwords.empty?
+              # Check that sshpass is installed correctly
+              exit_code, _stdout, _stderr = @cmd_runner.run_cmd 'sshpass -V', no_exception: true
+              raise 'sshpass is not installed. Can\'t use automatic passwords handling without it. Please install it.' unless exit_code == 0
+            end
+            FileUtils.touch known_hosts_file
+            File.open(ssh_exec_file, 'w+', 0700) do |file|
+              file.puts "#!#{`which env`.strip} bash"
+              # TODO: Make a mechanism that uses sshpass and the correct password only for the correct hostname (this requires parsing ssh parameters $*).
+              # Current implementation is much simpler: it uses sshpass if at least 1 password is needed, and always uses the first password.
+              # So far it is enough for our usage as we intend to use this only when deploying first time using root account, and all root accounts will have the same password.
+              file.puts "#{@passwords.empty? ? '' : "sshpass -p#{@passwords.first[1]} "}ssh -F #{ssh_conf_file} $*"
+            end
+            File.write(ssh_conf_file, ssh_config(ssh_exec: ssh_exec_file, known_hosts_file: known_hosts_file))
+            ENV['hpc_ssh_dir'] = @platforms_ssh_dir
+            dir_created = true
+          end
+          @platforms_ssh_dir_nbr_users += 1
+        end
+        yield "#{@platforms_ssh_dir}/ssh", "#{@platforms_ssh_dir}/ssh_config"
+      ensure
+        @platforms_ssh_dir_semaphore.synchronize do
+          @platforms_ssh_dir_nbr_users -= 1
+          if @platforms_ssh_dir_nbr_users == 0
+            # It's very important to remove the directory as soon as it is useless, as it contains eventual passwords
+            FileUtils.remove_entry @platforms_ssh_dir
+            @platforms_ssh_dir = nil
+            ENV.delete 'hpc_ssh_dir'
+          end
+        end
+      end
+    end
+
+    # Timeout in seconds to get host keys and update the host keys file.
+    TIMEOUT_HOST_KEYS = 5
+
+    # Ensure that a given hostname or IP has its key correctly set in the known hosts file.
+    # Prerequisite: with_platforms_ssh has been called before.
+    #
+    # Parameters::
+    # * *host* (String): The host or IP
+    def ensure_host_key(host)
+      if @strict_host_key_checking
+        # Get the host key
+        exit_status, stdout, _stderr = @cmd_runner.run_cmd "ssh-keyscan #{host}", timeout: TIMEOUT_HOST_KEYS, log_to_stdout: log_debug?, no_exception: true
+        if exit_status == 0
+          @platforms_ssh_dir_semaphore.synchronize do
+            known_hosts_file = "#{@platforms_ssh_dir}/known_hosts"
+            # Remove the previous eventually
+            @cmd_runner.run_cmd "ssh-keygen -R #{host} -f #{known_hosts_file}", timeout: TIMEOUT_HOST_KEYS, log_to_stdout: log_debug?
+            # Add the new one
+            host_key = stdout.strip
+            log_debug "Add new key for #{host} in #{known_hosts_file}: #{host_key}"
+            File.open(known_hosts_file, 'a') do |file|
+              file.puts host_key
+            end
+          end
+        else
+          log_warn "Unable to get host key for #{host}. Ignoring it. Accessing #{host} might require manual acceptance of its host key."
+        end
+      end
+    end
+
+    # Ensure that a given node has its key correctly set in the known hosts file.
+    # Prerequisite: with_platforms_ssh has been called before.
+    #
+    # Parameters::
+    # * *node* (String): The node
+    def ensure_node_host_key(node)
+      real_ip, _gateway, _gateway_user = connection_info_for(node, @nodes_handler.private_ip_for(node))
+      ensure_host_key(real_ip)
+    end
+
     private
+
+    # Get the connection information for a given node accessed using one of its given IPs.
+    # Take into account possible overrides used in tests for example to route connections.
+    #
+    # Parameters::
+    # * *node* (String): The node to access
+    # * *ip* (String or nil): Corresponding IP (can be nil if no IP information given) [default = nil]
+    # Result::
+    # * String: The real hostname or IP to be used to connect
+    # * String or nil: The gateway name to be used (should be defined by the gateways configurations), or nil if no gateway to be used.
+    # * String or nil: The gateway user to be used, or nil if none.
+    def connection_info_for(node, ip = nil)
+      # If we route connections to this node to another IP, use the overriding values
+      if @override_connections.key?(node)
+        [
+          @override_connections[node],
+          nil,
+          nil
+        ]
+      else
+        inventory_connection_info_for(node, ip)
+      end
+    end
 
     # Get the connection information for a given node accessed using one of its given IPs.
     #
@@ -445,7 +462,8 @@ Host *
     # * String or nil: The gateway name to be used (should be defined by the gateways configurations), or nil if no gateway to be used.
     # * String or nil: The gateway user to be used, or nil if none.
     def inventory_connection_info_for(node, ip = nil)
-      connection_settings = @nodes_handler.site_meta_for(node)['connection_settings']
+      site_meta = @nodes_handler.site_meta_for(node)
+      connection_settings = site_meta.nil? ? nil : site_meta['connection_settings']
       gateway, gateway_user =
         if connection_settings && connection_settings.key?('gateway')
           [
@@ -493,8 +511,9 @@ Host *
     #   1 action can contain several keys (action types), that will be performed in the order of the keys population in the Hash. Here are possible action types:
     #   * *local_bash* (String): Bash commands to be executed locally (not on the node)
     #   * *ruby* (Proc): Ruby code to be executed locally (not on the node):
-    #     * *stdout* (IO): Stream in which stdout of this action can be completed
-    #     * *stderr* (IO): Stream in which stderr of this action can be completed
+    #     * Parameters::
+    #       * *stdout* (IO): Stream in which stdout of this action can be completed
+    #       * *stderr* (IO): Stream in which stderr of this action can be completed
     #   * *scp* (Hash<String or Symbol, String or Object>): Set of couples source => destination_dir to copy files or directories from the local file system to the remote file system. Additional options can be provided using symbols:
     #     * *sudo* (Boolean): Do we use sudo to make the copy?
     #     * *owner* (String): Owner to use for files
@@ -502,7 +521,7 @@ Host *
     #   * *bash* (Array< Hash<Symbol, Object> or Array<String> or String>): List of bash actions to execute. Each action can have the following properties:
     #     * *commands* (Array<String> or String): List of bash commands to execute (can be a single one). This is the default property also that allows to not use the Hash form for brevity.
     #     * *file* (String): Name of file from which commands should be taken.
-    #     * *env* (Hash<String, String>): Environment variables to be set befre executing those commands.
+    #     * *env* (Hash<String, String>): Environment variables to be set before executing those commands.
     #   * *interactive* (Boolean): If true, then launch an interactive session.
     # * *ssh_env* (Hash<String,String>): SSH environment to be set for each SSH session. [default: {}]
     # * *timeout* (Integer): Timeout in seconds, or nil if none. [default: nil]
@@ -534,12 +553,19 @@ Host *
               log_to_stdout: log_to_stdout
             )
           when :ruby
-            log_debug "[#{node}] - Execute local Ruby commands \"#{action_info}\"..."
+            log_debug "[#{node}] - Execute local Ruby code #{action_info}..."
             # TODO: Handle timeout without using Timeout which is harmful when dealing with SSH connections and multithread.
             if @dry_run
               log_debug "[#{node}] - Won't execute Ruby code in dry_run mode."
             else
               action_info.call action_stdout, action_stderr
+              if log_to_file
+                FileUtils.mkdir_p File.dirname(log_to_file)
+                File.open(log_to_file, 'a') do |log_file|
+                  log_file.puts action_stdout unless action_stdout.empty?
+                  log_file.puts action_stderr unless action_stderr.empty?
+                end
+              end
             end
           when :scp
             sudo = action_info.delete(:sudo)
@@ -562,9 +588,10 @@ Host *
             # Normalize action_info
             action_info = [action_info] if action_info.is_a?(String)
             action_info = { commands: action_info } if action_info.is_a?(Array)
+            action_info[:commands] = [action_info[:commands]] if action_info[:commands].is_a?(String)
             bash_commands = @ssh_env.merge(ssh_env).merge(action_info[:env] || {}).map { |var_name, var_value| "export #{var_name}='#{var_value}'" }
             bash_commands.concat(action_info[:commands].clone) if action_info.key?(:commands)
-            bash_commands.concat(File.read(action_info[:file])) if action_info.key?(:file)
+            bash_commands << File.read(action_info[:file]) if action_info.key?(:file)
             log_debug "[#{node}] - Execute SSH Bash commands \"#{bash_commands.join("\n")}\"..."
             with_ssh_master_to(node, timeout: remaining_timeout) do |ssh_exec, ssh_urls|
               action_exit_status, action_stdout, action_stderr = @cmd_runner.run_cmd(
@@ -599,6 +626,9 @@ Host *
       rescue CmdRunner::UnexpectedExitCodeError
         # Error has already been logged in stderr
         exit_status = :failed_command
+      rescue CmdRunner::TimeoutError
+        # Error has already been logged in stderr
+        exit_status = :timeout
       rescue
         log_error "Uncaught exception while executing actions on #{node}: #{$!}\n#{$!.backtrace.join("\n")}"
         stderr.concat "#{$!}\n"

@@ -23,10 +23,8 @@ module HybridPlatformsConductor
       # Parameters::
       # * *hosts* (Array<String>): List of hosts
       # * *locale_code* (Symbol): The locale code
-      # Result::
-      # * String: The report
       def report_for(hosts, locale_code)
-        puts(Terminal::Table.new(headings: [
+        out(Terminal::Table.new(headings: [
           'Node name',
           'Platform',
           'Private IPs',

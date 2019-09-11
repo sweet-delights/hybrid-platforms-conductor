@@ -32,8 +32,6 @@ module HybridPlatformsConductor
       # Parameters::
       # * *hosts* (Array<String>): List of hosts
       # * *locale_code* (Symbol): The locale code
-      # Result::
-      # * String: The report
       def report_for(hosts, locale_code)
         # This method simply returns the report for a given list of hostnames in the desired locale.
         # The locale will be one of the supported ones.
@@ -51,7 +49,7 @@ module HybridPlatformsConductor
             output << @nodes_handler.site_meta_for(hostname).to_s
           end
         end
-        output
+        out output
       end
 
     end

@@ -3,15 +3,15 @@ require 'time'
 require 'terminal-table'
 require 'hybrid_platforms_conductor/executable'
 
-POSSIBLE_STRING_SORTS = [
+possible_string_sorts = [
   :admin,
   :repo_name,
   :commit_comment
 ]
-POSSIBLE_SORTS = {
+possible_sorts = {
   datetime: proc { |hostname, deploy_info| [deploy_info.key?(:error) || !deploy_info.key?(:datetime) ? 0 : deploy_info[:datetime].strftime('%Y%m%d%H%M%S').to_i, hostname] },
   host: proc { |hostname, _deploy_info| hostname },
-}.merge(Hash[POSSIBLE_STRING_SORTS.map do |property_name|
+}.merge(Hash[possible_string_sorts.map do |property_name|
   [
     property_name,
     proc { |hostname, deploy_info| [deploy_info.key?(:error) || !deploy_info.key?(property_name) ? '' : deploy_info[property_name], hostname] }
@@ -21,7 +21,7 @@ end])
 sort_by = :host
 sort_desc = false
 executable = HybridPlatformsConductor::Executable.new do |opts|
-  opts.on('-r', '--sort-by SORT', "Specify a sort. Possible values are: #{POSSIBLE_SORTS.keys.sort.join(', ')}. Each value can append _desc to specify a reverse sorting. Defaults to #{sort_by}.") do |sort_name|
+  opts.on('-r', '--sort-by SORT', "Specify a sort. Possible values are: #{possible_sorts.keys.sort.join(', ')}. Each value can append _desc to specify a reverse sorting. Defaults to #{sort_by}.") do |sort_name|
     if sort_name =~ /^(.+)_desc$/
       sort_desc = true
       sort_name = $1
@@ -34,11 +34,12 @@ ssh_executor = executable.ssh_executor
 ssh_executor.max_threads = 64
 
 executable.parse_options!
-raise "Unknown sort name: #{sort_by}. Should be one of #{POSSIBLE_SORTS.keys.join(', ')}." unless POSSIBLE_SORTS.key?(sort_by)
+raise "Unknown sort name: #{sort_by}. Should be one of #{possible_sorts.keys.join(', ')}." unless possible_sorts.key?(sort_by)
+nodes = executable.selected_nodes.empty? ? [{ all: true }] : executable.selected_nodes
 
 sorted_deploy_info = Hash[ssh_executor.
   run_cmd_on_hosts(
-    Hash[nodes_handler.resolve_hosts(executable.selected_nodes).map do |hostname|
+    Hash[nodes_handler.resolve_hosts(nodes).map do |hostname|
       [
         hostname,
         { actions: { bash: "cd /var/log/deployments && ls -t | head -1 | xargs sed '/===== STDOUT =====/q'" } }
@@ -103,9 +104,9 @@ sorted_deploy_info = Hash[ssh_executor.
       deploy_info
     ]
   end
-].sort_by(&POSSIBLE_SORTS[sort_by])
+].sort_by(&possible_sorts[sort_by])
 sorted_deploy_info.reverse! if sort_desc
-INFO_DISPLAYED = {
+info_displayed = {
   host: 'Hostname',
   datetime: 'Date',
   admin: 'Admin',
@@ -116,8 +117,8 @@ INFO_DISPLAYED = {
   nbr_diff_files: 'Differing files',
   error: 'Error'
 }
-executable.out(Terminal::Table.new(headings: INFO_DISPLAYED.values) do |table|
+executable.out(Terminal::Table.new(headings: info_displayed.values) do |table|
   sorted_deploy_info.each do |hostname, deploy_info|
-    table << INFO_DISPLAYED.keys.map { |key| deploy_info[key] }
+    table << info_displayed.keys.map { |key| deploy_info[key] }
   end
 end)

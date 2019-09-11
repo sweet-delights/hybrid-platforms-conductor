@@ -9,6 +9,9 @@ module HybridPlatformsConductor
     class UnexpectedExitCodeError < StandardError
     end
 
+    class TimeoutError < StandardError
+    end
+
     include LoggerHelpers
 
     # Return the executables prefix to use to execute commands
@@ -115,7 +118,7 @@ module HybridPlatformsConductor
           error_desc << "---------- COMMAND ----------\n#{cmd}\n" if log_debug?
           error_desc << "---------- STDOUT ----------\n#{cmd_stdout.strip}\n---------- STDERR ----------\n#{cmd_stderr.strip}\n-------------------------"
           log_error "#{error_title}\n#{error_desc}"
-          raise UnexpectedExitCodeError, error_title unless no_exception
+          raise exit_status == :timeout ? TimeoutError : UnexpectedExitCodeError, error_title unless no_exception
         end
         return exit_status, cmd_stdout, cmd_stderr
       end

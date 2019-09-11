@@ -12,6 +12,18 @@ module HybridPlatformsConductor
 
     include LoggerHelpers
 
+    # List of tests to execute [default: []]
+    # Array<Symbol>
+    attr_accessor :tests
+
+    # List of reports to use [default: []]
+    # Array<Symbol>
+    attr_accessor :reports
+
+    # Do we skip running check-node? [default: false]
+    # Boolean
+    attr_accessor :skip_run
+
     # Constructor
     #
     # Parameters::
@@ -30,7 +42,7 @@ module HybridPlatformsConductor
       # The list of tests plugins, with their associated class
       # Hash< Symbol, Class >
       @tests_plugins = Hash[Dir.
-        glob("#{File.dirname(__FILE__)}/tests/plugins/*.rb").
+        glob("#{__dir__}/tests/plugins/*.rb").
         map do |file_name|
           test_name = File.basename(file_name)[0..-4].to_sym
           require file_name
@@ -42,7 +54,7 @@ module HybridPlatformsConductor
       # The list of tests reports plugins, with their associated class
       # Hash< Symbol, Class >
       @reports_plugins = Hash[Dir.
-        glob("#{File.dirname(__FILE__)}/tests/reports_plugins/*.rb").
+        glob("#{__dir__}/tests/reports_plugins/*.rb").
         map do |file_name|
           plugin_name = File.basename(file_name)[0..-4].to_sym
           require file_name
@@ -434,9 +446,11 @@ module HybridPlatformsConductor
       tests_for_check_node = @tests.select { |test_name| @tests_plugins[test_name].method_defined?(:test_on_check_node) }.sort
       unless tests_for_check_node.empty?
         section "Run check-nodes tests #{tests_for_check_node.join(', ')}" do
+          # Compute the real list of hstnames that need check-node to be run, considering the filtering done by should_test_be_run_on.
+          nodes_to_test = @hostnames.select { |node| tests_for_check_node.any? { |test_name| should_test_be_run_on(test_name, node: node) } }
           outputs =
             if @skip_run
-              Hash[@hostnames.map do |hostname|
+              Hash[nodes_to_test.map do |hostname|
                 run_log_file_name = "./run_logs/#{hostname}.stdout"
                 [
                   hostname,
@@ -450,7 +464,7 @@ module HybridPlatformsConductor
               @deployer.use_why_run = true
               @deployer.force_direct_deploy = true
               @deployer.timeout = CHECK_NODE_TIMEOUT
-              @deployer.deploy_for(@hostnames)
+              @deployer.deploy_for(nodes_to_test)
             end
           # Analyze output
           outputs.each do |hostname, (exit_status, stdout, stderr)|

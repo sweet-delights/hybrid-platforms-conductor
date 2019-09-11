@@ -25,6 +25,7 @@ The way it works is by having a simple configuration file having an extensive DS
   * [Using secrets](#secrets)
   * [Development API](#development_api)
   * [Extending Hybrid Platforms Conductor features](#extending)
+  * [Development corner](#development_corner)
 
 <a name="requirements"></a>
 # Requirements to use it
@@ -110,6 +111,19 @@ gem 'hybrid_platforms_conductor'
 gem 'hybrid_platforms_conductor-chef'
 ```
 
+Example of `Gemfile` using My_company' Artifactory and versioning:
+```ruby
+source 'http://rubygems.org'
+
+source 'http://my.artefacts.my_company.net/gem-production/' do
+  # To operate the platforms
+  gem 'hybrid_platforms_conductor', '~> 6.8'
+  # Add all the plugin gems that are needed to operate platforms defined in platforms.rb
+  gem 'hybrid_platforms_conductor-chef', '~> 2.1'
+  gem 'hybrid_platforms_conductor-ansible', '~> 1.2'
+end
+```
+
 Example of `platforms.rb`:
 ```ruby
 # Define the known platforms
@@ -139,12 +153,16 @@ Host gw.data.ti
   Hostname 192.168.190.9
   ProxyCommand <%= @ssh_exec %> -W %h:%p my.gateway.com
 '
+
+# Define images that are referenced by the platforms inventory
+docker_image :centos, '/path/to/centos/docker_image'
 ```
 
 `platforms.rb` file is a Ruby file that can use all public methods of [this file](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/browse/lib/hybrid_platforms_conductor/platforms_dsl.rb), as a DSL.
 In particular the following methods are important:
 * `<platform_type>_platform`: Used to declare a new platform, providing either a local path to it (using `path: '/path/to/files'`) or a git repository to it (using `git: 'git_url'`).
 * `gateway`: Used to declare a new gateway, with 2 parameters: its name (as a Symbol) and its SSH configuration (as a String).
+* `docker_image`: Used to declare a new image, with its corresponding path containing a Docker file (used to instantiate test Docker containers for nodes using this image). It takes 2 parameters: its name (as a Symbol) and its directory path (as a String).
 * `hybrid_platforms_dir`: Used to get the directory in which the `platforms.rb` file is stored.
 
 ## 2. Install dependencies
@@ -219,7 +237,7 @@ Nodes selection options:
 
 SSH executor options:
     -d, --debug                      Activate verbose logs
-    -g, --gateway-user USER_NAME     Name of the gateway user to be used by the XAE gateways (defaults to ubradm)
+    -g, --gateway-user USER_NAME     Name of the gateway user to be used by the gateways. Can also be set from environment variable ti_gateway_user. Defaults to ubradm.
     -m, --max-threads NBR            Set the number of threads to use for concurrent queries (defaults to 16)
     -s, --show-commands              Display the SSH commands that would be run instead of running them
     -u, --ssh-user USER_NAME         Name of user to be used in SSH connections (defaults to platforms_ssh_user or USER environment variables)
@@ -268,7 +286,7 @@ Nodes handler options:
 
 SSH executor options:
     -d, --debug                      Activate verbose logs
-    -g, --gateway-user USER_NAME     Name of the gateway user to be used by the XAE gateways (defaults to ubradm)
+    -g, --gateway-user USER_NAME     Name of the gateway user to be used by the gateways. Can also be set from environment variable ti_gateway_user. Defaults to ubradm.
     -s, --show-commands              Display the SSH commands that would be run instead of running them
     -u, --ssh-user USER_NAME         Name of user to be used in SSH connections (defaults to platforms_ssh_user or USER environment variables)
     -w, --password                   If used, then expect SSH connections to ask for a password.
@@ -376,7 +394,7 @@ Nodes selection options:
 
 SSH executor options:
     -d, --debug                      Activate verbose logs
-    -g, --gateway-user USER_NAME     Name of the gateway user to be used by the XAE gateways (defaults to ubradm)
+    -g, --gateway-user USER_NAME     Name of the gateway user to be used by the gateways. Can also be set from environment variable ti_gateway_user. Defaults to ubradm.
     -m, --max-threads NBR            Set the number of threads to use for concurrent queries (defaults to 16)
     -s, --show-commands              Display the SSH commands that would be run instead of running them
     -u, --ssh-user USER_NAME         Name of user to be used in SSH connections (defaults to platforms_ssh_user or USER environment variables)
@@ -506,7 +524,7 @@ Nodes selection options:
 
 SSH executor options:
     -d, --debug                      Activate verbose logs
-    -g, --gateway-user USER_NAME     Name of the gateway user to be used by the XAE gateways (defaults to ubradm)
+    -g, --gateway-user USER_NAME     Name of the gateway user to be used by the gateways. Can also be set from environment variable ti_gateway_user. Defaults to ubradm.
     -m, --max-threads NBR            Set the number of threads to use for concurrent queries (defaults to 16)
     -s, --show-commands              Display the SSH commands that would be run instead of running them
     -u, --ssh-user USER_NAME         Name of user to be used in SSH connections (defaults to platforms_ssh_user or USER environment variables)
@@ -571,7 +589,7 @@ Nodes handler options:
 
 SSH executor options:
     -d, --debug                      Activate verbose logs
-    -g, --gateway-user USER_NAME     Name of the gateway user to be used by the XAE gateways (defaults to ubradm)
+    -g, --gateway-user USER_NAME     Name of the gateway user to be used by the gateways. Can also be set from environment variable ti_gateway_user. Defaults to ubradm.
     -s, --show-commands              Display the SSH commands that would be run instead of running them
     -u, --ssh-user USER_NAME         Name of user to be used in SSH connections (defaults to platforms_ssh_user or USER environment variables)
     -w, --password                   If used, then expect SSH connections to ask for a password.
@@ -835,7 +853,7 @@ Nodes selection options:
 
 SSH executor options:
     -d, --debug                      Activate verbose logs
-    -g, --gateway-user USER_NAME     Name of the gateway user to be used by the XAE gateways (defaults to ubradm)
+    -g, --gateway-user USER_NAME     Name of the gateway user to be used by the gateways. Can also be set from environment variable ti_gateway_user. Defaults to ubradm.
     -m, --max-threads NBR            Set the number of threads to use for concurrent queries (defaults to 64)
     -s, --show-commands              Display the SSH commands that would be run instead of running them
     -u, --ssh-user USER_NAME         Name of user to be used in SSH connections (defaults to platforms_ssh_user or USER environment variables)
@@ -902,7 +920,7 @@ JSON dump options:
 
 SSH executor options:
     -d, --debug                      Activate verbose logs
-    -g, --gateway-user USER_NAME     Name of the gateway user to be used by the XAE gateways (defaults to ubradm)
+    -g, --gateway-user USER_NAME     Name of the gateway user to be used by the gateways. Can also be set from environment variable ti_gateway_user. Defaults to ubradm.
     -m, --max-threads NBR            Set the number of threads to use for concurrent queries (defaults to 16)
     -s, --show-commands              Display the SSH commands that would be run instead of running them
     -u, --ssh-user USER_NAME         Name of user to be used in SSH connections (defaults to platforms_ssh_user or USER environment variables)
@@ -976,7 +994,7 @@ Nodes handler options:
 
 SSH executor options:
     -d, --debug                      Activate verbose logs
-    -g, --gateway-user USER_NAME     Name of the gateway user to be used by the XAE gateways (defaults to ubradm)
+    -g, --gateway-user USER_NAME     Name of the gateway user to be used by the gateways. Can also be set from environment variable ti_gateway_user. Defaults to ubradm.
     -m, --max-threads NBR            Set the number of threads to use for concurrent queries (defaults to 16)
     -s, --show-commands              Display the SSH commands that would be run instead of running them
     -u, --ssh-user USER_NAME         Name of user to be used in SSH connections (defaults to platforms_ssh_user or USER environment variables)
@@ -1056,7 +1074,7 @@ Nodes selection options:
 
 SSH executor options:
     -d, --debug                      Activate verbose logs
-    -g, --gateway-user USER_NAME     Name of the gateway user to be used by the XAE gateways (defaults to ubradm)
+    -g, --gateway-user USER_NAME     Name of the gateway user to be used by the gateways. Can also be set from environment variable ti_gateway_user. Defaults to ubradm.
     -m, --max-threads NBR            Set the number of threads to use for concurrent queries (defaults to 64)
     -s, --show-commands              Display the SSH commands that would be run instead of running them
     -u, --ssh-user USER_NAME         Name of user to be used in SSH connections (defaults to platforms_ssh_user or USER environment variables)
@@ -1241,7 +1259,7 @@ The SSH Executor options are used to drive how SSH commands are executed.
 ```
 SSH executor options:
     -d, --debug                      Activate verbose logs
-    -g, --gateway-user USER_NAME     Name of the gateway user to be used by the XAE gateways (defaults to ubradm)
+    -g, --gateway-user USER_NAME     Name of the gateway user to be used by the gateways. Can also be set from environment variable ti_gateway_user. Defaults to ubradm.
     -m, --max-threads NBR            Set the number of threads to use for concurrent queries (defaults to 64)
     -s, --show-commands              Display the SSH commands that would be run instead of running them
     -u, --ssh-user USER_NAME         Name of user to be used in SSH connections (defaults to platforms_ssh_user or USER environment variables)
@@ -1673,3 +1691,25 @@ This is done by adding files in the `./lib/hybrid_platforms_conductor/topographe
 Once new files are present in this directory, then the `topographer` executable is already able to use them, without further configuration.
 
 You can take topographer plugin content directly from the [topographer plugin sample file](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/browse/lib/hybrid_platforms_conductor/topographer/plugins/my_topographer_output_plugin.rb.sample), and adapt it.
+
+<a name="development_corner"></a>
+# Development corner
+
+## Development workflow
+
+Contributing to Hybrid Platforms Conductor is done using simple Pull Requests against the `master` branch of the [Bitbucket main repository](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/).
+Don't forget to add `[Feature]` or `[Breaking]` into your git commit comment (first line) if a commit adds a feature or breaks an existing feature, as this is used to apply automatically sematic versioning.
+
+The detailed development workflow can be found on [Confluence](https://www.site.my_company.net/documentation).
+
+## Continuous Integration and deliverables
+
+[Our CI](http://my_ci.domain.my_company.net/job/PROJECTjob/hybrid_platforms_conductor/) autonmatically catches on new PR merges and publishes a semantically versioned Rubygem on [Artifactory](http://my.artefacts.my_company.net/gem-production/gems/).
+
+## Tests
+
+The whole tests suite can be run by using `bundle exec rspec`.
+
+A subset of tests (or even a single test) can be run by using a part of their name this way: `bundle exec rspec -e "HybridPlatformsConductor::Deployer checking the docker images provisioning"`
+
+To enable debugging logs during tests run, set the environment variable `TEST_DEBUG` to `1`: `TEST_DEBUG=1 bundle exec rspec -e "HybridPlatformsConductor::Deployer checking the docker images provisioning"`

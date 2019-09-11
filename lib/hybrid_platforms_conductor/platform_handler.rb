@@ -25,11 +25,13 @@ module HybridPlatformsConductor
     #
     # Parameters::
     # * *logger* (Logger): Logger to be used
+    # * *logger_stderr* (Logger): Logger to be used for stderr
     # * *platform_type* (Symbol): Platform type
     # * *repository_path* (String): Repository path
     # * *nodes_handler* (NodesHandler): Nodes handler that can be used to get info about nodes.
-    def initialize(logger, platform_type, repository_path, nodes_handler)
+    def initialize(logger, logger_stderr, platform_type, repository_path, nodes_handler)
       @logger = logger
+      @logger_stderr = logger_stderr
       @platform_type = platform_type
       @repository_path = repository_path
       @nodes_handler = nodes_handler
@@ -58,28 +60,40 @@ module HybridPlatformsConductor
     def info
       # Keep info in a memory cache, so that we don't query git for nothing
       unless defined?(@info)
-        git = Git.open(@repository_path)
-        git_status = git.status
-        git_commit = git.log.first
-        @info = {
-          repo_name: File.basename(git.remotes.first.url).gsub(/\.git$/, ''),
-          commit: {
-            id: git_commit.sha,
-            ref: git_commit.name,
-            message: git_commit.message,
-            date: git_commit.date.utc,
-            author: {
-              name: git_commit.author.name,
-              email: git_commit.author.email
+        git = nil
+        begin
+          git = Git.open(@repository_path)
+        rescue
+          log_warn "Platform #{@repository_path} is not a git repository"
+        end
+        @info =
+          if git
+            git_status = git.status
+            git_commit = git.log.first
+            {
+              repo_name: File.basename(git.remotes.first.url).gsub(/\.git$/, ''),
+              commit: {
+                id: git_commit.sha,
+                ref: git_commit.name,
+                message: git_commit.message,
+                date: git_commit.date.utc,
+                author: {
+                  name: git_commit.author.name,
+                  email: git_commit.author.email
+                }
+              },
+              status: {
+                changed_files: git_status.changed.keys,
+                added_files: git_status.added.keys,
+                deleted_files: git_status.deleted.keys,
+                untracked_files: git_status.untracked.keys
+              }
             }
-          },
-          status: {
-            changed_files: git_status.changed.keys,
-            added_files: git_status.added.keys,
-            deleted_files: git_status.deleted.keys,
-            untracked_files: git_status.untracked.keys
-          }
-        }
+          else
+            {
+              repo_name: File.basename(@repository_path)
+            }
+          end
       end
       @info
     end

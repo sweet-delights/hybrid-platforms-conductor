@@ -94,7 +94,7 @@ module HybridPlatformsConductor
               table << [
                 hosts_list_name,
                 nodes_info[:nodes].size,
-                "#{(nodes_info[:tested_nodes].size*100.0/nodes_info[:nodes].size).to_i} %",
+                nodes_info[:nodes].empty? ? '' : "#{(nodes_info[:tested_nodes].size*100.0/nodes_info[:nodes].size).to_i} %",
                 nodes_info[:tested_nodes].empty? ? '' : "#{((nodes_info[:tested_nodes].size - nodes_info[:tested_nodes_in_error].size) * 100.0 / nodes_info[:tested_nodes].size).to_i} %"
               ]
             end
