@@ -18,7 +18,7 @@ module HybridPlatformsConductor
 
     include LoggerHelpers
 
-    # Give the list of selected nodes, if the option was offered. Check NodesHandler#resolve_hosts to know which kind of nodes description exist.
+    # Give the list of selected nodes, if the option was offered. Check NodesHandler#select_nodes to know which kind of nodes description exist.
     #   Array<Object>
     attr_reader :selected_nodes
 
@@ -157,7 +157,7 @@ module HybridPlatformsConductor
         end
         @opts_block.call(opts) if @opts_block
         @nodes_handler.options_parse(opts) if @nodes_handler
-        @nodes_handler.options_parse_hosts(opts, @selected_nodes) if @nodes_selection_options
+        @nodes_handler.options_parse_nodes_selectors(opts, @selected_nodes) if @nodes_selection_options
         @ssh_executor.options_parse(opts, parallel: @parallel_options) if @ssh_executor
         @deployer.options_parse(opts, parallel_switch: @parallel_options, plugins_options: @plugins_options, timeout_options: @timeout_options, why_run_switch: @check_options) if @deployer
         @json_dumper.options_parse(opts) if @json_dumper

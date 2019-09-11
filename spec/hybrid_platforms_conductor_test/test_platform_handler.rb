@@ -35,7 +35,7 @@ module HybridPlatformsConductorTest
     #
     # Result::
     # * Array<String>: List of hostnames
-    def known_hostnames
+    def known_nodes
       platform_info[:nodes].keys
     end
 
@@ -44,12 +44,12 @@ module HybridPlatformsConductorTest
     #
     # Result::
     # * Array<String>: List of hosts list names
-    def known_hosts_lists
+    def known_nodes_lists
       platform_info[:nodes_lists].keys
     end
 
     # Get the list of host descriptions belonging to a hosts list
-    # [API] - This method is optional unless known_hosts_lists has been defined.
+    # [API] - This method is optional unless known_nodes_lists has been defined.
     #
     # Parameters::
     # * *nodes_list_name* (String): Name of the nodes list
@@ -59,15 +59,29 @@ module HybridPlatformsConductorTest
       platform_info[:nodes_lists][nodes_list_name]
     end
 
-    # Get the configuration of a given hostname.
+    # Get the metadata of a given hostname.
     # [API] - This method is mandatory.
     #
     # Parameters::
-    # * *node* (String): Node to read configuration from
+    # * *node* (String): Node to read mtadata from
     # Result::
-    # * Hash<String,Object>: The corresponding JSON configuration
-    def node_conf_for(node)
-      node_info(node)[:meta]
+    # * Hash<String,Object>: The corresponding metadata (as a JSON object)
+    def metadata_for(node)
+      node_info(node)[:meta] || {}
+    end
+
+    # Return the connection string for a given node
+    # This is a real IP or hostname that can then be used with ssh...
+    # [API] - This method is mandatory.
+    #
+    # Parameters::
+    # * *node* (String): node to get connection info from
+    # Result::
+    # * String: The corresponding connection string
+    def connection_for(node)
+      connection = node_info(node)[:connection]
+      raise "Invalid test case: no connection info given for #{node}" if connection.nil?
+      connection.is_a?(String) ? [connection, nil, nil] : [connection[:connection], connection[:gateway], connection[:gateway_user]]
     end
 
     # Return the service for a given node
@@ -78,19 +92,9 @@ module HybridPlatformsConductorTest
     # Result::
     # * String: The corresponding service
     def service_for(node)
-      node_info(node)[:service]
-    end
-
-    # Get the default gateway name to be used for a given hostname.
-    # [API] - This method is optional.
-    #
-    # Parameters::
-    # * *node* (String): Hostname we want to connect to.
-    # * *ip* (String or nil): IP of the hostname we want to use for connection (or nil if no IP information given).
-    # Result::
-    # * String or nil: Name of the gateway (should be defined by the gateways configurations), or nil if no gateway.
-    def default_gateway_for(node, ip)
-      node_info(node)[:default_gateway]
+      service = node_info(node)[:service]
+      raise "Invalid test case: no service info given for #{node}" if service.nil?
+      service
     end
 
     # Package the repository, ready to be deployed on artefacts.

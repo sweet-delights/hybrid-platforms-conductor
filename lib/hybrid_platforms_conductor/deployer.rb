@@ -187,7 +187,7 @@ module HybridPlatformsConductor
     # Result::
     # * Hash<String, [Integer or Symbol, String, String]>: Exit status code (or Symbol in case of error or dry run), standard output and error for each hostname that has been deployed.
     def deploy_for(*nodes_selectors)
-      @hosts = @nodes_handler.resolve_hosts(nodes_selectors.flatten)
+      @hosts = @nodes_handler.select_nodes(nodes_selectors.flatten)
       # Keep a track of the git origins to be used by each host that takes its package from an artefact repository.
       @git_origins_per_host = {}
       # Keep track of the locations being deployed
@@ -234,7 +234,7 @@ module HybridPlatformsConductor
       end
       if docker_ok
         # Get the image name for this node
-        image = @nodes_handler.site_meta_for(node)['image'].to_sym
+        image = @nodes_handler.metadata_for(node)['image'].to_sym
         # Find if we have such an image registered
         if @nodes_handler.known_docker_images.include?(image)
           # Build the image if it does not exist

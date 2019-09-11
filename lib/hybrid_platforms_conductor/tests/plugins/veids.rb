@@ -11,9 +11,9 @@ module HybridPlatformsConductor
         def test
           # Get a map of VEIDs per hostname
           veids = Hash[@nodes_handler.
-            known_hostnames.
+            known_nodes.
             map do |hostname|
-              conf = @nodes_handler.site_meta_for hostname
+              conf = @nodes_handler.metadata_for hostname
               [
                 hostname,
                 conf.key?('veid') ? conf['veid'].to_i : nil

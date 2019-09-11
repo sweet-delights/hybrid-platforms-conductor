@@ -39,7 +39,7 @@ nodes = executable.selected_nodes.empty? ? [{ all: true }] : executable.selected
 
 sorted_deploy_info = Hash[ssh_executor.
   run_cmd_on_hosts(
-    Hash[nodes_handler.resolve_hosts(nodes).map do |hostname|
+    Hash[nodes_handler.select_nodes(nodes).map do |hostname|
       [
         hostname,
         { actions: { bash: "cd /var/log/deployments && ls -t | head -1 | xargs sed '/===== STDOUT =====/q'" } }

@@ -7,16 +7,7 @@ describe 'last_deploys executable' do
   #   * Parameters::
   #     * *repository* (String): Platform's repository
   def with_test_platform_for_last_deploys
-    with_test_platform(
-      {
-        nodes: {
-          'node1' => { meta: { 'site_meta' => { 'connection_settings' => { 'ip' => 'node1_connection' } } } },
-          'node2' => { meta: { 'site_meta' => { 'connection_settings' => { 'ip' => 'node2_connection' } } } }
-        }
-      },
-      true,
-      'gateway :test_gateway, \'Host test_gateway\''
-    ) do |repository|
+    with_test_platform({ nodes: { 'node1' => {}, 'node2' => {} } }, false, 'gateway :test_gateway, \'Host test_gateway\'') do |repository|
       ENV['ti_gateways_conf'] = 'test_gateway'
       yield repository
     end

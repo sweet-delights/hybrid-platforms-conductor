@@ -52,7 +52,7 @@ module HybridPlatformsConductor
     # Parameters::
     # * *nodes_descriptions* (Array<object>): List of nodes descriptions to dump files for
     def dump_json_for(nodes_descriptions)
-      hostnames = @nodes_handler.resolve_hosts(nodes_descriptions)
+      hostnames = @nodes_handler.select_nodes(nodes_descriptions)
       unless @skip_run
         hostnames.map { |hostname| @nodes_handler.platform_for(hostname) }.uniq.each.each do |platform_handler|
           platform_handler.prepare_why_run_deploy_for_json_dump

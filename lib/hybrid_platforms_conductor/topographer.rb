@@ -66,7 +66,7 @@ module HybridPlatformsConductor
     end
 
     # Some getters that can be useful for clients of the Topographer
-    attr_reader :nodes_graph, :config, :node_site_meta
+    attr_reader :nodes_graph, :config, :node_metadata
 
     # Constructor
     #
@@ -84,9 +84,9 @@ module HybridPlatformsConductor
       @nodes_handler = nodes_handler
       @json_dumper = json_dumper
       @config = Topographer.default_config.merge(config)
-      # Get the site_meta of each node, per hostname
+      # Get the metadata of each node, per hostname
       # Hash<String,Hash>
-      @node_site_meta = {}
+      @node_metadata = {}
       # Know for each IP what is the hostname it belongs to
       # Hash<String,String>
       @ips_to_host = {}
@@ -123,15 +123,15 @@ module HybridPlatformsConductor
           ]
         end]
 
-      @ips_to_host = @nodes_handler.known_ips.clone
+      @ips_to_host = known_ips.clone
 
-      # Fill info from the site_meta
-      @nodes_handler.known_hostnames.each do |hostname|
-        @node_site_meta[hostname] = @nodes_handler.site_meta_for(hostname)
+      # Fill info from the metadata
+      @nodes_handler.known_nodes.each do |hostname|
+        @node_metadata[hostname] = @nodes_handler.metadata_for(hostname)
       end
 
       # Small cache of hostnames used a lot to parse JSON
-      @known_hostnames = Hash[@nodes_handler.known_hostnames.map { |hostname| [hostname, nil] }]
+      @known_nodes = Hash[@nodes_handler.known_nodes.map { |hostname| [hostname, nil] }]
       # Cache of objects being used a lot in parsing for performance
       @non_word_regexp = /\W+/
       @ip_regexp = /(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})(\/(\d{1,2})|[^\d\/]|$)/
@@ -145,10 +145,10 @@ module HybridPlatformsConductor
     # * *options_parser* (OptionParser): The option parser to complete
     def options_parse(options_parser)
       from_hosts_opts_parser = OptionParser.new do |opts|
-        @nodes_handler.options_parse_hosts(opts, @from_hosts)
+        @nodes_handler.options_parse_nodes_selectors(opts, @from_hosts)
       end
       to_hosts_opts_parser = OptionParser.new do |opts|
-        @nodes_handler.options_parse_hosts(opts, @to_hosts)
+        @nodes_handler.options_parse_nodes_selectors(opts, @to_hosts)
       end
       options_parser.separator ''
       options_parser.separator 'Topographer options:'
@@ -187,8 +187,8 @@ module HybridPlatformsConductor
       @from_hosts << { all: true } if @from_hosts.empty?
       @to_hosts << { all: true } if @to_hosts.empty?
       [
-        @nodes_handler.resolve_hosts(@from_hosts),
-        @nodes_handler.resolve_hosts(@to_hosts)
+        @nodes_handler.select_nodes(@from_hosts),
+        @nodes_handler.select_nodes(@to_hosts)
       ]
     end
 
@@ -197,7 +197,7 @@ module HybridPlatformsConductor
       unless @skip_run
         @json_dumper.dump_dir = @config[:json_files_dir]
         # Generate all the jsons, even if 1 hostname is given, as it might be useful for the rest of the graph.
-        @json_dumper.dump_json_for(@nodes_handler.known_hostnames)
+        @json_dumper.dump_json_for(@nodes_handler.known_nodes)
       end
     end
 
@@ -236,7 +236,7 @@ module HybridPlatformsConductor
     # * *only_add_cluster* (Boolean): If true, then don't add missing nodes from this graph to the graph [default = false]
     def graph_for_hostlists(hosts_list_names, only_add_cluster: false)
       hosts_list_names.each do |hosts_list_name|
-        hosts_list = @nodes_handler.resolve_hosts(@nodes_handler.host_names_from_list(hosts_list_name))
+        hosts_list = @nodes_handler.select_nodes(@nodes_handler.nodes_from_list(hosts_list_name))
         if only_add_cluster
           # Select only the hosts list we know about
           hosts_list.select! { |hostname| @nodes_graph.key?(hostname) }
@@ -296,8 +296,8 @@ module HybridPlatformsConductor
     # Define clusters of ips with 24 bits ranges.
     def define_clusters_ip_24
       @nodes_graph.keys.each do |node_name|
-        if @nodes_graph[node_name][:type] == :node && !@node_site_meta[node_name]['private_ips'].nil? && !@node_site_meta[node_name]['private_ips'].empty?
-          ip_24 = "#{@node_site_meta[node_name]['private_ips'].first.split('.')[0..2].join('.')}.0/24"
+        if @nodes_graph[node_name][:type] == :node && !@node_metadata[node_name]['private_ips'].nil? && !@node_metadata[node_name]['private_ips'].empty?
+          ip_24 = "#{@node_metadata[node_name]['private_ips'].first.split('.')[0..2].join('.')}.0/24"
           @nodes_graph[ip_24] = ip_range_graph_info(ip_24) unless @nodes_graph.key?(ip_24)
           @nodes_graph[ip_24][:includes] << node_name unless @nodes_graph[ip_24][:includes].include?(node_name)
         end
@@ -499,7 +499,7 @@ module HybridPlatformsConductor
     # Result::
     # * Boolean: Is the node a physical node?
     def is_node_physical?(node_name)
-      @nodes_graph[node_name][:type] == :node && @node_site_meta[node_name]['physical_node']
+      @nodes_graph[node_name][:type] == :node && @node_metadata[node_name]['physical_node']
     end
 
     # Output the graph to a given file at a given format
@@ -524,7 +524,7 @@ module HybridPlatformsConductor
     def title_for(node_name)
       case @nodes_graph[node_name][:type]
       when :node
-        "#{node_name} - #{@node_site_meta[node_name]['private_ips'].nil? || @node_site_meta[node_name]['private_ips'].empty? ? 'No IP' : @node_site_meta[node_name]['private_ips'].first}"
+        "#{node_name} - #{@node_metadata[node_name]['private_ips'].nil? || @node_metadata[node_name]['private_ips'].empty? ? 'No IP' : @node_metadata[node_name]['private_ips'].first}"
       when :cluster
         "#{node_name} (#{@nodes_graph[node_name][:includes].size} nodes)"
       when :unknown
@@ -543,7 +543,7 @@ module HybridPlatformsConductor
       byebug if node_name == 'xaesbghad51'
       case @nodes_graph[node_name][:type]
       when :node
-        @node_site_meta[node_name]['description']
+        @node_metadata[node_name]['description']
       when :cluster
         nil
       when :unknown
@@ -552,6 +552,76 @@ module HybridPlatformsConductor
     end
 
     private
+
+    # Get the list of known IPs (private and public), and return each associated node
+    #
+    # Result::
+    # * Hash<String,String>: List of nodes per IP address
+    def known_ips
+      # Keep a cache of it
+      unless defined?(@known_ips)
+        @known_ips = {}
+        # Fill info from the metadata
+        @nodes_handler.known_nodes.each do |node|
+          metadata = @nodes_handler.metadata_for(node)
+          ['private_ips', 'public_ips'].each do |ip_type|
+            if metadata.key?(ip_type)
+              metadata[ip_type].each do |ip|
+                raise "Conflict: #{ip} is already associated to #{@known_ips[ip]}. Cannot associate it to #{node}." if @known_ips.key?(ip)
+                @known_ips[ip] = node
+              end
+            end
+          end
+        end
+      end
+      @known_ips
+    end
+
+    # Get the list of known IP addresses matching a given IP mask
+    #
+    # Parameters::
+    # * *ip_def* (String): The ip definition (without mask).
+    # * *ip_mask* (Integer): The IP mask in bits.
+    # Result::
+    # * Array<String>: The list of IP addresses matching this mask
+    def ips_matching_mask(ip_def, ip_mask)
+      # Keep a cache of it
+      # Hash<String, Hash<Integer, Array<String> > >
+      # Hash<ip_def,      ip_mask,       ip
+      @ips_mask = {} unless defined?(@ips_mask)
+      @ips_mask[ip_def] = {} unless @ips_mask.key?(ip_def)
+      unless @ips_mask[ip_def].key?(ip_mask)
+        # For performance, keep a cache of all the IPAddress::IPv4 objects
+        @ip_v4_cache = Hash[known_ips.keys.map { |ip, _node| [ip, IPAddress::IPv4.new(ip)] }] unless defined?(@ip_v4_cache)
+        ip_range = IPAddress::IPv4.new("#{ip_def}/#{ip_mask}")
+        @ips_mask[ip_def][ip_mask] = @ip_v4_cache.select { |_ip, ip_v4| ip_range.include?(ip_v4) }.keys
+      end
+      @ips_mask[ip_def][ip_mask]
+    end
+
+    # Get the list of 24 bits IP addresses matching a given IP mask
+    #
+    # Parameters::
+    # * *ip_def* (String): The ip definition (without mask).
+    # * *ip_mask* (Integer): The IP mask in bits.
+    # Result::
+    # * Array<String>: The list of 24 bits IP addresses matching this mask
+    def ips_24_matching_mask(ip_def, ip_mask)
+      # Keep a cache of it
+      # Hash<String, Hash<Integer, Array<String> > >
+      # Hash<ip_def,      ip_mask,       ip_24
+      @ips_24_mask = {} unless defined?(@ips_24_mask)
+      @ips_24_mask[ip_def] = {} unless @ips_24_mask.key?(ip_def)
+      unless @ips_24_mask[ip_def].key?(ip_mask)
+        ip_range = IPAddress::IPv4.new("#{ip_def}/#{ip_mask}")
+        @ips_24_mask[ip_def][ip_mask] = []
+        (0..255).each do |ip_third|
+          ip_24 = "172.16.#{ip_third}.0/24"
+          @ips_24_mask[ip_def][ip_mask] << ip_24 if ip_range.include?(IPAddress::IPv4.new(ip_24))
+        end
+      end
+      @ips_24_mask[ip_def][ip_mask]
+    end
 
     # Create a cluster of type IP range
     #
@@ -662,7 +732,7 @@ module HybridPlatformsConductor
                     if ip_mask == 24
                       [ip_str]
                     else
-                      @nodes_handler.ips_24_matching_mask(ip_def, ip_mask).select do |ip|
+                      ips_24_matching_mask(ip_def, ip_mask).select do |ip|
                         unless @ips_ignored.key?(ip_str)
                           # Check if we should ignore it.
                           @ips_ignored[ip] = nil if @config[:ignore_ips].any? { |ip_regexp| ip =~ ip_regexp }
@@ -694,7 +764,7 @@ module HybridPlatformsConductor
                     if ip_mask == 32
                       [ip_def]
                     else
-                      @nodes_handler.ips_matching_mask(ip_def, ip_mask).select do |ip|
+                      ips_matching_mask(ip_def, ip_mask).select do |ip|
                         unless @ips_ignored.key?(ip_str)
                           # Check if we should ignore it.
                           @ips_ignored[ip] = nil if @config[:ignore_ips].any? { |ip_regexp| ip =~ ip_regexp }
@@ -737,7 +807,7 @@ module HybridPlatformsConductor
         end
         # Look for any known hostname
         json.split(@non_word_regexp).each do |hostname|
-          if @known_hostnames.key?(hostname)
+          if @known_nodes.key?(hostname)
             nodes[hostname] = [] unless nodes.key?(hostname)
             nodes[hostname] << current_ref
           end
@@ -768,7 +838,7 @@ module HybridPlatformsConductor
           connections: connections_from_json(node_json_for(hostname)),
           includes: []
         }
-        @nodes_graph[hostname][:ipv4] = IPAddress::IPv4.new(@node_site_meta[hostname]['private_ips'].first) if !@node_site_meta[hostname]['private_ips'].nil? && !@node_site_meta[hostname]['private_ips'].empty?
+        @nodes_graph[hostname][:ipv4] = IPAddress::IPv4.new(@node_metadata[hostname]['private_ips'].first) if !@node_metadata[hostname]['private_ips'].nil? && !@node_metadata[hostname]['private_ips'].empty?
         sub_max_level = max_level.nil? ? nil : max_level - 1
         if sub_max_level != -1
           @nodes_graph[hostname][:connections].keys.each do |connected_hostname|

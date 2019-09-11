@@ -52,13 +52,13 @@ module HybridPlatformsConductor
         @cmd_runner.run_cmd "cd #{@repository_path} && bundle install --path vendor/bundle --binstubs"
       end
 
-      # Get the list of known hostnames.
+      # Get the list of known nodes.
       # [API] - This method is mandatory.
       #
       # Result::
-      # * Array<String>: List of hostnames
-      def known_hostnames
-        # This method is used to get the list of hostnames that are handled by the platform
+      # * Array<String>: List of node names
+      def known_nodes
+        # This method is used to get the list of nodes that are handled by the platform
         [
           'my_host_1',
           'my_host_2',
@@ -66,12 +66,12 @@ module HybridPlatformsConductor
         ]
       end
 
-      # Get the list of known host list names
+      # Get the list of known nodes lists names.
       # [API] - This method is optional.
       #
       # Result::
-      # * Array<String>: List of hosts list names
-      def known_hosts_lists
+      # * Array<String>: List of nodes lists' names
+      def known_nodes_lists
         # This method is used to get the list of hosts lists that are handled by the platform.
         # A hosts list is just a group of hosts description that can then be used to ease command line interfaces.
         [
@@ -81,14 +81,14 @@ module HybridPlatformsConductor
       end
 
       # Get the list of host descriptions belonging to a hosts list
-      # [API] - This method is optional unless known_hosts_lists has been defined.
+      # [API] - This method is optional unless known_nodes_lists has been defined.
       #
       # Parameters::
       # * *hosts_list_name* (String): Name of the hosts list
       # Result::
       # * Array<Object>: List of host descriptions
       def hosts_desc_from_list(hosts_list_name)
-        # If known_hosts_lists has been defined, then this method should return the list of hosts descriptions of a given host list.
+        # If known_nodes_lists has been defined, then this method should return the list of hosts descriptions of a given host list.
         case hosts_list_name
         when 'my_host_list_1'
           [
@@ -104,36 +104,42 @@ module HybridPlatformsConductor
         end
       end
 
-      # Get the configuration of a given hostname.
+      # Get the metadata of a given hostname.
       # [API] - This method is mandatory.
       #
       # Parameters::
-      # * *hostname* (String): Hostname to read configuration from
+      # * *node* (String): Node to read metadata from
       # Result::
-      # * Hash<String,Object>: The corresponding JSON configuration
-      def node_conf_for(hostname)
-        # This method should return the host configuration, among which site_meta data is present.
-        JSON.parse(File.read("#{@repository_path}/nodes/#{hostname}.json"))
+      # * Hash<String,Object>: The corresponding metadata (as a JSON object)
+      def metadata_for(node)
+        {
+          'french_name' => "Le noeud #{node}"
+        }
       end
 
-      # Get the default gateway name to be used for a given hostname.
-      # [API] - This method is optional.
+      # Return the connection string for a given node
+      # This is a real IP or hostname that can then be used with ssh...
+      # [API] - This method is mandatory.
       #
       # Parameters::
-      # * *hostname* (String): Hostname we want to connect to.
-      # * *ip* (String): IP of the hostname we want to use for connection.
+      # * *node* (String): node to get connection info from
       # Result::
-      # * String or nil: Name of the gateway (should be defined by the gateways configurations), or nil if no gateway.
-      def default_gateway_for(hostname, ip)
-        # This method is used to generate the proper SSH configuration file.
-        # Depending on the hosts to be reached, different gateway names could be used.
-        # The gateway names should be defined in the SSH gateways of the platforms configuration (in ti_platforms/platforms.rb).
-        case hostname
-        when 'my_host_2'
-          'gateway_adp.ti'
-        else
-          nil
-        end
+      # * String: The corresponding connection string
+      # * String or nil: The corresponding gateway to be used, or nil if none
+      # * String or nil: The corresponding gateway user to be used, or nil if none
+      def connection_for(node)
+        ["#{node}.my_domain.com", nil, nil]
+      end
+
+      # Return the service for a given node
+      # [API] - This method is mandatory.
+      #
+      # Parameters::
+      # * *node* (String): node to read configuration from
+      # Result::
+      # * String: The corresponding service
+      def service_for(node)
+        'hadoop_worker'
       end
 
       # Package the repository, ready to be deployed on artefacts.

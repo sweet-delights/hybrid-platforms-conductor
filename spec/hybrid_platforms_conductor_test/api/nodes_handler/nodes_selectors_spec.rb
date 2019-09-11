@@ -20,69 +20,36 @@ describe HybridPlatformsConductor::NodesHandler do
       end
     end
 
-    it 'selects no node' do
-      with_test_platform_for_nodes do
-        expect(test_nodes_handler.resolve_hosts([])).to eq []
-      end
-    end
+    # List all tests of nodes selectors, and the corresponding nodes list they should be resolved into
+    {
+      [] => [],
+      [{ all: true }] => %w[node1 node2 node3 node4 node5 node6],
+      'node1' => %w[node1],
+      '/node[12]/' => %w[node1 node2],
+      [{ list: 'nodeslist1' }] => %w[node1 node3],
+      [{ list: 'nodeslist2' }] => %w[node1 node2],
+      [{ platform: 'platform2' }] => %w[node4 node5 node6],
+      [{ service: 'service1' }] => %w[node2 node5],
+      ['/node[12]/', { service: 'service1' }] => %w[node1 node2 node5],
+    }.each do |nodes_selectors, expected_nodes|
 
-    it 'selects all nodes' do
-      with_test_platform_for_nodes do
-        expect(test_nodes_handler.resolve_hosts([{ all: true }]).sort).to eq %w[node1 node2 node3 node4 node5 node6].sort
+      it "selects nodes correctly: #{nodes_selectors} resolves to #{expected_nodes}" do
+        with_test_platform_for_nodes do
+          expect(test_nodes_handler.select_nodes([])).to eq []
+        end
       end
-    end
 
-    it 'selects by node name' do
-      with_test_platform_for_nodes do
-        expect(test_nodes_handler.resolve_hosts('node1').sort).to eq %w[node1].sort
-      end
-    end
-
-    it 'selects by node name with regexp' do
-      with_test_platform_for_nodes do
-        expect(test_nodes_handler.resolve_hosts('/node[12]/').sort).to eq %w[node1 node2].sort
-      end
-    end
-
-    it 'selects by nodes list' do
-      with_test_platform_for_nodes do
-        expect(test_nodes_handler.resolve_hosts([{ list: 'nodeslist1' }]).sort).to eq %w[node1 node3].sort
-      end
-    end
-
-    it 'selects by nodes list containing regexps' do
-      with_test_platform_for_nodes do
-        expect(test_nodes_handler.resolve_hosts([{ list: 'nodeslist2' }]).sort).to eq %w[node1 node2].sort
-      end
-    end
-
-    it 'selects by platform' do
-      with_test_platform_for_nodes do
-        expect(test_nodes_handler.resolve_hosts([{ platform: 'platform2' }]).sort).to eq %w[node4 node5 node6].sort
-      end
-    end
-
-    it 'selects by service' do
-      with_test_platform_for_nodes do
-        expect(test_nodes_handler.resolve_hosts([{ service: 'service1' }]).sort).to eq %w[node2 node5].sort
-      end
-    end
-
-    it 'selects by several criteria' do
-      with_test_platform_for_nodes do
-        expect(test_nodes_handler.resolve_hosts(['/node[12]/', { service: 'service1' }]).sort).to eq %w[node1 node2 node5].sort
-      end
     end
 
     it 'fails when selecting unknown nodes' do
       with_test_platform_for_nodes do
-        expect { test_nodes_handler.resolve_hosts('node1', 'node7') }.to raise_error(RuntimeError, 'Unknown host names: node7')
+        expect { test_nodes_handler.select_nodes('node1', 'node7') }.to raise_error(RuntimeError, 'Unknown nodes: node7')
       end
     end
 
     it 'ignore unknown nodes when asked' do
       with_test_platform_for_nodes do
-        expect(test_nodes_handler.resolve_hosts(['node1', 'node7'], ignore_unknowns: true).sort).to eq %w[node1 node7].sort
+        expect(test_nodes_handler.select_nodes(['node1', 'node7'], ignore_unknowns: true).sort).to eq %w[node1 node7].sort
       end
     end
 

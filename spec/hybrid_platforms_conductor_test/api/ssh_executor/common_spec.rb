@@ -9,7 +9,7 @@ describe HybridPlatformsConductor::SshExecutor do
   end
 
   it 'displays commands instead of executing them' do
-    with_test_platform(nodes: { 'node1' => { meta: { 'site_meta' => { 'connection_settings' => { 'ip' => 'node1_connection' } } } } }) do |repository|
+    with_test_platform(nodes: { 'node1' => { connection: 'node1_connection' } }) do |repository|
       executed = false
       test_ssh_executor.dry_run = true
       stdout_file = "#{repository}/run.stdout"
@@ -92,7 +92,7 @@ describe HybridPlatformsConductor::SshExecutor do
   it 'fails to execute a command on an unknown host' do
     with_test_platform(nodes: { 'node1' => {} }) do
       executed = false
-      expect { test_ssh_executor.run_cmd_on_hosts('node2' => { actions: { ruby: proc { executed = true } } }) }.to raise_error(RuntimeError, 'Unknown host names: node2')
+      expect { test_ssh_executor.run_cmd_on_hosts('node2' => { actions: { ruby: proc { executed = true } } }) }.to raise_error(RuntimeError, 'Unknown nodes: node2')
     end
   end
 

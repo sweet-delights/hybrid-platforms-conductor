@@ -174,15 +174,15 @@ module HybridPlatformsConductor
       #   * *tested_nodes* (Array<String>): Tested nodes in the list
       #   * *tested_nodes_in_error* (Array<String>): Tested nodes in error in the list
       def nodes_by_hosts_list
-        no_list_nodes = @nodes_handler.known_hostnames
+        no_list_nodes = @nodes_handler.known_nodes
         Hash[(
-          @nodes_handler.known_hosts_lists.sort.map do |hosts_list_name|
-            hosts_from_list = @nodes_handler.host_names_from_list(hosts_list_name, ignore_unknowns: true)
+          @nodes_handler.known_nodes_lists.sort.map do |hosts_list_name|
+            hosts_from_list = @nodes_handler.nodes_from_list(hosts_list_name, ignore_unknowns: true)
             no_list_nodes -= hosts_from_list
             [hosts_list_name, hosts_from_list]
           end + [
             ['No list', no_list_nodes],
-            ['All', @nodes_handler.known_hostnames]
+            ['All', @nodes_handler.known_nodes]
           ]
         ).map do |list_name, list_nodes|
           [

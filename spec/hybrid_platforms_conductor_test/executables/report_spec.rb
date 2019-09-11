@@ -1,53 +1,51 @@
 describe 'report executable' do
 
-  # Setup a platform for report tests
-  #
-  # Parameters::
-  # * Proc: Code called when the platform is setup
-  #   * Parameters::
-  #     * *repository* (String): Platform's repository
-  def with_test_platform_for_report
-    with_test_platform(
-      {
-        nodes: {
-          'node1' => { meta: { 'site_meta' => { 'connection_settings' => { 'ip' => 'node1_connection' } } } },
-          'node2' => { meta: { 'site_meta' => { 'connection_settings' => { 'ip' => 'node2_connection' } } } }
-        }
-      },
-      true,
-      'gateway :test_gateway, \'Host test_gateway\''
-    ) do |repository|
-      ENV['ti_gateways_conf'] = 'test_gateway'
-      yield repository
-    end
-  end
-
   it 'reports by default on all nodes' do
-    with_test_platform_for_report do
+    with_test_platform(nodes: { 'node1' => {}, 'node2' => {} }) do
       exit_code, stdout, stderr = run 'report'
       expect(exit_code).to eq 0
       expect(stdout).to eq(
-        "+-----------+--------------------+-------------+------------+----------------+----+---------+----------+---------+-------------+----------------------------+\n" +
-        "| Node name | Platform           | Private IPs | Public IPs | Physical node? | OS | Cluster | IP range | Product | Description | Missing industrialization? |\n" +
-        "+-----------+--------------------+-------------+------------+----------------+----+---------+----------+---------+-------------+----------------------------+\n" +
-        "| node1     | my_remote_platform |             |            | No             |    |         |          |         |             | No                         |\n" +
-        "| node2     | my_remote_platform |             |            | No             |    |         |          |         |             | No                         |\n" +
-        "+-----------+--------------------+-------------+------------+----------------+----+---------+----------+---------+-------------+----------------------------+\n"
+        "+-----------+----------+-------------+------------+----------------+----+---------+----------+---------+-------------+----------------------------+\n" +
+        "| Node name | Platform | Private IPs | Public IPs | Physical node? | OS | Cluster | IP range | Product | Description | Missing industrialization? |\n" +
+        "+-----------+----------+-------------+------------+----------------+----+---------+----------+---------+-------------+----------------------------+\n" +
+        "| node1     | platform |             |            | No             |    |         |          |         |             | No                         |\n" +
+        "| node2     | platform |             |            | No             |    |         |          |         |             | No                         |\n" +
+        "+-----------+----------+-------------+------------+----------------+----+---------+----------+---------+-------------+----------------------------+\n"
       )
       expect(stderr).to eq ''
     end
   end
 
   it 'reports on given nodes only' do
-    with_test_platform_for_report do
+    with_test_platform(nodes: { 'node1' => {}, 'node2' => {} }) do
       exit_code, stdout, stderr = run 'report', '--host-name', 'node2'
       expect(exit_code).to eq 0
       expect(stdout).to eq(
-        "+-----------+--------------------+-------------+------------+----------------+----+---------+----------+---------+-------------+----------------------------+\n" +
-        "| Node name | Platform           | Private IPs | Public IPs | Physical node? | OS | Cluster | IP range | Product | Description | Missing industrialization? |\n" +
-        "+-----------+--------------------+-------------+------------+----------------+----+---------+----------+---------+-------------+----------------------------+\n" +
-        "| node2     | my_remote_platform |             |            | No             |    |         |          |         |             | No                         |\n" +
-        "+-----------+--------------------+-------------+------------+----------------+----+---------+----------+---------+-------------+----------------------------+\n"
+        "+-----------+----------+-------------+------------+----------------+----+---------+----------+---------+-------------+----------------------------+\n" +
+        "| Node name | Platform | Private IPs | Public IPs | Physical node? | OS | Cluster | IP range | Product | Description | Missing industrialization? |\n" +
+        "+-----------+----------+-------------+------------+----------------+----+---------+----------+---------+-------------+----------------------------+\n" +
+        "| node2     | platform |             |            | No             |    |         |          |         |             | No                         |\n" +
+        "+-----------+----------+-------------+------------+----------------+----+---------+----------+---------+-------------+----------------------------+\n"
+      )
+      expect(stderr).to eq ''
+    end
+  end
+
+  it 'reports info from metadata' do
+    with_test_platform(nodes: { 'node' => { meta: {
+      'private_ips' => ['192.168.0.1', '192.168.0.2'],
+      'public_ips' => ['1.2.3.4'],
+      'os' => 'Windows 3.1',
+      'description' => 'A great server'
+    } } }) do
+      exit_code, stdout, stderr = run 'report', '--host-name', 'node'
+      expect(exit_code).to eq 0
+      expect(stdout).to eq(
+        "+-----------+----------+-------------------------+------------+----------------+-------------+---------+-------------+---------+----------------+----------------------------+\n" +
+        "| Node name | Platform | Private IPs             | Public IPs | Physical node? | OS          | Cluster | IP range    | Product | Description    | Missing industrialization? |\n" +
+        "+-----------+----------+-------------------------+------------+----------------+-------------+---------+-------------+---------+----------------+----------------------------+\n" +
+        "| node      | platform | 192.168.0.1 192.168.0.2 | 1.2.3.4    | No             | Windows 3.1 |         | 192.168.0.* |         | A great server | No                         |\n" +
+        "+-----------+----------+-------------------------+------------+----------------+-------------+---------+-------------+---------+----------------+----------------------------+\n"
       )
       expect(stderr).to eq ''
     end

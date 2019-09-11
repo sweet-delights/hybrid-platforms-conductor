@@ -1443,15 +1443,15 @@ Check the [NodesHandler public methods](https://www.site.my_company.net/git/proj
 Examples:
 ```ruby
 # Get the list of hostnames in a list
-hosts = nodes_handler.known_hostnames
+hosts = nodes_handler.known_nodes
 
-# Get the private IP of node23hst-nn2
-ip = nodes_handler.private_ip_for 'node23hst-nn2'
+# Get the IP or hostname of node23hst-nn2, along with eventual gateway and gateway's user to be used to connect to it
+ip, gateway, gateway_user = nodes_handler.connection_for 'node23hst-nn2'
 
-# Get the node configuration of node23hst-nn2, as a JSON Hash object
-conf = nodes_handler.node_conf_for 'node23hst-nn2'
-# Display its description from its site_meta data
-puts conf['site_meta']['description']
+# Get the node metadata of node23hst-nn2, as a JSON Hash object
+conf = nodes_handler.metadata_for 'node23hst-nn2'
+# Display its description from its metadata
+puts conf['description']
 ```
 
 ## SshExecutor

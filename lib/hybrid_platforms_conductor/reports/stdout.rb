@@ -38,7 +38,7 @@ module HybridPlatformsConductor
           'Missing industrialization?'
         ]) do |table|
           hosts.sort.each do |node|
-            node_info = @nodes_handler.site_meta_for(node)
+            node_info = @nodes_handler.metadata_for(node)
             table << [
               node,
               @nodes_handler.platform_for(node).info[:repo_name],

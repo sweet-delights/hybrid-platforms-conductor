@@ -125,7 +125,7 @@ module HybridPlatformsConductor
     #
     # Parameters::
     # * *actions_descriptions* (Hash<Object, Hash<Symbol,Object> >): Actions descriptions, per host description.
-    #   See resolve_hosts for details about possible hosts descriptions.
+    #   See select_nodes for details about possible hosts descriptions.
     #   Each actions description can have the following attributes:
     #   * *actions* (Array< Hash<Symbol,Object> > or Hash<Symbol,Object>): List of actions (or 1 single action). See execute_actions_on to know about the API of an action.
     #   * *env* (Hash<String,String>): Environment to set before executing SSH commands on this host description. [default = {}]
@@ -155,7 +155,7 @@ module HybridPlatformsConductor
           end
         end
         # Resolve hosts
-        @nodes_handler.resolve_hosts(host_desc).each do |hostname|
+        @nodes_handler.select_nodes(host_desc).each do |hostname|
           raise "Hostname #{hostname} has been specified for different actions" if actions_per_hostname.key?(hostname)
           actions_per_hostname[hostname] = resolved_host_actions
         end
@@ -243,31 +243,29 @@ Host *
 
 "
       # Add each node
-      @nodes_handler.known_hostnames.sort.each do |node|
-        conf = @nodes_handler.site_meta_for node
-        unless conf.nil?
-          (conf.key?('private_ips') ? conf['private_ips'].sort : [nil]).each.with_index do |private_ip, idx|
-            # Generate the conf for the node
-            real_ip, gateway, gateway_user = connection_info_for(node, private_ip)
-            aliases = ssh_aliases_for(node, private_ip)
-            if idx == 0
-              aliases << "hpc.#{node}"
-              if @override_connections.key?(node)
-                # Make sure the real hostname that could be used by other processes also route to the real IP
-                inv_real_ip, _gateway, _gateway_user = inventory_connection_info_for(node, private_ip)
-                aliases << inv_real_ip
-              end
+      @nodes_handler.known_nodes.sort.each do |node|
+        conf = @nodes_handler.metadata_for node
+        (conf.key?('private_ips') ? conf['private_ips'].sort : [nil]).each.with_index do |private_ip, idx|
+          # Generate the conf for the node
+          connection, gateway, gateway_user = connection_info_for(node)
+          aliases = ssh_aliases_for(node, private_ip)
+          if idx == 0
+            aliases << "hpc.#{node}"
+            if @override_connections.key?(node)
+              # Make sure the real hostname that could be used by other processes also route to the real IP
+              inv_connection, _gateway, _gateway_user = @nodes_handler.connection_for(node)
+              aliases << inv_connection
             end
-            config_content << "# #{node} - #{private_ip.nil? ? 'Unknown IP address' : private_ip} - #{@nodes_handler.platform_for(node).repository_path}#{conf.key?('description') ? " - #{conf['description']}" : ''}\n"
-            config_content << "Host #{aliases.join(' ')}\n"
-            config_content << "  Hostname #{real_ip}\n" unless real_ip.nil?
-            config_content << "  ProxyCommand #{ssh_exec} -q -W %h:%p #{gateway_user}@#{gateway}\n" unless gateway.nil?
-            if @passwords.key?(node)
-              config_content << "  PreferredAuthentications password\n"
-              config_content << "  PubkeyAuthentication no\n"
-            end
-            config_content << "\n"
           end
+          config_content << "# #{node} - #{private_ip.nil? ? 'Unknown IP address' : private_ip} - #{@nodes_handler.platform_for(node).repository_path}#{conf.key?('description') ? " - #{conf['description']}" : ''}\n"
+          config_content << "Host #{aliases.join(' ')}\n"
+          config_content << "  Hostname #{connection}\n"
+          config_content << "  ProxyCommand #{ssh_exec} -q -W %h:%p #{gateway_user}@#{gateway}\n" unless gateway.nil?
+          if @passwords.key?(node)
+            config_content << "  PreferredAuthentications password\n"
+            config_content << "  PubkeyAuthentication no\n"
+          end
+          config_content << "\n"
         end
       end
       config_content
@@ -293,13 +291,13 @@ Host *
             existing_control_master = false
             @control_master_nodes_semaphore.synchronize do
               unless @nodes_ssh_urls.key?(node)
-                ensure_node_host_key(node)
+                connection, _gateway, _gateway_user = connection_info_for(node)
+                ensure_host_key(connection)
                 ssh_url = "#{@ssh_user_name}@hpc.#{node}"
                 if @use_control_master
                   # Thanks to the ControlMaster option, connections are reused. So no problem to have several scp and ssh commands later.
                   log_debug "[ ControlMaster - #{node} ] - Starting ControlMaster for connection on #{ssh_url}..."
-                  real_ip, _gateway, _gateway_user = connection_info_for(node, @nodes_handler.private_ip_for(node))
-                  control_path_file = "/tmp/ssh_executor_mux_#{real_ip}_22_#{@ssh_user_name}"
+                  control_path_file = "/tmp/ssh_executor_mux_#{connection}_22_#{@ssh_user_name}"
                   if File.exist?(control_path_file)
                     log_warn "Removing stale SSH control file #{control_path_file}"
                     File.unlink control_path_file
@@ -417,16 +415,6 @@ Host *
       end
     end
 
-    # Ensure that a given node has its key correctly set in the known hosts file.
-    # Prerequisite: with_platforms_ssh has been called before.
-    #
-    # Parameters::
-    # * *node* (String): The node
-    def ensure_node_host_key(node)
-      real_ip, _gateway, _gateway_user = connection_info_for(node, @nodes_handler.private_ip_for(node))
-      ensure_host_key(real_ip)
-    end
-
     private
 
     # Get the connection information for a given node accessed using one of its given IPs.
@@ -434,12 +422,11 @@ Host *
     #
     # Parameters::
     # * *node* (String): The node to access
-    # * *ip* (String or nil): Corresponding IP (can be nil if no IP information given) [default = nil]
     # Result::
     # * String: The real hostname or IP to be used to connect
     # * String or nil: The gateway name to be used (should be defined by the gateways configurations), or nil if no gateway to be used.
     # * String or nil: The gateway user to be used, or nil if none.
-    def connection_info_for(node, ip = nil)
+    def connection_info_for(node)
       # If we route connections to this node to another IP, use the overriding values
       if @override_connections.key?(node)
         [
@@ -448,40 +435,10 @@ Host *
           nil
         ]
       else
-        inventory_connection_info_for(node, ip)
+        connection, gateway, gateway_user = @nodes_handler.connection_for(node)
+        gateway_user = @gateway_user if !gateway.nil? && gateway_user.nil?
+        [connection, gateway, gateway_user]
       end
-    end
-
-    # Get the connection information for a given node accessed using one of its given IPs.
-    #
-    # Parameters::
-    # * *node* (String): The node to access
-    # * *ip* (String or nil): Corresponding IP (can be nil if no IP information given) [default = nil]
-    # Result::
-    # * String: The real hostname or IP to be used to connect
-    # * String or nil: The gateway name to be used (should be defined by the gateways configurations), or nil if no gateway to be used.
-    # * String or nil: The gateway user to be used, or nil if none.
-    def inventory_connection_info_for(node, ip = nil)
-      site_meta = @nodes_handler.site_meta_for(node)
-      connection_settings = site_meta.nil? ? nil : site_meta['connection_settings']
-      gateway, gateway_user =
-        if connection_settings && connection_settings.key?('gateway')
-          [
-            connection_settings['gateway'],
-            connection_settings.key?('gateway_user') ? connection_settings['gateway_user'] : @gateway_user
-          ]
-        else
-          platform_handler = @nodes_handler.platform_for(node)
-          [
-            platform_handler.respond_to?(:default_gateway_for) ? platform_handler.default_gateway_for(node, ip) : nil,
-            @gateway_user
-          ]
-        end
-      [
-        connection_settings && connection_settings.key?('ip') ? connection_settings['ip'] : ip,
-        gateway,
-        gateway_user
-      ]
     end
 
     # Get the possible SSH aliases for a given node accessed through one of its IPs.

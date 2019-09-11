@@ -9,7 +9,7 @@ describe HybridPlatformsConductor::SshExecutor do
     #   * Parameters::
     #     * *repository* (String): Path to the repository
     def with_test_platform_for_actions
-      with_test_platform(nodes: { 'node' => { meta: { 'site_meta' => { 'connection_settings' => { 'ip' => 'node_connection' } } } } }) do |repository|
+      with_test_platform(nodes: { 'node' => { connection: 'node_connection' } }) do |repository|
         test_ssh_executor.ssh_user_name = 'test_user'
         yield repository
       end

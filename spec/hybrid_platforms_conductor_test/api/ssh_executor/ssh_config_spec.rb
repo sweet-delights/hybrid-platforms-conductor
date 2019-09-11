@@ -74,7 +74,7 @@ describe HybridPlatformsConductor::SshExecutor do
     end
 
     it 'generates a simple config for a node with direct access' do
-      with_test_platform(nodes: { 'node' => { meta: { 'site_meta' => { 'connection_settings' => { 'ip' => 'node_connection' } } } } }) do
+      with_test_platform(nodes: { 'node' => { connection: 'node_connection' } }) do
         expect(ssh_config_for('node')).to eq 'Host hpc.node
   Hostname node_connection'
       end
@@ -82,9 +82,9 @@ describe HybridPlatformsConductor::SshExecutor do
 
     it 'generates a simple config for several nodes with direct access' do
       with_test_platform(nodes: {
-        'node1' => { meta: { 'site_meta' => { 'connection_settings' => { 'ip' => 'node1_connection' } } } },
-        'node2' => { meta: { 'site_meta' => { 'connection_settings' => { 'ip' => 'node2_connection' } } } },
-        'node3' => { meta: { 'site_meta' => { 'connection_settings' => { 'ip' => 'node3_connection' } } } }
+        'node1' => { connection: 'node1_connection' },
+        'node2' => { connection: 'node2_connection' },
+        'node3' => { connection: 'node3_connection' }
       }) do
         expect(ssh_config_for('node1')).to eq 'Host hpc.node1
   Hostname node1_connection'
@@ -96,7 +96,7 @@ describe HybridPlatformsConductor::SshExecutor do
     end
 
     it 'uses node forced gateway information' do
-      with_test_platform(nodes: { 'node' => { meta: { 'site_meta' => { 'connection_settings' => { 'ip' => 'node_connection', 'gateway' => 'test_gateway', 'gateway_user' => 'test_gateway_user' } } } } }) do
+      with_test_platform(nodes: { 'node' => { connection: { connection: 'node_connection', gateway: 'test_gateway', gateway_user: 'test_gateway_user' } } }) do
         expect(ssh_config_for('node')).to eq 'Host hpc.node
   Hostname node_connection
   ProxyCommand ssh -q -W %h:%p test_gateway_user@test_gateway'
@@ -104,10 +104,7 @@ describe HybridPlatformsConductor::SshExecutor do
     end
 
     it 'uses node default gateway information and user from environment' do
-      with_test_platform(nodes: { 'node' => {
-        meta: { 'site_meta' => { 'connection_settings' => { 'ip' => 'node_connection' } } },
-        default_gateway: 'test_gateway'
-      } }) do
+      with_test_platform(nodes: { 'node' => { connection: { connection: 'node_connection', gateway: 'test_gateway' } } }) do
         ENV['ti_gateway_user'] = 'test_gateway_user'
         expect(ssh_config_for('node')).to eq 'Host hpc.node
   Hostname node_connection
@@ -116,10 +113,7 @@ describe HybridPlatformsConductor::SshExecutor do
     end
 
     it 'uses node default gateway information and user from setting' do
-      with_test_platform(nodes: { 'node' => {
-        meta: { 'site_meta' => { 'connection_settings' => { 'ip' => 'node_connection' } } },
-        default_gateway: 'test_gateway'
-      } }) do
+      with_test_platform(nodes: { 'node' => { connection: { connection: 'node_connection', gateway: 'test_gateway' } } }) do
         test_ssh_executor.gateway_user = 'test_gateway_user'
         expect(ssh_config_for('node')).to eq 'Host hpc.node
   Hostname node_connection
@@ -128,7 +122,7 @@ describe HybridPlatformsConductor::SshExecutor do
     end
 
     it 'uses node forced gateway information with a different ssh executable' do
-      with_test_platform(nodes: { 'node' => { meta: { 'site_meta' => { 'connection_settings' => { 'ip' => 'node_connection', 'gateway' => 'test_gateway', 'gateway_user' => 'test_gateway_user' } } } } }) do
+      with_test_platform(nodes: { 'node' => { connection: { connection: 'node_connection', gateway: 'test_gateway', gateway_user: 'test_gateway_user' } } }) do
         expect(ssh_config_for('node', ssh_exec: 'new_ssh')).to eq 'Host hpc.node
   Hostname node_connection
   ProxyCommand new_ssh -q -W %h:%p test_gateway_user@test_gateway'
@@ -136,10 +130,7 @@ describe HybridPlatformsConductor::SshExecutor do
     end
 
     it 'uses node default gateway information with a different ssh executable' do
-      with_test_platform(nodes: { 'node' => {
-        meta: { 'site_meta' => { 'connection_settings' => { 'ip' => 'node_connection' } } },
-        default_gateway: 'test_gateway'
-      } }) do
+      with_test_platform(nodes: { 'node' => { connection: { connection: 'node_connection', gateway: 'test_gateway' } } }) do
         test_ssh_executor.gateway_user = 'test_gateway_user'
         expect(ssh_config_for('node', ssh_exec: 'new_ssh')).to eq 'Host hpc.node
   Hostname node_connection
@@ -148,7 +139,7 @@ describe HybridPlatformsConductor::SshExecutor do
     end
 
     it 'generates a config compatible for passwords authentication' do
-      with_test_platform(nodes: { 'node' => { meta: { 'site_meta' => { 'connection_settings' => { 'ip' => 'node_connection' } } } } }) do
+      with_test_platform(nodes: { 'node' => { connection: 'node_connection' } }) do
         test_ssh_executor.passwords['node'] = 'PaSsWoRd'
         expect(ssh_config_for('node')).to eq 'Host hpc.node
   Hostname node_connection
@@ -159,10 +150,10 @@ describe HybridPlatformsConductor::SshExecutor do
 
     it 'generates a config compatible for passwords authentication only for marked nodes' do
       with_test_platform(nodes: {
-        'node1' => { meta: { 'site_meta' => { 'connection_settings' => { 'ip' => 'node1_connection' } } } },
-        'node2' => { meta: { 'site_meta' => { 'connection_settings' => { 'ip' => 'node2_connection' } } } },
-        'node3' => { meta: { 'site_meta' => { 'connection_settings' => { 'ip' => 'node3_connection' } } } },
-        'node4' => { meta: { 'site_meta' => { 'connection_settings' => { 'ip' => 'node4_connection' } } } }
+        'node1' => { connection: 'node1_connection' },
+        'node2' => { connection: 'node2_connection' },
+        'node3' => { connection: 'node3_connection' },
+        'node4' => { connection: 'node4_connection' }
       }) do
         test_ssh_executor.passwords['node1'] = 'PaSsWoRd1'
         test_ssh_executor.passwords['node3'] = 'PaSsWoRd3'
