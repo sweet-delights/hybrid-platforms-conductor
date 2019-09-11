@@ -125,9 +125,6 @@ module HybridPlatformsConductor
       #
       # Parameters::
       # * *tests* (Array<Test>): List of tests to group errors from
-      # * *filter* (Symbol or nil): Filter errors to be returned, or nil for no filter. Values can be: [default: nil]
-      #   * *only_as_expected*: Only report errors that were expected
-      #   * *only_as_non_expected*: Only report errors that were not expected.
       # * *group_criterias* (Symbol or Proc or Array<Symbol or Proc>): Ordered list (or single item) of group by criterias. Each criteria applies on a list of tests and can be one of the following:
       #   * Symbol: Named criteria. Can be one of the following:
       #     * test_name: Group by test name
@@ -138,6 +135,9 @@ module HybridPlatformsConductor
       #       * *test* (Test): Test to extract group by criteria from
       #     * Result::
       #       * Object: The group by criteria
+      # * *filter* (Symbol or nil): Filter errors to be returned, or nil for no filter. Values can be: [default: nil]
+      #   * *only_as_expected*: Only report errors that were expected
+      #   * *only_as_non_expected*: Only report errors that were not expected.
       # Result::
       # * Hash or Array<String>: Resulting tree structure, following the group by criterias, giving as leaves the grouped list of errors. If the criterias are empty, return the list of errors.
       def group_errors(tests, *group_criterias, filter: nil)
