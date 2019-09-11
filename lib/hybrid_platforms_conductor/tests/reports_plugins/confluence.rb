@@ -70,15 +70,37 @@ module HybridPlatformsConductor
           render '_confluence_errors_status'
         end
 
-        # Render a gauge of a percentage.
+        # Render a gauge displaying statuses of tests.
         #
         # Parameters::
-        # * *total* (Integer): Total value
-        # * *value* (Integer): Percentile
-        def render_gauge(total, value)
-          @gauge_total = total
-          @gauge_value = value
+        # * *info* (Hash<Symbol,Object>): The info about tests to render gauge for (check classify_tests to know about info)
+        def render_gauge(info)
+          @gauge_success = info[:success].size
+          @gauge_unexpected_error = info[:unexpected_error].size
+          @gauge_expected_error = info[:expected_error].size
+          @gauge_not_run = info[:not_run].size
           render '_confluence_gauge'
+        end
+
+        # Return the color linked to a status
+        #
+        # Parameters::
+        # * *status* (Symbol): Status (check classify_tests to know about possible statuses)
+        # Result::
+        # * String: Corresponding color
+        def status_color(status)
+          case status
+          when :success
+            'Green'
+          when :unexpected_error
+            'Red'
+          when :expected_error
+            'Yellow'
+          when :not_run
+            'Grey'
+          else
+            raise "Unknown status: #{status}"
+          end
         end
 
       end

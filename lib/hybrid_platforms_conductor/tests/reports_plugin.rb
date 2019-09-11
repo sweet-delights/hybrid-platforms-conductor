@@ -248,6 +248,41 @@ module HybridPlatformsConductor
         end
       end
 
+      # Classify a given list of tests by their statuses
+      #
+      # Parameters::
+      # * *tests* (Array<Test>): List of tests to group
+      # Result::
+      # * Hash<Symbol, Object >: Info for this list of tests. Properties are:
+      #   * *success* (Array<Test>): Successful tests
+      #   * *unexpected_error* (Array<Test>): Tests in unexpected error
+      #   * *expected_error* (Array<Test>): Tests in expected error
+      #   * *not_run* (Array<Test>): Tests that were not run
+      #   * *status* (Symbol): The global status of those tests (only the first matching status from this ordered list is returned):
+      #     * *success*: All tests are successful
+      #     * *unexpected_error*: Some tests have unexpected errors
+      #     * *expected_error*: Some tests have expected errors
+      #     * *not_run*: All non-successful tests have not been run
+      def classify_tests(tests)
+        info = {
+          not_run: tests.select { |test| !test.executed? },
+          success: tests.select { |test| test.executed? && test.errors.empty? },
+          unexpected_error: tests.select { |test| test.executed? && !test.errors.empty? && test.expected_failure.nil? },
+          expected_error: tests.select { |test| test.executed? && !test.errors.empty? && !test.expected_failure.nil? }
+        }
+        info[:status] =
+          if info[:success].size == tests.size
+            :success
+          elsif !info[:unexpected_error].empty?
+            :unexpected_error
+          elsif !info[:expected_error].empty?
+            :expected_error
+          else
+            :not_run
+          end
+        info
+      end
+
     end
 
   end
