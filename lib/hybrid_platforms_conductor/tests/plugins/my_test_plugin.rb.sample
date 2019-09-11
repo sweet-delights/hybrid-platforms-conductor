@@ -87,12 +87,12 @@ module HybridPlatformsConductor
         # [API] - @platform can be used to adapt the code with the platform handling this node.
         #
         # Parameters::
-        # * *stdout* (Array<String>): The check-node output
-        # * *stderr* (Array<String>): The check-node standard error
+        # * *stdout* (String): The check-node output
+        # * *stderr* (String): The check-node standard error
         # * *exit_status* (Integer): The check-node exit status
         def test_on_check_node(stdout, stderr, exit_status)
           # If this method is defined, the tests runner will execute a why-run deploy on the node and call this method to have assertions on the stdout of the why-run deploy.
-          assert_match stdout.last, /Success/, 'check-node did not end correctly'
+          assert_match stdout.split("\n").last, /Success/, 'check-node did not end correctly'
         end
 
         # Limit the list of platform types for these tests.

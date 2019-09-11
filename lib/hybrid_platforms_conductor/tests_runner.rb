@@ -499,7 +499,7 @@ module HybridPlatformsConductor
                 else
                   test.error "Check-node returned error code #{exit_status}" unless exit_status == 0
                   begin
-                    test.test_on_check_node(stdout.split("\n"), stderr.split("\n"), exit_status)
+                    test.test_on_check_node(stdout, stderr, exit_status)
                   rescue
                     test.error "Uncaught exception during test: #{$!}#{log_debug? ? "\n#{$!.backtrace.join("\n")}" : ''}"
                   end
