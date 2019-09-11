@@ -11,6 +11,18 @@ describe HybridPlatformsConductor::TestsRunner do
     end
   end
 
+  it 'executes all tests when all tests are selected' do
+    with_test_platform do
+      register_test_plugins(test_tests_runner,
+        global_test: HybridPlatformsConductorTest::TestPlugins::Global,
+        global_test_2: HybridPlatformsConductorTest::TestPlugins::Global
+      )
+      test_tests_runner.tests = [:all]
+      expect(test_tests_runner.run_tests([])).to eq 0
+      expect(HybridPlatformsConductorTest::TestPlugins::Global.nbr_runs).to eq 2
+    end
+  end
+
   it 'returns 1 when tests are failing' do
     with_test_platform do
       register_test_plugins(test_tests_runner, global_test: HybridPlatformsConductorTest::TestPlugins::Global)
@@ -21,43 +33,52 @@ describe HybridPlatformsConductor::TestsRunner do
   end
 
   it 'returns 0 when tests are failing as expected' do
-    with_repository('platform') do |repository|
-      with_platforms "test_platform path: '#{repository}'" do
-        register_platform_handlers test: HybridPlatformsConductorTest::TestPlatformHandler
-        self.test_platforms_info = { 'platform' => {} }
-        File.write("#{repository}/hpc.json", '{ "test": { "expected_failures": { "platform_test": { "": "Expected failure" } } } }')
-        register_test_plugins(test_tests_runner, platform_test: HybridPlatformsConductorTest::TestPlugins::Platform)
-        HybridPlatformsConductorTest::TestPlugins::Platform.fail_for = ['platform']
-        expect(test_tests_runner.run_tests([])).to eq 0
-        expect(HybridPlatformsConductorTest::TestPlugins::Platform.runs).to eq []
-      end
+    with_test_platform do |repository|
+      File.write("#{repository}/hpc.json", '{ "test": { "expected_failures": { "platform_test": { "": "Expected failure" } } } }')
+      register_test_plugins(test_tests_runner, platform_test: HybridPlatformsConductorTest::TestPlugins::Platform)
+      HybridPlatformsConductorTest::TestPlugins::Platform.fail_for = ['platform']
+      expect(test_tests_runner.run_tests([])).to eq 0
+      expect(HybridPlatformsConductorTest::TestPlugins::Platform.runs).to eq []
     end
   end
 
   it 'returns 0 when tests are failing as expected on a given node' do
-    with_repository('platform') do |repository|
-      with_platforms "test_platform path: '#{repository}'" do
-        register_platform_handlers test: HybridPlatformsConductorTest::TestPlatformHandler
-        self.test_platforms_info = { 'platform' => { nodes: { 'node1' => {}, 'node2' => {}, 'node3' => {} } } }
-        File.write("#{repository}/hpc.json", '{ "test": { "expected_failures": { "node_test": { "node2": "Expected failure" } } } }')
-        register_test_plugins(test_tests_runner, node_test: HybridPlatformsConductorTest::TestPlugins::Node)
-        HybridPlatformsConductorTest::TestPlugins::Node.fail_for = { node_test: ['node2'] }
-        expect(test_tests_runner.run_tests(%w[node1 node2 node3])).to eq 0
-        expect(HybridPlatformsConductorTest::TestPlugins::Node.runs.sort).to eq [[:node_test, 'node1'], [:node_test, 'node3']].sort
-      end
+    with_test_platform(nodes: { 'node1' => {}, 'node2' => {}, 'node3' => {} }) do |repository|
+      File.write("#{repository}/hpc.json", '{ "test": { "expected_failures": { "node_test": { "node2": "Expected failure" } } } }')
+      register_test_plugins(test_tests_runner, node_test: HybridPlatformsConductorTest::TestPlugins::Node)
+      HybridPlatformsConductorTest::TestPlugins::Node.fail_for = { node_test: ['node2'] }
+      expect(test_tests_runner.run_tests(%w[node1 node2 node3])).to eq 0
+      expect(HybridPlatformsConductorTest::TestPlugins::Node.runs.sort).to eq [[:node_test, 'node1'], [:node_test, 'node3']].sort
     end
   end
 
   it 'returns 1 when tests are succeeding but were expected to fail' do
-    with_repository('platform') do |repository|
-      with_platforms "test_platform path: '#{repository}'" do
-        register_platform_handlers test: HybridPlatformsConductorTest::TestPlatformHandler
-        self.test_platforms_info = { 'platform' => {} }
-        File.write("#{repository}/hpc.json", '{ "test": { "expected_failures": { "platform_test": { "": "Expected failure" } } } }')
-        register_test_plugins(test_tests_runner, platform_test: HybridPlatformsConductorTest::TestPlugins::Platform)
-        expect(test_tests_runner.run_tests([])).to eq 1
-        expect(HybridPlatformsConductorTest::TestPlugins::Platform.runs).to eq [[:platform_test, 'platform']]
-      end
+    with_test_platform do |repository|
+      File.write("#{repository}/hpc.json", '{ "test": { "expected_failures": { "platform_test": { "": "Expected failure" } } } }')
+      register_test_plugins(test_tests_runner, platform_test: HybridPlatformsConductorTest::TestPlugins::Platform)
+      expect(test_tests_runner.run_tests([])).to eq 1
+      expect(HybridPlatformsConductorTest::TestPlugins::Platform.runs).to eq [[:platform_test, 'platform']]
+    end
+  end
+
+  it 'returns 1 when extra expected failures have not been tested when running all tests' do
+    with_test_platform do |repository|
+      File.write("#{repository}/hpc.json", '{ "test": { "expected_failures": { "platform_test": { "another_node": "Expected failure" } } } }')
+      register_test_plugins(test_tests_runner, platform_test: HybridPlatformsConductorTest::TestPlugins::Platform)
+      expect(test_tests_runner.run_tests([])).to eq 1
+      expect(HybridPlatformsConductorTest::TestPlugins::Platform.runs).to eq [[:platform_test, 'platform']]
+    end
+  end
+
+  it 'returns 0 when other platforms report extra expected failures that were not part of the test runs' do
+    with_test_platforms(
+      'platform1' => { nodes: { 'node1' => {} } },
+      'platform2' => {}
+    ) do |repositories|
+      File.write("#{repositories['platform2']}/hpc.json", '{ "test": { "expected_failures": { "node_test": { "another_node": "Expected failure" } } } }')
+      register_test_plugins(test_tests_runner, node_test: HybridPlatformsConductorTest::TestPlugins::Node)
+      expect(test_tests_runner.run_tests([{ all: true }])).to eq 0
+      expect(HybridPlatformsConductorTest::TestPlugins::Node.runs).to eq [[:node_test, 'node1']]
     end
   end
 

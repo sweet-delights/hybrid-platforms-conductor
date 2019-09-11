@@ -32,6 +32,10 @@ module HybridPlatformsConductor
       #   String or nil
       attr_reader :node
 
+      # Expected failure, or nil if not expected to fail
+      #   String or nil
+      attr_reader :expected_failure
+
       # Constructor
       #
       # Parameters::
@@ -39,10 +43,11 @@ module HybridPlatformsConductor
       # * *logger_stderr* (Logger): Logger to be used for stderr [default = Logger.new(STDERR)]
       # * *nodes_handler* (NodesHandler): Nodes handler that can be used by tests
       # * *deployer* (Deployer): Deployer that can be used by tests
-      # * *name* (String): Name of the test being instantiated [default = 'unknown_test']
-      # * *platform* (PlatformHandler): Platform handler for which the test is instantiated, or nil if global [default = nil]
-      # * *node* (String): Node name for which the test is instantiated, or nil if global or platform specific [default = nil]
-      def initialize(logger, logger_stderr, nodes_handler, deployer, name: 'unknown_test', platform: nil, node: nil)
+      # * *name* (String): Name of the test being instantiated [default: 'unknown_test']
+      # * *platform* (PlatformHandler): Platform handler for which the test is instantiated, or nil if global [default: nil]
+      # * *node* (String): Node name for which the test is instantiated, or nil if global or platform specific [default: nil]
+      # * *expected_failure* (String or nil): Expected failure, or nil if not expected to fail [default: nil]
+      def initialize(logger, logger_stderr, nodes_handler, deployer, name: 'unknown_test', platform: nil, node: nil, expected_failure: nil)
         @logger = logger
         @logger_stderr = logger_stderr
         @nodes_handler = nodes_handler
@@ -50,6 +55,7 @@ module HybridPlatformsConductor
         @name = name
         @platform = platform
         @node = node
+        @expected_failure = expected_failure
         @errors = []
         @executed = false
       end
@@ -96,7 +102,7 @@ module HybridPlatformsConductor
       # * *message* (String): The error message
       # * *details* (String or nil): Additional details, or nil if none [default = nil]
       def error(message, details = nil)
-        log_error "[ #{self} ] - #{message}#{details.nil? ? '' : "\n#{details}"}"
+        log_error "[ #{self} ] - #{message}#{details.nil? ? '' : "\n#{details}"}" if @expected_failure.nil?
         @errors << message
       end
 

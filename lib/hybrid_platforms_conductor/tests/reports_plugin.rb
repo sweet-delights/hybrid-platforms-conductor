@@ -125,7 +125,8 @@ module HybridPlatformsConductor
       #
       # Parameters::
       # * *tests* (Array<Test>): List of tests to group errors from
-      # * *group_criterias* (Array<Symbol or Proc>): Ordered list of group by criterias. Each criteria applies on a list of tests and can be one of the following:
+      # * *only_as_expected* (Boolean): If true, only report errors that were expected [default: false]
+      # * *group_criterias* (Symbol or Proc or Array<Symbol or Proc>): Ordered list (or single item) of group by criterias. Each criteria applies on a list of tests and can be one of the following:
       #   * Symbol: Named criteria. Can be one of the following:
       #     * test_name: Group by test name
       #     * platform: Group by platform
@@ -137,9 +138,9 @@ module HybridPlatformsConductor
       #       * Object: The group by criteria
       # Result::
       # * Hash or Array<String>: Resulting tree structure, following the group by criterias, giving as leaves the grouped list of errors. If the criterias are empty, return the list of errors.
-      def group_errors(tests, *group_criterias)
+      def group_errors(tests, *group_criterias, only_as_expected: false)
         if group_criterias.empty?
-          tests.inject([]) { |errors, test| errors + test.errors }
+          tests.inject([]) { |errors, test| !only_as_expected || test.expected_failure ? errors + test.errors : errors }
         else
           first_criteria = group_criterias.first
           if first_criteria.is_a?(Symbol)
@@ -157,7 +158,7 @@ module HybridPlatformsConductor
           end
           groups = {}
           tests.group_by(&first_criteria).each do |first_group, grouped_tests|
-            next_grouped_errors = group_errors(grouped_tests, *group_criterias[1..-1])
+            next_grouped_errors = group_errors(grouped_tests, *group_criterias[1..-1], only_as_expected: only_as_expected, )
             groups[first_group] = next_grouped_errors unless next_grouped_errors.empty?
           end
           Hash[groups.sort]
@@ -173,7 +174,6 @@ module HybridPlatformsConductor
       #   * *tested_nodes* (Array<String>): Tested nodes in the list
       #   * *tested_nodes_in_error* (Array<String>): Tested nodes in error in the list
       def nodes_by_hosts_list
-        nodes_in_error = group_errors(node_tests, :node).keys
         no_list_nodes = @nodes_handler.known_hostnames
         Hash[(
           @nodes_handler.known_hosts_lists.sort.map do |hosts_list_name|
@@ -190,7 +190,8 @@ module HybridPlatformsConductor
             {
               nodes: list_nodes,
               tested_nodes: list_nodes & @tested_nodes,
-              tested_nodes_in_error: list_nodes & nodes_in_error
+              tested_nodes_in_error: list_nodes & group_errors(node_tests, :node).keys,
+              tested_nodes_in_error_as_expected: list_nodes & group_errors(node_tests, :node, only_as_expected: true).keys
             }
           ]
         end]
