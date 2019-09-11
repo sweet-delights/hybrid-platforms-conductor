@@ -23,47 +23,53 @@ module HybridPlatformsConductorTest
       # Hash<String, Hash<Symbol,Object> >
       attr_accessor :platforms_info
 
+      # Global properties.
+      # Properties can be:
+      # * *options_parse_for_deploy* (Proc or nil): Code called to populate an options parser, as a feature of the platform handler, or nil fo none [default = nil]
+      attr_accessor :global_info
+
       # Reset variables, so that they don't interfere between tests
       def reset
         @platforms_info = {}
+        @global_info = {}
       end
 
     end
 
-    # Get the list of known hostnames.
+    # Get the list of known nodes.
     # [API] - This method is mandatory.
     #
     # Result::
-    # * Array<String>: List of hostnames
+    # * Array<String>: List of node names
     def known_nodes
       platform_info[:nodes].keys
     end
 
-    # Get the list of known host list names
+    # Get the list of known nodes lists names.
     # [API] - This method is optional.
     #
     # Result::
-    # * Array<String>: List of hosts list names
+    # * Array<String>: List of nodes lists' names
     def known_nodes_lists
       platform_info[:nodes_lists].keys
     end
 
-    # Get the list of host descriptions belonging to a hosts list
+    # Get the list of nodes selectors belonging to a nodes list
     # [API] - This method is optional unless known_nodes_lists has been defined.
     #
     # Parameters::
-    # * *nodes_list_name* (String): Name of the nodes list
+    # * *nodes_list* (String): Name of the nodes list
     # Result::
-    # * Array<Object>: List of host descriptions
-    def hosts_desc_from_list(nodes_list_name)
+    # * Array<Object>: List of nodes selectors
+    def nodes_selectors_from_nodes_list(nodes_list_name)
       platform_info[:nodes_lists][nodes_list_name]
     end
 
-    # Get the metadata of a given hostname.
+    # Get the metadata of a given node.
     # [API] - This method is mandatory.
     #
     # Parameters::
-    # * *node* (String): Node to read mtadata from
+    # * *node* (String): Node to read metadata from
     # Result::
     # * Hash<String,Object>: The corresponding metadata (as a JSON object)
     def metadata_for(node)
@@ -97,7 +103,7 @@ module HybridPlatformsConductorTest
       service
     end
 
-    # Package the repository, ready to be deployed on artefacts.
+    # Package the repository, ready to be deployed on artefacts or directly to a node.
     # [API] - This method is mandatory.
     # [API] - @cmd_runner is accessible.
     # [API] - @ssh_executor is accessible.
@@ -105,7 +111,9 @@ module HybridPlatformsConductorTest
       platform_info[:package].call if platform_info.key?(:package)
     end
 
-    # Deliver what has been packaged for a given hostname.
+    # Deliver what has been packaged to the artefacts server for a given node.
+    # package has been called prior to this method.
+    # This method won't be called in case of a direct deploy to the node.
     # [API] - This method is mandatory.
     # [API] - @cmd_runner is accessible.
     # [API] - @ssh_executor is accessible.
@@ -116,8 +124,17 @@ module HybridPlatformsConductorTest
       node_info(node)[:deliver_on_artefact_for].call if node_info(node).key?(:deliver_on_artefact_for)
     end
 
-    # Get the list of actions to perform to deploy on a given hostname.
-    # Those actions can be executed in parallel with other deployments on other hostnames. They must be thread safe.
+    # Complete an option parser with options meant to control the deployment of such a platform.
+    # [API] - This method is optional.
+    #
+    # Parameters::
+    # * *options_parser* (OptionParser): The option parser to complete
+    def self.options_parse_for_deploy(options_parser)
+      self.global_info[:options_parse_for_deploy].call(options_parser) if self.global_info.key?(:options_parse_for_deploy)
+    end
+
+    # Get the list of actions to perform to deploy on a given node.
+    # Those actions can be executed in parallel with other deployments on other nodes. They must be thread safe.
     # [API] - This method is mandatory.
     # [API] - @cmd_runner is accessible.
     # [API] - @ssh_executor is accessible.

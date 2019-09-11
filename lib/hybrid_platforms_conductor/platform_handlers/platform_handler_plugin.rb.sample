@@ -1,7 +1,7 @@
 # This file is an example of a platform handler plugin.
 # Platform handler plugins should be stored in a separate Git repository, and packaged as Rubygems that are then included in Gemfile.
 # This way their discovery is automatic.
-# The PlatformHandlerPlugin example contains example of code that could be used to write a plugin for a new kind of platform handler.
+# The PlatformHandlerPlugin example contains example of code that could be used to write a plugin for a new platform type.
 require 'hybrid_platforms_conductor/platform_handler'
 
 module HybridPlatformsConductor
@@ -40,7 +40,7 @@ module HybridPlatformsConductor
       # [API] - This method is optional.
       def init
         # This method is called when initializing a new instance of this platform handler, for a given repository.
-        @my_instance_variable = initial_value
+        @my_instance_variable = :initial_value
       end
 
       # Setup the platform, install dependencies...
@@ -60,9 +60,9 @@ module HybridPlatformsConductor
       def known_nodes
         # This method is used to get the list of nodes that are handled by the platform
         [
-          'my_host_1',
-          'my_host_2',
-          'my_host_3'
+          'my_node_1',
+          'my_node_2',
+          'my_node_3'
         ]
       end
 
@@ -72,39 +72,39 @@ module HybridPlatformsConductor
       # Result::
       # * Array<String>: List of nodes lists' names
       def known_nodes_lists
-        # This method is used to get the list of hosts lists that are handled by the platform.
-        # A hosts list is just a group of hosts description that can then be used to ease command line interfaces.
+        # This method is used to get the list of nodes lists that are handled by the platform.
+        # A nodes list is just a group of nodes selectors that can then be used to ease command line interfaces.
         [
-          'my_host_list_1',
-          'my_host_list_2'
+          'my_nodes_list_1',
+          'my_nodes_list_2'
         ]
       end
 
-      # Get the list of host descriptions belonging to a hosts list
+      # Get the list of nodes selectors belonging to a nodes list
       # [API] - This method is optional unless known_nodes_lists has been defined.
       #
       # Parameters::
-      # * *hosts_list_name* (String): Name of the hosts list
+      # * *nodes_list* (String): Name of the nodes list
       # Result::
-      # * Array<Object>: List of host descriptions
-      def hosts_desc_from_list(hosts_list_name)
-        # If known_nodes_lists has been defined, then this method should return the list of hosts descriptions of a given host list.
-        case hosts_list_name
-        when 'my_host_list_1'
+      # * Array<Object>: List of nodes selectors
+      def nodes_selectors_from_nodes_list(nodes_list)
+        # If known_nodes_lists has been defined, then this method should return the list of nodes selectors of a given nodes list.
+        case nodes_list
+        when 'my_nodes_list_1'
           [
-            'my_host_1',
-            'my_host_2'
+            'my_node_1',
+            'my_node_2'
           ]
-        when 'my_host_list_2'
+        when 'my_nodes_list_2'
           [
-            '/my_host.*/'
+            '/my_node.*/'
           ]
         else
-          raise "Unknown list name #{hosts_list_name}"
+          raise "Unknown list name #{nodes_list}"
         end
       end
 
-      # Get the metadata of a given hostname.
+      # Get the metadata of a given node.
       # [API] - This method is mandatory.
       #
       # Parameters::
@@ -142,25 +142,27 @@ module HybridPlatformsConductor
         'hadoop_worker'
       end
 
-      # Package the repository, ready to be deployed on artefacts.
+      # Package the repository, ready to be deployed on artefacts or directly to a node.
       # [API] - This method is mandatory.
       # [API] - @cmd_runner is accessible.
       # [API] - @ssh_executor is accessible.
       def package
-        # This method should take all actions to prepare the repository to be deployed on hosts later.
+        # This method should take all actions to prepare the repository to be deployed on nodes later.
         # Usually it is meant to package the deployment scripts.
         @cmd_runner.run_cmd "cd #{@repository_path} && ./scripts/package_in_debian_format.sh"
       end
 
-      # Deliver what has been packaged for a given hostname.
+      # Deliver what has been packaged to the artefacts server for a given node.
+      # package has been called prior to this method.
+      # This method won't be called in case of a direct deploy to the node.
       # [API] - This method is mandatory.
       # [API] - @cmd_runner is accessible.
       # [API] - @ssh_executor is accessible.
       #
       # Parameters::
-      # * *hostname* (String): Hostname to deliver for
-      def deliver_on_artefact_for(hostname)
-        # This method is used to deliver a packaged repository on the artefact server that is accessible then to a hostname.
+      # * *node* (String): Node to deliver for
+      def deliver_on_artefact_for(node)
+        # This method is used to deliver a packaged repository on the artefact server that is accessible then to a node.
         @cmd_runner.run_cmd "cd #{@repository_path} && scp package.deb artefact_user@artefact.server.my_company.net:./artefacts/package.deb"
       end
 
@@ -196,6 +198,8 @@ module HybridPlatformsConductor
       end
 
       # Prepare deployments.
+      # This method is called just before getting and executing the actions to be deployed.
+      # It is called once per platform.
       # [API] - This method is optional.
       # [API] - @cmd_runner is accessible.
       # [API] - @ssh_executor is accessible.
@@ -208,21 +212,21 @@ module HybridPlatformsConductor
         ENV['deploy_time'] = Time.now.to_s
       end
 
-      # Get the list of actions to perform to deploy on a given hostname.
-      # Those actions can be executed in parallel with other deployments on other hostnames. They must be thread safe.
+      # Get the list of actions to perform to deploy on a given node.
+      # Those actions can be executed in parallel with other deployments on other nodes. They must be thread safe.
       # [API] - This method is mandatory.
       # [API] - @cmd_runner is accessible.
       # [API] - @ssh_executor is accessible.
       #
       # Parameters::
-      # * *hostname* (String): Hostname to deploy on
+      # * *node* (String): Node to deploy on
       # * *use_why_run* (Boolean): Do we use a why-run mode? [default = true]
       # Result::
       # * Array< Hash<Symbol,Object> >: List of actions to be done
-      def actions_to_deploy_on(hostname, use_why_run: true)
-        # This method returns all the actions to execute to deploy on a hostname.
+      def actions_to_deploy_on(node, use_why_run: true)
+        # This method returns all the actions to execute to deploy on a node.
         # The use_why_run switch is on if the deployment should just be simulated.
-        # Those actions (bash commands, scp of files, ruby code...) should be thread safe as they can be executed in parallel with other deployment actions for other hosts in case of a concurrent deployment on several nodes.
+        # Those actions (bash commands, scp of files, ruby code...) should be thread safe as they can be executed in parallel with other deployment actions for other nodes in case of a concurrent deployment on several nodes.
         # The complete description of an action can be found in ssh_executor.rb file, in the execute_actions_on method description.
         [
           {
