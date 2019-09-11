@@ -1,3 +1,9 @@
+# [7.0.0](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv6.10.0&sourceBranch=refs%2Ftags%2Fv7.0.0) (2019-09-11)
+
+### Breaking changes
+
+* Clean up api of NodesHandler ([0b1011e2](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/commits/0b1011e243e9741de2a36432570acf6ca505b307))
+
 # [6.10.0](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv6.9.0&sourceBranch=refs%2Ftags%2Fv6.10.0) (2019-09-11)
 
 ### New features
