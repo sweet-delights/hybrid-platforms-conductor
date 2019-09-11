@@ -1,3 +1,9 @@
+# [6.10.0](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv6.9.0&sourceBranch=refs%2Ftags%2Fv6.10.0) (2019-09-11)
+
+### New features
+
+* [Feature] Better reporting expected errors in tests: no more useless logging + Count them as errors without failing ([cc566239](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/commits/cc566239b3994f609119851de39b8ade239b7932))
+
 # [6.9.0](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv6.8.1&sourceBranch=refs%2Ftags%2Fv6.9.0) (2019-09-11)
 
 ### New features
