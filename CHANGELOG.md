@@ -1,3 +1,9 @@
+# [6.9.0](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv6.8.1&sourceBranch=refs%2Ftags%2Fv6.9.0) (2019-09-11)
+
+### New features
+
+* Add tests + Clarified API by adding new accessors + Some bug corrections found during testing ([1a2cb2f5](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/commits/1a2cb2f592a19dd35b8b84e9829b1ed85cd06f49))
+
 # [6.8.1](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv6.8.0&sourceBranch=refs%2Ftags%2Fv6.8.1) (2019-08-19)
 
 ### Fixes
