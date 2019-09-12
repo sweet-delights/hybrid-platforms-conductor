@@ -9,7 +9,7 @@
     errors = errors_for(@status_test_name, **@status_test_criteria)
     color, title =
       if missing_tests_for(@status_test_name, **@status_test_criteria)
-        ['Grey', 'Missing tests']
+        ['Grey', 'Not run']
       elsif errors.empty?
         ['Green', 'Success']
       elsif select_tests(@status_test_name, **@status_test_criteria).any? { |test| test.expected_failure.nil? && !test.errors.empty? }

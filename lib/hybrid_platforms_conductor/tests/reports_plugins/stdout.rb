@@ -19,7 +19,7 @@ module HybridPlatformsConductor
           out
 
           errors = group_errors(global_tests, :test_name, filter: :only_as_non_expected)
-          out "======= #{errors.size} failing global tests:"
+          out "======= #{errors.size} unexpected failing global tests:"
           out
           errors.each do |test_name, test_errors|
             out "===== #{test_name} found #{test_errors.size} errors:"
@@ -31,7 +31,7 @@ module HybridPlatformsConductor
           out
 
           errors = group_errors(platform_tests, :test_name, :platform, filter: :only_as_non_expected)
-          out "======= #{errors.size} failing platform tests:"
+          out "======= #{errors.size} unexpected failing platform tests:"
           out
           errors.each do |test_name, errors_by_platform|
             out "===== #{test_name} found #{errors_by_platform.size} platforms having errors:"
@@ -46,7 +46,7 @@ module HybridPlatformsConductor
           out
 
           errors = group_errors(node_tests, :test_name, :node, filter: :only_as_non_expected)
-          out "======= #{errors.size} failing node tests:"
+          out "======= #{errors.size} unexpected failing node tests:"
           out
           errors.each do |test_name, errors_by_node|
             out "===== #{test_name} found #{errors_by_node.size} nodes having errors:"
@@ -61,7 +61,7 @@ module HybridPlatformsConductor
           out
 
           errors = group_errors(platform_tests, :platform, :test_name, filter: :only_as_non_expected)
-          out "======= #{errors.size} failing platforms:"
+          out "======= #{errors.size} unexpected failing platforms:"
           out
           errors.each do |platform, errors_by_test|
             out "===== #{platform.repository_path} has #{errors_by_test.size} failing tests:"
@@ -76,7 +76,7 @@ module HybridPlatformsConductor
           out
 
           errors = group_errors(node_tests, :node, :test_name, filter: :only_as_non_expected)
-          out "======= #{errors.size} failing nodes:"
+          out "======= #{errors.size} unexpected failing nodes:"
           out
           errors.each do |node, errors_by_test|
             out "===== #{node} has #{errors_by_test.size} failing tests:"
