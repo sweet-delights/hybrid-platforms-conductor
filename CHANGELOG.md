@@ -1,3 +1,9 @@
+# [11.0.0](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv10.0.0&sourceBranch=refs%2Ftags%2Fv11.0.0) (2019-09-17)
+
+### Breaking changes
+
+* [Breaking] Clean up and harmonized command line and env variables interfaces ([ddf1d522](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/commits/ddf1d5224dcb6ac7edf75a7e9b62495766b9a1b7))
+
 # [10.0.0](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv9.0.0&sourceBranch=refs%2Ftags%2Fv10.0.0) (2019-09-17)
 
 ### Breaking changes
