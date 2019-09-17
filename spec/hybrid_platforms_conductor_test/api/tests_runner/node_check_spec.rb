@@ -22,7 +22,7 @@ describe HybridPlatformsConductor::TestsRunner do
     it 'executes check node tests once per node' do
       with_test_platform_for_node_check_tests do
         test_tests_runner.tests = [:node_check_test]
-        expect(test_deployer).to receive(:deploy_for).with(%w[node11 node12 node21 node22]).once do
+        expect(test_deployer).to receive(:deploy_on).with(%w[node11 node12 node21 node22]).once do
           expect(test_deployer.use_why_run).to eq true
           {
             'node11' => [0, 'node11 check ok', 'node11 stderr'],
@@ -44,7 +44,7 @@ describe HybridPlatformsConductor::TestsRunner do
     it 'executes check node tests only on specified nodes' do
       with_test_platform_for_node_check_tests do
         test_tests_runner.tests = [:node_check_test]
-        expect(test_deployer).to receive(:deploy_for).with(%w[node12 node22]).once do
+        expect(test_deployer).to receive(:deploy_on).with(%w[node12 node22]).once do
           expect(test_deployer.use_why_run).to eq true
           {
             'node12' => [0, 'node12 check ok', 'node12 stderr'],
@@ -62,7 +62,7 @@ describe HybridPlatformsConductor::TestsRunner do
     it 'executes check node tests once per node even if there are several tests using check reports' do
       with_test_platform_for_node_check_tests do
         test_tests_runner.tests = [:node_check_test, :node_check_test_2]
-        expect(test_deployer).to receive(:deploy_for).with(%w[node11 node12 node21 node22]).once do
+        expect(test_deployer).to receive(:deploy_on).with(%w[node11 node12 node21 node22]).once do
           expect(test_deployer.use_why_run).to eq true
           {
             'node11' => [0, 'node11 check ok', 'node11 stderr'],
@@ -88,7 +88,7 @@ describe HybridPlatformsConductor::TestsRunner do
     it 'fails when a check node tests returns an error for a node' do
       with_test_platform_for_node_check_tests do
         test_tests_runner.tests = [:node_check_test]
-        expect(test_deployer).to receive(:deploy_for).with(%w[node11 node12 node21 node22]).once do
+        expect(test_deployer).to receive(:deploy_on).with(%w[node11 node12 node21 node22]).once do
           expect(test_deployer.use_why_run).to eq true
           {
             'node11' => [0, 'node11 check ok', 'node11 stderr'],
@@ -110,7 +110,7 @@ describe HybridPlatformsConductor::TestsRunner do
     it 'fails when a check node tests raises an error' do
       with_test_platform_for_node_check_tests do
         test_tests_runner.tests = [:node_check_test]
-        expect(test_deployer).to receive(:deploy_for).with(%w[node11 node12 node21 node22]).once do
+        expect(test_deployer).to receive(:deploy_on).with(%w[node11 node12 node21 node22]).once do
           expect(test_deployer.use_why_run).to eq true
           {
             'node11' => [0, 'node11 check ok', 'node11 stderr'],
@@ -137,7 +137,7 @@ describe HybridPlatformsConductor::TestsRunner do
         File.write('./run_logs/node21.stdout', 'node21 check ok from logs')
         File.write('./run_logs/node22.stdout', 'node22 check ok from logs')
         test_tests_runner.tests = [:node_check_test]
-        expect(test_deployer).not_to receive(:deploy_for)
+        expect(test_deployer).not_to receive(:deploy_on)
         test_tests_runner.skip_run = true
         expect(test_tests_runner.run_tests([{ all: true }])).to eq 0
         expect(HybridPlatformsConductorTest::TestPlugins::NodeCheck.runs.sort).to eq [
@@ -157,7 +157,7 @@ describe HybridPlatformsConductor::TestsRunner do
         FileUtils.rm_f './run_logs/node21.stdout'
         File.write('./run_logs/node22.stdout', 'node22 check ok from logs')
         test_tests_runner.tests = [:node_check_test]
-        expect(test_deployer).not_to receive(:deploy_for)
+        expect(test_deployer).not_to receive(:deploy_on)
         test_tests_runner.skip_run = true
         expect(test_tests_runner.run_tests([{ all: true }])).to eq 1
         expect(HybridPlatformsConductorTest::TestPlugins::NodeCheck.runs.sort).to eq [
@@ -172,7 +172,7 @@ describe HybridPlatformsConductor::TestsRunner do
       with_test_platform_for_node_check_tests do
         HybridPlatformsConductorTest::TestPlugins::NodeCheck.only_on_platform_types = %i[test2]
         test_tests_runner.tests = [:node_check_test]
-        expect(test_deployer).to receive(:deploy_for).with(%w[node21 node22]).once do
+        expect(test_deployer).to receive(:deploy_on).with(%w[node21 node22]).once do
           expect(test_deployer.use_why_run).to eq true
           {
             'node21' => [0, 'node21 check ok', 'node21 stderr'],
@@ -191,7 +191,7 @@ describe HybridPlatformsConductor::TestsRunner do
       with_test_platform_for_node_check_tests do
         HybridPlatformsConductorTest::TestPlugins::NodeCheck.only_on_nodes = %w[node12 node22]
         test_tests_runner.tests = [:node_check_test]
-        expect(test_deployer).to receive(:deploy_for).with(%w[node12 node22]).once do
+        expect(test_deployer).to receive(:deploy_on).with(%w[node12 node22]).once do
           expect(test_deployer.use_why_run).to eq true
           {
             'node12' => [0, 'node12 check ok', 'node12 stderr'],
@@ -211,7 +211,7 @@ describe HybridPlatformsConductor::TestsRunner do
         HybridPlatformsConductorTest::TestPlugins::NodeCheck.only_on_platform_types = %i[test2]
         HybridPlatformsConductorTest::TestPlugins::NodeCheck.only_on_nodes = %w[node12 node22]
         test_tests_runner.tests = [:node_check_test]
-        expect(test_deployer).to receive(:deploy_for).with(%w[node22]).once do
+        expect(test_deployer).to receive(:deploy_on).with(%w[node22]).once do
           expect(test_deployer.use_why_run).to eq true
           {
             'node22' => [0, 'node22 check ok', 'node22 stderr']

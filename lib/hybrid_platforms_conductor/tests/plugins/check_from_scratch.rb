@@ -23,7 +23,7 @@ module HybridPlatformsConductor
         def test_for_node
           @deployer.with_docker_container_for(@node, container_id: 'check_from_scratch') do |deployer|
             deployer.use_why_run = true
-            result = deployer.deploy_for(@node)
+            result = deployer.deploy_on(@node)
             assert_equal result.size, 1, "Wrong number of nodes being tested: #{result.size}"
             tested_node, (exit_status, _stdout, _stderr) = result.first
             if exit_status.is_a?(Symbol)

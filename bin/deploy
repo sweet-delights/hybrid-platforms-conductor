@@ -10,4 +10,4 @@ raise 'No node selected. Please use --host-name option to set at least one.' if 
 
 ssh_executor.dump_conf
 # Deploy all
-deployer.deploy_for(executable.selected_nodes)
+deployer.deploy_on(executable.selected_nodes)

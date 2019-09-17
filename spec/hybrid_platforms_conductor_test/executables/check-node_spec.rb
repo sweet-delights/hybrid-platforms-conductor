@@ -15,7 +15,7 @@ describe 'check-node executable' do
 
   it 'checks a given node' do
     with_test_platform_for_check_node do
-      expect(test_deployer).to receive(:deploy_for).with('node') do
+      expect(test_deployer).to receive(:deploy_on).with('node') do
         expect(test_deployer.use_why_run).to eq true
         test_deployer.stdout_device << "Check ok\n"
         { 'node' => [0, "Check ok\n", ''] }

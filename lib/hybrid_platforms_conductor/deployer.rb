@@ -126,7 +126,7 @@ module HybridPlatformsConductor
       @cmd_runner = cmd_runner
       @nodes_handler = nodes_handler
       @ssh_executor = ssh_executor
-      @hosts = []
+      @nodes = []
       @secrets = []
       @allow_deploy_non_master = false
       # Default values
@@ -136,20 +136,12 @@ module HybridPlatformsConductor
       @force_direct_deploy = false
     end
 
-    # Validate that parsed parameters are valid
-    def validate_params
-      raise 'Can\'t have a timeout unless why-run mode. Please don\'t use --timeout without --why-run.' if !@timeout.nil? && !@use_why_run
-      @secrets.each do |secret_file|
-        raise "Missing secret file: #{secret_file}" unless File.exist?(secret_file)
-      end
-    end
-
-    # Complete an option parser with options meant to control this SSH executor
+    # Complete an option parser with options meant to control this Deployer
     #
     # Parameters::
     # * *options_parser* (OptionParser): The option parser to complete
     # * *parallel_switch* (Boolean): Do we allow parallel execution to be switched? [default = true]
-    # * *why_run_switch* (Boolean): Do we allow the why run to be switched? [default = false]
+    # * *why_run_switch* (Boolean): Do we allow the why-run mode to be switched? [default = false]
     # * *plugins_options* (Boolean): Do we allow plugins options? [default = true]
     # * *timeout_options* (Boolean): Do we allow timeout options? [default = true]
     def options_parse(options_parser, parallel_switch: true, why_run_switch: false, plugins_options: true, timeout_options: true)
@@ -180,32 +172,42 @@ module HybridPlatformsConductor
       end if plugins_options
     end
 
-    # Deploy for a given list of nodes selectors
+    # Validate that parsed parameters are valid
+    def validate_params
+      raise 'Can\'t have a timeout unless why-run mode. Please don\'t use --timeout without --why-run.' if !@timeout.nil? && !@use_why_run
+      @secrets.each do |secret_file|
+        raise "Missing secret file: #{secret_file}" unless File.exist?(secret_file)
+      end
+    end
+
+    # Deploy on a given list of nodes selectors.
+    # The workflow is the following:
+    # 1. Package the platform to be deployed (once per platform)
+    # 2. Deliver the packaged platform on artefacts server unless we perform direct deployments to the nodes (once per node to be deployed)
+    # 3. Register the secrets (once per platform)
+    # 4. Prepare the platform for deployment if the Platform Handler needs it (once per platform) 
+    # 5. Deploy on the nodes (once per node to be deployed)
     #
     # Parameters::
     # * *nodes_selectors* (Array<Object>): The list of nodes selectors we will deploy to.
     # Result::
-    # * Hash<String, [Integer or Symbol, String, String]>: Exit status code (or Symbol in case of error or dry run), standard output and error for each hostname that has been deployed.
-    def deploy_for(*nodes_selectors)
-      @hosts = @nodes_handler.select_nodes(nodes_selectors.flatten)
-      # Keep a track of the git origins to be used by each host that takes its package from an artefact repository.
-      @git_origins_per_host = {}
-      # Keep track of the locations being deployed
-      @locations = []
+    # * Hash<String, [Integer or Symbol, String, String]>: Exit status code (or Symbol in case of error or dry run), standard output and error for each node that has been deployed.
+    def deploy_on(*nodes_selectors)
+      @nodes = @nodes_handler.select_nodes(nodes_selectors.flatten)
       # Get the platforms that are impacted
-      @platforms = @hosts.map { |hostname| @nodes_handler.platform_for(hostname) }.uniq
+      @platforms = @nodes.map { |node| @nodes_handler.platform_for(node) }.uniq
       # Setup command runner and SSH executor in plugins
       @platforms.each do |platform_handler|
         platform_handler.cmd_runner = @cmd_runner
         platform_handler.ssh_executor = @ssh_executor
       end
       if !@use_why_run && !@allow_deploy_non_master
-        # Check that master is checked out correctly before deploying on every platform concerned by the hostnames to deploy on
+        # Check that master is checked out correctly before deploying.
+        # Check it on every platform having at least 1 node to be deployed.
         @platforms.each do |platform_handler|
           raise "Please checkout master before deploying on #{platform_handler.repository_path}. !!! Only master should be deployed !!!" if `cd #{platform_handler.repository_path} && git status | head -n 1`.strip != 'On branch master'
         end
       end
-
       # Package
       package
       # Deliver package on artefacts
@@ -375,11 +377,11 @@ module HybridPlatformsConductor
     end
 
     # Deliver the packaged repository on all needed artefacts.
-    # Prerequisite: package and hosts= have been called before.
+    # Prerequisite: package has been called before.
     def deliver_on_artefacts
       section 'Delivering on artefacts repositories' do
-        @hosts.each do |hostname|
-          @nodes_handler.platform_for(hostname).deliver_on_artefact_for(hostname)
+        @nodes.each do |node|
+          @nodes_handler.platform_for(node).deliver_on_artefact_for(node)
         end
       end
     end
@@ -388,12 +390,14 @@ module HybridPlatformsConductor
     # Prerequisite: deliver_on_artefacts has been called before in case of non-direct deployment.
     #
     # Result::
-    # * Hash<String, [Integer or Symbol, String, String]>: Exit status code (or Symbol in case of error or dry run), standard output and error for each hostname.
+    # * Hash<String, [Integer or Symbol, String, String]>: Exit status code (or Symbol in case of error or dry run), standard output and error for each node.
     def deploy
       outputs = {}
-      section "#{@use_why_run ? 'Checking' : 'Deploying'} on #{@hosts.size} hosts" do
+      section "#{@use_why_run ? 'Checking' : 'Deploying'} on #{@nodes.size} nodes" do
         # Prepare all the control masters here, as they will be reused for the whole process, including mutexes, deployment and logs saving
-        @ssh_executor.with_ssh_master_to(@hosts, no_exception: true) do
+        @ssh_executor.with_ssh_master_to(@nodes, no_exception: true) do
+
+          # Register the secrets in all the platforms
           @secrets.each do |json_file|
             secret_json = JSON.parse(File.read(json_file))
             @platforms.each do |platform_handler|
@@ -401,20 +405,22 @@ module HybridPlatformsConductor
             end
           end
 
+          # Prepare for deployment
           @platforms.each do |platform_handler|
             platform_handler.prepare_for_deploy(use_why_run: @use_why_run) if platform_handler.respond_to?(:prepare_for_deploy)
           end
 
+          # Deploy for real
           outputs = @ssh_executor.execute_actions(
-            Hash[@hosts.map do |hostname|
+            Hash[@nodes.map do |node|
               [
-                hostname,
+                node,
                 [
                   {
                     scp: { "#{__dir__}/mutex_dir" => '.' },
-                    remote_bash: "while ! #{@ssh_executor.ssh_user == 'root' ? '' : 'sudo '}./mutex_dir lock /tmp/hybrid_platforms_conductor_deploy_lock \"$(ps -o ppid= -p $$)\"; do echo -e 'Another deployment is running on #{hostname}. Waiting for it to finish to continue...' ; sleep 5 ; done"
+                    remote_bash: "while ! #{@ssh_executor.ssh_user == 'root' ? '' : 'sudo '}./mutex_dir lock /tmp/hybrid_platforms_conductor_deploy_lock \"$(ps -o ppid= -p $$)\"; do echo -e 'Another deployment is running on #{node}. Waiting for it to finish to continue...' ; sleep 5 ; done"
                   }
-                ] + @nodes_handler.platform_for(hostname).actions_to_deploy_on(hostname, use_why_run: @use_why_run)
+                ] + @nodes_handler.platform_for(node).actions_to_deploy_on(node, use_why_run: @use_why_run)
               ]
             end],
             timeout: @timeout,
@@ -423,9 +429,9 @@ module HybridPlatformsConductor
           )
           # Free eventual locks
           @ssh_executor.execute_actions(
-            Hash[@hosts.map do |hostname|
+            Hash[@nodes.map do |node|
               [
-                hostname,
+                node,
                 { remote_bash: "#{@ssh_executor.ssh_user == 'root' ? '' : 'sudo '}./mutex_dir unlock /tmp/hybrid_platforms_conductor_deploy_lock" }
               ]
             end],
@@ -433,6 +439,8 @@ module HybridPlatformsConductor
             concurrent: true,
             log_to_dir: nil
           )
+
+          # Save logs
           save_logs(outputs) if !@use_why_run && !@ssh_executor.dry_run
         end
       end
@@ -443,16 +451,16 @@ module HybridPlatformsConductor
     # It uploads them on the nodes that have been deployed.
     #
     # Parameters::
-    # * *logs* (Hash<String, [Integer or Symbol, String, String]>): Exit status code (or Symbol in case of error or dry run), standard output and error for each hostname.
+    # * *logs* (Hash<String, [Integer or Symbol, String, String]>): Exit status code (or Symbol in case of error or dry run), standard output and error for each node.
     def save_logs(logs)
-      section "Saving deployment logs for #{logs.size} hosts" do
+      section "Saving deployment logs for #{logs.size} nodes" do
         Dir.mktmpdir('hybrid_platforms_conductor-logs') do |tmp_dir|
           @ssh_executor.execute_actions(
-            Hash[logs.map do |hostname, (exit_status, stdout, stderr)|
+            Hash[logs.map do |node, (exit_status, stdout, stderr)|
               # Create a log file to be scp with all relevant info
               now = Time.now.utc
               log_file = "#{tmp_dir}/#{now.strftime('%F_%H%M%S')}_#{@ssh_executor.ssh_user}"
-              platform_info = @nodes_handler.platform_for(hostname).info
+              platform_info = @nodes_handler.platform_for(node).info
               user_name = @ssh_executor.ssh_user
               File.write(
                 log_file,
@@ -471,7 +479,7 @@ module HybridPlatformsConductor
                   (stderr || '')
               )
               [
-                hostname,
+                node,
                 {
                   remote_bash: "#{user_name == 'root' ? '' : 'sudo '}mkdir -p /var/log/deployments",
                   scp: {

@@ -17,7 +17,7 @@ describe 'executables\' Deployer options' do
     with_test_platform_for_deployer_options do |repository|
       secrets_file = "#{repository}/my_secrets.json"
       File.write(secrets_file, '{}')
-      expect(test_deployer).to receive(:deploy_for).with(['node']) do
+      expect(test_deployer).to receive(:deploy_on).with(['node']) do
         expect(test_deployer.secrets).to eq [secrets_file]
         {}
       end
@@ -33,7 +33,7 @@ describe 'executables\' Deployer options' do
       File.write(secrets_file1, '{}')
       secrets_file2 = "#{repository}/my_secrets2.json"
       File.write(secrets_file2, '{}')
-      expect(test_deployer).to receive(:deploy_for).with(['node']) do
+      expect(test_deployer).to receive(:deploy_on).with(['node']) do
         expect(test_deployer.secrets.sort).to eq [secrets_file1, secrets_file2].sort
         {}
       end
@@ -45,7 +45,7 @@ describe 'executables\' Deployer options' do
 
   it 'does not use artefacts server while deploying' do
     with_test_platform_for_deployer_options do |repository|
-      expect(test_deployer).to receive(:deploy_for).with(['node']) do
+      expect(test_deployer).to receive(:deploy_on).with(['node']) do
         expect(test_deployer.force_direct_deploy).to eq true
         {}
       end
@@ -57,7 +57,7 @@ describe 'executables\' Deployer options' do
 
   it 'uses parallel mode' do
     with_test_platform_for_deployer_options do |repository|
-      expect(test_deployer).to receive(:deploy_for).with(['node']) do
+      expect(test_deployer).to receive(:deploy_on).with(['node']) do
         expect(test_deployer.concurrent_execution).to eq true
         {}
       end
@@ -69,7 +69,7 @@ describe 'executables\' Deployer options' do
 
   it 'uses why-run' do
     with_test_platform_for_deployer_options do |repository|
-      expect(test_deployer).to receive(:deploy_for).with(['node']) do
+      expect(test_deployer).to receive(:deploy_on).with(['node']) do
         expect(test_deployer.use_why_run).to eq true
         {}
       end
@@ -81,7 +81,7 @@ describe 'executables\' Deployer options' do
 
   it 'uses timeout with why-run' do
     with_test_platform_for_deployer_options do |repository|
-      expect(test_deployer).to receive(:deploy_for).with(['node']) do
+      expect(test_deployer).to receive(:deploy_on).with(['node']) do
         expect(test_deployer.timeout).to eq 5
         {}
       end
@@ -117,7 +117,7 @@ describe 'executables\' Deployer options' do
       end
     end
     with_test_platform_for_deployer_options do
-      expect(test_deployer).to receive(:deploy_for).with(['node']) do
+      expect(test_deployer).to receive(:deploy_on).with(['node']) do
         expect(option_parsed).to eq true
         {}
       end
@@ -135,7 +135,7 @@ describe 'executables\' Deployer options' do
       end
     end
     with_test_platform_for_deployer_options do
-      expect(test_deployer).to receive(:deploy_for).with(['node']) do
+      expect(test_deployer).to receive(:deploy_on).with(['node']) do
         expect(option_parsed).to eq false
         {}
       end

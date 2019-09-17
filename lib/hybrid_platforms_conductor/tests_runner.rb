@@ -469,7 +469,7 @@ module HybridPlatformsConductor
               @deployer.use_why_run = true
               @deployer.force_direct_deploy = true
               @deployer.timeout = CHECK_NODE_TIMEOUT
-              @deployer.deploy_for(nodes_to_test)
+              @deployer.deploy_on(nodes_to_test)
             end
           # Analyze output
           outputs.each do |hostname, (exit_status, stdout, stderr)|

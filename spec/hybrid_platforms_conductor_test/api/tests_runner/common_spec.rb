@@ -97,7 +97,7 @@ describe HybridPlatformsConductor::TestsRunner do
     ) do
       register_test_plugins(test_tests_runner, several_tests: HybridPlatformsConductorTest::TestPlugins::SeveralChecks)
       # Mock the SSH Executor and Deployer expected calls
-      expect(test_deployer).to receive(:deploy_for).with(%w[node11 node12 node21 node22]).once do
+      expect(test_deployer).to receive(:deploy_on).with(%w[node11 node12 node21 node22]).once do
         expect(test_deployer.use_why_run).to eq true
         {
           'node11' => [0, 'node11 check ok', 'node11 stderr'],

@@ -15,7 +15,7 @@ describe 'deploy executable' do
 
   it 'deploys a given node' do
     with_test_platform_for_deploy do
-      expect(test_deployer).to receive(:deploy_for).with(['node']) do
+      expect(test_deployer).to receive(:deploy_on).with(['node']) do
         expect(test_deployer.use_why_run).to eq false
         test_deployer.stdout_device << "Deploy ok\n"
         { 'node' => [0, "Deploy ok\n", ''] }
