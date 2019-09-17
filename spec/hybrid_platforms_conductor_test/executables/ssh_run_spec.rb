@@ -8,7 +8,7 @@ describe 'ssh_run executable' do
   #     * *repository* (String): Platform's repository
   def with_test_platform_for_ssh_run
     with_test_platform({ nodes: { 'node1' => {}, 'node2' => {} } }, false, 'gateway :test_gateway, \'Host test_gateway\'') do |repository|
-      ENV['ti_gateways_conf'] = 'test_gateway'
+      ENV['hpc_ssh_gateways_conf'] = 'test_gateway'
       yield repository
     end
   end
@@ -20,7 +20,7 @@ describe 'ssh_run executable' do
         test_ssh_executor.stdout_device << "Hello\n"
         { 'node1' => [0, "Hello\n", ''] }
       end])
-      exit_code, stdout, stderr = run 'ssh_run', '--host-name', 'node1', '--command', 'echo Hello'
+      exit_code, stdout, stderr = run 'ssh_run', '--node', 'node1', '--command', 'echo Hello'
       expect(exit_code).to eq 0
       expect(stdout).to match /Hello/
       expect(stderr).to eq ''
@@ -36,7 +36,7 @@ describe 'ssh_run executable' do
         test_ssh_executor.stdout_device << "Hello1\nHello2\n"
         { 'node1' => [0, "Hello1\nHello2\n", ''] }
       end])
-      exit_code, stdout, stderr = run 'ssh_run', '--host-name', 'node1', '--command-file', commands_file
+      exit_code, stdout, stderr = run 'ssh_run', '--node', 'node1', '--command-file', commands_file
       expect(exit_code).to eq 0
       expect(stdout).to match /Hello1/
       expect(stdout).to match /Hello2/
@@ -52,7 +52,7 @@ describe 'ssh_run executable' do
         test_ssh_executor.stdout_device << "Hello\n"
         { 'node1' => [0, "Hello\n", ''] }
       end])
-      exit_code, stdout, stderr = run 'ssh_run', '--host-name', 'node1', '--command', 'echo Hello', '--timeout', '5'
+      exit_code, stdout, stderr = run 'ssh_run', '--node', 'node1', '--command', 'echo Hello', '--timeout', '5'
       expect(exit_code).to eq 0
       expect(stdout).to match /Hello/
       expect(stderr).to eq ''
@@ -66,7 +66,7 @@ describe 'ssh_run executable' do
         test_ssh_executor.stderr_device << "Hello\n"
         { 'node1' => [0, '', "Hello\n"] }
       end])
-      exit_code, stdout, stderr = run 'ssh_run', '--host-name', 'node1', '--command', 'echo Hello 2>&1'
+      exit_code, stdout, stderr = run 'ssh_run', '--node', 'node1', '--command', 'echo Hello 2>&1'
       expect(exit_code).to eq 0
       expect(stdout).to eq ''
       expect(stderr).to match /Hello/
@@ -81,7 +81,7 @@ describe 'ssh_run executable' do
         test_ssh_executor.stdout_device << "Hello\nHello\n"
         { 'node1' => [0, "Hello\nHello\n", ''] }
       end])
-      exit_code, stdout, stderr = run 'ssh_run', '--host-name', 'node1', '--host-name', 'node2', '--command', 'echo Hello'
+      exit_code, stdout, stderr = run 'ssh_run', '--node', 'node1', '--node', 'node2', '--command', 'echo Hello'
       expect(exit_code).to eq 0
       expect(stdout).to match /Hello/
       expect(stderr).to eq ''
@@ -95,7 +95,7 @@ describe 'ssh_run executable' do
         test_ssh_executor.stdout_device << "Hello1\nHello2\n"
         { 'node1' => [0, "Hello1\nHello2\n", ''] }
       end])
-      exit_code, stdout, stderr = run 'ssh_run', '--host-name', 'node1', '--command', 'echo Hello1', '--command', 'echo Hello2'
+      exit_code, stdout, stderr = run 'ssh_run', '--node', 'node1', '--command', 'echo Hello1', '--command', 'echo Hello2'
       expect(exit_code).to eq 0
       expect(stdout).to match /Hello1/
       expect(stdout).to match /Hello2/
@@ -119,7 +119,7 @@ describe 'ssh_run executable' do
         test_ssh_executor.stdout_device << "Hello1\nHello2\nHello3\nHello4\nHello5\nHello6\n"
         { 'node1' => [0, "Hello1\nHello2\nHello3\nHello4\nHello5\nHello6\n", ''] }
       end])
-      exit_code, stdout, stderr = run 'ssh_run', '--host-name', 'node1', '--commands-file', commands_file_1, '--command', 'echo Hello3', '--commands-file', commands_file_2, '--command', 'echo Hello6'
+      exit_code, stdout, stderr = run 'ssh_run', '--node', 'node1', '--commands-file', commands_file_1, '--command', 'echo Hello3', '--commands-file', commands_file_2, '--command', 'echo Hello6'
       expect(exit_code).to eq 0
       expect(stdout).to match /Hello1/
       expect(stdout).to match /Hello2/
@@ -139,7 +139,7 @@ describe 'ssh_run executable' do
         test_ssh_executor.stdout_device << "Hello\nHello\n"
         { 'node1' => [0, "Hello\nHello\n", ''] }
       end])
-      exit_code, stdout, stderr = run 'ssh_run', '--host-name', 'node1', '--host-name', 'node2', '--command', 'echo Hello', '--parallel'
+      exit_code, stdout, stderr = run 'ssh_run', '--node', 'node1', '--node', 'node2', '--command', 'echo Hello', '--parallel'
       expect(exit_code).to eq 0
       expect(stdout).to match /Hello/
       expect(stderr).to eq ''
@@ -152,7 +152,7 @@ describe 'ssh_run executable' do
         expect(actions).to eq(['node1'] => [{ interactive: true }])
         { 'node1' => [0, '', ''] }
       end])
-      exit_code, stdout, stderr = run 'ssh_run', '--host-name', 'node1', '--interactive'
+      exit_code, stdout, stderr = run 'ssh_run', '--node', 'node1', '--interactive'
       expect(exit_code).to eq 0
       expect(stdout).to eq ''
       expect(stderr).to eq ''
@@ -161,13 +161,13 @@ describe 'ssh_run executable' do
 
   it 'fails when neither commands nor interactive session are present' do
     with_test_platform_for_ssh_run do
-      expect { run 'ssh_run', '--host-name', 'node1' }.to raise_error(RuntimeError, '--interactive or --command options have to be present')
+      expect { run 'ssh_run', '--node', 'node1' }.to raise_error(RuntimeError, '--interactive or --command options have to be present')
     end
   end
 
   it 'fails when no node is specified' do
     with_test_platform_for_ssh_run do
-      expect { run 'ssh_run', '--command', 'echo Hello' }.to raise_error(RuntimeError, 'No node selected. Please use --host-name option to set at least one.')
+      expect { run 'ssh_run', '--command', 'echo Hello' }.to raise_error(RuntimeError, 'No node selected. Please use --node option to set at least one.')
     end
   end
 

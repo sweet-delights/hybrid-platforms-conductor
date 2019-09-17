@@ -8,7 +8,7 @@ describe 'last_deploys executable' do
   #     * *repository* (String): Platform's repository
   def with_test_platform_for_last_deploys
     with_test_platform({ nodes: { 'node1' => {}, 'node2' => {} } }, false, 'gateway :test_gateway, \'Host test_gateway\'') do |repository|
-      ENV['ti_gateways_conf'] = 'test_gateway'
+      ENV['hpc_ssh_gateways_conf'] = 'test_gateway'
       yield repository
     end
   end
@@ -155,7 +155,7 @@ diff_files:
 ", '']
         }
       end])
-      exit_code, stdout, stderr = run 'last_deploys', '--host-name', 'node1'
+      exit_code, stdout, stderr = run 'last_deploys', '--node', 'node1'
       expect(exit_code).to eq 0
       expect(stdout).to eq(
         "+-------+---------------------+-------------+------------+------------------+-----------------+-------+\n" +

@@ -4,7 +4,7 @@ describe HybridPlatformsConductor::SshExecutor do
 
     it 'generates a global configuration with user from environment' do
       with_test_platform do
-        ENV['platforms_ssh_user'] = 'test_user'
+        ENV['hpc_ssh_user'] = 'test_user'
         expect(ssh_config_for(nil)).to eq "Host *
   User test_user
   ControlPath #{Dir.tmpdir}/hpc_ssh_executor_mux_%h_%p_%r
@@ -47,7 +47,7 @@ describe HybridPlatformsConductor::SshExecutor do
 
     it 'includes the gateway definition from environment' do
       with_test_platform({}, false, 'gateway :gateway1, \'Host my_gateway\'') do
-        ENV['ti_gateways_conf'] = 'gateway1'
+        ENV['hpc_ssh_gateways_conf'] = 'gateway1'
         expect(test_ssh_executor.ssh_config).to match /^Host my_gateway$/
       end
     end
@@ -105,7 +105,7 @@ describe HybridPlatformsConductor::SshExecutor do
 
     it 'uses node default gateway information and user from environment' do
       with_test_platform(nodes: { 'node' => { connection: { connection: 'node_connection', gateway: 'test_gateway' } } }) do
-        ENV['ti_gateway_user'] = 'test_gateway_user'
+        ENV['hpc_ssh_gateway_user'] = 'test_gateway_user'
         expect(ssh_config_for('node')).to eq 'Host hpc.node
   Hostname node_connection
   ProxyCommand ssh -q -W %h:%p test_gateway_user@test_gateway'

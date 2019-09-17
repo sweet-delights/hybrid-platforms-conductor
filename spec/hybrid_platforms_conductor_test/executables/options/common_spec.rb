@@ -12,26 +12,26 @@ describe 'executables\' common options' do
       true,
       'gateway :test_gateway, \'Host test_gateway\''
     ) do |repository|
-      ENV['ti_gateways_conf'] = 'test_gateway'
+      ENV['hpc_ssh_gateways_conf'] = 'test_gateway'
       yield repository
     end
   end
 
   # List of executables for which we test the common options, along with options to try that should do nothing
   {
-    'check-node' => ['--host-name', 'node1', '--show-commands'],
-    'deploy' => ['--host-name', 'node1', '--show-commands', '--why-run'],
+    'check-node' => ['--node', 'node1', '--show-commands'],
+    'deploy' => ['--node', 'node1', '--show-commands', '--why-run'],
     'dump_nodes_json' => ['--help'],
     'free_ips' => [],
     'free_veids' => [],
-    'last_deploys' => ['--host-name', 'node1', '--show-commands'],
-    'report' => ['--host-name', 'node1', '--format', 'stdout'],
+    'last_deploys' => ['--node', 'node1', '--show-commands'],
+    'report' => ['--node', 'node1', '--format', 'stdout'],
     'setup' => ['--help'],
     'ssh_config' => [],
-    'ssh_run' => ['--host-name', 'node1', '--show-commands', '--interactive'],
+    'ssh_run' => ['--node', 'node1', '--show-commands', '--interactive'],
     'test' => ['--help']
     # TODO: Add topograph in the tests suite
-    # 'topograph' => ['--from', '--host-name node1', '--to', '--host-name node1', '--skip-run', '--output', 'graphviz:graph.gv'],
+    # 'topograph' => ['--from', '--node node1', '--to', '--node node1', '--skip-run', '--output', 'graphviz:graph.gv'],
   }.each do |executable, default_options|
 
     context "checking common options for #{executable}" do

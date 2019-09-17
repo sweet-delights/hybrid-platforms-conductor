@@ -30,7 +30,7 @@ module HybridPlatformsConductor
       @logger = logger
       @logger_stderr = logger_stderr
       # Directory in which we have platforms handled by HPCs definition
-      @hybrid_platforms_dir = File.expand_path(ENV['ti_platforms'].nil? ? '.' : ENV['ti_platforms'])
+      @hybrid_platforms_dir = File.expand_path(ENV['hpc_platforms'].nil? ? '.' : ENV['hpc_platforms'])
       @platform_types = PlatformsDsl.platform_types
       # Keep a list of instantiated platform handlers per platform type
       # Hash<Symbol, Array<PlatformHandler> >
@@ -60,7 +60,7 @@ module HybridPlatformsConductor
     def options_parse(options_parser, parallel: true)
       options_parser.separator ''
       options_parser.separator 'Nodes handler options:'
-      options_parser.on('-o', '--show-hosts', 'Display the list of possible hosts and exit') do
+      options_parser.on('-o', '--show-nodes', 'Display the list of possible nodes and exit') do
         out "* Known platforms:\n#{
           known_platforms.map do |platform|
             platform_handler = platform(platform)
@@ -94,19 +94,19 @@ module HybridPlatformsConductor
     def options_parse_nodes_selectors(options_parser, nodes_selectors)
       options_parser.separator ''
       options_parser.separator 'Nodes selection options:'
-      options_parser.on('-a', '--all-hosts', 'Select all nodes') do
+      options_parser.on('-a', '--all-nodes', 'Select all nodes') do
         nodes_selectors << { all: true }
       end
-      options_parser.on('-b', '--hosts-platform PLATFORM_NAME', "Select nodes belonging to a given platform name. Available platforms are: #{@platforms.keys.sort.join(', ')} (can be used several times)") do |platform_name|
-        nodes_selectors << { platform: platform_name }
+      options_parser.on('-b', '--nodes-platform PLATFORM', "Select nodes belonging to a given platform name. Available platforms are: #{@platforms.keys.sort.join(', ')} (can be used several times)") do |platform|
+        nodes_selectors << { platform: platform }
       end
-      options_parser.on('-l', '--hosts-list LIST_NAME', 'Select nodes defined in a nodes list (can be used several times)') do |nodes_list_name|
-        nodes_selectors << { list: nodes_list_name }
+      options_parser.on('-l', '--nodes-list LIST', 'Select nodes defined in a nodes list (can be used several times)') do |nodes_list|
+        nodes_selectors << { list: nodes_list }
       end
-      options_parser.on('-n', '--host-name NODE_NAME', 'Select a specific node. Can be a regular expression if used with enclosing "/" characters. (can be used several times)') do |node|
+      options_parser.on('-n', '--node NODE', 'Select a specific node. Can be a regular expression to select several nodes if used with enclosing "/" characters. (can be used several times).') do |node|
         nodes_selectors << node
       end
-      options_parser.on('-r', '--service SERVICE_NAME', 'Select nodes implementing a given service (can be used several times)') do |service|
+      options_parser.on('-r', '--nodes-service SERVICE', 'Select nodes implementing a given service (can be used several times)') do |service|
         nodes_selectors << { service: service }
       end
     end

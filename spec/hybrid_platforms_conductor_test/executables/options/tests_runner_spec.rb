@@ -8,7 +8,7 @@ describe 'executables\' Tests Runner options' do
   #     * *repository* (String): Platform's repository
   def with_test_platform_for_tests_runner_options
     with_test_platform({}, false, 'gateway :test_gateway, \'Host test_gateway\'') do |repository|
-      ENV['ti_gateways_conf'] = 'test_gateway'
+      ENV['hpc_ssh_gateways_conf'] = 'test_gateway'
       yield repository
     end
   end

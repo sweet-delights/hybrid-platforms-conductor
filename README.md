@@ -181,14 +181,14 @@ This README considers that executables are installed in the `./bin` directory an
 
 Those values can always be overridden by the tools command lines options if needed (always check `--help` options for details).
 ```
-export platforms_ssh_user=<your_default_ssh_user_name>
-export ti_gateways_conf=<your_default_gateway_configuration>
+export hpc_ssh_user=<your_default_ssh_user_name>
+export hpc_ssh_gateways_conf=<your_default_gateway_configuration>
 ```
 
-Unless you use the commands from directory containing the file `platforms.rb`, you'll have to set the `ti_platforms` environment variable to the path containing the `platforms.rb` file.
+Unless you use the commands from directory containing the file `platforms.rb`, you'll have to set the `hpc_platforms` environment variable to the path containing the `platforms.rb` file.
 For example if the file `/path/to/hybrid-platforms/platforms.rb` exists:
 ```
-export ti_platforms=/path/to/hybrid-platforms
+export hpc_platforms=/path/to/hybrid-platforms
 ```
 
 ## 4. Setup the platform repositories
@@ -207,7 +207,7 @@ This command will run the tests of platforms handled by HPCs Conductor executabl
 
 This command will list all the nodes that could be found in the platforms.
 ```
-./bin/check-node --show-hosts
+./bin/check-node --show-nodes
 ```
 
 <a name="how_to"></a>
@@ -222,28 +222,29 @@ Example:
 Usage: ./bin/deploy [options]
 
 Main options:
+    -d, --debug                      Activate debug mode
     -h, --help                       Display help and exit
 
 Nodes handler options:
-    -o, --show-hosts                 Display the list of possible hosts and exit
+    -o, --show-nodes                 Display the list of possible nodes and exit
 
 Nodes selection options:
-    -a, --all-hosts                  Select all nodes
-    -b PLATFORM_NAME,                Select nodes belonging to a given platform name. Available platforms are: ansible-repo, chef-repo (can be used several times)
-        --hosts-platform
-    -l, --hosts-list LIST_NAME       Select nodes defined in a nodes list (can be used several times)
-    -n, --host-name NODE_NAME        Select a specific node. Can be a regular expression if used with enclosing "/" characters. (can be used several times)
-        --service SERVICE_NAME       Select nodes implementing a given service (can be used several times)
+    -a, --all-nodes                  Select all nodes
+    -b, --nodes-platform PLATFORM    Select nodes belonging to a given platform name. Available platforms are: ansible-repo, chef-repo (can be used several times)
+    -l, --nodes-list LIST            Select nodes defined in a nodes list (can be used several times)
+    -n, --node NODE                  Select a specific node. Can be a regular expression to select several nodes if used with enclosing "/" characters. (can be used several times).
+        --nodes-service SERVICE      Select nodes implementing a given service (can be used several times)
 
 SSH executor options:
-    -d, --debug                      Activate verbose logs
-    -g, --gateway-user USER_NAME     Name of the gateway user to be used by the gateways. Can also be set from environment variable ti_gateway_user. Defaults to ubradm.
+    -g, --ssh-gateway-user USER      Name of the gateway user to be used by the gateways. Can also be set from environment variable hpc_ssh_gateway_user. Defaults to ubradm.
+    -j, --ssh-no-control-master      If used, don't create SSH control masters for connections.
     -m, --max-threads NBR            Set the number of threads to use for concurrent queries (defaults to 16)
+    -q, --ssh-no-host-key-checking   If used, don't check for SSH host keys.
     -s, --show-commands              Display the SSH commands that would be run instead of running them
-    -u, --ssh-user USER_NAME         Name of user to be used in SSH connections (defaults to platforms_ssh_user or USER environment variables)
+    -u, --ssh-user USER              Name of user to be used in SSH connections (defaults to hpc_ssh_user or USER environment variables)
     -w, --password                   If used, then expect SSH connections to ask for a password.
-    -y GATEWAYS_CONF_NAME,           Name of the gateways configuration to be used. Can also be set from environment variable ti_gateways_conf. Defaults to munich.
-        --gateways-conf
+    -y GATEWAYS_CONF,                Name of the gateways configuration to be used. Can also be set from environment variable hpc_ssh_gateways_conf. Defaults to munich.
+        --ssh-gateways-conf
 
 Deployer options:
     -e, --secrets JSON_FILE_NAME     Specify a JSON file storing secrets (can be specified several times).
@@ -278,20 +279,21 @@ It will:
 Usage: ./bin/check-node [options]
 
 Main options:
+    -d, --debug                      Activate debug mode
     -h, --help                       Display help and exit
-    -n, --host-name HOST_NAME        Run the command on a specific host.
+    -n, --node NODE                  Run the command on a specific node.
 
 Nodes handler options:
-    -o, --show-hosts                 Display the list of possible hosts and exit
+    -o, --show-nodes                 Display the list of possible nodes and exit
 
 SSH executor options:
-    -d, --debug                      Activate verbose logs
-    -g, --gateway-user USER_NAME     Name of the gateway user to be used by the gateways. Can also be set from environment variable ti_gateway_user. Defaults to ubradm.
+    -g, --ssh-gateway-user USER      Name of the gateway user to be used by the gateways. Can also be set from environment variable hpc_ssh_gateway_user. Defaults to ubradm.
+    -j, --ssh-no-control-master      If used, don't create SSH control masters for connections.
     -s, --show-commands              Display the SSH commands that would be run instead of running them
-    -u, --ssh-user USER_NAME         Name of user to be used in SSH connections (defaults to platforms_ssh_user or USER environment variables)
+    -u, --ssh-user USER              Name of user to be used in SSH connections (defaults to hpc_ssh_user or USER environment variables)
     -w, --password                   If used, then expect SSH connections to ask for a password.
-    -y GATEWAYS_CONF_NAME,           Name of the gateways configuration to be used. Can also be set from environment variable ti_gateways_conf. Defaults to munich.
-        --gateways-conf
+    -y GATEWAYS_CONF,                Name of the gateways configuration to be used. Can also be set from environment variable hpc_ssh_gateways_conf. Defaults to munich.
+        --ssh-gateways-conf
 
 Deployer options:
     -e, --secrets JSON_FILE_NAME     Specify a JSON file storing secrets (can be specified several times).
@@ -306,21 +308,21 @@ Deployer options specific to platforms of type chef:
 Usage examples:
 ```
 # Test on node23hst-nn1
-./bin/check-node --host-name node23hst-nn1
+./bin/check-node --node node23hst-nn1
 
 # Test on node23hst-nn1 using admin user a_usernme
-./bin/check-node --host-name node23hst-nn1 --ssh-user a_usernme
+./bin/check-node --node node23hst-nn1 --ssh-user a_usernme
 
 # Test on node23hst-nn1 using the gateway user tipadm
-./bin/check-node --host-name node23hst-nn1 --gateway-user tipadm
+./bin/check-node --node node23hst-nn1 --ssh-gateway-user tipadm
 
 # Test on node23hst-nn1 using a secrets file
-./bin/check-node --host-name node23hst-nn1 --secrets passwords.json
+./bin/check-node --node node23hst-nn1 --secrets passwords.json
 ```
 
 Example of output:
 ```
-=> ./bin/check-node --host-name node12had01
+=> ./bin/check-node --node node12had01
 SSH executor configuration used:
  * User: a_usernme
  * Dry run: false
@@ -379,28 +381,29 @@ It will:
 Usage: ./bin/deploy [options]
 
 Main options:
+    -d, --debug                      Activate debug mode
     -h, --help                       Display help and exit
 
 Nodes handler options:
-    -o, --show-hosts                 Display the list of possible hosts and exit
+    -o, --show-nodes                 Display the list of possible nodes and exit
 
 Nodes selection options:
-    -a, --all-hosts                  Select all nodes
-    -b PLATFORM_NAME,                Select nodes belonging to a given platform name. Available platforms are: ansible-repo, chef-repo (can be used several times)
-        --hosts-platform
-    -l, --hosts-list LIST_NAME       Select nodes defined in a nodes list (can be used several times)
-    -n, --host-name NODE_NAME        Select a specific node. Can be a regular expression if used with enclosing "/" characters. (can be used several times)
-        --service SERVICE_NAME       Select nodes implementing a given service (can be used several times)
+    -a, --all-nodes                  Select all nodes
+    -b, --nodes-platform PLATFORM    Select nodes belonging to a given platform name. Available platforms are: ansible-repo, chef-repo (can be used several times)
+    -l, --nodes-list LIST            Select nodes defined in a nodes list (can be used several times)
+    -n, --node NODE                  Select a specific node. Can be a regular expression to select several nodes if used with enclosing "/" characters. (can be used several times).
+        --nodes-service SERVICE      Select nodes implementing a given service (can be used several times)
 
 SSH executor options:
-    -d, --debug                      Activate verbose logs
-    -g, --gateway-user USER_NAME     Name of the gateway user to be used by the gateways. Can also be set from environment variable ti_gateway_user. Defaults to ubradm.
+    -g, --ssh-gateway-user USER      Name of the gateway user to be used by the gateways. Can also be set from environment variable hpc_ssh_gateway_user. Defaults to ubradm.
+    -j, --ssh-no-control-master      If used, don't create SSH control masters for connections.
     -m, --max-threads NBR            Set the number of threads to use for concurrent queries (defaults to 16)
+    -q, --ssh-no-host-key-checking   If used, don't check for SSH host keys.
     -s, --show-commands              Display the SSH commands that would be run instead of running them
-    -u, --ssh-user USER_NAME         Name of user to be used in SSH connections (defaults to platforms_ssh_user or USER environment variables)
+    -u, --ssh-user USER              Name of user to be used in SSH connections (defaults to hpc_ssh_user or USER environment variables)
     -w, --password                   If used, then expect SSH connections to ask for a password.
-    -y GATEWAYS_CONF_NAME,           Name of the gateways configuration to be used. Can also be set from environment variable ti_gateways_conf. Defaults to munich.
-        --gateways-conf
+    -y GATEWAYS_CONF,                Name of the gateways configuration to be used. Can also be set from environment variable hpc_ssh_gateways_conf. Defaults to munich.
+        --ssh-gateways-conf
 
 Deployer options:
     -e, --secrets JSON_FILE_NAME     Specify a JSON file storing secrets (can be specified several times).
@@ -417,39 +420,39 @@ Deployer options specific to platforms of type chef:
 Usage examples:
 ```
 # Deploy master on node23hst-nn1
-./bin/deploy --host-name node23hst-nn1
+./bin/deploy --node node23hst-nn1
 
-# Check in "why run" mode the deployment of master on node23hst-nn1 (equivalent to ./bin/check-node --host-name node23hst-nn1)
-./bin/deploy --host-name node23hst-nn1 --why-run
+# Check in "why run" mode the deployment of master on node23hst-nn1 (equivalent to ./bin/check-node --node node23hst-nn1)
+./bin/deploy --node node23hst-nn1 --why-run
 
 # Check in "why run" mode the deployment of master on node23hst-nn1 with a timeout of 1 minute
-./bin/deploy --host-name node23hst-nn1 --why-run --timeout 60
+./bin/deploy --node node23hst-nn1 --why-run --timeout 60
 
 # Deploy master using a file containing secrets on node23hst-nn1
-./bin/deploy --host-name node23hst-nn1 --secrets passwords.json
+./bin/deploy --node node23hst-nn1 --secrets passwords.json
 
 # Deploy master on all nodes containing xae in their name
-./bin/deploy --host-name /xae/
+./bin/deploy --node /xae/
 
 # Deploy master on all nodes containing xae in their name in parallel (and send each standard output in log files in ./run_logs/*.stdout)
-./bin/deploy --host-name /xae/ --parallel
+./bin/deploy --node /xae/ --parallel
 
 # Deploy master on all nodes containing xae in their name in parallel and using 32 threads in parallel
-./bin/deploy --host-name /xae/ --parallel --max-threads 32
+./bin/deploy --node /xae/ --parallel --max-threads 32
 
 # Deploy master on all nodes defined in the list xaebhsone (from ./hosts_lists/xaebhsone)
-./bin/deploy --hosts-list xaebhsone
+./bin/deploy --nodes-list xaebhsone
 
 # Deploy master on all nodes defined in the list xaebhsone and also node12hst-nn1 and node12hst-nn2
-./bin/deploy --hosts-list xaebhsone --host-name node12hst-nn1 --host-name node12hst-nn2
+./bin/deploy --nodes-list xaebhsone --node node12hst-nn1 --node node12hst-nn2
 
 # Deploy master on all nodes
-./bin/deploy --all-hosts
+./bin/deploy --all-nodes
 ```
 
 Example of output:
 ```
-=> ./bin/deploy --host-name node12had01 --why-run
+=> ./bin/deploy --node node12had01 --why-run
 SSH executor configuration used:
  * User: a_usernme
  * Dry run: false
@@ -505,6 +508,7 @@ Usage: ./bin/ssh_run [options]
 
 Main options:
     -c, --command CMD                Command to execute (can't be used with --interactive) (can be used several times, commands will be executed sequentially)
+    -d, --debug                      Activate debug mode
     -f, --commands-file FILE_NAME    Execute commands taken from a file (can't be used with --interactive) (can be used several times, commands will be executed sequentially)
     -h, --help                       Display help and exit
     -i, --interactive                Run an interactive SSH session instead of executing a command (can't be used with --command or --commands-file)
@@ -512,57 +516,57 @@ Main options:
     -t, --timeout SECS               Timeout in seconds to wait for each command (defaults to no timeout)
 
 Nodes handler options:
-    -o, --show-hosts                 Display the list of possible hosts and exit
+    -o, --show-nodes                 Display the list of possible nodes and exit
 
 Nodes selection options:
-    -a, --all-hosts                  Select all nodes
-    -b PLATFORM_NAME,                Select nodes belonging to a given platform name. Available platforms are: ansible-repo, chef-repo (can be used several times)
-        --hosts-platform
-    -l, --hosts-list LIST_NAME       Select nodes defined in a nodes list (can be used several times)
-    -n, --host-name NODE_NAME        Select a specific node. Can be a regular expression if used with enclosing "/" characters. (can be used several times)
-    -r, --service SERVICE_NAME       Select nodes implementing a given service (can be used several times)
+    -a, --all-nodes                  Select all nodes
+    -b, --nodes-platform PLATFORM    Select nodes belonging to a given platform name. Available platforms are: ansible-repo, chef-repo (can be used several times)
+    -l, --nodes-list LIST            Select nodes defined in a nodes list (can be used several times)
+    -n, --node NODE                  Select a specific node. Can be a regular expression to select several nodes if used with enclosing "/" characters. (can be used several times).
+    -r, --nodes-service SERVICE      Select nodes implementing a given service (can be used several times)
 
 SSH executor options:
-    -d, --debug                      Activate verbose logs
-    -g, --gateway-user USER_NAME     Name of the gateway user to be used by the gateways. Can also be set from environment variable ti_gateway_user. Defaults to ubradm.
+    -g, --ssh-gateway-user USER      Name of the gateway user to be used by the gateways. Can also be set from environment variable hpc_ssh_gateway_user. Defaults to ubradm.
+    -j, --ssh-no-control-master      If used, don't create SSH control masters for connections.
     -m, --max-threads NBR            Set the number of threads to use for concurrent queries (defaults to 16)
+    -q, --ssh-no-host-key-checking   If used, don't check for SSH host keys.
     -s, --show-commands              Display the SSH commands that would be run instead of running them
-    -u, --ssh-user USER_NAME         Name of user to be used in SSH connections (defaults to platforms_ssh_user or USER environment variables)
+    -u, --ssh-user USER              Name of user to be used in SSH connections (defaults to hpc_ssh_user or USER environment variables)
     -w, --password                   If used, then expect SSH connections to ask for a password.
-    -y GATEWAYS_CONF_NAME,           Name of the gateways configuration to be used. Can also be set from environment variable ti_gateways_conf. Defaults to munich.
-        --gateways-conf
+    -y GATEWAYS_CONF,                Name of the gateways configuration to be used. Can also be set from environment variable hpc_ssh_gateways_conf. Defaults to munich.
+        --ssh-gateways-conf
 ```
 
 Usage examples:
 ```
 # Display the possible nodes we can run commands on (also outputs the possible hosts lists)
-./bin/ssh_run --show-hosts
+./bin/ssh_run --show-nodes
 
 # Run an interactive SSH session on node23hst-nn1
-./bin/ssh_run --host-name node23hst-nn1 --interactive
+./bin/ssh_run --node node23hst-nn1 --interactive
 
 # Run the hostname command on node23hst-nn1
-./bin/ssh_run --host-name node23hst-nn1 --command hostname
+./bin/ssh_run --node node23hst-nn1 --command hostname
 
 # Run the hostname and ls commands on node23hst-nn1
-./bin/ssh_run --host-name node23hst-nn1 --command hostname --command ls
+./bin/ssh_run --node node23hst-nn1 --command hostname --command ls
 
 # Run a list of commands (taken from the file cmds.list) on node23hst-nn1
-./bin/ssh_run --host-name node23hst-nn1 --commands-file cmds.list
+./bin/ssh_run --node node23hst-nn1 --commands-file cmds.list
 
 # Run a list of commands (taken from the file cmds.list) and the hostname command on node23hst-nn1
-./bin/ssh_run --host-name node23hst-nn1 --commands-file cmds.list --command hostname
+./bin/ssh_run --node node23hst-nn1 --commands-file cmds.list --command hostname
 
 # Run the hostname command on node23hst-nn1 with a timeout of 5 seconds that would interrupt the command if it does not end before
-./bin/ssh_run --host-name node23hst-nn1 --command hostname --timeout 5
+./bin/ssh_run --node node23hst-nn1 --command hostname --timeout 5
 
 # Run the hostname command on all nodes containing xae in parallel (and send each standard output in log files in ./run_logs/*.stdout)
-./bin/ssh_run --host-name /xae/ --command hostname --parallel
+./bin/ssh_run --node /xae/ --command hostname --parallel
 ```
 
 Example of output:
 ```
-=> ./bin/ssh_run --host-name node12had01 --command hostname
+=> ./bin/ssh_run --node node12had01 --command hostname
 node12host.site.my_company.net
 ```
 
@@ -581,20 +585,21 @@ This executable is also used internally by other tools of Hybrid Platforms Condu
 Usage: ./bin/ssh_config [options]
 
 Main options:
+    -d, --debug                      Activate debug mode
     -h, --help                       Display help and exit
     -x, --ssh-exec FILE_PATH         Path to the SSH executable to be used. Useful to give default options (especially with GIT_SSH). Defaults to ssh.
 
 Nodes handler options:
-    -o, --show-hosts                 Display the list of possible hosts and exit
+    -o, --show-nodes                 Display the list of possible nodes and exit
 
 SSH executor options:
-    -d, --debug                      Activate verbose logs
-    -g, --gateway-user USER_NAME     Name of the gateway user to be used by the gateways. Can also be set from environment variable ti_gateway_user. Defaults to ubradm.
+    -g, --ssh-gateway-user USER      Name of the gateway user to be used by the gateways. Can also be set from environment variable hpc_ssh_gateway_user. Defaults to ubradm.
+    -j, --ssh-no-control-master      If used, don't create SSH control masters for connections.
     -s, --show-commands              Display the SSH commands that would be run instead of running them
-    -u, --ssh-user USER_NAME         Name of user to be used in SSH connections (defaults to platforms_ssh_user or USER environment variables)
+    -u, --ssh-user USER              Name of user to be used in SSH connections (defaults to hpc_ssh_user or USER environment variables)
     -w, --password                   If used, then expect SSH connections to ask for a password.
-    -y GATEWAYS_CONF_NAME,           Name of the gateways configuration to be used. Can also be set from environment variable ti_gateways_conf. Defaults to munich.
-        --gateways-conf
+    -y GATEWAYS_CONF,                Name of the gateways configuration to be used. Can also be set from environment variable hpc_ssh_gateways_conf. Defaults to munich.
+        --ssh-gateways-conf
 ```
 
 Usage examples:
@@ -610,13 +615,13 @@ Usage examples:
 ./bin/ssh_config >~/.ssh/platforms_config
 
 # Dump in stdout, using hadcli as gateway user
-./bin/ssh_config --gateway-user hadcli
+./bin/ssh_config --ssh-gateway-user hadcli
 
 # Dump in stdout, using /my/other/ssh instead of ssh
 ./bin/ssh_config --ssh-exec /my/other/ssh
 
 # Dump in stdout, using the madrid SSH gateways configuration
-./bin/ssh_config --gateways-conf madrid
+./bin/ssh_config --ssh-gateways-conf madrid
 ```
 
 Example of output:
@@ -732,6 +737,7 @@ This executable is using report generators plugins stored in `./lib/hybrid_platf
 Usage: ./bin/report [options]
 
 Main options:
+    -d, --debug                      Activate debug mode
     -h, --help                       Display help and exit
 
 Reports handler options:
@@ -739,15 +745,14 @@ Reports handler options:
     -f, --format FORMAT              Generate the report in the given format. Possible formats are confluence, mediawiki, stdout. Default: stdout.
 
 Nodes handler options:
-    -o, --show-hosts                 Display the list of possible hosts and exit
+    -o, --show-nodes                 Display the list of possible nodes and exit
 
 Nodes selection options:
-    -a, --all-hosts                  Select all nodes
-    -b PLATFORM_NAME,                Select nodes belonging to a given platform name. Available platforms are: ansible-repo, chef-repo (can be used several times)
-        --hosts-platform
-    -l, --hosts-list LIST_NAME       Select nodes defined in a nodes list (can be used several times)
-    -n, --host-name NODE_NAME        Select a specific node. Can be a regular expression if used with enclosing "/" characters. (can be used several times)
-    -r, --service SERVICE_NAME       Select nodes implementing a given service (can be used several times)
+    -a, --all-nodes                  Select all nodes
+    -b, --nodes-platform PLATFORM    Select nodes belonging to a given platform name. Available platforms are: ansible-repo, chef-repo (can be used several times)
+    -l, --nodes-list LIST            Select nodes defined in a nodes list (can be used several times)
+    -n, --node NODE                  Select a specific node. Can be a regular expression to select several nodes if used with enclosing "/" characters. (can be used several times).
+    -r, --nodes-service SERVICE      Select nodes implementing a given service (can be used several times)
 ```
 
 Usage examples:
@@ -759,7 +764,7 @@ Usage examples:
 ./bin/report --format mediawiki --locale en
 
 # Output all nodes containing /xae/ in their names using mediawiki format
-./bin/report --host-name /xae/ --format mediawiki
+./bin/report --node /xae/ --format mediawiki
 ```
 
 Example of output:
@@ -837,38 +842,39 @@ The `last_deploys` executable will fetch the last deployments information for a 
 Usage: ./bin/last_deploys [options]
 
 Main options:
+    -d, --debug                      Activate debug mode
     -h, --help                       Display help and exit
         --sort-by SORT               Specify a sort. Possible values are: admin, chef_commit_comment, chef_commit_id, datetime, git_branch, git_repo, host. Each value can append _desc to specify a reverse sorting. Defaults to host.
 
 Nodes handler options:
-    -o, --show-hosts                 Display the list of possible hosts and exit
+    -o, --show-nodes                 Display the list of possible nodes and exit
 
 Nodes selection options:
-    -a, --all-hosts                  Select all nodes
-    -b PLATFORM_NAME,                Select nodes belonging to a given platform name. Available platforms are: ansible-repo, chef-repo (can be used several times)
-        --hosts-platform
-    -l, --hosts-list LIST_NAME       Select nodes defined in a nodes list (can be used several times)
-    -n, --host-name NODE_NAME        Select a specific node. Can be a regular expression if used with enclosing "/" characters. (can be used several times)
-    -r, --service SERVICE_NAME       Select nodes implementing a given service (can be used several times)
+    -a, --all-nodes                  Select all nodes
+    -b, --nodes-platform PLATFORM    Select nodes belonging to a given platform name. Available platforms are: ansible-repo, chef-repo (can be used several times)
+    -l, --nodes-list LIST            Select nodes defined in a nodes list (can be used several times)
+    -n, --node NODE                  Select a specific node. Can be a regular expression to select several nodes if used with enclosing "/" characters. (can be used several times).
+    -r, --nodes-service SERVICE      Select nodes implementing a given service (can be used several times)
 
 SSH executor options:
-    -d, --debug                      Activate verbose logs
-    -g, --gateway-user USER_NAME     Name of the gateway user to be used by the gateways. Can also be set from environment variable ti_gateway_user. Defaults to ubradm.
+    -g, --ssh-gateway-user USER      Name of the gateway user to be used by the gateways. Can also be set from environment variable hpc_ssh_gateway_user. Defaults to ubradm.
+    -j, --ssh-no-control-master      If used, don't create SSH control masters for connections.
     -m, --max-threads NBR            Set the number of threads to use for concurrent queries (defaults to 64)
+    -q, --ssh-no-host-key-checking   If used, don't check for SSH host keys.
     -s, --show-commands              Display the SSH commands that would be run instead of running them
-    -u, --ssh-user USER_NAME         Name of user to be used in SSH connections (defaults to platforms_ssh_user or USER environment variables)
+    -u, --ssh-user USER              Name of user to be used in SSH connections (defaults to hpc_ssh_user or USER environment variables)
     -w, --password                   If used, then expect SSH connections to ask for a password.
-    -y GATEWAYS_CONF_NAME,           Name of the gateways configuration to be used. Can also be set from environment variable ti_gateways_conf. Defaults to munich.
-        --gateways-conf
+    -y GATEWAYS_CONF,                Name of the gateways configuration to be used. Can also be set from environment variable hpc_ssh_gateways_conf. Defaults to munich.
+        --ssh-gateways-conf
 ```
 
 Usage examples:
 ```
 # Check deployments for all nodes
-./bin/last_deploys --all-hosts
+./bin/last_deploys --all-nodes
 
 # Check deployments for all nodes, sorted by date descending
-./bin/last_deploys --all-hosts --sort-by datetime_desc
+./bin/last_deploys --all-nodes --sort-by datetime_desc
 ```
 
 Example of output:
@@ -901,32 +907,33 @@ Those JSON files can then be used for several purposes:
 Usage: ./bin/dump_nodes_json [options]
 
 Main options:
+    -d, --debug                      Activate debug mode
     -h, --help                       Display help and exit
 
 Nodes handler options:
-    -o, --show-hosts                 Display the list of possible hosts and exit
+    -o, --show-nodes                 Display the list of possible nodes and exit
 
 Nodes selection options:
-    -a, --all-hosts                  Select all nodes
-    -b PLATFORM_NAME,                Select nodes belonging to a given platform name. Available platforms are: ansible-repo, chef-repo (can be used several times)
-        --hosts-platform
-    -l, --hosts-list LIST_NAME       Select nodes defined in a nodes list (can be used several times)
-    -n, --host-name NODE_NAME        Select a specific node. Can be a regular expression if used with enclosing "/" characters. (can be used several times)
-    -r, --service SERVICE_NAME       Select nodes implementing a given service (can be used several times)
+    -a, --all-nodes                  Select all nodes
+    -b, --nodes-platform PLATFORM    Select nodes belonging to a given platform name. Available platforms are: ansible-repo, chef-repo (can be used several times)
+    -l, --nodes-list LIST            Select nodes defined in a nodes list (can be used several times)
+    -n, --node NODE                  Select a specific node. Can be a regular expression to select several nodes if used with enclosing "/" characters. (can be used several times).
+    -r, --nodes-service SERVICE      Select nodes implementing a given service (can be used several times)
 
 JSON dump options:
     -k, --skip-run                   Skip the actual gathering of dumps in run_logs. If set, the current run_logs content will be used.
     -j, --json-dir DIRECTORY         Specify the output directory in which JSON files are being written. Defaults to nodes_json.
 
 SSH executor options:
-    -d, --debug                      Activate verbose logs
-    -g, --gateway-user USER_NAME     Name of the gateway user to be used by the gateways. Can also be set from environment variable ti_gateway_user. Defaults to ubradm.
+    -g, --ssh-gateway-user USER      Name of the gateway user to be used by the gateways. Can also be set from environment variable hpc_ssh_gateway_user. Defaults to ubradm.
+    -j, --ssh-no-control-master      If used, don't create SSH control masters for connections.
     -m, --max-threads NBR            Set the number of threads to use for concurrent queries (defaults to 16)
+    -q, --ssh-no-host-key-checking   If used, don't check for SSH host keys.
     -s, --show-commands              Display the SSH commands that would be run instead of running them
-    -u, --ssh-user USER_NAME         Name of user to be used in SSH connections (defaults to platforms_ssh_user or USER environment variables)
+    -u, --ssh-user USER              Name of user to be used in SSH connections (defaults to hpc_ssh_user or USER environment variables)
     -w, --password                   If used, then expect SSH connections to ask for a password.
-    -y GATEWAYS_CONF_NAME,           Name of the gateways configuration to be used. Can also be set from environment variable ti_gateways_conf. Defaults to munich.
-        --gateways-conf
+    -y GATEWAYS_CONF,                Name of the gateways configuration to be used. Can also be set from environment variable hpc_ssh_gateways_conf. Defaults to munich.
+        --ssh-gateways-conf
 
 Deployer options:
     -e, --secrets JSON_FILE_NAME     Specify a JSON file storing secrets (can be specified several times).
@@ -937,10 +944,10 @@ Deployer options:
 Usage examples:
 ```
 # Dump JSON for the node named xaeprjcttlbd01
-./bin/dump_nodes_json --host-name xaeprjcttlbd01
+./bin/dump_nodes_json --node xaeprjcttlbd01
 
 # Dump JSON for the node named xaeprjcttlbd01, but reuse the actual files in run_logs.
-./bin/dump_nodes_json --host-name xaeprjcttlbd01 --skip-run
+./bin/dump_nodes_json --node xaeprjcttlbd01 --skip-run
 ```
 
 Example of output:
@@ -971,36 +978,36 @@ Prerequisites before running `topograph`:
 Usage: ./bin/topograph [options]
 
 Main options:
+    -d, --debug                      Activate debug mode
     -h, --help                       Display help and exit
 
 Topographer options:
     -F, --from HOSTS_OPTIONS         Specify options for the set of nodes to start from (enclose them with ""). Default: all nodes. HOSTS_OPTIONS follows the following:
-                                         -a, --all-hosts                  Select all hosts
-                                         -b PLATFORM_NAME,                Select hosts belonging to a given platform name. Available platforms are: ansible-repo, chef-repo (can be used several times)
-                                             --hosts-platform
-                                         -l, --hosts-list LIST_NAME       Select hosts defined in a hosts list (can be used several times)
-                                         -n, --host-name HOST_NAME        Select a specific host. Can be a regular expression if used with enclosing "/" characters. (can be used several times)
+                                         -a, --all-nodes                  Select all nodes
+                                         -b, --nodes-platform PLATFORM    Select nodes belonging to a given platform name. Available platforms are: ansible-repo, chef-repo (can be used several times)
+                                         -l, --nodes-list LIST            Select hosts defined in a nodes list (can be used several times)
+                                         -n, --node NODE                  Select a specific node. Can be a regular expression to select several nodes if used with enclosing "/" characters. (can be used several times).
     -k, --skip-run                   Skip the actual gathering of JSON node files. If set, the current files in nodes_json will be used.
     -p, --output FORMAT:FILE_NAME    Specify a format and file name. Can be used several times. FORMAT can be one of graphviz, json, svg. Ex.: graphviz:graph.gv
     -T, --to HOSTS_OPTIONS           Specify options for the set of nodes to get to (enclose them with ""). Default: all nodes. HOSTS_OPTIONS follows the following:
-                                         -a, --all-hosts                  Select all hosts
-                                         -b PLATFORM_NAME,                Select hosts belonging to a given platform name. Available platforms are: ansible-repo, chef-repo (can be used several times)
-                                             --hosts-platform
-                                         -l, --hosts-list LIST_NAME       Select hosts defined in a hosts list (can be used several times)
-                                         -n, --host-name HOST_NAME        Select a specific host. Can be a regular expression if used with enclosing "/" characters. (can be used several times)
+                                         -a, --all-nodes                  Select all nodes
+                                         -b, --nodes-platform PLATFORM    Select nodes belonging to a given platform name. Available platforms are: ansible-repo, chef-repo (can be used several times)
+                                         -l, --nodes-list LIST            Select hosts defined in a nodes list (can be used several times)
+                                         -n, --node NODE                  Select a specific node. Can be a regular expression to select several nodes if used with enclosing "/" characters. (can be used several times).
 
 Nodes handler options:
-    -o, --show-hosts                 Display the list of possible hosts and exit
+    -o, --show-nodes                 Display the list of possible nodes and exit
 
 SSH executor options:
-    -d, --debug                      Activate verbose logs
-    -g, --gateway-user USER_NAME     Name of the gateway user to be used by the gateways. Can also be set from environment variable ti_gateway_user. Defaults to ubradm.
+    -g, --ssh-gateway-user USER      Name of the gateway user to be used by the gateways. Can also be set from environment variable hpc_ssh_gateway_user. Defaults to ubradm.
+    -j, --ssh-no-control-master      If used, don't create SSH control masters for connections.
     -m, --max-threads NBR            Set the number of threads to use for concurrent queries (defaults to 16)
+    -q, --ssh-no-host-key-checking   If used, don't check for SSH host keys.
     -s, --show-commands              Display the SSH commands that would be run instead of running them
-    -u, --ssh-user USER_NAME         Name of user to be used in SSH connections (defaults to platforms_ssh_user or USER environment variables)
+    -u, --ssh-user USER              Name of user to be used in SSH connections (defaults to hpc_ssh_user or USER environment variables)
     -w, --password                   If used, then expect SSH connections to ask for a password.
-    -y GATEWAYS_CONF_NAME,           Name of the gateways configuration to be used. Can also be set from environment variable ti_gateways_conf. Defaults to munich.
-        --gateways-conf
+    -y GATEWAYS_CONF,                Name of the gateways configuration to be used. Can also be set from environment variable hpc_ssh_gateways_conf. Defaults to munich.
+        --ssh-gateways-conf
 
 Deployer options:
     -e, --secrets JSON_FILE_NAME     Specify a JSON file storing secrets (can be specified several times).
@@ -1017,13 +1024,13 @@ Usage examples:
 ./bin/topograph --output json:graph.json --output svg:graph.svg
 
 # Dump the network starting from any node belonging to the node12had hosts list
-./bin/topograph --output json:graph.json --from "--hosts-list node12had"
+./bin/topograph --output json:graph.json --from "--nodes-list node12had"
 
 # Dump the network getting to nodes xaeprjcttlbd01 and xaeprjctplbd01
-./bin/topograph --output json:graph.json --to "--host-name xaeprjcttlbd01 --host-name xaeprjctplbd01"
+./bin/topograph --output json:graph.json --to "--node xaeprjcttlbd01 --node xaeprjctplbd01"
 
 # Dump the network getting from any node belonging to the node12had hosts list and to nodes xaeprjcttlbd01 and xaeprjctplbd01
-./bin/topograph --output json:graph.json --from "--hosts-list node12had" --to "--host-name xaeprjcttlbd01 --host-name xaeprjctplbd01"
+./bin/topograph --output json:graph.json --from "--nodes-list node12had" --to "--node xaeprjcttlbd01 --node xaeprjctplbd01"
 
 # Dump the whole network in JSON format, reusing existing JSON files from nodes_json (won't call dump_nodes_json)
 ./bin/topograph --output json:graph.json --skip-run
@@ -1059,28 +1066,29 @@ This executable is perfectly suited to be integrated in a continuous integration
 Usage: ./bin/test [options]
 
 Main options:
+    -d, --debug                      Activate debug mode
     -h, --help                       Display help and exit.
 
 Nodes handler options:
-    -o, --show-hosts                 Display the list of possible hosts and exit
+    -o, --show-nodes                 Display the list of possible nodes and exit
 
 Nodes selection options:
-    -a, --all-hosts                  Select all nodes
-    -b PLATFORM_NAME,                Select nodes belonging to a given platform name. Available platforms are: ansible-repo, chef-repo (can be used several times)
-        --hosts-platform
-    -l, --hosts-list LIST_NAME       Select nodes defined in a nodes list (can be used several times)
-    -n, --host-name NODE_NAME        Select a specific node. Can be a regular expression if used with enclosing "/" characters. (can be used several times)
-        --service SERVICE_NAME       Select nodes implementing a given service (can be used several times)
+    -a, --all-nodes                  Select all nodes
+    -b, --nodes-platform PLATFORM    Select nodes belonging to a given platform name. Available platforms are: ansible-repo, chef-repo (can be used several times)
+    -l, --nodes-list LIST            Select nodes defined in a nodes list (can be used several times)
+    -n, --node NODE                  Select a specific node. Can be a regular expression to select several nodes if used with enclosing "/" characters. (can be used several times).
+        --nodes-service SERVICE      Select nodes implementing a given service (can be used several times)
 
 SSH executor options:
-    -d, --debug                      Activate verbose logs
-    -g, --gateway-user USER_NAME     Name of the gateway user to be used by the gateways. Can also be set from environment variable ti_gateway_user. Defaults to ubradm.
+    -g, --ssh-gateway-user USER      Name of the gateway user to be used by the gateways. Can also be set from environment variable hpc_ssh_gateway_user. Defaults to ubradm.
+    -j, --ssh-no-control-master      If used, don't create SSH control masters for connections.
     -m, --max-threads NBR            Set the number of threads to use for concurrent queries (defaults to 64)
+    -q, --ssh-no-host-key-checking   If used, don't check for SSH host keys.
     -s, --show-commands              Display the SSH commands that would be run instead of running them
-    -u, --ssh-user USER_NAME         Name of user to be used in SSH connections (defaults to platforms_ssh_user or USER environment variables)
+    -u, --ssh-user USER              Name of user to be used in SSH connections (defaults to hpc_ssh_user or USER environment variables)
     -w, --password                   If used, then expect SSH connections to ask for a password.
-    -y GATEWAYS_CONF_NAME,           Name of the gateways configuration to be used. Can also be set from environment variable ti_gateways_conf. Defaults to munich.
-        --gateways-conf
+    -y GATEWAYS_CONF,                Name of the gateways configuration to be used. Can also be set from environment variable hpc_ssh_gateways_conf. Defaults to munich.
+        --ssh-gateways-conf
 
 Deployer options:
     -e, --secrets JSON_FILE_NAME     Specify a JSON file storing secrets (can be specified several times).
@@ -1096,13 +1104,13 @@ Tests runner options:
 Usage examples:
 ```
 # Execute all tests on all nodes
-./bin/test --all-hosts
+./bin/test --all-nodes
 
 # Execute only the tests named hostname and ip on all nodes whose names contain xae
-./bin/test --test hostname --test ip --host-name /xae/
+./bin/test --test hostname --test ip --node /xae/
 
 # Execute all tests on all nodes, but reuse the content of run_logs instead of why-run deployments
-./bin/test --all-hosts --skip-run
+./bin/test --all-nodes --skip-run
 ```
 
 Here is an example of output:
@@ -1177,10 +1185,11 @@ It is intended to be run only for the initial setup or when such dependencies ch
 Usage: ./bin/setup [options]
 
 Main options:
+    -d, --debug                      Activate debug mode
     -h, --help                       Display help and exit
 
 Nodes handler options:
-    -o, --show-hosts                 Display the list of possible hosts and exit
+    -o, --show-nodes                 Display the list of possible nodes and exit
 ```
 
 Usage examples:
@@ -1227,10 +1236,10 @@ The nodes handler options add functionality about nodes information.
 
 ```
 Nodes handler options:
-    -o, --show-hosts                 Display the list of possible hosts and exit
+    -o, --show-nodes                 Display the list of possible nodes and exit
 ```
 
-* `--show-hosts`: Display the list of known hosts, hosts lists and platforms, and exit.
+* `--show-nodes`: Display the list of known nodes, nodes lists, platforms, services, description... and exit.
 
 ## Nodes selection options
 
@@ -1238,19 +1247,18 @@ The nodes selection options are used to select a set of nodes that the tool need
 
 ```
 Nodes selection options:
-    -a, --all-hosts                  Select all nodes
-    -b PLATFORM_NAME,                Select nodes belonging to a given platform name. Available platforms are: ansible-repo, chef-repo (can be used several times)
-        --hosts-platform
-    -l, --hosts-list LIST_NAME       Select nodes defined in a nodes list (can be used several times)
-    -n, --host-name NODE_NAME        Select a specific node. Can be a regular expression if used with enclosing "/" characters. (can be used several times)
-    -r, --service SERVICE_NAME       Select nodes implementing a given service (can be used several times)
+    -a, --all-nodes                  Select all nodes
+    -b, --nodes-platform PLATFORM    Select nodes belonging to a given platform name. Available platforms are: ansible-repo, chef-repo (can be used several times)
+    -l, --nodes-list LIST            Select nodes defined in a nodes list (can be used several times)
+    -n, --node NODE                  Select a specific node. Can be a regular expression to select several nodes if used with enclosing "/" characters. (can be used several times).
+    -r, --nodes-service SERVICE      Select nodes implementing a given service (can be used several times)
 ```
 
-* `--all-hosts`: Select all the known hosts.
-* `--hosts-platform PLATFORM_NAME`: Specify the name of a platform as a selector. Can be useful to only perform checks of nodes of a given repository after merging a PR on this repository.
-* `--hosts-list LIST_NAME`: Specify a hosts list name as selector. Hosts list are a named group of hosts, and are defined by each platform if they make sense. For example all the nodes belonging to the same cluster could be part of a hosts list.
-* `--host-name NODE_NAME`: Select a single host name. A regular expression can also be used when `HOST_NAME` is enclosed with `/` character (the regular expression grammar is [the Ruby one](http://ruby-doc.org/core-2.5.0/Regexp.html)). Examples: `--host-name my_host_1`, `--host-name /my_host_.+/`.
-* `--service SERVICE_NAME`: Select all nodes that implement a given service.
+* `--all-nodes`: Select all the known nodes.
+* `--nodes-platform PLATFORM`: Specify the name of a platform as a selector. Can be useful to only perform checks of nodes of a given repository after merging a PR on this repository.
+* `--nodes-list LIST`: Specify a hosts list name as selector. Hosts list are a named group of hosts, and are defined by each platform if they make sense. For example all the nodes belonging to the same cluster could be part of a nodes list.
+* `--node NODE`: Select a single node. A regular expression can also be used when `NODE` is enclosed with `/` character (the regular expression grammar is [the Ruby one](http://ruby-doc.org/core-2.5.0/Regexp.html)). Examples: `--node my_node_1`, `--node /my_node_.+/`.
+* `--nodes-service SERVICE`: Select all nodes that implement a given service.
 
 ## SSH Executor options
 
@@ -1259,22 +1267,26 @@ The SSH Executor options are used to drive how SSH commands are executed.
 ```
 SSH executor options:
     -d, --debug                      Activate verbose logs
-    -g, --gateway-user USER_NAME     Name of the gateway user to be used by the gateways. Can also be set from environment variable ti_gateway_user. Defaults to ubradm.
+    -g, --ssh-gateway-user USER      Name of the gateway user to be used by the gateways. Can also be set from environment variable hpc_ssh_gateway_user. Defaults to ubradm.
+    -j, --ssh-no-control-master      If used, don't create SSH control masters for connections.
     -m, --max-threads NBR            Set the number of threads to use for concurrent queries (defaults to 64)
+    -q, --ssh-no-host-key-checking   If used, don't check for SSH host keys.
     -s, --show-commands              Display the SSH commands that would be run instead of running them
-    -u, --ssh-user USER_NAME         Name of user to be used in SSH connections (defaults to platforms_ssh_user or USER environment variables)
+    -u, --ssh-user USER              Name of user to be used in SSH connections (defaults to hpc_ssh_user or USER environment variables)
     -w, --password                   If used, then expect SSH connections to ask for a password.
-    -y GATEWAYS_CONF_NAME,           Name of the gateways configuration to be used. Can also be set from environment variable ti_gateways_conf. Defaults to munich.
-        --gateways-conf
+    -y GATEWAYS_CONF,                Name of the gateways configuration to be used. Can also be set from environment variable hpc_ssh_gateways_conf. Defaults to munich.
+        --ssh-gateways-conf
 ```
 
 * `--debug`: Activate verbose logging.
-* `--gateway-user USER_NAME`: Specify the user to be used through the gateway accessing the nodes.
+* `--ssh-gateway-user USER`: Specify the user to be used through the gateway accessing the nodes.
+* `--ssh-no-control-master`: If specified, don't use an SSH control master: it will open/close an SSH connection for every command it needs to run.
 * `--max-threads NBR`: Specify the maximal number of threads to use when concurrent SSH execution is performed.
+* `--ssh-no-host-key-checking`: If specified, make sure SSH connections don't check for host keys.
 * `--show-commands`: Display the commands the tool would execute, without executing them. Useful to understand or debug the tool's behaviour.
-* `--ssh-user USER_NAME`: Specify the user to be used on the node being accessed by the tool. It is recommended to set the default value of this option in the `platforms_ssh_user` environment variable. If both this option and the `platforms_ssh_user` variables are omitted, then the `USER` environment variable is used.
+* `--ssh-user USER`: Specify the user to be used on the node being accessed by the tool. It is recommended to set the default value of this option in the `hpc_ssh_user` environment variable. If both this option and the `hpc_ssh_user` variables are omitted, then the `USER` environment variable is used.
 * `--password`: When specified, then don't use `-o BatchMode=yes` on SSH commands so that if connection needs a password it will be asked. Useful to deploy on accounts not having key authentication yet.
-* `--gateways-conf GATEWAYS_CONF_NAME`: Specify the gateway configuration name to be used. Gateway configurations are defined in the platforms definition file (`./platforms.rb`). It is recommended to set the default value of this option in the `ti_gateways_conf` environment variable.
+* `--ssh-gateways-conf GATEWAYS_CONF`: Specify the gateway configuration name to be used. Gateway configurations are defined in the platforms definition file (`./platforms.rb`). It is recommended to set the default value of this option in the `hpc_ssh_gateways_conf` environment variable.
 
 ## Deployer options
 
@@ -1315,19 +1327,17 @@ The Topographer options drive the way the topographer works. The Topographer is 
 ```
 Topographer options:
     -F, --from HOSTS_OPTIONS         Specify options for the set of nodes to start from (enclose them with ""). Default: all nodes. HOSTS_OPTIONS follows the following:
-                                         -a, --all-hosts                  Select all hosts
-                                         -b PLATFORM_NAME,                Select hosts belonging to a given platform name. Available platforms are: ansible-repo, chef-repo (can be used several times)
-                                             --hosts-platform
-                                         -l, --hosts-list LIST_NAME       Select hosts defined in a hosts list (can be used several times)
-                                         -n, --host-name HOST_NAME        Select a specific host. Can be a regular expression if used with enclosing "/" characters. (can be used several times)
+                                         -a, --all-nodes                  Select all nodes
+                                         -b, --nodes-platform PLATFORM    Select nodes belonging to a given platform name. Available platforms are: ansible-repo, chef-repo (can be used several times)
+                                         -l, --nodes-list LIST            Select hosts defined in a nodes list (can be used several times)
+                                         -n, --node NODE                  Select a specific node. Can be a regular expression to select several nodes if used with enclosing "/" characters. (can be used several times).
     -k, --skip-run                   Skip the actual gathering of JSON node files. If set, the current files in nodes_json will be used.
     -p, --output FORMAT:FILE_NAME    Specify a format and file name. Can be used several times. FORMAT can be one of graphviz, json, svg. Ex.: graphviz:graph.gv
     -T, --to HOSTS_OPTIONS           Specify options for the set of nodes to get to (enclose them with ""). Default: all nodes. HOSTS_OPTIONS follows the following:
-                                         -a, --all-hosts                  Select all hosts
-                                         -b PLATFORM_NAME,                Select hosts belonging to a given platform name. Available platforms are: ansible-repo, chef-repo (can be used several times)
-                                             --hosts-platform
-                                         -l, --hosts-list LIST_NAME       Select hosts defined in a hosts list (can be used several times)
-                                         -n, --host-name HOST_NAME        Select a specific host. Can be a regular expression if used with enclosing "/" characters. (can be used several times)
+                                         -a, --all-nodes                  Select all nodes
+                                         -b, --nodes-platform PLATFORM    Select nodes belonging to a given platform name. Available platforms are: ansible-repo, chef-repo (can be used several times)
+                                         -l, --nodes-list LIST            Select hosts defined in a nodes list (can be used several times)
+                                         -n, --node NODE                  Select a specific node. Can be a regular expression to select several nodes if used with enclosing "/" characters. (can be used several times).
 ```
 
 * `--from HOSTS_OPTIONS`: Specify the set of source nodes that we want to graph from.
@@ -1636,12 +1646,12 @@ Now your Platform Handler plugin should be ready to use.
 It should appear when you issue the following command:
 
 ```
-./bin/setup --show-hosts
+./bin/setup --show-nodes
 ```
 
 Example of output:
 ```
-=> ./bin/setup --show-hosts
+=> ./bin/setup --show-nodes
 * Known platforms:
 * <platform_type_name>: /path/to/hybrid_platforms_conductor-<platform_type_name>
 * chef: ./cloned_platforms/xae-chef-repo

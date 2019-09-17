@@ -7,7 +7,7 @@ executable = HybridPlatformsConductor::Executable.new(
   nodes_selection_options: false,
   parallel_options: false
 ) do |opts|
-  opts.on('-n', '--host-name HOST_NAME', 'Run the command on a specific host.') do |node|
+  opts.on('-n', '--node NODE', 'Run the command on a specific node.') do |node|
     test_node = node
   end
 end
@@ -16,7 +16,7 @@ ssh_executor = executable.ssh_executor
 deployer = executable.deployer
 
 executable.parse_options!
-raise 'No node selected. Please use --host-name option to set at least one.' if test_node.nil? || test_node.empty?
+raise 'No node selected. Please use --node option to set at least one.' if test_node.nil? || test_node.empty?
 raise "Unknown node: #{test_node}" unless nodes_handler.known_nodes.include?(test_node)
 
 ssh_executor.dump_conf

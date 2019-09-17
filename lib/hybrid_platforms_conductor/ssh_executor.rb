@@ -12,15 +12,15 @@ module HybridPlatformsConductor
 
     include LoggerHelpers
 
-    # Name of the gateway user to be used. [default: ENV['ti_gateway_user'] or ubradm]
+    # Name of the gateway user to be used. [default: ENV['hpc_ssh_gateway_user'] or ubradm]
     #   String
     attr_accessor :ssh_gateway_user
 
-    # Name of the gateways configuration. [default: ENV['ti_gateways_conf'] or munich]
+    # Name of the gateways configuration. [default: ENV['hpc_ssh_gateways_conf'] or munich]
     #   Symbol
     attr_accessor :ssh_gateways_conf
 
-    # User name used in SSH connections. [default: ENV['platforms_ssh_user'] or ENV['USER']]
+    # User name used in SSH connections. [default: ENV['hpc_ssh_user'] or ENV['USER']]
     #   String
     attr_accessor :ssh_user
 
@@ -69,7 +69,7 @@ module HybridPlatformsConductor
       @cmd_runner = cmd_runner
       @nodes_handler = nodes_handler
       # Default values
-      @ssh_user = ENV['platforms_ssh_user']
+      @ssh_user = ENV['hpc_ssh_user']
       @ssh_user = ENV['USER'] if @ssh_user.nil? || @ssh_user.empty?
       @ssh_env = {}
       @max_threads = 16
@@ -79,8 +79,8 @@ module HybridPlatformsConductor
       @override_connections = {}
       @passwords = {}
       @auth_password = false
-      @ssh_gateways_conf = ENV['ti_gateways_conf'].nil? ? :munich : ENV['ti_gateways_conf'].to_sym
-      @ssh_gateway_user = ENV['ti_gateway_user'].nil? ? 'ubradm' : ENV['ti_gateway_user']
+      @ssh_gateways_conf = ENV['hpc_ssh_gateways_conf'].nil? ? :munich : ENV['hpc_ssh_gateways_conf'].to_sym
+      @ssh_gateway_user = ENV['hpc_ssh_gateway_user'].nil? ? 'ubradm' : ENV['hpc_ssh_gateway_user']
       # Global variables handling the SSH directory storing temporary SSH configuration
       # Those variables are not shared between different instances of SshExecutor as the SSH configuration depends on the SshExecutor configuration.
       @platforms_ssh_dir = nil
@@ -100,35 +100,35 @@ module HybridPlatformsConductor
     def options_parse(options_parser, parallel: true)
       options_parser.separator ''
       options_parser.separator 'SSH executor options:'
-      options_parser.on('-g', '--gateway-user USER_NAME', "Name of the gateway user to be used by the gateways. Can also be set from environment variable ti_gateway_user. Defaults to #{@ssh_gateway_user}.") do |user_name|
-        @ssh_gateway_user = user_name
+      options_parser.on('-g', '--ssh-gateway-user USER', "Name of the gateway user to be used by the gateways. Can also be set from environment variable hpc_ssh_gateway_user. Defaults to #{@ssh_gateway_user}.") do |user|
+        @ssh_gateway_user = user
       end
-      options_parser.on('-j', '--no-ssh-control-master', 'If used, don\'t create SSH control masters for connections.') do
+      options_parser.on('-j', '--ssh-no-control-master', 'If used, don\'t create SSH control masters for connections.') do
         @ssh_use_control_master = false
       end
       options_parser.on('-m', '--max-threads NBR', "Set the number of threads to use for concurrent queries (defaults to #{@max_threads})") do |nbr_threads|
         @max_threads = nbr_threads.to_i
       end if parallel
-      options_parser.on('-q', '--no-ssh-host-key-checking', 'If used, don\'t check for SSH host keys.') do
+      options_parser.on('-q', '--ssh-no-host-key-checking', 'If used, don\'t check for SSH host keys.') do
         @ssh_strict_host_key_checking = false
       end
       options_parser.on('-s', '--show-commands', 'Display the SSH commands that would be run instead of running them') do
         self.dry_run = true
       end
-      options_parser.on('-u', '--ssh-user USER_NAME', 'Name of user to be used in SSH connections (defaults to platforms_ssh_user or USER environment variables)') do |user_name|
-        @ssh_user = user_name
+      options_parser.on('-u', '--ssh-user USER', 'Name of user to be used in SSH connections (defaults to hpc_ssh_user or USER environment variables)') do |user|
+        @ssh_user = user
       end
       options_parser.on('-w', '--password', 'If used, then expect SSH connections to ask for a password.') do
         @auth_password = true
       end
-      options_parser.on('-y', '--gateways-conf GATEWAYS_CONF_NAME', "Name of the gateways configuration to be used. Can also be set from environment variable ti_gateways_conf. Defaults to #{@ssh_gateways_conf}.") do |gateway|
+      options_parser.on('-y', '--ssh-gateways-conf GATEWAYS_CONF', "Name of the gateways configuration to be used. Can also be set from environment variable hpc_ssh_gateways_conf. Defaults to #{@ssh_gateways_conf}.") do |gateway|
         @ssh_gateways_conf = gateway.to_sym
       end
     end
 
     # Validate that parsed parameters are valid
     def validate_params
-      raise 'No SSH user name specified. Please use --ssh-user option or platforms_ssh_user environment variable to set it.' if @ssh_user.nil? || @ssh_user.empty?
+      raise 'No SSH user name specified. Please use --ssh-user option or hpc_ssh_user environment variable to set it.' if @ssh_user.nil? || @ssh_user.empty?
       known_gateways = @nodes_handler.known_gateways
       raise "Unknown gateway configuration provided: #{@ssh_gateways_conf}. Possible values are: #{known_gateways.join(', ')}." unless known_gateways.include?(@ssh_gateways_conf)
     end

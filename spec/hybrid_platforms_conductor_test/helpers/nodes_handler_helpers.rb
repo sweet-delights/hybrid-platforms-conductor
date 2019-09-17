@@ -53,7 +53,7 @@ module HybridPlatformsConductorTest
       end
 
       # Setup a platforms.rb with a given content and call code when it's ready.
-      # Automatically sets the ti_platforms env variable so that processes can then use it.
+      # Automatically sets the hpc_platforms env variable so that processes can then use it.
       # Clean-up at the end.
       #
       # Parameters::
@@ -64,7 +64,7 @@ module HybridPlatformsConductorTest
       def with_platforms(content)
         with_repository('hybrid-platforms') do |hybrid_platforms_dir|
           File.write("#{hybrid_platforms_dir}/platforms.rb", content)
-          ENV['ti_platforms'] = hybrid_platforms_dir
+          ENV['hpc_platforms'] = hybrid_platforms_dir
           yield hybrid_platforms_dir
         end
       end

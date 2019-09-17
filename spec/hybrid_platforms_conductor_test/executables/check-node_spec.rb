@@ -8,7 +8,7 @@ describe 'check-node executable' do
   #     * *repository* (String): Platform's repository
   def with_test_platform_for_check_node
     with_test_platform({ nodes: { 'node' => {} } }, false, 'gateway :test_gateway, \'Host test_gateway\'') do |repository|
-      ENV['ti_gateways_conf'] = 'test_gateway'
+      ENV['hpc_ssh_gateways_conf'] = 'test_gateway'
       yield repository
     end
   end
@@ -20,7 +20,7 @@ describe 'check-node executable' do
         test_deployer.stdout_device << "Check ok\n"
         { 'node' => [0, "Check ok\n", ''] }
       end
-      exit_code, stdout, stderr = run 'check-node', '--host-name', 'node'
+      exit_code, stdout, stderr = run 'check-node', '--node', 'node'
       expect(exit_code).to eq 0
       expect(stdout).to match /Check ok/
       expect(stderr).to eq ''
@@ -29,7 +29,7 @@ describe 'check-node executable' do
 
   it 'fails if no node is given' do
     with_test_platform_for_check_node do
-      expect { run 'check-node' }.to raise_error(RuntimeError, 'No node selected. Please use --host-name option to set at least one.')
+      expect { run 'check-node' }.to raise_error(RuntimeError, 'No node selected. Please use --node option to set at least one.')
     end
   end
 

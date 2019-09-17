@@ -43,14 +43,14 @@ describe 'executables\' Nodes Handler options' do
       false,
       'gateway :test_gateway, \'Host test_gateway\''
     ) do |repository|
-      ENV['ti_gateways_conf'] = 'test_gateway'
+      ENV['hpc_ssh_gateways_conf'] = 'test_gateway'
       yield repository
     end
   end
 
   it 'displays info about nodes' do
     with_test_platform_for_nodes_handler_options do
-      exit_code, stdout, stderr = run 'ssh_run', '--show-hosts'
+      exit_code, stdout, stderr = run 'ssh_run', '--show-nodes'
       expect(exit_code).to eq 0
       expect(stdout).to eq(
 '* Known platforms:
