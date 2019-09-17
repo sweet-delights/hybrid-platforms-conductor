@@ -47,37 +47,37 @@ module HybridPlatformsConductor
       end
     end
 
-    # Dump JSON files containing description of the given hostnames
+    # Dump JSON files containing description of the given nodes
     #
     # Parameters::
-    # * *nodes_descriptions* (Array<object>): List of nodes descriptions to dump files for
-    def dump_json_for(nodes_descriptions)
-      hostnames = @nodes_handler.select_nodes(nodes_descriptions)
+    # * *nodes_selectors* (Array<object>): List of nodes selectors to dump files for
+    def dump_json_for(nodes_selectors)
+      nodes = @nodes_handler.select_nodes(nodes_selectors)
       unless @skip_run
-        hostnames.map { |hostname| @nodes_handler.platform_for(hostname) }.uniq.each.each do |platform_handler|
+        nodes.map { |node| @nodes_handler.platform_for(node) }.uniq.each.each do |platform_handler|
           platform_handler.prepare_why_run_deploy_for_json_dump
         end
         @deployer.concurrent_execution = true
         @deployer.use_why_run = true
-        @deployer.deploy_on(hostnames)
+        @deployer.deploy_on(nodes)
       end
       # Parse the logs
       FileUtils.mkdir_p @dump_dir
-      hostnames.each do |hostname|
-        stdout_file_name = "run_logs/#{hostname}.stdout"
+      nodes.each do |node|
+        stdout_file_name = "run_logs/#{node}.stdout"
         if File.exist?(stdout_file_name)
           stdout = File.read(stdout_file_name).split("\n")
           dump_begin_idx = stdout.index('===== Node JSON dump BEGIN =====')
           dump_end_idx = stdout.index('===== Node JSON dump END =====')
           if dump_begin_idx.nil? || dump_end_idx.nil?
-            out "[ #{hostname} ] - Error while dumping JSON. Check #{stdout_file_name}"
+            out "[ #{node} ] - Error while dumping JSON. Check #{stdout_file_name}"
           else
-            json_file_name = "#{@dump_dir}/#{hostname}.json"
+            json_file_name = "#{@dump_dir}/#{node}.json"
             File.write(json_file_name, stdout[dump_begin_idx+1..dump_end_idx-1].join("\n"))
-            out "[ #{hostname} ] - OK. Check #{json_file_name}"
+            out "[ #{node} ] - OK. Check #{json_file_name}"
           end
         else
-          out "[ #{hostname} ] - Error while dumping JSON. File #{stdout_file_name} does not exist."
+          out "[ #{node} ] - Error while dumping JSON. File #{stdout_file_name} does not exist."
         end
       end
     end

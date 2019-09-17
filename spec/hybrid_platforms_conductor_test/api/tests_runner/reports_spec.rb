@@ -295,7 +295,7 @@ describe HybridPlatformsConductor::TestsRunner do
       end
     end
 
-    it 'returns correctly nodes by hosts lists' do
+    it 'returns correctly nodes by nodes lists' do
       with_test_platform(
         nodes: { 'node1' => {}, 'node2' => {}, 'node3' => {}, 'node4' => {}, 'node5' => {} },
         nodes_lists: {
@@ -311,24 +311,24 @@ describe HybridPlatformsConductor::TestsRunner do
         test_tests_runner.tests = [:node_test]
         test_tests_runner.run_tests %w[node1 node2 node3 node5]
         expect(HybridPlatformsConductorTest::TestsReportPlugin.reports.size).to eq 1
-        nodes_by_hosts_list = HybridPlatformsConductorTest::TestsReportPlugin.reports.first[:nodes_by_hosts_list]
-        expect(nodes_by_hosts_list.size).to eq 4
-        expect(nodes_by_hosts_list['nodes_list1'][:nodes].sort).to eq %w[node1 node3].sort
-        expect(nodes_by_hosts_list['nodes_list1'][:tested_nodes].sort).to eq %w[node1 node3].sort
-        expect(nodes_by_hosts_list['nodes_list1'][:tested_nodes_in_error].sort).to eq %w[node1].sort
-        expect(nodes_by_hosts_list['nodes_list1'][:tested_nodes_in_error_as_expected].sort).to eq %w[node1].sort
-        expect(nodes_by_hosts_list['nodes_list2'][:nodes].sort).to eq %w[node2 node3 node4].sort
-        expect(nodes_by_hosts_list['nodes_list2'][:tested_nodes].sort).to eq %w[node2 node3].sort
-        expect(nodes_by_hosts_list['nodes_list2'][:tested_nodes_in_error].sort).to eq %w[].sort
-        expect(nodes_by_hosts_list['nodes_list2'][:tested_nodes_in_error_as_expected].sort).to eq %w[].sort
-        expect(nodes_by_hosts_list['No list'][:nodes].sort).to eq %w[node5].sort
-        expect(nodes_by_hosts_list['No list'][:tested_nodes].sort).to eq %w[node5].sort
-        expect(nodes_by_hosts_list['No list'][:tested_nodes_in_error].sort).to eq %w[node5].sort
-        expect(nodes_by_hosts_list['No list'][:tested_nodes_in_error_as_expected].sort).to eq %w[].sort
-        expect(nodes_by_hosts_list['All'][:nodes].sort).to eq %w[node1 node2 node3 node4 node5].sort
-        expect(nodes_by_hosts_list['All'][:tested_nodes].sort).to eq %w[node1 node2 node3 node5].sort
-        expect(nodes_by_hosts_list['All'][:tested_nodes_in_error].sort).to eq %w[node1 node5].sort
-        expect(nodes_by_hosts_list['All'][:tested_nodes_in_error_as_expected].sort).to eq %w[node1].sort
+        nodes_by_nodes_list = HybridPlatformsConductorTest::TestsReportPlugin.reports.first[:nodes_by_nodes_list]
+        expect(nodes_by_nodes_list.size).to eq 4
+        expect(nodes_by_nodes_list['nodes_list1'][:nodes].sort).to eq %w[node1 node3].sort
+        expect(nodes_by_nodes_list['nodes_list1'][:tested_nodes].sort).to eq %w[node1 node3].sort
+        expect(nodes_by_nodes_list['nodes_list1'][:tested_nodes_in_error].sort).to eq %w[node1].sort
+        expect(nodes_by_nodes_list['nodes_list1'][:tested_nodes_in_error_as_expected].sort).to eq %w[node1].sort
+        expect(nodes_by_nodes_list['nodes_list2'][:nodes].sort).to eq %w[node2 node3 node4].sort
+        expect(nodes_by_nodes_list['nodes_list2'][:tested_nodes].sort).to eq %w[node2 node3].sort
+        expect(nodes_by_nodes_list['nodes_list2'][:tested_nodes_in_error].sort).to eq %w[].sort
+        expect(nodes_by_nodes_list['nodes_list2'][:tested_nodes_in_error_as_expected].sort).to eq %w[].sort
+        expect(nodes_by_nodes_list['No list'][:nodes].sort).to eq %w[node5].sort
+        expect(nodes_by_nodes_list['No list'][:tested_nodes].sort).to eq %w[node5].sort
+        expect(nodes_by_nodes_list['No list'][:tested_nodes_in_error].sort).to eq %w[node5].sort
+        expect(nodes_by_nodes_list['No list'][:tested_nodes_in_error_as_expected].sort).to eq %w[].sort
+        expect(nodes_by_nodes_list['All'][:nodes].sort).to eq %w[node1 node2 node3 node4 node5].sort
+        expect(nodes_by_nodes_list['All'][:tested_nodes].sort).to eq %w[node1 node2 node3 node5].sort
+        expect(nodes_by_nodes_list['All'][:tested_nodes_in_error].sort).to eq %w[node1 node5].sort
+        expect(nodes_by_nodes_list['All'][:tested_nodes_in_error_as_expected].sort).to eq %w[node1].sort
       end
     end
 

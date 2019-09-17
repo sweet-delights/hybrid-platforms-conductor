@@ -47,7 +47,7 @@ module HybridPlatformsConductor
         # [API] - @platform can be used to adapt the code with the platform handling this node.
         def test_for_node
           # If this method is defined, it will be used to execute once per node to be tested.
-          assert_match @node, /my_host_.+/, 'Node name does not follow naming convention'
+          assert_match @node, /my_node_.+/, 'Node name does not follow naming convention'
         end
 
         # Run test using SSH commands on the node.
@@ -71,7 +71,7 @@ module HybridPlatformsConductor
           # In place of a simple validator code block, a more complex structure can be used to give more info (for example timeout).
           {
             'echo 1' => proc do |stdout|
-              assert_equal stdout.first, '1', 'Echo did not return 1 on the host!!!'
+              assert_equal stdout.first, '1', 'Echo did not return 1 on the node!!!'
             end,
             "./longer_test_that_should_return_success.sh --hostname #{@node}" => {
               validator: proc do |stdout|

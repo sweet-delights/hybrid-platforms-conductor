@@ -9,28 +9,28 @@ module HybridPlatformsConductor
 
         # Check my_test_plugin.rb.sample documentation for signature details.
         def test
-          # Get a map of public IPs per hostname
+          # Get a map of public IPs per node
           public_ips = Hash[@nodes_handler.
             known_nodes.
-            map do |hostname|
-              conf = @nodes_handler.metadata_for hostname
+            map do |node|
+              conf = @nodes_handler.metadata_for node
               [
-                hostname,
+                node,
                 conf.key?('public_ips') ? conf['public_ips'] : []
               ]
             end
           ]
 
           # Check there are no duplicates
-          hostnames_per_public_ip = {}
-          public_ips.each do |hostname, public_ips|
+          nodes_per_public_ip = {}
+          public_ips.each do |node, public_ips|
             public_ips.each do |public_ip|
-              hostnames_per_public_ip[public_ip] = [] unless hostnames_per_public_ip.key?(public_ip)
-              hostnames_per_public_ip[public_ip] << hostname
+              nodes_per_public_ip[public_ip] = [] unless nodes_per_public_ip.key?(public_ip)
+              nodes_per_public_ip[public_ip] << node
             end
           end
-          hostnames_per_public_ip.each do |public_ip, hostnames|
-            error "Public IP #{public_ip} is used by the following nodes: #{hostnames.join(', ')}" if hostnames.size > 1
+          nodes_per_public_ip.each do |public_ip, nodes|
+            error "Public IP #{public_ip} is used by the following nodes: #{nodes.join(', ')}" if nodes.size > 1
           end
         end
 

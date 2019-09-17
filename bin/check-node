@@ -1,14 +1,14 @@
 #!/usr/bin/env ruby
 require 'hybrid_platforms_conductor/executable'
 
-test_host = nil
+test_node = nil
 executable = HybridPlatformsConductor::Executable.new(
   check_options: false,
   nodes_selection_options: false,
   parallel_options: false
 ) do |opts|
-  opts.on('-n', '--host-name HOST_NAME', 'Run the command on a specific host.') do |host_name|
-    test_host = host_name
+  opts.on('-n', '--host-name HOST_NAME', 'Run the command on a specific host.') do |node|
+    test_node = node
   end
 end
 nodes_handler = executable.nodes_handler
@@ -16,10 +16,10 @@ ssh_executor = executable.ssh_executor
 deployer = executable.deployer
 
 executable.parse_options!
-raise 'No node selected. Please use --host-name option to set at least one.' if test_host.nil? || test_host.empty?
-raise "Unknown host name: #{test_host}" unless nodes_handler.known_nodes.include?(test_host)
+raise 'No node selected. Please use --host-name option to set at least one.' if test_node.nil? || test_node.empty?
+raise "Unknown node: #{test_node}" unless nodes_handler.known_nodes.include?(test_node)
 
 ssh_executor.dump_conf
 # Make sure we always use why-run
 deployer.use_why_run = true
-deployer.deploy_on(test_host)
+deployer.deploy_on(test_node)

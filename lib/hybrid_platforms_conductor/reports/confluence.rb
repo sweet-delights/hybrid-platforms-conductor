@@ -20,14 +20,14 @@ module HybridPlatformsConductor
         [:en]
       end
 
-      # Create a report for a list of hostnames, in a given locale
+      # Create a report for a list of nodes, in a given locale
       # [API] - This method is mandatory.
       #
       # Parameters::
-      # * *hosts* (Array<String>): List of hosts
+      # * *nodes* (Array<String>): List of nodes
       # * *locale_code* (Symbol): The locale code
-      def report_for(hosts, locale_code)
-        @hosts = hosts
+      def report_for(nodes, locale_code)
+        @nodes = nodes
         confluence_page_update('763977681', render('confluence_inventory'))
         out 'Confluence page updated. Please visit https://www.site.my_company.net/confluence/display/TIU/Platforms+inventory'
       end

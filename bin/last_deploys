@@ -9,16 +9,16 @@ possible_string_sorts = [
   :commit_comment
 ]
 possible_sorts = {
-  datetime: proc { |hostname, deploy_info| [deploy_info.key?(:error) || !deploy_info.key?(:datetime) ? 0 : deploy_info[:datetime].strftime('%Y%m%d%H%M%S').to_i, hostname] },
-  host: proc { |hostname, _deploy_info| hostname },
+  datetime: proc { |node, deploy_info| [deploy_info.key?(:error) || !deploy_info.key?(:datetime) ? 0 : deploy_info[:datetime].strftime('%Y%m%d%H%M%S').to_i, node] },
+  node: proc { |node, _deploy_info| node },
 }.merge(Hash[possible_string_sorts.map do |property_name|
   [
     property_name,
-    proc { |hostname, deploy_info| [deploy_info.key?(:error) || !deploy_info.key?(property_name) ? '' : deploy_info[property_name], hostname] }
+    proc { |node, deploy_info| [deploy_info.key?(:error) || !deploy_info.key?(property_name) ? '' : deploy_info[property_name], node] }
   ]
 end])
 
-sort_by = :host
+sort_by = :node
 sort_desc = false
 executable = HybridPlatformsConductor::Executable.new do |opts|
   opts.on('-r', '--sort-by SORT', "Specify a sort. Possible values are: #{possible_sorts.keys.sort.join(', ')}. Each value can append _desc to specify a reverse sorting. Defaults to #{sort_by}.") do |sort_name|
@@ -39,9 +39,9 @@ nodes = executable.selected_nodes.empty? ? [{ all: true }] : executable.selected
 
 sorted_deploy_info = Hash[ssh_executor.
   execute_actions(
-    Hash[nodes_handler.select_nodes(nodes).map do |hostname|
+    Hash[nodes_handler.select_nodes(nodes).map do |node|
       [
-        hostname,
+        node,
         { remote_bash: "cd /var/log/deployments && ls -t | head -1 | xargs sed '/===== STDOUT =====/q'" }
       ]
     end],
@@ -49,14 +49,14 @@ sorted_deploy_info = Hash[ssh_executor.
     concurrent: true,
     timeout: 10
   ).
-  map do |hostname, (exit_status, stdout, stderr)|
+  map do |node, (exit_status, stdout, stderr)|
     # Expected format for stdout:
     # Property1: Value1
     # ...
     # PropertyN: ValueN
     # ===== STDOUT =====
     # ...
-    deploy_info = { host: hostname }
+    deploy_info = { node: node }
     if exit_status.is_a?(Symbol)
       deploy_info[:error] = "Error: #{exit_status}\n#{stderr}"
     else
@@ -100,14 +100,14 @@ sorted_deploy_info = Hash[ssh_executor.
       end
     end
     [
-      hostname,
+      node,
       deploy_info
     ]
   end
 ].sort_by(&possible_sorts[sort_by])
 sorted_deploy_info.reverse! if sort_desc
 info_displayed = {
-  host: 'Hostname',
+  node: 'Node',
   datetime: 'Date',
   admin: 'Admin',
   # debug: 'Debug',
@@ -118,7 +118,7 @@ info_displayed = {
   error: 'Error'
 }
 executable.out(Terminal::Table.new(headings: info_displayed.values) do |table|
-  sorted_deploy_info.each do |hostname, deploy_info|
+  sorted_deploy_info.each do |_node, deploy_info|
     table << info_displayed.keys.map { |key| deploy_info[key] }
   end
 end)

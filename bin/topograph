@@ -1,7 +1,6 @@
 #!/usr/bin/env ruby
 require 'hybrid_platforms_conductor/executable'
 
-test_host = nil
 executable = HybridPlatformsConductor::Executable.new(
   check_options: false,
   nodes_selection_options: false,
@@ -18,7 +17,7 @@ topographer = executable.topographer
 executable.parse_options!
 
 # Initialize the topograph
-from_hostnames, to_hostnames = topographer.resolve_from_to
+from_nodes, to_nodes = topographer.resolve_from_to
 topographer.get_json_files
 
 # The list of clusters to group nodes into 1 graphviz node to simplify the graph.
@@ -27,22 +26,22 @@ known_nodes_lists = nodes_handler.known_nodes_lists
 executable.section 'Compute graph' do
   topographer.graph_for(nodes_handler.known_nodes)
 end
-executable.section 'Add hosts lists clusters' do
-  topographer.graph_for_hostlists(known_nodes_lists)
+executable.section 'Add nodes lists clusters' do
+  topographer.graph_for_nodes_lists(known_nodes_lists)
 end
 executable.section 'Define IP 24 clusters' do
   topographer.define_clusters_ip_24
 end
 nodes = nil
 executable.section 'Select path' do
-  from_nodes = topographer.children_nodes(from_hostnames)
-  to_nodes = topographer.ancestor_nodes(to_hostnames)
+  from_nodes = topographer.children_nodes(from_nodes)
+  to_nodes = topographer.ancestor_nodes(to_nodes)
   nodes = from_nodes & to_nodes
 end
 executable.section "Filter only nodes #{nodes.sort.join(', ')}" do
   topographer.filter_in_nodes(nodes + topographer.cluster_nodes)
 end
-executable.section 'Collapse hosts lists' do
+executable.section 'Collapse nodes lists' do
   topographer.collapse_nodes(known_nodes_lists)
 end
 executable.section 'Remove self references' do

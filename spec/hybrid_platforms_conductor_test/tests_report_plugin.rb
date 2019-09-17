@@ -26,7 +26,7 @@ module HybridPlatformsConductorTest
             end]
           ]
         end],
-        nodes_by_hosts_list: nodes_by_hosts_list
+        nodes_by_nodes_list: nodes_by_nodes_list
       }
     end
 
