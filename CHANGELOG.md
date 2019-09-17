@@ -1,3 +1,9 @@
+# [10.0.0](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv9.0.0&sourceBranch=refs%2Ftags%2Fv10.0.0) (2019-09-17)
+
+### Breaking changes
+
+* Clean up last components' API ([8b76845c](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/commits/8b76845c8750c9f5088ae5ff136d53e717af942e))
+
 # [9.0.0](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv8.0.0&sourceBranch=refs%2Ftags%2Fv9.0.0) (2019-09-17)
 
 ### Breaking changes
