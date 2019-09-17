@@ -1,3 +1,9 @@
+# [11.0.1](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv11.0.0&sourceBranch=refs%2Ftags%2Fv11.0.1) (2019-09-17)
+
+### Fixes
+
+* Better tests report: less verbose, more efficient ([e04c820f](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/commits/e04c820f6175a46fcd1a0cecf232ed4cf3337cd9))
+
 # [11.0.0](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv10.0.0&sourceBranch=refs%2Ftags%2Fv11.0.0) (2019-09-17)
 
 ### Breaking changes
