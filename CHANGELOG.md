@@ -1,3 +1,9 @@
+# [9.0.0](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv8.0.0&sourceBranch=refs%2Ftags%2Fv9.0.0) (2019-09-17)
+
+### Breaking changes
+
+* Clean up api deployer ([01b7d71b](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/commits/01b7d71be4d2761f52fec76efe8d1b9c8d63b04b))
+
 # [8.0.0](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv7.0.1&sourceBranch=refs%2Ftags%2Fv8.0.0) (2019-09-11)
 
 ### Breaking changes
