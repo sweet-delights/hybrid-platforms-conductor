@@ -1,9 +1,9 @@
 <%# Partial template used to display a gauge.
   # Expects the following variables to be set:
-  # *@gauge_success* (Integer): Number of tests in success
-  # *@gauge_unexpected_error* (Integer): Number of tests in unexpected error
-  # *@gauge_expected_error* (Integer): Number of tests in expected error
-  # *@gauge_not_run* (Integer): Number of tests not run
+  # * *@gauge_success* (Integer): Number of tests in success
+  # * *@gauge_unexpected_error* (Integer): Number of tests in unexpected error
+  # * *@gauge_expected_error* (Integer): Number of tests in expected error
+  # * *@gauge_not_run* (Integer): Number of tests not run
 %>
 <% gauge_total = @gauge_success + @gauge_unexpected_error + @gauge_expected_error + @gauge_not_run %>
 <% unless gauge_total == 0 %>
