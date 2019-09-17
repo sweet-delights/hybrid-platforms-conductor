@@ -100,10 +100,10 @@ module HybridPlatformsConductor
       options_parser.on('-k', '--skip-run', 'Skip running the check-node commands for real, and just analyze existing run logs.') do
         @skip_run = true
       end
-      options_parser.on('-r', '--report REPORT_NAME', "Specify a report name. Can be used several times. Can be all for all reports. Possible values: #{@reports_plugins.keys.sort.join(', ')} (defaults to stdout).") do |report_name|
-        @reports << report_name.to_sym
+      options_parser.on('-r', '--report REPORT', "Specify a report name. Can be used several times. Can be all for all reports. Possible values: #{@reports_plugins.keys.sort.join(', ')} (defaults to stdout).") do |report|
+        @reports << report.to_sym
       end
-      options_parser.on('-t', '--test TEST_NAME', "Specify a test name. Can be used several times. Can be all for all tests. Possible values: #{@tests_plugins.keys.sort.join(', ')} (defaults to all).") do |test_name|
+      options_parser.on('-t', '--test TEST', "Specify a test name. Can be used several times. Can be all for all tests. Possible values: #{@tests_plugins.keys.sort.join(', ')} (defaults to all).") do |test_name|
         @tests << test_name.to_sym
       end
     end
@@ -146,17 +146,20 @@ module HybridPlatformsConductor
 
       # Check that tests that were expected to fail did not succeed.
       @tests_run.each do |test|
-        expected_failure = test.expected_failure
-        if expected_failure
-          if test.errors.empty?
-            # Should have failed
-            error(
-              "Test #{test} was marked to fail (#{expected_failure}) but it succeeded. Please remove it from the expected failures in case the issue has been resolved.",
-              platform: test.platform,
-              node: test.node
-            )
-          else
-            out "Expected failure for #{test} (#{expected_failure}):\n#{test.errors.map { |error| "  - #{error}" }.join("\n")}".yellow
+        if test.executed?
+          expected_failure = test.expected_failure
+          if expected_failure
+            if test.errors.empty?
+              # Should have failed
+              error(
+                "Test #{test} was marked to fail (#{expected_failure}) but it succeeded. Please remove it from the expected failures in case the issue has been resolved.",
+                platform: test.platform,
+                node: test.node,
+                force_failure: true
+              )
+            else
+              out "Expected failure for #{test} (#{expected_failure}):\n#{test.errors.map { |error| "  - #{error}" }.join("\n")}".yellow
+            end
           end
         end
       end
@@ -186,8 +189,12 @@ module HybridPlatformsConductor
       end
 
       # Produce reports
-      @reports.each do |report_name|
-        @reports_plugins[report_name].new(@logger, @logger_stderr, @nodes_handler, @nodes, @tested_platforms, @tests_run).report
+      @reports.each do |report|
+        begin
+          @reports_plugins[report].new(@logger, @logger_stderr, @nodes_handler, @nodes, @tested_platforms, @tests_run).report
+        rescue
+          log_error "Uncaught exception while producing report #{report}: #{$!}"
+        end
       end
 
       out
@@ -219,18 +226,11 @@ module HybridPlatformsConductor
     # Parameters::
     # * *message* (String): Error to be logged
     # * *platform* (PlatformHandler or nil): PlatformHandler for a platform's test, or nil for a global or node test [default: nil]
-    # * *node* (String): Node for which the test is instantiated, or nil if global or platform [default = nil]
-    def error(message, platform: nil, node: nil)
+    # * *node* (String): Node for which the test is instantiated, or nil if global or platform [default: nil]
+    # * *force_failure* (Boolean): If true, then ignore expected failures for this error [default: false]
+    def error(message, platform: nil, node: nil, force_failure: false)
       platform = @nodes_handler.platform_for(node) unless node.nil?
-      global_test = Tests::Test.new(
-        @logger,
-        @logger_stderr,
-        @nodes_handler,
-        @deployer,
-        name: :global,
-        platform: platform,
-        node: node
-      )
+      global_test = new_test(nil, platform: platform, node: node, ignore_expected_failure: force_failure)
       global_test.errors << message
       global_test.executed
       @tests_run << global_test
@@ -239,26 +239,27 @@ module HybridPlatformsConductor
     # Instantiate a new test
     #
     # Parameters::
-    # * *test_name* (Symbol): Test name to instantiate
+    # * *test_name* (Symbol or nil): Test name to instantiate, or nil for unnamed tests
     # * *platform* (PlatformHandler or nil): PlatformHandler for a platform's test, or nil for a global or node test [default: nil]
     # * *node* (String or nil): Node for a node's test, or nil for a global or platform test [default: nil]
+    # * *ignore_expected_failure* (Boolean): If true, then ignore expected failures for this error [default: false]
     # Result::
     # * Test: Corresponding test
-    def new_test(test_name, platform: nil, node: nil)
+    def new_test(test_name, platform: nil, node: nil, ignore_expected_failure: false)
       platform = @nodes_handler.platform_for(node) unless node.nil?
-      @tests_plugins[test_name].new(
+      (test_name.nil? ? Tests::Test : @tests_plugins[test_name]).new(
         @logger,
         @logger_stderr,
         @nodes_handler,
         @deployer,
-        name: test_name,
+        name: test_name.nil? ? :global : test_name,
         platform: platform,
         node: node,
-        expected_failure: if platform.nil?
+        expected_failure: if platform.nil? || ignore_expected_failure
                             nil
                           else
                             expected_failures = expected_failures_for(platform)
-                            expected_failures.nil? ? nil : expected_failures.dig(test_name.to_s, node || '')
+                            expected_failures.nil? ? nil : expected_failures.dig(test_name.nil? ? 'global' : test_name.to_s, node || '')
                           end
       )
     end
@@ -274,7 +275,7 @@ module HybridPlatformsConductor
               begin
                 test.test
               rescue
-                test.error "Uncaught exception during test: #{$!}\n#{$!.backtrace.join("\n")}"
+                test.error "Uncaught exception during test: #{$!}#{log_debug? ? "\n#{$!.backtrace.join("\n")}" : ''}"
               end
               test.executed
               @tests_run << test
@@ -300,7 +301,7 @@ module HybridPlatformsConductor
                   begin
                     test.test_on_platform
                   rescue
-                    test.error "Uncaught exception during test: #{$!}\n#{$!.backtrace.join("\n")}"
+                    test.error "Uncaught exception during test: #{$!}#{log_debug? ? "\n#{$!.backtrace.join("\n")}" : ''}"
                   end
                   test.executed
                   @tests_run << test
@@ -352,7 +353,7 @@ module HybridPlatformsConductor
                 ]
               end
             rescue
-              test.error "Uncaught exception during test preparation: #{$!}\n#{$!.backtrace.join("\n")}"
+              test.error "Uncaught exception during test preparation: #{$!}#{log_debug? ? "\n#{$!.backtrace.join("\n")}" : ''}"
             end
             @tests_run << test
             tests_on_nodes << test_name
@@ -409,7 +410,7 @@ module HybridPlatformsConductor
                 begin
                   test_info[:validator].call(stdout_lines[0..-2], return_code)
                 rescue
-                  test_info[:test].error "Uncaught exception during validation: #{$!}\n#{$!.backtrace.join("\n")}"
+                  test_info[:test].error "Uncaught exception during validation: #{$!}#{log_debug? ? "\n#{$!.backtrace.join("\n")}" : ''}"
                 end
                 test_info[:test].executed
               end
@@ -437,7 +438,7 @@ module HybridPlatformsConductor
                 begin
                   test.test_for_node
                 rescue
-                  test.error "Uncaught exception during test: #{$!}\n#{$!.backtrace.join("\n")}"
+                  test.error "Uncaught exception during test: #{$!}#{log_debug? ? "\n#{$!.backtrace.join("\n")}" : ''}"
                 end
                 test.executed
                 @tests_run << test
@@ -476,7 +477,15 @@ module HybridPlatformsConductor
               @deployer.use_why_run = true
               @deployer.force_direct_deploy = true
               @deployer.timeout = CHECK_NODE_TIMEOUT
-              @deployer.deploy_on(nodes_to_test)
+              begin
+                @deployer.deploy_on(nodes_to_test)
+              rescue
+                # If an exception occurred, make sure all concerned nodes are reporting the error
+                nodes_to_test.each do |node|
+                  error "Error while checking check-node output: #{$!}", node: node
+                end
+                {}
+              end
             end
           # Analyze output
           outputs.each do |node, (exit_status, stdout, stderr)|
@@ -492,7 +501,7 @@ module HybridPlatformsConductor
                   begin
                     test.test_on_check_node(stdout, stderr, exit_status)
                   rescue
-                    test.error "Uncaught exception during test: #{$!}\n#{$!.backtrace.join("\n")}"
+                    test.error "Uncaught exception during test: #{$!}#{log_debug? ? "\n#{$!.backtrace.join("\n")}" : ''}"
                   end
                 end
                 test.executed

@@ -1,10 +1,13 @@
 <%# Partial template used to display a gauge.
   # Expects the following variables to be set:
-  # * *@gauge_total* (Integer): Total value
-  # * *@gauge_value* (Integer): Percentila
+  # * *@gauge_success* (Integer): Number of tests in success
+  # * *@gauge_unexpected_error* (Integer): Number of tests in unexpected error
+  # * *@gauge_expected_error* (Integer): Number of tests in expected error
+  # * *@gauge_not_run* (Integer): Number of tests not run
 %>
-<% unless @gauge_total == 0 %>
-  <%= (@gauge_value*100.0/@gauge_total).to_i %> %
+<% gauge_total = @gauge_success + @gauge_unexpected_error + @gauge_expected_error + @gauge_not_run %>
+<% unless gauge_total == 0 %>
+  <%= (@gauge_success*100.0/gauge_total).to_i %> %
   <br/>
   <ac:structured-macro ac:name="chart" ac:schema-version="1">
     <ac:parameter ac:name="imageFormat">png</ac:parameter>
@@ -13,7 +16,7 @@
     <ac:parameter ac:name="legend">false</ac:parameter>
     <ac:parameter ac:name="width">200</ac:parameter>
     <ac:parameter ac:name="dataOrientation">vertical</ac:parameter>
-    <ac:parameter ac:name="colors">#14892C,#D04437</ac:parameter>
+    <ac:parameter ac:name="colors">#14892C,#FFD351,#D04437,#CCCCCC</ac:parameter>
     <ac:parameter ac:name="height">200</ac:parameter>
     <ac:parameter ac:name="pieSectionLabel">%1%</ac:parameter>
     <ac:rich-text-body>
@@ -24,12 +27,20 @@
             <th>Value</th>
           </tr>
           <tr>
-            <td>Good</td>
-            <td><%= @gauge_value %></td>
+            <td>Success</td>
+            <td><%= @gauge_success %></td>
           </tr>
           <tr>
-            <td>Bad</td>
-            <td><%= @gauge_total - @gauge_value %></td>
+            <td>Expected error</td>
+            <td><%= @gauge_expected_error %></td>
+          </tr>
+          <tr>
+            <td>Unexpected error</td>
+            <td><%= @gauge_unexpected_error %></td>
+          </tr>
+          <tr>
+            <td>Missing</td>
+            <td><%= @gauge_not_run %></td>
           </tr>
         </tbody>
       </table>

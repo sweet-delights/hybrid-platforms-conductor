@@ -125,7 +125,6 @@ module HybridPlatformsConductor
       #
       # Parameters::
       # * *tests* (Array<Test>): List of tests to group errors from
-      # * *only_as_expected* (Boolean): If true, only report errors that were expected [default: false]
       # * *group_criterias* (Symbol or Proc or Array<Symbol or Proc>): Ordered list (or single item) of group by criterias. Each criteria applies on a list of tests and can be one of the following:
       #   * Symbol: Named criteria. Can be one of the following:
       #     * test_name: Group by test name
@@ -136,11 +135,26 @@ module HybridPlatformsConductor
       #       * *test* (Test): Test to extract group by criteria from
       #     * Result::
       #       * Object: The group by criteria
+      # * *filter* (Symbol or nil): Filter errors to be returned, or nil for no filter. Values can be: [default: nil]
+      #   * *only_as_expected*: Only report errors that were expected
+      #   * *only_as_non_expected*: Only report errors that were not expected.
       # Result::
       # * Hash or Array<String>: Resulting tree structure, following the group by criterias, giving as leaves the grouped list of errors. If the criterias are empty, return the list of errors.
-      def group_errors(tests, *group_criterias, only_as_expected: false)
+      def group_errors(tests, *group_criterias, filter: nil)
         if group_criterias.empty?
-          tests.inject([]) { |errors, test| !only_as_expected || test.expected_failure ? errors + test.errors : errors }
+          tests.inject([]) do |errors, test|
+            errors +
+              case filter
+              when nil
+                test.errors
+              when :only_as_expected
+                test.expected_failure ? test.errors : []
+              when :only_as_non_expected
+                !test.expected_failure ? test.errors : []
+              else
+                raise "Unknown errors filter: #{fiter}"
+              end
+          end
         else
           first_criteria = group_criterias.first
           if first_criteria.is_a?(Symbol)
@@ -158,7 +172,7 @@ module HybridPlatformsConductor
           end
           groups = {}
           tests.group_by(&first_criteria).each do |first_group, grouped_tests|
-            next_grouped_errors = group_errors(grouped_tests, *group_criterias[1..-1], only_as_expected: only_as_expected, )
+            next_grouped_errors = group_errors(grouped_tests, *group_criterias[1..-1], filter: filter)
             groups[first_group] = next_grouped_errors unless next_grouped_errors.empty?
           end
           Hash[groups.sort]
@@ -192,7 +206,7 @@ module HybridPlatformsConductor
               nodes: list_nodes,
               tested_nodes: list_nodes & @tested_nodes,
               tested_nodes_in_error: list_nodes & group_errors(node_tests, :node).keys,
-              tested_nodes_in_error_as_expected: list_nodes & group_errors(node_tests, :node, only_as_expected: true).keys
+              tested_nodes_in_error_as_expected: list_nodes & group_errors(node_tests, :node, filter: :only_as_expected).keys
             }
           ]
         end]
@@ -232,6 +246,41 @@ module HybridPlatformsConductor
             h[k] = v
           end
         end
+      end
+
+      # Classify a given list of tests by their statuses
+      #
+      # Parameters::
+      # * *tests* (Array<Test>): List of tests to group
+      # Result::
+      # * Hash<Symbol, Object >: Info for this list of tests. Properties are:
+      #   * *success* (Array<Test>): Successful tests
+      #   * *unexpected_error* (Array<Test>): Tests in unexpected error
+      #   * *expected_error* (Array<Test>): Tests in expected error
+      #   * *not_run* (Array<Test>): Tests that were not run
+      #   * *status* (Symbol): The global status of those tests (only the first matching status from this ordered list is returned):
+      #     * *success*: All tests are successful
+      #     * *unexpected_error*: Some tests have unexpected errors
+      #     * *expected_error*: Some tests have expected errors
+      #     * *not_run*: All non-successful tests have not been run
+      def classify_tests(tests)
+        info = {
+          not_run: tests.select { |test| !test.executed? },
+          success: tests.select { |test| test.executed? && test.errors.empty? },
+          unexpected_error: tests.select { |test| test.executed? && !test.errors.empty? && test.expected_failure.nil? },
+          expected_error: tests.select { |test| test.executed? && !test.errors.empty? && !test.expected_failure.nil? }
+        }
+        info[:status] =
+          if info[:success].size == tests.size
+            :success
+          elsif !info[:unexpected_error].empty?
+            :unexpected_error
+          elsif !info[:expected_error].empty?
+            :expected_error
+          else
+            :not_run
+          end
+        info
       end
 
     end

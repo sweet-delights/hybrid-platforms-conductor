@@ -3,13 +3,10 @@
 <table>
   <tbody>
     <% # Compute the global counters of tests
-       nbr_global_tests = @global_test_names.size
-       nbr_global_tests_in_error = group_errors(global_tests, :test_name).size
-       nbr_platform_tests_by_test_and_platform = platform_tests.map { |test| [test.name, test.platform] }.uniq.size
-       nbr_platform_tests_by_test_and_platform_in_error = flatten_hash(group_errors(platform_tests, :test_name, :platform)).size
-       nbr_node_tests_by_test_and_node = node_tests.map { |test| [test.name, test.node] }.uniq.size
-       nbr_node_tests_by_test_and_node_in_error = flatten_hash(group_errors(node_tests, :test_name, :node)).size
-       success_percentage = 100.0 * (1.0 - (nbr_global_tests_in_error + nbr_platform_tests_by_test_and_platform_in_error + nbr_node_tests_by_test_and_node_in_error).to_f / (nbr_global_tests + nbr_platform_tests_by_test_and_platform + nbr_node_tests_by_test_and_node))
+       global_info = classify_tests(global_tests)
+       platform_info = classify_tests(platform_tests)
+       node_info = classify_tests(node_tests)
+       success_percentage = 100.0 * (global_info[:success].size + platform_info[:success].size + node_info[:success].size).to_f / (global_tests.size + platform_tests.size + node_tests.size)
     %>
     <tr>
       <th style="text-align: center; vertical-align: middle;">Global-level tests</th>
@@ -19,24 +16,24 @@
     <tr>
       <td style="text-align: center; vertical-align: middle;">
         <ac:structured-macro ac:name="status" ac:schema-version="1">
-          <ac:parameter ac:name="colour"><%= nbr_global_tests_in_error == 0 ? 'Green' : 'Red' %></ac:parameter>
+          <ac:parameter ac:name="colour"><%= status_color(global_info[:status]) %></ac:parameter>
         </ac:structured-macro>
       </td>
       <td style="text-align: center; vertical-align: middle;">
         <ac:structured-macro ac:name="status" ac:schema-version="1">
-          <ac:parameter ac:name="colour"><%= nbr_platform_tests_by_test_and_platform_in_error == 0 ? 'Green' : 'Red' %></ac:parameter>
+          <ac:parameter ac:name="colour"><%= status_color(platform_info[:status]) %></ac:parameter>
         </ac:structured-macro>
       </td>
       <td style="text-align: center; vertical-align: middle;">
         <ac:structured-macro ac:name="status" ac:schema-version="1">
-          <ac:parameter ac:name="colour"><%= nbr_node_tests_by_test_and_node_in_error == 0 ? 'Green' : 'Red' %></ac:parameter>
+          <ac:parameter ac:name="colour"><%= status_color(node_info[:status]) %></ac:parameter>
         </ac:structured-macro>
       </td>
     </tr>
     <tr>
-      <td style="text-align: center; vertical-align: middle;"><%= render_gauge(nbr_global_tests, nbr_global_tests - nbr_global_tests_in_error) %></td>
-      <td style="text-align: center; vertical-align: middle;"><%= render_gauge(nbr_platform_tests_by_test_and_platform, nbr_platform_tests_by_test_and_platform - nbr_platform_tests_by_test_and_platform_in_error) %></td>
-      <td style="text-align: center; vertical-align: middle;"><%= render_gauge(nbr_node_tests_by_test_and_node, nbr_node_tests_by_test_and_node - nbr_node_tests_by_test_and_node_in_error) %></td>
+      <td style="text-align: center; vertical-align: middle;"><%= render_gauge(global_info) %></td>
+      <td style="text-align: center; vertical-align: middle;"><%= render_gauge(platform_info) %></td>
+      <td style="text-align: center; vertical-align: middle;"><%= render_gauge(node_info) %></td>
     </tr>
   </tbody>
 </table>
@@ -83,10 +80,10 @@
       <% platform_info = platform.info %>
       <tr>
         <td><strong><%= platform_info[:repo_name] %></strong></td>
-        <td><%= platform_info[:commit][:message] %></td>
+        <td><%= CGI.escapeHTML(platform_info[:commit][:message]) %></td>
         <td><%= platform_info[:commit][:date].strftime('%F %T') %></td>
         <td><%= platform_info[:commit][:id] %></td>
-        <td><%= platform_info[:commit][:author][:name] %> (<%= platform_info[:commit][:author][:email] %>)</td>
+        <td><%= CGI.escapeHTML(platform_info[:commit][:author][:name]) %> (<%= CGI.escapeHTML(platform_info[:commit][:author][:email]) %>)</td>
       </tr>
     <% end %>
   </tbody>
@@ -96,30 +93,65 @@
   <tbody>
     <tr>
       <th style="vertical-align: middle;">Nodes list</th>
-      <th style="text-align: center; vertical-align: middle;">Number of nodes</th>
-      <th style="text-align: center; vertical-align: middle;">% tested</th>
-      <th style="text-align: center; vertical-align: middle;">% success</th>
-      <th style="text-align: center; vertical-align: middle;">Nodes in error</th>
+      <th style="text-align: center; vertical-align: middle;">Status</th>
+      <th style="text-align: center; vertical-align: middle;"></th>
     </tr>
     <% nodes_by_nodes_list.each do |nodes_list, nodes_info| %>
       <tr>
         <td style="vertical-align: middle;">
-          <ac:structured-macro ac:name="status" ac:schema-version="1">
-            <ac:parameter ac:name="colour"><%= nodes_info[:tested_nodes_in_error].empty? ? 'Green' : 'Red' %></ac:parameter>
-          </ac:structured-macro>
           <strong><%= nodes_list %></strong>
+          <br/>
+          <ac:structured-macro ac:name="status" ac:schema-version="1">
+            <ac:parameter ac:name="colour"><%=
+              if nodes_info[:tested_nodes].empty?
+                'Grey'
+              elsif nodes_info[:tested_nodes_in_error].empty?
+                'Green'
+              else
+                'Red'
+              end %></ac:parameter>
+          </ac:structured-macro>
         </td>
-        <td style="text-align: center; vertical-align: middle;"><%= nodes_info[:nodes].size %></td>
-        <td style="text-align: center; vertical-align: middle;"><%= render_gauge(nodes_info[:nodes].size, nodes_info[:tested_nodes].size) %></td>
-        <td style="text-align: center; vertical-align: middle;"><%= render_gauge(nodes_info[:tested_nodes].size, nodes_info[:tested_nodes].size - nodes_info[:tested_nodes_in_error].size) %></td>
         <td style="text-align: center; vertical-align: middle;">
-          <% unless nodes_info[:tested_nodes_in_error].empty? %>
+          Total: <%= nodes_info[:nodes].size %> (<%= nodes_info[:tested_nodes].size %> tested) / Errors: <%= nodes_info[:tested_nodes_in_error].size %> (<%= nodes_info[:tested_nodes_in_error_as_expected].size %> expected)
+          <br/>
+          <% unless nodes_info[:nodes].empty? %>
+            <table>
+              <tbody>
+                <tr>
+                  <% ((nodes_info[:tested_nodes_in_error_as_expected].size * @nbr_cells_in_status_bars.to_f) / nodes_info[:nodes].size).round.times do %>
+                    <td bgcolor="#FFD351">
+                      <br/>
+                    </td>
+                  <% end %>
+                  <% (((nodes_info[:tested_nodes_in_error].size - nodes_info[:tested_nodes_in_error_as_expected].size).abs * @nbr_cells_in_status_bars.to_f) / nodes_info[:nodes].size).round.times do %>
+                    <td bgcolor="#D04437">
+                      <br/>
+                    </td>
+                  <% end %>
+                  <% (((nodes_info[:tested_nodes].size - nodes_info[:tested_nodes_in_error].size) * @nbr_cells_in_status_bars.to_f) / nodes_info[:nodes].size).round.times do %>
+                    <td bgcolor="#14892C">
+                      <br/>
+                    </td>
+                  <% end %>
+                  <% (((nodes_info[:nodes].size - nodes_info[:tested_nodes].size) * @nbr_cells_in_status_bars.to_f) / nodes_info[:nodes].size).round.times do %>
+                    <td bgcolor="#CCCCCC">
+                      <br/>
+                    </td>
+                  <% end %>
+                </tr>
+              </tbody>
+            </table>
+          <% end %>
+        </td>
+        <td style="text-align: center; vertical-align: middle;">
+          <% unless (nodes_info[:tested_nodes_in_error] - nodes_info[:tested_nodes_in_error_as_expected]).empty? %>
             <ac:structured-macro ac:name="expand" ac:schema-version="1">
-              <ac:parameter ac:name="title">Nodes in error</ac:parameter>
+              <ac:parameter ac:name="title">Unexpected nodes in error</ac:parameter>
               <ac:rich-text-body>
                 <div style="text-align: left;">
                   <ul>
-                    <% nodes_info[:tested_nodes_in_error].sort.each do |node| %>
+                    <% (nodes_info[:tested_nodes_in_error] - nodes_info[:tested_nodes_in_error_as_expected]).sort.each do |node| %>
                       <li><%= node %></li>
                     <% end %>
                   </ul>

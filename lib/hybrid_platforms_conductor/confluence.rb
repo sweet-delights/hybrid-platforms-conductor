@@ -38,6 +38,7 @@ module HybridPlatformsConductor
     def confluence_page_update(page_id, content, version: nil)
       info = confluence_page_info(page_id)
       version = info['version']['number'] + 1 if version.nil?
+      log_debug "Update Confluence page #{page_id}..."
       call_confluence_api("rest/api/content/#{page_id}", :put) do |request|
         request['Content-Type'] = 'application/json'
         request.body = {

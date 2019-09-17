@@ -7,19 +7,22 @@
 <% if should_have_been_tested?(@status_test_name, **@status_test_criteria) %>
   <%
     errors = errors_for(@status_test_name, **@status_test_criteria)
-    color =
+    color, title =
       if missing_tests_for(@status_test_name, **@status_test_criteria)
-        'Grey'
+        ['Grey', 'Not run']
       elsif errors.empty?
-        'Green'
+        ['Green', 'Success']
+      elsif select_tests(@status_test_name, **@status_test_criteria).any? { |test| test.expected_failure.nil? && !test.errors.empty? }
+        ['Red', 'Errors']
       else
-        'Red'
+        ['Yellow', 'Expected errors']
       end
   %>
   <div class="content-wrapper">
     <p>
       <ac:structured-macro ac:name="status" ac:schema-version="1">
         <ac:parameter ac:name="colour"><%= color %></ac:parameter>
+        <ac:parameter ac:name="title"><%= title %></ac:parameter>
       </ac:structured-macro>
       <% unless errors.empty? %>
         <ac:structured-macro ac:name="expand" ac:schema-version="1">

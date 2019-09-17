@@ -10,6 +10,10 @@ module HybridPlatformsConductor
   # Gives ways to execute SSH commands on the nodes
   class SshExecutor
 
+    # Error class returned when the issue is due to an SSH connection issue
+    class SshConnectionError < RuntimeError
+    end
+
     include LoggerHelpers
 
     # Name of the gateway user to be used. [default: ENV['hpc_ssh_gateway_user'] or ubradm]
@@ -296,7 +300,12 @@ Host *
                     log_warn "Removing stale SSH control file #{control_path_file}"
                     File.unlink control_path_file
                   end
-                  exit_status, _stdout, _stderr = @cmd_runner.run_cmd "#{ssh_exec}#{@passwords.key?(node) || @auth_password ? '' : ' -o BatchMode=yes'} -o ControlMaster=yes -o ControlPersist=yes #{ssh_url} true", no_exception: no_exception, timeout: timeout
+                  ssh_control_master_start_cmd = "#{ssh_exec}#{@passwords.key?(node) || @auth_password ? '' : ' -o BatchMode=yes'} -o ControlMaster=yes -o ControlPersist=yes #{ssh_url} true"
+                  begin
+                    exit_status, _stdout, _stderr = @cmd_runner.run_cmd ssh_control_master_start_cmd, no_exception: no_exception, timeout: timeout
+                  rescue CmdRunner::UnexpectedExitCodeError
+                    raise SshConnectionError, "Error while starting SSH Control Master with #{ssh_control_master_start_cmd}"
+                  end
                   # Uncomment if you want to test the connection
                   # @cmd_runner.run_cmd "#{ssh_exec} -O check #{ssh_url}", log_to_stdout: false, timeout: timeout
                   if exit_status == 0
@@ -572,6 +581,9 @@ Host *
           stderr.concat action_stderr
           remaining_timeout -= Time.now - start_time unless remaining_timeout.nil?
         end
+      rescue SshConnectionError
+        exit_status = :ssh_connection_error
+        stderr << $!.to_s
       rescue CmdRunner::UnexpectedExitCodeError
         # Error has already been logged in stderr
         exit_status = :failed_command

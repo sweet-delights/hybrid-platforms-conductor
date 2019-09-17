@@ -22,16 +22,21 @@ module HybridPlatformsConductor
         # Maximal length of an error message to be reported
         MAX_ERROR_MESSAGE_LENGTH_DISPLAYED = 4096
 
+        # Number of cells in the nodes list's progress status bars
+        NBR_CELLS_IN_STATUS_BARS = 28
+
         # Handle tests reports
         def report
           # Get previous percentages for the evolution
           @previous_success_percentages = confluence_page_storage_format(CONFLUENCE_PAGE_ID).
             at('h1:contains("Evolution")').
-            next_element.css('table td').
+            search('~ structured-macro:first-of-type').
+            css('table td').
             map { |td_element| td_element.text }.
             each_slice(2).
             to_a.
             map { |(time_str, value_str)| [Time.parse("#{time_str} UTC"), value_str.to_f] }
+          @nbr_cells_in_status_bars = NBR_CELLS_IN_STATUS_BARS
           log_error 'Unable to extract previous percentages from Confluence page' if @previous_success_percentages.empty?
           confluence_page_update(CONFLUENCE_PAGE_ID, render('confluence'))
         end
@@ -65,15 +70,37 @@ module HybridPlatformsConductor
           render '_confluence_errors_status'
         end
 
-        # Render a gauge of a percentage.
+        # Render a gauge displaying statuses of tests.
         #
         # Parameters::
-        # * *total* (Integer): Total value
-        # * *value* (Integer): Percentile
-        def render_gauge(total, value)
-          @gauge_total = total
-          @gauge_value = value
+        # * *info* (Hash<Symbol,Object>): The info about tests to render gauge for (check classify_tests to know about info)
+        def render_gauge(info)
+          @gauge_success = info[:success].size
+          @gauge_unexpected_error = info[:unexpected_error].size
+          @gauge_expected_error = info[:expected_error].size
+          @gauge_not_run = info[:not_run].size
           render '_confluence_gauge'
+        end
+
+        # Return the color linked to a status
+        #
+        # Parameters::
+        # * *status* (Symbol): Status (check classify_tests to know about possible statuses)
+        # Result::
+        # * String: Corresponding color
+        def status_color(status)
+          case status
+          when :success
+            'Green'
+          when :unexpected_error
+            'Red'
+          when :expected_error
+            'Yellow'
+          when :not_run
+            'Grey'
+          else
+            raise "Unknown status: #{status}"
+          end
         end
 
       end

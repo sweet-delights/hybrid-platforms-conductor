@@ -9,7 +9,8 @@ module HybridPlatformsConductor
 
         # List of directories to always ignore
         DIRECTORIES_TO_ALWAYS_IGNORE = [
-          '/proc'
+          '/proc',
+          '/sys/kernel/debug'
         ]
         # List of directories (can be a single directory) to ignore, per node (can be a list of nodes)
         DIRECTORIES_TO_IGNORE = {
@@ -21,6 +22,8 @@ module HybridPlatformsConductor
             'node12hst-nn1',
             'node12hst-nn9',
             'node12hst-nn0',
+            'node12hst-nn2',
+            'node12hst-nn3',
             'node12hst-nn2',
             'node12hst-nn6',
             'node12hst-nn4',
@@ -44,6 +47,7 @@ module HybridPlatformsConductor
           ],
           'node12hst-nn6' => [
             '/var/www/html',
+            '/remote/oriadmshare',
             '/remote/oriarchive',
             '/remote/oridata',
             '/remote/oridatacenter',
