@@ -268,11 +268,13 @@ module HybridPlatformsConductor
                 log_debug "Creating Docker container #{container_name}..."
                 # We add the SYS_PTRACE capability as some images need to restart services (for example postfix) and those services need the rights to ls in /proc/{PID}/exe to check if a status is running. Without SYS_PTRACE such ls returns permission denied and the service can't be stopped (as init.d always returns it as stopped even when running).
                 # We add the privileges as some containers need to install and configure the udev package, which needs RW access to /sys.
+                # We add the bind to cgroup volume to be able to test systemd specifics (enabling/disabling services for example).
                 Docker::Container.create(
                   name: container_name,
                   image: image_tag,
                   CapAdd: 'SYS_PTRACE',
-                  Privileged: true
+                  Privileged: true,
+                  Binds: ['/sys/fs/cgroup:/sys/fs/cgroup:ro']
                 )
               end
             # Run the container
