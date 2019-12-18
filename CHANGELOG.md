@@ -1,3 +1,9 @@
+# [11.0.2](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv11.0.1&sourceBranch=refs%2Ftags%2Fv11.0.2) (2019-12-18)
+
+### Fixes
+
+* added bind to cgroup volume in docker container creation to enable systemd ([7992ab14](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/commits/7992ab14460a9411db31a984cbe91c2ba398aebf))
+
 # [11.0.1](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv11.0.0&sourceBranch=refs%2Ftags%2Fv11.0.1) (2019-09-17)
 
 ### Fixes
