@@ -274,7 +274,9 @@ module HybridPlatformsConductor
                   image: image_tag,
                   CapAdd: 'SYS_PTRACE',
                   Privileged: true,
-                  Binds: ['/sys/fs/cgroup:/sys/fs/cgroup:ro']
+                  Binds: ['/sys/fs/cgroup:/sys/fs/cgroup:ro'],
+                  # Some playbooks need the hostname to be set to a correct FQDN
+                  Hostname: "#{node}.testdomain"
                 )
               end
             # Run the container
