@@ -1,3 +1,9 @@
+# [11.0.3](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv11.0.2&sourceBranch=refs%2Ftags%2Fv11.0.3) (2020-01-17)
+
+### Fixes
+
+* Configure a hostname for tests run in Docker ([11c9fae5](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/commits/11c9fae51eb7ba0cd0060b0a770c22c3b2fe3388))
+
 # [11.0.2](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv11.0.1&sourceBranch=refs%2Ftags%2Fv11.0.2) (2019-12-18)
 
 ### Fixes
