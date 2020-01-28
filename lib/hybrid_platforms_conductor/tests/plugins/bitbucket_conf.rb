@@ -6,7 +6,7 @@ module HybridPlatformsConductor
 
     module Plugins
 
-      # Check that all executables run correctly, from an environment/installation point of view.
+      # Check that all repositories in Bitbucket have a consistent dev workflow.
       class BitbucketConf < Tests::Test
 
         # List of Bitbucket repositories to check
