@@ -37,7 +37,6 @@ module HybridPlatformsConductor
           user_name
           user_name
           user_name
-          christophe.delattre
           user_name
           usernme
           user_name
@@ -135,12 +134,13 @@ module HybridPlatformsConductor
               condition_info.dig('sourceRefMatcher', 'id') == 'ANY_REF_MATCHER_ID' &&
                 condition_info.dig('targetRefMatcher', 'id') == 'ANY_REF_MATCHER_ID' &&
                 !reviewers.nil? &&
-                (MANDATORY_DEFAULT_REVIEWERS - reviewers.map { |reviewer_info| reviewer_info['name'] }).empty?
+                (MANDATORY_DEFAULT_REVIEWERS - reviewers.map { |reviewer_info| reviewer_info['name'] }).empty? &&
+                condition_info.dig('requiredApprovals') == 2
             end
             assert_equal(
               reviewers_found,
               true,
-              "[#{repo_id}] - Missing mandatory reviewers among #{MANDATORY_DEFAULT_REVIEWERS.join(', ')}"
+              "[#{repo_id}] - Missing mandatory reviewers among #{MANDATORY_DEFAULT_REVIEWERS.join(', ')} with a minimum of 2 approvals from any branch to any branch"
             )
           end
           bitbucket.clear_password

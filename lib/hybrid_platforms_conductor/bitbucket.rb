@@ -85,7 +85,7 @@ module HybridPlatformsConductor
     # * Object: Returned JSON
     def get_api(path, api_domain: 'api', api_version: '1.0')
       api_url = "https://www.site.my_company.net/git/rest/#{api_domain}/#{api_version}/#{path}"
-      log_info "Call Bitbucket API #{@bitbucket_user_name}@#{api_url}..."
+      log_debug "Call Bitbucket API #{@bitbucket_user_name}@#{api_url}..."
       JSON.parse(open(api_url, http_basic_authentication: [@bitbucket_user_name, @bitbucket_password]).read)
     end
 
