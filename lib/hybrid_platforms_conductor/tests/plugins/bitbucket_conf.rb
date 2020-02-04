@@ -9,29 +9,6 @@ module HybridPlatformsConductor
       # Check that all repositories in Bitbucket have a consistent dev workflow.
       class BitbucketConf < Tests::Test
 
-        # List of Bitbucket repositories to check
-        # Array< String or Hash<Symbol,Object> >: List of project names, or project details. Project details can have the following properties:
-        # * *name* (String): Repository name (mandatory and default value if using a simple String instead of Hash).
-        # * *project* (String): Project name [default: 'ATI']
-        BITBUCKET_REPOS = [
-          'ansible-repo',
-          'chef-repo',
-          'ci-helpers',
-          'devops-jenkins-jobs',
-          'infra-repo',
-          'ti-calcite',
-          'hybrid-platforms',
-          'ti-sql-web',
-          'ti-websql-confs',
-          'ti_datasync',
-          'ti_dredger',
-          'hybrid_platforms_conductor',
-          'hybrid_platforms_conductor-ansible',
-          'hybrid_platforms_conductor-chef',
-          'ti_rails_debian',
-          'ti_sqlegalize'
-        ]
-
         # List of mandatory default reviewers
         MANDATORY_DEFAULT_REVIEWERS = %w[
           user_name
@@ -44,7 +21,7 @@ module HybridPlatformsConductor
 
         # Check my_test_plugin.rb.sample documentation for signature details.
         def test
-          # Set CI credentials by reading the .netrc file
+          # Read credentials from the .netrc file
           bitbucket = Bitbucket.new(
             *File.read(File.expand_path('~/.netrc')).
               strip.
@@ -52,14 +29,7 @@ module HybridPlatformsConductor
             logger: @logger,
             logger_stderr: @logger_stderr
           )
-          # Automatically add all repositories in AAR project
-          BITBUCKET_REPOS.concat(bitbucket.repos('AAR')['values'].map { |repo_info| { name: repo_info['slug'], project: 'AAR' } })
-          BITBUCKET_REPOS.each do |repo_info|
-            repo_info = { name: repo_info } if repo_info.is_a?(String)
-            # Set default values here
-            repo_info = {
-              project: 'ATI'
-            }.merge(repo_info)
+          bitbucket.acu_dat_dos_repos.each do |repo_info|
             # Test repo_info
             repo_id = "#{repo_info[:project]}/#{repo_info[:name]}"
             settings_pr = bitbucket.settings_pr(repo_info[:project], repo_info[:name])
