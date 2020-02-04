@@ -1,3 +1,9 @@
+# [11.1.0](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv11.0.3&sourceBranch=refs%2Ftags%2Fv11.1.0) (2020-02-04)
+
+### New features
+
+* [Feature] Add Bitbucket configuration testing ([b6b6f8af](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/commits/b6b6f8af2336b8b3cc8e671d5669a95af4691a7f))
+
 # [11.0.3](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv11.0.2&sourceBranch=refs%2Ftags%2Fv11.0.3) (2020-01-17)
 
 ### Fixes
