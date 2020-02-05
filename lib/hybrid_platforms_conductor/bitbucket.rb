@@ -32,6 +32,25 @@ module HybridPlatformsConductor
       'ti_sqlegalize'
     ]
 
+    # Provide a Bitbucket connector, and make sure the password is being cleaned when exiting.
+    # Forward the current loggers.
+    #
+    # Parameters::
+    # * *bitbucket_user_name* (String): Bitbucket user name to be used when querying the API
+    # * *bitbucket_password* (String): Bitbucket password to be used when querying the API
+    # * *logger* (Logger): Logger to be used
+    # * *logger_stderr* (Logger): Logger to be used for stderr
+    # * Proc: Code called with the Bitbucket instance.
+    #   * *bitbucket* (Bitbucket): The Bitbucket instance to use.
+    def self.with_bitbucket(bitbucket_user_name, bitbucket_password, logger, logger_stderr)
+      bitbucket = Bitbucket.new(bitbucket_user_name, bitbucket_password, logger: logger, logger_stderr: logger_stderr)
+      begin
+        yield bitbucket
+      ensure
+        bitbucket.clear_password
+      end
+    end
+
     # Constructor
     #
     # Parameters::
