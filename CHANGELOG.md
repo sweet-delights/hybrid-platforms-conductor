@@ -1,3 +1,9 @@
+# [11.2.0](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv11.1.0&sourceBranch=refs%2Ftags%2Fv11.2.0) (2020-02-10)
+
+### New features
+
+* [Feature] Add new test validating that each repository has a corresponding CI job ([e9cee4c6](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/commits/e9cee4c647d6ed82ff4958ba4981e66696863afa))
+
 # [11.1.0](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv11.0.3&sourceBranch=refs%2Ftags%2Fv11.1.0) (2020-02-04)
 
 ### New features
