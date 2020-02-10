@@ -9,6 +9,48 @@ module HybridPlatformsConductor
 
     include LoggerHelpers
 
+    # List of Bitbucket repositories to check
+    # Array< String or Hash<Symbol,Object> >: List of project names, or project details. Project details can have the following properties:
+    # * *name* (String): Repository name (mandatory and default value if using a simple String instead of Hash).
+    # * *project* (String): Project name [default: 'ATI']
+    BITBUCKET_REPOS = [
+      'ansible-repo',
+      'chef-repo',
+      'ci-helpers',
+      'devops-jenkins-jobs',
+      'infra-repo',
+      'ti-calcite',
+      'hybrid-platforms',
+      'ti-sql-web',
+      'ti-websql-confs',
+      'ti_datasync',
+      'ti_dredger',
+      'hybrid_platforms_conductor',
+      'hybrid_platforms_conductor-ansible',
+      'hybrid_platforms_conductor-chef',
+      'ti_rails_debian',
+      'ti_sqlegalize'
+    ]
+
+    # Provide a Bitbucket connector, and make sure the password is being cleaned when exiting.
+    # Forward the current loggers.
+    #
+    # Parameters::
+    # * *bitbucket_user_name* (String): Bitbucket user name to be used when querying the API
+    # * *bitbucket_password* (String): Bitbucket password to be used when querying the API
+    # * *logger* (Logger): Logger to be used
+    # * *logger_stderr* (Logger): Logger to be used for stderr
+    # * Proc: Code called with the Bitbucket instance.
+    #   * *bitbucket* (Bitbucket): The Bitbucket instance to use.
+    def self.with_bitbucket(bitbucket_user_name, bitbucket_password, logger, logger_stderr)
+      bitbucket = Bitbucket.new(bitbucket_user_name, bitbucket_password, logger: logger, logger_stderr: logger_stderr)
+      begin
+        yield bitbucket
+      ensure
+        bitbucket.clear_password
+      end
+    end
+
     # Constructor
     #
     # Parameters::
@@ -21,6 +63,22 @@ module HybridPlatformsConductor
       @bitbucket_password = bitbucket_password
       @logger = logger
       @logger_stderr = logger_stderr
+    end
+
+    # List of Bitbucket repositories handled by the DEVOPS team.
+    # This includes repositories from ATI and AAR projects.
+    #
+    # Result::
+    # * Array< Hash<Symbol,Object> >: List of project details:
+    #   * *name* (String): Repository name.
+    #   * *project* (String): Project name.
+    def acu_dat_dos_repos
+      (BITBUCKET_REPOS + repos('AAR')['values'].map { |repo_info| { name: repo_info['slug'], project: 'AAR' } }).map do |repo_info|
+        # Set default values here
+        repo_info = {
+          project: 'ATI'
+        }.merge(repo_info.is_a?(String) ? { name: repo_info } : repo_info)
+      end
     end
 
     # Provide a helper to clear password from memory for security.
