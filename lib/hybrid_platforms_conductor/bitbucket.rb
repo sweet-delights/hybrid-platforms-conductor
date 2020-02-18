@@ -1,6 +1,7 @@
 require 'logger'
 require 'open-uri'
 require 'json'
+require 'hybrid_platforms_conductor/logger_helpers'
 
 module HybridPlatformsConductor
 
@@ -129,7 +130,8 @@ module HybridPlatformsConductor
     # Result::
     # * Object: Corresponding JSON
     def branch_permissions(project, repo)
-      get_api("projects/#{project}/repos/#{repo}/restrictions", api_domain: 'branch-permissions', api_version: '2.0')
+      # Put 3 retries here as the Bitbucket installation has a very unstable API 2.0 and often returns random 401 errors.
+      get_api("projects/#{project}/repos/#{repo}/restrictions", api_domain: 'branch-permissions', api_version: '2.0', retries: 3)
     end
 
     # Issue an HTTP get on the API.
@@ -139,12 +141,25 @@ module HybridPlatformsConductor
     # * *path* (String): API path to access
     # * *api_domain* (String): API domain to access [default: 'api']
     # * *api_version* (String): API version to access [default: '1.0']
+    # * *retries* (Integer): Number of retries in case of failures [default: 0]
     # Result::
     # * Object: Returned JSON
-    def get_api(path, api_domain: 'api', api_version: '1.0')
+    def get_api(path, api_domain: 'api', api_version: '1.0', retries: 0)
       api_url = "https://www.site.my_company.net/git/rest/#{api_domain}/#{api_version}/#{path}"
       log_debug "Call Bitbucket API #{@bitbucket_user_name}@#{api_url}..."
-      JSON.parse(open(api_url, http_basic_authentication: [@bitbucket_user_name, @bitbucket_password]).read)
+      http_response = nil
+      loop do
+        begin
+          http_response = open(api_url, http_basic_authentication: [@bitbucket_user_name, @bitbucket_password])
+        rescue
+          raise if retries == 0
+          log_warn "Got error #{$!} on #{@bitbucket_user_name}@#{api_url}. Will retry #{retries} times..."
+          retries -= 1
+          sleep 1
+        end
+        break unless http_response.nil?
+      end
+      JSON.parse(http_response.read)
     end
 
   end

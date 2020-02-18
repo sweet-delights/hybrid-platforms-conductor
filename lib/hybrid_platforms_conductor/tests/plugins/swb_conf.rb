@@ -8,15 +8,19 @@ module HybridPlatformsConductor
     module Plugins
 
       # Check that all repositories have a correct CI configuration.
+      # Use the following environment variables:
+      # * ci_user: User to be used to connect to the CI instance [default: Content of .netrc file]
+      # * ci_password: Password to be used to connect to the CI instance [default: Content of .netrc file]
       class CiConf < Tests::Test
 
         # Check my_test_plugin.rb.sample documentation for signature details.
         def test
-          # Read credentials from the .netrc file
-          user, password = File.read(File.expand_path('~/.netrc')).
-              strip.
-              match(/machine www.site.my_company.net login ([^\s]+) password ([^\s]+)/)[1..2]
-          Bitbucket.with_bitbucket(user, password, @logger, @logger_stderr) do |bitbucket|
+          bitbucket_user, bitbucket_password = File.read(File.expand_path('~/.netrc')).
+            strip.
+            match(/machine www.site.my_company.net login ([^\s]+) password ([^\s]+)/)[1..2]
+          # Read credentials from the .netrc file by default if they are not given through environment variables
+          ci_user, ci_password = ENV['ci_user'].nil? || ENV['ci_password'].nil? ? [bitbucket_user, bitbucket_password] : [ENV['ci_user'], ENV['ci_password']]
+          Bitbucket.with_bitbucket(bitbucket_user, bitbucket_password, @logger, @logger_stderr) do |bitbucket|
             bitbucket.acu_dat_dos_repos.each do |repo_info|
               # Check that a job exists for this repo
               ci_root_url =
@@ -31,7 +35,7 @@ module HybridPlatformsConductor
               job_url = "#{ci_root_url}/job/#{repo_info[:project]}/job/#{repo_info[:name]}"
               # Get its config
               begin
-                doc = Nokogiri::XML(open("#{job_url}/config.xml", http_basic_authentication: [user ,password]).read)
+                doc = Nokogiri::XML(open("#{job_url}/config.xml", http_basic_authentication: [ci_user, ci_password]).read)
                 # Check that this job builds the correct Bitbucket repository
                 assert_equal(
                   doc.xpath('/org.jenkinsci.plugins.workflow.multibranch.WorkflowMultiBranchProject/sources/data/jenkins.branch.BranchSource/source/serverUrl').text,
