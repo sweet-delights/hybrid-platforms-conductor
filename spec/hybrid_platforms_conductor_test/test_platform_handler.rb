@@ -36,6 +36,15 @@ module HybridPlatformsConductorTest
 
     end
 
+    # Register test classes
+    # [API] - This method is optional
+    #
+    # Result::
+    # * Hash<Symbol,Class>: A list of tests classes (that should inherit from Tests::Test), per test name
+    def tests
+      platform_info.key?(:tests) ? platform_info[:tests] : {}
+    end
+
     # Get the list of known nodes.
     # [API] - This method is mandatory.
     #
