@@ -2,6 +2,7 @@ require 'logger'
 require 'open-uri'
 require 'json'
 require 'hybrid_platforms_conductor/logger_helpers'
+require 'hybrid_platforms_conductor/netrc'
 
 module HybridPlatformsConductor
 
@@ -37,14 +38,22 @@ module HybridPlatformsConductor
     # Forward the current loggers.
     #
     # Parameters::
-    # * *bitbucket_user_name* (String): Bitbucket user name to be used when querying the API
-    # * *bitbucket_password* (String): Bitbucket password to be used when querying the API
     # * *logger* (Logger): Logger to be used
     # * *logger_stderr* (Logger): Logger to be used for stderr
+    # * *user_name* (String): Bitbucket user name to be used when querying the API [default: Read from .netrc]
+    # * *password* (String): Bitbucket password to be used when querying the API [default: Read from .netrc]
     # * Proc: Code called with the Bitbucket instance.
     #   * *bitbucket* (Bitbucket): The Bitbucket instance to use.
-    def self.with_bitbucket(bitbucket_user_name, bitbucket_password, logger, logger_stderr)
-      bitbucket = Bitbucket.new(bitbucket_user_name, bitbucket_password, logger: logger, logger_stderr: logger_stderr)
+    def self.with_bitbucket(logger, logger_stderr, user_name: nil, password: nil)
+      if user_name.nil? || password.nil?
+        # Read credentials from netrc
+        Netrc.with_netrc_for('www.site.my_company.net') do |netrc_user, netrc_password|
+          # Clone them as exiting the block will erase them
+          user_name ||= netrc_user.clone
+          password ||= netrc_password.clone
+        end
+      end
+      bitbucket = Bitbucket.new(user_name, password, logger: logger, logger_stderr: logger_stderr)
       begin
         yield bitbucket
       ensure
@@ -73,13 +82,22 @@ module HybridPlatformsConductor
     # * Array< Hash<Symbol,Object> >: List of project details:
     #   * *name* (String): Repository name.
     #   * *project* (String): Project name.
+    #   * *url* (String): Project Git URL
     def acu_dat_dos_repos
-      (BITBUCKET_REPOS + repos('AAR')['values'].map { |repo_info| { name: repo_info['slug'], project: 'AAR' } }).map do |repo_info|
-        # Set default values here
-        repo_info = {
-          project: 'ATI'
-        }.merge(repo_info.is_a?(String) ? { name: repo_info } : repo_info)
-      end
+      BITBUCKET_REPOS.map do |ati_repo_name|
+        {
+          name: ati_repo_name,
+          project: 'ATI',
+          url: "https://www.site.my_company.net/git/scm/project#{ati_repo_name}.git"
+        }
+      end +
+        repos('AAR')['values'].map do |repo_info|
+          {
+            name: repo_info['slug'],
+            project: 'AAR',
+            url: "https://www.site.my_company.net/git/scm/aar/#{repo_info['slug']}.git"
+          }
+        end
     end
 
     # Provide a helper to clear password from memory for security.
