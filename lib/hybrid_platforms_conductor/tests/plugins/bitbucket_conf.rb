@@ -1,3 +1,4 @@
+require 'git'
 require 'hybrid_platforms_conductor/bitbucket'
 
 module HybridPlatformsConductor
@@ -105,6 +106,10 @@ module HybridPlatformsConductor
                 true,
                 "[#{repo_id}] - Missing mandatory reviewers among #{MANDATORY_DEFAULT_REVIEWERS.join(', ')} with a minimum of 2 approvals from any branch to any branch"
               )
+              # Make sure the repository has master being tagged correctly
+              refs_info = Git.ls_remote(repo_info[:url])
+              master_sha = refs_info['branches']['master'][:sha]
+              error "[#{repo_id}] - No semantic tag found on master branch (ref #{master_sha})" unless refs_info['tags'].any? { |tag_name, tag_info| tag_info[:sha] == master_sha && tag_name =~ /^v\d+\.\d+\.\d+$/ }
             end
           end
         end
