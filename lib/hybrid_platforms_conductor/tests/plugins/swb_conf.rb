@@ -15,7 +15,6 @@ module HybridPlatformsConductor
 
         # Check my_test_plugin.rb.sample documentation for signature details.
         def test
-          # Read credentials from the .netrc file by default if they are not given through environment variables
           Bitbucket.with_bitbucket(@logger, @logger_stderr) do |bitbucket|
             bitbucket.acu_dat_dos_repos.each do |repo_info|
               with_ci_credentials_for(repo_info[:project]) do |ci_root_url, ci_user, ci_password|
