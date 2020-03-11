@@ -14,6 +14,7 @@ module HybridPlatformsConductor
           user_name
           user_name
           user_name
+          user_name
           usernme
         ]
 
