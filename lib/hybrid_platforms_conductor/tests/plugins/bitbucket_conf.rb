@@ -16,7 +16,6 @@ module HybridPlatformsConductor
           user_name
           user_name
           usernme
-          user_name
         ]
 
         # Check my_test_plugin.rb.sample documentation for signature details.
