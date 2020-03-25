@@ -1,6 +1,7 @@
 require 'logger'
 require 'hybrid_platforms_conductor/logger_helpers'
 require 'hybrid_platforms_conductor/nodes_handler'
+require 'hybrid_platforms_conductor/parallel_threads'
 require 'hybrid_platforms_conductor/ssh_executor'
 require 'hybrid_platforms_conductor/tests/test'
 require 'hybrid_platforms_conductor/tests/reports_plugin'
@@ -10,7 +11,7 @@ module HybridPlatformsConductor
   # Class running tests
   class TestsRunner
 
-    include LoggerHelpers
+    include LoggerHelpers, ParallelThreads
 
     # List of tests to execute [default: []]
     # Array<Symbol>
@@ -68,6 +69,16 @@ module HybridPlatformsConductor
         if platform_handler_class.respond_to?(:tests)
           platform_handler_class.tests.each do |test_name, test_class|
             raise "Cannot register #{test_name} from platform #{platform_type} as it's already registered for another platform" if @tests_plugins.key?(test_name)
+            @tests_plugins[test_name] = test_class
+          end
+        end
+      end
+      # Register test classes from platforms
+      @nodes_handler.known_platforms.each do |platform_name|
+        platform = @nodes_handler.platform(platform_name)
+        if platform.respond_to?(:tests)
+          platform.tests.each do |test_name, test_class|
+            raise "Cannot register #{test_name} from platform #{platform} as it's already registered for another platform" if @tests_plugins.key?(test_name)
             @tests_plugins[test_name] = test_class
           end
         end
@@ -285,18 +296,26 @@ module HybridPlatformsConductor
       end
     end
 
+    # Number of threads max to use for platform tests
+    #   Integer
+    MAX_THREADS_PLATFORM_TESTS = 32
+
     # Run tests that are platform specific
     def run_tests_platform
       tests_on_platform = @tests.select { |test_name| @tests_plugins[test_name].method_defined?(:test_on_platform) }.uniq.sort
       unless tests_on_platform.empty?
         section "Run #{tests_on_platform.size} platform tests" do
+          # Get the list of tests to be run
+          # Array<Proc>
+          tests_to_be_run = []
           tests_on_platform.each do |test_name|
             # Run this test for every platform allowed
             @nodes_handler.known_platforms.each do |platform|
               platform_handler = @nodes_handler.platform(platform)
               @tested_platforms << platform_handler
               if should_test_be_run_on(test_name, platform: platform_handler)
-                section "Run platform test #{test_name} on #{platform_handler.info[:repo_name]}" do
+                log_debug "Run platform test #{test_name} on #{platform_handler.info[:repo_name]}"
+                tests_to_be_run << proc do
                   test = new_test(test_name, platform: platform_handler)
                   begin
                     test.test_on_platform
@@ -308,6 +327,9 @@ module HybridPlatformsConductor
                 end
               end
             end
+          end
+          for_each_element_in(tests_to_be_run, parallel: !log_debug?, nbr_threads_max: MAX_THREADS_PLATFORM_TESTS) do |test_code|
+            test_code.call
           end
         end
       end

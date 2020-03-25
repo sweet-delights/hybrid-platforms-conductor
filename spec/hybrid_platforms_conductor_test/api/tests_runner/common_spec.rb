@@ -153,4 +153,26 @@ describe HybridPlatformsConductor::TestsRunner do
     end
   end
 
+  # Specific test registered by the test platform handler
+  class SpecificPlatformHandlerTest < HybridPlatformsConductor::Tests::Test
+
+    class << self
+      attr_accessor :run
+    end
+    @run = false
+
+    def test
+      SpecificPlatformHandlerTest.run = true
+    end
+
+  end
+
+  it 'executes tests defined by a platform handler' do
+    with_test_platform(tests: { specific_platform_handler_test: SpecificPlatformHandlerTest }) do
+      test_tests_runner.tests = [:specific_platform_handler_test]
+      expect(test_tests_runner.run_tests([])).to eq 0
+      expect(SpecificPlatformHandlerTest.run).to eq true
+    end
+  end
+
 end

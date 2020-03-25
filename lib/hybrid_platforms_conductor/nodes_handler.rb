@@ -2,8 +2,8 @@ require 'json'
 require 'ipaddress'
 require 'logger'
 require 'ruby-progressbar'
-require 'thread'
 require 'hybrid_platforms_conductor/logger_helpers'
+require 'hybrid_platforms_conductor/parallel_threads'
 require 'hybrid_platforms_conductor/platforms_dsl'
 
 module HybridPlatformsConductor
@@ -11,7 +11,7 @@ module HybridPlatformsConductor
   # Provide utilities to handle Nodes configuration
   class NodesHandler
 
-    include PlatformsDsl, LoggerHelpers
+    include PlatformsDsl, LoggerHelpers, ParallelThreads
 
     # The list of registered platform handler classes, per platform type.
     #   Hash<Symbol,Class>
@@ -329,64 +329,8 @@ module HybridPlatformsConductor
     #   * Parameters::
     #     * *node* (String): The node name
     def for_each_node_in(nodes, parallel: false, nbr_threads_max: nil)
-      # Threads to wait for
-      if parallel
-        threads_to_join = []
-        # Spread nodes evenly among the threads.
-        # Use a shared pool of nodes to be handled by threads.
-        pools = {
-          to_process: nodes.sort,
-          processing: [],
-          processed: []
-        }
-        nbr_total = nodes.size
-        # Protect access to the pools using a mutex
-        pools_semaphore = Mutex.new
-        # Spawn the threads, each one responsible for handling its list
-        (nbr_threads_max.nil? || nbr_threads_max > nbr_total ? nbr_total : nbr_threads_max).times do
-          threads_to_join << Thread.new do
-            loop do
-              # Modify the list while processing it, so that reporting can be done.
-              node = nil
-              pools_semaphore.synchronize do
-                node = pools[:to_process].shift
-                pools[:processing] << node unless node.nil?
-              end
-              break if node.nil?
-              yield node
-              pools_semaphore.synchronize do
-                pools[:processing].delete(node)
-                pools[:processed] << node
-              end
-            end
-          end
-        end
-        # Here the main thread just reports progression
-        nbr_to_process = nil
-        nbr_processing = nil
-        nbr_processed = nil
-        with_progress_bar(nbr_total) do |progress_bar|
-          loop do
-            pools_semaphore.synchronize do
-              nbr_to_process = pools[:to_process].size
-              nbr_processing = pools[:processing].size
-              nbr_processed = pools[:processed].size
-            end
-            progress_bar.title = "Queue: #{nbr_to_process} - Processing: #{nbr_processing} - Done: #{nbr_processed} - Total: #{nbr_total}"
-            progress_bar.progress = nbr_processed
-            break if nbr_processed == nbr_total
-            sleep 0.5
-          end
-        end
-        # Wait for threads to be joined
-        threads_to_join.each do |thread|
-          thread.join
-        end
-      else
-        # Execute synchronously
-        nodes.each do |node|
-          yield node
-        end
+      for_each_element_in(nodes.sort, parallel: parallel, nbr_threads_max: nbr_threads_max) do |node|
+        yield node
       end
     end
 
