@@ -1,3 +1,13 @@
+# [12.0.0](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv11.2.1&sourceBranch=refs%2Ftags%2Fv12.0.0) (2020-03-25)
+
+### Breaking changes
+
+* [Feature] Make platform tests runnable in parallel for Molecule + Platforms can register new test plugins ([3fe397a2](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/commits/3fe397a2b69d0b7b21ecf64c050f3ca7f7da88f7))
+
+### New features
+
+* [Feature] Take CI credentials from env vars + Workaround Bitbucket's unstability ([5ac911a5](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/commits/5ac911a5cbaf51738f9bd5a586d2dd4eba4393a9))
+
 # [11.2.1](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv11.2.0&sourceBranch=refs%2Ftags%2Fv11.2.1) (2020-03-23)
 
 ### Fixes
