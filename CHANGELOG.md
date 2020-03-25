@@ -1,3 +1,9 @@
+# [11.2.1](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv11.2.0&sourceBranch=refs%2Ftags%2Fv11.2.1) (2020-03-23)
+
+### Fixes
+
+* Remove checks for obsolete users among reviewers ([1c2c075d](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/commits/1c2c075dee13c2ea5e307702e794df31e47d3caa))
+
 # [11.2.0](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv11.1.0&sourceBranch=refs%2Ftags%2Fv11.2.0) (2020-02-10)
 
 ### New features
