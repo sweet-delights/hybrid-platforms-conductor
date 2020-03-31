@@ -21,7 +21,7 @@ module HybridPlatformsConductor
         # Check my_test_plugin.rb.sample documentation for signature details.
         def test
           # Read credentials from the .netrc file
-          Bitbucket.with_bitbucket(*File.read(File.expand_path('~/.netrc')).strip.match(/machine www.site.my_company.net login ([^\s]+) password ([^\s]+)/)[1..2], @logger, @logger_stderr) do |bitbucket|
+          Bitbucket.with_bitbucket(@logger, @logger_stderr) do |bitbucket|
             bitbucket.acu_dat_dos_repos.each do |repo_info|
               # Test repo_info
               repo_id = "#{repo_info[:project]}/#{repo_info[:name]}"
