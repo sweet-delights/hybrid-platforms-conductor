@@ -1,3 +1,9 @@
+# [12.1.0](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv12.0.0&sourceBranch=refs%2Ftags%2Fv12.1.0) (2020-03-31)
+
+### New features
+
+* [Feature] New test checking that CI builds on master are successful + Better netrc usage + Simple CI mixin ([03c6ac85](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/commits/03c6ac85c8b23173f3778d3c54b8ee6da2fcbfc3))
+
 # [12.0.0](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv11.2.1&sourceBranch=refs%2Ftags%2Fv12.0.0) (2020-03-25)
 
 ### Breaking changes
