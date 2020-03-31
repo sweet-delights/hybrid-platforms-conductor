@@ -131,6 +131,178 @@ describe HybridPlatformsConductor::Deployer do
       end
     end
 
+    it 'deploys on 1 node with certificates to install using hpc_certificates on Debian' do
+      with_test_platform({ nodes: { 'node' => { meta: { 'image' => 'debian_9' } } } }, true) do |repository|
+        with_ssh_master_mocked_on ['node'] do
+          certs_dir = "#{repository}/certificates"
+          FileUtils.mkdir_p certs_dir
+          File.write("#{certs_dir}/test_cert.crt", 'Hello')
+          packaged = false
+          delivered = false
+          test_platforms_info['my_remote_platform'][:package] = proc { packaged = true }
+          test_platforms_info['my_remote_platform'][:nodes]['node'][:deliver_on_artefact_for] = proc { delivered = true }
+          expect_ssh_executor_runs([
+            # First run, we expect the mutex to be setup, and the deployment actions to be run
+            proc do |actions_per_nodes|
+              expect_actions_to_deploy_on(
+                actions_per_nodes,
+                'node',
+                expected_actions: [
+                  { remote_bash: 'sudo apt update && sudo apt install -y ca-certificates' },
+                  {
+                    remote_bash: 'sudo update-ca-certificates',
+                    scp:  { certs_dir => '/usr/local/share/ca-certificates' }
+                  }
+                ]
+              )
+            end,
+            # Second run, we expect the mutex to be released
+            proc { |actions_per_nodes| expect_actions_to_unlock(actions_per_nodes, 'node') },
+            # Third run, we expect logs to be uploaded on the node
+            proc { |actions_per_nodes| expect_actions_to_upload_logs(actions_per_nodes, 'node') }
+          ])
+          ENV['hpc_certificates'] = certs_dir
+          begin
+            expect(test_deployer.deploy_on('node')).to eq('node' => [0, 'Deploy successful', ''])
+          ensure
+            ENV.delete('hpc_certificates')
+          end
+          expect(packaged).to eq true
+          expect(delivered).to eq true
+        end
+      end
+    end
+
+    it 'deploys on 1 node with certificates to install using hpc_certificates on Debian using root' do
+      with_test_platform({ nodes: { 'node' => { meta: { 'image' => 'debian_9' } } } }, true) do |repository|
+        with_ssh_master_mocked_on ['node'] do
+          test_ssh_executor.ssh_user = 'root'
+          certs_dir = "#{repository}/certificates"
+          FileUtils.mkdir_p certs_dir
+          File.write("#{certs_dir}/test_cert.crt", 'Hello')
+          packaged = false
+          delivered = false
+          test_platforms_info['my_remote_platform'][:package] = proc { packaged = true }
+          test_platforms_info['my_remote_platform'][:nodes]['node'][:deliver_on_artefact_for] = proc { delivered = true }
+          expect_ssh_executor_runs([
+            # First run, we expect the mutex to be setup, and the deployment actions to be run
+            proc do |actions_per_nodes|
+              expect_actions_to_deploy_on(
+                actions_per_nodes,
+                'node',
+                sudo: false,
+                expected_actions: [
+                  { remote_bash: 'apt update && apt install -y ca-certificates' },
+                  {
+                    remote_bash: 'update-ca-certificates',
+                    scp: { certs_dir => '/usr/local/share/ca-certificates' }
+                  }
+                ]
+              )
+            end,
+            # Second run, we expect the mutex to be released
+            proc { |actions_per_nodes| expect_actions_to_unlock(actions_per_nodes, 'node', sudo: false) },
+            # Third run, we expect logs to be uploaded on the node
+            proc { |actions_per_nodes| expect_actions_to_upload_logs(actions_per_nodes, 'node', sudo: false) }
+          ])
+          ENV['hpc_certificates'] = certs_dir
+          begin
+            expect(test_deployer.deploy_on('node')).to eq('node' => [0, 'Deploy successful', ''])
+          ensure
+            ENV.delete('hpc_certificates')
+          end
+          expect(packaged).to eq true
+          expect(delivered).to eq true
+        end
+      end
+    end
+
+    it 'deploys on 1 node with certificates to install using hpc_certificates on CentOS' do
+      with_test_platform({ nodes: { 'node' => { meta: { 'image' => 'centos_7' } } } }, true) do |repository|
+        with_ssh_master_mocked_on ['node'] do
+          certs_dir = "#{repository}/certificates"
+          FileUtils.mkdir_p certs_dir
+          File.write("#{certs_dir}/test_cert.crt", 'Hello')
+          packaged = false
+          delivered = false
+          test_platforms_info['my_remote_platform'][:package] = proc { packaged = true }
+          test_platforms_info['my_remote_platform'][:nodes]['node'][:deliver_on_artefact_for] = proc { delivered = true }
+          expect_ssh_executor_runs([
+            # First run, we expect the mutex to be setup, and the deployment actions to be run
+            proc do |actions_per_nodes|
+              expect_actions_to_deploy_on(
+                actions_per_nodes,
+                'node',
+                expected_actions: [
+                  { remote_bash: 'sudo yum install -y ca-certificates' },
+                  {
+                    remote_bash: ['sudo update-ca-trust enable', 'sudo update-ca-trust extract'],
+                    scp: { "#{certs_dir}/test_cert.crt" => '/etc/pki/ca-trust/source/anchors' }
+                  }
+                ]
+              )
+            end,
+            # Second run, we expect the mutex to be released
+            proc { |actions_per_nodes| expect_actions_to_unlock(actions_per_nodes, 'node') },
+            # Third run, we expect logs to be uploaded on the node
+            proc { |actions_per_nodes| expect_actions_to_upload_logs(actions_per_nodes, 'node') }
+          ])
+          ENV['hpc_certificates'] = certs_dir
+          begin
+            expect(test_deployer.deploy_on('node')).to eq('node' => [0, 'Deploy successful', ''])
+          ensure
+            ENV.delete('hpc_certificates')
+          end
+          expect(packaged).to eq true
+          expect(delivered).to eq true
+        end
+      end
+    end
+
+    it 'deploys on 1 node with certificates to install using hpc_certificates on CentOS using root' do
+      with_test_platform({ nodes: { 'node' => { meta: { 'image' => 'centos_7' } } } }, true) do |repository|
+        with_ssh_master_mocked_on ['node'] do
+          test_ssh_executor.ssh_user = 'root'
+          certs_dir = "#{repository}/certificates"
+          FileUtils.mkdir_p certs_dir
+          File.write("#{certs_dir}/test_cert.crt", 'Hello')
+          packaged = false
+          delivered = false
+          test_platforms_info['my_remote_platform'][:package] = proc { packaged = true }
+          test_platforms_info['my_remote_platform'][:nodes]['node'][:deliver_on_artefact_for] = proc { delivered = true }
+          expect_ssh_executor_runs([
+            # First run, we expect the mutex to be setup, and the deployment actions to be run
+            proc do |actions_per_nodes|
+              expect_actions_to_deploy_on(
+                actions_per_nodes,
+                'node',
+                sudo: false,
+                expected_actions: [
+                  { remote_bash: 'yum install -y ca-certificates' },
+                  {
+                    remote_bash: ['update-ca-trust enable', 'update-ca-trust extract'],
+                    scp: { "#{certs_dir}/test_cert.crt" => '/etc/pki/ca-trust/source/anchors' }
+                  }
+                ]
+              )
+            end,
+            # Second run, we expect the mutex to be released
+            proc { |actions_per_nodes| expect_actions_to_unlock(actions_per_nodes, 'node', sudo: false) },
+            # Third run, we expect logs to be uploaded on the node
+            proc { |actions_per_nodes| expect_actions_to_upload_logs(actions_per_nodes, 'node', sudo: false) }
+          ])
+          ENV['hpc_certificates'] = certs_dir
+          begin
+            expect(test_deployer.deploy_on('node')).to eq('node' => [0, 'Deploy successful', ''])
+          ensure
+            ENV.delete('hpc_certificates')
+          end
+          expect(packaged).to eq true
+          expect(delivered).to eq true
+        end
+      end
+    end
+
     it 'deploys on several nodes' do
       with_test_platform({ nodes: { 'node1' => {}, 'node2' => {}, 'node3' => {} } }, true) do
         with_ssh_master_mocked_on %w[node1 node2 node3] do

@@ -34,16 +34,18 @@ module HybridPlatformsConductorTest
       # * *nodes* (String or Array<String>): Node (or list of nodes) that should be checked
       # * *check* (Boolean): Is the deploy only a check? [default: false]
       # * *sudo* (Boolean): Is sudo supposed to be used? [default: true]
+      # * *expected_actions* (Array<Object>): Additional expected actions [default: []]
       # Result::
       # * Hash<String, [Integer or Symbol, String, String] >: Expected result of those expected actions
-      def expect_actions_to_deploy_on(actions, nodes, check: false, sudo: true)
+      def expect_actions_to_deploy_on(actions, nodes, check: false, sudo: true, expected_actions: [])
         nodes = [nodes] if nodes.is_a?(String)
         expect(actions.size).to eq nodes.size
         nodes.each do |node|
           expect(actions.key?(node)).to eq true
-          expect(actions[node].size).to eq 2
+          expect(actions[node].size).to eq(2 + expected_actions.size)
           expect_action_to_lock_node(actions[node][0], node, sudo: sudo)
-          expect(actions[node][1]).to eq(local_bash: "echo \"#{check ? 'Checking' : 'Deploying'} on #{node}\"")
+          expect(actions[node][1..-2]).to eq expected_actions
+          expect(actions[node][-1]).to eq(local_bash: "echo \"#{check ? 'Checking' : 'Deploying'} on #{node}\"")
         end
         Hash[nodes.map { |node| [node, [0, "#{check ? 'Check' : 'Deploy'} successful", '']] }]
       end
