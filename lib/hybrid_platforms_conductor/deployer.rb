@@ -417,14 +417,61 @@ module HybridPlatformsConductor
           # Deploy for real
           outputs = @ssh_executor.execute_actions(
             Hash[@nodes.map do |node|
+              image_id = @nodes_handler.metadata_for(node)['image']
+              # Install My_company corporate certificates if present
+              certificate_actions =
+                if ENV['hpc_certificates']
+                  if File.exist?(ENV['hpc_certificates'])
+                    log_debug "Deploy certificates from #{ENV['hpc_certificates']}"
+                    case image_id
+                    when 'debian_9'
+                      [
+                        {
+                          remote_bash: "#{@ssh_executor.ssh_user == 'root' ? '' : 'sudo '}apt update && #{@ssh_executor.ssh_user == 'root' ? '' : 'sudo '}apt install -y ca-certificates"
+                        },
+                        {
+                          scp: { ENV['hpc_certificates'] => '/usr/local/share/ca-certificates' },
+                          remote_bash: "#{@ssh_executor.ssh_user == 'root' ? '' : 'sudo '}update-ca-certificates"
+                        }
+                      ]
+                    when 'centos_7'
+                      [
+                        {
+                          remote_bash: "#{@ssh_executor.ssh_user == 'root' ? '' : 'sudo '}yum install -y ca-certificates"
+                        },
+                        {
+                          scp: Hash[Dir.glob("#{ENV['hpc_certificates']}/*.crt").map do |cert_file|
+                            [
+                              cert_file,
+                              '/etc/pki/ca-trust/source/anchors'
+                            ]
+                          end],
+                          remote_bash: [
+                            "#{@ssh_executor.ssh_user == 'root' ? '' : 'sudo '}update-ca-trust enable",
+                            "#{@ssh_executor.ssh_user == 'root' ? '' : 'sudo '}update-ca-trust extract"
+                          ]
+                        }
+                      ]
+                    else
+                      raise "Unknown image ID for node #{node}: #{image_id}. Check metadata for this node."
+                    end
+                  else
+                    raise "Missing path referenced by the hpc_certificates environment variable: #{ENV['hpc_certificates']}"
+                  end
+                else
+                  []
+                end
               [
                 node,
                 [
+                  # Install the mutex lock and acquire it
                   {
                     scp: { "#{__dir__}/mutex_dir" => '.' },
                     remote_bash: "while ! #{@ssh_executor.ssh_user == 'root' ? '' : 'sudo '}./mutex_dir lock /tmp/hybrid_platforms_conductor_deploy_lock \"$(ps -o ppid= -p $$)\"; do echo -e 'Another deployment is running on #{node}. Waiting for it to finish to continue...' ; sleep 5 ; done"
                   }
-                ] + @nodes_handler.platform_for(node).actions_to_deploy_on(node, use_why_run: @use_why_run)
+                ] +
+                  certificate_actions +
+                  @nodes_handler.platform_for(node).actions_to_deploy_on(node, use_why_run: @use_why_run)
               ]
             end],
             timeout: @timeout,

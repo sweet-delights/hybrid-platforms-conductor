@@ -179,11 +179,14 @@ This README considers that executables are installed in the `./bin` directory an
 
 ## 3. Setup the local Hybrid Platforms Conductor environment variables
 
-Those values can always be overridden by the tools command lines options if needed (always check `--help` options for details).
+Those values can be overridden by the tools command lines options if needed (always check `--help` options for details).
 ```
 export hpc_ssh_user=<your_default_ssh_user_name>
 export hpc_ssh_gateways_conf=<your_default_gateway_configuration>
+export hpc_certificates=<path_to_dir_containing_crt_certificates>
 ```
+
+* `hpc_certificates` is an optional variable pointing to a directory containing `.crt` Base-64 encoded certificates. Those certificates will automatically be deployed on nodes handled by the Conductor. This can be useful when working from local environments that are subject to corporate certificates.
 
 Unless you use the commands from directory containing the file `platforms.rb`, you'll have to set the `hpc_platforms` environment variable to the path containing the `platforms.rb` file.
 For example if the file `/path/to/hybrid-platforms/platforms.rb` exists:
