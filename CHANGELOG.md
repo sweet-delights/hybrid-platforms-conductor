@@ -1,3 +1,9 @@
+# [12.3.0](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv12.2.0&sourceBranch=refs%2Ftags%2Fv12.3.0) (2020-04-02)
+
+### New features
+
+* [Feature] Check for semantic tags set correctly in our repos ([046a3e74](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/commits/046a3e74f8adb876136db23a5a7b9422ec9ab5a9))
+
 # [12.2.0](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv12.1.0&sourceBranch=refs%2Ftags%2Fv12.2.0) (2020-04-02)
 
 ### New features
