@@ -1,3 +1,9 @@
+# [12.2.0](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv12.1.0&sourceBranch=refs%2Ftags%2Fv12.2.0) (2020-04-02)
+
+### New features
+
+* [Feature] Use hpc_certificates variable to automatically install SSL certificates on nodes ([ca50e64a](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/commits/ca50e64a63e2f3093c6c9bf770c0f991d9b6b402))
+
 # [12.1.0](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv12.0.0&sourceBranch=refs%2Ftags%2Fv12.1.0) (2020-03-31)
 
 ### New features
