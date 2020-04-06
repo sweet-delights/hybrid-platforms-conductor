@@ -1,3 +1,9 @@
+# [12.3.1](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv12.3.0&sourceBranch=refs%2Ftags%2Fv12.3.1) (2020-04-06)
+
+### Fixes
+
+* Updated doc using new way of installing bundler ([5506edb8](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/commits/5506edb8119ca98c32af573bc4550feb09e90c58))
+
 # [12.3.0](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv12.2.0&sourceBranch=refs%2Ftags%2Fv12.3.0) (2020-04-02)
 
 ### New features
