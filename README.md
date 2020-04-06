@@ -39,7 +39,7 @@ Here are some steps to guid you in setting up those requirements in case they ar
 
 ## 1. Setup Git
 
-```
+```bash
 sudo apt-get install git
 git config --global user.email "<your_email>"
 git config --global user.name "<your_user_name>"
@@ -47,7 +47,7 @@ git config --global user.name "<your_user_name>"
 
 ## 2. Setup SSH
 
-```
+```bash
 cp ... .ssh/id_rsa
 ssh-add
 ```
@@ -59,12 +59,12 @@ Here are some ways to install it.
 
 ### Compiling it from scratch.
 
-```
+```bash
 mkdir ruby
 cd ruby
-wget https://cache.ruby-lang.org/pub/ruby/2.5/ruby-2.5.0.tar.gz
-tar xvzf ruby-2.5.0.tar.gz
-cd ruby-2.5.0
+wget https://cache.ruby-lang.org/pub/ruby/2.6/ruby-2.6.6.tar.gz
+tar xvzf ruby-2.6.6.tar.gz
+cd ruby-2.6.6
 sudo apt-get install -y build-essential zlib1g-dev libyaml-dev libssl-dev libgdbm-dev libreadline-dev libncurses5-dev libffi-dev
 ./configure
 make
@@ -74,7 +74,7 @@ cd ../..
 
 ### Using RVM
 
-```
+```bash
 sudo apt-get install dirmngr curl
 gpg --keyserver hkp://keys.gnupg.net:80 --recv-keys 409B6B1796C275462A1703113804BB82D39DC0E3 7D2BAF1CF37B13E2069D6956105BD0E739499BDB
 curl -sSL https://get.rvm.io | bash -s stable # Fails because you need a gpg2 binary somewhere...
@@ -84,13 +84,13 @@ rvm use 2.5.0
 
 ## Using Debian (>= Stretch) package manager
 
-```
+```bash
 sudo apt-get install ruby-dev libffi-dev zlib1g-dev
 ```
 
 ## 4. Install bundler
 
-```
+```bash
 sudo gem install bundler
 ```
 
@@ -117,10 +117,10 @@ source 'http://rubygems.org'
 
 source 'http://my.artefacts.my_company.net/gem-production/' do
   # To operate the platforms
-  gem 'hybrid_platforms_conductor', '~> 6.8'
+  gem 'hybrid_platforms_conductor', '~> 12.0'
   # Add all the plugin gems that are needed to operate platforms defined in platforms.rb
-  gem 'hybrid_platforms_conductor-chef', '~> 2.1'
-  gem 'hybrid_platforms_conductor-ansible', '~> 1.2'
+  gem 'hybrid_platforms_conductor-chef', '~> 5.0'
+  gem 'hybrid_platforms_conductor-ansible', '~> 3.0'
 end
 ```
 
@@ -168,10 +168,12 @@ In particular the following methods are important:
 ## 2. Install dependencies
 
 This will install the dependencies for Hybrid Platforms Conductor to work correctly.
+```bash
+bundle config set path vendor/bundle
+bundle install
+bundle binstubs hybrid_platforms_conductor hybrid_platforms_conductor-chef rubocop foodcritic
 ```
-bundle install --path vendor/bundle --binstubs
-```
-This will create a `bin` directory with all executables stored inside. You can then add this directory to your `PATH` environment variable to avoid prefixing your commands by `./bin/`.
+This will create a `bin` directory with all needed executables stored inside. You can then add this directory to your `PATH` environment variable to avoid prefixing your commands by `./bin/`.
 
 Alternatively, you can install Hybrid Platforms Conductor in a non-local path, using simply `bundle install`, and use the executables directly from Ruby's installation path.
 
@@ -180,7 +182,7 @@ This README considers that executables are installed in the `./bin` directory an
 ## 3. Setup the local Hybrid Platforms Conductor environment variables
 
 Those values can be overridden by the tools command lines options if needed (always check `--help` options for details).
-```
+```bash
 export hpc_ssh_user=<your_default_ssh_user_name>
 export hpc_ssh_gateways_conf=<your_default_gateway_configuration>
 export hpc_certificates=<path_to_dir_containing_crt_certificates>
@@ -190,26 +192,26 @@ export hpc_certificates=<path_to_dir_containing_crt_certificates>
 
 Unless you use the commands from directory containing the file `platforms.rb`, you'll have to set the `hpc_platforms` environment variable to the path containing the `platforms.rb` file.
 For example if the file `/path/to/hybrid-platforms/platforms.rb` exists:
-```
+```bash
 export hpc_platforms=/path/to/hybrid-platforms
 ```
 
 ## 4. Setup the platform repositories
 
 This will install the dependencies for any configuration management tool used by the platforms being declared in `platfroms.rb`.
-```
+```bash
 ./bin/setup
 ```
 
 ## 5. Perform a quick test to validate the setup
 
 This command will run the tests of platforms handled by HPCs Conductor executables installation, and should return `===== No error =====` at the end.
-```
+```bash
 ./bin/test --test executables
 ```
 
 This command will list all the nodes that could be found in the platforms.
-```
+```bash
 ./bin/check-node --show-nodes
 ```
 
@@ -309,7 +311,7 @@ Deployer options specific to platforms of type chef:
 ```
 
 Usage examples:
-```
+```bash
 # Test on node23hst-nn1
 ./bin/check-node --node node23hst-nn1
 
@@ -421,7 +423,7 @@ Deployer options specific to platforms of type chef:
 ```
 
 Usage examples:
-```
+```bash
 # Deploy master on node23hst-nn1
 ./bin/deploy --node node23hst-nn1
 
@@ -541,7 +543,7 @@ SSH executor options:
 ```
 
 Usage examples:
-```
+```bash
 # Display the possible nodes we can run commands on (also outputs the possible hosts lists)
 ./bin/ssh_run --show-nodes
 
@@ -606,7 +608,7 @@ SSH executor options:
 ```
 
 Usage examples:
-```
+```bash
 # Dump in stdout
 ./bin/ssh_config
 
@@ -685,7 +687,7 @@ The `free_ips` executable will output all free IP ranges for any used range.
 Pretty useful to assign new IPs.
 
 Usage examples:
-```
+```bash
 ./bin/free_ips
 ```
 
@@ -721,7 +723,7 @@ The `free_veids` executable will output all free VEIDs (smaller than 10000).
 Pretty useful to assign unused VEIDs to new VMs to be created.
 
 Usage examples:
-```
+```bash
 ./bin/free_veids
 ```
 
@@ -759,7 +761,7 @@ Nodes selection options:
 ```
 
 Usage examples:
-```
+```bash
 # Output all nodes info using mediawiki format
 ./bin/report --format mediawiki
 
@@ -872,7 +874,7 @@ SSH executor options:
 ```
 
 Usage examples:
-```
+```bash
 # Check deployments for all nodes
 ./bin/last_deploys --all-nodes
 
@@ -945,7 +947,7 @@ Deployer options:
 ```
 
 Usage examples:
-```
+```bash
 # Dump JSON for the node named xaeprjcttlbd01
 ./bin/dump_nodes_json --node xaeprjcttlbd01
 
@@ -1019,7 +1021,7 @@ Deployer options:
 ```
 
 Usage examples:
-```
+```bash
 # Dump the whole network in JSON format
 ./bin/topograph --output json:graph.json
 
@@ -1105,7 +1107,7 @@ Tests runner options:
 ```
 
 Usage examples:
-```
+```bash
 # Execute all tests on all nodes
 ./bin/test --all-nodes
 
@@ -1196,7 +1198,7 @@ Nodes handler options:
 ```
 
 Usage examples:
-```
+```bash
 # Setup all declared platforms
 ./bin/setup
 ```
@@ -1624,7 +1626,7 @@ gem 'hybrid_platforms_conductor-<platform_type_name>', git: '<GIT URL for hybrid
 ```
 
 Once this Gemfile is modified, don't forget to fetch the new dependency:
-```
+```bash
 bundle install
 ```
 In case the plugin is referenced using a local path, then there is no need to re-issue `bundle install` when the plugin files change (good to develop locally your plugin).
@@ -1648,7 +1650,7 @@ Example from a platform present in a Git repository:
 Now your Platform Handler plugin should be ready to use.
 It should appear when you issue the following command:
 
-```
+```bash
 ./bin/setup --show-nodes
 ```
 
