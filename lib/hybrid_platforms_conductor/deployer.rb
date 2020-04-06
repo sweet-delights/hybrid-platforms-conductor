@@ -112,6 +112,10 @@ module HybridPlatformsConductor
     #   Boolean
     attr_accessor :allow_deploy_non_master
 
+    # Are we deploying in a local environment?
+    #   Boolean
+    attr_reader :local_environment
+
     # Constructor
     #
     # Parameters::
@@ -134,6 +138,7 @@ module HybridPlatformsConductor
       @timeout = nil
       @concurrent_execution = false
       @force_direct_deploy = false
+      @local_environment = false
     end
 
     # Complete an option parser with options meant to control this Deployer
@@ -307,9 +312,9 @@ module HybridPlatformsConductor
                   ssh_executor.passwords[node] = 'root_pwd'
                   deployer.force_direct_deploy = true
                   deployer.allow_deploy_non_master = true
+                  deployer.prepare_for_local_environment
                   # Ignore secrets that might have been given: in Docker containers we always use dummy secrets
                   deployer.secrets = ["#{nodes_handler.hybrid_platforms_dir}/dummy_secrets.json"]
-                  nodes_handler.platform_for(node).prepare_deploy_for_local_testing
                   yield deployer, container_ip
                 end
               else
@@ -327,6 +332,14 @@ module HybridPlatformsConductor
         else
           raise "Unknown Docker image #{image} defined for node #{node}"
         end
+      end
+    end
+
+    # Prepare deployment to be run in a local environment
+    def prepare_for_local_environment
+      @local_environment = true
+      @nodes_handler.known_platforms.each do |platform_name|
+        @nodes_handler.platform(platform_name).prepare_deploy_for_local_testing
       end
     end
 
@@ -420,7 +433,7 @@ module HybridPlatformsConductor
               image_id = @nodes_handler.metadata_for(node)['image']
               # Install My_company corporate certificates if present
               certificate_actions =
-                if ENV['hpc_certificates']
+                if @local_environment && ENV['hpc_certificates']
                   if File.exist?(ENV['hpc_certificates'])
                     log_debug "Deploy certificates from #{ENV['hpc_certificates']}"
                     case image_id
