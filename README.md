@@ -1104,6 +1104,12 @@ Tests runner options:
     -k, --skip-run                   Skip running the check-node commands for real, and just analyze existing run logs.
     -r, --report REPORT_NAME         Specify a report name. Can be used several times. Can be all for all reports. Possible values: confluence, stdout (defaults to stdout).
     -t, --test TEST_NAME             Specify a test name. Can be used several times. Can be all for all tests. Possible values: chef_executables, chef_success, chef_woulds, connection, deploy_freshness, executables, food_critic, group_ids, hostname, ip, linear_strategy, obsolete_home_dirs, obsolete_users, orphan_files, private_ips, public_ips, rubocop, spectre, unused_recipes, unused_roles, user_ids, users_without_roles, veids (defaults to all).
+        --max-threads-ssh NBR_THREADS
+                                     Specify the max number of threads to parallelize tests connecting using SSH on nodes (defaults to 64).
+        --max-threads-nodes NBR_THREADS
+                                     Specify the max number of threads to parallelize tests at node level (defaults to 8).
+        --max-threads-platforms NBR_THREADS
+                                     Specify the max number of threads to parallelize tests at platform level (defaults to 8).
 ```
 
 Usage examples:
@@ -1360,12 +1366,21 @@ Tests runner options:
     -k, --skip-run                   Skip running the check-node commands for real, and just analyze existing run logs.
     -r, --report REPORT_NAME         Specify a report name. Can be used several times. Can be all for all reports. Possible values: confluence, stdout (defaults to stdout).
     -t, --test TEST_NAME             Specify a test name. Can be used several times. Can be all for all tests. Possible values: chef_executables, chef_success, chef_woulds, connection, deploy_freshness, executables, food_critic, group_ids, hostname, ip, linear_strategy, obsolete_home_dirs, obsolete_users, orphan_files, private_ips, public_ips, rubocop, spectre, unused_recipes, unused_roles, user_ids, users_without_roles, veids (defaults to all).
+        --max-threads-ssh NBR_THREADS
+                                     Specify the max number of threads to parallelize tests connecting using SSH on nodes (defaults to 64).
+        --max-threads-nodes NBR_THREADS
+                                     Specify the max number of threads to parallelize tests at node level (defaults to 8).
+        --max-threads-platforms NBR_THREADS
+                                     Specify the max number of threads to parallelize tests at platform level (defaults to 8).
 ```
 
 * `--report REPORT_NAME`: Specify which report plugin to use.
 * `--skip-run`: Don't fetch the information from the nodes themselves, but use the previous output from the `run_logs` directory. Useful if executing the command several times.
 * `--test TEST_NAME`: Specify the test to be performed.
 * `--tests-list FILE_NAME`: Give a file containing a list of tests names. The file can also containg comment lines starting with `#`.
+* `--max-threads-ssh NBR_THREADS`: Make sure that there won't be more than `NBR_THREADS` simultaneous SSH connections used by node tests using SSH.
+* `--max-threads-nodes NBR_THREADS`: Make sure that there won't be more than `NBR_THREADS` simultaneous tests run in parallel at node level. Those include Docker tests.
+* `--max-threads-platforms NBR_THREADS`: Make sure that there won't be more than `NBR_THREADS` simultaneous tests run in parallel at platform level. Those include Molecule, linter tests...
 
 <a name="tests_list"></a>
 # List of tests available

@@ -25,6 +25,18 @@ module HybridPlatformsConductor
     # Boolean
     attr_accessor :skip_run
 
+    # Number of threads max to use for tests connecting to nodes with ssh [default: 64]
+    # Integer
+    attr_accessor :max_threads_ssh_on_nodes
+
+    # Number of threads max to use for tests running at node level [default: 8]
+    # Integer
+    attr_accessor :max_threads_nodes
+
+    # Number of threads max to use for tests running at platform level [default: 8]
+    # Integer
+    attr_accessor :max_threads_platforms
+
     # Constructor
     #
     # Parameters::
@@ -89,6 +101,9 @@ module HybridPlatformsConductor
       @tests = []
       # List of reports to be used
       @reports = []
+      @max_threads_ssh_on_nodes = 64
+      @max_threads_nodes = 8
+      @max_threads_platforms = 8
       # Cache of expected failures
       @cache_expected_failures = {}
     end
@@ -116,6 +131,15 @@ module HybridPlatformsConductor
       end
       options_parser.on('-t', '--test TEST', "Specify a test name. Can be used several times. Can be all for all tests. Possible values: #{@tests_plugins.keys.sort.join(', ')} (defaults to all).") do |test_name|
         @tests << test_name.to_sym
+      end
+      options_parser.on('--max-threads-ssh NBR_THREADS', "Specify the max number of threads to parallelize tests connecting using SSH on nodes (defaults to #{@max_threads_ssh_on_nodes}).") do |nbr_threads|
+        @max_threads_ssh_on_nodes = Integer(nbr_threads)
+      end
+      options_parser.on('--max-threads-nodes NBR_THREADS', "Specify the max number of threads to parallelize tests at node level (defaults to #{@max_threads_nodes}).") do |nbr_threads|
+        @max_threads_nodes = Integer(nbr_threads)
+      end
+      options_parser.on('--max-threads-platforms NBR_THREADS', "Specify the max number of threads to parallelize tests at platform level (defaults to #{@max_threads_platforms}).") do |nbr_threads|
+        @max_threads_platforms = Integer(nbr_threads)
       end
     end
 
@@ -296,10 +320,6 @@ module HybridPlatformsConductor
       end
     end
 
-    # Number of threads max to use for platform tests
-    #   Integer
-    MAX_THREADS_PLATFORM_TESTS = 32
-
     # Run tests that are platform specific
     def run_tests_platform
       tests_on_platform = @tests.select { |test_name| @tests_plugins[test_name].method_defined?(:test_on_platform) }.uniq.sort
@@ -328,16 +348,12 @@ module HybridPlatformsConductor
               end
             end
           end
-          for_each_element_in(tests_to_be_run, parallel: !log_debug?, nbr_threads_max: MAX_THREADS_PLATFORM_TESTS) do |test_code|
+          for_each_element_in(tests_to_be_run, parallel: !log_debug?, nbr_threads_max: @max_threads_platforms) do |test_code|
             test_code.call
           end
         end
       end
     end
-
-    # Number of threads max to use for node ssh tests
-    #   Integer
-    MAX_THREADS_NODE_SSH_TESTS = 64
 
     # Timeout in seconds given to the SSH connection itself
     #   Integer
@@ -407,7 +423,7 @@ module HybridPlatformsConductor
         section "Run #{tests_on_nodes.size} nodes SSH tests #{tests_on_nodes.join(', ')} (timeout to #{timeout} secs)" do
           start_time = Time.now
           nbr_secs = nil
-          @ssh_executor.max_threads = MAX_THREADS_NODE_SSH_TESTS
+          @ssh_executor.max_threads = @max_threads_ssh_on_nodes
           @ssh_executor.execute_actions(
             test_cmds,
             concurrent: !log_debug?,
@@ -443,16 +459,12 @@ module HybridPlatformsConductor
       end
     end
 
-    # Number of threads max to use for node tests (they include the Docker tests)
-    #   Integer
-    MAX_THREADS_NODE_TESTS = 8
-
     # Run tests that are node specific
     def run_tests_for_nodes
       tests_for_nodes = @tests.select { |test_name| @tests_plugins[test_name].method_defined?(:test_for_node) }.uniq.sort
       unless tests_for_nodes.empty?
         section "Run #{tests_for_nodes.size} nodes tests #{tests_for_nodes.join(', ')} on #{@nodes.size} nodes" do
-          @nodes_handler.for_each_node_in(@nodes, parallel: !log_debug?, nbr_threads_max: MAX_THREADS_NODE_TESTS) do |node|
+          @nodes_handler.for_each_node_in(@nodes, parallel: !log_debug?, nbr_threads_max: @max_threads_nodes) do |node|
             tests_for_nodes.each do |test_name|
               if should_test_be_run_on(test_name, node: node)
                 log_debug "Run node test #{test_name} on node #{node}..."

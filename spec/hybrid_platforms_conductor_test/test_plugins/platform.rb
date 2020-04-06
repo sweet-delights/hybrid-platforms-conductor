@@ -20,12 +20,18 @@ module HybridPlatformsConductorTest
         # Array<Symbol>
         attr_accessor :only_on_platform_types
 
+        # Eventual sleep time per platform name, per test name
+        # Hash<Symbol, Hash<String, Integer> >
+        attr_accessor :sleeps
+
       end
 
       # Check my_test_plugin.rb.sample documentation for signature details.
       def test_on_platform
         platform_name = @platform.info[:repo_name]
         raise 'Failing test' if Platform.fail_for.include? platform_name
+        sleep_time = Platform.sleeps.dig(@name, platform_name)
+        sleep sleep_time unless sleep_time.nil?
         Platform.runs << [@name, platform_name]
       end
 

@@ -24,11 +24,17 @@ module HybridPlatformsConductorTest
         # Array<Symbol>
         attr_accessor :only_on_nodes
 
+        # Eventual sleep time per node name, per test name
+        # Hash<Symbol, Hash<String, Integer> >
+        attr_accessor :sleeps
+
       end
 
       # Check my_test_plugin.rb.sample documentation for signature details.
       def test_for_node
         raise "Failing test #{@name} for #{@node}" if Node.fail_for.key?(@name) && Node.fail_for[@name].include?(@node)
+        sleep_time = Node.sleeps.dig(@name, @node)
+        sleep sleep_time unless sleep_time.nil?
         Node.runs << [@name, @node]
       end
 

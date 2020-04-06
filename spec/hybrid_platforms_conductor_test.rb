@@ -64,10 +64,12 @@ module HybridPlatformsConductorTest
         HybridPlatformsConductorTest::TestPlugins::Platform.runs = []
         HybridPlatformsConductorTest::TestPlugins::Platform.fail_for = []
         HybridPlatformsConductorTest::TestPlugins::Platform.only_on_platform_types = nil
+        HybridPlatformsConductorTest::TestPlugins::Platform.sleeps = {}
         HybridPlatformsConductorTest::TestPlugins::Node.runs = []
         HybridPlatformsConductorTest::TestPlugins::Node.fail_for = {}
         HybridPlatformsConductorTest::TestPlugins::Node.only_on_platform_types = nil
         HybridPlatformsConductorTest::TestPlugins::Node.only_on_nodes = nil
+        HybridPlatformsConductorTest::TestPlugins::Node.sleeps = {}
         HybridPlatformsConductorTest::TestPlugins::NodeSsh.node_tests = {}
         HybridPlatformsConductorTest::TestPlugins::NodeSsh.only_on_platform_types = nil
         HybridPlatformsConductorTest::TestPlugins::NodeSsh.only_on_nodes = nil
