@@ -103,6 +103,60 @@ describe HybridPlatformsConductor::TestsRunner do
       end
     end
 
+    it 'executes node tests in parallel' do
+      with_test_platform_for_node_tests do
+        test_tests_runner.tests = [:node_test]
+        test_tests_runner.max_threads_nodes = 6
+        HybridPlatformsConductorTest::TestPlugins::Node.sleeps = { node_test: {
+          'node11' => 1.2,
+          'node12' => 0.2,
+          'node13' => 0.6,
+          'node21' => 0.8,
+          'node22' => 0.4,
+          'node23' => 1
+        } }
+        expect(test_tests_runner.run_tests([{ all: true }])).to eq 0
+        expect(HybridPlatformsConductorTest::TestPlugins::Node.runs).to eq [
+          [:node_test, 'node12'],
+          [:node_test, 'node22'],
+          [:node_test, 'node13'],
+          [:node_test, 'node21'],
+          [:node_test, 'node23'],
+          [:node_test, 'node11']
+        ]
+      end
+    end
+
+    it 'executes node tests not in parallel with a limiting number of threads' do
+      with_test_platform_for_node_tests do
+        test_tests_runner.tests = [:node_test]
+        test_tests_runner.max_threads_nodes = 3
+        HybridPlatformsConductorTest::TestPlugins::Node.sleeps = { node_test: {
+          'node11' => 1.2,
+          'node12' => 0.2,
+          'node13' => 0.6,
+          'node21' => 0.8,
+          'node22' => 0.5,
+          'node23' => 1
+        } }
+        # Here is the sequence:
+        # Thread 1: +-node11 1.2--------------------------------------------+
+        # Thread 2: +-node12 0.2-+-node21 0.8--------------+-node23 1.0-----|---+
+        # Thread 3: +-node13 0.6-|------------+-node22 0.5-|------------+   |   |
+        #           |            |            |            |            |   |   |
+        # Time    : 0            0.2          0.6          1.0          1.1 1.2 2.0
+        expect(test_tests_runner.run_tests([{ all: true }])).to eq 0
+        expect(HybridPlatformsConductorTest::TestPlugins::Node.runs).to eq [
+          [:node_test, 'node12'],
+          [:node_test, 'node13'],
+          [:node_test, 'node21'],
+          [:node_test, 'node22'],
+          [:node_test, 'node11'],
+          [:node_test, 'node23']
+        ]
+      end
+    end
+
   end
 
 end

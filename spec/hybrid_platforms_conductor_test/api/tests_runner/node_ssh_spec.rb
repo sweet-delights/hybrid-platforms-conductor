@@ -242,6 +242,29 @@ describe HybridPlatformsConductor::TestsRunner do
       end
     end
 
+    it 'executes SSH node tests in parallel' do
+      with_test_platform_for_node_ssh_tests do
+        expect_ssh_executor_runs([proc { |actions| expect_actions_to_test_nodes(actions, %w[11 12 21 22]) }])
+        test_tests_runner.tests = [:node_ssh_test]
+        test_tests_runner.max_threads_ssh_on_nodes = 43
+        ssh_executions = []
+        HybridPlatformsConductorTest::TestPlugins::NodeSsh.node_tests = { node_ssh_test: {
+          'node11' => { 'test_node11.sh' => proc { |stdout, exit_code| ssh_executions << ['node11', stdout, exit_code] } },
+          'node12' => { 'test_node12.sh' => proc { |stdout, exit_code| ssh_executions << ['node12', stdout, exit_code] } },
+          'node21' => { 'test_node21.sh' => proc { |stdout, exit_code| ssh_executions << ['node21', stdout, exit_code] } },
+          'node22' => { 'test_node22.sh' => proc { |stdout, exit_code| ssh_executions << ['node22', stdout, exit_code] } }
+        }}
+        expect(test_tests_runner.run_tests([{ all: true }])).to eq 0
+        expect(test_tests_runner.max_threads_ssh_on_nodes).to eq 43
+        expect(ssh_executions.sort).to eq [
+          ['node11', ['stdout11'], 0],
+          ['node12', ['stdout12'], 0],
+          ['node21', ['stdout21'], 0],
+          ['node22', ['stdout22'], 0]
+        ].sort
+      end
+    end
+
   end
 
 end

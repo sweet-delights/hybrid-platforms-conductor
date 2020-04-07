@@ -40,6 +40,59 @@ describe HybridPlatformsConductor::TestsRunner do
       end
     end
 
+    it 'executes several platform tests in parallel' do
+      with_test_platform_for_platform_tests do
+        test_tests_runner.tests = [:platform_test, :platform_test_2]
+        test_tests_runner.max_threads_platforms = 4
+        HybridPlatformsConductorTest::TestPlugins::Platform.sleeps = {
+          platform_test: {
+            'platform1' => 0.8,
+            'platform2' => 0.4
+          },
+          platform_test_2: {
+            'platform1' => 0.6,
+            'platform2' => 0.2
+          }
+        }
+        expect(test_tests_runner.run_tests([{ all: true }])).to eq 0
+        expect(HybridPlatformsConductorTest::TestPlugins::Platform.runs).to eq [
+          [:platform_test_2, 'platform2'],
+          [:platform_test, 'platform2'],
+          [:platform_test_2, 'platform1'],
+          [:platform_test, 'platform1']
+        ]
+      end
+    end
+
+    it 'executes several platform tests in parallel with a limited number of threads' do
+      with_test_platform_for_platform_tests do
+        test_tests_runner.tests = [:platform_test, :platform_test_2]
+        test_tests_runner.max_threads_platforms = 2
+        HybridPlatformsConductorTest::TestPlugins::Platform.sleeps = {
+          platform_test: {
+            'platform1' => 0.8,
+            'platform2' => 0.4
+          },
+          platform_test_2: {
+            'platform1' => 0.6,
+            'platform2' => 0.3
+          }
+        }
+        # Here is the sequence:
+        # Thread 1: +-t1p1 0.8------------+-t2p2 0.3 ----+
+        # Thread 2: +-t1p2 0.4-+-t2p1 0.6-|----------+   |
+        #           |          |          |          |   |
+        # Time    : 0          0.4        0.8        1.0 1.1
+        expect(test_tests_runner.run_tests([{ all: true }])).to eq 0
+        expect(HybridPlatformsConductorTest::TestPlugins::Platform.runs).to eq [
+          [:platform_test, 'platform2'],
+          [:platform_test, 'platform1'],
+          [:platform_test_2, 'platform1'],
+          [:platform_test_2, 'platform2']
+        ]
+      end
+    end
+
   end
 
 end
