@@ -99,7 +99,10 @@ module HybridPlatformsConductorTest
                       { remote_bash: 'sudo apt update && sudo apt install -y ca-certificates' },
                       {
                         remote_bash: 'sudo update-ca-certificates',
-                        scp:  { certs_dir => '/usr/local/share/ca-certificates' }
+                        scp:  {
+                          certs_dir => '/usr/local/share/ca-certificates',
+                          :sudo => true
+                        }
                       }
                     ]
                   )
@@ -148,7 +151,10 @@ module HybridPlatformsConductorTest
                       { remote_bash: 'apt update && apt install -y ca-certificates' },
                       {
                         remote_bash: 'update-ca-certificates',
-                        scp:  { certs_dir => '/usr/local/share/ca-certificates' }
+                        scp:  {
+                          certs_dir => '/usr/local/share/ca-certificates',
+                          :sudo => false
+                        }
                       }
                     ]
                   )
@@ -184,7 +190,10 @@ module HybridPlatformsConductorTest
                       { remote_bash: 'sudo yum install -y ca-certificates' },
                       {
                         remote_bash: ['sudo update-ca-trust enable', 'sudo update-ca-trust extract'],
-                        scp: { "#{certs_dir}/test_cert.crt" => '/etc/pki/ca-trust/source/anchors' }
+                        scp: {
+                          "#{certs_dir}/test_cert.crt" => '/etc/pki/ca-trust/source/anchors',
+                          :sudo => true
+                        }
                       }
                     ]
                   )
@@ -223,7 +232,10 @@ module HybridPlatformsConductorTest
                       { remote_bash: 'yum install -y ca-certificates' },
                       {
                         remote_bash: ['update-ca-trust enable', 'update-ca-trust extract'],
-                        scp: { "#{certs_dir}/test_cert.crt" => '/etc/pki/ca-trust/source/anchors' }
+                        scp: {
+                          "#{certs_dir}/test_cert.crt" => '/etc/pki/ca-trust/source/anchors',
+                          :sudo => false
+                        }
                       }
                     ]
                   )

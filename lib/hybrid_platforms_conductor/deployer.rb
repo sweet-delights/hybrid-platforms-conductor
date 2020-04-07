@@ -443,7 +443,10 @@ module HybridPlatformsConductor
                           remote_bash: "#{@ssh_executor.ssh_user == 'root' ? '' : 'sudo '}apt update && #{@ssh_executor.ssh_user == 'root' ? '' : 'sudo '}apt install -y ca-certificates"
                         },
                         {
-                          scp: { ENV['hpc_certificates'] => '/usr/local/share/ca-certificates' },
+                          scp: {
+                            ENV['hpc_certificates'] => '/usr/local/share/ca-certificates',
+                            :sudo => @ssh_executor.ssh_user != 'root'
+                          },
                           remote_bash: "#{@ssh_executor.ssh_user == 'root' ? '' : 'sudo '}update-ca-certificates"
                         }
                       ]
@@ -458,7 +461,7 @@ module HybridPlatformsConductor
                               cert_file,
                               '/etc/pki/ca-trust/source/anchors'
                             ]
-                          end],
+                          end].merge(sudo: @ssh_executor.ssh_user != 'root'),
                           remote_bash: [
                             "#{@ssh_executor.ssh_user == 'root' ? '' : 'sudo '}update-ca-trust enable",
                             "#{@ssh_executor.ssh_user == 'root' ? '' : 'sudo '}update-ca-trust extract"
