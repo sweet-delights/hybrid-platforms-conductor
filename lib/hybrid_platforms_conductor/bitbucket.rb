@@ -49,8 +49,8 @@ module HybridPlatformsConductor
         # Read credentials from netrc
         Netrc.with_netrc_for('www.site.my_company.net') do |netrc_user, netrc_password|
           # Clone them as exiting the block will erase them
-          user_name ||= netrc_user.clone
-          password ||= netrc_password.clone
+          user_name ||= netrc_user.dup
+          password ||= netrc_password.dup
         end
       end
       bitbucket = Bitbucket.new(user_name, password, logger: logger, logger_stderr: logger_stderr)
