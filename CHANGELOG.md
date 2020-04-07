@@ -1,3 +1,9 @@
+# [12.4.1](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv12.4.0&sourceBranch=refs%2Ftags%2Fv12.4.1) (2020-04-07)
+
+### Fixes
+
+* Corrected bug displaying errors about frozen strings when password is taken from environment ([ae2a7d69](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/commits/ae2a7d692e812501611ab52dc60c0019af4a10c2))
+
 # [12.4.0](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv12.3.1&sourceBranch=refs%2Ftags%2Fv12.4.0) (2020-04-08)
 
 ### New features
