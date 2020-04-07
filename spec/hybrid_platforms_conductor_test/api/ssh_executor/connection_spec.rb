@@ -6,7 +6,11 @@ describe HybridPlatformsConductor::SshExecutor do
       with_test_platform(nodes: { 'node' => { connection: 'node_connection' } }) do
         test_ssh_executor.ssh_user = 'test_user'
         with_cmd_runner_mocked(
-          commands: [[remote_bash_for('echo Hello1', node: 'node', user: 'test_user'), proc { [0, "Hello1\n", ''] }]],
+          commands: [
+            ['which env', proc { [0, "/usr/bin/env\n", '']}],
+            ['ssh -V 2>&1', proc { [0, "OpenSSH_7.4p1 Debian-10+deb9u7, OpenSSL 1.0.2u  20 Dec 2019\n", '']}],
+            [remote_bash_for('echo Hello1', node: 'node', user: 'test_user'), proc { [0, "Hello1\n", ''] }]
+          ],
           nodes_connections: { 'node' => { connection: 'node_connection', user: 'test_user' } }
         ) do
           expect(test_ssh_executor.execute_actions('node' => { remote_bash: 'echo Hello1' })['node']).to eq [0, "Hello1\n", '']
@@ -23,8 +27,14 @@ describe HybridPlatformsConductor::SshExecutor do
         test_ssh_executor.ssh_user = 'test_user'
         with_cmd_runner_mocked(
           commands: [
+            ['which env', proc { [0, "/usr/bin/env\n", '']}],
+            ['ssh -V 2>&1', proc { [0, "OpenSSH_7.4p1 Debian-10+deb9u7, OpenSSL 1.0.2u  20 Dec 2019\n", '']}],
             [remote_bash_for('echo Hello1', node: 'node1', user: 'test_user'), proc { [0, "Hello1\n", ''] }],
+            ['which env', proc { [0, "/usr/bin/env\n", '']}],
+            ['ssh -V 2>&1', proc { [0, "OpenSSH_7.4p1 Debian-10+deb9u7, OpenSSL 1.0.2u  20 Dec 2019\n", '']}],
             [remote_bash_for('echo Hello2', node: 'node2', user: 'test_user'), proc { [0, "Hello2\n", ''] }],
+            ['which env', proc { [0, "/usr/bin/env\n", '']}],
+            ['ssh -V 2>&1', proc { [0, "OpenSSH_7.4p1 Debian-10+deb9u7, OpenSSL 1.0.2u  20 Dec 2019\n", '']}],
             [remote_bash_for('echo Hello3', node: 'node3', user: 'test_user'), proc { [0, "Hello3\n", ''] }]
           ],
           nodes_connections: {
@@ -51,7 +61,11 @@ describe HybridPlatformsConductor::SshExecutor do
         test_ssh_executor.ssh_user = 'test_user'
         test_ssh_executor.override_connections['node'] = 'node_connection_new'
         with_cmd_runner_mocked(
-          commands: [[remote_bash_for('echo Hello1', node: 'node', user: 'test_user'), proc { [0, "Hello1\n", ''] }]],
+          commands: [
+            ['which env', proc { [0, "/usr/bin/env\n", '']}],
+            ['ssh -V 2>&1', proc { [0, "OpenSSH_7.4p1 Debian-10+deb9u7, OpenSSL 1.0.2u  20 Dec 2019\n", '']}],
+            [remote_bash_for('echo Hello1', node: 'node', user: 'test_user'), proc { [0, "Hello1\n", ''] }]
+          ],
           nodes_connections: { 'node' => { connection: 'node_connection_new', user: 'test_user' } }
         ) do
           expect(test_ssh_executor.execute_actions('node' => { remote_bash: 'echo Hello1' })['node']).to eq [0, "Hello1\n", '']
@@ -63,7 +77,10 @@ describe HybridPlatformsConductor::SshExecutor do
       with_test_platform(nodes: { 'node' => { connection: 'node_connection' } }) do
         test_ssh_executor.ssh_user = 'test_user'
         with_cmd_runner_mocked(
-          commands: [],
+          commands: [
+            ['which env', proc { [0, "/usr/bin/env\n", '']}],
+            ['ssh -V 2>&1', proc { [0, "OpenSSH_7.4p1 Debian-10+deb9u7, OpenSSL 1.0.2u  20 Dec 2019\n", '']}]
+          ],
           nodes_connections: { 'node' => { connection: 'node_connection', user: 'test_user' } }
         ) do
           test_ssh_executor.with_ssh_master_to(['node']) do |ssh_exec, ssh_urls|
@@ -78,7 +95,11 @@ describe HybridPlatformsConductor::SshExecutor do
       with_test_platform(nodes: { 'node' => { connection: 'node_connection' } }) do
         test_ssh_executor.ssh_user = 'test_user'
         with_cmd_runner_mocked(
-          commands: [[remote_bash_for('echo Hello1', node: 'node', user: 'test_user'), proc { [0, "Hello1\n", ''] }]],
+          commands: [
+            ['which env', proc { [0, "/usr/bin/env\n", '']}],
+            ['ssh -V 2>&1', proc { [0, "OpenSSH_7.4p1 Debian-10+deb9u7, OpenSSL 1.0.2u  20 Dec 2019\n", '']}],
+            [remote_bash_for('echo Hello1', node: 'node', user: 'test_user'), proc { [0, "Hello1\n", ''] }]
+          ],
           nodes_connections: { 'node' => { connection: 'node_connection', user: 'test_user' } }
         ) do
           test_ssh_executor.with_ssh_master_to(['node']) do
@@ -96,7 +117,10 @@ describe HybridPlatformsConductor::SshExecutor do
       }) do
         test_ssh_executor.ssh_user = 'test_user'
         with_cmd_runner_mocked(
-          commands: [],
+          commands: [
+            ['which env', proc { [0, "/usr/bin/env\n", '']}],
+            ['ssh -V 2>&1', proc { [0, "OpenSSH_7.4p1 Debian-10+deb9u7, OpenSSL 1.0.2u  20 Dec 2019\n", '']}]
+          ],
           nodes_connections: {
             'node1' => { connection: 'node1_connection', user: 'test_user' },
             'node2' => { connection: 'node2_connection', user: 'test_user' },
@@ -125,6 +149,8 @@ describe HybridPlatformsConductor::SshExecutor do
         test_ssh_executor.ssh_user = 'test_user'
         with_cmd_runner_mocked(
           commands: [
+            ['which env', proc { [0, "/usr/bin/env\n", '']}],
+            ['ssh -V 2>&1', proc { [0, "OpenSSH_7.4p1 Debian-10+deb9u7, OpenSSL 1.0.2u  20 Dec 2019\n", '']}],
             [remote_bash_for('echo Hello1', node: 'node1', user: 'test_user'), proc { [0, "Hello1\n", ''] }],
             [remote_bash_for('echo Hello2', node: 'node2', user: 'test_user'), proc { [0, "Hello2\n", ''] }],
             [remote_bash_for('echo Hello3', node: 'node3', user: 'test_user'), proc { [0, "Hello3\n", ''] }],
@@ -168,7 +194,10 @@ describe HybridPlatformsConductor::SshExecutor do
         test_ssh_executor.ssh_use_control_master = false
         test_ssh_executor.ssh_user = 'test_user'
         with_cmd_runner_mocked(
-          commands: [],
+          commands: [
+            ['which env', proc { [0, "/usr/bin/env\n", '']}],
+            ['ssh -V 2>&1', proc { [0, "OpenSSH_7.4p1 Debian-10+deb9u7, OpenSSL 1.0.2u  20 Dec 2019\n", '']}]
+          ],
           nodes_connections: {
             'node1' => { connection: 'node1_connection', user: 'test_user' },
             'node2' => { connection: 'node2_connection', user: 'test_user' },
@@ -197,7 +226,10 @@ describe HybridPlatformsConductor::SshExecutor do
         test_ssh_executor.ssh_strict_host_key_checking = false
         test_ssh_executor.ssh_user = 'test_user'
         with_cmd_runner_mocked(
-          commands: [],
+          commands: [
+            ['which env', proc { [0, "/usr/bin/env\n", '']}],
+            ['ssh -V 2>&1', proc { [0, "OpenSSH_7.4p1 Debian-10+deb9u7, OpenSSL 1.0.2u  20 Dec 2019\n", '']}]
+          ],
           nodes_connections: {
             'node1' => { connection: 'node1_connection', user: 'test_user' },
             'node2' => { connection: 'node2_connection', user: 'test_user' },
@@ -228,14 +260,16 @@ describe HybridPlatformsConductor::SshExecutor do
         test_ssh_executor.stdout_device = stdout_file
         test_ssh_executor.execute_actions('node' => { remote_bash: 'echo Hello' })
         lines = File.read(stdout_file).split("\n")
-        expect(lines[0]).to eq 'ssh-keyscan node_connection'
-        expect(lines[1]).to match /^ssh-keygen -R node_connection -f .+\/known_hosts$/
+        expect(lines[0]).to eq 'which env'
+        expect(lines[1]).to eq 'ssh -V 2>&1'
+        expect(lines[2]).to eq 'ssh-keyscan node_connection'
+        expect(lines[3]).to match /^ssh-keygen -R node_connection -f .+\/known_hosts$/
         # Here we should not have -o BatchMode=yes 
-        expect(lines[2]).to match /^.+\/ssh -o ControlMaster=yes -o ControlPersist=yes test_user@ti\.node true$/
-        expect(lines[3]).to match /^.+\/ssh test_user@ti\.node \/bin\/bash <<'EOF'$/
-        expect(lines[4]).to eq 'echo Hello'
-        expect(lines[5]).to eq 'EOF'
-        expect(lines[6]).to match /^.+\/ssh -O exit test_user@ti\.node 2>&1 \| grep -v 'Exit request sent\.'$/
+        expect(lines[4]).to match /^.+\/ssh -o ControlMaster=yes -o ControlPersist=yes test_user@ti\.node true$/
+        expect(lines[5]).to match /^.+\/ssh test_user@ti\.node \/bin\/bash <<'EOF'$/
+        expect(lines[6]).to eq 'echo Hello'
+        expect(lines[7]).to eq 'EOF'
+        expect(lines[8]).to match /^.+\/ssh -O exit test_user@ti\.node 2>&1 \| grep -v 'Exit request sent\.'$/
       end
     end
 
@@ -298,7 +332,10 @@ describe HybridPlatformsConductor::SshExecutor do
     it 'ensures a host key is registered' do
       with_test_platform do
         with_cmd_runner_mocked(
-          commands: [],
+          commands: [
+            ['which env', proc { [0, "/usr/bin/env\n", '']}],
+            ['ssh -V 2>&1', proc { [0, "OpenSSH_7.4p1 Debian-10+deb9u7, OpenSSL 1.0.2u  20 Dec 2019\n", '']}]
+          ],
           nodes_connections: { 'node' => { connection: 'node_connection', user: 'test_user' } },
           with_control_master: false
         ) do
