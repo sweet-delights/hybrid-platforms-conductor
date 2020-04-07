@@ -65,6 +65,7 @@ module HybridPlatformsConductorTest
         with_repository('hybrid-platforms') do |hybrid_platforms_dir|
           File.write("#{hybrid_platforms_dir}/platforms.rb", content)
           ENV['hpc_platforms'] = hybrid_platforms_dir
+          ENV.delete('hpc_certificates')
           yield hybrid_platforms_dir
         end
       end

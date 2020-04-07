@@ -91,6 +91,12 @@ describe HybridPlatformsConductor::Deployer do
       end
     end
 
+    it 'prepares the deployer to local environment when using Docker' do
+      with_test_docker_platform do |docker_deployer, docker_ip, repository|
+        expect(docker_deployer.local_environment).to eq true
+      end
+    end
+
   end
 
 end
