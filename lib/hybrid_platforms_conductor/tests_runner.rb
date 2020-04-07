@@ -42,16 +42,18 @@ module HybridPlatformsConductor
     # Parameters::
     # * *logger* (Logger): Logger to be used [default = Logger.new(STDOUT)]
     # * *logger_stderr* (Logger): Logger to be used for stderr [default = Logger.new(STDERR)]
+    # * *cmd_runner* (Cmdrunner): CmdRunner to be used [default = CmdRunner.new]
     # * *nodes_handler* (NodesHandler): Nodes handler to be used [default = NodesHandler.new]
     # * *ssh_executor* (SshExecutor): SSH executor to be used for the tests [default = SshExecutor.new]
     # * *deployer* (Deployer): Deployer to be used for the tests needed why-run deployments [default = Deployer.new]
-    def initialize(logger: Logger.new(STDOUT), logger_stderr: Logger.new(STDERR), nodes_handler: NodesHandler.new, ssh_executor: SshExecutor.new, deployer: Deployer.new)
+    def initialize(logger: Logger.new(STDOUT), logger_stderr: Logger.new(STDERR), cmd_runner: CmdRunner.new, nodes_handler: NodesHandler.new, ssh_executor: SshExecutor.new, deployer: Deployer.new)
       @logger = logger
       @logger_stderr = logger_stderr
+      @cmd_runner = cmd_runner
       @nodes_handler = nodes_handler
-      Tests::Test.nodes_handler = nodes_handler
       @ssh_executor = ssh_executor
       @deployer = deployer
+      Tests::Test.nodes_handler = nodes_handler
       # The list of tests plugins, with their associated class
       # Hash< Symbol, Class >
       @tests_plugins = Hash[Dir.
@@ -285,6 +287,7 @@ module HybridPlatformsConductor
       (test_name.nil? ? Tests::Test : @tests_plugins[test_name]).new(
         @logger,
         @logger_stderr,
+        @cmd_runner,
         @nodes_handler,
         @deployer,
         name: test_name.nil? ? :global : test_name,

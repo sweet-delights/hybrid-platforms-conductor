@@ -41,15 +41,17 @@ module HybridPlatformsConductor
       # Parameters::
       # * *logger* (Logger): Logger to be used
       # * *logger_stderr* (Logger): Logger to be used for stderr [default = Logger.new(STDERR)]
+      # * *cmd_runner* (CmdRunner): CmdRunner that can be used by tests
       # * *nodes_handler* (NodesHandler): Nodes handler that can be used by tests
       # * *deployer* (Deployer): Deployer that can be used by tests
       # * *name* (String): Name of the test being instantiated [default: 'unknown_test']
       # * *platform* (PlatformHandler): Platform handler for which the test is instantiated, or nil if global [default: nil]
       # * *node* (String): Node name for which the test is instantiated, or nil if global or platform specific [default: nil]
       # * *expected_failure* (String or nil): Expected failure, or nil if not expected to fail [default: nil]
-      def initialize(logger, logger_stderr, nodes_handler, deployer, name: 'unknown_test', platform: nil, node: nil, expected_failure: nil)
+      def initialize(logger, logger_stderr, cmd_runner, nodes_handler, deployer, name: 'unknown_test', platform: nil, node: nil, expected_failure: nil)
         @logger = logger
         @logger_stderr = logger_stderr
+        @cmd_runner = cmd_runner
         @nodes_handler = nodes_handler
         @deployer = deployer
         @name = name

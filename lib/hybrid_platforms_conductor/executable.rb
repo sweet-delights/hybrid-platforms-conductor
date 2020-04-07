@@ -127,7 +127,7 @@ module HybridPlatformsConductor
     # Result::
     # * TestsRunner: The Reports Handler to be used by this executable
     def tests_runner
-      @tests_runner = TestsRunner.new(logger: @logger, logger_stderr: @logger_stderr, nodes_handler: nodes_handler, ssh_executor: ssh_executor, deployer: deployer) if @tests_runner.nil?
+      @tests_runner = TestsRunner.new(logger: @logger, logger_stderr: @logger_stderr, cmd_runner: cmd_runner, nodes_handler: nodes_handler, ssh_executor: ssh_executor, deployer: deployer) if @tests_runner.nil?
       @tests_runner
     end
 

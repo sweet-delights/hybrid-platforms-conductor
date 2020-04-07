@@ -28,8 +28,7 @@ module HybridPlatformsConductor
             "#{CmdRunner.executables_prefix}topograph --from \"--node #{example_node}\" --to \"--node #{example_node}\" --skip-run --output graphviz:graph.gv"
           ].each do |cmd|
             log_debug "Testing #{cmd}"
-            stdout = `#{cmd} 2>&1`
-            exit_status = $?.exitstatus
+            exit_status, stdout, _stderr = @cmd_runner.run_cmd "#{cmd} 2>&1", no_exception: true, log_to_stdout: log_debug?
             assert_equal(exit_status, 0, "Command #{cmd} returned code #{exit_status}:\n#{stdout}")
           end
           # Remove the file created by Topograph if it exists
