@@ -1,3 +1,14 @@
+# [12.4.0](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv12.3.1&sourceBranch=refs%2Ftags%2Fv12.4.0) (2020-04-08)
+
+### New features
+
+* [Feature] Add command-line options to tune max threads run for SSH, nodes and platform tests ([e962d8a7](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/commits/e962d8a723a113183a0e31100775fd181cf6af0c))
+
+### Fixes
+
+* Merge pull request #76 in PROJECThybrid_platforms_conductor from ~USERNME/hybrid_platforms_conductor:PROJECT-319_certificates_only_in_local to master ([c7515666](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/commits/c7515666298754ed98e5d8a2ae5f71c52d7566f6))
+* Merge pull request #76 in PROJECThybrid_platforms_conductor from ~USERNME/hybrid_platforms_conductor:PROJECT-319_certificates_only_in_local to master ([c7515666](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/commits/c7515666298754ed98e5d8a2ae5f71c52d7566f6))
+
 # [12.3.1](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv12.3.0&sourceBranch=refs%2Ftags%2Fv12.3.1) (2020-04-06)
 
 ### Fixes
