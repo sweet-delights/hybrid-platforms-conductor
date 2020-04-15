@@ -33,12 +33,12 @@ describe HybridPlatformsConductor::SshExecutor do
         commands: expected_commands.nil? ? nil : [
           ['which env', proc do |cmd, log_to_file: nil, log_to_stdout: true, expected_code: 0, timeout: nil, no_exception: false|
             # Make sure we don't log to stdout this command, as it can alter the expected output
-            expect(log_to_stdout).to eq false
+            expect(log_to_stdout).to eq false unless ENV['TEST_DEBUG'] == '1'
             [0, "/usr/bin/env\n", '']
           end],
           ['ssh -V 2>&1', proc do |cmd, log_to_file: nil, log_to_stdout: true, expected_code: 0, timeout: nil, no_exception: false|
             # Make sure we don't log to stdout this command, as it can alter the expected output
-            expect(log_to_stdout).to eq false
+            expect(log_to_stdout).to eq false unless ENV['TEST_DEBUG'] == '1'
             [0, "OpenSSH_7.4p1 Debian-10+deb9u7, OpenSSL 1.0.2u  20 Dec 2019\n", '']
           end]
         ] * nbr_connections + expected_commands,

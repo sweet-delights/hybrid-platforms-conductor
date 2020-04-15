@@ -220,7 +220,10 @@ module HybridPlatformsConductor
     def ssh_config(ssh_exec: 'ssh', known_hosts_file: nil)
       _exit_status, stdout, _stderr = @cmd_runner.run_cmd 'ssh -V 2>&1', log_to_stdout: log_debug?
       # Make sure we have a fake value in case of dry-run
-      stdout = 'OpenSSH_7.4p1 Debian-10+deb9u7, OpenSSL 1.0.2u  20 Dec 2019' if @cmd_runner.dry_run
+      if @dry_run
+        log_debug 'Mock OpenSSH version because of dry-run mode'
+        stdout = 'OpenSSH_7.4p1 Debian-10+deb9u7, OpenSSL 1.0.2u  20 Dec 2019'
+      end
       open_ssh_major_version = stdout.match(/^OpenSSH_(\d)\..+$/)[1].to_i
 
       config_content = "

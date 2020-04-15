@@ -34,7 +34,9 @@ module HybridPlatformsConductorTest
             end
             if found_command
               logger.debug "[ Mocked CmdRunner ] - Calling mocked command #{cmd}"
-              found_command_code.call cmd, log_to_file: log_to_file, log_to_stdout: log_to_stdout, expected_code: expected_code, timeout: timeout, no_exception: no_exception
+              mocked_exit_status, mocked_stdout, mocked_stderr = found_command_code.call cmd, log_to_file: log_to_file, log_to_stdout: log_to_stdout, expected_code: expected_code, timeout: timeout, no_exception: no_exception
+              logger.debug "[ Mocked CmdRunner ] - Calling mocked command #{cmd} => #{mocked_exit_status}\n----- Mocked STDOUT:\n#{mocked_stdout}\n----- Mocked STDERR:\n#{mocked_stderr}\n-----"
+              [mocked_exit_status, mocked_stdout, mocked_stderr]
             else
               logger.error "[ Mocked CmdRunner ] - !!! Unexpected command run: #{cmd}"
               unexpected_commands << cmd
