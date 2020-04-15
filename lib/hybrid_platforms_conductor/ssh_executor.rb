@@ -218,7 +218,7 @@ module HybridPlatformsConductor
     # Result::
     # * String: The SSH config
     def ssh_config(ssh_exec: 'ssh', known_hosts_file: nil)
-      _exit_status, stdout, _stderr = @cmd_runner.run_cmd 'ssh -V 2>&1'
+      _exit_status, stdout, _stderr = @cmd_runner.run_cmd 'ssh -V 2>&1', log_to_stdout: log_debug?
       # Make sure we have a fake value in case of dry-run
       stdout = 'OpenSSH_7.4p1 Debian-10+deb9u7, OpenSSL 1.0.2u  20 Dec 2019' if @cmd_runner.dry_run
       open_ssh_major_version = stdout.match(/^OpenSSH_(\d)\..+$/)[1].to_i
@@ -365,7 +365,7 @@ Host *
             end
             FileUtils.touch known_hosts_file
             File.open(ssh_exec_file, 'w+', 0700) do |file|
-              _exit_status, stdout, _stderr = @cmd_runner.run_cmd 'which env'
+              _exit_status, stdout, _stderr = @cmd_runner.run_cmd 'which env', log_to_stdout: log_debug?
               file.puts "#!#{stdout.strip} bash"
               # TODO: Make a mechanism that uses sshpass and the correct password only for the correct hostname (this requires parsing ssh parameters $*).
               # Current implementation is much simpler: it uses sshpass if at least 1 password is needed, and always uses the first password.
