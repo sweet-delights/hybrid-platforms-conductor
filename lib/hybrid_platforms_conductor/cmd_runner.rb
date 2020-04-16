@@ -1,6 +1,7 @@
 require 'logger'
 require 'tty-command'
 require 'hybrid_platforms_conductor/logger_helpers'
+require 'hybrid_platforms_conductor/io_router'
 
 module HybridPlatformsConductor
 
@@ -85,32 +86,30 @@ module HybridPlatformsConductor
           end
         start_time = Time.now if log_debug?
         begin
-          cmd_result = TTY::Command.new(
-            printer: :null,
-            pty: true,
-            timeout: timeout,
-            uuid: false
-          ).run!(cmd) do |stdout, stderr|
-            if stdout
-              @logger << stdout if log_to_stdout
-              log_stdout_to_io << stdout if log_stdout_to_io
-              unless file_output.nil?
-                file_output << stdout
-                file_output.flush
-              end
+          # Route IOs
+          stdout_queue = Queue.new
+          stderr_queue = Queue.new
+          IoRouter.with_io_router(
+            stdout_queue => (log_stdout_to_io ? [log_stdout_to_io] : []) +
+              (log_to_stdout ? [@logger] : []) +
+              (file_output.nil? ? [] : [file_output]),
+            stderr_queue => (log_stderr_to_io ? [log_stderr_to_io] : []) +
+              (log_to_stdout ? [@logger_stderr] : []) +
+              (file_output.nil? ? [] : [file_output])
+          ) do
+            cmd_result = TTY::Command.new(
+              printer: :null,
+              pty: true,
+              timeout: timeout,
+              uuid: false
+            ).run!(cmd) do |stdout, stderr|
+              stdout_queue << stdout if stdout
+              stderr_queue << stderr if stderr
             end
-            if stderr
-              @logger_stderr << stderr if log_to_stdout
-              log_stderr_to_io << stderr if log_stderr_to_io
-              unless file_output.nil?
-                file_output << stderr
-                file_output.flush
-              end
-            end
+            exit_status = cmd_result.exit_status
+            cmd_stdout = cmd_result.out
+            cmd_stderr = cmd_result.err
           end
-          exit_status = cmd_result.exit_status
-          cmd_stdout = cmd_result.out
-          cmd_stderr = cmd_result.err
         rescue TTY::Command::TimeoutExceeded
           log_error "Timeout of #{timeout} seconds has been triggered while executing #{cmd}"
           exit_status = :timeout

@@ -80,8 +80,8 @@ describe HybridPlatformsConductor::SshExecutor do
           execute(
             {
               ruby: proc do |stdout, stderr|
-                stdout << 'TestStdout'
-                stderr << 'TestStderr'
+                stdout << "TestStdout\n"
+                stderr << "TestStderr\n"
               end
             },
             log_to_dir: logs_dir
@@ -94,21 +94,21 @@ describe HybridPlatformsConductor::SshExecutor do
 
     it 'executes local Bash code' do
       with_test_platform_for_actions do |repository|
-        expect(execute(local_bash: "echo TestContent >#{repository}/test_file ; echo TestStdout ; echo TestStderr 1>&2")).to eq [0, "TestStdout\n", "TestStderr\n"]
+        expect(execute(bash: "echo TestContent >#{repository}/test_file ; echo TestStdout ; echo TestStderr 1>&2")).to eq [0, "TestStdout\n", "TestStderr\n"]
         expect(File.read("#{repository}/test_file")).to eq "TestContent\n"
       end
     end
 
     it 'executes local Bash code with timeout' do
       with_test_platform_for_actions do |repository|
-        expect(execute({ local_bash: "sleep 5 ; echo ShouldNotReach" }, timeout: 1)).to eq [:timeout, '', '']
+        expect(execute({ bash: "sleep 5 ; echo ShouldNotReach" }, timeout: 1)).to eq [:timeout, '', '']
       end
     end
 
     it 'logs local Bash code' do
       with_repository 'logs' do |logs_dir|
         with_test_platform_for_actions do |repository|
-          execute({ local_bash: "echo TestStdout ; sleep 1 ; echo TestStderr 1>&2" }, log_to_dir: logs_dir)
+          execute({ bash: "echo TestStdout ; sleep 1 ; echo TestStderr 1>&2" }, log_to_dir: logs_dir)
           expect(File.exist?("#{logs_dir}/node.stdout")).to eq true
           expect(File.read("#{logs_dir}/node.stdout")).to eq "TestStdout\nTestStderr\n"
         end
@@ -289,11 +289,11 @@ describe HybridPlatformsConductor::SshExecutor do
             }
           },
           expected_commands: [
-            [/^cd . && tar -czf -   from1 \| .+\/ssh test_user@hpc.node "tar -xzf - -C to1 --owner=root"$/, proc do
+            [/^cd \. && tar\s+--create\s+--gzip\s+--file -\s+from1 \| .+\/ssh\s+test_user@ti\.node\s+"tar\s+--extract\s+--gunzip\s+--file -\s+--directory to1\s+--owner root\s*"/, proc do
               scp_executed << ['from1', 'to1']
               [0, '', '']
             end],
-            [/^cd . && tar -czf -   from2 \| .+\/ssh test_user@hpc.node "tar -xzf - -C to2 --owner=root"$/, proc do
+            [/^cd \. && tar\s+--create\s+--gzip\s+--file -\s+from2 \| .+\/ssh\s+test_user@ti\.node\s+"tar\s+--extract\s+--gunzip\s+--file -\s+--directory to2\s+--owner root\s*"/, proc do
               scp_executed << ['from2', 'to2']
               [0, '', '']
             end]
@@ -309,7 +309,7 @@ describe HybridPlatformsConductor::SshExecutor do
         expect(execute(
           { scp: { 'from1' => 'to1' } },
           expected_commands: [
-            [/^cd . && tar -czf -   from1 \| .+\/ssh test_user@hpc.node "tar -xzf - -C to1 --owner=root"$/, proc do
+            [/^cd \. && tar\s+--create\s+--gzip\s+--file -\s+from1 \| .+\/ssh\s+test_user@ti\.node\s+"tar\s+--extract\s+--gunzip\s+--file -\s+--directory to1\s+--owner root\s*"/, proc do
               sleep 1
               raise HybridPlatformsConductor::CmdRunner::TimeoutError
             end]
@@ -325,8 +325,8 @@ describe HybridPlatformsConductor::SshExecutor do
           execute(
             { scp: { 'from1' => 'to1' } },
             expected_commands: [
-              [/^cd . && tar -czf -   from1 \| .+\/ssh test_user@hpc.node "tar -xzf - -C to1 --owner=root"$/, proc do |cmd, log_to_file: nil, log_to_stdout: true, expected_code: 0, timeout: nil, no_exception: false|
-                expect(log_to_file).to eq "#{logs_dir}/node.stdout"
+              [/^cd \. && tar\s+--create\s+--gzip\s+--file -\s+from1 \| .+\/ssh\s+test_user@ti\.node\s+"tar\s+--extract\s+--gunzip\s+--file -\s+--directory to1\s+--owner root\s*"/, proc do |cmd, log_to_file: nil, log_to_stdout: true, log_stdout_to_io: nil, log_stderr_to_io: nil, expected_code: 0, timeout: nil, no_exception: false|
+                expect(log_stdout_to_io).not_to eq nil
                 [0, "TestStdout\n", "TestStderr\n"]
               end]
             ],
@@ -348,11 +348,11 @@ describe HybridPlatformsConductor::SshExecutor do
             }
           },
           expected_commands: [
-            [/^cd . && tar -czf -   from1 \| .+\/ssh test_user@hpc.node "sudo tar -xzf - -C to1 --owner=root"$/, proc do
+            [/^cd \. && tar\s+--create\s+--gzip\s+--file -\s+from1 \| .+\/ssh\s+test_user@ti\.node\s+"sudo tar\s+--extract\s+--gunzip\s+--file -\s+--directory to1\s+--owner root\s*"/, proc do
               scp_executed << ['from1', 'to1']
               [0, '', '']
             end],
-            [/^cd . && tar -czf -   from2 \| .+\/ssh test_user@hpc.node "sudo tar -xzf - -C to2 --owner=root"$/, proc do
+            [/^cd \. && tar\s+--create\s+--gzip\s+--file -\s+from2 \| .+\/ssh\s+test_user@ti\.node\s+"sudo tar\s+--extract\s+--gunzip\s+--file -\s+--directory to2\s+--owner root\s*"/, proc do
               scp_executed << ['from2', 'to2']
               [0, '', '']
             end]
@@ -376,11 +376,11 @@ describe HybridPlatformsConductor::SshExecutor do
             }
           },
           expected_commands: [
-            [/^cd . && tar -czf - --owner=new_owner --group=new_group from1 \| .+\/ssh test_user@hpc.node "tar -xzf - -C to1 --owner=root"$/, proc do
+            [/^cd \. && tar\s+--create\s+--gzip\s+--file -\s+--owner new_owner\s+--group new_group\s+from1 \| .+\/ssh\s+test_user@ti\.node\s+"tar\s+--extract\s+--gunzip\s+--file -\s+--directory to1\s+--owner root\s*"/, proc do
               scp_executed << ['from1', 'to1']
               [0, '', '']
             end],
-            [/^cd . && tar -czf - --owner=new_owner --group=new_group from2 \| .+\/ssh test_user@hpc.node "tar -xzf - -C to2 --owner=root"$/, proc do
+            [/^cd \. && tar\s+--create\s+--gzip\s+--file -\s+--owner new_owner\s+--group new_group\s+from2 \| .+\/ssh\s+test_user@ti\.node\s+"tar\s+--extract\s+--gunzip\s+--file -\s+--directory to2\s+--owner root\s*"/, proc do
               scp_executed << ['from2', 'to2']
               [0, '', '']
             end]
@@ -393,8 +393,8 @@ describe HybridPlatformsConductor::SshExecutor do
 
     it 'executes remote interactive session' do
       with_test_platform_for_actions do |repository|
-        expect(test_ssh_executor).to receive(:system) do |cmd|
-          expect(cmd).to match /^.+\/ssh test_user@hpc.node$/
+        expect_any_instance_of(HybridPlatformsConductor::Actions::Interactive).to receive(:system) do |_action, cmd|
+          expect(cmd).to match /^.+\/ssh test_user@ti\.node$/
         end
         expect(execute(
           { interactive: true },

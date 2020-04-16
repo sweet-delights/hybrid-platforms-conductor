@@ -83,7 +83,7 @@ describe HybridPlatformsConductor::SshExecutor do
           stderr << 'action1_stderr '
           actions_executed << 'action1'
         end },
-        { local_bash: 'echo action2_stdout' },
+        { bash: 'echo action2_stdout' },
         { ruby: proc do |stdout, stderr|
           stdout << 'action3_stdout'
           stderr << 'action3_stderr'
@@ -196,10 +196,12 @@ describe HybridPlatformsConductor::SshExecutor do
             { ruby: proc do |stdout, stderr|
               stdout << 'node1_action1_stdout '
               stderr << 'node1_action1_stderr '
+              sleep 1
             end },
             { ruby: proc do |stdout, stderr|
               stdout << 'node1_action2_stdout '
               stderr << 'node1_action2_stderr '
+              sleep 1
             end },
             { ruby: proc do |stdout, stderr|
               stdout << 'node1_action3_stdout'
@@ -210,10 +212,12 @@ describe HybridPlatformsConductor::SshExecutor do
             { ruby: proc do |stdout, stderr|
               stdout << 'node2_action1_stdout '
               stderr << 'node2_action1_stderr '
+              sleep 1
             end },
             { ruby: proc do |stdout, stderr|
               stdout << 'node2_action2_stdout '
               stderr << 'node2_action2_stderr '
+              sleep 1
             end },
             { ruby: proc do |stdout, stderr|
               stdout << 'node2_action3_stdout'
@@ -224,10 +228,12 @@ describe HybridPlatformsConductor::SshExecutor do
             { ruby: proc do |stdout, stderr|
               stdout << 'node3_action1_stdout '
               stderr << 'node3_action1_stderr '
+              sleep 1
             end },
             { ruby: proc do |stdout, stderr|
               stdout << 'node3_action2_stdout '
               stderr << 'node3_action2_stderr '
+              sleep 1
             end },
             { ruby: proc do |stdout, stderr|
               stdout << 'node3_action3_stdout'
@@ -242,9 +248,9 @@ describe HybridPlatformsConductor::SshExecutor do
         # Check logs
         log_files = Dir.glob("#{logs_repository}/*").map { |file| File.basename(file) }
         expect(log_files.sort).to eq %w[node1.stdout node2.stdout node3.stdout].sort
-        expect(File.read("#{logs_repository}/node1.stdout")).to eq "node1_action1_stdout \nnode1_action1_stderr \nnode1_action2_stdout \nnode1_action2_stderr \nnode1_action3_stdout\nnode1_action3_stderr\n"
-        expect(File.read("#{logs_repository}/node2.stdout")).to eq "node2_action1_stdout \nnode2_action1_stderr \nnode2_action2_stdout \nnode2_action2_stderr \nnode2_action3_stdout\nnode2_action3_stderr\n"
-        expect(File.read("#{logs_repository}/node3.stdout")).to eq "node3_action1_stdout \nnode3_action1_stderr \nnode3_action2_stdout \nnode3_action2_stderr \nnode3_action3_stdout\nnode3_action3_stderr\n"
+        expect(File.read("#{logs_repository}/node1.stdout")).to eq 'node1_action1_stdout node1_action1_stderr node1_action2_stdout node1_action2_stderr node1_action3_stdoutnode1_action3_stderr'
+        expect(File.read("#{logs_repository}/node2.stdout")).to eq 'node2_action1_stdout node2_action1_stderr node2_action2_stdout node2_action2_stderr node2_action3_stdoutnode2_action3_stderr'
+        expect(File.read("#{logs_repository}/node3.stdout")).to eq 'node3_action1_stdout node3_action1_stderr node3_action2_stdout node3_action2_stderr node3_action3_stdoutnode3_action3_stderr'
       end
     end
   end

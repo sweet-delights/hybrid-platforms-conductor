@@ -4,6 +4,8 @@ require 'tmpdir'
 require 'hybrid_platforms_conductor/nodes_handler'
 require 'hybrid_platforms_conductor/cmd_runner'
 require 'hybrid_platforms_conductor/logger_helpers'
+require 'hybrid_platforms_conductor/action'
+require 'hybrid_platforms_conductor/io_router'
 
 module HybridPlatformsConductor
 
@@ -85,6 +87,18 @@ module HybridPlatformsConductor
       @auth_password = false
       @ssh_gateways_conf = ENV['hpc_ssh_gateways_conf'].nil? ? :munich : ENV['hpc_ssh_gateways_conf'].to_sym
       @ssh_gateway_user = ENV['hpc_ssh_gateway_user'].nil? ? 'ubradm' : ENV['hpc_ssh_gateway_user']
+      # Parse available actions plugins, per action name
+      # Hash<Symbol, Class>
+      @action_plugins = Hash[Dir.
+        glob("#{__dir__}/actions/*.rb").
+        map do |file_name|
+          action_name = File.basename(file_name, '.rb').to_sym
+          require file_name
+          [
+            action_name,
+            Actions.const_get(action_name.to_s.split('_').collect(&:capitalize).join.to_sym)
+          ]
+        end]
       # Global variables handling the SSH directory storing temporary SSH configuration
       # Those variables are not shared between different instances of SshExecutor as the SSH configuration depends on the SshExecutor configuration.
       @platforms_ssh_dir = nil
@@ -163,7 +177,7 @@ module HybridPlatformsConductor
     # Parameters::
     # * *actions_per_nodes* (Hash<Object, Hash<Symbol,Object> or Array< Hash<Symbol,Object> >): Actions (as a Hash of actions or a list of Hash), per nodes selector.
     #   See NodesHandler#select_nodes for details about possible nodes selectors.
-    #   See execute_actions_on to know about the possible action types and data.
+    #   See each action's setup in actions directory to know about the possible action types and data.
     # * *timeout* (Integer): Timeout in seconds, or nil if none. [default: nil]
     # * *concurrent* (Boolean): Do we run the commands in parallel? If yes, then stdout of commands is stored in log files. [default: false]
     # * *log_to_dir* (String): Directory name to store log files. Can be nil to not store log files. [default: 'run_logs']
@@ -176,15 +190,20 @@ module HybridPlatformsConductor
       # Hash< node,   Array< [action_type, action_data]> >
       actions_per_node = {}
       actions_per_nodes.each do |nodes_selector, nodes_actions|
-        # Resolve actions
+        # Resolved actions, as Action objects
         resolved_nodes_actions = []
         (nodes_actions.is_a?(Array) ? nodes_actions : [nodes_actions]).each do |nodes_actions_set|
           nodes_actions_set.each do |action_type, action_info|
             raise 'Cannot have concurrent executions for interactive sessions' if concurrent && action_type == :interactive && action_info
-            resolved_nodes_actions << [
-              action_type,
-              action_info
-            ]
+            raise "Unknown action type #{action_type}" unless @action_plugins.key?(action_type)
+            resolved_nodes_actions << @action_plugins[action_type].new(
+              logger: @logger,
+              logger_stderr: @logger_stderr,
+              cmd_runner: @cmd_runner,
+              ssh_executor: self,
+              dry_run: @dry_run,
+              action_info: action_info
+            )
           end
         end
         # Resolve nodes
@@ -487,22 +506,7 @@ Host *
     #
     # Parameters::
     # * *node* (String): The node
-    # * *actions* (Array<[Symbol, Object]>): Ordered list of actions to perform. Each action is identified by an identifier (Symbol) and has associated data.
-    #   Here are the possible action types and their corresponding data:
-    #   * *local_bash* (String): Bash commands to be executed locally (not on the node)
-    #   * *ruby* (Proc): Ruby code to be executed locally (not on the node):
-    #     * Parameters::
-    #       * *stdout* (IO): Stream in which stdout of this action can be completed
-    #       * *stderr* (IO): Stream in which stderr of this action can be completed
-    #   * *scp* (Hash<String or Symbol, String or Object>): Set of couples source => destination_dir to copy files or directories from the local file system to the remote file system. Additional options can be provided using symbols:
-    #     * *sudo* (Boolean): Do we use sudo to make the copy?
-    #     * *owner* (String): Owner to use for files
-    #     * *group* (String): Group to use for files
-    #   * *remote_bash* (Array< Hash<Symbol, Object> or Array<String> or String>): List of bash actions to execute. Each action can have the following properties:
-    #     * *commands* (Array<String> or String): List of bash commands to execute (can be a single one). This is the default property also that allows to not use the Hash form for brevity.
-    #     * *file* (String): Name of file from which commands should be taken.
-    #     * *env* (Hash<String, String>): Environment variables to be set before executing those commands.
-    #   * *interactive* (Boolean): If true, then launch an interactive session.
+    # * *actions* (Array<Action>): Ordered list of actions to perform.
     # * *timeout* (Integer): Timeout in seconds, or nil if none. [default: nil]
     # * *log_to_file* (String or nil): Log file capturing stdout and stderr (or nil for none). [default: nil]
     # * *log_to_stdout* (Boolean): Do we send the output to stdout and stderr? [default: true]
@@ -513,108 +517,47 @@ Host *
     def execute_actions_on(node, actions, timeout: nil, log_to_file: nil, log_to_stdout: true)
       remaining_timeout = timeout
       exit_status = 0
+      file_output =
+        if log_to_file
+          FileUtils.mkdir_p(File.dirname(log_to_file))
+          File.open(log_to_file, 'w')
+        else
+          nil
+        end
+      stdout_queue = Queue.new
+      stderr_queue = Queue.new
       stdout = ''
       stderr = ''
-      begin
-        log_debug "[#{node}] - Execute #{actions.size} actions on #{node}..."
-        actions.each do |(action_type, action_info)|
-          start_time = Time.now
-          action_exit_status = 0
-          action_stdout = ''
-          action_stderr = ''
-          case action_type
-          when :local_bash
-            log_debug "[#{node}] - Execute local Bash commands \"#{action_info}\"..."
-            action_exit_status, action_stdout, action_stderr = @cmd_runner.run_cmd(
-              action_info,
-              timeout: remaining_timeout,
-              log_to_file: log_to_file,
-              log_to_stdout: log_to_stdout
-            )
-          when :ruby
-            log_debug "[#{node}] - Execute local Ruby code #{action_info}..."
-            # TODO: Handle timeout without using Timeout which is harmful when dealing with SSH connections and multithread.
-            if @dry_run
-              log_debug "[#{node}] - Won't execute Ruby code in dry_run mode."
-            else
-              action_info.call action_stdout, action_stderr
-              if log_to_file
-                FileUtils.mkdir_p File.dirname(log_to_file)
-                File.open(log_to_file, 'a') do |log_file|
-                  log_file.puts action_stdout unless action_stdout.empty?
-                  log_file.puts action_stderr unless action_stderr.empty?
-                end
-              end
-            end
-          when :scp
-            sudo = action_info.delete(:sudo)
-            owner = action_info.delete(:owner)
-            group = action_info.delete(:group)
-            action_info.each do |scp_from, scp_to_dir|
-              log_debug "[#{node}] - Copy over SSH \"#{scp_from}\" => \"#{scp_to_dir}\""
-              with_ssh_master_to(node, timeout: remaining_timeout) do |ssh_exec, ssh_urls|
-                action_exit_status, copy_action_stdout, copy_action_stderr = @cmd_runner.run_cmd(
-                  "cd #{File.dirname(scp_from)} && tar -czf - #{owner.nil? ? '' : "--owner=#{owner}"} #{group.nil? ? '' : "--group=#{group}"} #{File.basename(scp_from)} | #{ssh_exec} #{ssh_urls[node]} \"#{sudo ? 'sudo ' : ''}tar -xzf - -C #{scp_to_dir} --owner=root\"",
-                  timeout: remaining_timeout,
-                  log_to_file: log_to_file,
-                  log_to_stdout: log_to_stdout
-                )
-                action_stdout.concat copy_action_stdout
-                action_stderr.concat copy_action_stderr
-              end
-            end
-          when :remote_bash
-            # Normalize action_info
-            action_info = [action_info] if action_info.is_a?(String)
-            action_info = { commands: action_info } if action_info.is_a?(Array)
-            action_info[:commands] = [action_info[:commands]] if action_info[:commands].is_a?(String)
-            bash_commands = @ssh_env.merge(action_info[:env] || {}).map { |var_name, var_value| "export #{var_name}='#{var_value}'" }
-            bash_commands.concat(action_info[:commands].clone) if action_info.key?(:commands)
-            bash_commands << File.read(action_info[:file]) if action_info.key?(:file)
-            log_debug "[#{node}] - Execute SSH Bash commands \"#{bash_commands.join("\n")}\"..."
-            with_ssh_master_to(node, timeout: remaining_timeout) do |ssh_exec, ssh_urls|
-              action_exit_status, action_stdout, action_stderr = @cmd_runner.run_cmd(
-                "#{ssh_exec} #{ssh_urls[node]} /bin/bash <<'EOF'\n#{bash_commands.join("\n")}\nEOF",
-                timeout: remaining_timeout,
-                log_to_file: log_to_file,
-                log_to_stdout: log_to_stdout
-              )
-            end
-          when :interactive
-            if action_info
-              interactive_session = true
-              log_debug "[#{node}] - Run interactive SSH session..."
-              with_ssh_master_to(node, timeout: remaining_timeout) do |ssh_exec, ssh_urls|
-                interactive_cmd = "#{ssh_exec} #{ssh_urls[node]}"
-                out interactive_cmd
-                if @dry_run
-                  log_debug "[#{node}] - Won't execute interactive shell in dry_run mode."
-                else
-                  system interactive_cmd
-                end
-              end
-            end
-          else
-            raise "Unknown action: #{action_type}"
+      IoRouter.with_io_router(
+        stdout_queue => [stdout] +
+          (log_to_stdout ? [@logger] : []) +
+          (file_output.nil? ? [] : [file_output]),
+        stderr_queue => [stderr] +
+          (log_to_stdout ? [@logger_stderr] : []) +
+          (file_output.nil? ? [] : [file_output])
+      ) do
+        begin
+          log_debug "[#{node}] - Execute #{actions.size} actions on #{node}..."
+          actions.each do |action|
+            action.prepare_for(node, remaining_timeout, stdout_queue, stderr_queue, @ssh_env)
+            start_time = Time.now
+            action.execute
+            remaining_timeout -= Time.now - start_time unless remaining_timeout.nil?
           end
-          exit_status = action_exit_status
-          stdout.concat action_stdout
-          stderr.concat action_stderr
-          remaining_timeout -= Time.now - start_time unless remaining_timeout.nil?
+        rescue SshConnectionError
+          exit_status = :ssh_connection_error
+          stderr_queue << $!.to_s
+        rescue CmdRunner::UnexpectedExitCodeError
+          # Error has already been logged in stderr
+          exit_status = :failed_command
+        rescue CmdRunner::TimeoutError
+          # Error has already been logged in stderr
+          exit_status = :timeout
+        rescue
+          log_error "Uncaught exception while executing actions on #{node}: #{$!}\n#{$!.backtrace.join("\n")}"
+          stderr_queue << $!.to_s
+          exit_status = :failed_action
         end
-      rescue SshConnectionError
-        exit_status = :ssh_connection_error
-        stderr << $!.to_s
-      rescue CmdRunner::UnexpectedExitCodeError
-        # Error has already been logged in stderr
-        exit_status = :failed_command
-      rescue CmdRunner::TimeoutError
-        # Error has already been logged in stderr
-        exit_status = :timeout
-      rescue
-        log_error "Uncaught exception while executing actions on #{node}: #{$!}\n#{$!.backtrace.join("\n")}"
-        stderr.concat "#{$!}\n"
-        exit_status = :failed_action
       end
       [exit_status, stdout, stderr]
     end
