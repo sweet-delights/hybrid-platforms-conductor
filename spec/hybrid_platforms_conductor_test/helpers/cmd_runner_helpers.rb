@@ -34,8 +34,27 @@ module HybridPlatformsConductorTest
             end
             if found_command
               logger.debug "[ Mocked CmdRunner ] - Calling mocked command #{cmd}"
-              mocked_exit_status, mocked_stdout, mocked_stderr = found_command_code.call cmd, log_to_file: log_to_file, log_to_stdout: log_to_stdout, expected_code: expected_code, timeout: timeout, no_exception: no_exception
-              logger.debug "[ Mocked CmdRunner ] - Calling mocked command #{cmd} => #{mocked_exit_status}\n----- Mocked STDOUT:\n#{mocked_stdout}\n----- Mocked STDERR:\n#{mocked_stderr}\n-----"
+              mocked_exit_status, mocked_stdout, mocked_stderr = found_command_code.call(
+                cmd,
+                log_to_file: log_to_file,
+                log_to_stdout: log_to_stdout,
+                expected_code: expected_code,
+                timeout: timeout,
+                no_exception: no_exception
+              )
+              log_stdout =
+                if mocked_stdout.empty?
+                  ''
+                else
+                 mocked_stdout.include?("\n") ? "\n----- Mocked STDOUT:\n#{mocked_stdout}" : " (Mocked STDOUT: #{mocked_stdout})"
+               end
+              log_stderr =
+                if mocked_stderr.empty?
+                  ''
+                else
+                 mocked_stderr.include?("\n") ? "\n----- Mocked STDERR:\n#{mocked_stderr}" : " (Mocked STDERR: #{mocked_stderr})"
+               end
+              logger.debug "[ Mocked CmdRunner ] - Calling mocked command #{cmd} => #{mocked_exit_status}#{log_stdout}#{log_stderr}"
               [mocked_exit_status, mocked_stdout, mocked_stderr]
             else
               logger.error "[ Mocked CmdRunner ] - !!! Unexpected command run: #{cmd}"
