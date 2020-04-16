@@ -407,14 +407,17 @@ Host *
       if @ssh_strict_host_key_checking
         # If the host is not an IP address, then first register its IP address, as ssh connections will anyway register it due to CheckHostIp
         unless host =~ /^\d+\.\d+\.\d+\.\d+$/
-          _exit_status, stdout, _stderr = @cmd_runner.run_cmd "getent hosts #{host}", timeout: TIMEOUT_HOST_KEYS, log_to_stdout: log_debug?
+          _exit_status, stdout, _stderr = @cmd_runner.run_cmd "getent hosts #{host}", timeout: TIMEOUT_HOST_KEYS, log_to_stdout: log_debug?, no_exception: true
           if @dry_run
             log_debug "Mock IP address of host #{host} because of dry-run mode"
             stdout = "192.168.42.42 #{host}"
           end
           ip = stdout.split(/\s/).first
-          raise "Can't get IP for host #{host}" if ip.nil?
-          ensure_host_key(ip)
+          if ip.nil?
+            log_warn "Can't get IP for host #{host}. Ignoring it. Accessing #{host} might require manual acceptance of its host key."
+          else
+            ensure_host_key(ip)
+          end
         end
         # Get the host key
         exit_status, stdout, _stderr = @cmd_runner.run_cmd "ssh-keyscan #{host}", timeout: TIMEOUT_HOST_KEYS, log_to_stdout: log_debug?, no_exception: true
