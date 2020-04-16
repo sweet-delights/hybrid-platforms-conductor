@@ -389,7 +389,7 @@ Host *
     end
 
     # Timeout in seconds to get host keys and update the host keys file.
-    TIMEOUT_HOST_KEYS = 5
+    TIMEOUT_HOST_KEYS = 10
 
     # Ensure that a given hostname or IP has its key correctly set in the known hosts file.
     # Prerequisite: with_platforms_ssh has been called before.
