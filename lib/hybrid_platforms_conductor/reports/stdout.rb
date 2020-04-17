@@ -30,10 +30,8 @@ module HybridPlatformsConductor
           'Private IPs',
           'Public IPs',
           'Physical node?',
-          'OS',
-          'Cluster',
-          'IP range',
-          'Product',
+          'Image ID',
+          'Service',
           'Description',
           'Missing industrialization?'
         ]) do |table|
@@ -45,10 +43,8 @@ module HybridPlatformsConductor
               node_info['private_ips'] ? node_info['private_ips'].join(' ') : '',
               node_info['public_ips'] ? node_info['public_ips'].join(' ') : '',
               node_info['physical_node'] ? 'Yes' : 'No',
-              node_info['os'],
-              node_info['cluster'],
-              node_info['private_ips'] ? "#{node_info['private_ips'].first.split('.')[0..2].join('.')}.*" : '',
-              node_info['product'],
+              node_info['image'],
+              @nodes_handler.service_for(node),
               node_info['description'],
               node_info['missing_industrialization'] ? 'Yes' : 'No'
             ]
