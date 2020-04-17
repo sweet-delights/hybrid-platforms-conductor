@@ -12,6 +12,7 @@ module HybridPlatformsConductor
       #   * Parameters::
       #     * *stdout* (IO): Stream in which stdout of this action should be written
       #     * *stderr* (IO): Stream in which stderr of this action should be written
+      #     * *action* (Action): Action we can use to access other context-specific methods, such as run_cmd.
       def setup(code)
         @code = code
       end
@@ -23,9 +24,12 @@ module HybridPlatformsConductor
         if @dry_run
           log_debug "[#{@node}] - Won't execute Ruby code in dry_run mode."
         else
-          @code.call @stdout_io, @stderr_io
+          @code.call @stdout_io, @stderr_io, self
         end
       end
+
+      # Make the run_cmd method public for this action as it can be used by client procs
+      public :run_cmd
 
     end
 

@@ -52,7 +52,7 @@ describe HybridPlatformsConductor::SshExecutor do
     it 'executes local Ruby code' do
       with_test_platform_for_actions do
         executed = false
-        expect(execute(ruby: proc do |stdout, stderr|
+        expect(execute(ruby: proc do |stdout, stderr, action|
           stdout << 'TestStdout'
           stderr << 'TestStderr'
           executed = true
@@ -65,7 +65,7 @@ describe HybridPlatformsConductor::SshExecutor do
       pending 'Implement timeout for Ruby actions'
       with_test_platform_for_actions do
         executed = false
-        expect(execute({ ruby: proc do |stdout, stderr|
+        expect(execute({ ruby: proc do |stdout, stderr, action|
           sleep 5
           stdout << 'ShouldNotReach'
           executed = true
@@ -79,7 +79,7 @@ describe HybridPlatformsConductor::SshExecutor do
         with_test_platform_for_actions do
           execute(
             {
-              ruby: proc do |stdout, stderr|
+              ruby: proc do |stdout, stderr, action|
                 stdout << "TestStdout\n"
                 stderr << "TestStderr\n"
               end
