@@ -291,7 +291,11 @@ module HybridPlatformsConductor
         if nodes_selector.is_a?(String)
           string_nodes << nodes_selector
         else
-          string_nodes.concat(platform_for_list(nodes_selector[:list]).nodes_selectors_from_nodes_list(nodes_selector[:list])) if nodes_selector.key?(:list)
+          if nodes_selector.key?(:list)
+            platform = platform_for_list(nodes_selector[:list])
+            raise "Unknown nodes list: #{nodes_selector[:list]}" if platform.nil?
+            string_nodes.concat(platform.nodes_selectors_from_nodes_list(nodes_selector[:list]))
+          end
           string_nodes.concat(@platforms[nodes_selector[:platform]].known_nodes) if nodes_selector.key?(:platform)
           string_nodes.concat(known_nodes.select { |node| service_for(node) == nodes_selector[:service] }) if nodes_selector.key?(:service)
         end
