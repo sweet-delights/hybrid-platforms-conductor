@@ -26,10 +26,10 @@ describe HybridPlatformsConductor::NodesHandler do
     it 'returns nodes selectors defined in a nodes lists' do
       with_test_platform(
         nodes: {
-          'node10' => { service: 'test_service' },
-          'node11' => { service: 'test_service_2' },
-          'node20' => { service: 'test_service' },
-          'node21' => { service: 'test_service_2' },
+          'node10' => { services: ['test_service'] },
+          'node11' => { services: ['test_service_2'] },
+          'node20' => { services: ['test_service_3', 'test_service'] },
+          'node21' => { services: ['test_service_2'] }
         },
         nodes_lists: { 'test_nodes_list' => ['/node1.+/', { service: 'test_service' }] }
       ) do
@@ -73,9 +73,9 @@ describe HybridPlatformsConductor::NodesHandler do
       end
     end
 
-    it 'returns nodes service' do
-      with_test_platform(nodes: { 'test_node' => { service: 'test_service' } }) do
-        expect(test_nodes_handler.service_for('test_node')).to eq('test_service')
+    it 'returns nodes services' do
+      with_test_platform(nodes: { 'test_node' => { services: ['test_service1', 'test_service2'] } }) do
+        expect(test_nodes_handler.services_for('test_node').sort).to eq(['test_service1', 'test_service2'].sort)
       end
     end
 

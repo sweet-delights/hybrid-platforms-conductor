@@ -16,13 +16,13 @@ module HybridPlatformsConductor
           Tests::Test.nodes_handler.
             known_nodes.
             sort.
-            group_by { |node| [Tests::Test.nodes_handler.service_for(node), Tests::Test.nodes_handler.platform_for(node).info[:repo_name]] }.
+            group_by { |node| [Tests::Test.nodes_handler.services_for(node).sort, Tests::Test.nodes_handler.platform_for(node).info[:repo_name]] }.
             map { |(_service, _platform), nodes| nodes.first }
         end
 
         # Check my_test_plugin.rb.sample documentation for signature details.
         def test_for_node
-          @deployer.with_docker_container_for(@node, container_id: 'deploy_from_scratch') do |deployer|
+          @deployer.with_docker_container_for(@node, container_id: 'deploy_from_scratch', reuse_container: true) do |deployer|
             result = deployer.deploy_on(@node)
             assert_equal result.size, 1, "Wrong number of nodes being tested: #{result.size}"
             tested_node, (exit_status, _stdout, _stderr) = result.first

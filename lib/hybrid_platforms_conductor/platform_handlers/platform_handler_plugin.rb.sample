@@ -151,14 +151,14 @@ module HybridPlatformsConductor
         ["#{node}.my_domain.com", nil, nil]
       end
 
-      # Return the service for a given node
+      # Return the services for a given node
       # [API] - This method is mandatory.
       #
       # Parameters::
       # * *node* (String): node to read configuration from
       # Result::
-      # * String: The corresponding service
-      def service_for(node)
+      # * Array<String>: The corresponding services
+      def services_for(node)
         'hadoop_worker'
       end
 

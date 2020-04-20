@@ -99,17 +99,17 @@ module HybridPlatformsConductorTest
       connection.is_a?(String) ? [connection, nil, nil] : [connection[:connection], connection[:gateway], connection[:gateway_user]]
     end
 
-    # Return the service for a given node
+    # Return the services for a given node
     # [API] - This method is mandatory.
     #
     # Parameters::
     # * *node* (String): node to read configuration from
     # Result::
-    # * String: The corresponding service
-    def service_for(node)
-      service = node_info(node)[:service]
-      raise "Invalid test case: no service info given for #{node}" if service.nil?
-      service
+    # * Array<String>: The corresponding services
+    def services_for(node)
+      services = node_info(node)[:services]
+      raise "Invalid test case: no services info given for #{node}" if services.nil?
+      services
     end
 
     # Package the repository, ready to be deployed on artefacts or directly to a node.

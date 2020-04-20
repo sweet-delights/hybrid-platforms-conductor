@@ -9,11 +9,11 @@ describe HybridPlatformsConductor::NodesHandler do
     def with_test_platform_for_nodes
       with_test_platforms(
         'platform1' => {
-          nodes: { 'node1' => {}, 'node2' => { service: 'service1' }, 'node3' => { service: 'service2' } },
+          nodes: { 'node1' => {}, 'node2' => { services: ['service1'] }, 'node3' => { services: ['service2'] } },
           nodes_lists: { 'nodeslist1' => %w[node1 node3], 'nodeslist2' => ['/node[12]/'] }
         },
         'platform2' => {
-          nodes: { 'node4' => {}, 'node5' => { service: 'service1' }, 'node6' => {} }
+          nodes: { 'node4' => {}, 'node5' => { services: ['service3', 'service1'] }, 'node6' => {} }
         }
       ) do
         yield
