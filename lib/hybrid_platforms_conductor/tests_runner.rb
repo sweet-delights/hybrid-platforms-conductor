@@ -57,7 +57,7 @@ module HybridPlatformsConductor
       @tests_plugins = Hash[Dir.
         glob("#{__dir__}/tests/plugins/*.rb").
         map do |file_name|
-          test_name = File.basename(file_name)[0..-4].to_sym
+          test_name = File.basename(file_name, '.rb').to_sym
           require file_name
           [
             test_name,
@@ -69,7 +69,7 @@ module HybridPlatformsConductor
       @reports_plugins = Hash[Dir.
         glob("#{__dir__}/tests/reports_plugins/*.rb").
         map do |file_name|
-          plugin_name = File.basename(file_name)[0..-4].to_sym
+          plugin_name = File.basename(file_name, '.rb').to_sym
           require file_name
           [
             plugin_name,
