@@ -1,3 +1,9 @@
+# [12.4.2](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv12.4.1&sourceBranch=refs%2Ftags%2Fv12.4.2) (2020-04-21)
+
+### Fixes
+
+* Removed magic numbers ([1a7ee61f](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/commits/1a7ee61fc612d2f6a38c940822cb6b59a2bcfa2d))
+
 # [12.4.1](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv12.4.0&sourceBranch=refs%2Ftags%2Fv12.4.1) (2020-04-07)
 
 ### Fixes
