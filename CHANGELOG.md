@@ -1,3 +1,13 @@
+# [12.4.3](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv12.4.2&sourceBranch=refs%2Ftags%2Fv12.4.3) (2020-04-23)
+
+### Fixes
+
+* Improve error reporting when using an invalid nodes list ([1e5d50dd](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/commits/1e5d50ddae93f50f576ec8e7cd6ae75b88fc2822))
+* Merge pull request #86 in PROJECThybrid_platforms_conductor from ~USERNME/hybrid_platforms_conductor:PROJECT-565_better_stdout_reports to master ([70821952](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/commits/70821952ff5f4f0c2bdfe7a25f5881896ef19fd4))
+* Merge pull request #86 in PROJECThybrid_platforms_conductor from ~USERNME/hybrid_platforms_conductor:PROJECT-565_better_stdout_reports to master ([70821952](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/commits/70821952ff5f4f0c2bdfe7a25f5881896ef19fd4))
+* Merge pull request #81 in PROJECThybrid_platforms_conductor from ~USERNME/hybrid_platforms_conductor:PROJECT-565_increase_timeouts to master ([97bde852](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/commits/97bde8528e2178de790af09c92cfda8fd4c758d9))
+* Added support for Debian 10 ([d7bd39d3](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/commits/d7bd39d36c60682aa35b1836fef02ef3abd0d70d))
+
 # [12.4.2](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv12.4.1&sourceBranch=refs%2Ftags%2Fv12.4.2) (2020-04-21)
 
 ### Fixes
