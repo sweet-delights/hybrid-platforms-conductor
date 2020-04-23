@@ -437,7 +437,7 @@ module HybridPlatformsConductor
                   if File.exist?(ENV['hpc_certificates'])
                     log_debug "Deploy certificates from #{ENV['hpc_certificates']}"
                     case image_id
-                    when 'debian_9'
+                    when 'debian_9', 'debian_10'
                       [
                         {
                           remote_bash: "#{@ssh_executor.ssh_user == 'root' ? '' : 'sudo '}apt update && #{@ssh_executor.ssh_user == 'root' ? '' : 'sudo '}apt install -y ca-certificates"
