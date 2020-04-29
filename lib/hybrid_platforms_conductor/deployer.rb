@@ -210,7 +210,8 @@ module HybridPlatformsConductor
         # Check that master is checked out correctly before deploying.
         # Check it on every platform having at least 1 node to be deployed.
         @platforms.each do |platform_handler|
-          raise "Please checkout master before deploying on #{platform_handler.repository_path}. !!! Only master should be deployed !!!" if `cd #{platform_handler.repository_path} && git status | head -n 1`.strip != 'On branch master'
+          _exit_status, stdout, _stderr = @cmd_runner.run_cmd "cd #{platform_handler.repository_path} && git status | head -n 1"
+          raise "Please checkout master before deploying on #{platform_handler.repository_path}. !!! Only master should be deployed !!!" if stdout.strip != 'On branch master'
         end
       end
       # Package

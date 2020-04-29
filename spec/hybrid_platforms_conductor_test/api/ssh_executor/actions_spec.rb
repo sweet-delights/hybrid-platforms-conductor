@@ -29,7 +29,21 @@ describe HybridPlatformsConductor::SshExecutor do
     # * String: Stderr
     def execute(actions, expected_commands: nil, nbr_connections: 1, timeout: nil, log_to_dir: nil)
       run_result = nil
-      with_cmd_runner_mocked(commands: expected_commands, nodes_connections: { 'node' => { connection: 'node_connection', user: 'test_user', times: nbr_connections } }) do
+      with_cmd_runner_mocked(
+        commands: expected_commands.nil? ? nil : [
+          ['which env', proc do |cmd, log_to_file: nil, log_to_stdout: true, expected_code: 0, timeout: nil, no_exception: false|
+            # Make sure we don't log to stdout this command, as it can alter the expected output
+            expect(log_to_stdout).to eq false unless ENV['TEST_DEBUG'] == '1'
+            [0, "/usr/bin/env\n", '']
+          end],
+          ['ssh -V 2>&1', proc do |cmd, log_to_file: nil, log_to_stdout: true, expected_code: 0, timeout: nil, no_exception: false|
+            # Make sure we don't log to stdout this command, as it can alter the expected output
+            expect(log_to_stdout).to eq false unless ENV['TEST_DEBUG'] == '1'
+            [0, "OpenSSH_7.4p1 Debian-10+deb9u7, OpenSSL 1.0.2u  20 Dec 2019\n", '']
+          end]
+        ] * nbr_connections + expected_commands,
+        nodes_connections: { 'node' => { connection: 'node_connection', user: 'test_user', times: nbr_connections } }
+      ) do
         run_result = test_ssh_executor.execute_actions({ 'node' => actions }, timeout: timeout, log_to_dir: log_to_dir)['node']
       end
       run_result

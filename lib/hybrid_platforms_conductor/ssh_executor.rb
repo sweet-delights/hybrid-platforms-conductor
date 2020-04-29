@@ -218,7 +218,13 @@ module HybridPlatformsConductor
     # Result::
     # * String: The SSH config
     def ssh_config(ssh_exec: 'ssh', known_hosts_file: nil)
-      open_ssh_major_version = `ssh -V 2>&1`.match(/^OpenSSH_(\d)\..+$/)[1].to_i
+      _exit_status, stdout, _stderr = @cmd_runner.run_cmd 'ssh -V 2>&1', log_to_stdout: log_debug?
+      # Make sure we have a fake value in case of dry-run
+      if @dry_run
+        log_debug 'Mock OpenSSH version because of dry-run mode'
+        stdout = 'OpenSSH_7.4p1 Debian-10+deb9u7, OpenSSL 1.0.2u  20 Dec 2019'
+      end
+      open_ssh_major_version = stdout.match(/^OpenSSH_(\d)\..+$/)[1].to_i
 
       config_content = "
 ############
@@ -362,7 +368,8 @@ Host *
             end
             FileUtils.touch known_hosts_file
             File.open(ssh_exec_file, 'w+', 0700) do |file|
-              file.puts "#!#{`which env`.strip} bash"
+              _exit_status, stdout, _stderr = @cmd_runner.run_cmd 'which env', log_to_stdout: log_debug?
+              file.puts "#!#{stdout.strip} bash"
               # TODO: Make a mechanism that uses sshpass and the correct password only for the correct hostname (this requires parsing ssh parameters $*).
               # Current implementation is much simpler: it uses sshpass if at least 1 password is needed, and always uses the first password.
               # So far it is enough for our usage as we intend to use this only when deploying first time using root account, and all root accounts will have the same password.

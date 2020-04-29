@@ -12,10 +12,28 @@ module HybridPlatformsConductor
 
         # Check my_test_plugin.rb.sample documentation for signature details.
         def test_on_platform
-          `cd #{@platform.repository_path} && git log --merges --pretty=format:"%H"`.split("\n").each do |merge_commit_id|
-            if !`cd #{@platform.repository_path} && git log $(git merge-base --octopus $(git log #{merge_commit_id} --max-count 1 --pretty=format:"%P"))..#{merge_commit_id} --pretty=format:"%H" --graph | grep '|'`.empty? &&
-              Time.now - Time.parse(`cd #{@platform.repository_path} && git log #{merge_commit_id} --pretty=format:%aI`.strip) < LOOKING_PERIOD
-              error "Git history is not linear because of Merge commit #{merge_commit_id}"
+          _exit_status, stdout, _stderr = @cmd_runner.run_cmd(
+            "cd #{@platform.repository_path} && git --no-pager log --merges --pretty=format:\"%H\"",
+            log_to_stdout: log_debug?
+          )
+          stdout.split("\n").each do |merge_commit_id|
+            _exit_status, stdout, _stderr = @cmd_runner.run_cmd(<<~EOS, log_to_stdout: log_debug?, no_exception: true, expected_code: 1)
+              cd #{@platform.repository_path} && \
+              git --no-pager log \
+                $(git merge-base \
+                  --octopus \
+                  $(git --no-pager log #{merge_commit_id} --max-count 1 --pretty=format:\"%P\") \
+                )..#{merge_commit_id} \
+                --pretty=format:\"%H\" \
+                --graph \
+              | grep '|'
+            EOS
+            if !stdout.empty?
+              _exit_status, stdout, _stderr = @cmd_runner.run_cmd(
+                "cd #{@platform.repository_path} && git --no-pager log #{merge_commit_id} --pretty=format:%aI",
+                log_to_stdout: log_debug?
+              )
+              error "Git history is not linear because of Merge commit #{merge_commit_id}" if Time.now - Time.parse(stdout.strip) < LOOKING_PERIOD
             end
           end
         end
