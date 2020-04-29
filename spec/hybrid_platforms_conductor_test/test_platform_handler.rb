@@ -157,7 +157,7 @@ module HybridPlatformsConductorTest
       if !use_why_run && node_info(node)[:deploy_data]
         [{ remote_bash: "echo \"#{node_info(node)[:deploy_data]}\" >deployed_file ; echo \"Real deployment done on #{node}\"" }]
       else
-        [{ local_bash: "echo \"#{use_why_run ? 'Checking' : 'Deploying'} on #{node}\"" }]
+        [{ bash: "echo \"#{use_why_run ? 'Checking' : 'Deploying'} on #{node}\"" }]
       end
     end
 

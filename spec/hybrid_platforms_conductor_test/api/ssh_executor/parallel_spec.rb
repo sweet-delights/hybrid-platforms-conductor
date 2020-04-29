@@ -124,20 +124,20 @@ describe HybridPlatformsConductor::SshExecutor do
         expect(test_ssh_executor.execute_actions(
           {
             'node1' => [
-              { local_bash: 'sleep 1 && echo Node11' },
-              { local_bash: 'sleep 5 && echo Node12' }
+              { bash: 'sleep 1 && echo Node11' },
+              { bash: 'sleep 5 && echo Node12' }
             ],
             'node2' => [
-              { local_bash: 'echo Node21' },
-              { local_bash: 'sleep 1 && echo Node22' }
+              { bash: 'echo Node21' },
+              { bash: 'sleep 1 && echo Node22' }
             ],
             'node3' => [
-              { local_bash: 'sleep 1 && echo Node31' },
-              { local_bash: 'sleep 1 && echo Node32' },
-              { local_bash: 'sleep 5 && echo Node33' }
+              { bash: 'sleep 1 && echo Node31' },
+              { bash: 'sleep 1 && echo Node32' },
+              { bash: 'sleep 5 && echo Node33' }
             ],
             'node4' => [
-              { local_bash: 'sleep 5 && echo Node41' }
+              { bash: 'sleep 5 && echo Node41' }
             ]
           },
           timeout: 3,
@@ -211,42 +211,57 @@ describe HybridPlatformsConductor::SshExecutor do
             'node1' => [
               { ruby: proc do |stdout, stderr|
                 stdout << 'node1_action1_stdout '
+                sleep 1
                 stderr << 'node1_action1_stderr '
+                sleep 1
               end },
               { ruby: proc do |stdout, stderr|
                 stdout << 'node1_action2_stdout '
+                sleep 1
                 stderr << 'node1_action2_stderr '
+                sleep 1
               end },
               { ruby: proc do |stdout, stderr|
                 stdout << 'node1_action3_stdout'
+                sleep 1
                 stderr << 'node1_action3_stderr'
               end }
             ],
             'node2' => [
               { ruby: proc do |stdout, stderr|
                 stdout << 'node2_action1_stdout '
+                sleep 1
                 stderr << 'node2_action1_stderr '
+                sleep 1
               end },
               { ruby: proc do |stdout, stderr|
                 stdout << 'node2_action2_stdout '
+                sleep 1
                 stderr << 'node2_action2_stderr '
+                sleep 1
               end },
               { ruby: proc do |stdout, stderr|
                 stdout << 'node2_action3_stdout'
+                sleep 1
                 stderr << 'node2_action3_stderr'
               end }
             ],
             'node3' => [
               { ruby: proc do |stdout, stderr|
                 stdout << 'node3_action1_stdout '
+                sleep 1
                 stderr << 'node3_action1_stderr '
+                sleep 1
               end },
               { ruby: proc do |stdout, stderr|
                 stdout << 'node3_action2_stdout '
+                sleep 1
                 stderr << 'node3_action2_stderr '
+                sleep 1
               end },
               { ruby: proc do |stdout, stderr|
                 stdout << 'node3_action3_stdout'
+                sleep 1
                 stderr << 'node3_action3_stderr'
               end }
             ]
@@ -258,9 +273,9 @@ describe HybridPlatformsConductor::SshExecutor do
           # Check logs
           log_files = Dir.glob("#{logs_repository}/*").map { |file| File.basename(file) }
           expect(log_files.sort).to eq %w[node1.stdout node2.stdout node3.stdout].sort
-          expect(File.read("#{logs_repository}/node1.stdout")).to eq "node1_action1_stdout \nnode1_action1_stderr \nnode1_action2_stdout \nnode1_action2_stderr \nnode1_action3_stdout\nnode1_action3_stderr\n"
-          expect(File.read("#{logs_repository}/node2.stdout")).to eq "node2_action1_stdout \nnode2_action1_stderr \nnode2_action2_stdout \nnode2_action2_stderr \nnode2_action3_stdout\nnode2_action3_stderr\n"
-          expect(File.read("#{logs_repository}/node3.stdout")).to eq "node3_action1_stdout \nnode3_action1_stderr \nnode3_action2_stdout \nnode3_action2_stderr \nnode3_action3_stdout\nnode3_action3_stderr\n"
+          expect(File.read("#{logs_repository}/node1.stdout")).to eq 'node1_action1_stdout node1_action1_stderr node1_action2_stdout node1_action2_stderr node1_action3_stdoutnode1_action3_stderr'
+          expect(File.read("#{logs_repository}/node2.stdout")).to eq 'node2_action1_stdout node2_action1_stderr node2_action2_stdout node2_action2_stderr node2_action3_stdoutnode2_action3_stderr'
+          expect(File.read("#{logs_repository}/node3.stdout")).to eq 'node3_action1_stdout node3_action1_stderr node3_action2_stdout node3_action2_stderr node3_action3_stdoutnode3_action3_stderr'
         end
       end
     end

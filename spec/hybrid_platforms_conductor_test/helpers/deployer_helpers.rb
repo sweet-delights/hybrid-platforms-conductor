@@ -93,7 +93,7 @@ module HybridPlatformsConductorTest
           expect(actions[node].size).to eq(2 + expected_actions.size)
           expect_action_to_lock_node(actions[node][0], node, sudo: sudo)
           expect(actions[node][1..-2]).to eq expected_actions
-          expect(actions[node][-1]).to eq(local_bash: "echo \"#{check ? 'Checking' : 'Deploying'} on #{node}\"")
+          expect(actions[node][-1]).to eq(bash: "echo \"#{check ? 'Checking' : 'Deploying'} on #{node}\"")
         end
         Hash[nodes.map { |node| [node, [0, "#{check ? 'Check' : 'Deploy'} successful", '']] }]
       end
