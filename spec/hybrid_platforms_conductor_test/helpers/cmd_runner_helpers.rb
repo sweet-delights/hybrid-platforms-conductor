@@ -20,7 +20,7 @@ module HybridPlatformsConductorTest
         unexpected_commands = []
         unless commands.nil?
           remaining_expected_commands = ssh_expected_commands_for(nodes_connections, with_control_master, with_strict_host_key_checking) + commands
-          allow(test_cmd_runner).to receive(:run_cmd) do |cmd, log_to_file: nil, log_to_stdout: true, expected_code: 0, timeout: nil, no_exception: false|
+          allow(test_cmd_runner).to receive(:run_cmd) do |cmd, log_to_file: nil, log_to_stdout: true, log_stdout_to_io: nil, log_stderr_to_io: nil, expected_code: 0, timeout: nil, no_exception: false|
             # Check the remaining expected commands
             found_command = nil
             found_command_code = nil
@@ -38,6 +38,8 @@ module HybridPlatformsConductorTest
                 cmd,
                 log_to_file: log_to_file,
                 log_to_stdout: log_to_stdout,
+                log_stdout_to_io: log_stdout_to_io,
+                log_stderr_to_io: log_stderr_to_io,
                 expected_code: expected_code,
                 timeout: timeout,
                 no_exception: no_exception
@@ -55,6 +57,9 @@ module HybridPlatformsConductorTest
                  mocked_stderr.include?("\n") ? "\n----- Mocked STDERR:\n#{mocked_stderr}" : " (Mocked STDERR: #{mocked_stderr})"
                end
               logger.debug "[ Mocked CmdRunner ] - Calling mocked command #{cmd} => #{mocked_exit_status}#{log_stdout}#{log_stderr}"
+              # If IOs were used, don't forget to mock them as well
+              log_stdout_to_io << mocked_stdout if !mocked_stdout.empty? && !log_stdout_to_io.nil?
+              log_stderr_to_io << mocked_stderr if !mocked_stderr.empty? && !log_stderr_to_io.nil?
               [mocked_exit_status, mocked_stdout, mocked_stderr]
             else
               logger.error "[ Mocked CmdRunner ] - !!! Unexpected command run: #{cmd}"

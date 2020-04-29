@@ -20,6 +20,24 @@ describe HybridPlatformsConductor::CmdRunner do
     end
   end
 
+  it 'runs a simple bash command and logs stdout and stderr to an existing file' do
+    with_repository do |repository|
+      File.write("#{repository}/test_file", "Before\n")
+      test_cmd_runner.run_cmd "echo TestStderr 1>&2 ; sleep 1 ; echo TestStdout", log_to_file: "#{repository}/test_file"
+      expect(File.read("#{repository}/test_file")).to eq "Before\nTestStderr\nTestStdout\n"
+    end
+  end
+
+  it 'runs a simple bash command and logs stdout and stderr to IO objects' do
+    with_repository do |repository|
+      stdout = ''
+      stderr = ''
+      test_cmd_runner.run_cmd "echo TestStderr 1>&2 ; sleep 1 ; echo TestStdout", log_stdout_to_io: stdout, log_stderr_to_io: stderr
+      expect(stdout).to eq "TestStdout\n"
+      expect(stderr).to eq "TestStderr\n"
+    end
+  end
+
   it 'fails when the command does not exit 0' do
     with_repository do |repository|
       expect { test_cmd_runner.run_cmd 'exit 1' }.to raise_error(HybridPlatformsConductor::CmdRunner::UnexpectedExitCodeError, 'Command exit 1 returned error code 1 (expected 0).')

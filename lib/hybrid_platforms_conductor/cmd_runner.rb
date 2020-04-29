@@ -45,6 +45,8 @@ module HybridPlatformsConductor
     # * *cmd* (String): Command to be run
     # * *log_to_file* (String or nil): Log file capturing stdout or stderr (or nil for none). [default: nil]
     # * *log_to_stdout* (Boolean): Do we send the output to stdout? [default: true]
+    # * *log_stdout_to_io* (IO or nil): IO to send command's stdout to, or nil for none. [default: nil]
+    # * *log_stderr_to_io* (IO or nil): IO to send command's stderr to, or nil for none. [default: nil]
     # * *expected_code* (Integer): Return code that is expected [default: 0]
     # * *timeout* (Integer or nil): Timeout to apply for the command to be run, or nil for no timeout [default: nil]
     # * *no_exception* (Boolean): If true, don't throw exception in case of error [default: false]
@@ -52,7 +54,16 @@ module HybridPlatformsConductor
     # * Integer or Symbol: Exit status of the command, or Symbol in case of error. In case of dry-run mode the expected code is returned without executing anything.
     # * String: Standard output of the command
     # * String: Standard error output of the command (can be a descriptive message of the error in case of error)
-    def run_cmd(cmd, log_to_file: nil, log_to_stdout: true, expected_code: 0, timeout: nil, no_exception: false)
+    def run_cmd(
+      cmd,
+      log_to_file: nil,
+      log_to_stdout: true,
+      log_stdout_to_io: nil,
+      log_stderr_to_io: nil,
+      expected_code: 0,
+      timeout: nil,
+      no_exception: false
+    )
       if @dry_run
         out cmd
         return expected_code, '', ''
@@ -63,8 +74,12 @@ module HybridPlatformsConductor
         cmd_stderr = nil
         file_output =
           if log_to_file
-            FileUtils.mkdir_p(File.dirname(log_to_file))
-            File.open(log_to_file, 'w')
+            if File.exist?(log_to_file)
+              File.open(log_to_file, 'a')
+            else
+              FileUtils.mkdir_p(File.dirname(log_to_file))
+              File.open(log_to_file, 'w')
+            end
           else
             nil
           end
@@ -78,6 +93,7 @@ module HybridPlatformsConductor
           ).run!(cmd) do |stdout, stderr|
             if stdout
               @logger << stdout if log_to_stdout
+              log_stdout_to_io << stdout if log_stdout_to_io
               unless file_output.nil?
                 file_output << stdout
                 file_output.flush
@@ -85,6 +101,7 @@ module HybridPlatformsConductor
             end
             if stderr
               @logger_stderr << stderr if log_to_stdout
+              log_stderr_to_io << stderr if log_stderr_to_io
               unless file_output.nil?
                 file_output << stderr
                 file_output.flush
