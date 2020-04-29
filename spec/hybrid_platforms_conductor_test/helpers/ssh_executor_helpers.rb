@@ -23,6 +23,18 @@ module HybridPlatformsConductorTest
           if with_strict_host_key_checking
             expected_ssh_commands.concat([
               [
+                "getent hosts #{node_connection_info[:connection]}",
+                proc { [0, "192.168.42.42 #{node_connection_info[:connection]}", ''] }
+              ],
+              [
+                'ssh-keyscan 192.168.42.42',
+                proc { [0, 'fake_host_key_ip', ''] }
+              ],
+              [
+                /^ssh-keygen -R 192\.168\.42\.42 -f .+\/known_hosts$/,
+                proc { [0, '', ''] }
+              ],
+              [
                 "ssh-keyscan #{node_connection_info[:connection]}",
                 proc { [0, 'fake_host_key', ''] }
               ],

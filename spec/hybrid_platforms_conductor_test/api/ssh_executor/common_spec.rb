@@ -25,13 +25,16 @@ describe HybridPlatformsConductor::SshExecutor do
       lines = File.read(stdout_file).split("\n")
       expect(lines[0]).to eq 'which env'
       expect(lines[1]).to eq 'ssh -V 2>&1'
-      expect(lines[2]).to eq 'ssh-keyscan node1_connection'
-      expect(lines[3]).to match /^ssh-keygen -R node1_connection -f .+\/known_hosts$/
-      expect(lines[4]).to match /^.+\/ssh -o BatchMode=yes -o ControlMaster=yes -o ControlPersist=yes test_user@ti\.node1 true$/
-      expect(lines[5]).to match /^.+\/ssh test_user@ti\.node1 \/bin\/bash <<'EOF'$/
-      expect(lines[6]).to eq 'echo Hello'
-      expect(lines[7]).to eq 'EOF'
-      expect(lines[8]).to match /^.+\/ssh -O exit test_user@ti\.node1 2>&1 \| grep -v 'Exit request sent\.'$/
+      expect(lines[2]).to eq 'getent hosts node1_connection'
+      expect(lines[3]).to eq 'ssh-keyscan 192.168.42.42'
+      expect(lines[4]).to match /^ssh-keygen -R 192\.168\.42\.42 -f .+\/known_hosts$/
+      expect(lines[5]).to eq 'ssh-keyscan node1_connection'
+      expect(lines[6]).to match /^ssh-keygen -R node1_connection -f .+\/known_hosts$/
+      expect(lines[7]).to match /^.+\/ssh -o BatchMode=yes -o ControlMaster=yes -o ControlPersist=yes test_user@ti\.node1 true$/
+      expect(lines[8]).to match /^.+\/ssh test_user@ti\.node1 \/bin\/bash <<'EOF'$/
+      expect(lines[9]).to eq 'echo Hello'
+      expect(lines[10]).to eq 'EOF'
+      expect(lines[11]).to match /^.+\/ssh -O exit test_user@ti\.node1 2>&1 \| grep -v 'Exit request sent\.'$/
     end
   end
 
