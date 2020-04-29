@@ -1,3 +1,9 @@
+# [12.4.4](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv12.4.3&sourceBranch=refs%2Ftags%2Fv12.4.4) (2020-04-29)
+
+### Fixes
+
+* Improved logging of tests run ([c84b63d2](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/commits/c84b63d2107b523b578c1d671e94edad63ef0bee))
+
 # [12.4.3](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv12.4.2&sourceBranch=refs%2Ftags%2Fv12.4.3) (2020-04-23)
 
 ### Fixes
