@@ -1,3 +1,9 @@
+# [12.4.5](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv12.4.4&sourceBranch=refs%2Ftags%2Fv12.4.5) (2020-04-29)
+
+### Fixes
+
+* Make sure host IPs are among known hosts to avoid SSH warnings because of CheckHostIp ([0d465601](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/commits/0d4656011b1a338056e16fdcf5ca695a187dcd9f))
+
 # [12.4.4](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv12.4.3&sourceBranch=refs%2Ftags%2Fv12.4.4) (2020-04-29)
 
 ### Fixes
