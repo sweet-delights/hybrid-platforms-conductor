@@ -31,7 +31,7 @@ module HybridPlatformsConductor
           'Public IPs',
           'Physical node?',
           'Image ID',
-          'Service',
+          'Services',
           'Description',
           'Missing industrialization?'
         ]) do |table|
@@ -44,7 +44,7 @@ module HybridPlatformsConductor
               node_info['public_ips'] ? node_info['public_ips'].join(' ') : '',
               node_info['physical_node'] ? 'Yes' : 'No',
               node_info['image'],
-              @nodes_handler.service_for(node),
+              @nodes_handler.services_for(node).join(', '),
               node_info['description'],
               node_info['missing_industrialization'] ? 'Yes' : 'No'
             ]
