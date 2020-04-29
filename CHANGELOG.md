@@ -1,3 +1,9 @@
+# [14.0.0](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv13.0.0&sourceBranch=refs%2Ftags%2Fv14.0.0) (2020-04-29)
+
+### Breaking changes
+
+* Merge branch 'PROJECT-565_better_actions' ([c14ec24e](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/commits/c14ec24ee6213525b41cce36469f4bd64a2b4832))
+
 # [13.0.0](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv12.4.5&sourceBranch=refs%2Ftags%2Fv13.0.0) (2020-04-29)
 
 ### Breaking changes
