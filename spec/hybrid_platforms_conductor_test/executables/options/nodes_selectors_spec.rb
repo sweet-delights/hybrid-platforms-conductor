@@ -11,16 +11,16 @@ describe 'executables\' nodes selection options' do
       {
         'platform_1' => {
           nodes: {
-            'node11' => { service: 'service1' },
-            'node12' => { service: 'service1' },
-            'node13' => { service: 'service2' }
+            'node11' => { services: ['service1'] },
+            'node12' => { services: ['service3', 'service1'] },
+            'node13' => { services: ['service2'] }
           },
           nodes_lists: { 'my_list' => ['node11', 'node13'] }
         },
         'platform_2' => {
           nodes: {
-            'node21' => { service: 'service2' },
-            'node22' => { service: 'service1' }
+            'node21' => { services: ['service2'] },
+            'node22' => { services: ['service1'] }
           }
         }
       },

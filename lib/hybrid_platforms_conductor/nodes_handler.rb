@@ -78,7 +78,7 @@ module HybridPlatformsConductor
           known_nodes.map do |node|
             conf = metadata_for(node)
             connection, _gateway, _gateway_user = connection_for(node)
-            "#{platform_for(node).info[:repo_name]} - #{node} (#{connection}) - #{service_for(node)} - #{conf.key?('description') ? conf['description'] : ''}"
+            "#{platform_for(node).info[:repo_name]} - #{node} (#{connection}) - #{services_for(node).join(', ')} - #{conf.key?('description') ? conf['description'] : ''}"
           end.sort.join("\n")
         }"
         out
@@ -211,7 +211,7 @@ module HybridPlatformsConductor
     # Result::
     # * Array<String>: List of service names
     def known_services
-      known_nodes.map { |node| service_for(node) }.uniq.sort
+      known_nodes.map { |node| services_for(node) }.flatten.uniq.sort
     end
 
     # Get the platform handler of a given node
@@ -257,14 +257,14 @@ module HybridPlatformsConductor
       platform_for(node).connection_for(node)
     end
 
-    # Return the service for a given node
+    # Return the services for a given node
     #
     # Parameters::
     # * *node* (String): node to read configuration from
     # Result::
-    # * String: The corresponding service
-    def service_for(node)
-      platform_for(node).service_for(node)
+    # * Array<String>: The corresponding service
+    def services_for(node)
+      platform_for(node).services_for(node)
     end
 
     # Resolve a list of nodes selectors into a real list of known nodes.
@@ -297,7 +297,7 @@ module HybridPlatformsConductor
             string_nodes.concat(platform.nodes_selectors_from_nodes_list(nodes_selector[:list]))
           end
           string_nodes.concat(@platforms[nodes_selector[:platform]].known_nodes) if nodes_selector.key?(:platform)
-          string_nodes.concat(known_nodes.select { |node| service_for(node) == nodes_selector[:service] }) if nodes_selector.key?(:service)
+          string_nodes.concat(known_nodes.select { |node| services_for(node).include?(nodes_selector[:service]) }) if nodes_selector.key?(:service)
         end
       end
       # 3. Expand the Regexps

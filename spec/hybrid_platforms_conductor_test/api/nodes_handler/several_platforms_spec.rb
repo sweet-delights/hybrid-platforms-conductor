@@ -67,10 +67,16 @@ describe HybridPlatformsConductor::NodesHandler do
 
     it 'returns services' do
       with_test_platforms(
-        'platform1' => { nodes: { 'node1' => { service: 'service1' }, 'node2' => { service: 'service2' } } },
-        'platform2' => { nodes: { 'node3' => { service: 'service1' }, 'node4' => { service: 'service3' } } }
+        'platform1' => { nodes: {
+          'node1' => { services: ['service1'] },
+          'node2' => { services: ['service2'] }
+        } },
+        'platform2' => { nodes: {
+          'node3' => { services: ['service1', 'service4'] },
+          'node4' => { services: ['service3'] }
+        } }
       ) do
-        expect(test_nodes_handler.known_services.sort).to eq %w[service1 service2 service3].sort
+        expect(test_nodes_handler.known_services.sort).to eq %w[service1 service2 service3 service4].sort
       end
     end
 

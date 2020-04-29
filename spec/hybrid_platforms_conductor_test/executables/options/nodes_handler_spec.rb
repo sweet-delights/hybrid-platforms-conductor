@@ -13,16 +13,16 @@ describe 'executables\' Nodes Handler options' do
           nodes: {
             'node11' => {
                connection: 'node11_connection',
-               service: 'service1'
+               services: ['service1']
              },
             'node12' => {
               connection: 'node12_connection',
                meta: { 'description' => 'Node12 description' },
-               service: 'service1'
+               services: ['service1']
              },
             'node13' => {
                connection: 'node13_connection',
-               service: 'service2'
+               services: ['service2']
              }
           },
           nodes_lists: { 'my_list' => ['node11', 'node13'] }
@@ -31,11 +31,11 @@ describe 'executables\' Nodes Handler options' do
           nodes: {
             'node21' => {
                connection: 'node21_connection',
-               service: 'service2'
+               services: ['service2', 'service3']
              },
             'node22' => {
                connection: 'node22_connection',
-               service: 'service1'
+               services: ['service1']
              }
           }
         }
@@ -63,6 +63,7 @@ my_list
 * Known services:
 service1
 service2
+service3
 
 * Known nodes:
 node11
@@ -75,7 +76,7 @@ node22
 platform_1 - node11 (node11_connection) - service1 - 
 platform_1 - node12 (node12_connection) - service1 - Node12 description
 platform_1 - node13 (node13_connection) - service2 - 
-platform_2 - node21 (node21_connection) - service2 - 
+platform_2 - node21 (node21_connection) - service2, service3 - 
 platform_2 - node22 (node22_connection) - service1 - 
 
 '
