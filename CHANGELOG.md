@@ -1,3 +1,17 @@
+# [13.0.0](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv12.4.5&sourceBranch=refs%2Ftags%2Fv13.0.0) (2020-04-29)
+
+### Breaking changes
+
+* [Breaking] Associate several services to a node instead of just 1 ([4c95f239](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/commits/4c95f239e846ad4192ecd36d906aaa5596ea6ba4))
+
+### New features
+
+* [Feature] Add a way for CmdRunner to log stdout and stderr in IO streams ([aae21f4e](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/commits/aae21f4e0ba4c5e72906e10030c1a4dd743942bd))
+
+### Fixes
+
+* [Hotfix] Correct test cases wrong because of conflicting PRs merged in parallel ([702eda67](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/commits/702eda67b7d357c687989bbdf52e1632e4ea35f4))
+
 # [12.4.5](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv12.4.4&sourceBranch=refs%2Ftags%2Fv12.4.5) (2020-04-29)
 
 ### Fixes
