@@ -7,7 +7,7 @@ describe HybridPlatformsConductor::SshExecutor do
         ENV['hpc_ssh_user'] = 'test_user'
         expect(ssh_config_for(nil)).to eq "Host *
   User test_user
-  ControlPath #{Dir.tmpdir}/hpc_ssh_executor_mux_%h_%p_%r
+  ControlPath #{Dir.tmpdir}/hpc_ssh/hpc_ssh_executor_mux_%h_%p_%r
   PubkeyAcceptedKeyTypes +ssh-dss"
       end
     end
@@ -17,7 +17,7 @@ describe HybridPlatformsConductor::SshExecutor do
         test_ssh_executor.ssh_user = 'test_user'
         expect(ssh_config_for(nil)).to eq "Host *
   User test_user
-  ControlPath #{Dir.tmpdir}/hpc_ssh_executor_mux_%h_%p_%r
+  ControlPath #{Dir.tmpdir}/hpc_ssh/hpc_ssh_executor_mux_%h_%p_%r
   PubkeyAcceptedKeyTypes +ssh-dss"
       end
     end
@@ -27,9 +27,9 @@ describe HybridPlatformsConductor::SshExecutor do
         test_ssh_executor.ssh_user = 'test_user'
         expect(ssh_config_for(nil, known_hosts_file: '/path/to/known_hosts')).to eq "Host *
   User test_user
-  ControlPath #{Dir.tmpdir}/hpc_ssh_executor_mux_%h_%p_%r
-  UserKnownHostsFile /path/to/known_hosts
-  PubkeyAcceptedKeyTypes +ssh-dss"
+  ControlPath #{Dir.tmpdir}/hpc_ssh/hpc_ssh_executor_mux_%h_%p_%r
+  PubkeyAcceptedKeyTypes +ssh-dss
+  UserKnownHostsFile /path/to/known_hosts"
       end
     end
 
@@ -39,9 +39,9 @@ describe HybridPlatformsConductor::SshExecutor do
         test_ssh_executor.ssh_strict_host_key_checking = false
         expect(ssh_config_for(nil)).to eq "Host *
   User test_user
-  ControlPath #{Dir.tmpdir}/hpc_ssh_executor_mux_%h_%p_%r
-  StrictHostKeyChecking no
-  PubkeyAcceptedKeyTypes +ssh-dss"
+  ControlPath #{Dir.tmpdir}/hpc_ssh/hpc_ssh_executor_mux_%h_%p_%r
+  PubkeyAcceptedKeyTypes +ssh-dss
+  StrictHostKeyChecking no"
       end
     end
 

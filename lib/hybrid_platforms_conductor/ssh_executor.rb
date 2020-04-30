@@ -429,15 +429,14 @@ module HybridPlatformsConductor
         # Get the host key
         exit_status, stdout, _stderr = @cmd_runner.run_cmd "ssh-keyscan #{host}", timeout: TIMEOUT_HOST_KEYS, log_to_stdout: log_debug?, no_exception: true
         if exit_status == 0
-            # Remove the previous eventually
-            @cmd_runner.run_cmd "ssh-keygen -R #{host} -f #{known_hosts_file}", timeout: TIMEOUT_HOST_KEYS, log_to_stdout: log_debug?
-            # Add the new one
-            host_key = stdout.strip
-            log_debug "Add new key for #{host} in #{known_hosts_file}: #{host_key}"
-            Futex.new(known_hosts_file).open do
-              File.open(known_hosts_file, 'a') do |file|
-                file.puts host_key
-              end
+          # Remove the previous eventually
+          @cmd_runner.run_cmd "ssh-keygen -R #{host} -f #{known_hosts_file}", timeout: TIMEOUT_HOST_KEYS, log_to_stdout: log_debug?
+          # Add the new one
+          host_key = stdout.strip
+          log_debug "Add new key for #{host} in #{known_hosts_file}: #{host_key}"
+          Futex.new(known_hosts_file).open do
+            File.open(known_hosts_file, 'a') do |file|
+              file.puts host_key
             end
           end
         else
