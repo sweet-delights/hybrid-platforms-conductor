@@ -342,8 +342,8 @@ describe HybridPlatformsConductor::SshExecutor do
           nodes_connections: { 'node' => { connection: 'node_connection', user: 'test_user' } },
           with_control_master: false
         ) do
-          test_ssh_executor.with_platforms_ssh do |ssh_exec|
-            test_ssh_executor.ensure_host_key('node_connection')
+          test_ssh_executor.with_platforms_ssh do |ssh_exec, _ssh_config, known_hosts_file|
+            test_ssh_executor.ensure_host_key('node_connection', known_hosts_file)
             expect(File.read("#{File.dirname(ssh_exec)}/known_hosts")).to eq "fake_host_key_ip\nfake_host_key\n"
           end
         end
