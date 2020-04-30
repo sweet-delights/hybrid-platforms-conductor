@@ -422,7 +422,7 @@ module HybridPlatformsConductor
           if ip.nil?
             log_warn "Can't get IP for host #{host}. Ignoring it. Accessing #{host} might require manual acceptance of its host key."
           else
-            ensure_host_key(ip)
+            ensure_host_key(ip, known_hosts_file)
           end
         end
         # Get the host key
