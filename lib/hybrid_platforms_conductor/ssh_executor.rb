@@ -429,7 +429,6 @@ module HybridPlatformsConductor
         exit_status, stdout, _stderr = @cmd_runner.run_cmd "ssh-keyscan #{host}", timeout: TIMEOUT_HOST_KEYS, log_to_stdout: log_debug?, no_exception: true
         if exit_status == 0
           @platforms_ssh_dir_semaphore.synchronize do
-            known_hosts_file = "#{@platforms_ssh_dir}/known_hosts"
             # Remove the previous eventually
             @cmd_runner.run_cmd "ssh-keygen -R #{host} -f #{known_hosts_file}", timeout: TIMEOUT_HOST_KEYS, log_to_stdout: log_debug?
             # Add the new one
