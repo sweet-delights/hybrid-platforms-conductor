@@ -406,12 +406,14 @@ module HybridPlatformsConductor
     TIMEOUT_HOST_KEYS = 10
 
     # Ensure that a given hostname or IP has its key correctly set in the known hosts file.
+    # If the host is already part of the file, do nothing.
     #
     # Parameters::
     # * *host* (String): The host or IP
     # * *known_hosts_file* (String): Path to the known hosts file
     def ensure_host_key(host, known_hosts_file)
       if @ssh_strict_host_key_checking
+        unless File.read(known_hosts_file).include?(host)
         # If the host is not an IP address, then first register its IP address, as ssh connections will anyway register it due to CheckHostIp
         unless host =~ /^\d+\.\d+\.\d+\.\d+$/
           _exit_status, stdout, _stderr = @cmd_runner.run_cmd "getent hosts #{host}", timeout: TIMEOUT_HOST_KEYS, log_to_stdout: log_debug?, no_exception: true
@@ -438,9 +440,9 @@ module HybridPlatformsConductor
             File.open(known_hosts_file, 'a') do |file|
               file.puts host_key
             end
+          else
+            log_warn "Unable to get host key for #{host}. Ignoring it. Accessing #{host} might require manual acceptance of its host key."
           end
-        else
-          log_warn "Unable to get host key for #{host}. Ignoring it. Accessing #{host} might require manual acceptance of its host key."
         end
       end
     end
