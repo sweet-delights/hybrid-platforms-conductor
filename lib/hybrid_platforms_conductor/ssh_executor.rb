@@ -62,6 +62,9 @@ module HybridPlatformsConductor
     # Boolean
     attr_accessor :auth_password
 
+    # String: Sub-path of the system's temporary directory where temporary SSH config are generated
+    TMP_SSH_SUB_DIR = 'hpc_ssh'
+
     # Constructor
     #
     # Parameters::
@@ -87,6 +90,9 @@ module HybridPlatformsConductor
       @auth_password = false
       @ssh_gateways_conf = ENV['hpc_ssh_gateways_conf'].nil? ? :munich : ENV['hpc_ssh_gateways_conf'].to_sym
       @ssh_gateway_user = ENV['hpc_ssh_gateway_user'].nil? ? 'ubradm' : ENV['hpc_ssh_gateway_user']
+      # Temporary directory used by all SshExecutors, even from different processes
+      @tmp_dir = "#{Dir.tmpdir}/#{TMP_SSH_SUB_DIR}"
+      FileUtils.mkdir_p @tmp_dir
       # Parse available actions plugins, per action name
       # Hash<Symbol, Class>
       @action_plugins = Hash[Dir.
@@ -99,15 +105,21 @@ module HybridPlatformsConductor
             Actions.const_get(action_name.to_s.split('_').collect(&:capitalize).join.to_sym)
           ]
         end]
-      # Global variables handling the SSH directory storing temporary SSH configuration
-      # Those variables are not shared between different instances of SshExecutor as the SSH configuration depends on the SshExecutor configuration.
-      @platforms_ssh_dir = nil
-      @platforms_ssh_dir_nbr_users = 0
-      # The access of @platforms_ssh_dir_nbr_users should be protected as it runs in multithread
-      @platforms_ssh_dir_semaphore = Mutex.new
       # List of nodes already having their ControlMaster created, with their corresponding SSH URL
       @nodes_ssh_urls = {}
       @control_master_nodes_semaphore = Mutex.new
+      # Take a few info on the environment
+      exit_code, _stdout, _stderr = @cmd_runner.run_cmd 'sshpass -V', log_to_stdout: log_debug?, no_exception: true
+      @ssh_pass_installed = (exit_code == 0)
+      _exit_status, stdout, _stderr = @cmd_runner.run_cmd 'which env', log_to_stdout: log_debug?
+      @env_system_path = stdout.strip
+      _exit_status, stdout, _stderr = @cmd_runner.run_cmd 'ssh -V 2>&1', log_to_stdout: log_debug?
+      # Make sure we have a fake value in case of dry-run
+      if @dry_run
+        log_debug 'Mock OpenSSH version because of dry-run mode'
+        stdout = 'OpenSSH_7.4p1 Debian-10+deb9u7, OpenSSL 1.0.2u  20 Dec 2019'
+      end
+      @open_ssh_major_version = stdout.match(/^OpenSSH_(\d)\..+$/)[1].to_i
     end
 
     # Complete an option parser with options meant to control this SSH executor
@@ -237,34 +249,27 @@ module HybridPlatformsConductor
     # Result::
     # * String: The SSH config
     def ssh_config(ssh_exec: 'ssh', known_hosts_file: nil)
-      _exit_status, stdout, _stderr = @cmd_runner.run_cmd 'ssh -V 2>&1', log_to_stdout: log_debug?
-      # Make sure we have a fake value in case of dry-run
-      if @dry_run
-        log_debug 'Mock OpenSSH version because of dry-run mode'
-        stdout = 'OpenSSH_7.4p1 Debian-10+deb9u7, OpenSSL 1.0.2u  20 Dec 2019'
-      end
-      open_ssh_major_version = stdout.match(/^OpenSSH_(\d)\..+$/)[1].to_i
+      config_content = <<~EOS
+        ############
+        # GATEWAYS #
+        ############
 
-      config_content = "
-############
-# GATEWAYS #
-############
+        #{@nodes_handler.known_gateways.include?(@ssh_gateways_conf) ? @nodes_handler.ssh_for_gateway(@ssh_gateways_conf, ssh_exec: ssh_exec, user: @ssh_user) : ''}
 
-#{@nodes_handler.known_gateways.include?(@ssh_gateways_conf) ? @nodes_handler.ssh_for_gateway(@ssh_gateways_conf, ssh_exec: ssh_exec, user: @ssh_user) : ''}
+        #############
+        # ENDPOINTS #
+        #############
 
-#############
-# ENDPOINTS #
-#############
+        Host *
+          User #{@ssh_user}
+          # Default control socket path to be used when multiplexing SSH connections
+          ControlPath #{@tmp_dir}/hpc_ssh_executor_mux_%h_%p_%r
+          #{@open_ssh_major_version >= 7 ? 'PubkeyAcceptedKeyTypes +ssh-dss' : ''}
+          #{known_hosts_file.nil? ? '' : "UserKnownHostsFile #{known_hosts_file}"}
+          #{@ssh_strict_host_key_checking ? '' : 'StrictHostKeyChecking no'}
 
-Host *
-  User #{@ssh_user}
-  # Default control socket path to be used when multiplexing SSH connections
-  ControlPath /tmp/hpc_ssh_executor_mux_%h_%p_%r
-  #{@ssh_strict_host_key_checking ? '' : 'StrictHostKeyChecking no'}
-  #{known_hosts_file.nil? ? '' : "UserKnownHostsFile #{known_hosts_file}"}
-  #{open_ssh_major_version >= 7 ? 'PubkeyAcceptedKeyTypes +ssh-dss' : ''}
+      EOS
 
-"
       # Add each node
       @nodes_handler.known_nodes.sort.each do |node|
         conf = @nodes_handler.metadata_for node
@@ -307,20 +312,20 @@ Host *
     #     * *ssh_urls* (Hash<String,String>): Set of SSH URLs to be used, per each node name for which the connection was successful.
     def with_ssh_master_to(nodes, timeout: nil, no_exception: false)
       nodes = [nodes] if nodes.is_a?(String)
-      with_platforms_ssh do |ssh_exec|
         created_ssh_urls = {}
+      with_platforms_ssh do |ssh_exec, _ssh_config, known_hosts|
         begin
           nodes.each do |node|
             existing_control_master = false
             @control_master_nodes_semaphore.synchronize do
               unless @nodes_ssh_urls.key?(node)
                 connection, _gateway, _gateway_user = connection_info_for(node)
-                ensure_host_key(connection)
+                ensure_host_key(connection, known_hosts)
                 ssh_url = "#{@ssh_user}@hpc.#{node}"
                 if @ssh_use_control_master
                   # Thanks to the ControlMaster option, connections are reused. So no problem to have several scp and ssh commands later.
                   log_debug "[ ControlMaster - #{node} ] - Starting ControlMaster for connection on #{ssh_url}..."
-                  control_path_file = "/tmp/ssh_executor_mux_#{connection}_22_#{@ssh_user}"
+                  control_path_file = "#{@tmp_dir}/ssh_executor_mux_#{connection}_22_#{@ssh_user}"
                   if File.exist?(control_path_file)
                     log_warn "Removing stale SSH control file #{control_path_file}"
                     File.unlink control_path_file
@@ -372,45 +377,27 @@ Host *
     #   * Parameters::
     #     * *ssh_exec* (String): SSH command to be used
     #     * *ssh_config* (String): SSH configuration file to be used
+    #     * *ssh_known_hosts* (String): SSH known hosts file to be used
     def with_platforms_ssh
+      platforms_ssh_dir = Dir.mktmpdir("platforms_ssh_#{self.object_id}", @tmp_dir)
       begin
-        @platforms_ssh_dir_semaphore.synchronize do
-          if @platforms_ssh_dir.nil?
-            @platforms_ssh_dir = Dir.mktmpdir("platforms_ssh_#{self.object_id}")
-            ssh_conf_file = "#{@platforms_ssh_dir}/ssh_config"
-            ssh_exec_file = "#{@platforms_ssh_dir}/ssh"
-            known_hosts_file = "#{@platforms_ssh_dir}/known_hosts"
-            unless @passwords.empty?
-              # Check that sshpass is installed correctly
-              exit_code, _stdout, _stderr = @cmd_runner.run_cmd 'sshpass -V', no_exception: true
-              raise 'sshpass is not installed. Can\'t use automatic passwords handling without it. Please install it.' unless exit_code == 0
-            end
-            FileUtils.touch known_hosts_file
-            File.open(ssh_exec_file, 'w+', 0700) do |file|
-              _exit_status, stdout, _stderr = @cmd_runner.run_cmd 'which env', log_to_stdout: log_debug?
-              file.puts "#!#{stdout.strip} bash"
-              # TODO: Make a mechanism that uses sshpass and the correct password only for the correct hostname (this requires parsing ssh parameters $*).
-              # Current implementation is much simpler: it uses sshpass if at least 1 password is needed, and always uses the first password.
-              # So far it is enough for our usage as we intend to use this only when deploying first time using root account, and all root accounts will have the same password.
-              file.puts "#{@passwords.empty? ? '' : "sshpass -p#{@passwords.first[1]} "}ssh -F #{ssh_conf_file} $*"
-            end
-            File.write(ssh_conf_file, ssh_config(ssh_exec: ssh_exec_file, known_hosts_file: known_hosts_file))
-            ENV['hpc_ssh_dir'] = @platforms_ssh_dir
-            dir_created = true
-          end
-          @platforms_ssh_dir_nbr_users += 1
+        ssh_conf_file = "#{platforms_ssh_dir}/ssh_config"
+        ssh_exec_file = "#{platforms_ssh_dir}/ssh"
+        known_hosts_file = "#{platforms_ssh_dir}/known_hosts"
+        raise 'sshpass is not installed. Can\'t use automatic passwords handling without it. Please install it.' if !@passwords.empty? && !@ssh_pass_installed
+        FileUtils.touch known_hosts_file
+        File.open(ssh_exec_file, 'w+', 0700) do |file|
+          file.puts "#!#{@env_system_path} bash"
+          # TODO: Make a mechanism that uses sshpass and the correct password only for the correct hostname (this requires parsing ssh parameters $*).
+          # Current implementation is much simpler: it uses sshpass if at least 1 password is needed, and always uses the first password.
+          # So far it is enough for our usage as we intend to use this only when deploying first time using root account, and all root accounts will have the same password.
+          file.puts "#{@passwords.empty? ? '' : "sshpass -p#{@passwords.first[1]} "}ssh -F #{ssh_conf_file} $*"
         end
-        yield "#{@platforms_ssh_dir}/ssh", "#{@platforms_ssh_dir}/ssh_config"
+        File.write(ssh_conf_file, ssh_config(ssh_exec: ssh_exec_file, known_hosts_file: known_hosts_file))
+        yield ssh_exec_file, ssh_conf_file, known_hosts_file
       ensure
-        @platforms_ssh_dir_semaphore.synchronize do
-          @platforms_ssh_dir_nbr_users -= 1
-          if @platforms_ssh_dir_nbr_users == 0
-            # It's very important to remove the directory as soon as it is useless, as it contains eventual passwords
-            FileUtils.remove_entry @platforms_ssh_dir
-            @platforms_ssh_dir = nil
-            ENV.delete 'hpc_ssh_dir'
-          end
-        end
+        # It's very important to remove the directory as soon as it is useless, as it contains eventual passwords
+        FileUtils.remove_entry platforms_ssh_dir
       end
     end
 
@@ -418,11 +405,11 @@ Host *
     TIMEOUT_HOST_KEYS = 10
 
     # Ensure that a given hostname or IP has its key correctly set in the known hosts file.
-    # Prerequisite: with_platforms_ssh has been called before.
     #
     # Parameters::
     # * *host* (String): The host or IP
-    def ensure_host_key(host)
+    # * *known_hosts_file* (String): Path to the known hosts file
+    def ensure_host_key(host, known_hosts_file)
       if @ssh_strict_host_key_checking
         # If the host is not an IP address, then first register its IP address, as ssh connections will anyway register it due to CheckHostIp
         unless host =~ /^\d+\.\d+\.\d+\.\d+$/
