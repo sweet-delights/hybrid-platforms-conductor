@@ -356,7 +356,27 @@ describe HybridPlatformsConductor::SshExecutor do
         ) do
           test_ssh_executor.with_platforms_ssh do |ssh_exec, _ssh_config, known_hosts_file|
             test_ssh_executor.ensure_host_key('node_connection', known_hosts_file)
-            expect(File.read("#{File.dirname(ssh_exec)}/known_hosts")).to eq "fake_host_key_ip\nfake_host_key\n"
+            expect(File.read(known_hosts_file)).to eq "fake_host_key_ip\nfake_host_key\n"
+          end
+        end
+      end
+    end
+
+    it 'does not change the host key if already present' do
+      with_test_platform do
+        with_cmd_runner_mocked(
+          commands: [
+            ['sshpass -V', proc { [0, "sshpass 1.06\n", ''] }],
+            ['which env', proc { [0, "/usr/bin/env\n", ''] }],
+            ['ssh -V 2>&1', proc { [0, "OpenSSH_7.4p1 Debian-10+deb9u7, OpenSSL 1.0.2u  20 Dec 2019\n", ''] }]
+          ],
+          with_control_master: false
+        ) do
+          test_ssh_executor.with_platforms_ssh do |ssh_exec, _ssh_config, known_hosts_file|
+            # Put another host key in the file
+            File.write(known_hosts_file, "node_connection\nanother_fake_key\n")
+            test_ssh_executor.ensure_host_key('node_connection', known_hosts_file)
+            expect(File.read(known_hosts_file)).to eq "node_connection\nanother_fake_key\n"
           end
         end
       end
