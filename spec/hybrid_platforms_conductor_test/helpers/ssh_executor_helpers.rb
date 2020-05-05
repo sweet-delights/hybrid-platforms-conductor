@@ -112,12 +112,19 @@ module HybridPlatformsConductorTest
       # Parameters::
       # * *node* (String or nil): The node we look the SSH config for, or nil for the global configuration
       # * *ssh_config* (String or nil): The SSH config, or nil to get it from the test_ssh_executor [default: nil]
+      # * *nodes* (Array<String> or nil): List of nodes to give ssh_config, or nil for none. Used only if ssh_config is nil. [default: nil]
       # * *ssh_exec* (String or nil): SSH executable, or nil to keep default. Used only if ssh_config is nil. [default: nil]
       # * *known_hosts_file* (String or nil): Known host file to give. Used only if ssh_config is nil. [default: nil]
       # Result::
       # * String or nil: Corresponding SSH config, or nil if none
-      def ssh_config_for(node, ssh_config: nil, ssh_exec: nil, known_hosts_file: nil)
-        ssh_config = ssh_exec.nil? ? test_ssh_executor.ssh_config(known_hosts_file: known_hosts_file) : test_ssh_executor.ssh_config(ssh_exec: ssh_exec, known_hosts_file: known_hosts_file) if ssh_config.nil?
+      def ssh_config_for(node, ssh_config: nil, nodes: nil, ssh_exec: nil, known_hosts_file: nil)
+        if ssh_config.nil?
+          params = {}
+          params[:nodes] = nodes unless nodes.nil?
+          params[:ssh_exec] = ssh_exec unless ssh_exec.nil?
+          params[:known_hosts_file] = known_hosts_file unless known_hosts_file.nil?
+          ssh_config = test_ssh_executor.ssh_config(**params)
+        end
         ssh_config_lines = ssh_config.split("\n")
         begin_marker = node.nil? ? /^Host \*$/ : /^# #{Regexp.escape(node)} - .+$/
         start_idx = ssh_config_lines.index { |line| line =~ begin_marker }

@@ -111,6 +111,20 @@ describe HybridPlatformsConductor::SshExecutor do
       end
     end
 
+    it 'selects nodes when generating the config' do
+      with_test_platform(nodes: {
+        'node1' => { connection: 'node1_connection' },
+        'node2' => { connection: 'node2_connection' },
+        'node3' => { connection: 'node3_connection' }
+      }) do
+        expect(ssh_config_for('node1', nodes: %w[node1 node3])).to eq <<~EOS
+          Host hpc.node1
+            Hostname node1_connection
+        EOS
+        expect(ssh_config_for('node2', nodes: %w[node1 node3])).to eq nil
+      end
+    end
+
     it 'uses node forced gateway information' do
       with_test_platform(nodes: { 'node' => { connection: { connection: 'node_connection', gateway: 'test_gateway', gateway_user: 'test_gateway_user' } } }) do
         expect(ssh_config_for('node')).to eq <<~EOS
