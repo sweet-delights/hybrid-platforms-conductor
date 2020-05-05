@@ -128,7 +128,7 @@ module HybridPlatformsConductorTest
         ssh_config_lines[start_idx..end_idx].select do |line|
           stripped_line = line.strip
           !stripped_line.empty? && stripped_line[0] != '#'
-        end.join("\n")
+        end.join("\n") + "\n"
       end
 
       # Get a test SshExecutor
