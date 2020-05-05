@@ -12,11 +12,19 @@ module HybridPlatformsConductorTest
       #   * *connection* (String): Connection string (fqdn, IP...) used by SSH
       #   * *user* (String): User used by SSH
       #   * *times* (Integer): Number of times this connection should be used [default: 1]
-      # * *with_control_master* (Boolean): Do we use the control master? [default = true]
-      # * *with_strict_host_key_checking* (Boolean): Do we use strict host key checking? [default = true]
+      # * *with_control_master_create* (Boolean): Do we create the control master? [default: true]
+      # * *with_control_master_check* (Boolean): Do we check the control master? [default: false]
+      # * *with_control_master_destroy* (Boolean): Do we destroy the control master? [default: true]
+      # * *with_strict_host_key_checking* (Boolean): Do we use strict host key checking? [default: true]
       # Result::
       # * Array< [String or Regexp, Proc] >: The expected commands that should be used, and their corresponding mocked code
-      def ssh_expected_commands_for(nodes_connections, with_control_master = true, with_strict_host_key_checking = true)
+      def ssh_expected_commands_for(
+        nodes_connections,
+        with_control_master_create: true,
+        with_control_master_check: false,
+        with_control_master_destroy: true,
+        with_strict_host_key_checking: true
+      )
         nodes_connections.map do |node, node_connection_info|
           node_connection_info[:times] = 1 unless node_connection_info.key?(:times)
           expected_ssh_commands = []
@@ -44,17 +52,23 @@ module HybridPlatformsConductorTest
               ]
             ])
           end
-          if with_control_master
-            expected_ssh_commands.concat([
-              [
-                /^.+\/ssh -o BatchMode=yes -o ControlMaster=yes -o ControlPersist=yes #{Regexp.escape(node_connection_info[:user])}@hpc.#{Regexp.escape(node)} true$/,
-                proc { [0, '', ''] }
-              ],
-              [
-                /^.+\/ssh -O exit #{Regexp.escape(node_connection_info[:user])}@hpc.#{Regexp.escape(node)} 2>&1 | grep -v 'Exit request sent.'$/,
-                proc { [1, '', ''] }
-              ]
-            ])
+          if with_control_master_create
+            expected_ssh_commands << [
+              /^.+\/ssh -o BatchMode=yes -o ControlMaster=yes -o ControlPersist=yes #{Regexp.escape(node_connection_info[:user])}@hpc.#{Regexp.escape(node)} true$/,
+              proc { [0, '', ''] }
+            ]
+          end
+          if with_control_master_check
+            expected_ssh_commands << [
+              /^.+\/ssh -O check #{Regexp.escape(node_connection_info[:user])}@hpc.#{Regexp.escape(node)}$/,
+              proc { [0, '', ''] }
+            ]
+          end
+          if with_control_master_destroy
+            expected_ssh_commands << [
+              /^.+\/ssh -O exit #{Regexp.escape(node_connection_info[:user])}@hpc.#{Regexp.escape(node)} 2>&1 | grep -v 'Exit request sent.'$/,
+              proc { [1, '', ''] }
+            ]
           end
           expected_ssh_commands * node_connection_info[:times]
         end.flatten(1)
