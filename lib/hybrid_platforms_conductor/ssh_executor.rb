@@ -1,6 +1,7 @@
 require 'fileutils'
 require 'futex'
 require 'logger'
+require 'securerandom'
 require 'tmpdir'
 require 'hybrid_platforms_conductor/nodes_handler'
 require 'hybrid_platforms_conductor/cmd_runner'
@@ -106,9 +107,6 @@ module HybridPlatformsConductor
             Actions.const_get(action_name.to_s.split('_').collect(&:capitalize).join.to_sym)
           ]
         end]
-      # List of nodes already having their ControlMaster created, with their corresponding SSH URL
-      @nodes_ssh_urls = {}
-      @control_master_nodes_semaphore = Mutex.new
       # Take a few info on the environment
       exit_code, _stdout, _stderr = @cmd_runner.run_cmd 'sshpass -V', log_to_stdout: log_debug?, no_exception: true
       @ssh_pass_installed = (exit_code == 0)
@@ -303,6 +301,9 @@ module HybridPlatformsConductor
 
     # Open an SSH control master to multiplex connections to a given list of nodes.
     # This method is re-entrant and reuses the same control masters.
+    # It is multi-processes:
+    # * A file-mutex is used to keep track of all processes connecting to a user@node.
+    # * When the last process has finished using the control master, it closes it.
     #
     # Parameters::
     # * *nodes* (String or Array<String>): The nodes (or single node) for which we open the Control Master.
@@ -314,58 +315,91 @@ module HybridPlatformsConductor
     #     * *ssh_urls* (Hash<String,String>): Set of SSH URLs to be used, per each node name for which the connection was successful.
     def with_ssh_master_to(nodes, timeout: nil, no_exception: false)
       nodes = [nodes] if nodes.is_a?(String)
-        created_ssh_urls = {}
       with_platforms_ssh(nodes: nodes) do |ssh_exec, _ssh_config, known_hosts|
+        # List of user_ids that acquired a lock, per node
+        user_locks = {}
         begin
+          # List of SSH URL that is accessible, per node
+          working_ssh_urls = {}
           nodes.each do |node|
-            existing_control_master = false
-            @control_master_nodes_semaphore.synchronize do
-              unless @nodes_ssh_urls.key?(node)
-                connection, _gateway, _gateway_user = connection_info_for(node)
-                ensure_host_key(connection, known_hosts)
-                ssh_url = "#{@ssh_user}@hpc.#{node}"
-                if @ssh_use_control_master
-                  # Thanks to the ControlMaster option, connections are reused. So no problem to have several scp and ssh commands later.
-                  log_debug "[ ControlMaster - #{node} ] - Starting ControlMaster for connection on #{ssh_url}..."
+            ssh_url = "#{@ssh_user}@hpc.#{node}"
+            connection, _gateway, _gateway_user = connection_info_for(node)
+            ensure_host_key(connection, known_hosts)
+            if @ssh_use_control_master
+              with_lock_on_control_master_for(node) do |current_users, user_id|
+                working_master = false
+                if current_users.empty?
+                  log_debug "[ ControlMaster - #{ssh_url} ] - Creating SSH ControlMaster..."
+                  # We have to create the control master.
+                  # Make sure there is no stale one.
                   control_path_file = "#{@tmp_dir}/ssh_executor_mux_#{connection}_22_#{@ssh_user}"
                   if File.exist?(control_path_file)
-                    log_warn "Removing stale SSH control file #{control_path_file}"
+                    log_warn "[ ControlMaster - #{ssh_url} ] - Removing stale SSH control file #{control_path_file}"
                     File.unlink control_path_file
                   end
+                  # Create the control master
                   ssh_control_master_start_cmd = "#{ssh_exec}#{@passwords.key?(node) || @auth_password ? '' : ' -o BatchMode=yes'} -o ControlMaster=yes -o ControlPersist=yes #{ssh_url} true"
                   begin
-                    exit_status, _stdout, _stderr = @cmd_runner.run_cmd ssh_control_master_start_cmd, no_exception: no_exception, timeout: timeout
+                    exit_status, _stdout, _stderr = @cmd_runner.run_cmd ssh_control_master_start_cmd, log_to_stdout: log_debug?, no_exception: no_exception, timeout: timeout
                   rescue CmdRunner::UnexpectedExitCodeError
                     raise SshConnectionError, "Error while starting SSH Control Master with #{ssh_control_master_start_cmd}"
                   end
-                  # Uncomment if you want to test the connection
-                  # @cmd_runner.run_cmd "#{ssh_exec} -O check #{ssh_url}", log_to_stdout: false, timeout: timeout
                   if exit_status == 0
-                    # Connection ok
-                    created_ssh_urls[node] = ssh_url
-                    log_debug "[ ControlMaster - #{node} ] - ControlMaster started for connection on #{ssh_url}"
-                    @nodes_ssh_urls[node] = ssh_url
+                    log_debug "[ ControlMaster - #{ssh_url} ] - ControlMaster created"
+                    working_master = true
                   else
-                    log_error "[ ControlMaster - #{node} ] - ControlMaster could not be started for connection on #{ssh_url}"
+                    log_error "[ ControlMaster - #{ssh_url} ] - ControlMaster could not be started"
                   end
                 else
-                  @nodes_ssh_urls[node] = ssh_url
+                  # The control master should already exist
+                  log_debug "[ ControlMaster - #{ssh_url} ] - Using existing SSH ControlMaster..."
+                  # Test that it is working
+                  ssh_control_master_check_cmd = "#{ssh_exec} -O check #{ssh_url}"
+                  begin
+                    exit_status, _stdout, _stderr = @cmd_runner.run_cmd ssh_control_master_check_cmd, log_to_stdout: log_debug?, no_exception: no_exception, timeout: timeout
+                  rescue CmdRunner::UnexpectedExitCodeError
+                    raise SshConnectionError, "Error while checking SSH Control Master with #{ssh_control_master_check_cmd}"
+                  end
+                  if exit_status == 0
+                    log_debug "[ ControlMaster - #{ssh_url} ] - ControlMaster checked ok"
+                    working_master = true
+                  else
+                    log_error "[ ControlMaster - #{ssh_url} ] - ControlMaster could not be used"
+                  end
+                end
+                # Make sure we register ourselves among the users if the master is working
+                if working_master
+                  working_ssh_urls[node] = ssh_url
+                  user_locks[node] = user_id
+                  true
+                else
+                  false
                 end
               end
+            else
+              working_ssh_urls[node] = ssh_url
             end
           end
-          yield ssh_exec, @nodes_ssh_urls.select { |node| nodes.include?(node) }
+          yield ssh_exec, working_ssh_urls
         ensure
-          @control_master_nodes_semaphore.synchronize do
-            created_ssh_urls.each do |node, ssh_url|
-              log_debug "[ ControlMaster - #{node} ] - Stopping ControlMaster for connection on #{ssh_url}..."
-              # Dumb verbose ssh! Tricky trick to just silence what is useless.
-              # Don't fail if the connection close fails (but still log the error), as it can be seen as only a warning: it means the connection was closed anyway.
-              @cmd_runner.run_cmd "#{ssh_exec} -O exit #{ssh_url} 2>&1 | grep -v 'Exit request sent.'", expected_code: 1, timeout: timeout, no_exception: true
-              log_debug "[ ControlMaster - #{node} ] - ControlMaster stopped for connection on #{ssh_url}"
-              # Uncomment if you want to test the connection
-              # @cmd_runner.run_cmd "#{ssh_exec} -O check #{ssh_url}", log_to_stdout: false, expected_code: 255, timeout: timeout
-              @nodes_ssh_urls.delete(node)
+          user_locks.each do |node, user_id|
+            ssh_url = working_ssh_urls[node]
+            with_lock_on_control_master_for(node, user_id: user_id) do |current_users, user_id|
+              log_warn "[ ControlMaster - #{ssh_url} ] - Current process/thread was not part of the ControlMaster users anymore whereas it should have been" unless current_users.include?(user_id)
+              remaining_users = current_users - [user_id]
+              if remaining_users.empty?
+                # Stop the ControlMaster
+                log_debug "[ ControlMaster - #{ssh_url} ] - Stopping ControlMaster..."
+                # Dumb verbose ssh! Tricky trick to just silence what is useless.
+                # Don't fail if the connection close fails (but still log the error), as it can be seen as only a warning: it means the connection was closed anyway.
+                @cmd_runner.run_cmd "#{ssh_exec} -O exit #{ssh_url} 2>&1 | grep -v 'Exit request sent.'", log_to_stdout: log_debug?, expected_code: 1, timeout: timeout, no_exception: true
+                log_debug "[ ControlMaster - #{ssh_url} ] - ControlMaster stopped"
+                # Uncomment if you want to test that the connection has been closed
+                # @cmd_runner.run_cmd "#{ssh_exec} -O check #{ssh_url}", log_to_stdout: log_debug?, expected_code: 255, timeout: timeout
+              else
+                log_debug "[ ControlMaster - #{ssh_url} ] - Leaving ControlMaster started as #{remaining_users.size} processes/threads are still using it."
+              end
+              false
             end
           end
         end
@@ -451,6 +485,38 @@ module HybridPlatformsConductor
     end
 
     private
+
+    # Get the lock to access users of a given node's ControlMaster.
+    # Make sure the lock is released when exiting client code.
+    #
+    # Parameters::
+    # * *node* (String): Node to access
+    # * *user_id* (String or nil): User ID that wants to access the lock, or nil to get a new generated one. [default: nil]
+    # * Proc: The code to be called with lock taken
+    #   * Parameters::
+    #     * *current_users* (Array<String>): Current user IDs having the lock
+    #     * *user_id* (String): The user ID
+    #   * Result::
+    #     * Boolean: Should we stay as users of the lock?
+    def with_lock_on_control_master_for(node, user_id: nil)
+      user_id = "#{Process.pid}.#{Thread.current.object_id}.#{SecureRandom.uuid}" if user_id.nil?
+      control_master_users_file = "#{@tmp_dir}/#{@ssh_user}.#{node}.users"
+      # Make sure we remove our token for this control master
+      Futex.new(control_master_users_file).open do
+        # Get the list of existing process/thread ids using this control master
+        existing_users = File.exist?(control_master_users_file) ? File.read(control_master_users_file).split("\n") : []
+        confirmed_user = yield existing_users, user_id
+        user_already_included = existing_users.include?(user_id)
+        existing_users_to_update = nil
+        if confirmed_user
+          existing_users_to_update = existing_users + [user_id] unless user_already_included
+        elsif user_already_included
+          existing_users_to_update = existing_users - [user_id]
+        end
+        File.write(control_master_users_file, existing_users_to_update.join("\n")) if existing_users_to_update
+      end
+      user_id
+    end
 
     # Get the connection information for a given node accessed using one of its given IPs.
     # Take into account possible overrides used in tests for example to route connections.
