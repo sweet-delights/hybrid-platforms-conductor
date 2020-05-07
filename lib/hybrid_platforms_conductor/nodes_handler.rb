@@ -113,19 +113,10 @@ module HybridPlatformsConductor
         out "* Known nodes:\n#{known_nodes.sort.join("\n")}"
         out
         out "* Known nodes with description:\n#{
-          prefetch_metadata_of known_nodes, %i[hostname connection_ip private_ips services description]
+          prefetch_metadata_of known_nodes, %i[services description]
           known_nodes.map do |node|
-            "#{platform_for(node).info[:repo_name]} - #{node} (#{
-              if get_hostname_of node
-                get_hostname_of node
-              elsif get_connection_ip_of node
-                get_connection_ip_of node
-              elsif get_private_ips_of node
-                get_private_ips_of(node).first
-              else
-                'No connection'
-              end
-            }) - #{(get_services_of(node) || []).join(', ')} - #{get_description_of(node) || ''}"
+            connection, _gateway, _gateway_user = connection_for(node)
+            "#{platform_for(node).info[:repo_name]} - #{node} (#{connection}) - #{(get_services_of(node) || []).join(', ')} - #{get_description_of(node) || ''}"
           end.sort.join("\n")
         }"
         out
@@ -392,9 +383,8 @@ module HybridPlatformsConductor
                   # We need to convert it to real metadata Hash.
                   [node, { property => cmdb_result }]
                 end
-              end.
-              compact
-            ]
+              end
+            ].compact
             log_debug "#{cmdb_log_header} Found metadata for #{metadata_from_cmdb.select { |node, cmdb_result| cmdb_result.key?(property) }.size} nodes."
             updated_metadata.merge!(metadata_from_cmdb) do |node, existing_metadata, new_metadata|
               existing_metadata.merge(new_metadata) do |prop_name, existing_value, new_value|
@@ -458,7 +448,10 @@ module HybridPlatformsConductor
             string_nodes.concat(platform.nodes_selectors_from_nodes_list(nodes_selector[:list]))
           end
           string_nodes.concat(@platforms[nodes_selector[:platform]].known_nodes) if nodes_selector.key?(:platform)
-          string_nodes.concat(known_nodes.select { |node| services_for(node).include?(nodes_selector[:service]) }) if nodes_selector.key?(:service)
+          if nodes_selector.key?(:service)
+            prefetch_metadata_of known_nodes, :services
+            string_nodes.concat(known_nodes.select { |node| get_services_of(node).include?(nodes_selector[:service]) })
+          end
         end
       end
       # 3. Expand the Regexps

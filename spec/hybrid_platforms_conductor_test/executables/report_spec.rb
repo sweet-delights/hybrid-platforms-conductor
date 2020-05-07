@@ -34,10 +34,10 @@ describe 'report executable' do
   it 'reports info from metadata' do
     with_test_platform(nodes: { 'node' => {
        meta: {
-        'private_ips' => ['192.168.0.1', '192.168.0.2'],
-        'public_ips' => ['1.2.3.4'],
-        'image' => 'debian_10',
-        'description' => 'A great server'
+        private_ips: ['192.168.0.1', '192.168.0.2'],
+        public_ips: ['1.2.3.4'],
+        image: 'debian_10',
+        description: 'A great server'
       },
       services: ['node_service1', 'node_service2']
     } }) do

@@ -289,7 +289,7 @@ module HybridPlatformsConductor
               aliases << inv_connection
             end
           end
-          config_content << "# #{node} - #{private_ip.nil? ? 'Unknown IP address' : private_ip} - #{@nodes_handler.platform_for(node).repository_path}#{conf.key?('description') ? " - #{conf['description']}" : ''}\n"
+          config_content << "# #{node} - #{private_ip.nil? ? 'Unknown IP address' : private_ip} - #{@nodes_handler.platform_for(node).repository_path} - #{@nodes_handler.get_description_of(node) || ''}\n"
           config_content << "Host #{aliases.join(' ')}\n"
           config_content << "  Hostname #{connection}\n"
           config_content << "  ProxyCommand #{ssh_exec} -q -W %h:%p #{gateway_user}@#{gateway}\n" unless gateway.nil?

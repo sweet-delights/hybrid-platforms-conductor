@@ -85,12 +85,6 @@ describe HybridPlatformsConductor::NodesHandler do
       end
     end
 
-    it 'returns nodes services' do
-      with_test_platform(nodes: { 'test_node' => { services: ['test_service1', 'test_service2'] } }) do
-        expect(test_nodes_handler.services_for('test_node').sort).to eq(['test_service1', 'test_service2'].sort)
-      end
-    end
-
   end
 
 end
