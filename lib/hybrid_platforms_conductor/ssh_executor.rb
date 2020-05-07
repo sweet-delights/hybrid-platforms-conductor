@@ -274,9 +274,10 @@ module HybridPlatformsConductor
       EOS
 
       # Add each node
+      # Query for the metadata of all nodes at once
+      @nodes_handler.prefetch_metadata_of nodes, %i[private_ips hostname description]
       nodes.sort.each do |node|
-        conf = @nodes_handler.metadata_for node
-        (conf.key?('private_ips') ? conf['private_ips'].sort : [nil]).each.with_index do |private_ip, idx|
+        (@nodes_handler.get_private_ips_of(node) || [nil]).sort.each.with_index do |private_ip, idx|
           # Generate the conf for the node
           connection, gateway, gateway_user = connection_info_for(node)
           aliases = ssh_aliases_for(node, private_ip)

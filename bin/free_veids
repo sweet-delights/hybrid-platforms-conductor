@@ -8,12 +8,10 @@ nodes_handler = executable.nodes_handler
 
 executable.parse_options!
 
+nodes_handler.prefetch_metadata_of nodes_handler.known_nodes, :veid
 veids = nodes_handler.
   known_nodes.
-  map do |node|
-    conf = nodes_handler.metadata_for node
-    conf.key?('veid') ? conf['veid'].to_i : nil
-  end.
+  map { |node| nodes_handler.get_veid_of(node) ? nodes_handler.get_veid_of(node).to_i : nil }.
   compact
 
 executable.out "Free VEIDs: #{([10_000] + veids).missing.rangify}"

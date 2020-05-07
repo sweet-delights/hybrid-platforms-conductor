@@ -55,9 +55,21 @@ describe HybridPlatformsConductor::NodesHandler do
       end
     end
 
-    it 'returns nodes metadata' do
-      with_test_platform(nodes: { 'test_node' => { meta: { 'metadata_name' => 'value' } } }) do
-        expect(test_nodes_handler.metadata_for('test_node')).to eq({ 'metadata_name' => 'value' })
+    it 'returns nodes metadata using generic method' do
+      with_test_platform(nodes: { 'test_node' => { meta: { metadata_name: 'value' } } }) do
+        expect(test_nodes_handler.metadata_of('test_node', :metadata_name)).to eq 'value'
+      end
+    end
+
+    it 'returns nodes metadata using dynamic method' do
+      with_test_platform(nodes: { 'test_node' => { meta: { metadata_name: 'value' } } }) do
+        expect(test_nodes_handler.get_metadata_name_of('test_node')).to eq 'value'
+      end
+    end
+
+    it 'returns nodes metadata using dynamic method several times (as the method is created dynamically)' do
+      with_test_platform(nodes: { 'test_node' => { meta: { metadata_name: 'value' } } }) do
+        3.times { expect(test_nodes_handler.get_metadata_name_of('test_node')).to eq 'value' }
       end
     end
 

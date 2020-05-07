@@ -242,7 +242,7 @@ module HybridPlatformsConductor
       end
       if docker_ok
         # Get the image name for this node
-        image = @nodes_handler.metadata_for(node)['image'].to_sym
+        image = @nodes_handler.get_image_of(node).to_sym
         # Find if we have such an image registered
         if @nodes_handler.known_docker_images.include?(image)
           # Build the image if it does not exist
@@ -429,9 +429,10 @@ module HybridPlatformsConductor
           end
 
           # Deploy for real
+          @nodes_handler.prefetch_metadata_of @nodes, :image
           outputs = @ssh_executor.execute_actions(
             Hash[@nodes.map do |node|
-              image_id = @nodes_handler.metadata_for(node)['image']
+              image_id = @nodes_handler.get_image_of(node)
               # Install My_company corporate certificates if present
               certificate_actions =
                 if @local_environment && ENV['hpc_certificates']

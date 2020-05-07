@@ -9,12 +9,10 @@ nodes_handler = executable.nodes_handler
 executable.parse_options!
 
 # Group IPs per first 3 numbers
+nodes_handler.prefetch_metadata_of nodes_handler.known_nodes, :private_ips
 nodes_handler.
   known_nodes.
-  map do |node|
-    conf = nodes_handler.metadata_for node
-    conf.key?('private_ips') ? conf['private_ips'] : []
-  end.
+  map { |node| nodes_handler.get_private_ips_of(node) || [] }.
   flatten.
   uniq.
   group_by { |ip| ip.split('.')[0..2].map(&:to_i) }.

@@ -2,6 +2,8 @@ require 'json'
 require 'ipaddress'
 require 'logger'
 require 'ruby-progressbar'
+require 'hybrid_platforms_conductor/cmd_runner'
+require 'hybrid_platforms_conductor/cmdb'
 require 'hybrid_platforms_conductor/logger_helpers'
 require 'hybrid_platforms_conductor/parallel_threads'
 require 'hybrid_platforms_conductor/platforms_dsl'
@@ -24,11 +26,13 @@ module HybridPlatformsConductor
     # Constructor
     #
     # Parameters::
-    # * *logger* (Logger): Logger to be used [default = Logger.new(STDOUT)]
-    # * *logger_stderr* (Logger): Logger to be used for stderr [default = Logger.new(STDERR)]
-    def initialize(logger: Logger.new(STDOUT), logger_stderr: Logger.new(STDERR))
+    # * *logger* (Logger): Logger to be used [default: Logger.new(STDOUT)]
+    # * *logger_stderr* (Logger): Logger to be used for stderr [default: Logger.new(STDERR)]
+    # * *cmd_runner* (CmdRunner): Command executor to be used. [default: CmdRunner.new]
+    def initialize(logger: Logger.new(STDOUT), logger_stderr: Logger.new(STDERR), cmd_runner: CmdRunner.new)
       @logger = logger
       @logger_stderr = logger_stderr
+      @cmd_runner = cmd_runner
       # Directory in which we have platforms handled by HPCs definition
       @hybrid_platforms_dir = File.expand_path(ENV['hpc_platforms'].nil? ? '.' : ENV['hpc_platforms'])
       @platform_types = PlatformsDsl.platform_types
@@ -50,6 +54,40 @@ module HybridPlatformsConductor
       # List of platform handler per platform name
       # Hash<String, PlatformHandler>
       @platforms = {}
+      # List of CMDBs getting a property, per property name
+      # Hash<Symbol, Array<Cmdb> >
+      @cmdbs_per_property = {}
+      # List of CMDBs having the get_others method
+      # Array< Cmdb >
+      @cmdb_others = []
+      # Parse available CMDBs, per CMDB name
+      # Array<Cmdb>
+      @cmdbs = Dir.
+        glob("#{__dir__}/cmdbs/*.rb").
+        map do |file_name|
+          cmdb_name = File.basename(file_name, '.rb').to_sym
+          require file_name
+          cmdb = Cmdbs.const_get(cmdb_name.to_s.split('_').collect(&:capitalize).join.to_sym).new(
+            logger: @logger,
+            logger_stderr: @logger_stderr,
+            nodes_handler: self,
+            cmd_runner: @cmd_runner
+          )
+          @cmdb_others << cmdb if cmdb.respond_to?(:get_others)
+          cmdb.methods.each do |method|
+            if method.to_s =~ /^get_(.*)$/
+              property = $1.to_sym
+              @cmdbs_per_property[property] = [] unless @cmdbs_per_property.key?(property)
+              @cmdbs_per_property[property] << cmdb
+            end
+          end
+          cmdb
+        end
+      # Cache of metadata per node
+      # Hash<String, Hash<Symbol, Object> >
+      @metadata = {}
+      # The metadata update is protected by a mutex to make it thread-safe
+      @metadata_mutex = Mutex.new
       initialize_platforms_dsl
     end
 
@@ -75,10 +113,19 @@ module HybridPlatformsConductor
         out "* Known nodes:\n#{known_nodes.sort.join("\n")}"
         out
         out "* Known nodes with description:\n#{
+          prefetch_metadata_of known_nodes, %i[hostname connection_ip private_ips services description]
           known_nodes.map do |node|
-            conf = metadata_for(node)
-            connection, _gateway, _gateway_user = connection_for(node)
-            "#{platform_for(node).info[:repo_name]} - #{node} (#{connection}) - #{services_for(node).join(', ')} - #{conf.key?('description') ? conf['description'] : ''}"
+            "#{platform_for(node).info[:repo_name]} - #{node} (#{
+              if get_hostname_of node
+                get_hostname_of node
+              elsif get_connection_ip_of node
+                get_connection_ip_of node
+              elsif get_private_ips_of node
+                get_private_ips_of(node).first
+              else
+                'No connection'
+              end
+            }) - #{(get_services_of(node) || []).join(', ')} - #{get_description_of(node) || ''}"
           end.sort.join("\n")
         }"
         out
@@ -211,7 +258,8 @@ module HybridPlatformsConductor
     # Result::
     # * Array<String>: List of service names
     def known_services
-      known_nodes.map { |node| services_for(node) }.flatten.uniq.sort
+      prefetch_metadata_of known_nodes, :services
+      known_nodes.map { |node| get_services_of node }.flatten.uniq.sort
     end
 
     # Get the platform handler of a given node
@@ -234,14 +282,16 @@ module HybridPlatformsConductor
       @nodes_list_platform[nodes_list]
     end
 
-    # Get the metadata of a given node.
+    # Get a metadata property for a given node
     #
     # Parameters::
-    # * *node* (String): Node to read mtadata from
+    # * *node* (String): Node
+    # * *property* (Symbol): The property name
     # Result::
-    # * Hash<String,Object>: The corresponding metadata (as a JSON object)
-    def metadata_for(node)
-      platform_for(node).metadata_for(node)
+    # * Object or nil: The node's metadata value for this property, or nil if none
+    def metadata_of(node, property)
+      prefetch_metadata_of([node], property) unless @metadata.key?(node) && @metadata[node].key?(property)
+      @metadata[node][property]
     end
 
     # Return the connection string for a given node
@@ -257,14 +307,125 @@ module HybridPlatformsConductor
       platform_for(node).connection_for(node)
     end
 
-    # Return the services for a given node
+    # Define a method to get a metadata property of a node.
+    # This is like a factory of method shortcuts for properties.
+    # The method will be named get_<property>_of.
+    # This way instead of calling
+    #   metadata_of node, :host_ip
+    # we can call
+    #   get_host_ip_of node
+    # Readability wins :D
     #
     # Parameters::
-    # * *node* (String): node to read configuration from
-    # Result::
-    # * Array<String>: The corresponding service
-    def services_for(node)
-      platform_for(node).services_for(node)
+    # * *property* (Symbol): The property name
+    def define_property_method_for(property)
+      define_singleton_method("get_#{property}_of".to_sym) { |node| metadata_of(node, property) }
+    end
+
+    # Accept any method of name get_<property>_of to get the metadata property of a given node.
+    # Here is the magic of accepting method names that are not statically defined.
+    #
+    # Parameters::
+    # * *method* (Symbol): The missing method name
+    # * *args* (Array<Object>): Arguments given to the call
+    # * *block* (Proc): Code block given to the call
+    def method_missing(method, *args, &block)
+      if method.to_s =~ /^get_(.*)_of$/
+        property = $1.to_sym
+        # Define the method so that we don't go trough method_missing next time (more efficient).
+        define_property_method_for(property)
+        # Then call it
+        send("get_#{property}_of".to_sym, *args, &block)
+      else
+        # We really don't know this method.
+        # Call original implementation of method_missing that will raise an exception.
+        super
+      end
+    end
+
+    # Prefetch some metadata properties for a given list of nodes.
+    # Useful for performance reasons when clients know they will need to use a lot of properties on nodes.
+    # Keep a thread-safe memory cache of it.
+    #
+    # Parameters::
+    # * *nodes* (Array<String>): Nodes to read metadata for
+    # * *properties* (Symbol or Array<Symbol>): Metadata properties (or single one) to read
+    def prefetch_metadata_of(nodes, properties)
+      (properties.is_a?(Symbol) ? [properties] : properties).each do |property|
+        # Gather the list of nodes missing this property
+        missing_nodes = nodes.select { |node| !@metadata.key?(node) || !@metadata[node].key?(property) }
+        unless missing_nodes.empty?
+          # Query the CMDBs having first the get_<property> method, then the ones having the get_others method till we have our property set for all missing nodes
+          # Metadata being retrieved by the different CMDBs, per node
+          updated_metadata = {}
+          (
+            (@cmdbs_per_property.key?(property) ? @cmdbs_per_property[property] : []).map { |cmdb| [cmdb, property] } +
+            @cmdb_others.map { |cmdb| [cmdb, :others] }
+          ).each do |(cmdb, cmdb_property)|
+            remaining_nodes = missing_nodes.select { |node| !updated_metadata.key?(node) || !updated_metadata[node][property] }
+            # Stop browsing the CMDBs when all nodes have a value for this property
+            break if remaining_nodes.empty?
+            # Check first if this property depends on other ones for this cmdb
+            if cmdb.respond_to?(:property_dependencies)
+              property_deps = cmdb.property_dependencies
+              if property_deps.key?(property)
+                prefetch_metadata_of remaining_nodes, property_deps[property]
+                # Recompute mising nodes, as @metadata might have changed
+                missing_nodes = nodes.select { |node| !@metadata.key?(node) || !@metadata[node].key?(property) }
+                remaining_nodes = missing_nodes.select { |node| !updated_metadata.key?(node) || !updated_metadata[node][property] }
+                break if remaining_nodes.empty?
+              end
+            end
+            cmdb_log_header = "[CMDB #{cmdb.class.name.split('::').last}.#{cmdb_property}] -"
+            log_debug "#{cmdb_log_header} Query #{remaining_nodes.size} nodes to find property #{property}..."
+            metadata_from_cmdb = Hash[
+              cmdb.send("get_#{cmdb_property}".to_sym, remaining_nodes, @metadata.slice(*remaining_nodes)).map do |node, cmdb_result|
+                if cmdb_property == :others
+                  # Here cmdb_result is a real Hash of metadata.
+                  # Remove nil values if any, as the call could have returned data for other properties as well.
+                  # We don't want to keep those nil properties, as maybe a query to those properties would have tried other CMDBs and the value would have be filled.
+                  # If we keep them as nil, then the cache will understand that we tried to fetch them but they really have no value.
+                  compacted_metadata = cmdb_result.compact
+                  [node, compacted_metadata.empty? ? nil : compacted_metadata]
+                else
+                  # Here cmdb_result is the metadata property value.
+                  # We need to convert it to real metadata Hash.
+                  [node, { property => cmdb_result }]
+                end
+              end.
+              compact
+            ]
+            log_debug "#{cmdb_log_header} Found metadata for #{metadata_from_cmdb.select { |node, cmdb_result| cmdb_result.key?(property) }.size} nodes."
+            updated_metadata.merge!(metadata_from_cmdb) do |node, existing_metadata, new_metadata|
+              existing_metadata.merge(new_metadata) do |prop_name, existing_value, new_value|
+                raise "#{cmdb_log_header} Returned a conflicting value for metadata #{prop_name} of node #{node}: #{new_value} whereas the value was already set to #{existing_value}" if !existing_value.nil? && new_value != existing_value
+                new_value
+              end
+            end
+          end
+          # Here, explicitely store nil if nothing has been found for a node because we know there is no value to be fetched.
+          # This way we won't query again all CMDBs thanks to the cache.
+          missing_nodes.each do |node|
+            if updated_metadata.key?(node)
+              updated_metadata[node][property] = nil unless updated_metadata[node].key?(property)
+            else
+              updated_metadata[node] = { property => nil }
+            end
+          end
+          # Avoid conflicts in metadata while merging and make sure this update is thread-safe
+          # As @metadata is only appending data and never deleting it, protecting the update only is enough.
+          # At worst several threads will query several times the same CMDBs to update the same data several times.
+          # If we also want to be thread-safe in this regard, we should protect the whole CMDB call with mutexes, at the granularity of the node + property bein read.
+          @metadata_mutex.synchronize do
+            @metadata.merge!(updated_metadata) do |node, existing_metadata, new_metadata|
+              existing_metadata.merge(new_metadata) do |prop_name, existing_value, new_value|
+                raise "CMDB #{cmdb.class.name} returned a conflicting value for metadata #{prop_name} of node #{node}: #{new_value} whereas the value was already set to #{existing_value}" unless new_value == existing_value
+                new_value
+              end
+            end
+          end
+        end
+      end
     end
 
     # Resolve a list of nodes selectors into a real list of known nodes.
