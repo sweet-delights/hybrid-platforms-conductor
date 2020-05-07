@@ -22,6 +22,7 @@ require 'hybrid_platforms_conductor_test/helpers/deployer_test_helpers'
 require 'hybrid_platforms_conductor_test/helpers/tests_runner_helpers'
 require 'hybrid_platforms_conductor_test/helpers/reports_handler_helpers'
 require 'hybrid_platforms_conductor_test/helpers/executables_helpers'
+require 'hybrid_platforms_conductor_test/helpers/cmdb_helpers'
 require 'hybrid_platforms_conductor_test/test_plugins/global'
 require 'hybrid_platforms_conductor_test/test_plugins/platform'
 require 'hybrid_platforms_conductor_test/test_plugins/node'
@@ -42,6 +43,7 @@ module HybridPlatformsConductorTest
     include TestsRunnerHelpers
     include ReportsHandlerHelpers
     include ExecutablesHelpers
+    include CmdbHelpers
 
     # Make sure the tested components are being reset before each test case
     RSpec.configure do |config|

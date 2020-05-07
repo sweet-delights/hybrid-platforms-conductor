@@ -1,6 +1,6 @@
 describe HybridPlatformsConductor::NodesHandler do
 
-  context 'checking plugins\' API called by NodesHandler' do
+  context 'checking Platform Handlers plugins\' API called by NodesHandler' do
 
     it 'returns nodes' do
       with_test_platform(nodes: { 'node1' => {}, 'node2' => {} }) do
@@ -52,24 +52,6 @@ describe HybridPlatformsConductor::NodesHandler do
         nodes_lists: { 'test_nodes_list' => %w[node1 node2] }
       ) do
         expect { test_nodes_handler.nodes_from_list('test_nodes_list') }.to raise_error(RuntimeError, 'Unknown nodes: node2')
-      end
-    end
-
-    it 'returns nodes metadata using generic method' do
-      with_test_platform(nodes: { 'test_node' => { meta: { metadata_name: 'value' } } }) do
-        expect(test_nodes_handler.metadata_of('test_node', :metadata_name)).to eq 'value'
-      end
-    end
-
-    it 'returns nodes metadata using dynamic method' do
-      with_test_platform(nodes: { 'test_node' => { meta: { metadata_name: 'value' } } }) do
-        expect(test_nodes_handler.get_metadata_name_of('test_node')).to eq 'value'
-      end
-    end
-
-    it 'returns nodes metadata using dynamic method several times (as the method is created dynamically)' do
-      with_test_platform(nodes: { 'test_node' => { meta: { metadata_name: 'value' } } }) do
-        3.times { expect(test_nodes_handler.get_metadata_name_of('test_node')).to eq 'value' }
       end
     end
 

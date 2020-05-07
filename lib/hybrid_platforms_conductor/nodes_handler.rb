@@ -59,30 +59,13 @@ module HybridPlatformsConductor
       @cmdbs_per_property = {}
       # List of CMDBs having the get_others method
       # Array< Cmdb >
-      @cmdb_others = []
+      @cmdbs_others = []
       # Parse available CMDBs, per CMDB name
-      # Array<Cmdb>
-      @cmdbs = Dir.
-        glob("#{__dir__}/cmdbs/*.rb").
-        map do |file_name|
-          cmdb_name = File.basename(file_name, '.rb').to_sym
-          require file_name
-          cmdb = Cmdbs.const_get(cmdb_name.to_s.split('_').collect(&:capitalize).join.to_sym).new(
-            logger: @logger,
-            logger_stderr: @logger_stderr,
-            nodes_handler: self,
-            cmd_runner: @cmd_runner
-          )
-          @cmdb_others << cmdb if cmdb.respond_to?(:get_others)
-          cmdb.methods.each do |method|
-            if method.to_s =~ /^get_(.*)$/
-              property = $1.to_sym
-              @cmdbs_per_property[property] = [] unless @cmdbs_per_property.key?(property)
-              @cmdbs_per_property[property] << cmdb
-            end
-          end
-          cmdb
-        end
+      # Hash<Symbol, Cmdb>
+      @cmdbs = {}
+      Dir.glob("#{__dir__}/cmdbs/*.rb").each do |file_name|
+        register_cmdb_from_file(file_name)
+      end
       # Cache of metadata per node
       # Hash<String, Hash<Symbol, Object> >
       @metadata = {}
@@ -351,7 +334,7 @@ module HybridPlatformsConductor
           updated_metadata = {}
           (
             (@cmdbs_per_property.key?(property) ? @cmdbs_per_property[property] : []).map { |cmdb| [cmdb, property] } +
-            @cmdb_others.map { |cmdb| [cmdb, :others] }
+            @cmdbs_others.map { |cmdb| [cmdb, :others] }
           ).each do |(cmdb, cmdb_property)|
             remaining_nodes = missing_nodes.select { |node| !updated_metadata.key?(node) || !updated_metadata[node][property] }
             # Stop browsing the CMDBs when all nodes have a value for this property
@@ -409,7 +392,7 @@ module HybridPlatformsConductor
           @metadata_mutex.synchronize do
             @metadata.merge!(updated_metadata) do |node, existing_metadata, new_metadata|
               existing_metadata.merge(new_metadata) do |prop_name, existing_value, new_value|
-                raise "CMDB #{cmdb.class.name} returned a conflicting value for metadata #{prop_name} of node #{node}: #{new_value} whereas the value was already set to #{existing_value}" unless new_value == existing_value
+                raise "A CMDB returned a conflicting value for metadata #{prop_name} of node #{node}: #{new_value} whereas the value was already set to #{existing_value}" unless new_value == existing_value
                 new_value
               end
             end
@@ -490,6 +473,32 @@ module HybridPlatformsConductor
       for_each_element_in(nodes.sort, parallel: parallel, nbr_threads_max: nbr_threads_max) do |node|
         yield node
       end
+    end
+
+    private
+
+    # Register a CMDB plugin from a file
+    #
+    # Parameters::
+    # * *file_name* (String): The file name
+    def register_cmdb_from_file(file_name)
+      cmdb_name = File.basename(file_name, '.rb').to_sym
+      require file_name
+      cmdb = Cmdbs.const_get(cmdb_name.to_s.split('_').collect(&:capitalize).join.to_sym).new(
+        logger: @logger,
+        logger_stderr: @logger_stderr,
+        nodes_handler: self,
+        cmd_runner: @cmd_runner
+      )
+      @cmdbs_others << cmdb if cmdb.respond_to?(:get_others)
+      cmdb.methods.each do |method|
+        if method.to_s =~ /^get_(.*)$/
+          property = $1.to_sym
+          @cmdbs_per_property[property] = [] unless @cmdbs_per_property.key?(property)
+          @cmdbs_per_property[property] << cmdb
+        end
+      end
+      @cmdbs[cmdb_name] = cmdb
     end
 
   end
