@@ -196,6 +196,8 @@ module HybridPlatformsConductor
     # Result::
     # * Hash<String, [Integer or Symbol, String, String]>: Exit status code (or Symbol in case of error or dry run), standard output and error for each node.
     def execute_actions(actions_per_nodes, timeout: nil, concurrent: false, log_to_dir: 'run_logs', log_to_stdout: true)
+      # Keep a list of nodes that will need remote access
+      nodes_needing_remote = []
       # Compute the ordered list of actions per selected node
       # Hash< String, Array< [Symbol,      Object     ]> >
       # Hash< node,   Array< [action_type, action_data]> >
@@ -203,10 +205,12 @@ module HybridPlatformsConductor
       actions_per_nodes.each do |nodes_selector, nodes_actions|
         # Resolved actions, as Action objects
         resolved_nodes_actions = []
+        need_remote = false
         (nodes_actions.is_a?(Array) ? nodes_actions : [nodes_actions]).each do |nodes_actions_set|
           nodes_actions_set.each do |action_type, action_info|
             raise 'Cannot have concurrent executions for interactive sessions' if concurrent && action_type == :interactive && action_info
             raise "Unknown action type #{action_type}" unless @action_plugins.key?(action_type)
+            need_remote = true if action_type == :remote_bash
             resolved_nodes_actions << @action_plugins[action_type].new(
               logger: @logger,
               logger_stderr: @logger_stderr,
@@ -218,11 +222,15 @@ module HybridPlatformsConductor
           end
         end
         # Resolve nodes
-        @nodes_handler.select_nodes(nodes_selector).each do |node|
+        resolved_nodes = @nodes_handler.select_nodes(nodes_selector)
+        nodes_needing_remote.concat(resolved_nodes) if need_remote
+        resolved_nodes.each do |node|
           actions_per_node[node] = [] unless actions_per_node.key?(node)
           actions_per_node[node].concat(resolved_nodes_actions)
         end
       end
+      # Prepare remote access for our nodes
+      @nodes_handler.prefetch_metadata_of nodes_needing_remote.sort.uniq, %i[host_ip host_keys]
       log_debug "Running actions on #{actions_per_node.size} nodes#{log_to_dir.nil? ? '' : " (logs dumped in #{log_to_dir})"}"
       # Prepare the result (stdout or nil per node)
       result = Hash[actions_per_node.keys.map { |node| [node, nil] }]
@@ -324,8 +332,6 @@ module HybridPlatformsConductor
           working_ssh_urls = {}
           nodes.each do |node|
             ssh_url = "#{@ssh_user}@hpc.#{node}"
-            connection, _gateway, _gateway_user = connection_info_for(node)
-            ensure_host_key(connection, known_hosts)
             if @ssh_use_control_master
               with_lock_on_control_master_for(node) do |current_users, user_id|
                 working_master = false
@@ -333,6 +339,7 @@ module HybridPlatformsConductor
                   log_debug "[ ControlMaster - #{ssh_url} ] - Creating SSH ControlMaster..."
                   # We have to create the control master.
                   # Make sure there is no stale one.
+                  connection, _gateway, _gateway_user = connection_info_for(node)
                   control_path_file = "#{@tmp_dir}/ssh_executor_mux_#{connection}_22_#{@ssh_user}"
                   if File.exist?(control_path_file)
                     log_warn "[ ControlMaster - #{ssh_url} ] - Removing stale SSH control file #{control_path_file}"
@@ -418,12 +425,12 @@ module HybridPlatformsConductor
     #     * *ssh_known_hosts* (String): SSH known hosts file to be used
     def with_platforms_ssh(nodes: @nodes_handler.known_nodes)
       platforms_ssh_dir = Dir.mktmpdir("platforms_ssh_#{self.object_id}", @tmp_dir)
+      log_debug "Generate temporary SSH configuration in #{platforms_ssh_dir}"
       begin
         ssh_conf_file = "#{platforms_ssh_dir}/ssh_config"
         ssh_exec_file = "#{platforms_ssh_dir}/ssh"
         known_hosts_file = "#{platforms_ssh_dir}/known_hosts"
         raise 'sshpass is not installed. Can\'t use automatic passwords handling without it. Please install it.' if !@passwords.empty? && !@ssh_pass_installed
-        FileUtils.touch known_hosts_file
         File.open(ssh_exec_file, 'w+', 0700) do |file|
           file.puts "#!#{@env_system_path} bash"
           # TODO: Make a mechanism that uses sshpass and the correct password only for the correct hostname (this requires parsing ssh parameters $*).
@@ -432,6 +439,25 @@ module HybridPlatformsConductor
           file.puts "#{@passwords.empty? ? '' : "sshpass -p#{@passwords.first[1]} "}ssh -F #{ssh_conf_file} $*"
         end
         File.write(ssh_conf_file, ssh_config(ssh_exec: ssh_exec_file, known_hosts_file: known_hosts_file, nodes: nodes))
+        # Make sure all host keys are setup in the known hosts file
+        @nodes_handler.prefetch_metadata_of nodes, %i[host_keys hostname host_ip]
+        File.open(known_hosts_file, 'w+', 0700) do |file|
+          nodes.sort.each do |node|
+            aliases = []
+            aliases << @nodes_handler.get_hostname_of(node) if @nodes_handler.get_hostname_of(node)
+            aliases << @nodes_handler.get_host_ip_of(node) if @nodes_handler.get_host_ip_of(node)
+            if !aliases.empty?
+              host_keys = @nodes_handler.get_host_keys_of(node)
+              if host_keys && !host_keys.empty?
+                aliases.each do |host_alias|
+                  host_keys.each do |host_key|
+                    file.puts "#{host_alias} #{host_key}"
+                  end
+                end
+              end
+            end
+          end
+        end
         yield ssh_exec_file, ssh_conf_file, known_hosts_file
       ensure
         # It's very important to remove the directory as soon as it is useless, as it contains eventual passwords
@@ -451,20 +477,6 @@ module HybridPlatformsConductor
     def ensure_host_key(host, known_hosts_file)
       if @ssh_strict_host_key_checking
         unless File.read(known_hosts_file).include?(host)
-          # If the host is not an IP address, then first register its IP address, as ssh connections will anyway register it due to CheckHostIp
-          unless host =~ /^\d+\.\d+\.\d+\.\d+$/
-            _exit_status, stdout, _stderr = @cmd_runner.run_cmd "getent hosts #{host}", timeout: TIMEOUT_HOST_KEYS, log_to_stdout: log_debug?, no_exception: true
-            if @dry_run
-              log_debug "Mock IP address of host #{host} because of dry-run mode"
-              stdout = "192.168.42.42 #{host}"
-            end
-            ip = stdout.split(/\s/).first
-            if ip.nil?
-              log_warn "Can't get IP for host #{host}. Ignoring it. Accessing #{host} might require manual acceptance of its host key."
-            else
-              ensure_host_key(ip, known_hosts_file)
-            end
-          end
           # Get the host key
           exit_status, stdout, _stderr = @cmd_runner.run_cmd "ssh-keyscan #{host}", timeout: TIMEOUT_HOST_KEYS, log_to_stdout: log_debug?, no_exception: true
           if exit_status == 0
@@ -542,6 +554,8 @@ module HybridPlatformsConductor
             @nodes_handler.get_host_ip_of(node)
           elsif @nodes_handler.get_private_ips_of(node)
             @nodes_handler.get_private_ips_of(node).first
+          elsif @nodes_handler.get_host_ip_of(node)
+            @nodes_handler.get_host_ip_of(node)
           else
             raise "No connection possible to #{node}"
           end
