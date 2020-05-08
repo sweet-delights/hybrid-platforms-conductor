@@ -9,7 +9,7 @@ describe HybridPlatformsConductor::SshExecutor do
     #   * Parameters::
     #     * *repository* (String): Path to the repository
     def with_test_platform_for_actions
-      with_test_platform(nodes: { 'node' => { connection: 'node_connection' } }) do |repository|
+      with_test_platform(nodes: { 'node' => { meta: { connection_ip: '192.168.42.42' } } }) do |repository|
         with_cmd_runner_mocked(
           commands: [
             ['sshpass -V', proc do |cmd, log_to_file: nil, log_to_stdout: true, log_stdout_to_io: nil, log_stderr_to_io: nil, expected_code: 0, timeout: nil, no_exception: false|
@@ -51,7 +51,7 @@ describe HybridPlatformsConductor::SshExecutor do
       run_result = nil
       with_cmd_runner_mocked(
         commands: expected_commands.nil? ? nil : expected_commands,
-        nodes_connections: { 'node' => { connection: 'node_connection', user: 'test_user', times: nbr_connections } }
+        nodes_connections: { 'node' => { connection: '192.168.42.42', user: 'test_user', times: nbr_connections } }
       ) do
         run_result = test_ssh_executor.execute_actions({ 'node' => actions }, timeout: timeout, log_to_dir: log_to_dir)['node']
       end

@@ -12,31 +12,45 @@ describe 'executables\' Nodes Handler options' do
         'platform_1' => {
           nodes: {
             'node11' => {
-               connection: 'node11_connection',
-               services: ['service1']
-             },
+              meta: { connection_ip: '192.168.42.11' },
+              services: ['service1']
+            },
             'node12' => {
-              connection: 'node12_connection',
-               meta: { description: 'Node12 description' },
-               services: ['service1']
-             },
+              meta: {
+                connection_ip: '192.168.42.12',
+                description: 'Node12 description'
+              },
+              services: ['service1']
+            },
             'node13' => {
-               connection: 'node13_connection',
-               services: ['service2']
-             }
+              meta: { connection_ip: '192.168.42.13' },
+              services: ['service2']
+            },
+            'node14' => {
+              meta: { private_ips: ['192.168.42.14', '172.16.42.14'] }
+            },
+            'node15' => {
+              meta: { hostname: 'my_host15.my_domain' }
+            },
+            'node16' => {
+              meta: {
+                connection_ip: '192.168.42.16',
+                hostname: 'my_host16.my_domain'
+              }
+            }
           },
           nodes_lists: { 'my_list' => ['node11', 'node13'] }
         },
         'platform_2' => {
           nodes: {
             'node21' => {
-               connection: 'node21_connection',
-               services: ['service2', 'service3']
-             },
+              meta: { connection_ip: '192.168.42.21' },
+              services: ['service2', 'service3']
+            },
             'node22' => {
-               connection: 'node22_connection',
-               services: ['service1']
-             }
+              meta: { connection_ip: '192.168.42.22' },
+              services: ['service1']
+            }
           }
         }
       },
@@ -69,15 +83,21 @@ service3
 node11
 node12
 node13
+node14
+node15
+node16
 node21
 node22
 
 * Known nodes with description:
-platform_1 - node11 (node11_connection) - service1 - 
-platform_1 - node12 (node12_connection) - service1 - Node12 description
-platform_1 - node13 (node13_connection) - service2 - 
-platform_2 - node21 (node21_connection) - service2, service3 - 
-platform_2 - node22 (node22_connection) - service1 - 
+platform_1 - node11 (192.168.42.11) - service1 - 
+platform_1 - node12 (192.168.42.12) - service1 - Node12 description
+platform_1 - node13 (192.168.42.13) - service2 - 
+platform_1 - node14 (192.168.42.14) -  - 
+platform_1 - node15 (my_host15.my_domain) -  - 
+platform_1 - node16 (my_host16.my_domain) -  - 
+platform_2 - node21 (192.168.42.21) - service2, service3 - 
+platform_2 - node22 (192.168.42.22) - service1 - 
 
 '
       )

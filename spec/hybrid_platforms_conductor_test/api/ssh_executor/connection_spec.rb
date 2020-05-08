@@ -3,7 +3,7 @@ describe HybridPlatformsConductor::SshExecutor do
   context 'checking connections handling' do
 
     it 'connects on a node before executing commands' do
-      with_test_platform(nodes: { 'node' => { connection: 'node_connection' } }) do
+      with_test_platform(nodes: { 'node' => { meta: { connection_ip: '192.168.42.42' } } }) do
         with_cmd_runner_mocked(
           commands: [
             ['sshpass -V', proc { [0, "sshpass 1.06\n", ''] }],
@@ -11,7 +11,7 @@ describe HybridPlatformsConductor::SshExecutor do
             ['ssh -V 2>&1', proc { [0, "OpenSSH_7.4p1 Debian-10+deb9u7, OpenSSL 1.0.2u  20 Dec 2019\n", ''] }],
             [remote_bash_for('echo Hello1', node: 'node', user: 'test_user'), proc { [0, "Hello1\n", ''] }]
           ],
-          nodes_connections: { 'node' => { connection: 'node_connection', user: 'test_user' } }
+          nodes_connections: { 'node' => { connection: '192.168.42.42', user: 'test_user' } }
         ) do
           test_ssh_executor.ssh_user = 'test_user'
           expect(test_ssh_executor.execute_actions('node' => { remote_bash: 'echo Hello1' })['node']).to eq [0, "Hello1\n", '']
@@ -21,9 +21,9 @@ describe HybridPlatformsConductor::SshExecutor do
 
     it 'connects on several nodes before executing commands' do
       with_test_platform(nodes: {
-        'node1' => { connection: 'node1_connection' },
-        'node2' => { connection: 'node2_connection' },
-        'node3' => { connection: 'node3_connection' }
+        'node1' => { meta: { connection_ip: '192.168.42.1' } },
+        'node2' => { meta: { connection_ip: '192.168.42.2' } },
+        'node3' => { meta: { connection_ip: '192.168.42.3' } }
       }) do
         with_cmd_runner_mocked(
           commands: [
@@ -35,9 +35,9 @@ describe HybridPlatformsConductor::SshExecutor do
             [remote_bash_for('echo Hello3', node: 'node3', user: 'test_user'), proc { [0, "Hello3\n", ''] }]
           ],
           nodes_connections: {
-            'node1' => { connection: 'node1_connection', user: 'test_user' },
-            'node2' => { connection: 'node2_connection', user: 'test_user' },
-            'node3' => { connection: 'node3_connection', user: 'test_user' }
+            'node1' => { connection: '192.168.42.1', user: 'test_user' },
+            'node2' => { connection: '192.168.42.2', user: 'test_user' },
+            'node3' => { connection: '192.168.42.3', user: 'test_user' }
           }
         ) do
           test_ssh_executor.ssh_user = 'test_user'
@@ -55,7 +55,7 @@ describe HybridPlatformsConductor::SshExecutor do
     end
 
     it 'can override connection settings to a node' do
-      with_test_platform(nodes: { 'node' => { connection: 'node_connection' } }) do
+      with_test_platform(nodes: { 'node' => { meta: { connection_ip: '192.168.42.42' } } }) do
         with_cmd_runner_mocked(
           commands: [
             ['sshpass -V', proc { [0, "sshpass 1.06\n", ''] }],
@@ -63,24 +63,24 @@ describe HybridPlatformsConductor::SshExecutor do
             ['ssh -V 2>&1', proc { [0, "OpenSSH_7.4p1 Debian-10+deb9u7, OpenSSL 1.0.2u  20 Dec 2019\n", ''] }],
             [remote_bash_for('echo Hello1', node: 'node', user: 'test_user'), proc { [0, "Hello1\n", ''] }]
           ],
-          nodes_connections: { 'node' => { connection: 'node_connection_new', user: 'test_user' } }
+          nodes_connections: { 'node' => { connection: '192.168.42.66', user: 'test_user' } }
         ) do
           test_ssh_executor.ssh_user = 'test_user'
-          test_ssh_executor.override_connections['node'] = 'node_connection_new'
+          test_ssh_executor.override_connections['node'] = '192.168.42.66'
           expect(test_ssh_executor.execute_actions('node' => { remote_bash: 'echo Hello1' })['node']).to eq [0, "Hello1\n", '']
         end
       end
     end
 
     it 'creates an SSH master to 1 node' do
-      with_test_platform(nodes: { 'node' => { connection: 'node_connection' } }) do
+      with_test_platform(nodes: { 'node' => { meta: { connection_ip: '192.168.42.42' } } }) do
         with_cmd_runner_mocked(
           commands: [
             ['sshpass -V', proc { [0, "sshpass 1.06\n", ''] }],
             ['which env', proc { [0, "/usr/bin/env\n", ''] }],
             ['ssh -V 2>&1', proc { [0, "OpenSSH_7.4p1 Debian-10+deb9u7, OpenSSL 1.0.2u  20 Dec 2019\n", ''] }]
           ],
-          nodes_connections: { 'node' => { connection: 'node_connection', user: 'test_user' } }
+          nodes_connections: { 'node' => { connection: '192.168.42.42', user: 'test_user' } }
         ) do
           test_ssh_executor.ssh_user = 'test_user'
           test_ssh_executor.with_ssh_master_to(['node']) do |ssh_exec, ssh_urls|
@@ -92,8 +92,8 @@ describe HybridPlatformsConductor::SshExecutor do
     end
 
     it 'reuses SSH master already created to 1 node' do
-      with_test_platform(nodes: { 'node' => { connection: 'node_connection' } }) do
-        nodes_connections_to_mock = { 'node' => { connection: 'node_connection', user: 'test_user' } }
+      with_test_platform(nodes: { 'node' => { meta: { connection_ip: '192.168.42.42' } } }) do
+        nodes_connections_to_mock = { 'node' => { connection: '192.168.42.42', user: 'test_user' } }
         with_cmd_runner_mocked(
           commands: [
             ['sshpass -V', proc { [0, "sshpass 1.06\n", ''] }],
@@ -118,9 +118,9 @@ describe HybridPlatformsConductor::SshExecutor do
 
     it 'creates SSH master to several nodes' do
       with_test_platform(nodes: {
-        'node1' => { connection: 'node1_connection' },
-        'node2' => { connection: 'node2_connection' },
-        'node3' => { connection: 'node3_connection' }
+        'node1' => { meta: { connection_ip: '192.168.42.1' } },
+        'node2' => { meta: { connection_ip: '192.168.42.2' } },
+        'node3' => { meta: { connection_ip: '192.168.42.3' } }
       }) do
         with_cmd_runner_mocked(
           commands: [
@@ -129,9 +129,9 @@ describe HybridPlatformsConductor::SshExecutor do
             ['ssh -V 2>&1', proc { [0, "OpenSSH_7.4p1 Debian-10+deb9u7, OpenSSL 1.0.2u  20 Dec 2019\n", ''] }]
           ],
           nodes_connections: {
-            'node1' => { connection: 'node1_connection', user: 'test_user' },
-            'node2' => { connection: 'node2_connection', user: 'test_user' },
-            'node3' => { connection: 'node3_connection', user: 'test_user' }
+            'node1' => { connection: '192.168.42.1', user: 'test_user' },
+            'node2' => { connection: '192.168.42.2', user: 'test_user' },
+            'node3' => { connection: '192.168.42.3', user: 'test_user' }
           }
         ) do
           test_ssh_executor.ssh_user = 'test_user'
@@ -149,10 +149,10 @@ describe HybridPlatformsConductor::SshExecutor do
 
     it 'reuses SSH masters already created to some nodes and create new ones if needed' do
       with_test_platform(nodes: {
-        'node1' => { connection: 'node1_connection' },
-        'node2' => { connection: 'node2_connection' },
-        'node3' => { connection: 'node3_connection' },
-        'node4' => { connection: 'node4_connection' }
+        'node1' => { meta: { connection_ip: '192.168.42.1' } },
+        'node2' => { meta: { connection_ip: '192.168.42.2' } },
+        'node3' => { meta: { connection_ip: '192.168.42.3' } },
+        'node4' => { meta: { connection_ip: '192.168.42.4' } }
       }) do
         with_cmd_runner_mocked(
           commands: [
@@ -165,18 +165,18 @@ describe HybridPlatformsConductor::SshExecutor do
             [remote_bash_for('echo Hello4', node: 'node4', user: 'test_user'), proc { [0, "Hello4\n", ''] }]
           ] + ssh_expected_commands_for(
             {
-              'node1' => { connection: 'node1_connection', user: 'test_user' },
-              'node3' => { connection: 'node3_connection', user: 'test_user' }
+              'node1' => { connection: '192.168.42.1', user: 'test_user' },
+              'node3' => { connection: '192.168.42.3', user: 'test_user' }
             },
             with_control_master_create: false,
             with_control_master_check: true,
             with_control_master_destroy: false
           ),
           nodes_connections: {
-            'node1' => { connection: 'node1_connection', user: 'test_user' },
-            'node2' => { connection: 'node2_connection', user: 'test_user' },
-            'node3' => { connection: 'node3_connection', user: 'test_user' },
-            'node4' => { connection: 'node4_connection', user: 'test_user' }
+            'node1' => { connection: '192.168.42.1', user: 'test_user' },
+            'node2' => { connection: '192.168.42.2', user: 'test_user' },
+            'node3' => { connection: '192.168.42.3', user: 'test_user' },
+            'node4' => { connection: '192.168.42.4', user: 'test_user' }
           }
         ) do
           test_ssh_executor.ssh_user = 'test_user'
@@ -203,7 +203,7 @@ describe HybridPlatformsConductor::SshExecutor do
     end
 
     it 'makes sure the last client using ControlMaster destroys it, even using a different environment' do
-      with_test_platform(nodes: { 'node' => { connection: 'node_connection' } }) do
+      with_test_platform(nodes: { 'node' => { meta: { connection_ip: '192.168.42.42' } } }) do
         # 1. Current thread creates the ControlMaster.
         # 2. Second thread connects to it.
         # 3. Current thread releases it.
@@ -213,7 +213,7 @@ describe HybridPlatformsConductor::SshExecutor do
           ['which env', proc { [0, "/usr/bin/env\n", ''] }],
           ['ssh -V 2>&1', proc { [0, "OpenSSH_7.4p1 Debian-10+deb9u7, OpenSSL 1.0.2u  20 Dec 2019\n", ''] }],
         ]
-        nodes_connections_to_mock = { 'node' => { connection: 'node_connection', user: 'test_user' } }
+        nodes_connections_to_mock = { 'node' => { connection: '192.168.42.42', user: 'test_user' } }
         step = 0
         second_thread = Thread.new do
           # Use a different environment: CmdRunner, NodesHandler, SshExecutor
@@ -256,9 +256,9 @@ describe HybridPlatformsConductor::SshExecutor do
 
     it 'does not create SSH master if asked' do
       with_test_platform(nodes: {
-        'node1' => { connection: 'node1_connection' },
-        'node2' => { connection: 'node2_connection' },
-        'node3' => { connection: 'node3_connection' }
+        'node1' => { meta: { connection_ip: '192.168.42.1' } },
+        'node2' => { meta: { connection_ip: '192.168.42.2' } },
+        'node3' => { meta: { connection_ip: '192.168.42.3' } }
       }) do
         with_cmd_runner_mocked(
           commands: [
@@ -267,9 +267,9 @@ describe HybridPlatformsConductor::SshExecutor do
             ['ssh -V 2>&1', proc { [0, "OpenSSH_7.4p1 Debian-10+deb9u7, OpenSSL 1.0.2u  20 Dec 2019\n", ''] }]
           ],
           nodes_connections: {
-            'node1' => { connection: 'node1_connection', user: 'test_user' },
-            'node2' => { connection: 'node2_connection', user: 'test_user' },
-            'node3' => { connection: 'node3_connection', user: 'test_user' }
+            'node1' => { connection: '192.168.42.1', user: 'test_user' },
+            'node2' => { connection: '192.168.42.2', user: 'test_user' },
+            'node3' => { connection: '192.168.42.3', user: 'test_user' }
           },
           with_control_master_create: false,
           with_control_master_destroy: false
@@ -290,9 +290,9 @@ describe HybridPlatformsConductor::SshExecutor do
 
     it 'does not check host keys if asked' do
       with_test_platform(nodes: {
-        'node1' => { connection: 'node1_connection' },
-        'node2' => { connection: 'node2_connection' },
-        'node3' => { connection: 'node3_connection' }
+        'node1' => { meta: { connection_ip: '192.168.42.1' } },
+        'node2' => { meta: { connection_ip: '192.168.42.2' } },
+        'node3' => { meta: { connection_ip: '192.168.42.3' } }
       }) do
         with_cmd_runner_mocked(
           commands: [
@@ -301,9 +301,9 @@ describe HybridPlatformsConductor::SshExecutor do
             ['ssh -V 2>&1', proc { [0, "OpenSSH_7.4p1 Debian-10+deb9u7, OpenSSL 1.0.2u  20 Dec 2019\n", ''] }]
           ],
           nodes_connections: {
-            'node1' => { connection: 'node1_connection', user: 'test_user' },
-            'node2' => { connection: 'node2_connection', user: 'test_user' },
-            'node3' => { connection: 'node3_connection', user: 'test_user' }
+            'node1' => { connection: '192.168.42.1', user: 'test_user' },
+            'node2' => { connection: '192.168.42.2', user: 'test_user' },
+            'node3' => { connection: '192.168.42.3', user: 'test_user' }
           },
           with_strict_host_key_checking: false
         ) do
@@ -322,7 +322,7 @@ describe HybridPlatformsConductor::SshExecutor do
     end
 
     it 'does not use batch mode when passwords are to be expected' do
-      with_test_platform(nodes: { 'node' => { connection: 'node_connection' } }) do |repository|
+      with_test_platform(nodes: { 'node' => { meta: { connection_ip: '192.168.42.42' } } }) do |repository|
         test_ssh_executor.dry_run = true
         test_ssh_executor.auth_password = true
         stdout_file = "#{repository}/run.stdout"
@@ -332,28 +332,25 @@ describe HybridPlatformsConductor::SshExecutor do
         test_ssh_executor.stdout_device = stdout_file
         test_ssh_executor.execute_actions('node' => { remote_bash: 'echo Hello' })
         lines = File.read(stdout_file).split("\n")
-        expect(lines[0]).to eq 'getent hosts node_connection'
-        expect(lines[1]).to eq 'ssh-keyscan 192.168.42.42'
-        expect(lines[2]).to match /^ssh-keygen -R 192\.168\.42\.42 -f .+\/known_hosts$/
-        expect(lines[3]).to eq 'ssh-keyscan node_connection'
-        expect(lines[4]).to match /^ssh-keygen -R node_connection -f .+\/known_hosts$/
+        expect(lines[0]).to eq 'ssh-keyscan 192.168.42.42'
+        expect(lines[1]).to match /^ssh-keygen -R 192\.168\.42\.42 -f .+\/known_hosts$/
         # Here we should not have -o BatchMode=yes 
-        expect(lines[5]).to match /^.+\/ssh -o ControlMaster=yes -o ControlPersist=yes test_user@ti\.node true$/
-        expect(lines[6]).to match /^.+\/ssh test_user@ti\.node \/bin\/bash <<'EOF'$/
-        expect(lines[7]).to eq 'echo Hello'
-        expect(lines[8]).to eq 'EOF'
-        expect(lines[9]).to match /^.+\/ssh -O exit test_user@ti\.node 2>&1 \| grep -v 'Exit request sent\.'$/
+        expect(lines[2]).to match /^.+\/ssh -o ControlMaster=yes -o ControlPersist=yes test_user@ti\.node true$/
+        expect(lines[3]).to match /^.+\/ssh test_user@ti\.node \/bin\/bash <<'EOF'$/
+        expect(lines[4]).to eq 'echo Hello'
+        expect(lines[5]).to eq 'EOF'
+        expect(lines[6]).to match /^.+\/ssh -O exit test_user@ti\.node 2>&1 \| grep -v 'Exit request sent\.'$/
       end
     end
 
     it 'provides an SSH executable path that contains the whole SSH config, along with an SSH config file and known hosts file to be used as well' do
-      with_test_platform(nodes: { 'node' => { connection: 'node_connection' } }) do
+      with_test_platform(nodes: { 'node' => { meta: { connection_ip: '192.168.42.42' } } }) do
         test_ssh_executor.with_platforms_ssh do |ssh_exec, ssh_config, ssh_known_hosts|
           expect(`#{ssh_exec} -V 2>&1`).to eq `ssh -V 2>&1`
-          expect(`#{ssh_exec} -G hpc.node`.split("\n").find { |line| line =~ /^hostname .+$/ }).to eq 'hostname node_connection'
+          expect(`#{ssh_exec} -G hpc.node`.split("\n").find { |line| line =~ /^hostname .+$/ }).to eq 'hostname 192.168.42.42'
           expect(ssh_config_for('node', ssh_config: File.read(ssh_config))).to eq <<~EOS
             Host hpc.node
-              Hostname node_connection
+              Hostname 192.168.42.42
           EOS
           expect(File.exist?(ssh_known_hosts)).to eq true
         end
@@ -362,40 +359,40 @@ describe HybridPlatformsConductor::SshExecutor do
 
     it 'provides an SSH executable path that contains the SSH config for selected nodes' do
       with_test_platform(nodes: {
-        'node1' => { connection: 'node_connection1' },
-        'node2' => { connection: 'node_connection2' },
-        'node3' => { connection: 'node_connection3' }
+        'node1' => { meta: { connection_ip: '192.168.42.1' } },
+        'node2' => { meta: { connection_ip: '192.168.42.2' } },
+        'node3' => { meta: { connection_ip: '192.168.42.3' } }
       }) do
         test_ssh_executor.with_platforms_ssh(nodes: %w[node1 node3]) do |ssh_exec, ssh_config|
           expect(`#{ssh_exec} -V 2>&1`).to eq `ssh -V 2>&1`
-          expect(`#{ssh_exec} -G hpc.node1`.split("\n").find { |line| line =~ /^hostname .+$/ }).to eq 'hostname node_connection1'
+          expect(`#{ssh_exec} -G hpc.node1`.split("\n").find { |line| line =~ /^hostname .+$/ }).to eq 'hostname 192.168.42.1'
           # If the SSH config does not contain the name of the node, then the output hostname is the name given as parameter to ssh
           expect(`#{ssh_exec} -G hpc.node2`.split("\n").find { |line| line =~ /^hostname .+$/ }).to eq 'hostname hpc.node2'
-          expect(`#{ssh_exec} -G hpc.node3`.split("\n").find { |line| line =~ /^hostname .+$/ }).to eq 'hostname node_connection3'
+          expect(`#{ssh_exec} -G hpc.node3`.split("\n").find { |line| line =~ /^hostname .+$/ }).to eq 'hostname 192.168.42.3'
           ssh_config_content = File.read(ssh_config)
           expect(ssh_config_for('node1', ssh_config: ssh_config_content)).to eq <<~EOS
             Host hpc.node1
-              Hostname node_connection1
+              Hostname 192.168.42.1
           EOS
           expect(ssh_config_for('node2', ssh_config: ssh_config_content)).to eq nil
           expect(ssh_config_for('node3', ssh_config: ssh_config_content)).to eq <<~EOS
             Host hpc.node3
-              Hostname node_connection3
+              Hostname 192.168.42.3
           EOS
         end
       end
     end
 
     it 'uses sshpass correctly if needed by the provided SSH executable' do
-      with_test_platform(nodes: { 'node' => { connection: 'node_connection' } }) do
+      with_test_platform(nodes: { 'node' => { meta: { connection_ip: '192.168.42.42' } } }) do
         test_ssh_executor.passwords['node'] = 'PaSsWoRd'
         test_ssh_executor.with_platforms_ssh do |ssh_exec, ssh_config|
           expect(`#{ssh_exec} -V 2>&1`).to eq `ssh -V 2>&1`
-          expect(`#{ssh_exec} -G hpc.node`.split("\n").find { |line| line =~ /^hostname .+$/ }).to eq 'hostname node_connection'
+          expect(`#{ssh_exec} -G hpc.node`.split("\n").find { |line| line =~ /^hostname .+$/ }).to eq 'hostname 192.168.42.42'
           expect(File.read(ssh_exec)).to match /^sshpass -pPaSsWoRd ssh .+$/
           expect(ssh_config_for('node', ssh_config: File.read(ssh_config))).to eq <<~EOS
             Host hpc.node
-              Hostname node_connection
+              Hostname 192.168.42.42
               PreferredAuthentications password
               PubkeyAuthentication no
           EOS
@@ -404,7 +401,7 @@ describe HybridPlatformsConductor::SshExecutor do
     end
 
     it 'does not reuse provided SSH executables and configs' do
-      with_test_platform(nodes: { 'node' => { connection: 'node_connection' } }) do
+      with_test_platform(nodes: { 'node' => { meta: { connection_ip: '192.168.42.42' } } }) do
         test_ssh_executor.with_platforms_ssh do |first_ssh_exec, first_ssh_config|
           test_ssh_executor.with_platforms_ssh do |second_ssh_exec, second_ssh_config|
             expect(second_ssh_exec).not_to eq first_ssh_exec
@@ -415,7 +412,7 @@ describe HybridPlatformsConductor::SshExecutor do
     end
 
     it 'cleans provided SSH executables and configs after use' do
-      with_test_platform(nodes: { 'node' => { connection: 'node_connection' } }) do
+      with_test_platform(nodes: { 'node' => { meta: { connection_ip: '192.168.42.42' } } }) do
         ssh_exec_file_1 = nil
         ssh_config_file_1 = nil
         test_ssh_executor.with_platforms_ssh do |ssh_exec_1, ssh_config_1|
@@ -449,13 +446,45 @@ describe HybridPlatformsConductor::SshExecutor do
             ['which env', proc { [0, "/usr/bin/env\n", ''] }],
             ['ssh -V 2>&1', proc { [0, "OpenSSH_7.4p1 Debian-10+deb9u7, OpenSSL 1.0.2u  20 Dec 2019\n", ''] }]
           ],
-          nodes_connections: { 'node' => { connection: 'node_connection', user: 'test_user' } },
+          nodes_connections: { 'node' => { connection: '192.168.42.42', user: 'test_user' } },
           with_control_master_create: false,
           with_control_master_destroy: false
         ) do
           test_ssh_executor.with_platforms_ssh do |ssh_exec, _ssh_config, known_hosts_file|
-            test_ssh_executor.ensure_host_key('node_connection', known_hosts_file)
-            expect(File.read(known_hosts_file)).to eq "fake_host_key_ip\nfake_host_key\n"
+            test_ssh_executor.ensure_host_key('192.168.42.42', known_hosts_file)
+            expect(File.read(known_hosts_file)).to eq "fake_host_key\n"
+          end
+        end
+      end
+    end
+
+    it 'ensures 2 host keys are registered when connecting using a hostname' do
+      with_test_platform do
+        with_cmd_runner_mocked(
+          commands: [
+            ['sshpass -V', proc { [0, "sshpass 1.06\n", ''] }],
+            ['which env', proc { [0, "/usr/bin/env\n", ''] }],
+            ['ssh -V 2>&1', proc { [0, "OpenSSH_7.4p1 Debian-10+deb9u7, OpenSSL 1.0.2u  20 Dec 2019\n", ''] }],
+            [
+              'getent hosts my_host.my_domain',
+              proc { [0, '192.168.42.23 my_host.my_domain', ''] }
+            ],
+            [
+              'ssh-keyscan my_host.my_domain',
+              proc { [0, 'fake_host_key_hostname', ''] }
+            ],
+            [
+              /^ssh-keygen -R my_host\.my_domain -f .+\/known_hosts$/,
+              proc { [0, '', ''] }
+            ]
+          ],
+          nodes_connections: { 'node' => { connection: '192.168.42.23', user: 'test_user' } },
+          with_control_master_create: false,
+          with_control_master_destroy: false
+        ) do
+          test_ssh_executor.with_platforms_ssh do |ssh_exec, _ssh_config, known_hosts_file|
+            test_ssh_executor.ensure_host_key('my_host.my_domain', known_hosts_file)
+            expect(File.read(known_hosts_file)).to eq "fake_host_key\nfake_host_key_hostname\n"
           end
         end
       end
@@ -474,9 +503,9 @@ describe HybridPlatformsConductor::SshExecutor do
         ) do
           test_ssh_executor.with_platforms_ssh do |ssh_exec, _ssh_config, known_hosts_file|
             # Put another host key in the file
-            File.write(known_hosts_file, "node_connection\nanother_fake_key\n")
-            test_ssh_executor.ensure_host_key('node_connection', known_hosts_file)
-            expect(File.read(known_hosts_file)).to eq "node_connection\nanother_fake_key\n"
+            File.write(known_hosts_file, "192.168.42.42\nanother_fake_key\n")
+            test_ssh_executor.ensure_host_key('192.168.42.42', known_hosts_file)
+            expect(File.read(known_hosts_file)).to eq "192.168.42.42\nanother_fake_key\n"
           end
         end
       end

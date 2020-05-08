@@ -9,7 +9,7 @@ describe HybridPlatformsConductor::SshExecutor do
   end
 
   it 'displays commands instead of executing them' do
-    with_test_platform(nodes: { 'node1' => { connection: 'node1_connection' } }) do |repository|
+    with_test_platform(nodes: { 'node1' => { meta: { connection_ip: '192.168.42.42' } } }) do |repository|
       executed = false
       test_ssh_executor.dry_run = true
       stdout_file = "#{repository}/run.stdout"
@@ -23,16 +23,13 @@ describe HybridPlatformsConductor::SshExecutor do
       ])
       expect(executed).to eq false
       lines = File.read(stdout_file).split("\n")
-      expect(lines[0]).to eq 'getent hosts node1_connection'
-      expect(lines[1]).to eq 'ssh-keyscan 192.168.42.42'
-      expect(lines[2]).to match /^ssh-keygen -R 192\.168\.42\.42 -f .+\/known_hosts$/
-      expect(lines[3]).to eq 'ssh-keyscan node1_connection'
-      expect(lines[4]).to match /^ssh-keygen -R node1_connection -f .+\/known_hosts$/
-      expect(lines[5]).to match /^.+\/ssh -o BatchMode=yes -o ControlMaster=yes -o ControlPersist=yes test_user@ti\.node1 true$/
-      expect(lines[6]).to match /^.+\/ssh test_user@ti\.node1 \/bin\/bash <<'EOF'$/
-      expect(lines[7]).to eq 'echo Hello'
-      expect(lines[8]).to eq 'EOF'
-      expect(lines[9]).to match /^.+\/ssh -O exit test_user@ti\.node1 2>&1 \| grep -v 'Exit request sent\.'$/
+      expect(lines[0]).to eq 'ssh-keyscan 192.168.42.42'
+      expect(lines[1]).to match /^ssh-keygen -R 192\.168\.42\.42 -f .+\/known_hosts$/
+      expect(lines[2]).to match /^.+\/ssh -o BatchMode=yes -o ControlMaster=yes -o ControlPersist=yes test_user@ti\.node1 true$/
+      expect(lines[3]).to match /^.+\/ssh test_user@ti\.node1 \/bin\/bash <<'EOF'$/
+      expect(lines[4]).to eq 'echo Hello'
+      expect(lines[5]).to eq 'EOF'
+      expect(lines[6]).to match /^.+\/ssh -O exit test_user@ti\.node1 2>&1 \| grep -v 'Exit request sent\.'$/
     end
   end
 

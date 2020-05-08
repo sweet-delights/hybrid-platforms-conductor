@@ -10,7 +10,7 @@ module HybridPlatformsConductorTest
       # Properties can be:
       # * *nodes* (Hash< String, Hash<Symbol,Object> >): List of nodes, and their associated info (per node name) [default: {}]:
       #   * *meta* (Hash<String,Object>): JSON object storing metadata about this node
-      #   * *service* (String): Service bound to this node
+      #   * *services* (Array<String>): Services bound to this node
       #   * *default_gateway* (String): Default gateway
       #   * *deliver_on_artefact_for* (Proc): Code called when a packages repository has to be delivered for a given node
       #   * *deploy_data* (String or nil): Data to be deployed, or nil to not deploy for real [default: nil]
@@ -93,9 +93,7 @@ module HybridPlatformsConductorTest
     # Result::
     # * Array<String>: The corresponding services
     def services_for(node)
-      services = node_info(node)[:services]
-      raise "Invalid test case: no services info given for #{node}" if services.nil?
-      services
+      node_info(node)[:services]
     end
 
     # Package the repository, ready to be deployed on artefacts or directly to a node.
