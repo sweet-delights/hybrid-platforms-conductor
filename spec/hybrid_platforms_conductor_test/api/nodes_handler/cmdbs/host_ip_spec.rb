@@ -29,7 +29,7 @@ describe HybridPlatformsConductor::NodesHandler do
         with_cmd_runner_mocked(commands: [
           ['getent hosts my_domain.my_host', proc { [0, '', ''] }]
         ]) do
-          expect(cmdb(:host_ip).get_host_ip(['test_node'], { 'test_node' => { hostname: 'my_domain.my_host' } })).to eq('test_node' => nil)
+          expect(cmdb(:host_ip).get_host_ip(['test_node'], { 'test_node' => { hostname: 'my_domain.my_host' } })).to eq({})
         end
       end
     end
@@ -53,7 +53,6 @@ describe HybridPlatformsConductor::NodesHandler do
             'test_node4' => { hostname: 'my_domain.my_host4' }
           })).to eq(
             'test_node1' => '192.168.42.1',
-            'test_node2' => nil,
             'test_node4' => '192.168.42.4'
           )
         end
