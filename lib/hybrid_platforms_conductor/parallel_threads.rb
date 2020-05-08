@@ -13,10 +13,11 @@ module HybridPlatformsConductor
     # * *list* (Array<Object>): List of objects to iterate over
     # * *parallel* (Boolean): Iterate in a multithreaded way? [default: false]
     # * *nbr_threads_max* (Integer or nil): Maximum number of threads to be used in case of parallel, or nil for no limit [default: nil]
+    # * *display_progress* (Boolean): Should we display a progress bar? [default: true]
     # * Proc: The code called for each node being iterated on.
     #   * Parameters::
     #     * *element* (Object): The object
-    def for_each_element_in(list, parallel: false, nbr_threads_max: nil)
+    def for_each_element_in(list, parallel: false, nbr_threads_max: nil, display_progress: true)
       if parallel
         # Threads to wait for
         threads_to_join = []
@@ -49,21 +50,23 @@ module HybridPlatformsConductor
             end
           end
         end
-        # Here the main thread just reports progression
-        nbr_to_process = nil
-        nbr_processing = nil
-        nbr_processed = nil
-        with_progress_bar(nbr_total) do |progress_bar|
-          loop do
-            pools_semaphore.synchronize do
-              nbr_to_process = pools[:to_process].size
-              nbr_processing = pools[:processing].size
-              nbr_processed = pools[:processed].size
+        if display_progress
+          # Here the main thread just reports progression
+          nbr_to_process = nil
+          nbr_processing = nil
+          nbr_processed = nil
+          with_progress_bar(nbr_total) do |progress_bar|
+            loop do
+              pools_semaphore.synchronize do
+                nbr_to_process = pools[:to_process].size
+                nbr_processing = pools[:processing].size
+                nbr_processed = pools[:processed].size
+              end
+              progress_bar.title = "Queue: #{nbr_to_process} - Processing: #{nbr_processing} - Done: #{nbr_processed} - Total: #{nbr_total}"
+              progress_bar.progress = nbr_processed
+              break if nbr_processed == nbr_total
+              sleep 0.5
             end
-            progress_bar.title = "Queue: #{nbr_to_process} - Processing: #{nbr_processing} - Done: #{nbr_processed} - Total: #{nbr_total}"
-            progress_bar.progress = nbr_processed
-            break if nbr_processed == nbr_total
-            sleep 0.5
           end
         end
         # Wait for threads to be joined
