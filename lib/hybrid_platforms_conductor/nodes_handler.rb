@@ -233,7 +233,7 @@ module HybridPlatformsConductor
     # * Array<String>: List of service names
     def known_services
       prefetch_metadata_of known_nodes, :services
-      known_nodes.map { |node| get_services_of node }.flatten.uniq.sort
+      known_nodes.map { |node| get_services_of node }.flatten.compact.uniq.sort
     end
 
     # Get the platform handler of a given node

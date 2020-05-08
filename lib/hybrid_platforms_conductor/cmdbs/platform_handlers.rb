@@ -38,10 +38,7 @@ module HybridPlatformsConductor
       # * Hash<String, Hash<Symbol,Object> >: The corresponding properties, per required node.
       #     Nodes for which the property can't be fetched can be ommitted.
       def get_others(nodes, metadata)
-        # We consider the values returned by platform handlers are static, so we cache it.
-        # If this happens to change, just remove this cache.
-        @metadata = Hash[nodes.map { |node| [node, @nodes_handler.platform_for(node).metadata_for(node)] }] unless defined?(@metadata)
-        @metadata
+        Hash[nodes.map { |node| [node, @nodes_handler.platform_for(node).metadata_for(node)] }]
       end
 
     end
