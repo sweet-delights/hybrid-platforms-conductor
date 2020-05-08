@@ -137,20 +137,6 @@ module HybridPlatformsConductor
         }
       end
 
-      # Return the connection string for a given node
-      # This is a real IP or hostname that can then be used with ssh...
-      # [API] - This method is mandatory.
-      #
-      # Parameters::
-      # * *node* (String): node to get connection info from
-      # Result::
-      # * String: The corresponding connection string
-      # * String or nil: The corresponding gateway to be used, or nil if none
-      # * String or nil: The corresponding gateway user to be used, or nil if none
-      def connection_for(node)
-        ["#{node}.my_domain.com", nil, nil]
-      end
-
       # Return the services for a given node
       # [API] - This method is mandatory.
       #

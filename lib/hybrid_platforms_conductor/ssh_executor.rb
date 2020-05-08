@@ -540,9 +540,11 @@ module HybridPlatformsConductor
           nil
         ]
       else
-        connection, gateway, gateway_user = @nodes_handler.connection_for(node)
+        ip = @nodes_handler.get_connection_ip_of(node) || @nodes_handler.get_private_ips_of(node).first
+        gateway = @nodes_handler.get_gateway_of node
+        gateway = @nodes_handler.get_gateway_user_of node
         gateway_user = @ssh_gateway_user if !gateway.nil? && gateway_user.nil?
-        [connection, gateway, gateway_user]
+        [ip, gateway, gateway_user]
       end
     end
 
