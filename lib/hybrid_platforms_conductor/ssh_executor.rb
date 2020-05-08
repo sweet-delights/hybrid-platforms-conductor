@@ -285,8 +285,7 @@ module HybridPlatformsConductor
             aliases << "hpc.#{node}"
             if @override_connections.key?(node)
               # Make sure the real hostname that could be used by other processes also route to the real IP
-              inv_connection, _gateway, _gateway_user = @nodes_handler.connection_for(node)
-              aliases << inv_connection
+              aliases << @nodes_handler.get_hostname_of(node) if @nodes_handler.get_hostname_of(node)
             end
           end
           config_content << "# #{node} - #{private_ip.nil? ? 'Unknown IP address' : private_ip} - #{@nodes_handler.platform_for(node).repository_path} - #{@nodes_handler.get_description_of(node) || ''}\n"
