@@ -57,9 +57,9 @@ module HybridPlatformsConductor
       private
 
       # Timeout (in seconds) to use getent, per host
-      TIMEOUT_GETENT = 20
+      TIMEOUT_GETENT = 30
       # Number of threads max to use for getent calls
-      MAX_THREADS_GETENT = 64
+      MAX_THREADS_GETENT = 32
 
       # Discover the real IPs associated to a list of hosts.
       #
@@ -69,6 +69,7 @@ module HybridPlatformsConductor
       # * Hash<String, String or nil>: The corresponding IP (or nil if none), per host name
       def ip_for(*hosts)
         results = {}
+        log_debug "Get IPs of #{hosts.size} hosts..."
         for_each_element_in(hosts, parallel: true, nbr_threads_max: MAX_THREADS_GETENT, display_progress: log_debug?) do |host|
           _exit_status, stdout, _stderr = @cmd_runner.run_cmd(
             "getent hosts #{host}",
