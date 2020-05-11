@@ -230,9 +230,10 @@ module HybridPlatformsConductor
         end
       end
       # Prepare remote access for our nodes
-      prefetch_metadata = [:host_ip]
-      prefetch_metadata << :host_keys if @ssh_strict_host_key_checking
-      @nodes_handler.prefetch_metadata_of nodes_needing_remote.sort.uniq, prefetch_metadata
+      nodes_needing_remote.sort!
+      nodes_needing_remote.uniq!
+      @nodes_handler.prefetch_metadata_of nodes_needing_remote, :host_ip
+      @nodes_handler.prefetch_metadata_of nodes_needing_remote.select { |node| !@override_connections.key?(node) }, :host_keys if @ssh_strict_host_key_checking
       log_debug "Running actions on #{actions_per_node.size} nodes#{log_to_dir.nil? ? '' : " (logs dumped in #{log_to_dir})"}"
       # Prepare the result (stdout or nil per node)
       result = Hash[actions_per_node.keys.map { |node| [node, nil] }]
@@ -347,8 +348,6 @@ module HybridPlatformsConductor
                     log_warn "[ ControlMaster - #{ssh_url} ] - Removing stale SSH control file #{control_path_file}"
                     File.unlink control_path_file
                   end
-                  # If the connection has been overriden, make sure we have the host key
-                  ensure_host_key(connection, known_hosts) if @override_connections.key?(node)
                   # Create the control master
                   ssh_control_master_start_cmd = "#{ssh_exec}#{@passwords.key?(node) || @auth_password ? '' : ' -o BatchMode=yes'} -o ControlMaster=yes -o ControlPersist=yes #{ssh_url} true"
                   begin
@@ -444,21 +443,21 @@ module HybridPlatformsConductor
         end
         File.write(ssh_conf_file, ssh_config(ssh_exec: ssh_exec_file, known_hosts_file: known_hosts_file, nodes: nodes))
         # Make sure all host keys are setup in the known hosts file
-        if @ssh_strict_host_key_checking
-          @nodes_handler.prefetch_metadata_of nodes, %i[host_keys hostname host_ip]
-          File.open(known_hosts_file, 'w+', 0700) do |file|
+        File.open(known_hosts_file, 'w+', 0700) do |file|
+          if @ssh_strict_host_key_checking
+            # In the case of an overriden connection, get host key for the overriden connection
+            @nodes_handler.prefetch_metadata_of nodes.select { |node| !@override_connections.key?(node) }, %i[host_keys]
             nodes.sort.each do |node|
-              aliases = []
-              aliases << @nodes_handler.get_hostname_of(node) if @nodes_handler.get_hostname_of(node)
-              aliases << @nodes_handler.get_host_ip_of(node) if @nodes_handler.get_host_ip_of(node)
-              if !aliases.empty?
-                host_keys = @nodes_handler.get_host_keys_of(node)
-                if host_keys && !host_keys.empty?
-                  aliases.each do |host_alias|
-                    host_keys.each do |host_key|
-                      file.puts "#{host_alias} #{host_key}"
-                    end
-                  end
+              connection, _gateway, _gateway_user = connection_info_for(node)
+              host_keys =
+                if @override_connections.key?(node)
+                  scan_keys_for(connection)
+                else
+                  @nodes_handler.get_host_keys_of(node)
+                end
+              if host_keys && !host_keys.empty?
+                host_keys.each do |host_key|
+                  file.puts "#{connection} #{host_key}"
                 end
               end
             end
@@ -483,17 +482,16 @@ module HybridPlatformsConductor
     def ensure_host_key(host, known_hosts_file)
       if @ssh_strict_host_key_checking
         unless File.read(known_hosts_file).include?(host)
-          # Get the host key
-          exit_status, stdout, _stderr = @cmd_runner.run_cmd "ssh-keyscan #{host}", timeout: TIMEOUT_HOST_KEYS, log_to_stdout: log_debug?, no_exception: true
-          if exit_status == 0
+          # Get the host keys
+          found_keys = scan_keys_for(host)
+          if found_keys
             # Remove the previous eventually
             @cmd_runner.run_cmd "ssh-keygen -R #{host} -f #{known_hosts_file}", timeout: TIMEOUT_HOST_KEYS, log_to_stdout: log_debug?
-            # Add the new one
-            host_key = stdout.strip
-            log_debug "Add new key for #{host} in #{known_hosts_file}: #{host_key}"
+            # Add the new ones
+            log_debug "Add #{found_keys.size} new keys for #{host} in #{known_hosts_file}"
             Futex.new(known_hosts_file).open do
               File.open(known_hosts_file, 'a') do |file|
-                file.puts host_key
+                file.puts found_keys.map { |host_key| "#{host} #{host_key}" }.join("\n")
               end
             end
           else
@@ -504,6 +502,38 @@ module HybridPlatformsConductor
     end
 
     private
+
+    # Timeout to scan for host keys, in seconds
+    TIMEOUT_SSH_KEYSCAN = 30
+
+    # Get host keys of a given host.
+    # Host keys are returned as a list of strings of the form "<type> <key>"
+    #
+    # Parameters::
+    # * *host* (String): The host to query host keys from
+    # Result::
+    # * Array<String> or nil: The host keys, or nil in case of error
+    def scan_keys_for(host)
+      exit_status, stdout, _stderr = @cmd_runner.run_cmd(
+        "ssh-keyscan #{host}",
+        timeout: TIMEOUT_SSH_KEYSCAN,
+        log_to_stdout: log_debug?,
+        no_exception: true
+      )
+      if exit_status == 0
+        found_keys = []
+        stdout.split("\n").each do |line|
+          unless line =~ /^# .*$/
+            _host, type, key = line.split(/\s+/)
+            found_keys << "#{type} #{key}"
+          end
+        end
+        found_keys
+      else
+        log_warn "Unable to get host key for #{host}."
+        nil
+      end
+    end
 
     # Get the lock to access users of a given node's ControlMaster.
     # Make sure the lock is released when exiting client code.
@@ -560,8 +590,6 @@ module HybridPlatformsConductor
             @nodes_handler.get_host_ip_of(node)
           elsif @nodes_handler.get_private_ips_of(node)
             @nodes_handler.get_private_ips_of(node).first
-          elsif @nodes_handler.get_host_ip_of(node)
-            @nodes_handler.get_host_ip_of(node)
           else
             raise "No connection possible to #{node}"
           end

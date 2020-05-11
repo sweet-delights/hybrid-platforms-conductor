@@ -33,7 +33,7 @@ module HybridPlatformsConductorTest
             ssh_commands_once.concat([
               [
                 "ssh-keyscan #{node_connection_info[:connection]}",
-                proc { [0, 'fake_host_key', ''] }
+                proc { [0, "#{node_connection_info[:connection]} ssh-rsa fake_host_key_for_#{node_connection_info[:connection]}", ''] }
               ]
             ])
           end

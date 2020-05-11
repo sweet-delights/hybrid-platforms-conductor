@@ -61,8 +61,6 @@ describe HybridPlatformsConductor::SshExecutor do
             ['sshpass -V', proc { [0, "sshpass 1.06\n", ''] }],
             ['which env', proc { [0, "/usr/bin/env\n", ''] }],
             ['ssh -V 2>&1', proc { [0, "OpenSSH_7.4p1 Debian-10+deb9u7, OpenSSL 1.0.2u  20 Dec 2019\n", ''] }],
-            ['ssh-keyscan 192.168.42.42', proc { [0, "fake_host_key\n", ''] }],
-            [/^ssh-keygen -R 192.168.42.66 -f .+\/known_hosts/, proc { [0, '', ''] }],
             [remote_bash_for('echo Hello1', node: 'node', user: 'test_user'), proc { [0, "Hello1\n", ''] }]
           ],
           nodes_connections: { 'node' => { connection: '192.168.42.66', user: 'test_user' } }
@@ -448,13 +446,13 @@ describe HybridPlatformsConductor::SshExecutor do
             ['sshpass -V', proc { [0, "sshpass 1.06\n", ''] }],
             ['which env', proc { [0, "/usr/bin/env\n", ''] }],
             ['ssh -V 2>&1', proc { [0, "OpenSSH_7.4p1 Debian-10+deb9u7, OpenSSL 1.0.2u  20 Dec 2019\n", ''] }],
-            ['ssh-keyscan 192.168.42.66', proc { [0, "fake_host_key\n", ''] }],
+            ['ssh-keyscan 192.168.42.66', proc { [0, "192.168.42.66 ssh-rsa fake_host_key_66\n", ''] }],
             [/^ssh-keygen -R 192.168.42.66 -f .+\/known_hosts/, proc { [0, '', ''] }]
           ]
         ) do
           test_ssh_executor.with_platforms_ssh do |ssh_exec, _ssh_config, known_hosts_file|
             test_ssh_executor.ensure_host_key('192.168.42.66', known_hosts_file)
-            expect(File.read(known_hosts_file)).to eq "fake_host_key\n"
+            expect(File.read(known_hosts_file)).to eq "192.168.42.66 ssh-rsa fake_host_key_66\n"
           end
         end
       end
@@ -476,6 +474,44 @@ describe HybridPlatformsConductor::SshExecutor do
             File.write(known_hosts_file, "192.168.42.42\nanother_fake_key\n")
             test_ssh_executor.ensure_host_key('192.168.42.42', known_hosts_file)
             expect(File.read(known_hosts_file)).to eq "192.168.42.42\nanother_fake_key\n"
+          end
+        end
+      end
+    end
+
+    it 'adds the host key in case of an overriden connection' do
+      with_test_platform(nodes: { 'node' => { meta: { host_ip: '192.168.42.42' } } }) do
+        with_cmd_runner_mocked(
+          commands: [
+            ['sshpass -V', proc { [0, "sshpass 1.06\n", ''] }],
+            ['which env', proc { [0, "/usr/bin/env\n", ''] }],
+            ['ssh -V 2>&1', proc { [0, "OpenSSH_7.4p1 Debian-10+deb9u7, OpenSSL 1.0.2u  20 Dec 2019\n", ''] }],
+            ['ssh-keyscan 192.168.42.66', proc { [0, "192.168.42.66 ssh-rsa fake_host_key_66\n", ''] }]
+          ]
+        ) do
+          test_ssh_executor.ssh_user = 'test_user'
+          test_ssh_executor.override_connections['node'] = '192.168.42.66'
+          test_ssh_executor.with_platforms_ssh(nodes: ['node']) do |_ssh_exec, _ssh_urls, known_hosts_file|
+            expect(File.read(known_hosts_file)).to eq "192.168.42.66 ssh-rsa fake_host_key_66\n"
+          end
+        end
+      end
+    end
+
+    it 'does not add the host key in case of an overriden connection when we don\'t check for host keys' do
+      with_test_platform(nodes: { 'node' => { meta: { host_ip: '192.168.42.42' } } }) do
+        with_cmd_runner_mocked(
+          commands: [
+            ['sshpass -V', proc { [0, "sshpass 1.06\n", ''] }],
+            ['which env', proc { [0, "/usr/bin/env\n", ''] }],
+            ['ssh -V 2>&1', proc { [0, "OpenSSH_7.4p1 Debian-10+deb9u7, OpenSSL 1.0.2u  20 Dec 2019\n", ''] }]
+          ]
+        ) do
+          test_ssh_executor.ssh_user = 'test_user'
+          test_ssh_executor.override_connections['node'] = '192.168.42.66'
+          test_ssh_executor.ssh_strict_host_key_checking = false
+          test_ssh_executor.with_platforms_ssh(nodes: ['node']) do |_ssh_exec, _ssh_urls, known_hosts_file|
+            expect(File.read(known_hosts_file)).to eq ''
           end
         end
       end
