@@ -82,7 +82,7 @@ describe HybridPlatformsConductor::SshExecutor do
     end
 
     it 'generates a simple config for a node with direct access' do
-      with_test_platform(nodes: { 'node' => { meta: { connection_ip: '192.168.42.42' } } }) do
+      with_test_platform(nodes: { 'node' => { meta: { host_ip: '192.168.42.42' } } }) do
         expect(ssh_config_for('node')).to eq <<~EOS
           Host hpc.node
             Hostname 192.168.42.42
@@ -92,9 +92,9 @@ describe HybridPlatformsConductor::SshExecutor do
 
     it 'generates a simple config for several nodes with direct access' do
       with_test_platform(nodes: {
-        'node1' => { meta: { connection_ip: '192.168.42.1' } },
-        'node2' => { meta: { connection_ip: '192.168.42.2' } },
-        'node3' => { meta: { connection_ip: '192.168.42.3' } }
+        'node1' => { meta: { host_ip: '192.168.42.1' } },
+        'node2' => { meta: { host_ip: '192.168.42.2' } },
+        'node3' => { meta: { host_ip: '192.168.42.3' } }
       }) do
         expect(ssh_config_for('node1')).to eq <<~EOS
           Host hpc.node1
@@ -113,9 +113,9 @@ describe HybridPlatformsConductor::SshExecutor do
 
     it 'selects nodes when generating the config' do
       with_test_platform(nodes: {
-        'node1' => { meta: { connection_ip: '192.168.42.1' } },
-        'node2' => { meta: { connection_ip: '192.168.42.2' } },
-        'node3' => { meta: { connection_ip: '192.168.42.3' } }
+        'node1' => { meta: { host_ip: '192.168.42.1' } },
+        'node2' => { meta: { host_ip: '192.168.42.2' } },
+        'node3' => { meta: { host_ip: '192.168.42.3' } }
       }) do
         expect(ssh_config_for('node1', nodes: %w[node1 node3])).to eq <<~EOS
           Host hpc.node1
@@ -132,7 +132,7 @@ describe HybridPlatformsConductor::SshExecutor do
     end
 
     it 'uses node\'s hostname if present' do
-      with_test_platform(nodes: { 'node' => { meta: { connection_ip: '192.168.42.42', hostname: 'my_hostname.my_domain' } } }) do
+      with_test_platform(nodes: { 'node' => { meta: { host_ip: '192.168.42.42', hostname: 'my_hostname.my_domain' } } }) do
         expect(ssh_config_for('node')).to eq <<~EOS
           Host hpc.node my_hostname.my_domain
             Hostname 192.168.42.42
@@ -141,7 +141,7 @@ describe HybridPlatformsConductor::SshExecutor do
     end
 
     it 'uses node forced gateway information' do
-      with_test_platform(nodes: { 'node' => { meta: { connection_ip: '192.168.42.42', gateway: 'test_gateway', gateway_user: 'test_gateway_user' } } }) do
+      with_test_platform(nodes: { 'node' => { meta: { host_ip: '192.168.42.42', gateway: 'test_gateway', gateway_user: 'test_gateway_user' } } }) do
         expect(ssh_config_for('node')).to eq <<~EOS
           Host hpc.node
             Hostname 192.168.42.42
@@ -151,7 +151,7 @@ describe HybridPlatformsConductor::SshExecutor do
     end
 
     it 'uses node default gateway information and user from environment' do
-      with_test_platform(nodes: { 'node' => { meta: { connection_ip: '192.168.42.42', gateway: 'test_gateway' } } }) do
+      with_test_platform(nodes: { 'node' => { meta: { host_ip: '192.168.42.42', gateway: 'test_gateway' } } }) do
         ENV['hpc_ssh_gateway_user'] = 'test_gateway_user'
         expect(ssh_config_for('node')).to eq <<~EOS
           Host hpc.node
@@ -162,7 +162,7 @@ describe HybridPlatformsConductor::SshExecutor do
     end
 
     it 'uses node default gateway information and user from setting' do
-      with_test_platform(nodes: { 'node' => { meta: { connection_ip: '192.168.42.42', gateway: 'test_gateway' } } }) do
+      with_test_platform(nodes: { 'node' => { meta: { host_ip: '192.168.42.42', gateway: 'test_gateway' } } }) do
         test_ssh_executor.ssh_gateway_user = 'test_gateway_user'
         expect(ssh_config_for('node')).to eq <<~EOS
           Host hpc.node
@@ -173,7 +173,7 @@ describe HybridPlatformsConductor::SshExecutor do
     end
 
     it 'uses node forced gateway information with a different ssh executable' do
-      with_test_platform(nodes: { 'node' => { meta: { connection_ip: '192.168.42.42', gateway: 'test_gateway', gateway_user: 'test_gateway_user' } } }) do
+      with_test_platform(nodes: { 'node' => { meta: { host_ip: '192.168.42.42', gateway: 'test_gateway', gateway_user: 'test_gateway_user' } } }) do
         expect(ssh_config_for('node', ssh_exec: 'new_ssh')).to eq <<~EOS
           Host hpc.node
             Hostname 192.168.42.42
@@ -183,7 +183,7 @@ describe HybridPlatformsConductor::SshExecutor do
     end
 
     it 'uses node default gateway information with a different ssh executable' do
-      with_test_platform(nodes: { 'node' => { meta: { connection_ip: '192.168.42.42', gateway: 'test_gateway' } } }) do
+      with_test_platform(nodes: { 'node' => { meta: { host_ip: '192.168.42.42', gateway: 'test_gateway' } } }) do
         test_ssh_executor.ssh_gateway_user = 'test_gateway_user'
         expect(ssh_config_for('node', ssh_exec: 'new_ssh')).to eq <<~EOS
           Host hpc.node
@@ -194,7 +194,7 @@ describe HybridPlatformsConductor::SshExecutor do
     end
 
     it 'generates a config compatible for passwords authentication' do
-      with_test_platform(nodes: { 'node' => { meta: { connection_ip: '192.168.42.42' } } }) do
+      with_test_platform(nodes: { 'node' => { meta: { host_ip: '192.168.42.42' } } }) do
         test_ssh_executor.passwords['node'] = 'PaSsWoRd'
         expect(ssh_config_for('node')).to eq <<~EOS
           Host hpc.node
@@ -207,10 +207,10 @@ describe HybridPlatformsConductor::SshExecutor do
 
     it 'generates a config compatible for passwords authentication only for marked nodes' do
       with_test_platform(nodes: {
-        'node1' => { meta: { connection_ip: '192.168.42.1' } },
-        'node2' => { meta: { connection_ip: '192.168.42.2' } },
-        'node3' => { meta: { connection_ip: '192.168.42.3' } },
-        'node4' => { meta: { connection_ip: '192.168.42.4' } }
+        'node1' => { meta: { host_ip: '192.168.42.1' } },
+        'node2' => { meta: { host_ip: '192.168.42.2' } },
+        'node3' => { meta: { host_ip: '192.168.42.3' } },
+        'node4' => { meta: { host_ip: '192.168.42.4' } }
       }) do
         test_ssh_executor.passwords['node1'] = 'PaSsWoRd1'
         test_ssh_executor.passwords['node3'] = 'PaSsWoRd3'

@@ -96,13 +96,13 @@ module HybridPlatformsConductor
         out "* Known nodes:\n#{known_nodes.sort.join("\n")}"
         out
         out "* Known nodes with description:\n#{
-          prefetch_metadata_of known_nodes, %i[hostname connection_ip private_ips services description]
+          prefetch_metadata_of known_nodes, %i[hostname host_ip private_ips services description]
           known_nodes.map do |node|
             "#{platform_for(node).info[:repo_name]} - #{node} (#{
               if get_hostname_of node
                 get_hostname_of node
-              elsif get_connection_ip_of node
-                get_connection_ip_of node
+              elsif get_host_ip_of node
+                get_host_ip_of node
               elsif get_private_ips_of node
                 get_private_ips_of(node).first
               else

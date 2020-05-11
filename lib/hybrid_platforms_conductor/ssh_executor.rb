@@ -538,8 +538,8 @@ module HybridPlatformsConductor
         ]
       else
         ip =
-          if @nodes_handler.get_connection_ip_of(node)
-            @nodes_handler.get_connection_ip_of(node)
+          if @nodes_handler.get_host_ip_of(node)
+            @nodes_handler.get_host_ip_of(node)
           elsif @nodes_handler.get_private_ips_of(node)
             @nodes_handler.get_private_ips_of(node).first
           else

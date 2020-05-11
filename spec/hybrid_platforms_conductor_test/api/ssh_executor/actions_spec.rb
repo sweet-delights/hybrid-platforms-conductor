@@ -9,7 +9,7 @@ describe HybridPlatformsConductor::SshExecutor do
     #   * Parameters::
     #     * *repository* (String): Path to the repository
     def with_test_platform_for_actions
-      with_test_platform(nodes: { 'node' => { meta: { connection_ip: '192.168.42.42' } } }) do |repository|
+      with_test_platform(nodes: { 'node' => { meta: { host_ip: '192.168.42.42' } } }) do |repository|
         with_cmd_runner_mocked(
           commands: [
             ['sshpass -V', proc do |cmd, log_to_file: nil, log_to_stdout: true, log_stdout_to_io: nil, log_stderr_to_io: nil, expected_code: 0, timeout: nil, no_exception: false|

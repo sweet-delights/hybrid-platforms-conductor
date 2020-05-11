@@ -9,7 +9,7 @@ describe HybridPlatformsConductor::SshExecutor do
   end
 
   it 'displays commands instead of executing them' do
-    with_test_platform(nodes: { 'node1' => { meta: { connection_ip: '192.168.42.42' } } }) do |repository|
+    with_test_platform(nodes: { 'node1' => { meta: { host_ip: '192.168.42.42' } } }) do |repository|
       executed = false
       test_ssh_executor.dry_run = true
       stdout_file = "#{repository}/run.stdout"

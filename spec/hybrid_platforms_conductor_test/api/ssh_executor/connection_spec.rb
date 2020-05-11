@@ -3,7 +3,7 @@ describe HybridPlatformsConductor::SshExecutor do
   context 'checking connections handling' do
 
     it 'connects on a node before executing commands' do
-      with_test_platform(nodes: { 'node' => { meta: { connection_ip: '192.168.42.42' } } }) do
+      with_test_platform(nodes: { 'node' => { meta: { host_ip: '192.168.42.42' } } }) do
         with_cmd_runner_mocked(
           commands: [
             ['sshpass -V', proc { [0, "sshpass 1.06\n", ''] }],
@@ -21,9 +21,9 @@ describe HybridPlatformsConductor::SshExecutor do
 
     it 'connects on several nodes before executing commands' do
       with_test_platform(nodes: {
-        'node1' => { meta: { connection_ip: '192.168.42.1' } },
-        'node2' => { meta: { connection_ip: '192.168.42.2' } },
-        'node3' => { meta: { connection_ip: '192.168.42.3' } }
+        'node1' => { meta: { host_ip: '192.168.42.1' } },
+        'node2' => { meta: { host_ip: '192.168.42.2' } },
+        'node3' => { meta: { host_ip: '192.168.42.3' } }
       }) do
         with_cmd_runner_mocked(
           commands: [
@@ -55,7 +55,7 @@ describe HybridPlatformsConductor::SshExecutor do
     end
 
     it 'can override connection settings to a node' do
-      with_test_platform(nodes: { 'node' => { meta: { connection_ip: '192.168.42.42' } } }) do
+      with_test_platform(nodes: { 'node' => { meta: { host_ip: '192.168.42.42' } } }) do
         with_cmd_runner_mocked(
           commands: [
             ['sshpass -V', proc { [0, "sshpass 1.06\n", ''] }],
@@ -73,7 +73,7 @@ describe HybridPlatformsConductor::SshExecutor do
     end
 
     it 'creates an SSH master to 1 node' do
-      with_test_platform(nodes: { 'node' => { meta: { connection_ip: '192.168.42.42' } } }) do
+      with_test_platform(nodes: { 'node' => { meta: { host_ip: '192.168.42.42' } } }) do
         with_cmd_runner_mocked(
           commands: [
             ['sshpass -V', proc { [0, "sshpass 1.06\n", ''] }],
@@ -92,7 +92,7 @@ describe HybridPlatformsConductor::SshExecutor do
     end
 
     it 'reuses SSH master already created to 1 node' do
-      with_test_platform(nodes: { 'node' => { meta: { connection_ip: '192.168.42.42' } } }) do
+      with_test_platform(nodes: { 'node' => { meta: { host_ip: '192.168.42.42' } } }) do
         nodes_connections_to_mock = { 'node' => { connection: '192.168.42.42', user: 'test_user' } }
         with_cmd_runner_mocked(
           commands: [
@@ -118,9 +118,9 @@ describe HybridPlatformsConductor::SshExecutor do
 
     it 'creates SSH master to several nodes' do
       with_test_platform(nodes: {
-        'node1' => { meta: { connection_ip: '192.168.42.1' } },
-        'node2' => { meta: { connection_ip: '192.168.42.2' } },
-        'node3' => { meta: { connection_ip: '192.168.42.3' } }
+        'node1' => { meta: { host_ip: '192.168.42.1' } },
+        'node2' => { meta: { host_ip: '192.168.42.2' } },
+        'node3' => { meta: { host_ip: '192.168.42.3' } }
       }) do
         with_cmd_runner_mocked(
           commands: [
@@ -149,10 +149,10 @@ describe HybridPlatformsConductor::SshExecutor do
 
     it 'reuses SSH masters already created to some nodes and create new ones if needed' do
       with_test_platform(nodes: {
-        'node1' => { meta: { connection_ip: '192.168.42.1' } },
-        'node2' => { meta: { connection_ip: '192.168.42.2' } },
-        'node3' => { meta: { connection_ip: '192.168.42.3' } },
-        'node4' => { meta: { connection_ip: '192.168.42.4' } }
+        'node1' => { meta: { host_ip: '192.168.42.1' } },
+        'node2' => { meta: { host_ip: '192.168.42.2' } },
+        'node3' => { meta: { host_ip: '192.168.42.3' } },
+        'node4' => { meta: { host_ip: '192.168.42.4' } }
       }) do
         with_cmd_runner_mocked(
           commands: [
@@ -203,7 +203,7 @@ describe HybridPlatformsConductor::SshExecutor do
     end
 
     it 'makes sure the last client using ControlMaster destroys it, even using a different environment' do
-      with_test_platform(nodes: { 'node' => { meta: { connection_ip: '192.168.42.42' } } }) do
+      with_test_platform(nodes: { 'node' => { meta: { host_ip: '192.168.42.42' } } }) do
         # 1. Current thread creates the ControlMaster.
         # 2. Second thread connects to it.
         # 3. Current thread releases it.
@@ -256,9 +256,9 @@ describe HybridPlatformsConductor::SshExecutor do
 
     it 'does not create SSH master if asked' do
       with_test_platform(nodes: {
-        'node1' => { meta: { connection_ip: '192.168.42.1' } },
-        'node2' => { meta: { connection_ip: '192.168.42.2' } },
-        'node3' => { meta: { connection_ip: '192.168.42.3' } }
+        'node1' => { meta: { host_ip: '192.168.42.1' } },
+        'node2' => { meta: { host_ip: '192.168.42.2' } },
+        'node3' => { meta: { host_ip: '192.168.42.3' } }
       }) do
         with_cmd_runner_mocked(
           commands: [
@@ -290,9 +290,9 @@ describe HybridPlatformsConductor::SshExecutor do
 
     it 'does not check host keys if asked' do
       with_test_platform(nodes: {
-        'node1' => { meta: { connection_ip: '192.168.42.1' } },
-        'node2' => { meta: { connection_ip: '192.168.42.2' } },
-        'node3' => { meta: { connection_ip: '192.168.42.3' } }
+        'node1' => { meta: { host_ip: '192.168.42.1' } },
+        'node2' => { meta: { host_ip: '192.168.42.2' } },
+        'node3' => { meta: { host_ip: '192.168.42.3' } }
       }) do
         with_cmd_runner_mocked(
           commands: [
@@ -322,7 +322,7 @@ describe HybridPlatformsConductor::SshExecutor do
     end
 
     it 'does not use batch mode when passwords are to be expected' do
-      with_test_platform(nodes: { 'node' => { meta: { connection_ip: '192.168.42.42' } } }) do |repository|
+      with_test_platform(nodes: { 'node' => { meta: { host_ip: '192.168.42.42' } } }) do |repository|
         test_ssh_executor.dry_run = true
         test_ssh_executor.auth_password = true
         stdout_file = "#{repository}/run.stdout"
@@ -344,7 +344,7 @@ describe HybridPlatformsConductor::SshExecutor do
     end
 
     it 'provides an SSH executable path that contains the whole SSH config, along with an SSH config file and known hosts file to be used as well' do
-      with_test_platform(nodes: { 'node' => { meta: { connection_ip: '192.168.42.42' } } }) do
+      with_test_platform(nodes: { 'node' => { meta: { host_ip: '192.168.42.42' } } }) do
         test_ssh_executor.with_platforms_ssh do |ssh_exec, ssh_config, ssh_known_hosts|
           expect(`#{ssh_exec} -V 2>&1`).to eq `ssh -V 2>&1`
           expect(`#{ssh_exec} -G hpc.node`.split("\n").find { |line| line =~ /^hostname .+$/ }).to eq 'hostname 192.168.42.42'
@@ -359,9 +359,9 @@ describe HybridPlatformsConductor::SshExecutor do
 
     it 'provides an SSH executable path that contains the SSH config for selected nodes' do
       with_test_platform(nodes: {
-        'node1' => { meta: { connection_ip: '192.168.42.1' } },
-        'node2' => { meta: { connection_ip: '192.168.42.2' } },
-        'node3' => { meta: { connection_ip: '192.168.42.3' } }
+        'node1' => { meta: { host_ip: '192.168.42.1' } },
+        'node2' => { meta: { host_ip: '192.168.42.2' } },
+        'node3' => { meta: { host_ip: '192.168.42.3' } }
       }) do
         test_ssh_executor.with_platforms_ssh(nodes: %w[node1 node3]) do |ssh_exec, ssh_config|
           expect(`#{ssh_exec} -V 2>&1`).to eq `ssh -V 2>&1`
@@ -384,7 +384,7 @@ describe HybridPlatformsConductor::SshExecutor do
     end
 
     it 'uses sshpass correctly if needed by the provided SSH executable' do
-      with_test_platform(nodes: { 'node' => { meta: { connection_ip: '192.168.42.42' } } }) do
+      with_test_platform(nodes: { 'node' => { meta: { host_ip: '192.168.42.42' } } }) do
         test_ssh_executor.passwords['node'] = 'PaSsWoRd'
         test_ssh_executor.with_platforms_ssh do |ssh_exec, ssh_config|
           expect(`#{ssh_exec} -V 2>&1`).to eq `ssh -V 2>&1`
@@ -401,7 +401,7 @@ describe HybridPlatformsConductor::SshExecutor do
     end
 
     it 'does not reuse provided SSH executables and configs' do
-      with_test_platform(nodes: { 'node' => { meta: { connection_ip: '192.168.42.42' } } }) do
+      with_test_platform(nodes: { 'node' => { meta: { host_ip: '192.168.42.42' } } }) do
         test_ssh_executor.with_platforms_ssh do |first_ssh_exec, first_ssh_config|
           test_ssh_executor.with_platforms_ssh do |second_ssh_exec, second_ssh_config|
             expect(second_ssh_exec).not_to eq first_ssh_exec
@@ -412,7 +412,7 @@ describe HybridPlatformsConductor::SshExecutor do
     end
 
     it 'cleans provided SSH executables and configs after use' do
-      with_test_platform(nodes: { 'node' => { meta: { connection_ip: '192.168.42.42' } } }) do
+      with_test_platform(nodes: { 'node' => { meta: { host_ip: '192.168.42.42' } } }) do
         ssh_exec_file_1 = nil
         ssh_config_file_1 = nil
         test_ssh_executor.with_platforms_ssh do |ssh_exec_1, ssh_config_1|

@@ -12,29 +12,32 @@ describe 'executables\' Nodes Handler options' do
         'platform_1' => {
           nodes: {
             'node11' => {
-              meta: { connection_ip: '192.168.42.11' },
+              meta: { host_ip: '192.168.42.11' },
               services: ['service1']
             },
             'node12' => {
               meta: {
-                connection_ip: '192.168.42.12',
+                host_ip: '192.168.42.12',
                 description: 'Node12 description'
               },
               services: ['service1']
             },
             'node13' => {
-              meta: { connection_ip: '192.168.42.13' },
+              meta: { host_ip: '192.168.42.13' },
               services: ['service2']
             },
             'node14' => {
               meta: { private_ips: ['192.168.42.14', '172.16.42.14'] }
             },
             'node15' => {
-              meta: { hostname: 'my_host15.my_domain' }
+              meta: {
+                hostname: 'my_host15.my_domain',
+                host_ip: '192.168.42.15'
+              }
             },
             'node16' => {
               meta: {
-                connection_ip: '192.168.42.16',
+                host_ip: '192.168.42.16',
                 hostname: 'my_host16.my_domain'
               }
             }
@@ -44,11 +47,11 @@ describe 'executables\' Nodes Handler options' do
         'platform_2' => {
           nodes: {
             'node21' => {
-              meta: { connection_ip: '192.168.42.21' },
+              meta: { host_ip: '192.168.42.21' },
               services: ['service2', 'service3']
             },
             'node22' => {
-              meta: { connection_ip: '192.168.42.22' },
+              meta: { host_ip: '192.168.42.22' },
               services: ['service1']
             }
           }
