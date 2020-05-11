@@ -210,7 +210,7 @@ module HybridPlatformsConductor
           nodes_actions_set.each do |action_type, action_info|
             raise 'Cannot have concurrent executions for interactive sessions' if concurrent && action_type == :interactive && action_info
             raise "Unknown action type #{action_type}" unless @action_plugins.key?(action_type)
-            need_remote = true if action_type == :remote_bash
+            need_remote = true if action_type == :remote_bash || action_type == :scp
             resolved_nodes_actions << @action_plugins[action_type].new(
               logger: @logger,
               logger_stderr: @logger_stderr,
