@@ -230,7 +230,9 @@ module HybridPlatformsConductor
         end
       end
       # Prepare remote access for our nodes
-      @nodes_handler.prefetch_metadata_of nodes_needing_remote.sort.uniq, %i[host_ip host_keys]
+      prefetch_metadata = [:host_ip]
+      prefetch_metadata << :host_keys if @ssh_strict_host_key_checking
+      @nodes_handler.prefetch_metadata_of nodes_needing_remote.sort.uniq, prefetch_metadata
       log_debug "Running actions on #{actions_per_node.size} nodes#{log_to_dir.nil? ? '' : " (logs dumped in #{log_to_dir})"}"
       # Prepare the result (stdout or nil per node)
       result = Hash[actions_per_node.keys.map { |node| [node, nil] }]
@@ -345,6 +347,8 @@ module HybridPlatformsConductor
                     log_warn "[ ControlMaster - #{ssh_url} ] - Removing stale SSH control file #{control_path_file}"
                     File.unlink control_path_file
                   end
+                  # If the connection has been overriden, make sure we have the host key
+                  ensure_host_key(connection, known_hosts) if @override_connections.key?(node)
                   # Create the control master
                   ssh_control_master_start_cmd = "#{ssh_exec}#{@passwords.key?(node) || @auth_password ? '' : ' -o BatchMode=yes'} -o ControlMaster=yes -o ControlPersist=yes #{ssh_url} true"
                   begin
@@ -440,18 +444,20 @@ module HybridPlatformsConductor
         end
         File.write(ssh_conf_file, ssh_config(ssh_exec: ssh_exec_file, known_hosts_file: known_hosts_file, nodes: nodes))
         # Make sure all host keys are setup in the known hosts file
-        @nodes_handler.prefetch_metadata_of nodes, %i[host_keys hostname host_ip]
-        File.open(known_hosts_file, 'w+', 0700) do |file|
-          nodes.sort.each do |node|
-            aliases = []
-            aliases << @nodes_handler.get_hostname_of(node) if @nodes_handler.get_hostname_of(node)
-            aliases << @nodes_handler.get_host_ip_of(node) if @nodes_handler.get_host_ip_of(node)
-            if !aliases.empty?
-              host_keys = @nodes_handler.get_host_keys_of(node)
-              if host_keys && !host_keys.empty?
-                aliases.each do |host_alias|
-                  host_keys.each do |host_key|
-                    file.puts "#{host_alias} #{host_key}"
+        if @ssh_strict_host_key_checking
+          @nodes_handler.prefetch_metadata_of nodes, %i[host_keys hostname host_ip]
+          File.open(known_hosts_file, 'w+', 0700) do |file|
+            nodes.sort.each do |node|
+              aliases = []
+              aliases << @nodes_handler.get_hostname_of(node) if @nodes_handler.get_hostname_of(node)
+              aliases << @nodes_handler.get_host_ip_of(node) if @nodes_handler.get_host_ip_of(node)
+              if !aliases.empty?
+                host_keys = @nodes_handler.get_host_keys_of(node)
+                if host_keys && !host_keys.empty?
+                  aliases.each do |host_alias|
+                    host_keys.each do |host_key|
+                      file.puts "#{host_alias} #{host_key}"
+                    end
                   end
                 end
               end
