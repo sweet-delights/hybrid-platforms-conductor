@@ -429,7 +429,7 @@ module HybridPlatformsConductor
     #     * *ssh_known_hosts* (String): SSH known hosts file to be used
     def with_platforms_ssh(nodes: @nodes_handler.known_nodes)
       platforms_ssh_dir = Dir.mktmpdir("platforms_ssh_#{self.object_id}", @tmp_dir)
-      log_debug "Generate temporary SSH configuration in #{platforms_ssh_dir}"
+      log_debug "Generate temporary SSH configuration in #{platforms_ssh_dir} for #{nodes.size} nodes..."
       begin
         ssh_conf_file = "#{platforms_ssh_dir}/ssh_config"
         ssh_exec_file = "#{platforms_ssh_dir}/ssh"
