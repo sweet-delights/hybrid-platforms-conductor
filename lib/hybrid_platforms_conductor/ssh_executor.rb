@@ -288,25 +288,17 @@ module HybridPlatformsConductor
       # Query for the metadata of all nodes at once
       @nodes_handler.prefetch_metadata_of nodes, %i[private_ips hostname description]
       nodes.sort.each do |node|
-        (@nodes_handler.get_private_ips_of(node) || [nil]).sort.each.with_index do |private_ip, idx|
-          # Generate the conf for the node
-          connection, gateway, gateway_user = connection_info_for(node)
-          aliases = ssh_aliases_for(node, private_ip)
-          if idx == 0
-            aliases << "hpc.#{node}"
-            # Make sure the real hostname that could be used by other processes also route to the real IP
-            aliases << @nodes_handler.get_hostname_of(node) if @nodes_handler.get_hostname_of(node)
-          end
-          config_content << "# #{node} - #{private_ip.nil? ? 'Unknown IP address' : private_ip} - #{@nodes_handler.platform_for(node).repository_path} - #{@nodes_handler.get_description_of(node) || ''}\n"
-          config_content << "Host #{aliases.join(' ')}\n"
-          config_content << "  Hostname #{connection}\n"
-          config_content << "  ProxyCommand #{ssh_exec} -q -W %h:%p #{gateway_user}@#{gateway}\n" unless gateway.nil?
-          if @passwords.key?(node)
-            config_content << "  PreferredAuthentications password\n"
-            config_content << "  PubkeyAuthentication no\n"
-          end
-          config_content << "\n"
+        # Generate the conf for the node
+        connection, gateway, gateway_user = connection_info_for(node)
+        config_content << "# #{node} - #{connection} - #{@nodes_handler.platform_for(node).repository_path} - #{@nodes_handler.get_description_of(node) || ''}\n"
+        config_content << "Host #{ssh_aliases_for(node).join(' ')}\n"
+        config_content << "  Hostname #{connection}\n"
+        config_content << "  ProxyCommand #{ssh_exec} -q -W %h:%p #{gateway_user}@#{gateway}\n" unless gateway.nil?
+        if @passwords.key?(node)
+          config_content << "  PreferredAuthentications password\n"
+          config_content << "  PubkeyAuthentication no\n"
         end
+        config_content << "\n"
       end
       config_content
     end
@@ -590,6 +582,8 @@ module HybridPlatformsConductor
             @nodes_handler.get_host_ip_of(node)
           elsif @nodes_handler.get_private_ips_of(node)
             @nodes_handler.get_private_ips_of(node).first
+          elsif @nodes_handler.get_hostname_of(node)
+            @nodes_handler.get_hostname_of(node)
           else
             raise "No connection possible to #{node}"
           end
@@ -600,22 +594,24 @@ module HybridPlatformsConductor
       end
     end
 
-    # Get the possible SSH aliases for a given node accessed through one of its IPs.
+    # Get the possible SSH aliases for a given node.
     #
     # Parameters::
     # * *node* (String): The node to access
-    # * *ip* (String or nil): Corresponding IP, or nil if none available
     # Result::
     # * Array<String>: The list of possible SSH aliases
-    def ssh_aliases_for(node, ip)
-      if ip.nil?
-        []
-      else
-        aliases = ["hpc.#{ip}"]
-        split_ip = ip.split('.').map(&:to_i)
-        aliases << "hpc.#{split_ip[2..3].join('.')}" if split_ip[0..1] == [172, 16]
-        aliases
+    def ssh_aliases_for(node)
+      aliases = ["hpc.#{node}"]
+      # Make sure the real hostname that could be used by other processes also route to the real IP.
+      # Especially useful when connections are overriden to a different IP.
+      aliases << @nodes_handler.get_hostname_of(node) if @nodes_handler.get_hostname_of(node)
+      if @nodes_handler.get_private_ips_of(node)
+        aliases.concat(@nodes_handler.get_private_ips_of(node).map do |ip|
+          split_ip = ip.split('.').map(&:to_i)
+          "hpc.#{(split_ip[0..1] == [172, 16] ? split_ip[2..3] : split_ip).join('.')}"
+        end)
       end
+      aliases
     end
 
     # Execute a list of actions for a node, and return exit codes, stdout and stderr of those actions.
