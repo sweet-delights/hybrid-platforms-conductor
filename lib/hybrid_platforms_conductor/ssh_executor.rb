@@ -238,7 +238,12 @@ module HybridPlatformsConductor
       # Prepare the result (stdout or nil per node)
       result = Hash[actions_per_node.keys.map { |node| [node, nil] }]
       unless actions_per_node.empty?
-        @nodes_handler.for_each_node_in(actions_per_node.keys, parallel: concurrent, nbr_threads_max: @max_threads) do |node|
+        @nodes_handler.for_each_node_in(
+          actions_per_node.keys,
+          parallel: concurrent,
+          nbr_threads_max: @max_threads,
+          progress: 'Executing actions'
+        ) do |node|
           node_actions = actions_per_node[node]
           # If we run in parallel then clone the actions, so that each node has its own instance for thread-safe code.
           node_actions.map!(&:clone) if concurrent
