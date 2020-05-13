@@ -262,6 +262,60 @@ describe HybridPlatformsConductor::NodesHandler do
       end
     end
 
+    it 'does not refuse conflicts between CMDBs and overriden values' do
+      with_cmdb_test_platform(cmdbs: %i[test_cmdb_others]) do
+        test_nodes_handler.override_metadata_of 'node1', :downcase, 'OVERIDDEN'
+        expect(test_nodes_handler.get_unknown_of('node1')).to eq nil
+        expect(test_nodes_handler.get_downcase_of('node1')).to eq 'OVERIDDEN'
+      end
+    end
+
+    it 'sets metadata that was not prefetched' do
+      with_cmdb_test_platform do
+        test_nodes_handler.override_metadata_of 'node1', :upcase, 'OVERIDDEN'
+        expect(test_nodes_handler.metadata_of('node1', :upcase)).to eq 'OVERIDDEN'
+        expect(cmdb(:test_cmdb).calls).to eq nil
+      end
+    end
+
+    it 'overrides metadata that was already prefetched' do
+      with_cmdb_test_platform do
+        expect(test_nodes_handler.metadata_of('node1', :upcase)).to eq 'NODE1'
+        test_nodes_handler.override_metadata_of 'node1', :upcase, 'OVERIDDEN'
+        cmdb(:test_cmdb).calls = []
+        expect(test_nodes_handler.metadata_of('node1', :upcase)).to eq 'OVERIDDEN'
+        expect(cmdb(:test_cmdb).calls).to eq []
+      end
+    end
+
+    it 'overriden metadata is accessible to other CMDBs' do
+      with_cmdb_test_platform do
+        test_nodes_handler.override_metadata_of 'node1', :other_property, 'Other value'
+        cmdb(:test_cmdb).calls = []
+        expect(test_nodes_handler.metadata_of('node1', :upcase)).to eq 'NODE1'
+        expect(cmdb(:test_cmdb).calls).to eq [[:get_upcase, ['node1'], { 'node1' => { other_property: 'Other value' } }]]
+      end
+    end
+
+    it 'invalidates metadata that was not prefetched' do
+      with_cmdb_test_platform do
+        test_nodes_handler.invalidate_metadata_of 'node1', :upcase
+        expect(test_nodes_handler.metadata_of('node1', :upcase)).to eq 'NODE1'
+        expect(cmdb(:test_cmdb).calls).to eq [[:get_upcase, ['node1'], {}]]
+      end
+    end
+
+    it 'invalidates metadata that was already prefetched' do
+      with_cmdb_test_platform do
+        test_nodes_handler.metadata_of('node1', :upcase)
+        test_nodes_handler.override_metadata_of 'node1', :upcase, 'OVERIDDEN'
+        test_nodes_handler.invalidate_metadata_of 'node1', :upcase
+        cmdb(:test_cmdb).calls = []
+        expect(test_nodes_handler.metadata_of('node1', :upcase)).to eq 'NODE1'
+        expect(cmdb(:test_cmdb).calls).to eq [[:get_upcase, ['node1'], { 'node1' => {} }]]
+      end
+    end
+
   end
 
 end
