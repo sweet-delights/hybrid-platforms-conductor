@@ -8,6 +8,5 @@ deployer = executable.deployer
 executable.parse_options!
 raise 'No node selected. Please use --node option to set at least one.' if executable.selected_nodes.empty?
 
-ssh_executor.dump_conf
 # Deploy all
 deployer.deploy_on(executable.selected_nodes)

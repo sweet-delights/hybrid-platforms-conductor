@@ -12,13 +12,27 @@ module HybridPlatformsConductor
       # [API] - @ssh_executor is accessible
       #
       # Parameters::
-      # * *code* (Proc): Ruby code to be executed locally (not on the node):
-      #   * Parameters::
-      #     * *stdout* (IO): Stream in which stdout of this action should be written
-      #     * *stderr* (IO): Stream in which stderr of this action should be written
-      #     * *action* (Action): Action we can use to access other context-specific methods, such as run_cmd.
-      def setup(code)
-        @code = code
+      # * *info* (Hash<Symbol, Object>): Properties for the Ruby action:
+      #   * *code* (Proc): Ruby code to be executed.
+      #     This is the default property, and can be given directly without using a Hash.
+      #     * Parameters::
+      #       * *stdout* (IO): Stream in which stdout of this action should be written.
+      #       * *stderr* (IO): Stream in which stderr of this action should be written.
+      #       * *action* (Action): Action we can use to access other context-specific methods, such as run_cmd.
+      #       * *connector* (Connector or nil): The connector to the node, or nil if none.
+      #   * *need_remote* (Boolean): Do we need a remote connection to the node for this code to run? [default = false]
+      def setup(info)
+        info = { code: info } if info.is_a?(Proc)
+        @need_remote = info[:need_remote] || false
+        @code = info[:code]
+      end
+
+      # Do we need a connector to execute this action on a node?
+      #
+      # Result::
+      # * Boolean: Do we need a connector to execute this action on a node?
+      def need_connector?
+        @need_remote
       end
 
       # Execute the action
@@ -34,7 +48,7 @@ module HybridPlatformsConductor
       def execute
         log_debug "[#{@node}] - Execute local Ruby code #{@code}..."
         # TODO: Handle timeout without using Timeout which is harmful when dealing with SSH connections and multithread.
-        @code.call @stdout_io, @stderr_io, self
+        @code.call @stdout_io, @stderr_io, self, @connector
       end
 
       # Make the run_cmd method public for this action as it can be used by client procs

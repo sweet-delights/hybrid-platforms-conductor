@@ -26,8 +26,8 @@ module HybridPlatformsConductor
           @deployer.with_docker_container_for(@node, container_id: 'idem_potence') do |deployer|
             deployer.deploy_on(@node)
             # Now that the node has been deployed, use the a_testadmin user for the check-node (as root has no more access)
-            deployer.instance_variable_get(:@ssh_executor).ssh_user = 'a_testadmin'
-            deployer.instance_variable_get(:@ssh_executor).passwords.delete(@node)
+            deployer.instance_variable_get(:@ssh_executor).connector(:ssh).ssh_user = 'a_testadmin'
+            deployer.instance_variable_get(:@ssh_executor).connector(:ssh).passwords.delete(@node)
             deployer.use_why_run = true
             result = deployer.deploy_on(@node)
             assert_equal result.size, 1, "Wrong number of nodes being tested: #{result.size}"

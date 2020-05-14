@@ -11,4 +11,4 @@ ssh_executor = executable.ssh_executor
 
 executable.parse_options!
 
-executable.out ssh_executor.ssh_config(ssh_exec: ssh_exec)
+executable.out ssh_executor.connector(:ssh).ssh_config(ssh_exec: ssh_exec)
