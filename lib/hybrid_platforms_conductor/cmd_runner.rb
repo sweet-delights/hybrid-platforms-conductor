@@ -38,6 +38,19 @@ module HybridPlatformsConductor
       @dry_run = false
     end
 
+    # Complete an option parser with options meant to control this SSH executor
+    #
+    # Parameters::
+    # * *options_parser* (OptionParser): The option parser to complete
+    # * *parallel* (Boolean): Do we activate options regarding parallel execution? [default = true]
+    def options_parse(options_parser, parallel: true)
+      options_parser.separator ''
+      options_parser.separator 'Command runner options:'
+      options_parser.on('-s', '--show-commands', 'Display the commands that would be run instead of running them') do
+        @dry_run = true
+      end
+    end
+
     # Run an external command.
     # Handle dry-run mode, timeout, and check for an expected return code.
     # Raise an exception if the exit status is not the expected one.

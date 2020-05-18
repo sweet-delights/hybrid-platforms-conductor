@@ -11,16 +11,6 @@ describe HybridPlatformsConductor::SshExecutor do
       end
     end
 
-    it 'does not execute local Bash code in dry_run mode' do
-      with_test_platform(nodes: { 'node' => {} }) do |repository|
-        test_ssh_executor.dry_run = true
-        expect(test_ssh_executor.execute_actions('node' => {
-          bash: "echo TestContent >#{repository}/test_file ; echo TestStdout ; echo TestStderr 1>&2"
-        })['node']).to eq [0, '', '']
-        expect(File.exist?("#{repository}/test_file")).to eq false
-      end
-    end
-
     it 'executes local Bash code with timeout' do
       with_test_platform(nodes: { 'node' => {} }) do |repository|
         expect(test_ssh_executor.execute_actions(

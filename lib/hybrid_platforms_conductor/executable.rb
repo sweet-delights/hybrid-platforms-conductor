@@ -158,6 +158,7 @@ module HybridPlatformsConductor
         @opts_block.call(opts) if @opts_block
         @nodes_handler.options_parse(opts) if @nodes_handler
         @nodes_handler.options_parse_nodes_selectors(opts, @selected_nodes) if @nodes_selection_options
+        @cmd_runner.options_parse(opts) if @cmd_runner
         @ssh_executor.options_parse(opts, parallel: @parallel_options) if @ssh_executor
         @deployer.options_parse(opts, parallel_switch: @parallel_options, plugins_options: @plugins_options, timeout_options: @timeout_options, why_run_switch: @check_options) if @deployer
         @json_dumper.options_parse(opts) if @json_dumper

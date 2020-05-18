@@ -51,15 +51,6 @@ describe HybridPlatformsConductor::SshExecutor do
       end
     end
 
-    it 'does not execute remote Bash code in dry_run mode' do
-      with_test_platform_for_actions do |repository|
-        test_ssh_executor.dry_run = true
-        expect(execute(
-          { remote_bash: 'echo TestContent >test_file ; echo TestStdout ; echo TestStderr 1>&2' },
-        )).to eq [0, '', '']
-      end
-    end
-
     it 'executes remote Bash code with timeout' do
       with_test_platform_for_actions do |repository|
         expect(execute(

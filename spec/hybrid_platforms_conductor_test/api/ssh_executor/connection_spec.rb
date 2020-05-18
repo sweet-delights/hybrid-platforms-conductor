@@ -325,7 +325,8 @@ describe HybridPlatformsConductor::SshExecutor do
 
     it 'does not use batch mode when passwords are to be expected' do
       with_test_platform(nodes: { 'node' => { meta: { host_ip: '192.168.42.42' } } }) do |repository|
-        test_ssh_executor.dry_run = true
+        # Set dry-run to make sure the command is the expected one
+        test_cmd_runner.dry_run = true
         test_ssh_executor.auth_password = true
         stdout_file = "#{repository}/run.stdout"
         File.open(stdout_file, 'w') { |f| f.truncate(0) }

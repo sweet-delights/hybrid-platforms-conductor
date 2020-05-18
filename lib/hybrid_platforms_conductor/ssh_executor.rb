@@ -48,10 +48,6 @@ module HybridPlatformsConductor
     #   Integer
     attr_accessor :max_threads
 
-    # Do we display SSH commands instead of executing them? [default: false]
-    #   Boolean
-    attr_accessor :dry_run
-
     # Set of overriding connections: real IP per node [default: {}]
     # Hash<String, String>
     attr_accessor :override_connections
@@ -84,7 +80,6 @@ module HybridPlatformsConductor
       @ssh_user = ENV['USER'] if @ssh_user.nil? || @ssh_user.empty?
       @ssh_env = {}
       @max_threads = 16
-      @dry_run = false
       @ssh_use_control_master = true
       @ssh_strict_host_key_checking = true
       @override_connections = {}
@@ -114,7 +109,7 @@ module HybridPlatformsConductor
       @env_system_path = stdout.strip
       _exit_status, stdout, _stderr = @cmd_runner.run_cmd 'ssh -V 2>&1', log_to_stdout: log_debug?
       # Make sure we have a fake value in case of dry-run
-      if @dry_run
+      if @cmd_runner.dry_run
         log_debug 'Mock OpenSSH version because of dry-run mode'
         stdout = 'OpenSSH_7.4p1 Debian-10+deb9u7, OpenSSL 1.0.2u  20 Dec 2019'
       end
@@ -141,9 +136,6 @@ module HybridPlatformsConductor
       options_parser.on('-q', '--ssh-no-host-key-checking', 'If used, don\'t check for SSH host keys.') do
         @ssh_strict_host_key_checking = false
       end
-      options_parser.on('-s', '--show-commands', 'Display the SSH commands that would be run instead of running them') do
-        self.dry_run = true
-      end
       options_parser.on('-u', '--ssh-user USER', 'Name of user to be used in SSH connections (defaults to hpc_ssh_user or USER environment variables)') do |user|
         @ssh_user = user
       end
@@ -162,20 +154,11 @@ module HybridPlatformsConductor
       raise "Unknown gateway configuration provided: #{@ssh_gateways_conf}. Possible values are: #{known_gateways.join(', ')}." unless known_gateways.include?(@ssh_gateways_conf)
     end
 
-    # Set dry run
-    #
-    # Parameters::
-    # * *switch* (Boolean): Do we activate dry run?
-    def dry_run=(switch)
-      @dry_run = switch
-      @cmd_runner.dry_run = @dry_run
-    end
-
     # Dump the current configuration for info
     def dump_conf
       out 'SSH executor configuration used:'
       out " * User: #{@ssh_user}"
-      out " * Dry run: #{@dry_run}"
+      out " * Dry run: #{@cmd_runner.dry_run}"
       out " * Use SSH control master: #{@ssh_use_control_master}"
       out " * Max threads used: #{@max_threads}"
       out " * Gateways configuration: #{@ssh_gateways_conf}"
@@ -216,7 +199,6 @@ module HybridPlatformsConductor
               logger_stderr: @logger_stderr,
               cmd_runner: @cmd_runner,
               ssh_executor: self,
-              dry_run: @dry_run,
               action_info: action_info
             )
           end

@@ -510,7 +510,7 @@ module HybridPlatformsConductor
           )
 
           # Save logs
-          save_logs(outputs) if !@use_why_run && !@ssh_executor.dry_run
+          save_logs(outputs) if !@use_why_run && !@cmd_runner.dry_run
         end
       end
       outputs

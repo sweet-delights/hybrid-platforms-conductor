@@ -85,19 +85,6 @@ describe 'executables\' SSH Executor options' do
     end
   end
 
-  it 'displays commands instead of running them' do
-    with_test_platform_for_ssh_executor_options do
-      expect_ssh_executor_runs([proc do |actions, timeout: nil, concurrent: false, log_to_dir: 'run_logs', log_to_stdout: true|
-        expect(test_ssh_executor.dry_run).to eq true
-        {}
-      end])
-      exit_code, stdout, stderr = run 'ssh_run', '--node', 'node', '--command', 'echo Hello', '--show-commands'
-      expect(exit_code).to eq 0
-      expect(stdout).to eq ''
-      expect(stderr).to eq ''
-    end
-  end
-
   it 'uses a different SSH user name' do
     with_test_platform_for_ssh_executor_options do
       expect_ssh_executor_runs([proc do |actions, timeout: nil, concurrent: false, log_to_dir: 'run_logs', log_to_stdout: true|

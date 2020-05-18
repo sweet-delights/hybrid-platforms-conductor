@@ -16,21 +16,6 @@ describe HybridPlatformsConductor::SshExecutor do
       end
     end
 
-    it 'does not execute local Ruby code in dry_run mode' do
-      with_test_platform(nodes: { 'node' => {} }) do
-        executed = false
-        test_ssh_executor.dry_run = true
-        expect(test_ssh_executor.execute_actions('node' => {
-          ruby: proc do |stdout, stderr, action|
-            stdout << 'TestStdout'
-            stderr << 'TestStderr'
-            executed = true
-          end
-        })['node']).to eq [0, '', '']
-        expect(executed).to eq false
-      end
-    end
-
     it 'executes local Ruby code with timeout' do
       pending 'Implement timeout for Ruby actions'
       with_test_platform(nodes: { 'node' => {} }) do

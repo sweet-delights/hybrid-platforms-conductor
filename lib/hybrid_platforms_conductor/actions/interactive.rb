@@ -20,7 +20,7 @@ module HybridPlatformsConductor
         with_ssh_to_node do |ssh_exec, ssh_url|
           interactive_cmd = "#{ssh_exec} #{ssh_url}"
           out interactive_cmd
-          if @dry_run
+          if @cmd_runner.dry_run
             log_debug "[#{@node}] - Won't execute interactive shell in dry_run mode."
           else
             system interactive_cmd
