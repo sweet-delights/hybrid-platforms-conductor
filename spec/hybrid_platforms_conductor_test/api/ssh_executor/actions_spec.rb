@@ -22,7 +22,7 @@ describe HybridPlatformsConductor::SshExecutor do
     HybridPlatformsConductorTest::TestAction.executions
   end
 
-  it 'executes a simple command on 1 node' do
+  it 'executes a simple action on 1 node' do
     with_test_platform_for_actions do
       test_ssh_executor.execute_actions('node1' => { test_action: 'Action executed' })
       expect(executions).to eq [{ node: 'node1', message: 'Action executed', dry_run: false }]
@@ -58,7 +58,7 @@ describe HybridPlatformsConductor::SshExecutor do
     end
   end
 
-  it 'executes a simple command on several nodes' do
+  it 'executes a simple action on several nodes' do
     with_test_platform_for_actions do
       test_ssh_executor.execute_actions(%w[node1 node2 node3] => { test_action: 'Action executed' })
       expect(executions).to eq [
@@ -69,7 +69,7 @@ describe HybridPlatformsConductor::SshExecutor do
     end
   end
 
-  it 'executes several commands on 1 nodes' do
+  it 'executes several actions on 1 node' do
     with_test_platform_for_actions do
       test_ssh_executor.execute_actions('node1' => [
         { test_action: 'Action 1 executed' },
@@ -84,7 +84,7 @@ describe HybridPlatformsConductor::SshExecutor do
     end
   end
 
-  it 'executes different commands on several nodes' do
+  it 'executes different actions on several nodes' do
     with_test_platform_for_actions do
       test_ssh_executor.execute_actions(
         'node1' => { test_action: 'Action 1 executed' },
@@ -277,7 +277,7 @@ describe HybridPlatformsConductor::SshExecutor do
     end
   end
 
-  it 'fails to execute a command on an unknown node' do
+  it 'fails to execute an action on an unknown node' do
     with_test_platform_for_actions do
       expect { test_ssh_executor.execute_actions('unknown_node' => { test_action: 'Action executed' }) }.to raise_error(RuntimeError, 'Unknown nodes: unknown_node')
       expect(executions).to eq []
