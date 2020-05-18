@@ -7,25 +7,15 @@ describe HybridPlatformsConductor::SshExecutor do
   #   * Parameters::
   #     * *repository* (String): Path to the repository
   def with_test_platform_for_actions
-    with_test_platform(nodes: { 'node1' => {}, 'node2' => {}, 'node3' => {} }) do |repository|
-      # Register the test_action action
-      test_ssh_executor.instance_variable_get(:@action_plugins)[:test_action] = HybridPlatformsConductorTest::TestAction
+    with_test_platform_for_executor(nodes: { 'node1' => {}, 'node2' => {}, 'node3' => {} }) do |repository|
       yield repository
     end
-  end
-
-  # Get the executions of the test action
-  #
-  # Result::
-  # * Array< [ String, String ] >: Test action executions
-  def executions
-    HybridPlatformsConductorTest::TestAction.executions
   end
 
   it 'executes a simple action on 1 node' do
     with_test_platform_for_actions do
       test_ssh_executor.execute_actions('node1' => { test_action: 'Action executed' })
-      expect(executions).to eq [{ node: 'node1', message: 'Action executed', dry_run: false }]
+      expect(action_executions).to eq [{ node: 'node1', message: 'Action executed', dry_run: false }]
     end
   end
 
@@ -61,7 +51,7 @@ describe HybridPlatformsConductor::SshExecutor do
   it 'executes a simple action on several nodes' do
     with_test_platform_for_actions do
       test_ssh_executor.execute_actions(%w[node1 node2 node3] => { test_action: 'Action executed' })
-      expect(executions).to eq [
+      expect(action_executions).to eq [
         { node: 'node1', message: 'Action executed', dry_run: false },
         { node: 'node2', message: 'Action executed', dry_run: false },
         { node: 'node3', message: 'Action executed', dry_run: false }
@@ -76,7 +66,7 @@ describe HybridPlatformsConductor::SshExecutor do
         { test_action: 'Action 2 executed' },
         { test_action: 'Action 3 executed' }
       ])
-      expect(executions).to eq [
+      expect(action_executions).to eq [
         { node: 'node1', message: 'Action 1 executed', dry_run: false },
         { node: 'node1', message: 'Action 2 executed', dry_run: false },
         { node: 'node1', message: 'Action 3 executed', dry_run: false }
@@ -91,7 +81,7 @@ describe HybridPlatformsConductor::SshExecutor do
         'node2' => { test_action: 'Action 2 executed' },
         'node3' => { test_action: 'Action 3 executed' }
       )
-      expect(executions).to eq [
+      expect(action_executions).to eq [
         { node: 'node1', message: 'Action 1 executed', dry_run: false },
         { node: 'node2', message: 'Action 2 executed', dry_run: false },
         { node: 'node3', message: 'Action 3 executed', dry_run: false }
@@ -270,7 +260,7 @@ describe HybridPlatformsConductor::SshExecutor do
         'node1' => { test_action: 'Action 1 executed' },
         '/node1/' => { test_action: 'Action 2 executed' }
       )
-      expect(executions).to eq [
+      expect(action_executions).to eq [
         { node: 'node1', message: 'Action 1 executed', dry_run: false },
         { node: 'node1', message: 'Action 2 executed', dry_run: false }
       ]
@@ -280,7 +270,7 @@ describe HybridPlatformsConductor::SshExecutor do
   it 'fails to execute an action on an unknown node' do
     with_test_platform_for_actions do
       expect { test_ssh_executor.execute_actions('unknown_node' => { test_action: 'Action executed' }) }.to raise_error(RuntimeError, 'Unknown nodes: unknown_node')
-      expect(executions).to eq []
+      expect(action_executions).to eq []
     end
   end
 

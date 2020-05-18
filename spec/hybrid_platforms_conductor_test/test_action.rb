@@ -30,6 +30,7 @@ module HybridPlatformsConductorTest
     #     * Parameters::
     #       * *stdout_io* (IO): stdout IO to be used for stdout logging
     #       * *stderr_io* (IO): stdout IO to be used for stderr logging
+    #       * *action* (TestAction): The test action
     def setup(input)
       # Normalize input
       input = { message: input } if input.is_a?(String)
@@ -42,13 +43,16 @@ module HybridPlatformsConductorTest
     # Execute the action
     def execute
       run_cmd(@input[:run_cmd]) if @input.key?(:run_cmd)
-      @input[:code].call(@stdout_io, @stderr_io) if @input.key?(:code)
+      @input[:code].call(@stdout_io, @stderr_io, self) if @input.key?(:code)
       TestAction.executions << {
         node: @node,
         message: @input[:message],
         dry_run: @dry_run
       }
     end
+
+    # Integer: Timeout that the action should respect
+    attr_reader :timeout
 
   end
 
