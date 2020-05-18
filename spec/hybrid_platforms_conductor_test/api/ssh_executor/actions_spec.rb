@@ -41,7 +41,7 @@ describe HybridPlatformsConductor::SshExecutor do
           }
         }
       ])
-      expect(executions).to eq [{ node: 'node1', message: 'Action executed', dry_run: true }]
+      expect(action_executions).to eq [{ node: 'node1', message: 'Action executed', dry_run: true }]
       expect(File.read(stdout_file).split("\n")).to eq [
         'echo Hello'
       ]

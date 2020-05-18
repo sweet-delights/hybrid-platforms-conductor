@@ -15,21 +15,6 @@ module HybridPlatformsConductorTest
         with_test_platform(platform_info) do |repository|
           # Register the test_action action
           test_ssh_executor.instance_variable_get(:@action_plugins)[:test_action] = HybridPlatformsConductorTest::TestAction
-          # Register the test_connectors, and only these ones
-          test_ssh_executor.instance_variable_set(:@connector_plugins, {
-            test_connector: HybridPlatformsConductorTest::TestConnector.new(
-              logger: logger,
-              logger_stderr: logger,
-              cmd_runner: test_cmd_runner,
-              nodes_handler: test_nodes_handler
-            ),
-            test_connector_2: HybridPlatformsConductorTest::TestConnector.new(
-              logger: logger,
-              logger_stderr: logger,
-              cmd_runner: test_cmd_runner,
-              nodes_handler: test_nodes_handler
-            )
-          })
           yield repository
         end
       end
