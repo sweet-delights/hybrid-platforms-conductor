@@ -1,3 +1,9 @@
+# [14.1.0](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv14.0.2&sourceBranch=refs%2Ftags%2Fv14.1.0) (2020-05-19)
+
+### New features
+
+* [Feature] Add a way for ssh config to be generated for a given set of nodes ([78c8230a](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/commits/78c8230a1ce68c85b5f5971fcf69f6d70f66024d))
+
 # [14.0.2](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv14.0.1&sourceBranch=refs%2Ftags%2Fv14.0.2) (2020-05-19)
 
 ### Fixes
