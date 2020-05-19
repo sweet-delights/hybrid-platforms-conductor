@@ -279,13 +279,42 @@ describe HybridPlatformsConductor::SshExecutor do
       end
     end
 
-    it 'provides an SSH executable path that contains the whole SSH config, along with an SSH config file to be used as well' do
+    it 'provides an SSH executable path that contains the whole SSH config, along with an SSH config file and known hosts file to be used as well' do
       with_test_platform(nodes: { 'node' => { connection: 'node_connection' } }) do
-        test_ssh_executor.with_platforms_ssh do |ssh_exec, ssh_config|
+        test_ssh_executor.with_platforms_ssh do |ssh_exec, ssh_config, ssh_known_hosts|
           expect(`#{ssh_exec} -V 2>&1`).to eq `ssh -V 2>&1`
           expect(`#{ssh_exec} -G hpc.node`.split("\n").find { |line| line =~ /^hostname .+$/ }).to eq 'hostname node_connection'
-          expect(ssh_config_for('node', ssh_config: File.read(ssh_config))).to eq 'Host hpc.node
-  Hostname node_connection'
+          expect(ssh_config_for('node', ssh_config: File.read(ssh_config))).to eq <<~EOS
+            Host hpc.node
+              Hostname node_connection
+          EOS
+          expect(File.exist?(ssh_known_hosts)).to eq true
+        end
+      end
+    end
+
+    it 'provides an SSH executable path that contains the SSH config for selected nodes' do
+      with_test_platform(nodes: {
+        'node1' => { connection: 'node_connection1' },
+        'node2' => { connection: 'node_connection2' },
+        'node3' => { connection: 'node_connection3' }
+      }) do
+        test_ssh_executor.with_platforms_ssh(nodes: %w[node1 node3]) do |ssh_exec, ssh_config|
+          expect(`#{ssh_exec} -V 2>&1`).to eq `ssh -V 2>&1`
+          expect(`#{ssh_exec} -G hpc.node1`.split("\n").find { |line| line =~ /^hostname .+$/ }).to eq 'hostname node_connection1'
+          # If the SSH config does not contain the name of the node, then the output hostname is the name given as parameter to ssh
+          expect(`#{ssh_exec} -G hpc.node2`.split("\n").find { |line| line =~ /^hostname .+$/ }).to eq 'hostname hpc.node2'
+          expect(`#{ssh_exec} -G hpc.node3`.split("\n").find { |line| line =~ /^hostname .+$/ }).to eq 'hostname node_connection3'
+          ssh_config_content = File.read(ssh_config)
+          expect(ssh_config_for('node1', ssh_config: ssh_config_content)).to eq <<~EOS
+            Host hpc.node1
+              Hostname node_connection1
+          EOS
+          expect(ssh_config_for('node2', ssh_config: ssh_config_content)).to eq nil
+          expect(ssh_config_for('node3', ssh_config: ssh_config_content)).to eq <<~EOS
+            Host hpc.node3
+              Hostname node_connection3
+          EOS
         end
       end
     end
@@ -297,10 +326,12 @@ describe HybridPlatformsConductor::SshExecutor do
           expect(`#{ssh_exec} -V 2>&1`).to eq `ssh -V 2>&1`
           expect(`#{ssh_exec} -G hpc.node`.split("\n").find { |line| line =~ /^hostname .+$/ }).to eq 'hostname node_connection'
           expect(File.read(ssh_exec)).to match /^sshpass -pPaSsWoRd ssh .+$/
-          expect(ssh_config_for('node', ssh_config: File.read(ssh_config))).to eq 'Host hpc.node
-  Hostname node_connection
-  PreferredAuthentications password
-  PubkeyAuthentication no'
+          expect(ssh_config_for('node', ssh_config: File.read(ssh_config))).to eq <<~EOS
+            Host hpc.node
+              Hostname node_connection
+              PreferredAuthentications password
+              PubkeyAuthentication no
+          EOS
         end
       end
     end

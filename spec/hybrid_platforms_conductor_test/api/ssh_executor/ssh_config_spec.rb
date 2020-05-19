@@ -5,31 +5,37 @@ describe HybridPlatformsConductor::SshExecutor do
     it 'generates a global configuration with user from environment' do
       with_test_platform do
         ENV['hpc_ssh_user'] = 'test_user'
-        expect(ssh_config_for(nil)).to eq "Host *
-  User test_user
-  ControlPath #{Dir.tmpdir}/hpc_ssh/hpc_ssh_executor_mux_%h_%p_%r
-  PubkeyAcceptedKeyTypes +ssh-dss"
+        expect(ssh_config_for(nil)).to eq <<~EOS
+          Host *
+            User test_user
+            ControlPath #{Dir.tmpdir}/hpc_ssh/hpc_ssh_executor_mux_%h_%p_%r
+            PubkeyAcceptedKeyTypes +ssh-dss
+        EOS
       end
     end
 
     it 'generates a global configuration with user from setting' do
       with_test_platform do
         test_ssh_executor.ssh_user = 'test_user'
-        expect(ssh_config_for(nil)).to eq "Host *
-  User test_user
-  ControlPath #{Dir.tmpdir}/hpc_ssh/hpc_ssh_executor_mux_%h_%p_%r
-  PubkeyAcceptedKeyTypes +ssh-dss"
+        expect(ssh_config_for(nil)).to eq <<~EOS
+          Host *
+            User test_user
+            ControlPath #{Dir.tmpdir}/hpc_ssh/hpc_ssh_executor_mux_%h_%p_%r
+            PubkeyAcceptedKeyTypes +ssh-dss
+        EOS
       end
     end
 
     it 'generates a global configuration with known hosts file' do
       with_test_platform do
         test_ssh_executor.ssh_user = 'test_user'
-        expect(ssh_config_for(nil, known_hosts_file: '/path/to/known_hosts')).to eq "Host *
-  User test_user
-  ControlPath #{Dir.tmpdir}/hpc_ssh/hpc_ssh_executor_mux_%h_%p_%r
-  PubkeyAcceptedKeyTypes +ssh-dss
-  UserKnownHostsFile /path/to/known_hosts"
+        expect(ssh_config_for(nil, known_hosts_file: '/path/to/known_hosts')).to eq <<~EOS
+          Host *
+            User test_user
+            ControlPath #{Dir.tmpdir}/hpc_ssh/hpc_ssh_executor_mux_%h_%p_%r
+            PubkeyAcceptedKeyTypes +ssh-dss
+            UserKnownHostsFile /path/to/known_hosts
+        EOS
       end
     end
 
@@ -37,11 +43,13 @@ describe HybridPlatformsConductor::SshExecutor do
       with_test_platform do
         test_ssh_executor.ssh_user = 'test_user'
         test_ssh_executor.ssh_strict_host_key_checking = false
-        expect(ssh_config_for(nil)).to eq "Host *
-  User test_user
-  ControlPath #{Dir.tmpdir}/hpc_ssh/hpc_ssh_executor_mux_%h_%p_%r
-  PubkeyAcceptedKeyTypes +ssh-dss
-  StrictHostKeyChecking no"
+        expect(ssh_config_for(nil)).to eq <<~EOS
+          Host *
+            User test_user
+            ControlPath #{Dir.tmpdir}/hpc_ssh/hpc_ssh_executor_mux_%h_%p_%r
+            PubkeyAcceptedKeyTypes +ssh-dss
+            StrictHostKeyChecking no
+        EOS
       end
     end
 
@@ -75,8 +83,10 @@ describe HybridPlatformsConductor::SshExecutor do
 
     it 'generates a simple config for a node with direct access' do
       with_test_platform(nodes: { 'node' => { connection: 'node_connection' } }) do
-        expect(ssh_config_for('node')).to eq 'Host hpc.node
-  Hostname node_connection'
+        expect(ssh_config_for('node')).to eq <<~EOS
+          Host hpc.node
+            Hostname node_connection
+        EOS
       end
     end
 
@@ -86,65 +96,97 @@ describe HybridPlatformsConductor::SshExecutor do
         'node2' => { connection: 'node2_connection' },
         'node3' => { connection: 'node3_connection' }
       }) do
-        expect(ssh_config_for('node1')).to eq 'Host hpc.node1
-  Hostname node1_connection'
-        expect(ssh_config_for('node2')).to eq 'Host hpc.node2
-  Hostname node2_connection'
-        expect(ssh_config_for('node3')).to eq 'Host hpc.node3
-  Hostname node3_connection'
+        expect(ssh_config_for('node1')).to eq <<~EOS
+          Host hpc.node1
+            Hostname node1_connection
+        EOS
+        expect(ssh_config_for('node2')).to eq <<~EOS
+          Host hpc.node2
+            Hostname node2_connection
+        EOS
+        expect(ssh_config_for('node3')).to eq <<~EOS
+          Host hpc.node3
+            Hostname node3_connection
+        EOS
+      end
+    end
+
+    it 'selects nodes when generating the config' do
+      with_test_platform(nodes: {
+        'node1' => { connection: 'node1_connection' },
+        'node2' => { connection: 'node2_connection' },
+        'node3' => { connection: 'node3_connection' }
+      }) do
+        expect(ssh_config_for('node1', nodes: %w[node1 node3])).to eq <<~EOS
+          Host hpc.node1
+            Hostname node1_connection
+        EOS
+        expect(ssh_config_for('node2', nodes: %w[node1 node3])).to eq nil
       end
     end
 
     it 'uses node forced gateway information' do
       with_test_platform(nodes: { 'node' => { connection: { connection: 'node_connection', gateway: 'test_gateway', gateway_user: 'test_gateway_user' } } }) do
-        expect(ssh_config_for('node')).to eq 'Host hpc.node
-  Hostname node_connection
-  ProxyCommand ssh -q -W %h:%p test_gateway_user@test_gateway'
+        expect(ssh_config_for('node')).to eq <<~EOS
+          Host hpc.node
+            Hostname node_connection
+            ProxyCommand ssh -q -W %h:%p test_gateway_user@test_gateway
+        EOS
       end
     end
 
     it 'uses node default gateway information and user from environment' do
       with_test_platform(nodes: { 'node' => { connection: { connection: 'node_connection', gateway: 'test_gateway' } } }) do
         ENV['hpc_ssh_gateway_user'] = 'test_gateway_user'
-        expect(ssh_config_for('node')).to eq 'Host hpc.node
-  Hostname node_connection
-  ProxyCommand ssh -q -W %h:%p test_gateway_user@test_gateway'
+        expect(ssh_config_for('node')).to eq <<~EOS
+          Host hpc.node
+            Hostname node_connection
+            ProxyCommand ssh -q -W %h:%p test_gateway_user@test_gateway
+        EOS
       end
     end
 
     it 'uses node default gateway information and user from setting' do
       with_test_platform(nodes: { 'node' => { connection: { connection: 'node_connection', gateway: 'test_gateway' } } }) do
         test_ssh_executor.ssh_gateway_user = 'test_gateway_user'
-        expect(ssh_config_for('node')).to eq 'Host hpc.node
-  Hostname node_connection
-  ProxyCommand ssh -q -W %h:%p test_gateway_user@test_gateway'
+        expect(ssh_config_for('node')).to eq <<~EOS
+          Host hpc.node
+            Hostname node_connection
+            ProxyCommand ssh -q -W %h:%p test_gateway_user@test_gateway
+        EOS
       end
     end
 
     it 'uses node forced gateway information with a different ssh executable' do
       with_test_platform(nodes: { 'node' => { connection: { connection: 'node_connection', gateway: 'test_gateway', gateway_user: 'test_gateway_user' } } }) do
-        expect(ssh_config_for('node', ssh_exec: 'new_ssh')).to eq 'Host hpc.node
-  Hostname node_connection
-  ProxyCommand new_ssh -q -W %h:%p test_gateway_user@test_gateway'
+        expect(ssh_config_for('node', ssh_exec: 'new_ssh')).to eq <<~EOS
+          Host hpc.node
+            Hostname node_connection
+            ProxyCommand new_ssh -q -W %h:%p test_gateway_user@test_gateway
+        EOS
       end
     end
 
     it 'uses node default gateway information with a different ssh executable' do
       with_test_platform(nodes: { 'node' => { connection: { connection: 'node_connection', gateway: 'test_gateway' } } }) do
         test_ssh_executor.ssh_gateway_user = 'test_gateway_user'
-        expect(ssh_config_for('node', ssh_exec: 'new_ssh')).to eq 'Host hpc.node
-  Hostname node_connection
-  ProxyCommand new_ssh -q -W %h:%p test_gateway_user@test_gateway'
+        expect(ssh_config_for('node', ssh_exec: 'new_ssh')).to eq <<~EOS
+          Host hpc.node
+            Hostname node_connection
+            ProxyCommand new_ssh -q -W %h:%p test_gateway_user@test_gateway
+        EOS
       end
     end
 
     it 'generates a config compatible for passwords authentication' do
       with_test_platform(nodes: { 'node' => { connection: 'node_connection' } }) do
         test_ssh_executor.passwords['node'] = 'PaSsWoRd'
-        expect(ssh_config_for('node')).to eq 'Host hpc.node
-  Hostname node_connection
-  PreferredAuthentications password
-  PubkeyAuthentication no'
+        expect(ssh_config_for('node')).to eq <<~EOS
+          Host hpc.node
+            Hostname node_connection
+            PreferredAuthentications password
+            PubkeyAuthentication no
+        EOS
       end
     end
 
@@ -157,18 +199,26 @@ describe HybridPlatformsConductor::SshExecutor do
       }) do
         test_ssh_executor.passwords['node1'] = 'PaSsWoRd1'
         test_ssh_executor.passwords['node3'] = 'PaSsWoRd3'
-        expect(ssh_config_for('node1')).to eq 'Host hpc.node1
-  Hostname node1_connection
-  PreferredAuthentications password
-  PubkeyAuthentication no'
-        expect(ssh_config_for('node2')).to eq 'Host hpc.node2
-  Hostname node2_connection'
-        expect(ssh_config_for('node3')).to eq 'Host hpc.node3
-  Hostname node3_connection
-  PreferredAuthentications password
-  PubkeyAuthentication no'
-        expect(ssh_config_for('node4')).to eq 'Host hpc.node4
-  Hostname node4_connection'
+        expect(ssh_config_for('node1')).to eq <<~EOS
+          Host hpc.node1
+            Hostname node1_connection
+            PreferredAuthentications password
+            PubkeyAuthentication no
+        EOS
+        expect(ssh_config_for('node2')).to eq <<~EOS
+          Host hpc.node2
+            Hostname node2_connection
+        EOS
+        expect(ssh_config_for('node3')).to eq <<~EOS
+          Host hpc.node3
+            Hostname node3_connection
+            PreferredAuthentications password
+            PubkeyAuthentication no
+        EOS
+        expect(ssh_config_for('node4')).to eq <<~EOS
+          Host hpc.node4
+            Hostname node4_connection
+        EOS
       end
     end
 

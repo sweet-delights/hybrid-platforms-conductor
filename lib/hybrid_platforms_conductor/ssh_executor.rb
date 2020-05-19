@@ -247,9 +247,10 @@ module HybridPlatformsConductor
     # Parameters::
     # * *ssh_exec* (String): SSH command to be used [default: 'ssh']
     # * *known_hosts_file* (String or nil): Path to the known hosts file, or nil for default [default: nil]
+    # * *nodes* (Array<String>): List of nodes to generate the config for [default: @nodes_handler.known_nodes]
     # Result::
     # * String: The SSH config
-    def ssh_config(ssh_exec: 'ssh', known_hosts_file: nil)
+    def ssh_config(ssh_exec: 'ssh', known_hosts_file: nil, nodes: @nodes_handler.known_nodes)
       config_content = <<~EOS
         ############
         # GATEWAYS #
@@ -272,7 +273,7 @@ module HybridPlatformsConductor
       EOS
 
       # Add each node
-      @nodes_handler.known_nodes.sort.each do |node|
+      nodes.sort.each do |node|
         conf = @nodes_handler.metadata_for node
         (conf.key?('private_ips') ? conf['private_ips'].sort : [nil]).each.with_index do |private_ip, idx|
           # Generate the conf for the node
@@ -314,7 +315,7 @@ module HybridPlatformsConductor
     def with_ssh_master_to(nodes, timeout: nil, no_exception: false)
       nodes = [nodes] if nodes.is_a?(String)
         created_ssh_urls = {}
-      with_platforms_ssh do |ssh_exec, _ssh_config, known_hosts|
+      with_platforms_ssh(nodes: nodes) do |ssh_exec, _ssh_config, known_hosts|
         begin
           nodes.each do |node|
             existing_control_master = false
@@ -371,15 +372,16 @@ module HybridPlatformsConductor
       end
     end
 
-    # Provide a bootstrapped ssh executable that includes all the TI SSH config.
+    # Provide a bootstrapped ssh executable that includes an SSH config allowing access to nodes.
     #
     # Parameters::
+    # * *nodes* (Array<String>): List of nodes for which we need the config to be created [default: @nodes_handler.known_nodes ]
     # * Proc: Code called with the given ssh executable to be used to get TI config
     #   * Parameters::
     #     * *ssh_exec* (String): SSH command to be used
     #     * *ssh_config* (String): SSH configuration file to be used
     #     * *ssh_known_hosts* (String): SSH known hosts file to be used
-    def with_platforms_ssh
+    def with_platforms_ssh(nodes: @nodes_handler.known_nodes)
       platforms_ssh_dir = Dir.mktmpdir("platforms_ssh_#{self.object_id}", @tmp_dir)
       begin
         ssh_conf_file = "#{platforms_ssh_dir}/ssh_config"
@@ -394,7 +396,7 @@ module HybridPlatformsConductor
           # So far it is enough for our usage as we intend to use this only when deploying first time using root account, and all root accounts will have the same password.
           file.puts "#{@passwords.empty? ? '' : "sshpass -p#{@passwords.first[1]} "}ssh -F #{ssh_conf_file} $*"
         end
-        File.write(ssh_conf_file, ssh_config(ssh_exec: ssh_exec_file, known_hosts_file: known_hosts_file))
+        File.write(ssh_conf_file, ssh_config(ssh_exec: ssh_exec_file, known_hosts_file: known_hosts_file, nodes: nodes))
         yield ssh_exec_file, ssh_conf_file, known_hosts_file
       ensure
         # It's very important to remove the directory as soon as it is useless, as it contains eventual passwords
