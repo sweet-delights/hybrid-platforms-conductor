@@ -1,3 +1,9 @@
+# [14.0.2](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv14.0.1&sourceBranch=refs%2Ftags%2Fv14.0.2) (2020-05-19)
+
+### Fixes
+
+* Don't update known_hosts file if the host is already registered in it ([6b256e2f](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/commits/6b256e2fb94fffae53624f07a097b08eab701d85))
+
 # [14.0.1](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv14.0.0&sourceBranch=refs%2Ftags%2Fv14.0.1) (2020-05-19)
 
 ### Fixes
