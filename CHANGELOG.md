@@ -1,3 +1,9 @@
+# [14.1.1](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv14.1.0&sourceBranch=refs%2Ftags%2Fv14.1.1) (2020-05-19)
+
+### Fixes
+
+* ControlMasters used by SSH connections are now protected in multi-process environment ([1c697885](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/commits/1c69788543965bf8afd532fb6d37e075ae980bd5))
+
 # [14.1.0](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv14.0.2&sourceBranch=refs%2Ftags%2Fv14.1.0) (2020-05-19)
 
 ### New features
