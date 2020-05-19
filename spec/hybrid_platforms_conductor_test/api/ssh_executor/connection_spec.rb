@@ -93,14 +93,20 @@ describe HybridPlatformsConductor::SshExecutor do
 
     it 'reuses SSH master already created to 1 node' do
       with_test_platform(nodes: { 'node' => { connection: 'node_connection' } }) do
+        nodes_connections_to_mock = { 'node' => { connection: 'node_connection', user: 'test_user' } }
         with_cmd_runner_mocked(
           commands: [
             ['sshpass -V', proc { [0, "sshpass 1.06\n", ''] }],
             ['which env', proc { [0, "/usr/bin/env\n", ''] }],
             ['ssh -V 2>&1', proc { [0, "OpenSSH_7.4p1 Debian-10+deb9u7, OpenSSL 1.0.2u  20 Dec 2019\n", ''] }],
             [remote_bash_for('echo Hello1', node: 'node', user: 'test_user'), proc { [0, "Hello1\n", ''] }]
-          ],
-          nodes_connections: { 'node' => { connection: 'node_connection', user: 'test_user' } }
+          ] + ssh_expected_commands_for(
+            nodes_connections_to_mock,
+            with_control_master_create: false,
+            with_control_master_check: true,
+            with_control_master_destroy: false
+          ),
+          nodes_connections: nodes_connections_to_mock
         ) do
           test_ssh_executor.ssh_user = 'test_user'
           test_ssh_executor.with_ssh_master_to(['node']) do
@@ -157,7 +163,15 @@ describe HybridPlatformsConductor::SshExecutor do
             [remote_bash_for('echo Hello2', node: 'node2', user: 'test_user'), proc { [0, "Hello2\n", ''] }],
             [remote_bash_for('echo Hello3', node: 'node3', user: 'test_user'), proc { [0, "Hello3\n", ''] }],
             [remote_bash_for('echo Hello4', node: 'node4', user: 'test_user'), proc { [0, "Hello4\n", ''] }]
-          ],
+          ] + ssh_expected_commands_for(
+            {
+              'node1' => { connection: 'node1_connection', user: 'test_user' },
+              'node3' => { connection: 'node3_connection', user: 'test_user' }
+            },
+            with_control_master_create: false,
+            with_control_master_check: true,
+            with_control_master_destroy: false
+          ),
           nodes_connections: {
             'node1' => { connection: 'node1_connection', user: 'test_user' },
             'node2' => { connection: 'node2_connection', user: 'test_user' },
@@ -188,6 +202,58 @@ describe HybridPlatformsConductor::SshExecutor do
       end
     end
 
+    it 'makes sure the last client using ControlMaster destroys it, even using a different environment' do
+      with_test_platform(nodes: { 'node' => { connection: 'node_connection' } }) do
+        # 1. Current thread creates the ControlMaster.
+        # 2. Second thread connects to it.
+        # 3. Current thread releases it.
+        # 4. Second thread releases it, hence destroying it.
+        init_commands = [
+          ['sshpass -V', proc { [0, "sshpass 1.06\n", ''] }],
+          ['which env', proc { [0, "/usr/bin/env\n", ''] }],
+          ['ssh -V 2>&1', proc { [0, "OpenSSH_7.4p1 Debian-10+deb9u7, OpenSSL 1.0.2u  20 Dec 2019\n", ''] }],
+        ]
+        nodes_connections_to_mock = { 'node' => { connection: 'node_connection', user: 'test_user' } }
+        step = 0
+        second_thread = Thread.new do
+          # Use a different environment: CmdRunner, NodesHandler, SshExecutor
+          second_cmd_runner = HybridPlatformsConductor::CmdRunner.new logger: logger, logger_stderr: logger
+          with_cmd_runner_mocked(
+            commands: init_commands,
+            nodes_connections: nodes_connections_to_mock,
+            with_control_master_create: false,
+            with_control_master_check: true,
+            cmd_runner: second_cmd_runner
+          ) do
+            second_nodes_handler = HybridPlatformsConductor::NodesHandler.new logger: logger, logger_stderr: logger
+            second_ssh_executor = HybridPlatformsConductor::SshExecutor.new logger: logger, logger_stderr: logger, cmd_runner: second_cmd_runner, nodes_handler: second_nodes_handler
+            second_ssh_executor.ssh_user = 'test_user'
+            # Wait for the first thread to create ControlMaster
+            sleep 0.1 while step == 0
+            second_ssh_executor.with_ssh_master_to(['node']) do
+              step = 2
+              # Wait for the first thread to release the ControlMaster
+              sleep 0.1 while step == 2
+            end
+          end
+        end
+        with_cmd_runner_mocked(
+          commands: init_commands,
+          nodes_connections: nodes_connections_to_mock,
+          with_control_master_destroy: false
+        ) do
+          test_ssh_executor.ssh_user = 'test_user'
+          test_ssh_executor.with_ssh_master_to(['node']) do
+            step = 1
+            # Now wait for the second thread to also acquire it
+            sleep 0.1 while step == 1
+          end
+          step = 3
+        end
+        second_thread.join
+      end
+    end
+
     it 'does not create SSH master if asked' do
       with_test_platform(nodes: {
         'node1' => { connection: 'node1_connection' },
@@ -205,7 +271,8 @@ describe HybridPlatformsConductor::SshExecutor do
             'node2' => { connection: 'node2_connection', user: 'test_user' },
             'node3' => { connection: 'node3_connection', user: 'test_user' }
           },
-          with_control_master: false
+          with_control_master_create: false,
+          with_control_master_destroy: false
         ) do
           test_ssh_executor.ssh_use_control_master = false
           test_ssh_executor.ssh_user = 'test_user'
@@ -383,7 +450,8 @@ describe HybridPlatformsConductor::SshExecutor do
             ['ssh -V 2>&1', proc { [0, "OpenSSH_7.4p1 Debian-10+deb9u7, OpenSSL 1.0.2u  20 Dec 2019\n", ''] }]
           ],
           nodes_connections: { 'node' => { connection: 'node_connection', user: 'test_user' } },
-          with_control_master: false
+          with_control_master_create: false,
+          with_control_master_destroy: false
         ) do
           test_ssh_executor.with_platforms_ssh do |ssh_exec, _ssh_config, known_hosts_file|
             test_ssh_executor.ensure_host_key('node_connection', known_hosts_file)
@@ -401,7 +469,8 @@ describe HybridPlatformsConductor::SshExecutor do
             ['which env', proc { [0, "/usr/bin/env\n", ''] }],
             ['ssh -V 2>&1', proc { [0, "OpenSSH_7.4p1 Debian-10+deb9u7, OpenSSL 1.0.2u  20 Dec 2019\n", ''] }]
           ],
-          with_control_master: false
+          with_control_master_create: false,
+          with_control_master_destroy: false
         ) do
           test_ssh_executor.with_platforms_ssh do |ssh_exec, _ssh_config, known_hosts_file|
             # Put another host key in the file
