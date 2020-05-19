@@ -41,6 +41,7 @@ module HybridPlatformsConductor
       # [API] - @ssh_executor is accessible
       # [API] - @action_info is accessible with the action details
       # [API] - @node (String) can be used to know on which node the action is to be executed
+      # [API] - @connector (Connector or nil) can be used to access the node's connector if the action needs remote connection
       # [API] - @timeout (Integer) should be used to make sure the action execution does not get past this number of seconds
       # [API] - @stdout_io can be used to log stdout messages
       # [API] - @stderr_io can be used to log stderr messages

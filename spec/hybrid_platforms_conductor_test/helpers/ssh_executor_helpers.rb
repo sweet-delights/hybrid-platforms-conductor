@@ -15,6 +15,34 @@ module HybridPlatformsConductorTest
         with_test_platform(platform_info) do |repository|
           # Register the test_action action
           test_ssh_executor.instance_variable_get(:@action_plugins)[:test_action] = HybridPlatformsConductorTest::TestAction
+          # Register the test_connectors, and only these ones
+          test_ssh_executor.instance_variable_set(:@connector_plugins, {
+            test_connector: HybridPlatformsConductorTest::TestConnector.new(
+              logger: logger,
+              logger_stderr: logger,
+              cmd_runner: test_cmd_runner,
+              nodes_handler: test_nodes_handler
+            ),
+            test_connector_2: HybridPlatformsConductorTest::TestConnector.new(
+              logger: logger,
+              logger_stderr: logger,
+              cmd_runner: test_cmd_runner,
+              nodes_handler: test_nodes_handler
+            )
+          })
+          yield repository
+        end
+      end
+
+      # Define a simple environment with 1 node to perform tests on actions' plugins
+      #
+      # Parameters::
+      # * Proc: Code called with environment setup
+      #   * Parameters::
+      #     * *repository* (String): Path to the repository
+      def with_test_platform_for_action_plugins
+        with_test_platform_for_executor(nodes: { 'node' => {} }) do |repository|
+          test_ssh_executor.connector(:test_connector).accept_nodes = ['node']
           yield repository
         end
       end
@@ -39,6 +67,7 @@ module HybridPlatformsConductorTest
       # * *with_control_master_check* (Boolean): Do we check the control master? [default: false]
       # * *with_control_master_destroy* (Boolean): Do we destroy the control master? [default: true]
       # * *with_strict_host_key_checking* (Boolean): Do we use strict host key checking? [default: true]
+      # * *with_batch_mode* (Boolean): Do we use BatchMode when creating the control master? [default: true]
       # Result::
       # * Array< [String or Regexp, Proc] >: The expected commands that should be used, and their corresponding mocked code
       def ssh_expected_commands_for(
@@ -46,7 +75,8 @@ module HybridPlatformsConductorTest
         with_control_master_create: true,
         with_control_master_check: false,
         with_control_master_destroy: true,
-        with_strict_host_key_checking: true
+        with_strict_host_key_checking: true,
+        with_batch_mode: true
       )
         nodes_connections.map do |node, node_connection_info|
           node_connection_info[:times] = 1 unless node_connection_info.key?(:times)
@@ -62,7 +92,7 @@ module HybridPlatformsConductorTest
           end
           if with_control_master_create
             ssh_commands_per_connection << [
-              /^.+\/ssh -o BatchMode=yes -o ControlMaster=yes -o ControlPersist=yes #{Regexp.escape(node_connection_info[:user])}@hpc.#{Regexp.escape(node)} true$/,
+              /^.+\/ssh #{with_batch_mode ? '-o BatchMode=yes ' : ''}-o ControlMaster=yes -o ControlPersist=yes #{Regexp.escape(node_connection_info[:user])}@hpc.#{Regexp.escape(node)} true$/,
               proc { [0, '', ''] }
             ]
           end
@@ -126,38 +156,6 @@ module HybridPlatformsConductorTest
           idx_ssh_executor_run += 1
           result
         end
-      end
-
-      # Get the SSH config for a given node.
-      # Don't return comments and empty lines.
-      #
-      # Parameters::
-      # * *node* (String or nil): The node we look the SSH config for, or nil for the global configuration
-      # * *ssh_config* (String or nil): The SSH config, or nil to get it from the test_ssh_executor [default: nil]
-      # * *nodes* (Array<String> or nil): List of nodes to give ssh_config, or nil for none. Used only if ssh_config is nil. [default: nil]
-      # * *ssh_exec* (String or nil): SSH executable, or nil to keep default. Used only if ssh_config is nil. [default: nil]
-      # * *known_hosts_file* (String or nil): Known host file to give. Used only if ssh_config is nil. [default: nil]
-      # Result::
-      # * String or nil: Corresponding SSH config, or nil if none
-      def ssh_config_for(node, ssh_config: nil, nodes: nil, ssh_exec: nil, known_hosts_file: nil)
-        if ssh_config.nil?
-          params = {}
-          params[:nodes] = nodes unless nodes.nil?
-          params[:ssh_exec] = ssh_exec unless ssh_exec.nil?
-          params[:known_hosts_file] = known_hosts_file unless known_hosts_file.nil?
-          ssh_config = test_ssh_executor.ssh_config(**params)
-        end
-        ssh_config_lines = ssh_config.split("\n")
-        begin_marker = node.nil? ? /^Host \*$/ : /^# #{Regexp.escape(node)} - .+$/
-        start_idx = ssh_config_lines.index { |line| line =~ begin_marker }
-        return nil if start_idx.nil?
-        end_marker = /^# \w+ - .+$/
-        end_idx = ssh_config_lines[start_idx + 1..-1].index { |line| line =~ end_marker }
-        end_idx = end_idx.nil? ? -1 : start_idx + end_idx
-        ssh_config_lines[start_idx..end_idx].select do |line|
-          stripped_line = line.strip
-          !stripped_line.empty? && stripped_line[0] != '#'
-        end.join("\n") + "\n"
       end
 
       # Get a test SshExecutor

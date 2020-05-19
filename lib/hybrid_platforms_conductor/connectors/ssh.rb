@@ -156,7 +156,12 @@ module HybridPlatformsConductor
       def remote_interactive
         interactive_cmd = "#{ssh_exec} #{ssh_url}"
         out interactive_cmd
-        system interactive_cmd
+        # As we're not using run_cmd here, make sure we handle the dry_run switch ourselves
+        if @cmd_runner.dry_run
+          out 'Won\'t execute interactive shell in dry_run mode'
+        else
+          system interactive_cmd
+        end
       end
 
       # Copy a file to the remote node in a directory
@@ -172,19 +177,22 @@ module HybridPlatformsConductor
       # Parameters::
       # * *from* (String): Local file to copy
       # * *to* (String): Remote directory to copy to
-      def remote_copy(from, to)
+      # * *sudo* (Boolean): Do we use sudo to copy? [default: false]
+      # * *owner* (String or nil): Owner to be used when copying the files, or nil for current one [default: nil]
+      # * *group* (String or nil): Group to be used when copying the files, or nil for current one [default: nil]
+      def remote_copy(from, to, sudo: false, owner: nil, group: nil)
         run_cmd <<~EOS
           cd #{File.dirname(from)} && \
           tar \
             --create \
             --gzip \
             --file - \
-            #{@owner.nil? ? '' : "--owner #{@owner}"} \
-            #{@group.nil? ? '' : "--group #{@group}"} \
+            #{owner.nil? ? '' : "--owner #{owner}"} \
+            #{group.nil? ? '' : "--group #{group}"} \
             #{File.basename(from)} | \
           #{ssh_exec} \
             #{ssh_url} \
-            \"#{@sudo ? 'sudo ' : ''}tar \
+            \"#{sudo ? 'sudo ' : ''}tar \
               --extract \
               --gunzip \
               --file - \
@@ -365,7 +373,7 @@ module HybridPlatformsConductor
                     begin
                       exit_status, _stdout, _stderr = @cmd_runner.run_cmd ssh_control_master_start_cmd, log_to_stdout: log_debug?, no_exception: no_exception, timeout: timeout
                     rescue CmdRunner::UnexpectedExitCodeError
-                      raise SshConnectionError, "Error while starting SSH Control Master with #{ssh_control_master_start_cmd}"
+                      raise SshExecutor::ConnectionError, "Error while starting SSH Control Master with #{ssh_control_master_start_cmd}"
                     end
                     if exit_status == 0
                       log_debug "[ ControlMaster - #{ssh_url} ] - ControlMaster created"
@@ -381,7 +389,7 @@ module HybridPlatformsConductor
                     begin
                       exit_status, _stdout, _stderr = @cmd_runner.run_cmd ssh_control_master_check_cmd, log_to_stdout: log_debug?, no_exception: no_exception, timeout: timeout
                     rescue CmdRunner::UnexpectedExitCodeError
-                      raise SshConnectionError, "Error while checking SSH Control Master with #{ssh_control_master_check_cmd}"
+                      raise SshExecutor::ConnectionError, "Error while checking SSH Control Master with #{ssh_control_master_check_cmd}"
                     end
                     if exit_status == 0
                       log_debug "[ ControlMaster - #{ssh_url} ] - ControlMaster checked ok"

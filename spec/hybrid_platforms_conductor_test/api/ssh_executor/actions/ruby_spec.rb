@@ -3,7 +3,7 @@ describe HybridPlatformsConductor::SshExecutor do
   context 'checking actions\' plugin ruby' do
 
     it 'executes local Ruby code' do
-      with_test_platform(nodes: { 'node' => {} }) do
+      with_test_platform_for_action_plugins do
         executed = false
         expect(test_ssh_executor.execute_actions('node' => {
           ruby: proc do |stdout, stderr, action|
@@ -18,7 +18,7 @@ describe HybridPlatformsConductor::SshExecutor do
 
     it 'executes local Ruby code with timeout' do
       pending 'Implement timeout for Ruby actions'
-      with_test_platform(nodes: { 'node' => {} }) do
+      with_test_platform_for_action_plugins do
         executed = false
         expect(test_ssh_executor.execute_actions(
           { 'node' => {
@@ -36,7 +36,7 @@ describe HybridPlatformsConductor::SshExecutor do
 
     it 'logs local Ruby code' do
       with_repository 'logs' do |logs_dir|
-        with_test_platform(nodes: { 'node' => {} }) do
+        with_test_platform_for_action_plugins do
           test_ssh_executor.execute_actions(
             { 'node' => {
               ruby: proc do |stdout, stderr, action|

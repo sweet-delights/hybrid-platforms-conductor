@@ -3,7 +3,7 @@ describe HybridPlatformsConductor::SshExecutor do
   context 'checking actions\' plugin bash' do
 
     it 'executes local Bash code' do
-      with_test_platform(nodes: { 'node' => {} }) do |repository|
+      with_test_platform_for_action_plugins do |repository|
         expect(test_ssh_executor.execute_actions('node' => {
           bash: "echo TestContent >#{repository}/test_file ; echo TestStdout ; echo TestStderr 1>&2"
         })['node']).to eq [0, "TestStdout\n", "TestStderr\n"]
@@ -12,7 +12,7 @@ describe HybridPlatformsConductor::SshExecutor do
     end
 
     it 'executes local Bash code with timeout' do
-      with_test_platform(nodes: { 'node' => {} }) do |repository|
+      with_test_platform_for_action_plugins do |repository|
         expect(test_ssh_executor.execute_actions(
           { 'node' => {
             bash: 'sleep 2 ; echo ShouldNotReach'
@@ -24,7 +24,7 @@ describe HybridPlatformsConductor::SshExecutor do
 
     it 'logs local Bash code' do
       with_repository 'logs' do |logs_dir|
-        with_test_platform(nodes: { 'node' => {} }) do |repository|
+        with_test_platform_for_action_plugins do |repository|
           test_ssh_executor.execute_actions({
             'node' => {
               bash: 'echo TestStdout ; sleep 1 ; echo TestStderr 1>&2'

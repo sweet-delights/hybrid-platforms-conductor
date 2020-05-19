@@ -105,8 +105,16 @@ module HybridPlatformsConductor
       # Parameters::
       # * *from* (String): Local file to copy
       # * *to* (String): Remote directory to copy to
-      def remote_copy(from, to)
-        MyConnectLib.connect_to(@nodes_handler.get_host_ip_of(@node)).cp from, to
+      # * *sudo* (Boolean): Do we use sudo to copy? [default: false]
+      # * *owner* (String or nil): Owner to be used when copying the files, or nil for current one [default: nil]
+      # * *group* (String or nil): Group to be used when copying the files, or nil for current one [default: nil]
+      def remote_copy(from, to, sudo: false, owner: nil, group: nil)
+        MyConnectLib.connect_to(
+          @nodes_handler.get_host_ip_of(@node),
+          sudo: sudo,
+          user: owner,
+          group: group
+        ).cp from, to
       end
 
     end

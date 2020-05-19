@@ -15,8 +15,8 @@ module HybridPlatformsConductor
   # Gives ways to execute SSH commands on the nodes
   class SshExecutor
 
-    # Error class returned when the issue is due to an SSH connection issue
-    class SshConnectionError < RuntimeError
+    # Error class returned when the issue is due to a connection issue to the node
+    class ConnectionError < RuntimeError
     end
 
     include LoggerHelpers
@@ -209,7 +209,9 @@ module HybridPlatformsConductor
         else
           connector = @connector_plugins[connector_name]
           selected_nodes = nodes_needing_connectors.select { |_node, selected_connector| selected_connector == connector }.keys
-          unless selected_nodes.empty?
+          if selected_nodes.empty?
+            preparation_code.call(remaining_plugins_to_prepare[1..-1])
+          else
             connector.with_connection_to(selected_nodes) do
               preparation_code.call(remaining_plugins_to_prepare[1..-1])
             end
@@ -274,12 +276,12 @@ module HybridPlatformsConductor
             action.execute
             remaining_timeout -= Time.now - start_time unless remaining_timeout.nil?
           end
-        rescue SshConnectionError
-          exit_status = :ssh_connection_error
+        rescue ConnectionError
+          exit_status = :connection_error
           stderr_queue << $!.to_s
         rescue CmdRunner::UnexpectedExitCodeError
-          # Error has already been logged in stderr
           exit_status = :failed_command
+          stderr_queue << $!.to_s
         rescue CmdRunner::TimeoutError
           # Error has already been logged in stderr
           exit_status = :timeout
