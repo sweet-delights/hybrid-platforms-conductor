@@ -16,7 +16,7 @@ describe HybridPlatformsConductor::NodesHandler do
 
     it 'returns host keys when hostname is set' do
       with_test_platform(nodes: { 'test_node' => {} }) do
-        with_cmd_runner_mocked(commands: [
+        with_cmd_runner_mocked([
           ['ssh-keyscan my_host.my_domain', proc { [0, "my_host.my_domain ssh-rsa fake_host_key\n", ''] }]
         ]) do
           expect(cmdb(:host_keys).get_host_keys(['test_node'], { 'test_node' => { hostname: 'my_host.my_domain' } })).to eq('test_node' => ['ssh-rsa fake_host_key'])
@@ -26,7 +26,7 @@ describe HybridPlatformsConductor::NodesHandler do
 
     it 'returns host keys when host_ip is set' do
       with_test_platform(nodes: { 'test_node' => {} }) do
-        with_cmd_runner_mocked(commands: [
+        with_cmd_runner_mocked([
           ['ssh-keyscan 192.168.42.42', proc { [0, "192.168.42.42 ssh-rsa fake_host_key\n", ''] }]
         ]) do
           expect(cmdb(:host_keys).get_host_keys(['test_node'], { 'test_node' => { host_ip: '192.168.42.42' } })).to eq('test_node' => ['ssh-rsa fake_host_key'])
@@ -36,7 +36,7 @@ describe HybridPlatformsConductor::NodesHandler do
 
     it 'returns several host keys' do
       with_test_platform(nodes: { 'test_node' => {} }) do
-        with_cmd_runner_mocked(commands: [
+        with_cmd_runner_mocked([
           ['ssh-keyscan 192.168.42.42', proc do
             [0, <<~EOS, '']
               192.168.42.42 ssh-rsa fake_host_key_rsa
@@ -54,7 +54,7 @@ describe HybridPlatformsConductor::NodesHandler do
 
     it 'returns several host keys and ignores comments from ssh-keyscan' do
       with_test_platform(nodes: { 'test_node' => {} }) do
-        with_cmd_runner_mocked(commands: [
+        with_cmd_runner_mocked([
           ['ssh-keyscan 192.168.42.42', proc do
             [0, <<~EOS, '']
               # That's a comment
@@ -75,7 +75,7 @@ describe HybridPlatformsConductor::NodesHandler do
 
     it 'does not return host keys when ssh-keyscan can\'t retrieve them' do
       with_test_platform(nodes: { 'test_node' => {} }) do
-        with_cmd_runner_mocked(commands: [
+        with_cmd_runner_mocked([
           ['ssh-keyscan 192.168.42.42', proc { [0, '', ''] }]
         ]) do
           expect(cmdb(:host_keys).get_host_keys(['test_node'], { 'test_node' => { host_ip: '192.168.42.42' } })).to eq({})
@@ -90,7 +90,7 @@ describe HybridPlatformsConductor::NodesHandler do
         'test_node3' => {},
         'test_node4' => {}
       }) do
-        with_cmd_runner_mocked(commands: [
+        with_cmd_runner_mocked([
           ['ssh-keyscan 192.168.42.1', proc { [0, "192.168.42.1 ssh-rsa fake_host_key_1\n", ''] }],
           ['ssh-keyscan 192.168.42.2', proc { [0, '', ''] }],
           ['ssh-keyscan my_host_4.my_domain', proc { [0, "my_host_4.my_domain ssh-rsa fake_host_key_4\n", ''] }],

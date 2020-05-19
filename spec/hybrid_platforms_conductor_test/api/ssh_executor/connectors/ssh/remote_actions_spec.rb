@@ -23,7 +23,7 @@ describe HybridPlatformsConductor::SshExecutor do
       def with_test_platform_for_remote_testing(expected_cmds: [], expected_stdout: '', expected_stderr: '', timeout: nil)
         with_test_platform(nodes: { 'node' => { meta: { host_ip: '192.168.42.42' } } }) do
           with_cmd_runner_mocked(
-            commands: [
+            [
               ['which env', proc { [0, "/usr/bin/env\n", ''] }],
               ['ssh -V 2>&1', proc { [0, "OpenSSH_7.4p1 Debian-10+deb9u7, OpenSSL 1.0.2u  20 Dec 2019\n", ''] }]
             ] +

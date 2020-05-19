@@ -14,6 +14,54 @@ module HybridPlatformsConductorTest
 
         context "testing deployment#{check_mode ? ' in why-run mode' : ''}" do
 
+          # Prepare a platform ready to test deployments on.
+          #
+          # Parameters::
+          # * *nodes_info* (Hash): Node info to give the platform [default: { nodes: { 'node' => {} } }]
+          # * *expect_packaged_times* (Integer): Expected number of times the deployer has packaged the repository [default: 1]
+          # * *expect_delivered_nodes* (Array<String>): Expected nodes being delivered to the artefacts? [default: nodes_info[:nodes].keys]
+          # * *expect_default_actions* (Boolean): Should we expect default actions? [default: true]
+          # * *expect_sudo* (Boolean): Do we expect sudo to be used in commands? [default: true]
+          # * *check_mode* (Boolean): Are we testing in check mode? [default: @check_mode]
+          # * Proc: Code called once the platform is ready for testing the deployer
+          #   * Parameters::
+          #     * *repository* (String): Path to the repository
+          def with_platform_to_deploy(
+            nodes_info: { nodes: { 'node' => {} } },
+            expect_packaged_times: 1,
+            expect_delivered_nodes: nodes_info[:nodes].keys,
+            expect_default_actions: true,
+            expect_sudo: true,
+            check_mode: @check_mode
+          )
+            platform_name = check_mode ? 'platform' : 'my_remote_platform'
+            with_test_platform(nodes_info, !check_mode) do |repository|
+              with_connections_mocked_on(nodes_info[:nodes].keys) do
+                packaged_times = 0
+                delivered_nodes = []
+                test_platforms_info[platform_name][:package] = proc { packaged_times += 1 }
+                nodes_info[:nodes].keys.each do |node|
+                  test_platforms_info[platform_name][:nodes][node][:deliver_on_artefact_for] = proc { delivered_nodes << node }
+                end
+                if expect_default_actions
+                  default_actions = [
+                    # First run, we expect the mutex to be setup, and the deployment actions to be run
+                    proc { |actions_per_nodes| expect_actions_to_deploy_on(actions_per_nodes, nodes_info[:nodes].keys, check: check_mode, sudo: expect_sudo) },
+                    # Second run, we expect the mutex to be released
+                    proc { |actions_per_nodes| expect_actions_to_unlock(actions_per_nodes, nodes_info[:nodes].keys, sudo: expect_sudo) }
+                  ]
+                  # Third run, we expect logs to be uploaded on the node (only if not check mode)
+                  default_actions << proc { |actions_per_nodes| expect_actions_to_upload_logs(actions_per_nodes, nodes_info[:nodes].keys, sudo: expect_sudo) } unless check_mode
+                  expect_ssh_executor_runs(default_actions) 
+                end
+                test_deployer.use_why_run = true if check_mode
+                yield repository
+                expect(packaged_times).to eq expect_packaged_times
+                expect(delivered_nodes.sort).to eq expect_delivered_nodes.sort
+              end
+            end
+          end
+
           before :each do
             @check_mode = check_mode
           end

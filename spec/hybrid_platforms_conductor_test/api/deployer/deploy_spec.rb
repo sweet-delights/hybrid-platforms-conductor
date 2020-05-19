@@ -7,7 +7,7 @@ describe HybridPlatformsConductor::Deployer do
     it 'deploys correct logs information on 1 node' do
       with_test_platform({ nodes: { 'node' => {} } }, true) do |repository|
         FileUtils.touch "#{repository}/new_file"
-        with_ssh_master_mocked_on ['node'] do
+        with_connections_mocked_on ['node'] do
           test_ssh_executor.connector(:ssh).ssh_user = 'test_user'
           expect_ssh_executor_runs([
             # First run, we expect the mutex to be setup, and the deployment actions to be run

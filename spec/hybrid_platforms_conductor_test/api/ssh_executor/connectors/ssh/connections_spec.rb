@@ -15,7 +15,7 @@ describe HybridPlatformsConductor::SshExecutor do
       it 'creates an SSH master to 1 node' do
         with_test_platform(nodes: { 'node' => { meta: { host_ip: '192.168.42.42' } } }) do
           with_cmd_runner_mocked(
-            commands: [
+            [
               ['which env', proc { [0, "/usr/bin/env\n", ''] }],
               ['ssh -V 2>&1', proc { [0, "OpenSSH_7.4p1 Debian-10+deb9u7, OpenSSL 1.0.2u  20 Dec 2019\n", ''] }]
             ] + ssh_expected_commands_for('node' => { connection: '192.168.42.42', user: 'test_user' })
@@ -34,7 +34,7 @@ describe HybridPlatformsConductor::SshExecutor do
           'node3' => { meta: { host_ip: '192.168.42.3' } }
         }) do
           with_cmd_runner_mocked(
-            commands: [
+            [
               ['which env', proc { [0, "/usr/bin/env\n", ''] }],
               ['ssh -V 2>&1', proc { [0, "OpenSSH_7.4p1 Debian-10+deb9u7, OpenSSL 1.0.2u  20 Dec 2019\n", ''] }]
             ] + ssh_expected_commands_for(
@@ -53,7 +53,7 @@ describe HybridPlatformsConductor::SshExecutor do
       it 'reuses SSH master already created to 1 node' do
         with_test_platform(nodes: { 'node' => { meta: { host_ip: '192.168.42.42' } } }) do
           with_cmd_runner_mocked(
-            commands: [
+            [
               ['which env', proc { [0, "/usr/bin/env\n", ''] }],
               ['ssh -V 2>&1', proc { [0, "OpenSSH_7.4p1 Debian-10+deb9u7, OpenSSL 1.0.2u  20 Dec 2019\n", ''] }]
             ] +
@@ -83,7 +83,7 @@ describe HybridPlatformsConductor::SshExecutor do
           'node4' => { meta: { host_ip: '192.168.42.4' } }
         }) do
           with_cmd_runner_mocked(
-            commands: [
+            [
               ['which env', proc { [0, "/usr/bin/env\n", ''] }],
               ['ssh -V 2>&1', proc { [0, "OpenSSH_7.4p1 Debian-10+deb9u7, OpenSSL 1.0.2u  20 Dec 2019\n", ''] }]
             ] +
@@ -131,7 +131,7 @@ describe HybridPlatformsConductor::SshExecutor do
             # Use a different environment: CmdRunner, NodesHandler, SshExecutor
             second_cmd_runner = HybridPlatformsConductor::CmdRunner.new logger: logger, logger_stderr: logger
             with_cmd_runner_mocked(
-              commands: init_commands +
+              init_commands +
                 ssh_expected_commands_for(
                   nodes_connections_to_mock,
                   with_control_master_create: false,
@@ -152,7 +152,7 @@ describe HybridPlatformsConductor::SshExecutor do
             end
           end
           with_cmd_runner_mocked(
-            commands: init_commands +
+            init_commands +
               ssh_expected_commands_for(nodes_connections_to_mock, with_control_master_destroy: false)
           ) do
             test_connector.ssh_user = 'test_user'
@@ -170,7 +170,7 @@ describe HybridPlatformsConductor::SshExecutor do
       it 'does not create SSH master if asked' do
         with_test_platform(nodes: { 'node' => { meta: { host_ip: '192.168.42.42' } } }) do
           with_cmd_runner_mocked(
-            commands: [
+            [
               ['which env', proc { [0, "/usr/bin/env\n", ''] }],
               ['ssh -V 2>&1', proc { [0, "OpenSSH_7.4p1 Debian-10+deb9u7, OpenSSL 1.0.2u  20 Dec 2019\n", ''] }]
             ] + ssh_expected_commands_for(
@@ -190,7 +190,7 @@ describe HybridPlatformsConductor::SshExecutor do
       it 'does not check host keys if asked' do
         with_test_platform(nodes: { 'node' => { meta: { host_ip: '192.168.42.42' } } }) do
           with_cmd_runner_mocked(
-            commands: [
+            [
               ['which env', proc { [0, "/usr/bin/env\n", ''] }],
               ['ssh -V 2>&1', proc { [0, "OpenSSH_7.4p1 Debian-10+deb9u7, OpenSSL 1.0.2u  20 Dec 2019\n", ''] }]
             ] + ssh_expected_commands_for(
@@ -209,7 +209,7 @@ describe HybridPlatformsConductor::SshExecutor do
       it 'does not use batch mode when passwords are to be expected' do
         with_test_platform(nodes: { 'node' => { meta: { host_ip: '192.168.42.42' } } }) do
           with_cmd_runner_mocked(
-            commands: [
+            [
               ['which env', proc { [0, "/usr/bin/env\n", ''] }],
               ['ssh -V 2>&1', proc { [0, "OpenSSH_7.4p1 Debian-10+deb9u7, OpenSSL 1.0.2u  20 Dec 2019\n", ''] }]
             ] + ssh_expected_commands_for(
@@ -228,7 +228,7 @@ describe HybridPlatformsConductor::SshExecutor do
       it 'uses sshpass to prepare connections needing passwords' do
         with_test_platform(nodes: { 'node' => { meta: { host_ip: '192.168.42.42' } } }) do
           with_cmd_runner_mocked(
-            commands: [
+            [
               ['sshpass -V', proc { [0, "sshpass 1.06\n", ''] }],
               ['which env', proc { [0, "/usr/bin/env\n", ''] }],
               ['ssh -V 2>&1', proc { [0, "OpenSSH_7.4p1 Debian-10+deb9u7, OpenSSL 1.0.2u  20 Dec 2019\n", ''] }]
@@ -248,7 +248,7 @@ describe HybridPlatformsConductor::SshExecutor do
       it 'does not reuse provided SSH executables and configs' do
         with_test_platform(nodes: { 'node' => { meta: { host_ip: '192.168.42.42' } } }) do
           with_cmd_runner_mocked(
-            commands: [
+            [
               ['which env', proc { [0, "/usr/bin/env\n", ''] }],
               ['ssh -V 2>&1', proc { [0, "OpenSSH_7.4p1 Debian-10+deb9u7, OpenSSL 1.0.2u  20 Dec 2019\n", ''] }]
             ] +
@@ -279,7 +279,7 @@ describe HybridPlatformsConductor::SshExecutor do
       it 'cleans provided SSH executables and configs after use' do
         with_test_platform(nodes: { 'node' => { meta: { host_ip: '192.168.42.42' } } }) do
           with_cmd_runner_mocked(
-            commands: [
+            [
               ['which env', proc { [0, "/usr/bin/env\n", ''] }],
               ['ssh -V 2>&1', proc { [0, "OpenSSH_7.4p1 Debian-10+deb9u7, OpenSSL 1.0.2u  20 Dec 2019\n", ''] }]
             ] +
