@@ -71,6 +71,8 @@ module HybridPlatformsConductorTest
         yield
         expect(unexpected_commands).to eq []
         expect(remaining_expected_commands).to eq([]), "Expected CmdRunner commands were not run:\n#{remaining_expected_commands.map(&:first).join("\n")}" unless commands.nil?
+        # Un-mock the command runner
+        allow(test_cmd_runner).to receive(:run_cmd).and_call_original unless commands.nil?
       end
 
       # Get a test CmdRunner
