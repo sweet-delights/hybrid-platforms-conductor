@@ -516,19 +516,19 @@ Chef Client finished, 3/133 resources would have been updated
 ===== Checking on 1 hosts ===== ...End =====
 ```
 
-## ssh_run
+## run
 
-The `ssh_run` executable will run any SSH commands (or interactive SSH sessions) on a node (or list of nodes).
+The `run` executable will run any command (or interactive session) on a node (or list of nodes).
 It will handle any proxy configuration, without relying on the local SSH configuration.
 
 ```
-Usage: ./bin/ssh_run [options]
+Usage: ./bin/run [options]
 
 Main options:
-    -c, --command CMD                Command to execute (can't be used with --interactive) (can be used several times, commands will be executed sequentially)
     -d, --debug                      Activate debug mode
-    -f, --commands-file FILE_NAME    Execute commands taken from a file (can't be used with --interactive) (can be used several times, commands will be executed sequentially)
     -h, --help                       Display help and exit
+    -c, --command CMD                Command to execute (can't be used with --interactive) (can be used several times, commands will be executed sequentially)
+    -f, --commands-file FILE_NAME    Execute commands taken from a file (can't be used with --interactive) (can be used several times, commands will be executed sequentially)
     -i, --interactive                Run an interactive SSH session instead of executing a command (can't be used with --command or --commands-file)
     -p, --parallel                   Execute the commands in parallel (put the standard output in files ./run_logs/*.stdout)
     -t, --timeout SECS               Timeout in seconds to wait for each command (defaults to no timeout)
@@ -543,12 +543,16 @@ Nodes selection options:
     -n, --node NODE                  Select a specific node. Can be a regular expression to select several nodes if used with enclosing "/" characters. (can be used several times).
     -r, --nodes-service SERVICE      Select nodes implementing a given service (can be used several times)
 
+Command runner options:
+    -s, --show-commands              Display the commands that would be run instead of running them
+
 Actions Executor options:
+    -m, --max-threads NBR            Set the number of threads to use for concurrent queries (defaults to 16)
+
+Connector ssh options:
     -g, --ssh-gateway-user USER      Name of the gateway user to be used by the gateways. Can also be set from environment variable hpc_ssh_gateway_user. Defaults to ubradm.
     -j, --ssh-no-control-master      If used, don't create SSH control masters for connections.
-    -m, --max-threads NBR            Set the number of threads to use for concurrent queries (defaults to 16)
     -q, --ssh-no-host-key-checking   If used, don't check for SSH host keys.
-    -s, --show-commands              Display the SSH commands that would be run instead of running them
     -u, --ssh-user USER              Name of user to be used in SSH connections (defaults to hpc_ssh_user or USER environment variables)
     -w, --password                   If used, then expect SSH connections to ask for a password.
     -y GATEWAYS_CONF,                Name of the gateways configuration to be used. Can also be set from environment variable hpc_ssh_gateways_conf. Defaults to munich.
@@ -558,33 +562,33 @@ Actions Executor options:
 Usage examples:
 ```bash
 # Display the possible nodes we can run commands on (also outputs the possible hosts lists)
-./bin/ssh_run --show-nodes
+./bin/run --show-nodes
 
 # Run an interactive SSH session on node23hst-nn1
-./bin/ssh_run --node node23hst-nn1 --interactive
+./bin/run --node node23hst-nn1 --interactive
 
 # Run the hostname command on node23hst-nn1
-./bin/ssh_run --node node23hst-nn1 --command hostname
+./bin/run --node node23hst-nn1 --command hostname
 
 # Run the hostname and ls commands on node23hst-nn1
-./bin/ssh_run --node node23hst-nn1 --command hostname --command ls
+./bin/run --node node23hst-nn1 --command hostname --command ls
 
 # Run a list of commands (taken from the file cmds.list) on node23hst-nn1
-./bin/ssh_run --node node23hst-nn1 --commands-file cmds.list
+./bin/run --node node23hst-nn1 --commands-file cmds.list
 
 # Run a list of commands (taken from the file cmds.list) and the hostname command on node23hst-nn1
-./bin/ssh_run --node node23hst-nn1 --commands-file cmds.list --command hostname
+./bin/run --node node23hst-nn1 --commands-file cmds.list --command hostname
 
 # Run the hostname command on node23hst-nn1 with a timeout of 5 seconds that would interrupt the command if it does not end before
-./bin/ssh_run --node node23hst-nn1 --command hostname --timeout 5
+./bin/run --node node23hst-nn1 --command hostname --timeout 5
 
 # Run the hostname command on all nodes containing xae in parallel (and send each standard output in log files in ./run_logs/*.stdout)
-./bin/ssh_run --node /xae/ --command hostname --parallel
+./bin/run --node /xae/ --command hostname --parallel
 ```
 
 Example of output:
 ```
-=> ./bin/ssh_run --node node12had01 --command hostname
+=> ./bin/run --node node12had01 --command hostname
 node12host.site.my_company.net
 ```
 

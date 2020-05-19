@@ -26,7 +26,7 @@ describe 'executables\' Cmd Runner options' do
         expect(test_cmd_runner.dry_run).to eq true
         {}
       end])
-      exit_code, stdout, stderr = run 'ssh_run', '--node', 'node', '--command', 'echo Hello', '--show-commands'
+      exit_code, stdout, stderr = run 'run', '--node', 'node', '--command', 'echo Hello', '--show-commands'
       expect(exit_code).to eq 0
       expect(stdout).to eq ''
       expect(stderr).to eq ''

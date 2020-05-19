@@ -26,7 +26,7 @@ describe 'executables\' Actions Executor options' do
         expect(test_actions_executor.max_threads).to eq 5
         {}
       end])
-      exit_code, stdout, stderr = run 'ssh_run', '--node', 'node', '--command', 'echo Hello', '--max-threads', '5'
+      exit_code, stdout, stderr = run 'run', '--node', 'node', '--command', 'echo Hello', '--max-threads', '5'
       expect(exit_code).to eq 0
       expect(stdout).to eq ''
       expect(stderr).to eq ''
