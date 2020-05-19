@@ -47,7 +47,7 @@ module HybridPlatformsConductorTest
           HybridPlatformsConductor::Deployer => test_deployer,
           HybridPlatformsConductor::NodesHandler => test_nodes_handler,
           HybridPlatformsConductor::ReportsHandler => test_reports_handler,
-          HybridPlatformsConductor::SshExecutor => test_ssh_executor,
+          HybridPlatformsConductor::ActionsExecutor => test_actions_executor,
           HybridPlatformsConductor::TestsRunner => test_tests_runner
         }
         # Make sure the tested components use the same loggers as the executable.
@@ -62,13 +62,18 @@ module HybridPlatformsConductorTest
         # Run the executable
         args.concat(['--debug']) if ENV['TEST_DEBUG'] == '1'
         ARGV.replace(args)
+        old_0 = $0
         $0 = executable
-        exit_code = nil
         begin
-          load "#{__dir__}/../../../bin/#{executable}"
-          exit_code = 0
-        rescue SystemExit
-          exit_code = $!.status
+          exit_code = nil
+          begin
+            load "#{__dir__}/../../../bin/#{executable}"
+            exit_code = 0
+          rescue SystemExit
+            exit_code = $!.status
+          end
+        ensure
+          $0 = old_0
         end
         stdout = File.read(stdout_file)
         stderr = File.read(stderr_file)

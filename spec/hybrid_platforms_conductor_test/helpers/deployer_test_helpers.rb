@@ -52,7 +52,7 @@ module HybridPlatformsConductorTest
                   ]
                   # Third run, we expect logs to be uploaded on the node (only if not check mode)
                   default_actions << proc { |actions_per_nodes| expect_actions_to_upload_logs(actions_per_nodes, nodes_info[:nodes].keys, sudo: expect_sudo) } unless check_mode
-                  expect_ssh_executor_runs(default_actions) 
+                  expect_actions_executor_runs(default_actions) 
                 end
                 test_deployer.use_why_run = true if check_mode
                 yield repository
@@ -85,7 +85,7 @@ module HybridPlatformsConductorTest
 
           it 'deploys on 1 node using root' do
             with_platform_to_deploy(expect_sudo: false) do
-              test_ssh_executor.connector(:ssh).ssh_user = 'root'
+              test_actions_executor.connector(:ssh).ssh_user = 'root'
               expect(test_deployer.deploy_on('node')).to eq('node' => expected_deploy_result)
             end
           end
@@ -160,7 +160,7 @@ module HybridPlatformsConductorTest
               ]
               # Third run, we expect logs to be uploaded on the node (only if not check mode)
               expected_actions << proc { |actions_per_nodes| expect_actions_to_upload_logs(actions_per_nodes, 'node') } unless check_mode
-              expect_ssh_executor_runs(expected_actions)
+              expect_actions_executor_runs(expected_actions)
               expect(test_deployer.deploy_on('node')).to eq('node' => expected_deploy_result)
             end
           end
@@ -185,7 +185,7 @@ module HybridPlatformsConductorTest
               FileUtils.mkdir_p certs_dir
               File.write("#{certs_dir}/test_cert.crt", 'Hello')
               ENV['hpc_certificates'] = certs_dir
-              test_ssh_executor.connector(:ssh).ssh_user = 'root'
+              test_actions_executor.connector(:ssh).ssh_user = 'root'
               test_deployer.prepare_for_local_environment
               expected_actions = [
                 # First run, we expect the mutex to be setup, and the deployment actions to be run
@@ -212,7 +212,7 @@ module HybridPlatformsConductorTest
               ]
               # Third run, we expect logs to be uploaded on the node (only if not check mode)
               expected_actions << proc { |actions_per_nodes| expect_actions_to_upload_logs(actions_per_nodes, 'node', sudo: false) } unless check_mode
-              expect_ssh_executor_runs(expected_actions)
+              expect_actions_executor_runs(expected_actions)
               expect(test_deployer.deploy_on('node')).to eq('node' => expected_deploy_result)
             end
           end
@@ -251,7 +251,7 @@ module HybridPlatformsConductorTest
               ]
               # Third run, we expect logs to be uploaded on the node (only if not check mode)
               expected_actions << proc { |actions_per_nodes| expect_actions_to_upload_logs(actions_per_nodes, 'node') } unless check_mode
-              expect_ssh_executor_runs(expected_actions)
+              expect_actions_executor_runs(expected_actions)
               expect(test_deployer.deploy_on('node')).to eq('node' => expected_deploy_result)
             end
           end
@@ -266,7 +266,7 @@ module HybridPlatformsConductorTest
               FileUtils.mkdir_p certs_dir
               File.write("#{certs_dir}/test_cert.crt", 'Hello')
               ENV['hpc_certificates'] = certs_dir
-              test_ssh_executor.connector(:ssh).ssh_user = 'root'
+              test_actions_executor.connector(:ssh).ssh_user = 'root'
               test_deployer.prepare_for_local_environment
               expected_actions = [
                 # First run, we expect the mutex to be setup, and the deployment actions to be run
@@ -293,7 +293,7 @@ module HybridPlatformsConductorTest
               ]
               # Third run, we expect logs to be uploaded on the node (only if not check mode)
               expected_actions << proc { |actions_per_nodes| expect_actions_to_upload_logs(actions_per_nodes, 'node', sudo: false) } unless check_mode
-              expect_ssh_executor_runs(expected_actions)
+              expect_actions_executor_runs(expected_actions)
               expect(test_deployer.deploy_on('node')).to eq('node' => expected_deploy_result)
             end
           end
@@ -325,7 +325,7 @@ module HybridPlatformsConductorTest
               ]
               # Third run, we expect logs to be uploaded on the node (only if not check mode)
               expected_actions << proc { |actions_per_nodes| expect_actions_to_upload_logs(actions_per_nodes, %w[node1 node2 node3]) } unless check_mode
-              expect_ssh_executor_runs(expected_actions)
+              expect_actions_executor_runs(expected_actions)
               test_deployer.concurrent_execution = true
               expect(test_deployer.deploy_on(%w[node1 node2 node3])).to eq(
                 'node1' => expected_deploy_result,
@@ -351,7 +351,7 @@ module HybridPlatformsConductorTest
               ]
               # Third run, we expect logs to be uploaded on the node (only if not check mode)
               expected_actions << proc { |actions_per_nodes| expect_actions_to_upload_logs(actions_per_nodes, %w[node1 node2 node3]) } unless check_mode
-              expect_ssh_executor_runs(expected_actions)
+              expect_actions_executor_runs(expected_actions)
               test_deployer.timeout = 5
               expect(test_deployer.deploy_on(%w[node1 node2 node3])).to eq(
                 'node1' => expected_deploy_result,

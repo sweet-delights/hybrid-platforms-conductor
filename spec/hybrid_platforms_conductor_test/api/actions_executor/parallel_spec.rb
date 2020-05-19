@@ -1,4 +1,4 @@
-describe HybridPlatformsConductor::SshExecutor do
+describe HybridPlatformsConductor::ActionsExecutor do
 
   context 'checking parallel runs' do
 
@@ -20,7 +20,7 @@ describe HybridPlatformsConductor::SshExecutor do
     it 'executes a simple command on several nodes in parallel' do
       with_test_platform_for_parallel_tests do
         nodes_executed = []
-        test_ssh_executor.execute_actions({
+        test_actions_executor.execute_actions({
           'node1' => { test_action: { code: proc do
             sleep 2
             nodes_executed << 'node1'
@@ -46,7 +46,7 @@ describe HybridPlatformsConductor::SshExecutor do
         # * node2: 1---2-----3
         # * node3: ------1-2-----3
         # * Time : 0 1 2 3 4 5 6 7 8
-        expect(test_ssh_executor.execute_actions({
+        expect(test_actions_executor.execute_actions({
           'node1' => [
             {
               test_action: { code: proc do |stdout, stderr|
@@ -136,7 +136,7 @@ describe HybridPlatformsConductor::SshExecutor do
 
     it 'executes several commands on several nodes with timeout on different actions depending on the node, in parallel' do
       with_test_platform_for_parallel_tests do
-        expect(test_ssh_executor.execute_actions(
+        expect(test_actions_executor.execute_actions(
           {
             'node1' => [
               { bash: 'sleep 1 && echo Node11' },
@@ -168,7 +168,7 @@ describe HybridPlatformsConductor::SshExecutor do
 
     it 'executes several actions on several nodes and returns the corresponding stdout and stderr correctly in parallel' do
       with_test_platform_for_parallel_tests do
-        expect(test_ssh_executor.execute_actions({
+        expect(test_actions_executor.execute_actions({
           'node1' => [
             { test_action: { code: proc do |stdout, stderr|
               stdout << 'node1_action1_stdout '
@@ -222,7 +222,7 @@ describe HybridPlatformsConductor::SshExecutor do
     it 'executes several actions on several nodes and returns the corresponding stdout and stderr correctly in parallel and in files' do
       with_repository do |logs_repository|
         with_test_platform_for_parallel_tests do
-          expect(test_ssh_executor.execute_actions({
+          expect(test_actions_executor.execute_actions({
             'node1' => [
               { test_action: { code: proc do |stdout, stderr|
                 stdout << 'node1_action1_stdout '
@@ -298,7 +298,7 @@ describe HybridPlatformsConductor::SshExecutor do
     it 'executes the same actions on several nodes and returns the corresponding stdout and stderr correctly in parallel and in files' do
       with_repository do |logs_repository|
         with_test_platform(nodes: { 'node1' => {}, 'node2' => {}, 'node3' => {} }) do
-          expect(test_ssh_executor.execute_actions({
+          expect(test_actions_executor.execute_actions({
             %w[node1 node2 node3] => [
               { ruby: proc do |stdout, stderr, action|
                 stdout << "#{action.node}_action1_stdout "

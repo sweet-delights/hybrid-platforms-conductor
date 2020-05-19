@@ -13,19 +13,19 @@ module HybridPlatformsConductor
     # * *logger* (Logger): Logger to be used [default: Logger.new(STDOUT)]
     # * *logger_stderr* (Logger): Logger to be used for stderr [default: Logger.new(STDERR)]
     # * *cmd_runner* (CmdRunner): Command executor to be used. [default: CmdRunner.new]
-    # * *ssh_executor* (SshExecutor): Ssh executor to be used. [default: SshExecutor.new]
+    # * *actions_executor* (ActionsExecutor): Actions Executor to be used. [default: ActionsExecutor.new]
     # * *action_info* (Object or nil): Action info needed to setup the action, or nil if none [default: nil]
     def initialize(
       logger: Logger.new(STDOUT),
       logger_stderr: Logger.new(STDERR),
       cmd_runner: CmdRunner.new,
-      ssh_executor: SshExecutor.new,
+      actions_executor: ActionsExecutor.new,
       action_info: nil
     )
       @logger = logger
       @logger_stderr = logger_stderr
       @cmd_runner = cmd_runner
-      @ssh_executor = ssh_executor
+      @actions_executor = actions_executor
       @action_info = action_info
       setup(@action_info) if self.respond_to?(:setup)
     end

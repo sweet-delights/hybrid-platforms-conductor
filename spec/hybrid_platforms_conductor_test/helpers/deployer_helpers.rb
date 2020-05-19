@@ -137,7 +137,7 @@ module HybridPlatformsConductorTest
       # * Deployer: Deployer on which we can do testing
       def test_deployer
         unless @deployer
-          @deployer = HybridPlatformsConductor::Deployer.new logger: logger, logger_stderr: logger, cmd_runner: test_cmd_runner, nodes_handler: test_nodes_handler, ssh_executor: test_ssh_executor
+          @deployer = HybridPlatformsConductor::Deployer.new logger: logger, logger_stderr: logger, cmd_runner: test_cmd_runner, nodes_handler: test_nodes_handler, actions_executor: test_actions_executor
           @deployer.set_loggers_format
         end
         @deployer

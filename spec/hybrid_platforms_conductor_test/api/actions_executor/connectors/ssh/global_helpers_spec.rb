@@ -1,4 +1,4 @@
-describe HybridPlatformsConductor::SshExecutor do
+describe HybridPlatformsConductor::ActionsExecutor do
 
   context 'checking connector plugin ssh' do
 
@@ -9,7 +9,7 @@ describe HybridPlatformsConductor::SshExecutor do
       # Result::
       # * Connector: Connector to be tested
       def test_connector
-        test_ssh_executor.connector(:ssh)
+        test_actions_executor.connector(:ssh)
       end
 
       # Get the SSH config for a given node.
@@ -17,7 +17,7 @@ describe HybridPlatformsConductor::SshExecutor do
       #
       # Parameters::
       # * *node* (String or nil): The node we look the SSH config for, or nil for the global configuration
-      # * *ssh_config* (String or nil): The SSH config, or nil to get it from the test_ssh_executor [default: nil]
+      # * *ssh_config* (String or nil): The SSH config, or nil to get it from the test_actions_executor [default: nil]
       # * *nodes* (Array<String> or nil): List of nodes to give ssh_config, or nil for none. Used only if ssh_config is nil. [default: nil]
       # * *ssh_exec* (String or nil): SSH executable, or nil to keep default. Used only if ssh_config is nil. [default: nil]
       # * *known_hosts_file* (String or nil): Known host file to give. Used only if ssh_config is nil. [default: nil]
@@ -50,7 +50,7 @@ describe HybridPlatformsConductor::SshExecutor do
           expect(ssh_config_for(nil)).to eq <<~EOS
             Host *
               User test_user
-              ControlPath #{Dir.tmpdir}/hpc_ssh/hpc_ssh_executor_mux_%h_%p_%r
+              ControlPath #{Dir.tmpdir}/hpc_ssh/hpc_actions_executor_mux_%h_%p_%r
               PubkeyAcceptedKeyTypes +ssh-dss
           EOS
         end
@@ -62,7 +62,7 @@ describe HybridPlatformsConductor::SshExecutor do
           expect(ssh_config_for(nil)).to eq <<~EOS
             Host *
               User test_user
-              ControlPath #{Dir.tmpdir}/hpc_ssh/hpc_ssh_executor_mux_%h_%p_%r
+              ControlPath #{Dir.tmpdir}/hpc_ssh/hpc_actions_executor_mux_%h_%p_%r
               PubkeyAcceptedKeyTypes +ssh-dss
           EOS
         end
@@ -74,7 +74,7 @@ describe HybridPlatformsConductor::SshExecutor do
           expect(ssh_config_for(nil, known_hosts_file: '/path/to/known_hosts')).to eq <<~EOS
             Host *
               User test_user
-              ControlPath #{Dir.tmpdir}/hpc_ssh/hpc_ssh_executor_mux_%h_%p_%r
+              ControlPath #{Dir.tmpdir}/hpc_ssh/hpc_actions_executor_mux_%h_%p_%r
               PubkeyAcceptedKeyTypes +ssh-dss
               UserKnownHostsFile /path/to/known_hosts
           EOS
@@ -88,7 +88,7 @@ describe HybridPlatformsConductor::SshExecutor do
           expect(ssh_config_for(nil)).to eq <<~EOS
             Host *
               User test_user
-              ControlPath #{Dir.tmpdir}/hpc_ssh/hpc_ssh_executor_mux_%h_%p_%r
+              ControlPath #{Dir.tmpdir}/hpc_ssh/hpc_actions_executor_mux_%h_%p_%r
               PubkeyAcceptedKeyTypes +ssh-dss
               StrictHostKeyChecking no
           EOS

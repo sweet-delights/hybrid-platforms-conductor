@@ -133,7 +133,7 @@ module HybridPlatformsConductor
       ]
       @nodes_handler.prefetch_metadata_of @nodes_handler.known_nodes, metadata_properties
       @nodes_handler.known_nodes.each do |hostname|
-        @node_metadata[hostname] = Hash[metadata_properties.map { |property| [property, @nodes_handler.metadata_of(node, property)] }]
+        @node_metadata[hostname] = Hash[metadata_properties.map { |property| [property, @nodes_handler.metadata_of(hostname, property)] }]
       end
 
       # Small cache of hostnames used a lot to parse JSON
@@ -568,7 +568,7 @@ module HybridPlatformsConductor
       unless defined?(@known_ips)
         @known_ips = {}
         # Fill info from the metadata
-        @nodes_handler.prefvetch_metadata_of @nodes_handler.known_nodes, %i[private_ips public_ips]
+        @nodes_handler.prefetch_metadata_of @nodes_handler.known_nodes, %i[private_ips public_ips]
         @nodes_handler.known_nodes.each do |node|
           %i[private_ips public_ips].each do |ip_type|
             ips = @nodes_handler.metadata_of(node, ip_type)

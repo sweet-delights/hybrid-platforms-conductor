@@ -1,8 +1,8 @@
-describe HybridPlatformsConductor::SshExecutor do
+describe HybridPlatformsConductor::ActionsExecutor do
 
   context 'checking actions handling' do
 
-    # Instantiate a test platform, with the test action registered in SSH Executor.
+    # Instantiate a test platform, with the test action registered in Actions Executor.
     #
     # Parameters::
     # * Proc: Code called with the environment ready
@@ -16,20 +16,20 @@ describe HybridPlatformsConductor::SshExecutor do
 
     it 'executes a simple action on 1 node' do
       with_test_platform_for_actions do
-        test_ssh_executor.execute_actions('node1' => { test_action: 'Action executed' })
+        test_actions_executor.execute_actions('node1' => { test_action: 'Action executed' })
         expect(action_executions).to eq [{ node: 'node1', message: 'Action executed' }]
       end
     end
 
     it 'fails to execute an unknown action' do
       with_test_platform_for_actions do
-        expect { test_ssh_executor.execute_actions('node1' => { unknown_action: 'Action executed' }) }.to raise_error(/Unknown action type unknown_action/)
+        expect { test_actions_executor.execute_actions('node1' => { unknown_action: 'Action executed' }) }.to raise_error(/Unknown action type unknown_action/)
       end
     end
 
     it 'executes a simple action on several nodes' do
       with_test_platform_for_actions do
-        test_ssh_executor.execute_actions(%w[node1 node2 node3] => { test_action: 'Action executed' })
+        test_actions_executor.execute_actions(%w[node1 node2 node3] => { test_action: 'Action executed' })
         expect(action_executions).to eq [
           { node: 'node1', message: 'Action executed' },
           { node: 'node2', message: 'Action executed' },
@@ -40,7 +40,7 @@ describe HybridPlatformsConductor::SshExecutor do
 
     it 'executes several actions on 1 node' do
       with_test_platform_for_actions do
-        test_ssh_executor.execute_actions('node1' => [
+        test_actions_executor.execute_actions('node1' => [
           { test_action: 'Action 1 executed' },
           { test_action: 'Action 2 executed' },
           { test_action: 'Action 3 executed' }
@@ -55,7 +55,7 @@ describe HybridPlatformsConductor::SshExecutor do
 
     it 'executes different actions on several nodes' do
       with_test_platform_for_actions do
-        test_ssh_executor.execute_actions(
+        test_actions_executor.execute_actions(
           'node1' => { test_action: 'Action 1 executed' },
           'node2' => { test_action: 'Action 2 executed' },
           'node3' => { test_action: 'Action 3 executed' }
@@ -71,7 +71,7 @@ describe HybridPlatformsConductor::SshExecutor do
     it 'captures stdout and stderr from action correctly' do
       with_test_platform_for_actions do
         expect(
-          test_ssh_executor.execute_actions('node1' => { test_action: {
+          test_actions_executor.execute_actions('node1' => { test_action: {
             code: proc do |stdout, stderr|
               stdout << 'action_stdout'
               stderr << 'action_stderr'
@@ -85,7 +85,7 @@ describe HybridPlatformsConductor::SshExecutor do
       with_repository('logs') do |logs_repository|
         with_test_platform_for_actions do
           expect(
-            test_ssh_executor.execute_actions(
+            test_actions_executor.execute_actions(
               {
                 'node1' => { test_action: {
                   code: proc do |stdout, stderr|
@@ -105,7 +105,7 @@ describe HybridPlatformsConductor::SshExecutor do
     it 'captures stdout and stderr from action correctly when using run_cmd' do
       with_test_platform_for_actions do
         expect(
-          test_ssh_executor.execute_actions('node1' => { test_action: { run_cmd: 'echo action_stdout && >&2 echo action_stderr' } })
+          test_actions_executor.execute_actions('node1' => { test_action: { run_cmd: 'echo action_stdout && >&2 echo action_stderr' } })
         ).to eq('node1' => [0, "action_stdout\n", "action_stderr\n"])
       end
     end
@@ -113,7 +113,7 @@ describe HybridPlatformsConductor::SshExecutor do
     it 'captures stdout and stderr sequentially from several actions' do
       with_test_platform_for_actions do
         expect(
-          test_ssh_executor.execute_actions('node1' => [
+          test_actions_executor.execute_actions('node1' => [
             { test_action: {
               code: proc do |stdout, stderr|
                 stdout << 'action1_stdout '
@@ -137,7 +137,7 @@ describe HybridPlatformsConductor::SshExecutor do
     it 'dispatches stdout and stderr correctly among several nodes' do
       with_test_platform_for_actions do
         expect(
-          test_ssh_executor.execute_actions(
+          test_actions_executor.execute_actions(
             'node1' => { test_action: {
               code: proc do |stdout, stderr|
                 stdout << 'action1_stdout'
@@ -168,7 +168,7 @@ describe HybridPlatformsConductor::SshExecutor do
     it 'dispatches stdout and stderr correctly among several nodes with several actions' do
       with_test_platform_for_actions do
         expect(
-          test_ssh_executor.execute_actions(
+          test_actions_executor.execute_actions(
             'node1' => { test_action: {
               code: proc do |stdout, stderr|
                 stdout << 'action1_stdout '
@@ -215,7 +215,7 @@ describe HybridPlatformsConductor::SshExecutor do
     it 'executes several actions of different types' do
       with_test_platform_for_actions do
         actions_executed = []
-        expect(test_ssh_executor.execute_actions('node1' => [
+        expect(test_actions_executor.execute_actions('node1' => [
           { ruby: proc do |stdout, stderr|
             stdout << 'action1_stdout '
             stderr << 'action1_stderr '
@@ -235,7 +235,7 @@ describe HybridPlatformsConductor::SshExecutor do
     it 'executes several actions on 1 node specified using different selectors' do
       with_test_platform_for_actions do
         actions_executed = []
-        test_ssh_executor.execute_actions(
+        test_actions_executor.execute_actions(
           'node1' => { test_action: 'Action 1 executed' },
           '/node1/' => { test_action: 'Action 2 executed' }
         )
@@ -248,7 +248,7 @@ describe HybridPlatformsConductor::SshExecutor do
 
     it 'fails to execute an action on an unknown node' do
       with_test_platform_for_actions do
-        expect { test_ssh_executor.execute_actions('unknown_node' => { test_action: 'Action executed' }) }.to raise_error(RuntimeError, 'Unknown nodes: unknown_node')
+        expect { test_actions_executor.execute_actions('unknown_node' => { test_action: 'Action executed' }) }.to raise_error(RuntimeError, 'Unknown nodes: unknown_node')
         expect(action_executions).to eq []
       end
     end
@@ -256,7 +256,7 @@ describe HybridPlatformsConductor::SshExecutor do
     it 'fails to execute actions being interactive in parallel' do
       with_test_platform_for_actions do
         expect do
-          test_ssh_executor.execute_actions(
+          test_actions_executor.execute_actions(
             {
               'node1' => { test_action: 'Action executed' },
               'node2' => { interactive: true }
@@ -269,7 +269,7 @@ describe HybridPlatformsConductor::SshExecutor do
 
     it 'returns errors without failing for actions having command issues' do
       with_test_platform_for_actions do
-        expect(test_ssh_executor.execute_actions(
+        expect(test_actions_executor.execute_actions(
           'node1' => { test_action: { code: proc { |stdout| stdout << 'Action 1' } } },
           'node2' => { test_action: { code: proc { raise HybridPlatformsConductor::CmdRunner::UnexpectedExitCodeError, 'Command returned 1' } } },
           'node3' => { test_action: { code: proc { |stdout| stdout << 'Action 3' } } }
@@ -283,7 +283,7 @@ describe HybridPlatformsConductor::SshExecutor do
 
     it 'returns errors without failing for actions having timeout issues' do
       with_test_platform_for_actions do
-        expect(test_ssh_executor.execute_actions(
+        expect(test_actions_executor.execute_actions(
           'node1' => { test_action: { code: proc { |stdout| stdout << 'Action 1' } } },
           'node2' => { test_action: { code: proc { raise HybridPlatformsConductor::CmdRunner::TimeoutError } } },
           'node3' => { test_action: { code: proc { |stdout| stdout << 'Action 3' } } }
@@ -297,9 +297,9 @@ describe HybridPlatformsConductor::SshExecutor do
 
     it 'returns errors without failing for actions having connection issues' do
       with_test_platform_for_actions do
-        expect(test_ssh_executor.execute_actions(
+        expect(test_actions_executor.execute_actions(
           'node1' => { test_action: { code: proc { |stdout| stdout << 'Action 1' } } },
-          'node2' => { test_action: { code: proc { raise HybridPlatformsConductor::SshExecutor::ConnectionError, 'Can\'t connect' } } },
+          'node2' => { test_action: { code: proc { raise HybridPlatformsConductor::ActionsExecutor::ConnectionError, 'Can\'t connect' } } },
           'node3' => { test_action: { code: proc { |stdout| stdout << 'Action 3' } } }
         )).to eq(
           'node1' => [0, 'Action 1', ''],
@@ -311,7 +311,7 @@ describe HybridPlatformsConductor::SshExecutor do
 
     it 'returns errors without failing for actions having unhandled exceptions' do
       with_test_platform_for_actions do
-        expect(test_ssh_executor.execute_actions(
+        expect(test_actions_executor.execute_actions(
           'node1' => { test_action: { code: proc { |stdout| stdout << 'Action 1' } } },
           'node2' => { test_action: { code: proc { raise 'Strange error' } } },
           'node3' => { test_action: { code: proc { |stdout| stdout << 'Action 3' } } }
@@ -326,7 +326,7 @@ describe HybridPlatformsConductor::SshExecutor do
     it 'executes several actions on several nodes and returns the corresponding stdout and stderr correctly in files' do
       with_repository('logs') do |logs_repository|
         with_test_platform_for_actions do
-          expect(test_ssh_executor.execute_actions({
+          expect(test_actions_executor.execute_actions({
             'node1' => [
               { test_action: { code: proc do |stdout, stderr|
                 stdout << 'node1_action1_stdout '

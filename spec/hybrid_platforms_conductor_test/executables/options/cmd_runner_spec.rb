@@ -22,7 +22,7 @@ describe 'executables\' Cmd Runner options' do
 
   it 'displays commands instead of running them' do
     with_test_platform_for_cmd_runner_options do
-      expect_ssh_executor_runs([proc do
+      expect_actions_executor_runs([proc do
         expect(test_cmd_runner.dry_run).to eq true
         {}
       end])

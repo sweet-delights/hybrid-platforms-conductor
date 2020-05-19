@@ -18,8 +18,8 @@ module HybridPlatformsConductor
     #   Symbol
     attr_reader :platform_type
 
-    # Before deploying, need to set the command runner and SSH executor in case the plugins need them
-    attr_accessor :cmd_runner, :ssh_executor
+    # Before deploying, need to set the command runner and Actions Executor in case the plugins need them
+    attr_accessor :cmd_runner, :actions_executor
 
     # Constructor
     #

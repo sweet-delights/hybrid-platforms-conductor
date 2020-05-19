@@ -1,12 +1,12 @@
 describe HybridPlatformsConductor::TestsRunner do
 
-  context 'checking SSH node tests execution' do
+  context 'checking connection node tests execution' do
 
     # Prepare the test platform with test plugins
     #
     # Parameters::
     # * Proc: Code called with the platform setup
-    def with_test_platform_for_node_ssh_tests
+    def with_test_platform_for_node_connection_tests
       with_test_platforms(
         'platform1' => { nodes: { 'node11' => {}, 'node12' => {} } },
         'platform2' => { nodes: { 'node21' => {}, 'node22' => {} }, platform_type: :test2 }
@@ -52,8 +52,8 @@ describe HybridPlatformsConductor::TestsRunner do
     end
 
     it 'executes SSH node tests once per node with the correct command' do
-      with_test_platform_for_node_ssh_tests do
-        expect_ssh_executor_runs([proc { |actions| expect_actions_to_test_nodes(actions, %w[11 12 21 22]) }])
+      with_test_platform_for_node_connection_tests do
+        expect_actions_executor_runs([proc { |actions| expect_actions_to_test_nodes(actions, %w[11 12 21 22]) }])
         test_tests_runner.tests = [:node_ssh_test]
         ssh_executions = []
         HybridPlatformsConductorTest::TestPlugins::NodeSsh.node_tests = { node_ssh_test: {
@@ -73,8 +73,8 @@ describe HybridPlatformsConductor::TestsRunner do
     end
 
     it 'executes SSH node tests only on specified nodes' do
-      with_test_platform_for_node_ssh_tests do
-        expect_ssh_executor_runs([proc { |actions| expect_actions_to_test_nodes(actions, %w[12 22]) }])
+      with_test_platform_for_node_connection_tests do
+        expect_actions_executor_runs([proc { |actions| expect_actions_to_test_nodes(actions, %w[12 22]) }])
         test_tests_runner.tests = [:node_ssh_test]
         ssh_executions = []
         HybridPlatformsConductorTest::TestPlugins::NodeSsh.node_tests = { node_ssh_test: {
@@ -90,8 +90,8 @@ describe HybridPlatformsConductor::TestsRunner do
     end
 
     it 'executes several SSH node tests once per node with the correct command, grouping commands' do
-      with_test_platform_for_node_ssh_tests do
-        expect_ssh_executor_runs([proc do |actions|
+      with_test_platform_for_node_connection_tests do
+        expect_actions_executor_runs([proc do |actions|
           node_suffixes = %w[11 12 21 22]
           expect(actions.size).to eq node_suffixes.size
           node_suffixes.each do |node_suffix|
@@ -149,8 +149,8 @@ describe HybridPlatformsConductor::TestsRunner do
     end
 
     it 'fails an SSH node test when the SSH command returns non zero exit code' do
-      with_test_platform_for_node_ssh_tests do
-        expect_ssh_executor_runs([proc { |actions| expect_actions_to_test_nodes(actions, %w[11 12 21 22], fails_on: ['12']) }])
+      with_test_platform_for_node_connection_tests do
+        expect_actions_executor_runs([proc { |actions| expect_actions_to_test_nodes(actions, %w[11 12 21 22], fails_on: ['12']) }])
         test_tests_runner.tests = [:node_ssh_test]
         ssh_executions = []
         HybridPlatformsConductorTest::TestPlugins::NodeSsh.node_tests = { node_ssh_test: {
@@ -170,8 +170,8 @@ describe HybridPlatformsConductor::TestsRunner do
     end
 
     it 'fails an SSH node test when the command test code raises an error' do
-      with_test_platform_for_node_ssh_tests do
-        expect_ssh_executor_runs([proc { |actions| expect_actions_to_test_nodes(actions, %w[11 12 21 22], fails_on: ['12']) }])
+      with_test_platform_for_node_connection_tests do
+        expect_actions_executor_runs([proc { |actions| expect_actions_to_test_nodes(actions, %w[11 12 21 22], fails_on: ['12']) }])
         test_tests_runner.tests = [:node_ssh_test]
         ssh_executions = []
         HybridPlatformsConductorTest::TestPlugins::NodeSsh.node_tests = { node_ssh_test: {
@@ -190,9 +190,9 @@ describe HybridPlatformsConductor::TestsRunner do
     end
 
     it 'executes SSH node tests only on valid platform types' do
-      with_test_platform_for_node_ssh_tests do
+      with_test_platform_for_node_connection_tests do
         HybridPlatformsConductorTest::TestPlugins::NodeSsh.only_on_platform_types = %i[test2]
-        expect_ssh_executor_runs([proc { |actions| expect_actions_to_test_nodes(actions, %w[21 22]) }])
+        expect_actions_executor_runs([proc { |actions| expect_actions_to_test_nodes(actions, %w[21 22]) }])
         test_tests_runner.tests = [:node_ssh_test]
         ssh_executions = []
         HybridPlatformsConductorTest::TestPlugins::NodeSsh.node_tests = { node_ssh_test: {
@@ -208,9 +208,9 @@ describe HybridPlatformsConductor::TestsRunner do
     end
 
     it 'executes SSH node tests only on valid nodes' do
-      with_test_platform_for_node_ssh_tests do
+      with_test_platform_for_node_connection_tests do
         HybridPlatformsConductorTest::TestPlugins::NodeSsh.only_on_nodes = %w[node12 node22]
-        expect_ssh_executor_runs([proc { |actions| expect_actions_to_test_nodes(actions, %w[12 22]) }])
+        expect_actions_executor_runs([proc { |actions| expect_actions_to_test_nodes(actions, %w[12 22]) }])
         test_tests_runner.tests = [:node_ssh_test]
         ssh_executions = []
         HybridPlatformsConductorTest::TestPlugins::NodeSsh.node_tests = { node_ssh_test: {
@@ -226,10 +226,10 @@ describe HybridPlatformsConductor::TestsRunner do
     end
 
     it 'executes SSH node tests only on valid platform types and nodes' do
-      with_test_platform_for_node_ssh_tests do
+      with_test_platform_for_node_connection_tests do
         HybridPlatformsConductorTest::TestPlugins::NodeSsh.only_on_platform_types = %i[test2]
         HybridPlatformsConductorTest::TestPlugins::NodeSsh.only_on_nodes = %w[node12 node22]
-        expect_ssh_executor_runs([proc { |actions| expect_actions_to_test_nodes(actions, %w[22]) }])
+        expect_actions_executor_runs([proc { |actions| expect_actions_to_test_nodes(actions, %w[22]) }])
         test_tests_runner.tests = [:node_ssh_test]
         ssh_executions = []
         HybridPlatformsConductorTest::TestPlugins::NodeSsh.node_tests = { node_ssh_test: {
@@ -243,10 +243,10 @@ describe HybridPlatformsConductor::TestsRunner do
     end
 
     it 'executes SSH node tests in parallel' do
-      with_test_platform_for_node_ssh_tests do
-        expect_ssh_executor_runs([proc { |actions| expect_actions_to_test_nodes(actions, %w[11 12 21 22]) }])
+      with_test_platform_for_node_connection_tests do
+        expect_actions_executor_runs([proc { |actions| expect_actions_to_test_nodes(actions, %w[11 12 21 22]) }])
         test_tests_runner.tests = [:node_ssh_test]
-        test_tests_runner.max_threads_ssh_on_nodes = 43
+        test_tests_runner.max_threads_connection_on_nodes = 43
         ssh_executions = []
         HybridPlatformsConductorTest::TestPlugins::NodeSsh.node_tests = { node_ssh_test: {
           'node11' => { 'test_node11.sh' => proc { |stdout, exit_code| ssh_executions << ['node11', stdout, exit_code] } },
@@ -255,7 +255,7 @@ describe HybridPlatformsConductor::TestsRunner do
           'node22' => { 'test_node22.sh' => proc { |stdout, exit_code| ssh_executions << ['node22', stdout, exit_code] } }
         }}
         expect(test_tests_runner.run_tests([{ all: true }])).to eq 0
-        expect(test_tests_runner.max_threads_ssh_on_nodes).to eq 43
+        expect(test_tests_runner.max_threads_connection_on_nodes).to eq 43
         expect(ssh_executions.sort).to eq [
           ['node11', ['stdout11'], 0],
           ['node12', ['stdout12'], 0],

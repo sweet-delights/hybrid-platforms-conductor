@@ -3,7 +3,7 @@ require 'tmpdir'
 require 'hybrid_platforms_conductor/nodes_handler'
 require 'hybrid_platforms_conductor/platform_handler'
 require 'hybrid_platforms_conductor/cmd_runner'
-require 'hybrid_platforms_conductor/ssh_executor'
+require 'hybrid_platforms_conductor/actions_executor'
 require 'hybrid_platforms_conductor/deployer'
 require 'hybrid_platforms_conductor/tests_runner'
 require 'hybrid_platforms_conductor/reports_handler'
@@ -19,7 +19,7 @@ require 'hybrid_platforms_conductor_test/helpers/platform_handler_helpers'
 require 'hybrid_platforms_conductor_test/helpers/cmd_runner_helpers'
 require 'hybrid_platforms_conductor_test/helpers/connector_ssh_helpers'
 require 'hybrid_platforms_conductor_test/helpers/nodes_handler_helpers'
-require 'hybrid_platforms_conductor_test/helpers/ssh_executor_helpers'
+require 'hybrid_platforms_conductor_test/helpers/actions_executor_helpers'
 require 'hybrid_platforms_conductor_test/helpers/deployer_helpers'
 require 'hybrid_platforms_conductor_test/helpers/deployer_test_helpers'
 require 'hybrid_platforms_conductor_test/helpers/tests_runner_helpers'
@@ -42,7 +42,7 @@ module HybridPlatformsConductorTest
     include CmdRunnerHelpers
     include ConnectorSshHelpers
     include NodesHandlerHelpers
-    include SshExecutorHelpers
+    include ActionsExecutorHelpers
     include DeployerHelpers
     include TestsRunnerHelpers
     include ReportsHandlerHelpers
@@ -54,7 +54,7 @@ module HybridPlatformsConductorTest
       config.before(:each) do
         @nodes_handler = nil
         @cmd_runner = nil
-        @ssh_executor = nil
+        @actions_executor = nil
         @deployer = nil
         @tests_runner = nil
         ENV.delete 'hpc_ssh_gateways_conf'

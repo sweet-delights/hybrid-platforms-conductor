@@ -22,7 +22,7 @@ executable = HybridPlatformsConductor::Executable.new do |opts|
     timeout = nbr_secs.to_i
   end
 end
-ssh_executor = executable.ssh_executor
+actions_executor = executable.actions_executor
 
 executable.parse_options!
 raise '--interactive or --command options have to be present' if commands.empty? && !interactive
@@ -31,7 +31,7 @@ raise 'No node selected. Please use --node option to set at least one.' if execu
 actions = []
 actions << { remote_bash: commands } unless commands.empty?
 actions << { interactive: true } if interactive
-ssh_executor.execute_actions(
+actions_executor.execute_actions(
   { executable.selected_nodes => actions },
   timeout: timeout,
   concurrent: concurrent_execution,

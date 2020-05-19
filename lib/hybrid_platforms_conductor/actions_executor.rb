@@ -12,8 +12,8 @@ require 'hybrid_platforms_conductor/nodes_handler'
 
 module HybridPlatformsConductor
 
-  # Gives ways to execute SSH commands on the nodes
-  class SshExecutor
+  # Gives ways to execute actions on the nodes
+  class ActionsExecutor
 
     # Error class returned when the issue is due to a connection issue to the node
     class ConnectionError < RuntimeError
@@ -70,17 +70,19 @@ module HybridPlatformsConductor
         end]
     end
 
-    # Complete an option parser with options meant to control this SSH executor
+    # Complete an option parser with options meant to control this Actions Executor
     #
     # Parameters::
     # * *options_parser* (OptionParser): The option parser to complete
     # * *parallel* (Boolean): Do we activate options regarding parallel execution? [default = true]
     def options_parse(options_parser, parallel: true)
-      options_parser.separator ''
-      options_parser.separator 'SSH executor options:'
-      options_parser.on('-m', '--max-threads NBR', "Set the number of threads to use for concurrent queries (defaults to #{@max_threads})") do |nbr_threads|
-        @max_threads = nbr_threads.to_i
-      end if parallel
+      if parallel
+        options_parser.separator ''
+        options_parser.separator 'Actions Executor options:'
+        options_parser.on('-m', '--max-threads NBR', "Set the number of threads to use for concurrent queries (defaults to #{@max_threads})") do |nbr_threads|
+          @max_threads = nbr_threads.to_i
+        end
+      end
       # Display options connectors might have
       @connector_plugins.each do |connector_name, connector|
         if connector.respond_to?(:options_parse)
@@ -129,7 +131,7 @@ module HybridPlatformsConductor
               logger: @logger,
               logger_stderr: @logger_stderr,
               cmd_runner: @cmd_runner,
-              ssh_executor: self,
+              actions_executor: self,
               action_info: action_info
             )
             need_remote = true if action.need_connector?

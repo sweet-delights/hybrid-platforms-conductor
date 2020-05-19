@@ -1,4 +1,4 @@
-describe HybridPlatformsConductor::SshExecutor do
+describe HybridPlatformsConductor::ActionsExecutor do
 
   context 'checking connector plugin ssh' do
 
@@ -9,7 +9,7 @@ describe HybridPlatformsConductor::SshExecutor do
       # Result::
       # * Connector: Connector to be tested
       def test_connector
-        test_ssh_executor.connector(:ssh)
+        test_actions_executor.connector(:ssh)
       end
 
       it 'selects connectable nodes correctly' do

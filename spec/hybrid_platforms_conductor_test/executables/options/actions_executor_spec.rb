@@ -1,4 +1,4 @@
-describe 'executables\' SSH Executor options' do
+describe 'executables\' Actions Executor options' do
 
   # Setup a platform for tests
   #
@@ -6,7 +6,7 @@ describe 'executables\' SSH Executor options' do
   # * Proc: Code called when the platform is setup
   #   * Parameters::
   #     * *repository* (String): Platform's repository
-  def with_test_platform_for_ssh_executor_options
+  def with_test_platform_for_actions_executor_options
     with_test_platform(
       { nodes: { 'node' => {} } },
       false,
@@ -21,9 +21,9 @@ describe 'executables\' SSH Executor options' do
   end
 
   it 'drives the maximum number of threads' do
-    with_test_platform_for_ssh_executor_options do
-      expect_ssh_executor_runs([proc do |actions, timeout: nil, concurrent: false, log_to_dir: 'run_logs', log_to_stdout: true|
-        expect(test_ssh_executor.max_threads).to eq 5
+    with_test_platform_for_actions_executor_options do
+      expect_actions_executor_runs([proc do |actions, timeout: nil, concurrent: false, log_to_dir: 'run_logs', log_to_stdout: true|
+        expect(test_actions_executor.max_threads).to eq 5
         {}
       end])
       exit_code, stdout, stderr = run 'ssh_run', '--node', 'node', '--command', 'echo Hello', '--max-threads', '5'

@@ -110,13 +110,13 @@ describe 'executables\' Tests Runner options' do
     end
   end
 
-  it 'specifies the number of max threads for ssh connections to nodes' do
+  it 'specifies the number of max threads for connections to nodes' do
     with_test_platform_for_tests_runner_options do
       expect(test_tests_runner).to receive(:run_tests).with([]) do
-        expect(test_tests_runner.max_threads_ssh_on_nodes).to eq 43
+        expect(test_tests_runner.max_threads_connection_on_nodes).to eq 43
         0
       end
-      exit_code, stdout, stderr = run 'test', '--max-threads-ssh', '43'
+      exit_code, stdout, stderr = run 'test', '--max-threads-connections', '43'
       expect(exit_code).to eq 0
       expect(stdout).to eq ''
       expect(stderr).to eq ''

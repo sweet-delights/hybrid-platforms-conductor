@@ -30,14 +30,14 @@ executable = HybridPlatformsConductor::Executable.new do |opts|
   end
 end
 nodes_handler = executable.nodes_handler
-ssh_executor = executable.ssh_executor
-ssh_executor.max_threads = 64
+actions_executor = executable.actions_executor
+actions_executor.max_threads = 64
 
 executable.parse_options!
 raise "Unknown sort name: #{sort_by}. Should be one of #{possible_sorts.keys.join(', ')}." unless possible_sorts.key?(sort_by)
 nodes = executable.selected_nodes.empty? ? [{ all: true }] : executable.selected_nodes
 
-sorted_deploy_info = Hash[ssh_executor.
+sorted_deploy_info = Hash[actions_executor.
   execute_actions(
     Hash[nodes_handler.select_nodes(nodes).map do |node|
       [

@@ -99,7 +99,7 @@ module HybridPlatformsConductorTest
     # Package the repository, ready to be deployed on artefacts or directly to a node.
     # [API] - This method is mandatory.
     # [API] - @cmd_runner is accessible.
-    # [API] - @ssh_executor is accessible.
+    # [API] - @actions_executor is accessible.
     def package
       platform_info[:package].call if platform_info.key?(:package)
     end
@@ -109,7 +109,7 @@ module HybridPlatformsConductorTest
     # This method won't be called in case of a direct deploy to the node.
     # [API] - This method is mandatory.
     # [API] - @cmd_runner is accessible.
-    # [API] - @ssh_executor is accessible.
+    # [API] - @actions_executor is accessible.
     #
     # Parameters::
     # * *node* (String): Node to deliver for
@@ -130,7 +130,7 @@ module HybridPlatformsConductorTest
     # Those actions can be executed in parallel with other deployments on other nodes. They must be thread safe.
     # [API] - This method is mandatory.
     # [API] - @cmd_runner is accessible.
-    # [API] - @ssh_executor is accessible.
+    # [API] - @actions_executor is accessible.
     #
     # Parameters::
     # * *node* (String): Node to deploy on
@@ -148,7 +148,7 @@ module HybridPlatformsConductorTest
     # Register secrets given in JSON format
     # [API] - This method is mandatory.
     # [API] - @cmd_runner is accessible.
-    # [API] - @ssh_executor is accessible.
+    # [API] - @actions_executor is accessible.
     #
     # Parameters::
     # * *json* (Hash<String,Object>): JSON secrets

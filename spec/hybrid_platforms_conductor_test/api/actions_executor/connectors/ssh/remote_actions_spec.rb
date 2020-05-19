@@ -1,4 +1,4 @@
-describe HybridPlatformsConductor::SshExecutor do
+describe HybridPlatformsConductor::ActionsExecutor do
 
   context 'checking connector plugin ssh' do
 
@@ -9,10 +9,10 @@ describe HybridPlatformsConductor::SshExecutor do
       # Result::
       # * Connector: Connector to be tested
       def test_connector
-        test_ssh_executor.connector(:ssh)
+        test_actions_executor.connector(:ssh)
       end
 
-      # Get a test platform and the connector prepared the same way SSH executor does before calling remote_* methods
+      # Get a test platform and the connector prepared the same way Actions Executor does before calling remote_* methods
       #
       # Parameters::
       # * *expected_cmds* (Array< [String or Regexp, Proc] >): The expected commands that should be used, and their corresponding mocked code [default: []]

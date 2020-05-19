@@ -1,6 +1,6 @@
 module HybridPlatformsConductorTest
 
-  # Dummy action plugin that can be used to test interactions between SSH Executor and actions
+  # Dummy action plugin that can be used to test interactions between Actions Executor and actions
   class TestAction < HybridPlatformsConductor::Action
 
     class << self
