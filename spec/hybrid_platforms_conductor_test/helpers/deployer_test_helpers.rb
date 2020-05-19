@@ -37,7 +37,7 @@ module HybridPlatformsConductorTest
 
           it 'deploys on 1 node using root' do
             with_platform_to_deploy(expect_sudo: false) do
-              test_ssh_executor.ssh_user = 'root'
+              test_ssh_executor.connector(:ssh).ssh_user = 'root'
               expect(test_deployer.deploy_on('node')).to eq('node' => expected_deploy_result)
             end
           end
@@ -137,7 +137,7 @@ module HybridPlatformsConductorTest
               FileUtils.mkdir_p certs_dir
               File.write("#{certs_dir}/test_cert.crt", 'Hello')
               ENV['hpc_certificates'] = certs_dir
-              test_ssh_executor.ssh_user = 'root'
+              test_ssh_executor.connector(:ssh).ssh_user = 'root'
               test_deployer.prepare_for_local_environment
               expected_actions = [
                 # First run, we expect the mutex to be setup, and the deployment actions to be run
@@ -218,7 +218,7 @@ module HybridPlatformsConductorTest
               FileUtils.mkdir_p certs_dir
               File.write("#{certs_dir}/test_cert.crt", 'Hello')
               ENV['hpc_certificates'] = certs_dir
-              test_ssh_executor.ssh_user = 'root'
+              test_ssh_executor.connector(:ssh).ssh_user = 'root'
               test_deployer.prepare_for_local_environment
               expected_actions = [
                 # First run, we expect the mutex to be setup, and the deployment actions to be run

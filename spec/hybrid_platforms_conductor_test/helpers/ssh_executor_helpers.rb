@@ -131,10 +131,9 @@ module HybridPlatformsConductorTest
       # * *expected_nodes* (Array<String>): List of nodes that should have masters created
       # * Proc: Code called with the SSH Executor mocked
       def with_ssh_master_mocked_on(expected_nodes)
-        expect(test_ssh_executor).to receive(:with_ssh_master_to) do |nodes, timeout: nil, no_exception: false, &client_code|
-          nodes = [nodes] if nodes.is_a?(String)
+        expect(test_ssh_executor).to receive(:with_connections_prepared_to) do |nodes, no_exception: false, &client_code|
           expect(nodes.sort).to eq expected_nodes.sort
-          client_code.call 'ssh', Hash[nodes.map { |node| [node, "test_user@hpc.#{node}"] }]
+          client_code.call Hash[nodes.map { |node| [node, test_ssh_executor.connector(:test_connector)] }]
         end
         yield
       end
