@@ -1,3 +1,9 @@
+# [14.0.1](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv14.0.0&sourceBranch=refs%2Ftags%2Fv14.0.1) (2020-05-19)
+
+### Fixes
+
+* Removed ssh directory locks by having 1 different dir per usage ([f90a2132](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/commits/f90a21327c9d5b4953ef6f1aaeec405d797392ea))
+
 # [14.0.0](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv13.0.0&sourceBranch=refs%2Ftags%2Fv14.0.0) (2020-04-29)
 
 ### Breaking changes
