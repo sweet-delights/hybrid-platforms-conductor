@@ -108,7 +108,7 @@ describe HybridPlatformsConductor::TestsRunner do
         test_tests_runner.tests = [:node_test]
         test_tests_runner.max_threads_nodes = 6
         HybridPlatformsConductorTest::TestPlugins::Node.sleeps = { node_test: {
-          'node11' => 2.5,
+          'node11' => 3.0,
           'node12' => 0.5,
           'node13' => 1.5,
           'node21' => 2.0,
