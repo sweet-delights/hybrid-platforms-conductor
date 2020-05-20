@@ -10,15 +10,10 @@ module HybridPlatformsConductor
         # Check my_test_plugin.rb.sample documentation for signature details.
         def test
           # Get a map of VEIDs per node
+          @nodes_handler.prefetch_metadata_of @nodes_handler.known_nodes, :veid
           veids = Hash[@nodes_handler.
             known_nodes.
-            map do |node|
-              conf = @nodes_handler.metadata_for node
-              [
-                node,
-                conf.key?('veid') ? conf['veid'].to_i : nil
-              ]
-            end
+            map { |node| [node, @nodes_handler.get_veid_of(node) ? @nodes_handler.get_veid_of(node).to_i : nil] }
           ]
 
           # Check there are no duplicates

@@ -1,0 +1,31 @@
+require 'hybrid_platforms_conductor/logger_helpers'
+
+module HybridPlatformsConductor
+
+  # Base class for any CMDB plugin
+  class Cmdb
+
+    include LoggerHelpers
+
+    # Constructor
+    #
+    # Parameters::
+    # * *logger* (Logger): Logger to be used [default: Logger.new(STDOUT)]
+    # * *logger_stderr* (Logger): Logger to be used for stderr [default: Logger.new(STDERR)]
+    # * *nodes_handler* (NodesHandler): Nodes Handler to be used. [default: NodesHandler.new]
+    # * *cmd_runner* (CmdRunner): Command Runner to be used. [default: CmdRunner.new]
+    def initialize(
+      logger: Logger.new(STDOUT),
+      logger_stderr: Logger.new(STDERR),
+      nodes_handler: NodesHandler.new,
+      cmd_runner: CmdRunner.new
+    )
+      @logger = logger
+      @logger_stderr = logger_stderr
+      @nodes_handler = nodes_handler
+      @cmd_runner = cmd_runner
+    end
+
+  end
+
+end

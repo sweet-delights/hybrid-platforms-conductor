@@ -225,7 +225,7 @@ describe HybridPlatformsConductor::SshExecutor do
             with_control_master_check: true,
             cmd_runner: second_cmd_runner
           ) do
-            second_nodes_handler = HybridPlatformsConductor::NodesHandler.new logger: logger, logger_stderr: logger
+            second_nodes_handler = HybridPlatformsConductor::NodesHandler.new logger: logger, logger_stderr: logger, cmd_runner: second_cmd_runner
             second_ssh_executor = HybridPlatformsConductor::SshExecutor.new logger: logger, logger_stderr: logger, cmd_runner: second_cmd_runner, nodes_handler: second_nodes_handler
             second_ssh_executor.ssh_user = 'test_user'
             # Wait for the first thread to create ControlMaster

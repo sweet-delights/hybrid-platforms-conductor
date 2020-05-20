@@ -22,6 +22,7 @@ module HybridPlatformsConductor
           gui: 'GUI',
           handled_by_chef: 'Handled by Chef',
           hosted_on: 'Hosted on',
+          hostname: 'Hostname',
           image: 'Image',
           kernel: 'Kernel',
           location: 'Location',
@@ -74,14 +75,17 @@ This page has been generated using <code>./bin/report --format mediawiki</code> 
 
 "
         # Get all confs
+        # Use the translations' keys to know all properties we want to display
+        all_properties = (%i[physical_node cluster private_ips description] + locale.keys).uniq
+        @nodes_handler.prefetch_metadata_of nodes, locale.keys
         nodes.
           map do |node|
-            { 'node' => node }.merge(@nodes_handler.metadata_for(node))
+            { node: node }.merge(Hash[all_properties.map { |property| [property, @nodes_handler.metadata_of(node, property)] }])
           end.
           # Group them by physical / VMs
           group_by do |node_info|
             # Consume the info to not display it again later
-            physical_node = node_info.delete('physical_node')
+            physical_node = node_info.delete(:physical_node)
             !physical_node.nil? && physical_node
           end.
           each do |physical, nodes_for_physical|
@@ -90,7 +94,7 @@ This page has been generated using <code>./bin/report --format mediawiki</code> 
             nodes_for_physical.
               group_by do |node_info|
                 # Consume the info to not display it again later
-                cluster = node_info.delete('cluster')
+                cluster = node_info.delete(:cluster)
                 cluster.nil? ? '' : cluster
               end.
               sort.
@@ -98,33 +102,34 @@ This page has been generated using <code>./bin/report --format mediawiki</code> 
                 output << "== #{cluster.empty? ? 'Independent nodes' : "Belonging to cluster #{cluster}"} ==\n\n"
                 # Group them by IP range (24 bits)
                 nodes_for_cluster.
-                  group_by { |node_info| node_info['private_ips'].nil? || node_info['private_ips'].empty? ? [] : node_info['private_ips'].first.split('.')[0..2].map(&:to_i) }.
+                  group_by { |node_info| node_info[:private_ips].nil? || node_info[:private_ips].empty? ? [] : node_info[:private_ips].first.split('.')[0..2].map(&:to_i) }.
                   sort.
                   each do |ip_range, nodes_for_ip_range|
                     output << "=== #{ip_range.empty? ? 'No IP' : "#{ip_range.join('.')}/24"} ===\n\n"
                     nodes_for_ip_range.
-                      sort_by { |node_info| node_info['node'] }.
+                      sort_by { |node_info| node_info[:node] }.
                       each do |node_info|
-                        output << "* '''#{node_info.delete('node')}'''#{node_info['private_ips'].nil? || node_info['private_ips'].empty? ? '' : " - #{node_info['private_ips'].first}"} - #{node_info.delete('description')}\n"
-                        node_info.delete('private_ips') if !node_info['private_ips'].nil? && node_info['private_ips'].size == 1
-                        output << node_info.sort.map do |key, value|
-                          key_sym = key.to_sym
-                          raise "Missing translation of key: #{key_sym}. Please edit TRANSLATIONS[:#{locale_code}]." unless locale.key?(key_sym)
-                          formatted_value =
-                            if value.is_a?(Array)
-                              "\n#{value.map { |item| "::* #{item}" }.join("\n")}"
-                            elsif value.is_a?(Hash)
-                              "\n#{value.map { |item, value| "::* #{item}: #{value}" }.join("\n")}"
-                            elsif value.is_a?(TrueClass)
-                              locale[:true]
-                            elsif value.is_a?(FalseClass)
-                              locale[:false]
-                            else
-                              value.to_str
-                            end
-                          ": #{locale[key_sym]}: #{formatted_value}"
-                        end.join("\n")
-                        output << "\n\n\n"
+                        output << "* '''#{node_info.delete(:node)}'''#{node_info[:private_ips].nil? || node_info[:private_ips].empty? ? '' : " - #{node_info[:private_ips].first}"} - #{node_info.delete(:description)}\n"
+                        node_info.delete(:private_ips) if !node_info[:private_ips].nil? && node_info[:private_ips].size == 1
+                        node_info.sort.each do |property, value|
+                          unless value.nil?
+                            raise "Missing translation of key: #{property}. Please edit TRANSLATIONS[:#{locale_code}]." unless locale.key?(property)
+                            formatted_value =
+                              if value.is_a?(Array)
+                                "\n#{value.map { |item| "::* #{item}" }.join("\n")}"
+                              elsif value.is_a?(Hash)
+                                "\n#{value.map { |item, value| "::* #{item}: #{value}" }.join("\n")}"
+                              elsif value.is_a?(TrueClass)
+                                locale[:true]
+                              elsif value.is_a?(FalseClass)
+                                locale[:false]
+                              else
+                                value.to_str
+                              end
+                            output << ": #{locale[property]}: #{formatted_value}\n"
+                          end
+                        end
+                        output << "\n\n"
                       end
                   end
               end

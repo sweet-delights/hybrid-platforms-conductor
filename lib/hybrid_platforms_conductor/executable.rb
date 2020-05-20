@@ -82,7 +82,7 @@ module HybridPlatformsConductor
     # Result::
     # * NodesHandler: The Nodes Handler to be used by this executable
     def nodes_handler
-      @nodes_handler = NodesHandler.new(logger: @logger, logger_stderr: @logger_stderr) if @nodes_handler.nil?
+      @nodes_handler = NodesHandler.new(logger: @logger, logger_stderr: @logger_stderr, cmd_runner: cmd_runner) if @nodes_handler.nil?
       @nodes_handler
     end
 

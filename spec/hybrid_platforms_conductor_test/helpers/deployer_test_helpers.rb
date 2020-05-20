@@ -80,7 +80,7 @@ module HybridPlatformsConductorTest
 
           it 'deploys on 1 node in local environment with certificates to install using hpc_certificates on Debian' do
             with_platform_to_deploy(
-              nodes_info: { nodes: { 'node' => { meta: { 'image' => 'debian_9' } } } },
+              nodes_info: { nodes: { 'node' => { meta: { image: 'debian_9' } } } },
               expect_default_actions: false
             ) do |repository|
               certs_dir = "#{repository}/certificates"
@@ -118,7 +118,7 @@ module HybridPlatformsConductorTest
           end
 
           it 'deploys on 1 node with certificates to install using hpc_certificates on Debian but ignores them in non-local environment' do
-            with_platform_to_deploy(nodes_info: { nodes: { 'node' => { meta: { 'image' => 'debian_9' } } } }) do |repository|
+            with_platform_to_deploy(nodes_info: { nodes: { 'node' => { meta: { image: 'debian_9' } } } }) do |repository|
               certs_dir = "#{repository}/certificates"
               FileUtils.mkdir_p certs_dir
               File.write("#{certs_dir}/test_cert.crt", 'Hello')
@@ -129,7 +129,7 @@ module HybridPlatformsConductorTest
 
           it 'deploys on 1 node with certificates to install using hpc_certificates on Debian using root' do
             with_platform_to_deploy(
-              nodes_info: { nodes: { 'node' => { meta: { 'image' => 'debian_9' } } } },
+              nodes_info: { nodes: { 'node' => { meta: { image: 'debian_9' } } } },
               expect_sudo: false,
               expect_default_actions: false
             ) do |repository|
@@ -171,7 +171,7 @@ module HybridPlatformsConductorTest
 
           it 'deploys on 1 node with certificates to install using hpc_certificates on CentOS' do
             with_platform_to_deploy(
-              nodes_info: { nodes: { 'node' => { meta: { 'image' => 'centos_7' } } } },
+              nodes_info: { nodes: { 'node' => { meta: { image: 'centos_7' } } } },
               expect_default_actions: false
             ) do |repository|
               certs_dir = "#{repository}/certificates"
@@ -210,7 +210,7 @@ module HybridPlatformsConductorTest
 
           it 'deploys on 1 node with certificates to install using hpc_certificates on CentOS using root' do
             with_platform_to_deploy(
-              nodes_info: { nodes: { 'node' => { meta: { 'image' => 'centos_7' } } } },
+              nodes_info: { nodes: { 'node' => { meta: { image: 'centos_7' } } } },
               expect_sudo: false,
               expect_default_actions: false
             ) do |repository|

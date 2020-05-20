@@ -274,9 +274,10 @@ module HybridPlatformsConductor
       EOS
 
       # Add each node
+      # Query for the metadata of all nodes at once
+      @nodes_handler.prefetch_metadata_of nodes, %i[private_ips hostname description]
       nodes.sort.each do |node|
-        conf = @nodes_handler.metadata_for node
-        (conf.key?('private_ips') ? conf['private_ips'].sort : [nil]).each.with_index do |private_ip, idx|
+        (@nodes_handler.get_private_ips_of(node) || [nil]).sort.each.with_index do |private_ip, idx|
           # Generate the conf for the node
           connection, gateway, gateway_user = connection_info_for(node)
           aliases = ssh_aliases_for(node, private_ip)
@@ -288,7 +289,7 @@ module HybridPlatformsConductor
               aliases << inv_connection
             end
           end
-          config_content << "# #{node} - #{private_ip.nil? ? 'Unknown IP address' : private_ip} - #{@nodes_handler.platform_for(node).repository_path}#{conf.key?('description') ? " - #{conf['description']}" : ''}\n"
+          config_content << "# #{node} - #{private_ip.nil? ? 'Unknown IP address' : private_ip} - #{@nodes_handler.platform_for(node).repository_path} - #{@nodes_handler.get_description_of(node) || ''}\n"
           config_content << "Host #{aliases.join(' ')}\n"
           config_content << "  Hostname #{connection}\n"
           config_content << "  ProxyCommand #{ssh_exec} -q -W %h:%p #{gateway_user}@#{gateway}\n" unless gateway.nil?

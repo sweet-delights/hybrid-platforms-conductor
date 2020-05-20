@@ -17,7 +17,7 @@ describe 'executables\' Nodes Handler options' do
              },
             'node12' => {
               connection: 'node12_connection',
-               meta: { 'description' => 'Node12 description' },
+               meta: { description: 'Node12 description' },
                services: ['service1']
              },
             'node13' => {

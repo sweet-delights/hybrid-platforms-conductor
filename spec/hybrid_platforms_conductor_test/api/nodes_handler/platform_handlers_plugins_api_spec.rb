@@ -1,6 +1,6 @@
 describe HybridPlatformsConductor::NodesHandler do
 
-  context 'checking plugins\' API called by NodesHandler' do
+  context 'checking Platform Handlers plugins\' API called by NodesHandler' do
 
     it 'returns nodes' do
       with_test_platform(nodes: { 'node1' => {}, 'node2' => {} }) do
@@ -55,12 +55,6 @@ describe HybridPlatformsConductor::NodesHandler do
       end
     end
 
-    it 'returns nodes metadata' do
-      with_test_platform(nodes: { 'test_node' => { meta: { 'metadata_name' => 'value' } } }) do
-        expect(test_nodes_handler.metadata_for('test_node')).to eq({ 'metadata_name' => 'value' })
-      end
-    end
-
     it 'returns nodes connection' do
       with_test_platform(nodes: { 'test_node' => { connection: 'test_node.my_host.com' } }) do
         expect(test_nodes_handler.connection_for('test_node')).to eq ['test_node.my_host.com', nil, nil]
@@ -70,12 +64,6 @@ describe HybridPlatformsConductor::NodesHandler do
     it 'returns nodes connection with gateways information' do
       with_test_platform(nodes: { 'test_node' => { connection: { connection: 'test_node.my_host.com', gateway: 'test_gateway', gateway_user: 'test_gateway_user' } } }) do
         expect(test_nodes_handler.connection_for('test_node')).to eq ['test_node.my_host.com', 'test_gateway', 'test_gateway_user']
-      end
-    end
-
-    it 'returns nodes services' do
-      with_test_platform(nodes: { 'test_node' => { services: ['test_service1', 'test_service2'] } }) do
-        expect(test_nodes_handler.services_for('test_node').sort).to eq(['test_service1', 'test_service2'].sort)
       end
     end
 

@@ -1478,10 +1478,8 @@ hosts = nodes_handler.known_nodes
 # Get the IP or hostname of node23hst-nn2, along with eventual gateway and gateway's user to be used to connect to it
 ip, gateway, gateway_user = nodes_handler.connection_for 'node23hst-nn2'
 
-# Get the node metadata of node23hst-nn2, as a JSON Hash object
-conf = nodes_handler.metadata_for 'node23hst-nn2'
-# Display its description from its metadata
-puts conf['description']
+# Display the node's description of node23hst-nn2, taken from its metadata
+puts nodes_handler.get_description_of 'node23hst-nn2'
 ```
 
 ## SshExecutor

@@ -10,15 +10,10 @@ module HybridPlatformsConductor
         # Check my_test_plugin.rb.sample documentation for signature details.
         def test
           # Get a map of private IPs per node
+          @nodes_handler.prefetch_metadata_of @nodes_handler.known_nodes, :private_ips
           private_ips = Hash[@nodes_handler.
             known_nodes.
-            map do |node|
-              conf = @nodes_handler.metadata_for node
-              [
-                node,
-                conf.key?('private_ips') ? conf['private_ips'] : []
-              ]
-            end
+            map { |node| [node, @nodes_handler.get_private_ips_of(node) || []] }
           ]
 
           # Check there are no duplicates
