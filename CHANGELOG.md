@@ -1,3 +1,9 @@
+# [16.0.1](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv16.0.0&sourceBranch=refs%2Ftags%2Fv16.0.1) (2020-05-20)
+
+### Fixes
+
+* Take host keys from CMDB and use them to generate known_hosts file ([cd03c51a](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/commits/cd03c51ab07698149c3d55bee0e327c3901180b8))
+
 # [16.0.0](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv15.0.0&sourceBranch=refs%2Ftags%2Fv16.0.0) (2020-05-20)
 
 ### Breaking changes
