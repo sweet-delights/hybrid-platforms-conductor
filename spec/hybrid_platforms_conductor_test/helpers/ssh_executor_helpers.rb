@@ -27,38 +27,35 @@ module HybridPlatformsConductorTest
       )
         nodes_connections.map do |node, node_connection_info|
           node_connection_info[:times] = 1 unless node_connection_info.key?(:times)
-          expected_ssh_commands = []
+          ssh_commands_once = []
+          ssh_commands_per_connection = []
           if with_strict_host_key_checking
-            expected_ssh_commands.concat([
+            ssh_commands_once.concat([
               [
                 "ssh-keyscan #{node_connection_info[:connection]}",
-                proc { [0, 'fake_host_key', ''] }
-              ],
-              [
-                /^ssh-keygen -R #{Regexp.escape(node_connection_info[:connection])} -f .+\/known_hosts$/,
-                proc { [0, '', ''] }
+                proc { [0, "#{node_connection_info[:connection]} ssh-rsa fake_host_key_for_#{node_connection_info[:connection]}", ''] }
               ]
             ])
           end
           if with_control_master_create
-            expected_ssh_commands << [
+            ssh_commands_per_connection << [
               /^.+\/ssh -o BatchMode=yes -o ControlMaster=yes -o ControlPersist=yes #{Regexp.escape(node_connection_info[:user])}@hpc.#{Regexp.escape(node)} true$/,
               proc { [0, '', ''] }
             ]
           end
           if with_control_master_check
-            expected_ssh_commands << [
+            ssh_commands_per_connection << [
               /^.+\/ssh -O check #{Regexp.escape(node_connection_info[:user])}@hpc.#{Regexp.escape(node)}$/,
               proc { [0, '', ''] }
             ]
           end
           if with_control_master_destroy
-            expected_ssh_commands << [
+            ssh_commands_per_connection << [
               /^.+\/ssh -O exit #{Regexp.escape(node_connection_info[:user])}@hpc.#{Regexp.escape(node)} 2>&1 | grep -v 'Exit request sent.'$/,
               proc { [1, '', ''] }
             ]
           end
-          expected_ssh_commands * node_connection_info[:times]
+          ssh_commands_once + ssh_commands_per_connection * node_connection_info[:times]
         end.flatten(1)
       end
 

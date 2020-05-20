@@ -102,6 +102,7 @@ describe HybridPlatformsConductor::SshExecutor do
             [remote_bash_for('echo Hello1', node: 'node', user: 'test_user'), proc { [0, "Hello1\n", ''] }]
           ] + ssh_expected_commands_for(
             nodes_connections_to_mock,
+            with_strict_host_key_checking: false,
             with_control_master_create: false,
             with_control_master_check: true,
             with_control_master_destroy: false
@@ -168,6 +169,7 @@ describe HybridPlatformsConductor::SshExecutor do
               'node1' => { connection: '192.168.42.1', user: 'test_user' },
               'node3' => { connection: '192.168.42.3', user: 'test_user' }
             },
+            with_strict_host_key_checking: false,
             with_control_master_create: false,
             with_control_master_check: true,
             with_control_master_destroy: false
@@ -333,13 +335,12 @@ describe HybridPlatformsConductor::SshExecutor do
         test_ssh_executor.execute_actions('node' => { remote_bash: 'echo Hello' })
         lines = File.read(stdout_file).split("\n")
         expect(lines[0]).to eq 'ssh-keyscan 192.168.42.42'
-        expect(lines[1]).to match /^ssh-keygen -R 192\.168\.42\.42 -f .+\/known_hosts$/
         # Here we should not have -o BatchMode=yes 
-        expect(lines[2]).to match /^.+\/ssh -o ControlMaster=yes -o ControlPersist=yes test_user@ti\.node true$/
-        expect(lines[3]).to match /^.+\/ssh test_user@ti\.node \/bin\/bash <<'EOF'$/
-        expect(lines[4]).to eq 'echo Hello'
-        expect(lines[5]).to eq 'EOF'
-        expect(lines[6]).to match /^.+\/ssh -O exit test_user@ti\.node 2>&1 \| grep -v 'Exit request sent\.'$/
+        expect(lines[1]).to match /^.+\/ssh -o ControlMaster=yes -o ControlPersist=yes test_user@ti\.node true$/
+        expect(lines[2]).to match /^.+\/ssh test_user@ti\.node \/bin\/bash <<'EOF'$/
+        expect(lines[3]).to eq 'echo Hello'
+        expect(lines[4]).to eq 'EOF'
+        expect(lines[5]).to match /^.+\/ssh -O exit test_user@ti\.node 2>&1 \| grep -v 'Exit request sent\.'$/
       end
     end
 
@@ -444,47 +445,14 @@ describe HybridPlatformsConductor::SshExecutor do
           commands: [
             ['sshpass -V', proc { [0, "sshpass 1.06\n", ''] }],
             ['which env', proc { [0, "/usr/bin/env\n", ''] }],
-            ['ssh -V 2>&1', proc { [0, "OpenSSH_7.4p1 Debian-10+deb9u7, OpenSSL 1.0.2u  20 Dec 2019\n", ''] }]
-          ],
-          nodes_connections: { 'node' => { connection: '192.168.42.42', user: 'test_user' } },
-          with_control_master_create: false,
-          with_control_master_destroy: false
-        ) do
-          test_ssh_executor.with_platforms_ssh do |ssh_exec, _ssh_config, known_hosts_file|
-            test_ssh_executor.ensure_host_key('192.168.42.42', known_hosts_file)
-            expect(File.read(known_hosts_file)).to eq "fake_host_key\n"
-          end
-        end
-      end
-    end
-
-    it 'ensures 2 host keys are registered when connecting using a hostname' do
-      with_test_platform do
-        with_cmd_runner_mocked(
-          commands: [
-            ['sshpass -V', proc { [0, "sshpass 1.06\n", ''] }],
-            ['which env', proc { [0, "/usr/bin/env\n", ''] }],
             ['ssh -V 2>&1', proc { [0, "OpenSSH_7.4p1 Debian-10+deb9u7, OpenSSL 1.0.2u  20 Dec 2019\n", ''] }],
-            [
-              'getent hosts my_host.my_domain',
-              proc { [0, '192.168.42.23 my_host.my_domain', ''] }
-            ],
-            [
-              'ssh-keyscan my_host.my_domain',
-              proc { [0, 'fake_host_key_hostname', ''] }
-            ],
-            [
-              /^ssh-keygen -R my_host\.my_domain -f .+\/known_hosts$/,
-              proc { [0, '', ''] }
-            ]
-          ],
-          nodes_connections: { 'node' => { connection: '192.168.42.23', user: 'test_user' } },
-          with_control_master_create: false,
-          with_control_master_destroy: false
+            ['ssh-keyscan 192.168.42.66', proc { [0, "192.168.42.66 ssh-rsa fake_host_key_66\n", ''] }],
+            [/^ssh-keygen -R 192.168.42.66 -f .+\/known_hosts/, proc { [0, '', ''] }]
+          ]
         ) do
           test_ssh_executor.with_platforms_ssh do |ssh_exec, _ssh_config, known_hosts_file|
-            test_ssh_executor.ensure_host_key('my_host.my_domain', known_hosts_file)
-            expect(File.read(known_hosts_file)).to eq "fake_host_key\nfake_host_key_hostname\n"
+            test_ssh_executor.ensure_host_key('192.168.42.66', known_hosts_file)
+            expect(File.read(known_hosts_file)).to eq "192.168.42.66 ssh-rsa fake_host_key_66\n"
           end
         end
       end
@@ -506,6 +474,44 @@ describe HybridPlatformsConductor::SshExecutor do
             File.write(known_hosts_file, "192.168.42.42\nanother_fake_key\n")
             test_ssh_executor.ensure_host_key('192.168.42.42', known_hosts_file)
             expect(File.read(known_hosts_file)).to eq "192.168.42.42\nanother_fake_key\n"
+          end
+        end
+      end
+    end
+
+    it 'adds the host key in case of an overriden connection' do
+      with_test_platform(nodes: { 'node' => { meta: { host_ip: '192.168.42.42' } } }) do
+        with_cmd_runner_mocked(
+          commands: [
+            ['sshpass -V', proc { [0, "sshpass 1.06\n", ''] }],
+            ['which env', proc { [0, "/usr/bin/env\n", ''] }],
+            ['ssh -V 2>&1', proc { [0, "OpenSSH_7.4p1 Debian-10+deb9u7, OpenSSL 1.0.2u  20 Dec 2019\n", ''] }],
+            ['ssh-keyscan 192.168.42.66', proc { [0, "192.168.42.66 ssh-rsa fake_host_key_66\n", ''] }]
+          ]
+        ) do
+          test_ssh_executor.ssh_user = 'test_user'
+          test_ssh_executor.override_connections['node'] = '192.168.42.66'
+          test_ssh_executor.with_platforms_ssh(nodes: ['node']) do |_ssh_exec, _ssh_urls, known_hosts_file|
+            expect(File.read(known_hosts_file)).to eq "192.168.42.66 ssh-rsa fake_host_key_66\n"
+          end
+        end
+      end
+    end
+
+    it 'does not add the host key in case of an overriden connection when we don\'t check for host keys' do
+      with_test_platform(nodes: { 'node' => { meta: { host_ip: '192.168.42.42' } } }) do
+        with_cmd_runner_mocked(
+          commands: [
+            ['sshpass -V', proc { [0, "sshpass 1.06\n", ''] }],
+            ['which env', proc { [0, "/usr/bin/env\n", ''] }],
+            ['ssh -V 2>&1', proc { [0, "OpenSSH_7.4p1 Debian-10+deb9u7, OpenSSL 1.0.2u  20 Dec 2019\n", ''] }]
+          ]
+        ) do
+          test_ssh_executor.ssh_user = 'test_user'
+          test_ssh_executor.override_connections['node'] = '192.168.42.66'
+          test_ssh_executor.ssh_strict_host_key_checking = false
+          test_ssh_executor.with_platforms_ssh(nodes: ['node']) do |_ssh_exec, _ssh_urls, known_hosts_file|
+            expect(File.read(known_hosts_file)).to eq ''
           end
         end
       end

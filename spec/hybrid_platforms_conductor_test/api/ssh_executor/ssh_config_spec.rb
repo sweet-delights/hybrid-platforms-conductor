@@ -81,7 +81,7 @@ describe HybridPlatformsConductor::SshExecutor do
       end
     end
 
-    it 'generates a simple config for a node with direct access' do
+    it 'generates a simple config for a node with host_ip' do
       with_test_platform(nodes: { 'node' => { meta: { host_ip: '192.168.42.42' } } }) do
         expect(ssh_config_for('node')).to eq <<~EOS
           Host hpc.node
@@ -90,7 +90,7 @@ describe HybridPlatformsConductor::SshExecutor do
       end
     end
 
-    it 'generates a simple config for several nodes with direct access' do
+    it 'generates a simple config for several nodes' do
       with_test_platform(nodes: {
         'node1' => { meta: { host_ip: '192.168.42.1' } },
         'node2' => { meta: { host_ip: '192.168.42.2' } },
@@ -131,11 +131,38 @@ describe HybridPlatformsConductor::SshExecutor do
       end
     end
 
-    it 'uses node\'s hostname if present' do
+    it 'generates an alias if the node has a hostname' do
       with_test_platform(nodes: { 'node' => { meta: { host_ip: '192.168.42.42', hostname: 'my_hostname.my_domain' } } }) do
         expect(ssh_config_for('node')).to eq <<~EOS
           Host hpc.node my_hostname.my_domain
             Hostname 192.168.42.42
+        EOS
+      end
+    end
+
+    it 'generates aliases if the node has private ips' do
+      with_test_platform(nodes: { 'node' => { meta: { host_ip: '192.168.42.42', private_ips: ['192.168.42.1', '192.168.42.2'] } } }) do
+        expect(ssh_config_for('node')).to eq <<~EOS
+          Host hpc.node hpc.192.168.42.1 hpc.192.168.42.2
+            Hostname 192.168.42.42
+        EOS
+      end
+    end
+
+    it 'generates a simple config for a node with hostname' do
+      with_test_platform(nodes: { 'node' => { meta: { hostname: 'my_hostname.my_domain' } } }) do
+        expect(ssh_config_for('node')).to eq <<~EOS
+          Host hpc.node my_hostname.my_domain
+            Hostname my_hostname.my_domain
+        EOS
+      end
+    end
+
+    it 'generates a simple config for a node with private_ips' do
+      with_test_platform(nodes: { 'node' => { meta: { private_ips: ['192.168.42.1', '192.168.42.2'] } } }) do
+        expect(ssh_config_for('node')).to eq <<~EOS
+          Host hpc.node hpc.192.168.42.1 hpc.192.168.42.2
+            Hostname 192.168.42.1
         EOS
       end
     end
