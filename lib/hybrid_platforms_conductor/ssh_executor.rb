@@ -283,11 +283,8 @@ module HybridPlatformsConductor
           aliases = ssh_aliases_for(node, private_ip)
           if idx == 0
             aliases << "hpc.#{node}"
-            if @override_connections.key?(node)
-              # Make sure the real hostname that could be used by other processes also route to the real IP
-              inv_connection, _gateway, _gateway_user = @nodes_handler.connection_for(node)
-              aliases << inv_connection
-            end
+            # Make sure the real hostname that could be used by other processes also route to the real IP
+            aliases << @nodes_handler.get_hostname_of(node) if @nodes_handler.get_hostname_of(node)
           end
           config_content << "# #{node} - #{private_ip.nil? ? 'Unknown IP address' : private_ip} - #{@nodes_handler.platform_for(node).repository_path} - #{@nodes_handler.get_description_of(node) || ''}\n"
           config_content << "Host #{aliases.join(' ')}\n"
@@ -540,9 +537,18 @@ module HybridPlatformsConductor
           nil
         ]
       else
-        connection, gateway, gateway_user = @nodes_handler.connection_for(node)
+        ip =
+          if @nodes_handler.get_host_ip_of(node)
+            @nodes_handler.get_host_ip_of(node)
+          elsif @nodes_handler.get_private_ips_of(node)
+            @nodes_handler.get_private_ips_of(node).first
+          else
+            raise "No connection possible to #{node}"
+          end
+        gateway = @nodes_handler.get_gateway_of node
+        gateway_user = @nodes_handler.get_gateway_user_of node
         gateway_user = @ssh_gateway_user if !gateway.nil? && gateway_user.nil?
-        [connection, gateway, gateway_user]
+        [ip, gateway, gateway_user]
       end
     end
 

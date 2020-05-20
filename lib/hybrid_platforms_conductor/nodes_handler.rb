@@ -96,10 +96,19 @@ module HybridPlatformsConductor
         out "* Known nodes:\n#{known_nodes.sort.join("\n")}"
         out
         out "* Known nodes with description:\n#{
-          prefetch_metadata_of known_nodes, %i[services description]
+          prefetch_metadata_of known_nodes, %i[hostname host_ip private_ips services description]
           known_nodes.map do |node|
-            connection, _gateway, _gateway_user = connection_for(node)
-            "#{platform_for(node).info[:repo_name]} - #{node} (#{connection}) - #{(get_services_of(node) || []).join(', ')} - #{get_description_of(node) || ''}"
+            "#{platform_for(node).info[:repo_name]} - #{node} (#{
+              if get_hostname_of node
+                get_hostname_of node
+              elsif get_host_ip_of node
+                get_host_ip_of node
+              elsif get_private_ips_of node
+                get_private_ips_of(node).first
+              else
+                'No connection'
+              end
+            }) - #{(get_services_of(node) || []).join(', ')} - #{get_description_of(node) || ''}"
           end.sort.join("\n")
         }"
         out
@@ -266,19 +275,6 @@ module HybridPlatformsConductor
     def metadata_of(node, property)
       prefetch_metadata_of([node], property) unless @metadata.key?(node) && @metadata[node].key?(property)
       @metadata[node][property]
-    end
-
-    # Return the connection string for a given node
-    # This is a real IP or hostname that can then be used with ssh...
-    #
-    # Parameters::
-    # * *node* (String): node to get connection info from
-    # Result::
-    # * String: The corresponding connection string
-    # * String or nil: The corresponding gateway to be used, or nil if none
-    # * String or nil: The corresponding gateway user to be used, or nil if none
-    def connection_for(node)
-      platform_for(node).connection_for(node)
     end
 
     # Define a method to get a metadata property of a node.
