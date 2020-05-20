@@ -1,3 +1,9 @@
+# [16.0.0](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv15.0.0&sourceBranch=refs%2Ftags%2Fv16.0.0) (2020-05-20)
+
+### Breaking changes
+
+* [Breaking] Moved connection logic from NodesHandler to SshExecutor so that metadata is used to decide connection details ([133ba94e](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/commits/133ba94e49ddcb94f05c76a33469288fb4d3be4c))
+
 # [15.0.0](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv14.1.1&sourceBranch=refs%2Ftags%2Fv15.0.0) (2020-05-20)
 
 ### Breaking changes
