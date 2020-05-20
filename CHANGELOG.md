@@ -1,3 +1,13 @@
+# [15.0.0](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv14.1.1&sourceBranch=refs%2Ftags%2Fv15.0.0) (2020-05-20)
+
+### Breaking changes
+
+* [Breaking] Support for CMDBs in NodesHandler ([33a4fc0f](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/commits/33a4fc0f78dd3a86f468f62bc92582ef1ccfeae2))
+
+### Fixes
+
+* Bug correction messing up log files of commands run in parallel ([eeaad8cb](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/commits/eeaad8cb432d9060a41b8e634ecce369f924f7dd))
+
 # [14.1.1](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv14.1.0&sourceBranch=refs%2Ftags%2Fv14.1.1) (2020-05-19)
 
 ### Fixes
