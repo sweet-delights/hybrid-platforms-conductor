@@ -31,6 +31,9 @@ module HybridPlatformsConductor
       # Make the run_cmd method public for this action as it can be used by client procs
       public :run_cmd
 
+      # Give access to the node so that action can use it
+      attr_reader :node
+
     end
 
   end
