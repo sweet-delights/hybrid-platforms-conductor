@@ -14,6 +14,8 @@ module HybridPlatformsConductor
         include Ci
 
         SUCCESS_STATUSES = [
+          # Add nil as the status of a currently running job (which is always the case for hybrid-platforms) is null
+          nil,
           # Add ABORTED as it is impossible to make Groovy Pipelines return SUCCESS when we want to abort it normally.
           'ABORTED',
           'SUCCESS'
@@ -32,6 +34,7 @@ module HybridPlatformsConductor
                   # Get the last build's URL
                   last_build_info_url = "#{master_info['lastBuild']['url']}/api/json"
                   last_build_info = JSON.parse(open(last_build_info_url, http_basic_authentication: [ci_user, ci_password]).read)
+                  log_debug "Build info for #{master_info_url}:\n#{JSON.pretty_generate(last_build_info)}"
                   error "Last build for job #{repo_info[:project]}/#{repo_info[:name]} is in status #{last_build_info['result']}: #{master_info['lastBuild']['url']}" unless SUCCESS_STATUSES.include?(last_build_info['result'])
                 rescue
                   error "Error while checking CI job for #{repo_info[:project]}/#{repo_info[:name]}: #{$!}"
