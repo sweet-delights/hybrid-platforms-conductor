@@ -260,7 +260,7 @@ module HybridPlatformsConductor
     # Parameters::
     # * *nodes_list* (String): Nodes list name
     # Result::
-    # * PlatformHandler: The corresponding platform handler
+    # * PlatformHandler or nil: The corresponding platform handler, or nil if none
     def platform_for_list(nodes_list)
       @nodes_list_platform[nodes_list]
     end

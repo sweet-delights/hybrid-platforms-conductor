@@ -211,8 +211,9 @@ module HybridPlatformsConductor
       # [API] - @actions_executor is accessible.
       #
       # Parameters::
+      # * *nodes* (Array<String>): Nodes on which we prepare the deployment.
       # * *use_why_run* (Boolean): Do we use a why-run mode? [default = true]
-      def prepare_for_deploy(use_why_run: true)
+      def prepare_for_deploy(nodes, use_why_run: true)
         # This method is used if some actions are needed before deploying for real.
         # The use_why_run switch is on if the deployment should just be simulated.
         ENV['deploy_time'] = Time.now.to_s
