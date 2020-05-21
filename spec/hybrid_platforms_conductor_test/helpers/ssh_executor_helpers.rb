@@ -93,7 +93,10 @@ module HybridPlatformsConductorTest
       # Result::
       # * SshExecutor: SshExecutor on which we can do testing
       def test_ssh_executor
-        @ssh_executor = HybridPlatformsConductor::SshExecutor.new logger: logger, logger_stderr: logger, cmd_runner: test_cmd_runner, nodes_handler: test_nodes_handler unless @ssh_executor
+        unless @ssh_executor
+          @ssh_executor = HybridPlatformsConductor::SshExecutor.new logger: logger, logger_stderr: logger, cmd_runner: test_cmd_runner, nodes_handler: test_nodes_handler
+          @ssh_executor.set_loggers_format
+        end
         @ssh_executor
       end
 

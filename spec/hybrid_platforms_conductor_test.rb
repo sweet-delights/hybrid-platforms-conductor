@@ -87,6 +87,7 @@ module HybridPlatformsConductorTest
         HybridPlatformsConductorTest::TestPlugins::SeveralChecks.runs = []
         FileUtils.rm_rf './run_logs'
         FileUtils.rm_rf './testadmin.key.pub'
+        FileUtils.rm_rf '/tmp/hpc_ssh'
       end
     end
 

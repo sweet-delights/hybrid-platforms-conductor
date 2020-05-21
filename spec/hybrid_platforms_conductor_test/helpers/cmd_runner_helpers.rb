@@ -17,16 +17,20 @@ module HybridPlatformsConductorTest
         # Mock the calls to CmdRunner made by the SSH connections
         unexpected_commands = []
         remaining_expected_commands = commands.clone
+        # We need to protect the access to this array as the mocked commands can be called by competing threads
+        remaining_expected_commands_mutex = Mutex.new
         allow(cmd_runner).to receive(:run_cmd) do |cmd, log_to_file: nil, log_to_stdout: true, log_stdout_to_io: nil, log_stderr_to_io: nil, expected_code: 0, timeout: nil, no_exception: false|
           # Check the remaining expected commands
           found_command = nil
           found_command_code = nil
-          remaining_expected_commands.delete_if do |(expected_command, command_code)|
-            break unless found_command.nil?
-            if (expected_command.is_a?(String) && expected_command == cmd) || (expected_command.is_a?(Regexp) && cmd =~ expected_command)
-              found_command = expected_command
-              found_command_code = command_code
-              true
+          remaining_expected_commands_mutex.synchronize do
+            remaining_expected_commands.delete_if do |(expected_command, command_code)|
+              break unless found_command.nil?
+              if (expected_command.is_a?(String) && expected_command == cmd) || (expected_command.is_a?(Regexp) && cmd =~ expected_command)
+                found_command = expected_command
+                found_command_code = command_code
+                true
+              end
             end
           end
           if found_command
@@ -78,7 +82,10 @@ module HybridPlatformsConductorTest
       # Result::
       # * CmdRunner: CmdRunner on which we can do testing
       def test_cmd_runner
-        @cmd_runner = HybridPlatformsConductor::CmdRunner.new logger: logger, logger_stderr: logger unless @cmd_runner
+        unless @cmd_runner
+          @cmd_runner = HybridPlatformsConductor::CmdRunner.new logger: logger, logger_stderr: logger
+          @cmd_runner.set_loggers_format
+        end
         @cmd_runner
       end
 

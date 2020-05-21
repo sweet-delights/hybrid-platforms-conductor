@@ -241,7 +241,7 @@ module HybridPlatformsConductor
           Host *
             User #{@ssh_user}
             # Default control socket path to be used when multiplexing SSH connections
-            ControlPath #{@tmp_dir}/hpc_ssh_executor_mux_%h_%p_%r
+            ControlPath #{control_master_file('%h', '%p', '%r')}
             #{open_ssh_major_version >= 7 ? 'PubkeyAcceptedKeyTypes +ssh-dss' : ''}
             #{known_hosts_file.nil? ? '' : "UserKnownHostsFile #{known_hosts_file}"}
             #{@ssh_strict_host_key_checking ? '' : 'StrictHostKeyChecking no'}
@@ -360,14 +360,6 @@ module HybridPlatformsConductor
                   ssh_url = "#{@ssh_user}@hpc.#{node}"
                   if current_users.empty?
                     log_debug "[ ControlMaster - #{ssh_url} ] - Creating SSH ControlMaster..."
-                    # We have to create the control master.
-                    # Make sure there is no stale one.
-                    connection, _gateway, _gateway_user = connection_info_for(node)
-                    control_path_file = "#{@tmp_dir}/ssh_executor_mux_#{connection}_22_#{@ssh_user}"
-                    if File.exist?(control_path_file)
-                      log_warn "[ ControlMaster - #{ssh_url} ] - Removing stale SSH control file #{control_path_file}"
-                      File.unlink control_path_file
-                    end
                     # Create the control master
                     ssh_control_master_start_cmd = "#{ssh_exec}#{@passwords.key?(node) || @auth_password ? '' : ' -o BatchMode=yes'} -o ControlMaster=yes -o ControlPersist=yes #{ssh_url} true"
                     begin
@@ -411,8 +403,8 @@ module HybridPlatformsConductor
             yield
           ensure
             user_locks.each do |node, user_id|
-              ssh_url = "#{@ssh_user}@hpc.#{node}"
               with_lock_on_control_master_for(node, user_id: user_id) do |current_users, user_id|
+                ssh_url = "#{@ssh_user}@hpc.#{node}"
                 log_warn "[ ControlMaster - #{ssh_url} ] - Current process/thread was not part of the ControlMaster users anymore whereas it should have been" unless current_users.include?(user_id)
                 remaining_users = current_users - [user_id]
                 if remaining_users.empty?
@@ -436,6 +428,7 @@ module HybridPlatformsConductor
 
       # Get the lock to access users of a given node's ControlMaster.
       # Make sure the lock is released when exiting client code.
+      # Handle stalled ControlMaster files as well.
       #
       # Parameters::
       # * *node* (String): Node to access
@@ -451,8 +444,22 @@ module HybridPlatformsConductor
         control_master_users_file = "#{@tmp_dir}/#{@ssh_user}.#{node}.users"
         # Make sure we remove our token for this control master
         Futex.new(control_master_users_file).open do
+          # TODO: Add test case when control file is missing ad when it is stale
           # Get the list of existing process/thread ids using this control master
           existing_users = File.exist?(control_master_users_file) ? File.read(control_master_users_file).split("\n") : []
+          ssh_url = "#{@ssh_user}@hpc.#{node}"
+          control_path_file = control_master_file(connection_info_for(node).first, '22', @ssh_user)
+          if existing_users.empty?
+            # Make sure there is no stale one.
+            if File.exist?(control_path_file)
+              log_warn "[ ControlMaster - #{ssh_url} ] - Removing stale SSH control file #{control_path_file}"
+              File.unlink control_path_file
+            end
+          elsif !File.exist?(control_path_file)
+            # Make sure the control file is still present, otherwise it means we should not have users
+            log_warn "[ ControlMaster - #{ssh_url} ] - Missing SSH control file #{control_path_file} whereas the following users were supposed to use it: #{existing_users.join(', ')}"
+            existing_users = []
+          end
           confirmed_user = yield existing_users, user_id
           user_already_included = existing_users.include?(user_id)
           existing_users_to_update = nil
@@ -464,6 +471,16 @@ module HybridPlatformsConductor
           File.write(control_master_users_file, existing_users_to_update.join("\n")) if existing_users_to_update
         end
         user_id
+      end
+
+      # Return the name of a ControlMaster file used for a given host, port and user
+      #
+      # Parameters::
+      # * *host* (String): The host
+      # * *port* (String): The port. Can be a string as ssh config uses wildchars.
+      # * *user* (String): The user
+      def control_master_file(host, port, user)
+        "#{@tmp_dir}/hpc_ssh_executor_mux_#{host}_#{port}_#{user}"
       end
 
       # Provide a bootstrapped ssh executable that includes an SSH config allowing access to nodes.

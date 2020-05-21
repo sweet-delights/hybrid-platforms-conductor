@@ -313,7 +313,40 @@ describe HybridPlatformsConductor::SshExecutor do
             expect(File.exist?(ssh_exec_2)).to eq false
           end
         end
+      end
 
+      it 'creates an SSH master to 1 node even when there is a stalled ControlMaster file' do
+        with_test_platform(nodes: { 'node' => { meta: { host_ip: '192.168.42.42' } } }) do
+          with_cmd_runner_mocked(
+            [
+              ['which env', proc { [0, "/usr/bin/env\n", ''] }],
+              ['ssh -V 2>&1', proc { [0, "OpenSSH_7.4p1 Debian-10+deb9u7, OpenSSL 1.0.2u  20 Dec 2019\n", ''] }]
+            ] + ssh_expected_commands_for('node' => { connection: '192.168.42.42', user: 'test_user' })
+          ) do
+            test_connector.ssh_user = 'test_user'
+            # Fake a ControlMaster file that is stalled
+            File.write(test_ssh_executor.connector(:ssh).send(:control_master_file, '192.168.42.42', '22', 'test_user'), '')
+            test_connector.with_connection_to(['node']) do
+            end
+          end
+        end
+      end
+
+      it 'creates an SSH master to 1 node even when there is a left-over user for the ControlMaster file that has not been unregistered' do
+        with_test_platform(nodes: { 'node' => { meta: { host_ip: '192.168.42.42' } } }) do
+          with_cmd_runner_mocked(
+            [
+              ['which env', proc { [0, "/usr/bin/env\n", ''] }],
+              ['ssh -V 2>&1', proc { [0, "OpenSSH_7.4p1 Debian-10+deb9u7, OpenSSL 1.0.2u  20 Dec 2019\n", ''] }]
+            ] + ssh_expected_commands_for('node' => { connection: '192.168.42.42', user: 'test_user' })
+          ) do
+            test_connector.ssh_user = 'test_user'
+            # Fake a user that was not cleaned correctly
+            File.write('/tmp/hpc_ssh/test_user.node.users', "unregistered_user\n")
+            test_connector.with_connection_to(['node']) do
+            end
+          end
+        end
       end
 
     end
