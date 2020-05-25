@@ -34,6 +34,9 @@ module HybridPlatformsConductor
         # Spawn the threads, each one responsible for handling its list
         (nbr_threads_max.nil? || nbr_threads_max > nbr_total ? nbr_total : nbr_threads_max).times do
           threads_to_join << Thread.new do
+            # As exceptions are logged anyway whatever the Thread setting is, only turn it on for debug.
+            # That will keep tests execution cleaner.
+            Thread.current.report_on_exception = log_debug?
             begin
               loop do
                 # Modify the list while processing it, so that reporting can be done.
@@ -43,10 +46,13 @@ module HybridPlatformsConductor
                   pools[:processing] << element unless element.nil?
                 end
                 break if element.nil?
-                yield element
-                pools_semaphore.synchronize do
-                  pools[:processing].delete(element)
-                  pools[:processed] << element
+                begin
+                  yield element
+                ensure
+                  pools_semaphore.synchronize do
+                    pools[:processing].delete(element)
+                    pools[:processed] << element
+                  end
                 end
               end
             rescue

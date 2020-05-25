@@ -48,4 +48,28 @@ describe HybridPlatformsConductor::NodesHandler do
     end
   end
 
+  it 'iterates over defined nodes in parallel and handle errors correctly' do
+    with_test_platform(nodes: { 'node1' => {}, 'node2' => {}, 'node3' => {}, 'node4' => {} }) do
+      nodes_iterated = []
+      # Make sure we exit the test case even if the error is not handled correctly by using a timeout
+      Timeout.timeout(5) do
+        expect do
+          test_nodes_handler.for_each_node_in(['node2', 'node3', 'node4'], parallel: true) do |node|
+            case node
+            when 'node2'
+              sleep 2
+            when 'node3'
+              sleep 3
+              raise "Error iterating on #{node}"
+            when 'node4'
+              sleep 1
+            end
+            nodes_iterated << node
+          end
+        end.to raise_error 'Error iterating on node3'
+      end
+      expect(nodes_iterated).to eq %w[node4 node2]
+    end
+  end
+
 end
