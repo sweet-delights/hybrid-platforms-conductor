@@ -35,10 +35,12 @@ module HybridPlatformsConductorTest
       # * *check* (Boolean): Is the deploy only a check? [default: false]
       # * *sudo* (Boolean): Is sudo supposed to be used? [default: true]
       # * *expected_actions* (Array<Object>): Additional expected actions [default: []]
+      # * *mocked_result* (Hash<String, [Object, String, String]>): Expected result of the actions, per node, or nil for success [default: nil]
       # Result::
       # * Hash<String, [Integer or Symbol, String, String] >: Expected result of those expected actions
-      def expect_actions_to_deploy_on(actions, nodes, check: false, sudo: true, expected_actions: [])
+      def expect_actions_to_deploy_on(actions, nodes, check: false, sudo: true, expected_actions: [], mocked_result: nil)
         nodes = [nodes] if nodes.is_a?(String)
+        mocked_result = Hash[nodes.map { |node| [node, [0, "#{check ? 'Check' : 'Deploy'} successful", '']] }] if mocked_result.nil?
         expect(actions.size).to eq nodes.size
         nodes.each do |node|
           expect(actions.key?(node)).to eq true
@@ -47,7 +49,7 @@ module HybridPlatformsConductorTest
           expect(actions[node][1..-2]).to eq expected_actions
           expect(actions[node][-1]).to eq(bash: "echo \"#{check ? 'Checking' : 'Deploying'} on #{node}\"")
         end
-        Hash[nodes.map { |node| [node, [0, "#{check ? 'Check' : 'Deploy'} successful", '']] }]
+        mocked_result
       end
 
       # Expect a given set of actions to be unlock deployments to a list of nodes

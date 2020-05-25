@@ -86,7 +86,8 @@ describe HybridPlatformsConductor::Deployer do
           repo_name: 'my_remote_platform',
           commit_id: Git.open(repository).log.first.sha,
           commit_message: 'Test commit',
-          diff_files: 'docker_image/Dockerfile'
+          diff_files: 'docker_image/Dockerfile',
+          exit_status: '0'
         )
       end
     end

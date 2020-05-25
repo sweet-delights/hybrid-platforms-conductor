@@ -544,10 +544,11 @@ module HybridPlatformsConductor
                   repo_name: platform_info[:repo_name],
                   commit_id: platform_info[:commit][:id],
                   commit_message: platform_info[:commit][:message].split("\n").first,
-                  diff_files: (platform_info[:status][:changed_files] + platform_info[:status][:added_files] + platform_info[:status][:deleted_files] + platform_info[:status][:untracked_files]).join(', ')
+                  diff_files: (platform_info[:status][:changed_files] + platform_info[:status][:added_files] + platform_info[:status][:deleted_files] + platform_info[:status][:untracked_files]).join(', '),
+                  exit_status: exit_status
                 }.map { |property, value| "#{property}: #{value}" }.join("\n") +
                   "\n===== STDOUT =====\n" +
-                  (exit_status.is_a?(Symbol) ? "Error: #{exit_status}" : stdout) +
+                  (stdout || '') +
                   "\n===== STDERR =====\n" +
                   (stderr || '')
               )
