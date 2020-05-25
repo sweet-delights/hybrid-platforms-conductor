@@ -346,6 +346,7 @@ module HybridPlatformsConductor
         with_platforms_ssh(nodes: nodes) do
           # List of user_ids that acquired a lock, per node
           user_locks = {}
+          user_locks_mutex = Mutex.new
           begin
             if @ssh_use_control_master
               @nodes_handler.for_each_node_in(
@@ -392,7 +393,7 @@ module HybridPlatformsConductor
                   end
                   # Make sure we register ourselves among the users if the master is working
                   if working_master
-                    user_locks[node] = user_id
+                    user_locks_mutex.synchronize { user_locks[node] = user_id }
                     true
                   else
                     false
