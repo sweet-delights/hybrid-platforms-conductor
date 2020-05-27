@@ -26,6 +26,7 @@ module HybridPlatformsConductor
             'node12hst-nn3',
             'node12hst-nn2',
             'node12hst-nn6',
+            'node12hst-nn0',
             'node12hst-nn4',
             'node12hst-nn5'
           ] => [
