@@ -13,12 +13,79 @@ describe 'executables\' Deployer options' do
     end
   end
 
-  it 'sends a secrets file' do
+  # Mock calls being made to a Thycotic SOAP API using Savon
+  #
+  # Parameters::
+  # * *url* (String): Mocked URL
+  # * *secret_id* (String): The mocked secret ID
+  # * *mocked_secrets_file* (String or nil): The mocked secrets file stored in Thycotic, or nil to mock a missing secret
+  def mock_thycotic_file_download_on(url, secret_id, mocked_secrets_file)
+    host = url.match(/^https?:\/\/([^\/]+)\/.+$/)[1]
+    expect(HybridPlatformsConductor::Netrc).to receive(:with_netrc_for).with(host) do |&client_code|
+      client_code.call 'thycotic_user', 'thycotic_password'
+    end
+    # Mock the Savon calls
+    mocked_savon_client = double 'Mocked Savon client'
+    expect(Savon).to receive(:client) do |params|
+      expect(params[:wsdl]).to eq "#{url}/webservices/SSWebservice.asmx?wsdl"
+      expect(params[:ssl_verify_mode]).to eq :none
+      mocked_savon_client
+    end
+    expect(mocked_savon_client).to receive(:call).with(
+      :authenticate,
+      message: {
+        username: 'thycotic_user',
+        password: 'thycotic_password',
+        domain: 'thycotic_auth_domain'
+      }
+    ) do
+      { authenticate_response: { authenticate_result: { token: 'soap_token' } } }
+    end
+    expect(mocked_savon_client).to receive(:call).with(
+      :get_secret,
+      message: {
+        token: 'soap_token',
+        secretId: secret_id
+      }
+    ) do
+      {
+        get_secret_response: {
+          get_secret_result:
+            if mocked_secrets_file
+              { secret: { items: { secret_item: { id: '4242' } } } }
+            else
+              { errors: { string: 'Access Denied'}, secret_error: { error_code: 'LOAD', error_message: 'Access Denied', allows_response: false } }
+            end
+        }
+      }
+    end
+    if mocked_secrets_file
+      expect(mocked_savon_client).to receive(:call).with(
+        :download_file_attachment_by_item_id,
+        message: {
+          token: 'soap_token',
+          secretId: secret_id,
+          secretItemId: '4242'
+        }
+      ) do
+        {
+          download_file_attachment_by_item_id_response: {
+            download_file_attachment_by_item_id_result: {
+              file_attachment: Base64.encode64(mocked_secrets_file)
+            }
+          }
+        }
+      end
+    end
+    ENV['hpc_thycotic_domain'] = 'thycotic_auth_domain'
+  end
+
+  it 'gets secrets from a file' do
     with_test_platform_for_deployer_options do |repository|
       secrets_file = "#{repository}/my_secrets.json"
-      File.write(secrets_file, '{}')
+      File.write(secrets_file, '{ "secret_name": "secret_value" }')
       expect(test_deployer).to receive(:deploy_on).with(['node']) do
-        expect(test_deployer.secrets).to eq [secrets_file]
+        expect(test_deployer.secrets).to eq [{ 'secret_name' => 'secret_value' }]
         {}
       end
       exit_code, stdout, stderr = run 'deploy', '--node', 'node', '--secrets', secrets_file
@@ -27,19 +94,76 @@ describe 'executables\' Deployer options' do
     end
   end
 
-  it 'sends several secrets files' do
+  it 'gets secrets from several files' do
     with_test_platform_for_deployer_options do |repository|
       secrets_file1 = "#{repository}/my_secrets1.json"
-      File.write(secrets_file1, '{}')
+      File.write(secrets_file1, '{ "secret1": "value1" }')
       secrets_file2 = "#{repository}/my_secrets2.json"
-      File.write(secrets_file2, '{}')
+      File.write(secrets_file2, '{ "secret2": "value2" }')
       expect(test_deployer).to receive(:deploy_on).with(['node']) do
-        expect(test_deployer.secrets.sort).to eq [secrets_file1, secrets_file2].sort
+        expect(test_deployer.secrets).to eq [{ 'secret1' => 'value1' }, { 'secret2' => 'value2' }]
         {}
       end
       exit_code, stdout, stderr = run 'deploy', '--node', 'node', '--secrets', secrets_file1, '--secrets', secrets_file2
       expect(exit_code).to eq 0
       expect(stderr).to eq ''
+    end
+  end
+
+  it 'fails to get secrets from a missing file' do
+    with_test_platform_for_deployer_options do
+      expect do
+        run 'deploy', '--node', 'node', '--secrets', 'unknown_file.json'
+      end.to raise_error 'Missing secret file: unknown_file.json'
+    end
+  end
+
+  it 'gets secrets from a Thycotic Secret Server' do
+    with_test_platform_for_deployer_options do
+      expect(test_deployer).to receive(:deploy_on).with(['node']) do
+        expect(test_deployer.secrets).to eq [{ 'secret_name' => 'secret_value' }]
+        {}
+      end
+      mock_thycotic_file_download_on('https://my_thycotic.domain.com/SecretServer', '1107', '{ "secret_name": "secret_value" }')
+      exit_code, stdout, stderr = run 'deploy', '--node', 'node', '--secrets', 'https://my_thycotic.domain.com/SecretServer:1107'
+      expect(exit_code).to eq 0
+      expect(stderr).to eq ''
+    end
+  end
+
+  it 'gets secrets from several Thycotic Secret Servers and files' do
+    with_test_platform_for_deployer_options do |repository|
+      secrets_file1 = "#{repository}/my_secrets1.json"
+      File.write(secrets_file1, '{ "secret1": "value1" }')
+      secrets_file3 = "#{repository}/my_secrets3.json"
+      File.write(secrets_file3, '{ "secret3": "value3" }')
+      expect(test_deployer).to receive(:deploy_on).with(['node']) do
+        expect(test_deployer.secrets).to eq [
+          { 'secret1' => 'value1' },
+          { 'secret2' => 'value2' },
+          { 'secret3' => 'value3' },
+          { 'secret4' => 'value4' }
+        ]
+        {}
+      end
+      mock_thycotic_file_download_on('https://my_thycotic2.domain.com/SecretServer', '110702', '{ "secret2": "value2" }')
+      mock_thycotic_file_download_on('https://my_thycotic4.domain.com/SecretServer', '110704', '{ "secret4": "value4" }')
+      exit_code, stdout, stderr = run 'deploy', '--node', 'node',
+        '--secrets', secrets_file1,
+        '--secrets', 'https://my_thycotic2.domain.com/SecretServer:110702',
+        '--secrets', secrets_file3,
+        '--secrets', 'https://my_thycotic4.domain.com/SecretServer:110704'
+      expect(exit_code).to eq 0
+      expect(stderr).to eq ''
+    end
+  end
+
+  it 'fails to get secrets from a missing Thycotic Secret Server' do
+    with_test_platform_for_deployer_options do
+      mock_thycotic_file_download_on('https://my_thycotic.domain.com/SecretServer', '1107', nil)
+      expect do
+        run 'deploy', '--node', 'node', '--secrets', 'https://my_thycotic.domain.com/SecretServer:1107'
+      end.to raise_error 'Unable to fetch secret file ID https://my_thycotic.domain.com/SecretServer:1107'
     end
   end
 
