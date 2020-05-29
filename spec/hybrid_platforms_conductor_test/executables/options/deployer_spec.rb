@@ -19,10 +19,16 @@ describe 'executables\' Deployer options' do
   # * *url* (String): Mocked URL
   # * *secret_id* (String): The mocked secret ID
   # * *mocked_secrets_file* (String or nil): The mocked secrets file stored in Thycotic, or nil to mock a missing secret
-  def mock_thycotic_file_download_on(url, secret_id, mocked_secrets_file)
+  # * *user* (String or nil): The user to be expected, or nil if it should be read from netrc [default: nil]
+  # * *password* (String or nil): The password to be expected, or nil if it should be read from netrc [default: nil]
+  def mock_thycotic_file_download_on(url, secret_id, mocked_secrets_file, user: nil, password: nil)
     host = url.match(/^https?:\/\/([^\/]+)\/.+$/)[1]
-    expect(HybridPlatformsConductor::Netrc).to receive(:with_netrc_for).with(host) do |&client_code|
-      client_code.call 'thycotic_user', 'thycotic_password'
+    if user.nil?
+      user = 'thycotic_user_from_netrc'
+      password = 'thycotic_password_from_netrc'
+      expect(HybridPlatformsConductor::Netrc).to receive(:with_netrc_for).with(host) do |&client_code|
+        client_code.call user, password
+      end
     end
     # Mock the Savon calls
     mocked_savon_client = double 'Mocked Savon client'
@@ -34,8 +40,8 @@ describe 'executables\' Deployer options' do
     expect(mocked_savon_client).to receive(:call).with(
       :authenticate,
       message: {
-        username: 'thycotic_user',
-        password: 'thycotic_password',
+        username: user,
+        password: password,
         domain: 'thycotic_auth_domain'
       }
     ) do
@@ -125,6 +131,27 @@ describe 'executables\' Deployer options' do
         {}
       end
       mock_thycotic_file_download_on('https://my_thycotic.domain.com/SecretServer', '1107', '{ "secret_name": "secret_value" }')
+      exit_code, stdout, stderr = run 'deploy', '--node', 'node', '--secrets', 'https://my_thycotic.domain.com/SecretServer:1107'
+      expect(exit_code).to eq 0
+      expect(stderr).to eq ''
+    end
+  end
+
+  it 'gets secrets from a Thycotic Secret Server using hpc_thycotic_user and hpc_thycotic_password env variables' do
+    with_test_platform_for_deployer_options do
+      expect(test_deployer).to receive(:deploy_on).with(['node']) do
+        expect(test_deployer.secrets).to eq [{ 'secret_name' => 'secret_value' }]
+        {}
+      end
+      mock_thycotic_file_download_on(
+        'https://my_thycotic.domain.com/SecretServer',
+        '1107',
+        '{ "secret_name": "secret_value" }',
+        user: 'thycotic_user_from_env',
+        password: 'thycotic_password_from_env'
+      )
+      ENV['hpc_thycotic_user'] = 'thycotic_user_from_env'
+      ENV['hpc_thycotic_password'] = 'thycotic_password_from_env'
       exit_code, stdout, stderr = run 'deploy', '--node', 'node', '--secrets', 'https://my_thycotic.domain.com/SecretServer:1107'
       expect(exit_code).to eq 0
       expect(stderr).to eq ''

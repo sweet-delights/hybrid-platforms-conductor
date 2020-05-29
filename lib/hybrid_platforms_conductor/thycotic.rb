@@ -16,26 +16,26 @@ module HybridPlatformsConductor
     # * *url* (String): URL of the Thycotic Secret Server
     # * *logger* (Logger): Logger to be used [default: Logger.new(STDOUT)]
     # * *logger_stderr* (Logger): Logger to be used for stderr [default: Logger.new(STDERR)]
-    # * *username* (String or nil): User name to be used to connect to Thycotic, or nil to get it from netrc [default: nil]
-    # * *password* (String or nil): Password to be used to connect to Thycotic, or nil to get it from netrc [default: nil]
+    # * *user* (String or nil): User name to be used to connect to Thycotic, or nil to get it from netrc [default: ENV['hpc_thycotic_user']]
+    # * *password* (String or nil): Password to be used to connect to Thycotic, or nil to get it from netrc [default: ENV['hpc_thycotic_password']]
     # * *domain* (String): Domain to use for authentication to Thycotic [default: ENV['hpc_thycotic_domain']]
     def initialize(
       url,
       logger: Logger.new(STDOUT),
       logger_stderr: Logger.new(STDERR),
-      username: nil,
-      password: nil,
+      user: ENV['hpc_thycotic_user'],
+      password: ENV['hpc_thycotic_password'],
       domain: ENV['hpc_thycotic_domain']
     )
       @logger = logger
       @logger_stderr = logger_stderr
-      if username.nil? || password.nil?
+      if user.nil? || password.nil?
         host = url.match(/^https?:\/\/([^\/]+)\/.+$/)[1]
         Netrc.with_netrc_for(host) do |thycotic_user, thycotic_password|
-          username = thycotic_user.clone if username.nil?
+          user = thycotic_user.clone if user.nil?
           password = thycotic_password.clone if password.nil?
         end
-        raise "Unable to get Thycotic\'s username from .netrc file for host #{host}" if username.nil?
+        raise "Unable to get Thycotic\'s user from .netrc file for host #{host}" if user.nil?
         raise "Unable to get Thycotic\'s password from .netrc file for host #{host}" if password.nil?
       end
       # Get a token to this SOAP API
@@ -46,7 +46,7 @@ module HybridPlatformsConductor
         log: log_debug?
       )
       @token = @client.call(:authenticate, message: {
-        username: username,
+        username: user,
         password: password,
         domain: domain
       }).to_hash.dig(:authenticate_response, :authenticate_result, :token)
