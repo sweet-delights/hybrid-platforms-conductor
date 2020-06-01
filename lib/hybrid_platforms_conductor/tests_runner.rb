@@ -351,7 +351,12 @@ module HybridPlatformsConductor
               end
             end
           end
-          for_each_element_in(tests_to_be_run, parallel: !log_debug?, nbr_threads_max: @max_threads_platforms) do |test_code|
+          for_each_element_in(
+            tests_to_be_run,
+            parallel: !log_debug?,
+            nbr_threads_max: @max_threads_platforms,
+            progress: 'Run platforms tests'
+          ) do |test_code|
             test_code.call
           end
         end
@@ -467,7 +472,12 @@ module HybridPlatformsConductor
       tests_for_nodes = @tests.select { |test_name| @tests_plugins[test_name].method_defined?(:test_for_node) }.uniq.sort
       unless tests_for_nodes.empty?
         section "Run #{tests_for_nodes.size} nodes tests #{tests_for_nodes.join(', ')} on #{@nodes.size} nodes" do
-          @nodes_handler.for_each_node_in(@nodes, parallel: !log_debug?, nbr_threads_max: @max_threads_nodes) do |node|
+          @nodes_handler.for_each_node_in(
+            @nodes,
+            parallel: !log_debug?,
+            nbr_threads_max: @max_threads_nodes,
+            progress: 'Run nodes tests'
+          ) do |node|
             tests_for_nodes.each do |test_name|
               if should_test_be_run_on(test_name, node: node)
                 log_debug "Run node test #{test_name} on node #{node}..."

@@ -228,10 +228,11 @@ module HybridPlatformsConductor
     #
     # Parameters::
     # * *nbr_total* (Integer): Total value of the progress bar
+    # * *name* (String or nil): Name to put on the progress bar, or nil for no name [default: nil]
     # * Proc: Code block called with the progress bar
     #   * Parameters::
     #     * *progress_bar* (ProgressBar): The progress bar
-    def with_progress_bar(nbr_total)
+    def with_progress_bar(nbr_total, name: nil)
       previous_stdout_device = nil
       previous_stderr_device = nil
       progress_bar = nil
@@ -241,7 +242,7 @@ module HybridPlatformsConductor
           output: stdout_log_device.is_a?(ProgressBarLogDevice) ? $stdout : stdout_log_device,
           title: 'Initializing...',
           total: nbr_total,
-          format: '[%j%%] - |%bC%i| - [ %t ]',
+          format: "#{name ? "#{name} " : ''}[%j%%] - |%bC%i| - [ %t ]",
           progress_mark: ' ',
           remainder_mark: '-'
         )

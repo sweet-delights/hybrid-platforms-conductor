@@ -74,7 +74,12 @@ module HybridPlatformsConductor
       def host_keys_for(*hosts)
         results = {}
         log_debug "Get host keys of #{hosts.size} hosts..."
-        for_each_element_in(hosts, parallel: true, nbr_threads_max: MAX_THREADS_SSH_KEY_SCAN, display_progress: log_debug?) do |host|
+        for_each_element_in(
+          hosts,
+          parallel: true,
+          nbr_threads_max: MAX_THREADS_SSH_KEY_SCAN,
+          progress: log_debug? ? 'Gather host keys' : nil
+        ) do |host|
           exit_status, stdout, _stderr = @cmd_runner.run_cmd(
             "ssh-keyscan #{host}",
             timeout: TIMEOUT_SSH_KEYSCAN,

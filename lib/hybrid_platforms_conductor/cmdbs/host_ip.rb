@@ -70,7 +70,12 @@ module HybridPlatformsConductor
       def ip_for(*hosts)
         results = {}
         log_debug "Get IPs of #{hosts.size} hosts..."
-        for_each_element_in(hosts, parallel: true, nbr_threads_max: MAX_THREADS_GETENT, display_progress: log_debug?) do |host|
+        for_each_element_in(
+          hosts,
+          parallel: true,
+          nbr_threads_max: MAX_THREADS_GETENT,
+          progress: log_debug? ? 'Gather IPs' : nil
+        ) do |host|
           _exit_status, stdout, _stderr = @cmd_runner.run_cmd(
             "getent hosts #{host}",
             timeout: TIMEOUT_GETENT,

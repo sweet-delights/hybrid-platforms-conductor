@@ -13,11 +13,11 @@ module HybridPlatformsConductor
     # * *list* (Array<Object>): List of objects to iterate over
     # * *parallel* (Boolean): Iterate in a multithreaded way? [default: false]
     # * *nbr_threads_max* (Integer or nil): Maximum number of threads to be used in case of parallel, or nil for no limit [default: nil]
-    # * *display_progress* (Boolean): Should we display a progress bar? [default: true]
+    # * *progress* (String or nil): Name of a progress bar to follow the progression, or nil for no progress bar [default: 'Progress']
     # * Proc: The code called for each node being iterated on.
     #   * Parameters::
     #     * *element* (Object): The object
-    def for_each_element_in(list, parallel: false, nbr_threads_max: nil, display_progress: true)
+    def for_each_element_in(list, parallel: false, nbr_threads_max: nil, progress: 'Process')
       if parallel
         # Threads to wait for
         threads_to_join = []
@@ -50,12 +50,12 @@ module HybridPlatformsConductor
             end
           end
         end
-        if display_progress
+        if progress
           # Here the main thread just reports progression
           nbr_to_process = nil
           nbr_processing = nil
           nbr_processed = nil
-          with_progress_bar(nbr_total) do |progress_bar|
+          with_progress_bar(nbr_total, name: progress) do |progress_bar|
             loop do
               pools_semaphore.synchronize do
                 nbr_to_process = pools[:to_process].size
