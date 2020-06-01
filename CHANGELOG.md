@@ -1,3 +1,9 @@
+# [16.1.2](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv16.1.1&sourceBranch=refs%2Ftags%2Fv16.1.2) (2020-06-01)
+
+### Fixes
+
+* Organized actions' tests by plugin ([58edaaf0](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/commits/58edaaf0b8d91d9b619fe9d7c3e78f1e7fd6f99e))
+
 # [16.1.1](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv16.1.0&sourceBranch=refs%2Ftags%2Fv16.1.1) (2020-06-01)
 
 ### Fixes
