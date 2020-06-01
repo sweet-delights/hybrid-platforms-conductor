@@ -52,6 +52,57 @@ describe HybridPlatformsConductor::SshExecutor do
       end
     end
 
+    it 'executes local Ruby code that needs an action' do
+      with_test_platform_for_action_plugins do
+        executed = false
+        expect(test_ssh_executor.execute_actions('node' => {
+          ruby: proc do |stdout, stderr, action|
+            expect(action.is_a?(HybridPlatformsConductor::Actions::Ruby)).to eq true
+            stdout << 'TestStdout'
+            stderr << 'TestStderr'
+            executed = true
+          end
+        })['node']).to eq [0, 'TestStdout', 'TestStderr']
+        expect(executed).to eq true
+      end
+    end
+
+    it 'executes local Ruby code that needs a connector' do
+      with_test_platform_for_action_plugins do
+        executed = false
+        expect(test_ssh_executor.execute_actions('node' => {
+          ruby: {
+            code: proc do |stdout, stderr, action, connector|
+              expect(connector.is_a?(HybridPlatformsConductorTest::TestConnector)).to eq true
+              stdout << 'TestStdout'
+              stderr << 'TestStderr'
+              executed = true
+            end,
+            need_remote: true
+          }
+        })['node']).to eq [0, 'TestStdout', 'TestStderr']
+        expect(executed).to eq true
+      end
+    end
+
+    it 'executes local Ruby code that does not need a connector' do
+      with_test_platform_for_action_plugins do
+        executed = false
+        expect(test_ssh_executor.execute_actions('node' => {
+          ruby: {
+            code: proc do |stdout, stderr, action, connector|
+              expect(connector).to be_nil
+              stdout << 'TestStdout'
+              stderr << 'TestStderr'
+              executed = true
+            end,
+            need_remote: false
+          }
+        })['node']).to eq [0, 'TestStdout', 'TestStderr']
+        expect(executed).to eq true
+      end
+    end
+
   end
 
 end
