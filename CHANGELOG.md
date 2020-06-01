@@ -1,3 +1,9 @@
+# [17.0.1](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv17.0.0&sourceBranch=refs%2Ftags%2Fv17.0.1) (2020-06-01)
+
+### Fixes
+
+* Add v40 into nodes having remote mounts ([671ed543](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/commits/671ed543d0cfc1a951f8e06d2b983c82bf9bbc80))
+
 # [17.0.0](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv16.1.2&sourceBranch=refs%2Ftags%2Fv17.0.0) (2020-06-01)
 
 ### Breaking changes
