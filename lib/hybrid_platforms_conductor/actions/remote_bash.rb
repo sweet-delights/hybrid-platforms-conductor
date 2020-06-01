@@ -5,7 +5,11 @@ module HybridPlatformsConductor
     # Execute a bash command on the remote node
     class RemoteBash < Action
 
-      # Setup the action
+      # Setup the action.
+      # This is called by the constructor itself, when an action is instantiated to be executed for a node.
+      # [API] - This method is optional
+      # [API] - @cmd_runner is accessible
+      # [API] - @ssh_executor is accessible
       #
       # Parameters::
       # * *remote_bash* (Array< Hash<Symbol, Object> or Array<String> or String>): List of bash actions to execute. Each action can have the following properties:
@@ -21,6 +25,15 @@ module HybridPlatformsConductor
       end
 
       # Execute the action
+      # [API] - This method is mandatory
+      # [API] - @cmd_runner is accessible
+      # [API] - @ssh_executor is accessible
+      # [API] - @action_info is accessible with the action details
+      # [API] - @node (String) can be used to know on which node the action is to be executed
+      # [API] - @timeout (Integer) should be used to make sure the action execution does not get past this number of seconds
+      # [API] - @stdout_io can be used to log stdout messages
+      # [API] - @stderr_io can be used to log stderr messages
+      # [API] - run_cmd(String) method can be used to execute a command. See CmdRunner#run_cmd to know about the result's signature.
       def execute
         bash_commands = @ssh_env.merge(@remote_bash[:env] || {}).map { |var_name, var_value| "export #{var_name}='#{var_value}'" }
         bash_commands.concat(@remote_bash[:commands].clone) if @remote_bash.key?(:commands)

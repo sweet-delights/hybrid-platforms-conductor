@@ -10,6 +10,7 @@ require 'hybrid_platforms_conductor/reports_handler'
 require 'hybrid_platforms_conductor/report_plugin'
 require 'hybrid_platforms_conductor/tests/test'
 require 'hybrid_platforms_conductor/tests/reports_plugin'
+require 'hybrid_platforms_conductor_test/test_action'
 require 'hybrid_platforms_conductor_test/test_platform_handler'
 require 'hybrid_platforms_conductor_test/tests_report_plugin'
 require 'hybrid_platforms_conductor_test/report_plugin'
@@ -58,6 +59,7 @@ module HybridPlatformsConductorTest
         # Set the necessary Hybrid Platforms Conductor environment variables
         ENV['hpc_ssh_user'] = 'test_user'
         HybridPlatformsConductor::Deployer.packaged_platforms.clear
+        HybridPlatformsConductorTest::TestAction.reset
         HybridPlatformsConductorTest::TestPlatformHandler.reset
         HybridPlatformsConductorTest::TestsReportPlugin.reports = []
         HybridPlatformsConductorTest::ReportPlugin.generated_reports = []

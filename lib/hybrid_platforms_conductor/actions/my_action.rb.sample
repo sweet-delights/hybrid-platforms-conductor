@@ -2,8 +2,8 @@ module HybridPlatformsConductor
 
   module Actions
 
-    # Execute Bash commands locally
-    class Bash < Action
+    # Example of an action plugin
+    class MyAction < Action
 
       # Setup the action.
       # This is called by the constructor itself, when an action is instantiated to be executed for a node.
@@ -12,9 +12,9 @@ module HybridPlatformsConductor
       # [API] - @ssh_executor is accessible
       #
       # Parameters::
-      # * *cmd* (String): The bash command to execute
-      def setup(cmd)
-        @cmd = cmd
+      # * *action_info* (Object): The action info
+      def setup(action_info)
+        @action_info[:message] = 'Default message' unless @action_info.key?(:message)
       end
 
       # Execute the action
@@ -28,8 +28,7 @@ module HybridPlatformsConductor
       # [API] - @stderr_io can be used to log stderr messages
       # [API] - run_cmd(String) method can be used to execute a command. See CmdRunner#run_cmd to know about the result's signature.
       def execute
-        log_debug "[#{@node}] - Execute local Bash commands \"#{@cmd}\"..."
-        run_cmd(@cmd)
+        run_cmd("echo #{@action_info[:message]} on #{@node}")
       end
 
     end

@@ -4,6 +4,29 @@ module HybridPlatformsConductorTest
 
     module SshExecutorHelpers
 
+      # Return a test platform setup with test actions and test connectors
+      #
+      # Parameters::
+      # * *platform_info* (Hash<Symbol,Object>): Platform info for the test platform [default = {}]
+      # * Proc: Code called with the environment ready
+      #   * Parameters::
+      #     * *repository* (String): Path to the repository
+      def with_test_platform_for_executor(platform_info = {})
+        with_test_platform(platform_info) do |repository|
+          # Register the test_action action
+          test_ssh_executor.instance_variable_get(:@action_plugins)[:test_action] = HybridPlatformsConductorTest::TestAction
+          yield repository
+        end
+      end
+
+      # Get the test action executions
+      #
+      # Result::
+      # * Array<Array>: Test action executions
+      def action_executions
+        HybridPlatformsConductorTest::TestAction.executions
+      end
+
       # Get expected commands for SSH connections established for a given set of nodes.
       # Those expected commands are meant to be directed and mocked by CmdRunner.
       #

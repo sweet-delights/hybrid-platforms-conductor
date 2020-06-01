@@ -29,7 +29,8 @@ module HybridPlatformsConductor
       @cmd_runner = cmd_runner
       @ssh_executor = ssh_executor
       @dry_run = dry_run
-      setup(action_info) if !action_info.nil? && self.respond_to?(:setup)
+      @action_info = action_info
+      setup(@action_info) if self.respond_to?(:setup)
     end
 
     # Prepare an action to be run for a given node in a given context.
