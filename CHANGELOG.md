@@ -1,3 +1,10 @@
+# [16.0.2](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv16.0.1&sourceBranch=refs%2Ftags%2Fv16.0.2) (2020-06-01)
+
+### Fixes
+
+* Better ssh_run logging when in debug mode ([31468c6c](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/commits/31468c6cb8524b39c692512f207b872e4a7db2a4))
+* Merge pull request #107 in PROJECThybrid_platforms_conductor from ~USERNME/hybrid_platforms_conductor:add_tcorvazier to master ([12d2e2df](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/commits/12d2e2df2ab2272f9694c8e90b33d7a9714835a2))
+
 # [16.0.1](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv16.0.0&sourceBranch=refs%2Ftags%2Fv16.0.1) (2020-05-20)
 
 ### Fixes
