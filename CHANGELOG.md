@@ -1,3 +1,9 @@
+# [16.0.4](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv16.0.3&sourceBranch=refs%2Ftags%2Fv16.0.4) (2020-06-01)
+
+### Fixes
+
+* Make sure non-finished lines are logged correctly ([e8b8b254](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/commits/e8b8b254d529d74cb9f87459493dca5b8a521a72))
+
 # [16.0.3](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv16.0.2&sourceBranch=refs%2Ftags%2Fv16.0.3) (2020-06-01)
 
 ### Fixes
