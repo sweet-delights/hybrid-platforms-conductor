@@ -1,3 +1,9 @@
+# [16.0.3](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv16.0.2&sourceBranch=refs%2Ftags%2Fv16.0.3) (2020-06-01)
+
+### Fixes
+
+* Add titles on progress bars for better output ([b524d696](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/commits/b524d696d5371b7a4127cc0c42c911a240607499))
+
 # [16.0.2](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv16.0.1&sourceBranch=refs%2Ftags%2Fv16.0.2) (2020-06-01)
 
 ### Fixes
