@@ -35,5 +35,5 @@ ssh_executor.execute_actions(
   { executable.selected_nodes => actions },
   timeout: timeout,
   concurrent: concurrent_execution,
-  log_to_stdout: !concurrent_execution
+  log_to_stdout: executable.log_debug? || !concurrent_execution
 )
