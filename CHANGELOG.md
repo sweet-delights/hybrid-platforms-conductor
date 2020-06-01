@@ -1,3 +1,9 @@
+# [17.0.0](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv16.1.2&sourceBranch=refs%2Ftags%2Fv17.0.0) (2020-06-01)
+
+### Breaking changes
+
+* [Breaking] Make the dry_run switch specific to the CmdRunner API only ([0bc2a574](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/commits/0bc2a574f97705c9dd1f8bed80f4bec85fcf9e65))
+
 # [16.1.2](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv16.1.1&sourceBranch=refs%2Ftags%2Fv16.1.2) (2020-06-01)
 
 ### Fixes
