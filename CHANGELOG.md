@@ -1,3 +1,9 @@
+# [16.1.1](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv16.1.0&sourceBranch=refs%2Ftags%2Fv16.1.1) (2020-06-01)
+
+### Fixes
+
+* Better error reporting when multi-threaded code fails ([9876482c](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/commits/9876482c48cbcc0b0d26aa1d393afa30d822b0f5))
+
 # [16.1.0](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv16.0.4&sourceBranch=refs%2Ftags%2Fv16.1.0) (2020-06-01)
 
 ### New features
