@@ -51,6 +51,14 @@ module HybridPlatformsConductor
       def close
       end
 
+      # Make sure if the current line is not flushed we still do it
+      def flush
+        unless @current_line.nil?
+          @stream << @current_line
+          @current_line = nil
+        end
+      end
+
     end
 
     class << self
@@ -261,6 +269,8 @@ module HybridPlatformsConductor
         yield progress_bar
       ensure
         LoggerHelpers.progress_bar_semaphore.synchronize do
+          self.stdout_device.flush
+          self.stderr_device.flush
           self.stdout_device = previous_stdout_device unless previous_stdout_device.nil?
           self.stderr_device = previous_stderr_device unless previous_stderr_device.nil?
         end
