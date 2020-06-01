@@ -64,22 +64,6 @@ describe HybridPlatformsConductor::SshExecutor do
       end
     end
 
-    it 'does not execute remote SCP in dry_run mode' do
-      with_test_platform_for_actions do
-        test_ssh_executor.dry_run = true
-        scp_executed = []
-        expect(execute(
-          {
-            scp: {
-              'from1' => 'to1',
-              'from2' => 'to2'
-            }
-          }
-        )).to eq [0, '', '']
-        expect(scp_executed.sort).to eq []
-      end
-    end
-
     it 'executes remote SCP with timeout' do
       with_test_platform_for_actions do
         expect(execute(

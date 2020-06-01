@@ -17,7 +17,7 @@ describe HybridPlatformsConductor::SshExecutor do
     it 'executes a simple action on 1 node' do
       with_test_platform_for_actions do
         test_ssh_executor.execute_actions('node1' => { test_action: 'Action executed' })
-        expect(action_executions).to eq [{ node: 'node1', message: 'Action executed', dry_run: false }]
+        expect(action_executions).to eq [{ node: 'node1', message: 'Action executed' }]
       end
     end
 
@@ -27,36 +27,13 @@ describe HybridPlatformsConductor::SshExecutor do
       end
     end
 
-    it 'displays commands instead of executing them in dry_run mode' do
-      with_test_platform_for_actions do |repository|
-        test_ssh_executor.dry_run = true
-        stdout_file = "#{repository}/run.stdout"
-        File.open(stdout_file, 'w') { |f| f.truncate(0) }
-        test_cmd_runner.stdout_device = stdout_file
-        test_nodes_handler.stdout_device = stdout_file
-        test_ssh_executor.stdout_device = stdout_file
-        test_ssh_executor.execute_actions('node1' => [
-          {
-            test_action: {
-              message: 'Action executed',
-              run_cmd: 'echo Hello'
-            }
-          }
-        ])
-        expect(action_executions).to eq [{ node: 'node1', message: 'Action executed', dry_run: true }]
-        expect(File.read(stdout_file).split("\n")).to eq [
-          'echo Hello'
-        ]
-      end
-    end
-
     it 'executes a simple action on several nodes' do
       with_test_platform_for_actions do
         test_ssh_executor.execute_actions(%w[node1 node2 node3] => { test_action: 'Action executed' })
         expect(action_executions).to eq [
-          { node: 'node1', message: 'Action executed', dry_run: false },
-          { node: 'node2', message: 'Action executed', dry_run: false },
-          { node: 'node3', message: 'Action executed', dry_run: false }
+          { node: 'node1', message: 'Action executed' },
+          { node: 'node2', message: 'Action executed' },
+          { node: 'node3', message: 'Action executed' }
         ]
       end
     end
@@ -69,9 +46,9 @@ describe HybridPlatformsConductor::SshExecutor do
           { test_action: 'Action 3 executed' }
         ])
         expect(action_executions).to eq [
-          { node: 'node1', message: 'Action 1 executed', dry_run: false },
-          { node: 'node1', message: 'Action 2 executed', dry_run: false },
-          { node: 'node1', message: 'Action 3 executed', dry_run: false }
+          { node: 'node1', message: 'Action 1 executed' },
+          { node: 'node1', message: 'Action 2 executed' },
+          { node: 'node1', message: 'Action 3 executed' }
         ]
       end
     end
@@ -84,9 +61,9 @@ describe HybridPlatformsConductor::SshExecutor do
           'node3' => { test_action: 'Action 3 executed' }
         )
         expect(action_executions).to eq [
-          { node: 'node1', message: 'Action 1 executed', dry_run: false },
-          { node: 'node2', message: 'Action 2 executed', dry_run: false },
-          { node: 'node3', message: 'Action 3 executed', dry_run: false }
+          { node: 'node1', message: 'Action 1 executed' },
+          { node: 'node2', message: 'Action 2 executed' },
+          { node: 'node3', message: 'Action 3 executed' }
         ]
       end
     end
@@ -263,8 +240,8 @@ describe HybridPlatformsConductor::SshExecutor do
           '/node1/' => { test_action: 'Action 2 executed' }
         )
         expect(action_executions).to eq [
-          { node: 'node1', message: 'Action 1 executed', dry_run: false },
-          { node: 'node1', message: 'Action 2 executed', dry_run: false }
+          { node: 'node1', message: 'Action 1 executed' },
+          { node: 'node1', message: 'Action 2 executed' }
         ]
       end
     end

@@ -50,17 +50,6 @@ describe HybridPlatformsConductor::SshExecutor do
       end
     end
 
-    it 'does not execute remote interactive session in dry_run mode' do
-      with_test_platform_for_actions do |repository|
-        test_ssh_executor.dry_run = true
-        expect_any_instance_of(HybridPlatformsConductor::Actions::Interactive).not_to receive(:system)
-        expect(execute(
-          { interactive: true },
-          expected_commands: []
-        )).to eq [0, '', '']
-      end
-    end
-
   end
 
 end

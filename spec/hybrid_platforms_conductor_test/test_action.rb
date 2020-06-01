@@ -9,7 +9,6 @@ module HybridPlatformsConductorTest
       # Array< Hash<Symbol,Object> >
       # * *node* (String): Node on which the action has been executed
       # * *message* (String): Message executed
-      # * *dry_run* (Boolean): Was the action executed in dry run mode?
       attr_accessor :executions
 
       # Reset variables, so that they don't interfere between tests
@@ -46,8 +45,7 @@ module HybridPlatformsConductorTest
       @input[:code].call(@stdout_io, @stderr_io, self) if @input.key?(:code)
       TestAction.executions << {
         node: @node,
-        message: @input[:message],
-        dry_run: @dry_run
+        message: @input[:message]
       }
     end
 

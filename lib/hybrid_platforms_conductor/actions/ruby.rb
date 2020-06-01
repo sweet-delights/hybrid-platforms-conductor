@@ -34,11 +34,7 @@ module HybridPlatformsConductor
       def execute
         log_debug "[#{@node}] - Execute local Ruby code #{@code}..."
         # TODO: Handle timeout without using Timeout which is harmful when dealing with SSH connections and multithread.
-        if @dry_run
-          log_debug "[#{@node}] - Won't execute Ruby code in dry_run mode."
-        else
-          @code.call @stdout_io, @stderr_io, self
-        end
+        @code.call @stdout_io, @stderr_io, self
       end
 
       # Make the run_cmd method public for this action as it can be used by client procs
