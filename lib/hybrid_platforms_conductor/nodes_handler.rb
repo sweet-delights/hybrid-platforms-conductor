@@ -277,6 +277,30 @@ module HybridPlatformsConductor
       @metadata[node][property]
     end
 
+    # Override a metadata property for a given node
+    #
+    # Parameters::
+    # * *node* (String): Node
+    # * *property* (Symbol): The property name
+    # * *value* (Object): The property value
+    def override_metadata_of(node, property, value)
+      @metadata_mutex.synchronize do
+        @metadata[node] = {} unless @metadata.key?(node)
+        @metadata[node][property] = value
+      end
+    end
+
+    # Invalidate a metadata property for a given node
+    #
+    # Parameters::
+    # * *node* (String): Node
+    # * *property* (Symbol): The property name
+    def invalidate_metadata_of(node, property)
+      @metadata_mutex.synchronize do
+        @metadata[node].delete(property) if @metadata.key?(node)
+      end
+    end
+
     # Define a method to get a metadata property of a node.
     # This is like a factory of method shortcuts for properties.
     # The method will be named get_<property>_of.
@@ -388,8 +412,8 @@ module HybridPlatformsConductor
           @metadata_mutex.synchronize do
             @metadata.merge!(updated_metadata) do |node, existing_metadata, new_metadata|
               existing_metadata.merge(new_metadata) do |prop_name, existing_value, new_value|
-                raise "A CMDB returned a conflicting value for metadata #{prop_name} of node #{node}: #{new_value} whereas the value was already set to #{existing_value}" unless new_value == existing_value
-                new_value
+                log_warn "A CMDB returned a conflicting value for metadata #{prop_name} of node #{node}: #{new_value} whereas the value was already set to #{existing_value}. Keep old value." unless new_value == existing_value
+                existing_value
               end
             end
           end
