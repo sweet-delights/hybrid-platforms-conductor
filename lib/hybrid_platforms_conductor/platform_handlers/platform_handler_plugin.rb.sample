@@ -267,6 +267,31 @@ module HybridPlatformsConductor
         @local_testing = true
       end
 
+      # Parse stdout and stderr of a given deploy run and get the list of tasks with their status
+      # [API] - This method is mandatory.
+      #
+      # Parameters::
+      # * *stdout* (String): stdout to be parsed
+      # * *stderr* (String): stderr to be parsed
+      # Result::
+      # * Array< Hash<Symbol,Object> >: List of task properties. The following properties should be returned, among free ones:
+      #   * *name* (String): Task name
+      #   * *status* (Symbol): Task status. Should be on of:
+      #     * *:changed*: The task has been changed
+      #     * *:identical*: The task has not been changed
+      def parse_deploy_output(stdout, stderr)
+        tasks = []
+        stdout.split("\n").each do |line|
+          if line =~ /Task (.+) status - (.+)/
+            tasks << {
+              name: $1,
+              status: $2 == 'ok' ? :identical : :changed
+            }
+          end
+        end
+        tasks
+      end
+
     end
 
   end
