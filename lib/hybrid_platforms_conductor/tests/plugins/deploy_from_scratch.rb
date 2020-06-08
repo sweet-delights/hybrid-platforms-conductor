@@ -1,3 +1,5 @@
+require 'hybrid_platforms_conductor/tests/test_by_service'
+
 module HybridPlatformsConductor
 
   module Tests
@@ -5,20 +7,7 @@ module HybridPlatformsConductor
     module Plugins
 
       # Test that deploy returns no error on an empty image
-      class DeployFromScratch < Tests::Test
-
-        # Limit the list of nodes for these tests.
-        #
-        # Result::
-        # * Array<String or Regex> or nil: List of nodes allowed for this test, or nil for all. Regular expressions matching node names can also be used.
-        def self.only_on_nodes
-          # Just 1 node per service and platform
-          Tests::Test.nodes_handler.
-            known_nodes.
-            sort.
-            group_by { |node| [Tests::Test.nodes_handler.get_services_of(node).sort, Tests::Test.nodes_handler.platform_for(node).info[:repo_name]] }.
-            map { |(_service, _platform), nodes| nodes.first }
-        end
+      class DeployFromScratch < TestByService
 
         # Check my_test_plugin.rb.sample documentation for signature details.
         def test_for_node
