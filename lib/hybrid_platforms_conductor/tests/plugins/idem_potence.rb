@@ -13,8 +13,7 @@ module HybridPlatformsConductor
         # Check my_test_plugin.rb.sample documentation for signature details.
         def test_for_node
           @deployer.with_docker_container_for(@node, container_id: 'idem_potence', reuse_container: log_debug?) do |deployer, container_ip, docker_container|
-            # First deploy as root to give access to a_testadmin
-            # TODO: PROJECT-594 - Replace this deploy and sleep by the process of infra provisioning
+            # First deploy as root
             exit_status, _stdout, _stderr = deployer.deploy_on(@node)[@node]
             if exit_status == 0
               # As it's possible sshd has to be restarted because of a change in its conf, restart the container.
