@@ -330,8 +330,11 @@ module HybridPlatformsConductor
       # Max number of threads to use to parallelize ControlMaster connections
       MAX_THREADS_CONTROL_MASTER = 32
 
-      # Max number of retries because a system is booting up (each retry has 1 min wait)
+      # Max number of retries because a system is booting up
       MAX_RETRIES_FOR_BOOT = 10
+
+      # Time in seconds to wait between different retries because system is booting up
+      WAIT_TIME_FOR_BOOT = 10
 
       # Open an SSH control master to multiplex connections to a given list of nodes.
       # This method is re-entrant and reuses the same control masters.
@@ -384,7 +387,7 @@ module HybridPlatformsConductor
                         # Wait a bit and try again
                         idx_try += 1
                         log_debug "[ ControlMaster - #{ssh_url} ] - System is booting up (try ##{idx_try}). Wait 1 minute before trying ControlMaster's creation again."
-                        sleep 60
+                        sleep WAIT_TIME_FOR_BOOT
                       elsif no_exception
                         break
                       else

@@ -349,6 +349,40 @@ describe HybridPlatformsConductor::ActionsExecutor do
         end
       end
 
+      it 'retries when the remote node is booting up' do
+        with_test_platform(nodes: { 'node' => { meta: { host_ip: '192.168.42.42' } } }) do
+          nbr_boot_messages = 0
+          with_cmd_runner_mocked(
+            [
+              ['which env', proc { [0, "/usr/bin/env\n", ''] }],
+              ['ssh -V 2>&1', proc { [0, "OpenSSH_7.4p1 Debian-10+deb9u7, OpenSSL 1.0.2u  20 Dec 2019\n", ''] }],
+            ] +
+              [[
+                /^.+\/ssh -o BatchMode=yes -o ControlMaster=yes -o ControlPersist=yes test_user@ti\.node true$/,
+                proc do
+                  nbr_boot_messages += 1
+                  [255, '', "System is booting up. See pam_nologin(8)\nAuthentication failed.\n"]
+                end
+              ]] * 3 +
+              ssh_expected_commands_for('node' => { connection: '192.168.42.42', user: 'test_user' })
+          ) do
+            test_connector.ssh_user = 'test_user'
+            # To speed up the test, alter the wait time between retries.
+            old_wait = HybridPlatformsConductor::Connectors::Ssh.const_get(:WAIT_TIME_FOR_BOOT)
+            begin
+              HybridPlatformsConductor::Connectors::Ssh.send(:remove_const, :WAIT_TIME_FOR_BOOT)
+              HybridPlatformsConductor::Connectors::Ssh.const_set(:WAIT_TIME_FOR_BOOT, 1)
+              test_connector.with_connection_to(['node']) do
+              end
+              expect(nbr_boot_messages).to eq 3
+            ensure
+              HybridPlatformsConductor::Connectors::Ssh.send(:remove_const, :WAIT_TIME_FOR_BOOT)
+              HybridPlatformsConductor::Connectors::Ssh.const_set(:WAIT_TIME_FOR_BOOT, old_wait)
+            end
+          end
+        end
+      end
+
     end
 
   end
