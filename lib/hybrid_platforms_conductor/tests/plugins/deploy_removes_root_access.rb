@@ -24,7 +24,7 @@ module HybridPlatformsConductor
 
         # Check my_test_plugin.rb.sample documentation for signature details.
         def test_for_node
-          @deployer.with_docker_container_for(@node, container_id: 'deploy_removes_root_access') do |deployer, ip_address|
+          @deployer.with_docker_container_for(@node, container_id: 'deploy_removes_root_access', reuse_container: log_debug?) do |deployer, ip_address|
             # Check that we can connect with root
             ssh_ok = false
             begin
