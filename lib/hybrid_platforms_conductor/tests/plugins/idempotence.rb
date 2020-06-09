@@ -8,11 +8,11 @@ module HybridPlatformsConductor
 
       # Test that a check-node after a deploy returns no error.
       # This tests also the ciadm access. Don't forget to add the ciadm private key in your SSH agent if you run this test locally.
-      class IdemPotence < TestByService
+      class Idempotence < TestByService
 
         # Check my_test_plugin.rb.sample documentation for signature details.
         def test_for_node
-          @deployer.with_docker_container_for(@node, container_id: 'idem_potence', reuse_container: log_debug?) do |deployer, container_ip, docker_container|
+          @deployer.with_docker_container_for(@node, container_id: 'idempotence', reuse_container: log_debug?) do |deployer, container_ip, docker_container|
             # First deploy as root
             exit_status, _stdout, _stderr = deployer.deploy_on(@node)[@node]
             if exit_status == 0
