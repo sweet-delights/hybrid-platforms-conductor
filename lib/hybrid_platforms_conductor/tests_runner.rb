@@ -529,7 +529,7 @@ module HybridPlatformsConductor
               rescue
                 # If an exception occurred, make sure all concerned nodes are reporting the error
                 nodes_to_test.each do |node|
-                  error "Error while checking check-node output: #{$!}", node: node
+                  error "Error while checking check-node output: #{$!}#{log_debug? ? "\n#{$!.backtrace.join("\n")}" : ''}", node: node
                 end
                 {}
               end
