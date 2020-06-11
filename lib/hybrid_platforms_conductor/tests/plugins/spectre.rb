@@ -16,7 +16,9 @@ module HybridPlatformsConductor
         # Check my_test_plugin.rb.sample documentation for signature details.
         def test_on_node
           {
-            File.read("#{File.dirname(__FILE__)}/../spectre-meltdown-checker.sh") => {
+            "sudo /bin/bash <<'EOAction'
+            #{File.read("#{__dir__}/../spectre-meltdown-checker.sh")}
+EOAction" => {
               validator: proc do |stdout|
                 VULNERABILITIES_TO_CHECK.each do |id, name|
                   id_regexp = /#{Regexp.escape(id)}/
