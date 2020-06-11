@@ -400,6 +400,7 @@ module HybridPlatformsConductor
               end
             rescue
               test.error "Uncaught exception during test preparation: #{$!}#{log_debug? ? "\n#{$!.backtrace.join("\n")}" : ''}"
+              test.executed
             end
             @tests_run << test
             tests_on_nodes << test_name
