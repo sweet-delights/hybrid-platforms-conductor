@@ -1,3 +1,9 @@
+# [18.2.6](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv18.2.5&sourceBranch=refs%2Ftags%2Fv18.2.6) (2020-06-15)
+
+### Fixes
+
+* Dump call trace when an exception arises during check-node in debug mode ([f018ca08](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/commits/f018ca087705f36c53a584e14b4f32abb0259706))
+
 # [18.2.5](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv18.2.4&sourceBranch=refs%2Ftags%2Fv18.2.5) (2020-06-15)
 
 ### Fixes
