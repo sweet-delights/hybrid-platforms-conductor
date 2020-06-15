@@ -1,3 +1,9 @@
+# [18.2.0](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv18.1.0&sourceBranch=refs%2Ftags%2Fv18.2.0) (2020-06-15)
+
+### New features
+
+* [Feature] Parse deployment logs to check tasks in detail for idempotence ([4553565b](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/commits/4553565bcc934956085bae6a819b797393cc0f0e))
+
 # [18.1.0](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv18.0.4&sourceBranch=refs%2Ftags%2Fv18.1.0) (2020-06-15)
 
 ### New features
