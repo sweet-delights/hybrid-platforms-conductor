@@ -1,3 +1,9 @@
+# [18.2.3](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv18.2.2&sourceBranch=refs%2Ftags%2Fv18.2.3) (2020-06-15)
+
+### Fixes
+
+* Factorize tests at service-level logic ([5237930f](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/commits/5237930f1a39adf3bd05e1f45447b1c512ad7a4f))
+
 # [18.2.2](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv18.2.1&sourceBranch=refs%2Ftags%2Fv18.2.2) (2020-06-15)
 
 ### Fixes
