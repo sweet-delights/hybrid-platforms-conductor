@@ -426,7 +426,7 @@ module HybridPlatformsConductor
 
           # Prepare for deployment
           @platforms.each do |platform_handler|
-            platform_handler.prepare_for_deploy(use_why_run: @use_why_run) if platform_handler.respond_to?(:prepare_for_deploy)
+            platform_handler.prepare_for_deploy(@nodes, use_why_run: @use_why_run) if platform_handler.respond_to?(:prepare_for_deploy)
           end
 
           # Get the ssh user directly from the connector
