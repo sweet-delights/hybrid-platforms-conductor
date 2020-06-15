@@ -186,9 +186,15 @@ Those values can be overridden by the tools command lines options if needed (alw
 export hpc_ssh_user=<your_default_ssh_user_name>
 export hpc_ssh_gateways_conf=<your_default_gateway_configuration>
 export hpc_certificates=<path_to_dir_containing_crt_certificates>
+export hpc_thycotic_domain=<thycotic_authorization_domain>
+export hpc_thycotic_user=<thycotic_authorization_user>
+export hpc_thycotic_password=<thycotic_authorization_password>
 ```
 
 * `hpc_certificates` is an optional variable pointing to a directory containing `.crt` Base-64 encoded certificates. Those certificates will automatically be deployed on nodes handled by the Conductor. This can be useful when working from local environments that are subject to corporate certificates.
+* `hpc_thycotic_domain` should contain the domain used when authenticating on a Thycotic server. This is ignored unless you use the `--secrets` option pointing to a Thycotic server. For the My_company Thycotic server the value is `mucmspdom`.
+* `hpc_thycotic_user` can contain the user used when authenticating on a Thycotic server. This is ignored unless you use the `--secrets` option pointing to a Thycotic server. If absent then the value is retrieved from the `~/.netrc` file.
+* `hpc_thycotic_password` can contain the password used when authenticating on a Thycotic server. This is ignored unless you use the `--secrets` option pointing to a Thycotic server. If absent then the value is retrieved from the `~/.netrc` file.
 
 Unless you use the commands from directory containing the file `platforms.rb`, you'll have to set the `hpc_platforms` environment variable to the path containing the `platforms.rb` file.
 For example if the file `/path/to/hybrid-platforms/platforms.rb` exists:
@@ -255,7 +261,9 @@ Connector ssh options:
         --ssh-gateways-conf
 
 Deployer options:
-    -e, --secrets JSON_FILE_NAME     Specify a JSON file storing secrets (can be specified several times).
+    -e, --secrets SECRETS_LOCATION   Specify a secrets location. Can be specified several times. Location can be:
+                                     * Local path to a JSON file
+                                     * URL of the form http[s]://<url>:<secret_id> to get a secret JSON file from a Thycotic Secret Server at the given URL.
     -i, --direct-deploy              Don't use artefacts servers while deploying.
     -p, --parallel                   Execute the commands in parallel (put the standard output in files ./run_logs/*.stdout)
     -t, --timeout SECS               Timeout in seconds to wait for each chef run. Only used in why-run mode. (defaults to no timeout)
@@ -308,7 +316,9 @@ Connector ssh options:
         --ssh-gateways-conf
 
 Deployer options:
-    -e, --secrets JSON_FILE_NAME     Specify a JSON file storing secrets (can be specified several times).
+    -e, --secrets SECRETS_LOCATION   Specify a secrets location. Can be specified several times. Location can be:
+                                     * Local path to a JSON file
+                                     * URL of the form http[s]://<url>:<secret_id> to get a secret JSON file from a Thycotic Secret Server at the given URL.
     -i, --direct-deploy              Don't use artefacts servers while deploying.
     -t, --timeout SECS               Timeout in seconds to wait for each chef run. Only used in why-run mode. (defaults to no timeout)
 
@@ -423,7 +433,9 @@ Connector ssh options:
         --ssh-gateways-conf
 
 Deployer options:
-    -e, --secrets JSON_FILE_NAME     Specify a JSON file storing secrets (can be specified several times).
+    -e, --secrets SECRETS_LOCATION   Specify a secrets location. Can be specified several times. Location can be:
+                                     * Local path to a JSON file
+                                     * URL of the form http[s]://<url>:<secret_id> to get a secret JSON file from a Thycotic Secret Server at the given URL.
     -i, --direct-deploy              Don't use artefacts servers while deploying.
     -p, --parallel                   Execute the commands in parallel (put the standard output in files ./run_logs/*.stdout)
     -t, --timeout SECS               Timeout in seconds to wait for each chef run. Only used in why-run mode. (defaults to no timeout)
@@ -965,7 +977,9 @@ Connector ssh options:
         --ssh-gateways-conf
 
 Deployer options:
-    -e, --secrets JSON_FILE_NAME     Specify a JSON file storing secrets (can be specified several times).
+    -e, --secrets SECRETS_LOCATION   Specify a secrets location. Can be specified several times. Location can be:
+                                     * Local path to a JSON file
+                                     * URL of the form http[s]://<url>:<secret_id> to get a secret JSON file from a Thycotic Secret Server at the given URL.
     -i, --direct-deploy              Don't use artefacts servers while deploying.
     -t, --timeout SECS               Timeout in seconds to wait for each chef run. Only used in why-run mode. (defaults to 30)
     -W, --why-run                    Use the why-run mode to see what would be the result of the deploy instead of deploying it for real.
@@ -1036,7 +1050,9 @@ Connector ssh options:
         --ssh-gateways-conf
 
 Deployer options:
-    -e, --secrets JSON_FILE_NAME     Specify a JSON file storing secrets (can be specified several times).
+    -e, --secrets SECRETS_LOCATION   Specify a secrets location. Can be specified several times. Location can be:
+                                     * Local path to a JSON file
+                                     * URL of the form http[s]://<url>:<secret_id> to get a secret JSON file from a Thycotic Secret Server at the given URL.
     -i, --direct-deploy              Don't use artefacts servers while deploying.
     -t, --timeout SECS               Timeout in seconds to wait for each chef run. Only used in why-run mode. (defaults to 30)
 
@@ -1137,7 +1153,9 @@ Connector ssh options:
         --ssh-gateways-conf
 
 Deployer options:
-    -e, --secrets JSON_FILE_NAME     Specify a JSON file storing secrets (can be specified several times).
+    -e, --secrets SECRETS_LOCATION   Specify a secrets location. Can be specified several times. Location can be:
+                                     * Local path to a JSON file
+                                     * URL of the form http[s]://<url>:<secret_id> to get a secret JSON file from a Thycotic Secret Server at the given URL.
         --direct-deploy              Don't use artefacts servers while deploying.
 
 Tests runner options:
@@ -1365,14 +1383,19 @@ The Deployer options are used to drive a deployment (be it in why-run mode or no
 
 ```
 Deployer options:
-    -e, --secrets JSON_FILE_NAME     Specify a JSON file storing secrets (can be specified several times).
+    -e, --secrets SECRETS_LOCATION   Specify a secrets location. Can be specified several times. Location can be:
+                                     * Local path to a JSON file
+                                     * URL of the form http[s]://<url>:<secret_id> to get a secret JSON file from a Thycotic Secret Server at the given URL.
     -i, --direct-deploy              Don't use artefacts servers while deploying.
     -p, --parallel                   Execute the commands in parallel (put the standard output in files ./run_logs/*.stdout)
     -t, --timeout SECS               Timeout in seconds to wait for each chef run. Only used in why-run mode. (defaults to no timeout)
     -W, --why-run                    Use the why-run mode to see what would be the result of the deploy instead of deploying it for real.
 ```
 
-* `--secrets JSON_FILE_NAME`: Specify a JSON file storing secrets that can be used by the deployment process. Secrets are values that are needed for deployment but that should not be part of the platforms repositories (such as passwords).
+* `--secrets SECRETS_LOCATION`: Specify a JSON file storing secrets that can be used by the deployment process. Secrets are values that are needed for deployment but that should not be part of the platforms repositories (such as passwords).
+  The location can be:
+  * A local file path (for example /path/to/file.json).
+  * A Thycotic Secret Server URL followed by a secret id (for example https://portal.muc.msp.my_company.net/SecretServer:8845).
 * `--direct-deploy`: When specified, don't use artefacts servers to ship the deployment deliverable. Ship directly to the target node instead.
 * `--parallel`: Specify that the deployment process should perform concurrently on the different nodes it has to deploy to.
 * `--timeout SECS`: Specify the timeout (in seconds) to apply while deploying. This can be set only in why-run mode.

@@ -8,6 +8,7 @@ require 'hybrid_platforms_conductor/nodes_handler'
 require 'hybrid_platforms_conductor/actions_executor'
 require 'hybrid_platforms_conductor/cmd_runner'
 require 'hybrid_platforms_conductor/executable'
+require 'hybrid_platforms_conductor/thycotic'
 
 module HybridPlatformsConductor
 
@@ -103,8 +104,8 @@ module HybridPlatformsConductor
     #   Boolean
     attr_accessor :force_direct_deploy
 
-    # The list of secrets JSON files
-    #   Array<String>
+    # The list of JSON secrets
+    #   Array<Hash>
     attr_accessor :secrets
 
     # Do we allow deploying branches that are not master? [default = false]
@@ -152,8 +153,27 @@ module HybridPlatformsConductor
     def options_parse(options_parser, parallel_switch: true, why_run_switch: false, plugins_options: true, timeout_options: true)
       options_parser.separator ''
       options_parser.separator 'Deployer options:'
-      options_parser.on('-e', '--secrets JSON_FILE_NAME', 'Specify a JSON file storing secrets (can be specified several times).') do |json_file|
-        @secrets << File.expand_path(json_file)
+      options_parser.on(
+        '-e', '--secrets SECRETS_LOCATION',
+        'Specify a secrets location. Can be specified several times. Location can be:',
+        '* Local path to a JSON file',
+        '* URL of the form http[s]://<url>:<secret_id> to get a secret JSON file from a Thycotic Secret Server at the given URL.'
+      ) do |secrets_location|
+        @secrets << JSON.parse(
+          if secrets_location =~ /^(https?:\/\/.+):(\d+)$/
+            url = $1
+            secret_id = $2
+            thycotic = Thycotic.new(url, logger: @logger)
+            secret_file_item_id = thycotic.get_secret(secret_id).dig(:secret, :items, :secret_item, :id)
+            raise "Unable to fetch secret file ID #{secrets_location}" if secret_file_item_id.nil?
+            secret = thycotic.download_file_attachment_by_item_id(secret_id, secret_file_item_id)
+            raise "Unable to fetch secret file attachment from #{secrets_location}" if secret.nil?
+            secret
+          else
+            raise "Missing secret file: #{secrets_location}" unless File.exist?(secrets_location)
+            File.read(secrets_location)
+          end
+        )
       end
       options_parser.on('-i', '--direct-deploy', 'Don\'t use artefacts servers while deploying.') do
         @force_direct_deploy = true
@@ -180,9 +200,6 @@ module HybridPlatformsConductor
     # Validate that parsed parameters are valid
     def validate_params
       raise 'Can\'t have a timeout unless why-run mode. Please don\'t use --timeout without --why-run.' if !@timeout.nil? && !@use_why_run
-      @secrets.each do |secret_file|
-        raise "Missing secret file: #{secret_file}" unless File.exist?(secret_file)
-      end
     end
 
     # Deploy on a given list of nodes selectors.
@@ -316,7 +333,7 @@ module HybridPlatformsConductor
                   deployer.allow_deploy_non_master = true
                   deployer.prepare_for_local_environment
                   # Ignore secrets that might have been given: in Docker containers we always use dummy secrets
-                  deployer.secrets = ["#{nodes_handler.hybrid_platforms_dir}/dummy_secrets.json"]
+                  deployer.secrets = [JSON.parse(File.read("#{nodes_handler.hybrid_platforms_dir}/dummy_secrets.json"))]
                   yield deployer, container_ip
                 end
               else
@@ -417,8 +434,7 @@ module HybridPlatformsConductor
         @actions_executor.with_connections_prepared_to(@nodes, no_exception: true) do
 
           # Register the secrets in all the platforms
-          @secrets.each do |json_file|
-            secret_json = JSON.parse(File.read(json_file))
+          @secrets.each do |secret_json|
             @platforms.each do |platform_handler|
               platform_handler.register_secrets(secret_json)
             end

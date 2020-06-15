@@ -97,27 +97,21 @@ module HybridPlatformsConductorTest
             end
           end
 
-          it 'deploys on 1 node using 1 secrets file' do
-            with_platform_to_deploy do |repository|
+          it 'deploys on 1 node using 1 secret' do
+            with_platform_to_deploy do
               registered_secrets = nil
               test_platforms_info[platform_name][:register_secrets] = proc { |secrets| registered_secrets = secrets }
-              secret_file = "#{repository}/secrets.json"
-              File.write(secret_file, '{ "secret1": "password1" }')
-              test_deployer.secrets = [secret_file]
+              test_deployer.secrets = [{ 'secret1' => 'password1' }]
               expect(test_deployer.deploy_on('node')).to eq('node' => expected_deploy_result)
               expect(registered_secrets).to eq('secret1' => 'password1')
             end
           end
 
-          it 'deploys on 1 node using several secrets file' do
-            with_platform_to_deploy do |repository|
+          it 'deploys on 1 node using several secrets' do
+            with_platform_to_deploy do
               registered_secrets = []
               test_platforms_info[platform_name][:register_secrets] = proc { |secrets| registered_secrets << secrets }
-              secret_file1 = "#{repository}/secrets1.json"
-              secret_file2 = "#{repository}/secrets2.json"
-              File.write(secret_file1, '{ "secret1": "password1" }')
-              File.write(secret_file2, '{ "secret2": "password2" }')
-              test_deployer.secrets = [secret_file1, secret_file2]
+              test_deployer.secrets = [{ 'secret1' => 'password1' }, { 'secret2' => 'password2' }]
               expect(test_deployer.deploy_on('node')).to eq('node' => expected_deploy_result)
               expect(registered_secrets).to eq([
                 { 'secret1' => 'password1' },
