@@ -1,3 +1,9 @@
+# [18.1.0](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv18.0.4&sourceBranch=refs%2Ftags%2Fv18.1.0) (2020-06-15)
+
+### New features
+
+* [Feature] Make the --secrets option able to fetch secrets directly from a Thycotic Secret Server ([029a533c](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/commits/029a533c2a9d4002dd363fec9c81c28417d92ea1))
+
 # [18.0.4](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv18.0.3&sourceBranch=refs%2Ftags%2Fv18.0.4) (2020-06-15)
 
 ### Fixes
