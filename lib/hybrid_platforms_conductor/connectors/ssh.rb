@@ -330,6 +330,12 @@ module HybridPlatformsConductor
       # Max number of threads to use to parallelize ControlMaster connections
       MAX_THREADS_CONTROL_MASTER = 32
 
+      # Max number of retries because a system is booting up
+      MAX_RETRIES_FOR_BOOT = 10
+
+      # Time in seconds to wait between different retries because system is booting up
+      WAIT_TIME_FOR_BOOT = 10
+
       # Open an SSH control master to multiplex connections to a given list of nodes.
       # This method is re-entrant and reuses the same control masters.
       # It is multi-processes:
@@ -363,10 +369,30 @@ module HybridPlatformsConductor
                     log_debug "[ ControlMaster - #{ssh_url} ] - Creating SSH ControlMaster..."
                     # Create the control master
                     ssh_control_master_start_cmd = "#{ssh_exec}#{@passwords.key?(node) || @auth_password ? '' : ' -o BatchMode=yes'} -o ControlMaster=yes -o ControlPersist=yes #{ssh_url} true"
-                    begin
-                      exit_status, _stdout, _stderr = @cmd_runner.run_cmd ssh_control_master_start_cmd, log_to_stdout: log_debug?, no_exception: no_exception, timeout: timeout
-                    rescue CmdRunner::UnexpectedExitCodeError
-                      raise ActionsExecutor::ConnectionError, "Error while starting SSH Control Master with #{ssh_control_master_start_cmd}"
+                    exit_status = nil
+                    idx_try = 0
+                    loop do
+                      stderr = nil
+                      exit_status, _stdout, stderr = @cmd_runner.run_cmd ssh_control_master_start_cmd, log_to_stdout: log_debug?, no_exception: true, timeout: timeout
+                      if exit_status == 0
+                        break
+                      elsif stderr =~ /System is booting up/
+                        if idx_try == MAX_RETRIES_FOR_BOOT
+                          if no_exception
+                            break
+                          else
+                            raise ActionsExecutor::ConnectionError, "Tried #{idx_try} times to create SSH Control Master with #{ssh_control_master_start_cmd} but system says it's booting up."
+                          end
+                        end
+                        # Wait a bit and try again
+                        idx_try += 1
+                        log_debug "[ ControlMaster - #{ssh_url} ] - System is booting up (try ##{idx_try}). Wait #{WAIT_TIME_FOR_BOOT} seconds before trying ControlMaster's creation again."
+                        sleep WAIT_TIME_FOR_BOOT
+                      elsif no_exception
+                        break
+                      else
+                        raise ActionsExecutor::ConnectionError, "Error while starting SSH Control Master with #{ssh_control_master_start_cmd}"
+                      end
                     end
                     if exit_status == 0
                       log_debug "[ ControlMaster - #{ssh_url} ] - ControlMaster created"
