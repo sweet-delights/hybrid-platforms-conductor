@@ -1,3 +1,9 @@
+# [18.2.5](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv18.2.4&sourceBranch=refs%2Ftags%2Fv18.2.5) (2020-06-15)
+
+### Fixes
+
+* Add divergence test - what was previously achieved by the chef_woulds test, now generic ([3ca11868](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/commits/3ca118687a07e2bd3a34de0d2dbd50b46d597901))
+
 # [18.2.4](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv18.2.3&sourceBranch=refs%2Ftags%2Fv18.2.4) (2020-06-15)
 
 ### Fixes
