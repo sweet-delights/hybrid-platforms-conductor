@@ -386,7 +386,7 @@ module HybridPlatformsConductor
                         end
                         # Wait a bit and try again
                         idx_try += 1
-                        log_debug "[ ControlMaster - #{ssh_url} ] - System is booting up (try ##{idx_try}). Wait 1 minute before trying ControlMaster's creation again."
+                        log_debug "[ ControlMaster - #{ssh_url} ] - System is booting up (try ##{idx_try}). Wait #{WAIT_TIME_FOR_BOOT} seconds before trying ControlMaster's creation again."
                         sleep WAIT_TIME_FOR_BOOT
                       elsif no_exception
                         break
