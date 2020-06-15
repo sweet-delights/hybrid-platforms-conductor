@@ -2,8 +2,8 @@ require 'hybrid_platforms_conductor/logger_helpers'
 
 module HybridPlatformsConductor
 
-  # Base class for any action that could be run on a node.
-  class Action
+  # Base class for any connector
+  class Connector
 
     include LoggerHelpers
 
@@ -13,47 +13,47 @@ module HybridPlatformsConductor
     # * *logger* (Logger): Logger to be used [default: Logger.new(STDOUT)]
     # * *logger_stderr* (Logger): Logger to be used for stderr [default: Logger.new(STDERR)]
     # * *cmd_runner* (CmdRunner): Command executor to be used. [default: CmdRunner.new]
-    # * *ssh_executor* (SshExecutor): Ssh executor to be used. [default: SshExecutor.new]
-    # * *action_info* (Object or nil): Action info needed to setup the action, or nil if none [default: nil]
+    # * *nodes_handler* (NodesHandler): NodesHandler to be used. [default: NodesHandler.new]
     def initialize(
       logger: Logger.new(STDOUT),
       logger_stderr: Logger.new(STDERR),
       cmd_runner: CmdRunner.new,
-      ssh_executor: SshExecutor.new,
-      action_info: nil
+      nodes_handler: NodesHandler.new
     )
       @logger = logger
       @logger_stderr = logger_stderr
       @cmd_runner = cmd_runner
-      @ssh_executor = ssh_executor
-      @action_info = action_info
-      setup(@action_info) if self.respond_to?(:setup)
+      @nodes_handler = nodes_handler
+      # If the connector has an initializer, use it
+      init if respond_to?(:init)
     end
 
-    # Do we need a connector to execute this action on a node?
-    #
-    # Result::
-    # * Boolean: Do we need a connector to execute this action on a node?
-    def need_connector?
-      false
-    end
-
-    # Prepare an action to be run for a given node in a given context.
-    # It is required to call this method before executing the action.
+    # Prepare a connector to be run for a given node in a given context.
+    # It is required to call this method before using the following methods:
+    # * remote_bash
+    # * run_cmd
     #
     # Paramaters::
-    # * *node* (String): The node this actions is targetting
-    # * *connector* (Connector or nil): Connector to use to connect to this node, or nil if none
-    # * *timeout* (Integer or nil): Timeout this action should have (in seconds), or nil if none
+    # * *node* (String): The node this connector is currently targeting
+    # * *timeout* (Integer or nil): Timeout this connector's process should have (in seconds), or nil if none
     # * *stdout_io* (IO): IO to log stdout to
     # * *stderr_io* (IO): IO to log stderr to
-    def prepare_for(node, connector, timeout, stdout_io, stderr_io)
+    def prepare_for(node, timeout, stdout_io, stderr_io)
       @node = node
-      @connector = connector
       @timeout = timeout
       @stdout_io = stdout_io
       @stderr_io = stderr_io
-      @connector.prepare_for(@node, @timeout, @stdout_io, @stderr_io) if @connector
+    end
+
+    # Prepare connections to a given set of nodes.
+    # Useful to prefetch metadata or open bulk connections.
+    # Default implementation deos nothing.
+    #
+    # Parameters::
+    # * *nodes* (Array<String>): Nodes to prepare the connection to
+    # * Proc: Code called with the connections prepared.
+    def with_connection_to(nodes)
+      yield
     end
 
     private

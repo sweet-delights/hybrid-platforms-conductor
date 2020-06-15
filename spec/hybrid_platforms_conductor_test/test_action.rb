@@ -25,6 +25,7 @@ module HybridPlatformsConductorTest
     # * *input* (Hash<Symbol, Object>): The action input, as a set of properties:
     #   * *message* (String): The message to log in the executions. This is the default property that can be used in place of the Hash. [default = 'Action executed']
     #   * *run_cmd* (String or nil): A command to run with run_cmd, or nil if none [default = nil]
+    #   * *need_connector* (Boolean): Does this action need a remote connection to the node? [default = false]
     #   * *code* (Proc or nil): Code to be called during action's execution, or nil if none [default = nil]
     #     * Parameters::
     #       * *stdout_io* (IO): stdout IO to be used for stdout logging
@@ -35,8 +36,17 @@ module HybridPlatformsConductorTest
       input = { message: input } if input.is_a?(String)
       # Set defaults
       @input = {
-        message: 'Action executed'
+        message: 'Action executed',
+        need_connector: false
       }.merge(input)
+    end
+
+    # Do we need a connector to execute this action on a node?
+    #
+    # Result::
+    # * Boolean: Do we need a connector to execute this action on a node?
+    def need_connector?
+      @input[:need_connector]
     end
 
     # Execute the action

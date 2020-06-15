@@ -267,6 +267,62 @@ describe HybridPlatformsConductor::SshExecutor do
       end
     end
 
+    it 'returns errors without failing for actions having command issues' do
+      with_test_platform_for_actions do
+        expect(test_ssh_executor.execute_actions(
+          'node1' => { test_action: { code: proc { |stdout| stdout << 'Action 1' } } },
+          'node2' => { test_action: { code: proc { raise HybridPlatformsConductor::CmdRunner::UnexpectedExitCodeError, 'Command returned 1' } } },
+          'node3' => { test_action: { code: proc { |stdout| stdout << 'Action 3' } } }
+        )).to eq(
+          'node1' => [0, 'Action 1', ''],
+          'node2' => [:failed_command, '', 'Command returned 1'],
+          'node3' => [0, 'Action 3', '']
+        )
+      end
+    end
+
+    it 'returns errors without failing for actions having timeout issues' do
+      with_test_platform_for_actions do
+        expect(test_ssh_executor.execute_actions(
+          'node1' => { test_action: { code: proc { |stdout| stdout << 'Action 1' } } },
+          'node2' => { test_action: { code: proc { raise HybridPlatformsConductor::CmdRunner::TimeoutError } } },
+          'node3' => { test_action: { code: proc { |stdout| stdout << 'Action 3' } } }
+        )).to eq(
+          'node1' => [0, 'Action 1', ''],
+          'node2' => [:timeout, '', ''],
+          'node3' => [0, 'Action 3', '']
+        )
+      end
+    end
+
+    it 'returns errors without failing for actions having connection issues' do
+      with_test_platform_for_actions do
+        expect(test_ssh_executor.execute_actions(
+          'node1' => { test_action: { code: proc { |stdout| stdout << 'Action 1' } } },
+          'node2' => { test_action: { code: proc { raise HybridPlatformsConductor::SshExecutor::ConnectionError, 'Can\'t connect' } } },
+          'node3' => { test_action: { code: proc { |stdout| stdout << 'Action 3' } } }
+        )).to eq(
+          'node1' => [0, 'Action 1', ''],
+          'node2' => [:connection_error, '', 'Can\'t connect'],
+          'node3' => [0, 'Action 3', '']
+        )
+      end
+    end
+
+    it 'returns errors without failing for actions having unhandled exceptions' do
+      with_test_platform_for_actions do
+        expect(test_ssh_executor.execute_actions(
+          'node1' => { test_action: { code: proc { |stdout| stdout << 'Action 1' } } },
+          'node2' => { test_action: { code: proc { raise 'Strange error' } } },
+          'node3' => { test_action: { code: proc { |stdout| stdout << 'Action 3' } } }
+        )).to eq(
+          'node1' => [0, 'Action 1', ''],
+          'node2' => [:failed_action, '', 'Strange error'],
+          'node3' => [0, 'Action 3', '']
+        )
+      end
+    end
+
     it 'executes several actions on several nodes and returns the corresponding stdout and stderr correctly in files' do
       with_repository('logs') do |logs_repository|
         with_test_platform_for_actions do

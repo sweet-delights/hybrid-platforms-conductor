@@ -308,9 +308,10 @@ module HybridPlatformsConductor
                   nodes_handler = sub_executable.nodes_handler
                   ssh_executor = sub_executable.ssh_executor
                   deployer = sub_executable.deployer
-                  ssh_executor.override_connections[node] = container_ip
-                  ssh_executor.ssh_user = 'root'
-                  ssh_executor.passwords[node] = 'root_pwd'
+                  nodes_handler.override_metadata_of node, :host_ip, container_ip
+                  nodes_handler.invalidate_metadata_of node, :host_keys
+                  ssh_executor.connector(:ssh).ssh_user = 'root'
+                  ssh_executor.connector(:ssh).passwords[node] = 'root_pwd'
                   deployer.force_direct_deploy = true
                   deployer.allow_deploy_non_master = true
                   deployer.prepare_for_local_environment
@@ -413,7 +414,7 @@ module HybridPlatformsConductor
       outputs = {}
       section "#{@use_why_run ? 'Checking' : 'Deploying'} on #{@nodes.size} nodes" do
         # Prepare all the control masters here, as they will be reused for the whole process, including mutexes, deployment and logs saving
-        @ssh_executor.with_ssh_master_to(@nodes, no_exception: true) do
+        @ssh_executor.with_connections_prepared_to(@nodes, no_exception: true) do
 
           # Register the secrets in all the platforms
           @secrets.each do |json_file|
@@ -427,6 +428,9 @@ module HybridPlatformsConductor
           @platforms.each do |platform_handler|
             platform_handler.prepare_for_deploy(use_why_run: @use_why_run) if platform_handler.respond_to?(:prepare_for_deploy)
           end
+
+          # Get the ssh user directly from the connector
+          ssh_user = @ssh_executor.connector(:ssh).ssh_user
 
           # Deploy for real
           @nodes_handler.prefetch_metadata_of @nodes, :image
@@ -442,20 +446,20 @@ module HybridPlatformsConductor
                     when 'debian_9', 'debian_10'
                       [
                         {
-                          remote_bash: "#{@ssh_executor.ssh_user == 'root' ? '' : 'sudo '}apt update && #{@ssh_executor.ssh_user == 'root' ? '' : 'sudo '}apt install -y ca-certificates"
+                          remote_bash: "#{ssh_user == 'root' ? '' : 'sudo '}apt update && #{ssh_user == 'root' ? '' : 'sudo '}apt install -y ca-certificates"
                         },
                         {
                           scp: {
                             ENV['hpc_certificates'] => '/usr/local/share/ca-certificates',
-                            :sudo => @ssh_executor.ssh_user != 'root'
+                            :sudo => ssh_user != 'root'
                           },
-                          remote_bash: "#{@ssh_executor.ssh_user == 'root' ? '' : 'sudo '}update-ca-certificates"
+                          remote_bash: "#{ssh_user == 'root' ? '' : 'sudo '}update-ca-certificates"
                         }
                       ]
                     when 'centos_7'
                       [
                         {
-                          remote_bash: "#{@ssh_executor.ssh_user == 'root' ? '' : 'sudo '}yum install -y ca-certificates"
+                          remote_bash: "#{ssh_user == 'root' ? '' : 'sudo '}yum install -y ca-certificates"
                         },
                         {
                           scp: Hash[Dir.glob("#{ENV['hpc_certificates']}/*.crt").map do |cert_file|
@@ -463,10 +467,10 @@ module HybridPlatformsConductor
                               cert_file,
                               '/etc/pki/ca-trust/source/anchors'
                             ]
-                          end].merge(sudo: @ssh_executor.ssh_user != 'root'),
+                          end].merge(sudo: ssh_user != 'root'),
                           remote_bash: [
-                            "#{@ssh_executor.ssh_user == 'root' ? '' : 'sudo '}update-ca-trust enable",
-                            "#{@ssh_executor.ssh_user == 'root' ? '' : 'sudo '}update-ca-trust extract"
+                            "#{ssh_user == 'root' ? '' : 'sudo '}update-ca-trust enable",
+                            "#{ssh_user == 'root' ? '' : 'sudo '}update-ca-trust extract"
                           ]
                         }
                       ]
@@ -485,7 +489,7 @@ module HybridPlatformsConductor
                   # Install the mutex lock and acquire it
                   {
                     scp: { "#{__dir__}/mutex_dir" => '.' },
-                    remote_bash: "while ! #{@ssh_executor.ssh_user == 'root' ? '' : 'sudo '}./mutex_dir lock /tmp/hybrid_platforms_conductor_deploy_lock \"$(ps -o ppid= -p $$)\"; do echo -e 'Another deployment is running on #{node}. Waiting for it to finish to continue...' ; sleep 5 ; done"
+                    remote_bash: "while ! #{ssh_user == 'root' ? '' : 'sudo '}./mutex_dir lock /tmp/hybrid_platforms_conductor_deploy_lock \"$(ps -o ppid= -p $$)\"; do echo -e 'Another deployment is running on #{node}. Waiting for it to finish to continue...' ; sleep 5 ; done"
                   }
                 ] +
                   certificate_actions +
@@ -501,7 +505,7 @@ module HybridPlatformsConductor
             Hash[@nodes.map do |node|
               [
                 node,
-                { remote_bash: "#{@ssh_executor.ssh_user == 'root' ? '' : 'sudo '}./mutex_dir unlock /tmp/hybrid_platforms_conductor_deploy_lock" }
+                { remote_bash: "#{ssh_user == 'root' ? '' : 'sudo '}./mutex_dir unlock /tmp/hybrid_platforms_conductor_deploy_lock" }
               ]
             end],
             timeout: 10,
@@ -524,18 +528,18 @@ module HybridPlatformsConductor
     def save_logs(logs)
       section "Saving deployment logs for #{logs.size} nodes" do
         Dir.mktmpdir('hybrid_platforms_conductor-logs') do |tmp_dir|
+          ssh_user = @ssh_executor.connector(:ssh).ssh_user
           @ssh_executor.execute_actions(
             Hash[logs.map do |node, (exit_status, stdout, stderr)|
               # Create a log file to be scp with all relevant info
               now = Time.now.utc
-              log_file = "#{tmp_dir}/#{now.strftime('%F_%H%M%S')}_#{@ssh_executor.ssh_user}"
+              log_file = "#{tmp_dir}/#{now.strftime('%F_%H%M%S')}_#{ssh_user}"
               platform_info = @nodes_handler.platform_for(node).info
-              user_name = @ssh_executor.ssh_user
               File.write(
                 log_file,
                 {
                   date: now.strftime('%F %T'),
-                  user: user_name,
+                  user: ssh_user,
                   debug: log_debug? ? 'Yes' : 'No',
                   repo_name: platform_info[:repo_name],
                   commit_id: platform_info[:commit][:id],
@@ -550,10 +554,10 @@ module HybridPlatformsConductor
               [
                 node,
                 {
-                  remote_bash: "#{user_name == 'root' ? '' : 'sudo '}mkdir -p /var/log/deployments",
+                  remote_bash: "#{ssh_user == 'root' ? '' : 'sudo '}mkdir -p /var/log/deployments",
                   scp: {
                     log_file => '/var/log/deployments',
-                    :sudo => user_name != 'root',
+                    :sudo => ssh_user != 'root',
                     :owner => 'root',
                     :group => 'root'
                   }

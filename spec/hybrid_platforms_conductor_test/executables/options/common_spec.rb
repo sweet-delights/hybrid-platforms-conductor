@@ -8,7 +8,7 @@ describe 'executables\' common options' do
   #     * *repository* (String): Platform's repository
   def with_test_platform_for_common_options
     with_test_platform(
-      { nodes: { 'node1' => { meta: { host_ip: 'node1_connection' }, services: ['node1_service'] } } },
+      { nodes: { 'node1' => { meta: { host_ip: '192.168.42.42' }, services: ['node1_service'] } } },
       true,
       'gateway :test_gateway, \'Host test_gateway\''
     ) do |repository|
@@ -19,16 +19,16 @@ describe 'executables\' common options' do
 
   # List of executables for which we test the common options, along with options to try that should do nothing
   {
-    'check-node' => ['--node', 'node1', '--show-commands'],
-    'deploy' => ['--node', 'node1', '--show-commands', '--why-run'],
+    'check-node' => ['--node', 'node1', '--show-commands', '--ssh-no-control-master'],
+    'deploy' => ['--node', 'node1', '--show-commands', '--why-run', '--ssh-no-control-master'],
     'dump_nodes_json' => ['--help'],
     'free_ips' => [],
     'free_veids' => [],
-    'last_deploys' => ['--node', 'node1', '--show-commands'],
+    'last_deploys' => ['--node', 'node1', '--show-commands', '--ssh-no-control-master'],
     'report' => ['--node', 'node1', '--format', 'stdout'],
     'setup' => ['--help'],
     'ssh_config' => [],
-    'ssh_run' => ['--node', 'node1', '--show-commands', '--interactive'],
+    'ssh_run' => ['--node', 'node1', '--show-commands', '--interactive', '--ssh-no-control-master'],
     'test' => ['--help']
     # TODO: Add topograph in the tests suite
     # 'topograph' => ['--from', '--node node1', '--to', '--node node1', '--skip-run', '--output', 'graphviz:graph.gv'],

@@ -11,11 +11,13 @@ require 'hybrid_platforms_conductor/report_plugin'
 require 'hybrid_platforms_conductor/tests/test'
 require 'hybrid_platforms_conductor/tests/reports_plugin'
 require 'hybrid_platforms_conductor_test/test_action'
+require 'hybrid_platforms_conductor_test/test_connector'
 require 'hybrid_platforms_conductor_test/test_platform_handler'
 require 'hybrid_platforms_conductor_test/tests_report_plugin'
 require 'hybrid_platforms_conductor_test/report_plugin'
 require 'hybrid_platforms_conductor_test/helpers/platform_handler_helpers'
 require 'hybrid_platforms_conductor_test/helpers/cmd_runner_helpers'
+require 'hybrid_platforms_conductor_test/helpers/connector_ssh_helpers'
 require 'hybrid_platforms_conductor_test/helpers/nodes_handler_helpers'
 require 'hybrid_platforms_conductor_test/helpers/ssh_executor_helpers'
 require 'hybrid_platforms_conductor_test/helpers/deployer_helpers'
@@ -38,6 +40,7 @@ module HybridPlatformsConductorTest
 
     include PlatformHandlerHelpers
     include CmdRunnerHelpers
+    include ConnectorSshHelpers
     include NodesHandlerHelpers
     include SshExecutorHelpers
     include DeployerHelpers
@@ -84,6 +87,7 @@ module HybridPlatformsConductorTest
         HybridPlatformsConductorTest::TestPlugins::SeveralChecks.runs = []
         FileUtils.rm_rf './run_logs'
         FileUtils.rm_rf './testadmin.key.pub'
+        FileUtils.rm_rf '/tmp/hpc_ssh'
       end
     end
 

@@ -18,7 +18,10 @@ module HybridPlatformsConductorTest
       # Result::
       # * ReportsHandler: ReportsHandler on which we can do testing
       def test_reports_handler
-        @reports_handler = HybridPlatformsConductor::ReportsHandler.new logger: logger, logger_stderr: logger, nodes_handler: test_nodes_handler unless @reports_handler
+        unless @reports_handler
+          @reports_handler = HybridPlatformsConductor::ReportsHandler.new logger: logger, logger_stderr: logger, nodes_handler: test_nodes_handler
+          @reports_handler.set_loggers_format
+        end
         @reports_handler
       end
 

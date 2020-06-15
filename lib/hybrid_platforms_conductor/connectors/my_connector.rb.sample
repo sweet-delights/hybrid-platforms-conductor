@@ -1,0 +1,124 @@
+module HybridPlatformsConductor
+
+  module Connectors
+
+    # Sample connector
+    class MyConnector < Connector
+
+      # Initialize the connector.
+      # This can be used to initialize global variables that are used for this connector
+      # [API] - This method is optional
+      # [API] - @cmd_runner can be used
+      # [API] - @nodes_handler can be used
+      def init
+        @logger_ip = nil
+      end
+
+      # Complete an option parser with options meant to control this connector
+      # [API] - This method is optional
+      # [API] - @cmd_runner can be used
+      # [API] - @nodes_handler can be used
+      #
+      # Parameters::
+      # * *options_parser* (OptionParser): The option parser to complete
+      def options_parse(options_parser)
+        options_parser.on('--logger-ip IP', 'If specified, then log everything to a given IP') do |ip|
+          @logger_ip = ip
+        end
+      end
+
+      # Validate that parsed parameters are valid
+      # [API] - This method is optional
+      # [API] - @cmd_runner can be used
+      # [API] - @nodes_handler can be used
+      def validate_params
+        # Check that the logger IP is valid if specified
+        raise "Invalid IP: #{@logger_ip}" if @logger_ip && !(@logger_ip =~ /^\d+\.\d+\.\d+\.\d+$/)
+      end
+
+      # Select nodes where this connector can connect.
+      # [API] - This method is mandatory
+      # [API] - @cmd_runner can be used
+      # [API] - @nodes_handler can be used
+      #
+      # Parameters::
+      # * *nodes* (Array<String>): List of candidate nodes
+      # Result::
+      # * Array<String>: List of nodes we can connect to from the candidates
+      def connectable_nodes_from(nodes)
+        nodes.select { |node| @nodes_handler.get_ip_of(node) =~ /^192\.168\..+$/ }
+      end
+
+      # Prepare connections to a given set of nodes.
+      # Useful to prefetch metadata or open bulk connections.
+      # [API] - This method is optional
+      # [API] - @cmd_runner can be used
+      # [API] - @nodes_handler can be used
+      #
+      # Parameters::
+      # * *nodes* (Array<String>): Nodes to prepare the connection to
+      # * Proc: Code called with the connections prepared.
+      def with_connection_to(nodes)
+        register_nodes_in_logger(@logger_ip, nodes) if @logger_ip
+        yield
+      end
+
+      # Run bash commands on a given node.
+      # [API] - This method is mandatory
+      # [API] - If defined, then with_connection_to has been called before this method.
+      # [API] - @cmd_runner can be used
+      # [API] - @nodes_handler can be used
+      # [API] - @node can be used to access the node on which we execute the remote bash
+      # [API] - @timeout can be used to know when the action should fail
+      # [API] - @stdout_io can be used to send stdout output
+      # [API] - @stderr_io can be used to send stderr output
+      #
+      # Parameters::
+      # * *bash_cmds* (String): Bash commands to execute
+      def remote_bash(bash_cmds)
+        MyConnectLib.connect_to(@nodes_handler.get_host_ip_of(@node)).run_bash(bash_cmds)
+      end
+
+      # Execute an interactive shell on the remote node
+      # [API] - This method is mandatory
+      # [API] - If defined, then with_connection_to has been called before this method.
+      # [API] - @cmd_runner can be used
+      # [API] - @nodes_handler can be used
+      # [API] - @node can be used to access the node on which we execute the remote bash
+      # [API] - @timeout can be used to know when the action should fail
+      # [API] - @stdout_io can be used to send stdout output
+      # [API] - @stderr_io can be used to send stderr output
+      def remote_interactive
+        MyConnectLib.connect_to(@nodes_handler.get_host_ip_of(@node)).interactive
+      end
+
+      # Copy a file to the remote node in a directory
+      # [API] - This method is mandatory
+      # [API] - If defined, then with_connection_to has been called before this method.
+      # [API] - @cmd_runner can be used
+      # [API] - @nodes_handler can be used
+      # [API] - @node can be used to access the node on which we execute the remote bash
+      # [API] - @timeout can be used to know when the action should fail
+      # [API] - @stdout_io can be used to send stdout output
+      # [API] - @stderr_io can be used to send stderr output
+      #
+      # Parameters::
+      # * *from* (String): Local file to copy
+      # * *to* (String): Remote directory to copy to
+      # * *sudo* (Boolean): Do we use sudo to copy? [default: false]
+      # * *owner* (String or nil): Owner to be used when copying the files, or nil for current one [default: nil]
+      # * *group* (String or nil): Group to be used when copying the files, or nil for current one [default: nil]
+      def remote_copy(from, to, sudo: false, owner: nil, group: nil)
+        MyConnectLib.connect_to(
+          @nodes_handler.get_host_ip_of(@node),
+          sudo: sudo,
+          user: owner,
+          group: group
+        ).cp from, to
+      end
+
+    end
+
+  end
+
+end

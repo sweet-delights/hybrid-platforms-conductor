@@ -24,40 +24,29 @@ module HybridPlatformsConductor
         @group = @mappings.delete(:group)
       end
 
+      # Do we need a connector to execute this action on a node?
+      #
+      # Result::
+      # * Boolean: Do we need a connector to execute this action on a node?
+      def need_connector?
+        true
+      end
+
       # Execute the action
       # [API] - This method is mandatory
       # [API] - @cmd_runner is accessible
       # [API] - @ssh_executor is accessible
       # [API] - @action_info is accessible with the action details
       # [API] - @node (String) can be used to know on which node the action is to be executed
+      # [API] - @connector (Connector or nil) can be used to access the node's connector if the action needs remote connection
       # [API] - @timeout (Integer) should be used to make sure the action execution does not get past this number of seconds
       # [API] - @stdout_io can be used to log stdout messages
       # [API] - @stderr_io can be used to log stderr messages
       # [API] - run_cmd(String) method can be used to execute a command. See CmdRunner#run_cmd to know about the result's signature.
       def execute
-        @mappings.each do |scp_from, scp_to_dir|
-          log_debug "[#{@node}] - Copy over SSH \"#{scp_from}\" => \"#{scp_to_dir}\""
-          with_ssh_to_node do |ssh_exec, ssh_url|
-            run_cmd <<~EOS
-              cd #{File.dirname(scp_from)} && \
-              tar \
-                --create \
-                --gzip \
-                --file - \
-                #{@owner.nil? ? '' : "--owner #{@owner}"} \
-                #{@group.nil? ? '' : "--group #{@group}"} \
-                #{File.basename(scp_from)} | \
-              #{ssh_exec} \
-                #{ssh_url} \
-                \"#{@sudo ? 'sudo ' : ''}tar \
-                  --extract \
-                  --gunzip \
-                  --file - \
-                  --directory #{scp_to_dir} \
-                  --owner root \
-                \"
-            EOS
-          end
+        @mappings.each do |from, to|
+          log_debug "[#{@node}] - Copy to remote \"#{from}\" => \"#{to}\""
+          @connector.remote_copy from, to, sudo: @sudo, owner: @owner, group: @group
         end
       end
 

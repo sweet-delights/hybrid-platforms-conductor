@@ -1497,7 +1497,7 @@ Check the [SshExecutor public methods](https://www.site.my_company.net/git/proje
 Examples:
 ```ruby
 # Set the SSH user name to be used in SSH connections
-ssh_executor.ssh_user = 'a_usernme'
+ssh_executor.connector(:ssh).ssh_user = 'a_usernme'
 
 # Set the "Dry run" flag that will display SSH commands without actually executing them
 ssh_executor.dry_run = true

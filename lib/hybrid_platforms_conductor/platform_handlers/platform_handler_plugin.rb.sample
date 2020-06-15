@@ -130,10 +130,10 @@ module HybridPlatformsConductor
       # Parameters::
       # * *node* (String): Node to read metadata from
       # Result::
-      # * Hash<String,Object>: The corresponding metadata (as a JSON object)
+      # * Hash<Symbol,Object>: The corresponding metadata
       def metadata_for(node)
         {
-          'french_name' => "Le noeud #{node}"
+          french_name: "Le noeud #{node}"
         }
       end
 

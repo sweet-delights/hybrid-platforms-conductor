@@ -19,7 +19,6 @@ executable.parse_options!
 raise 'No node selected. Please use --node option to set at least one.' if test_node.nil? || test_node.empty?
 raise "Unknown node: #{test_node}" unless nodes_handler.known_nodes.include?(test_node)
 
-ssh_executor.dump_conf
 # Make sure we always use why-run
 deployer.use_why_run = true
 deployer.deploy_on(test_node)
