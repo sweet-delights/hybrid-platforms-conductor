@@ -1,3 +1,9 @@
+# [18.2.2](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv18.2.1&sourceBranch=refs%2Ftags%2Fv18.2.2) (2020-06-15)
+
+### Fixes
+
+* Automatically reuse Docker containers in debug mode to ease local debugging ([a07a990f](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/commits/a07a990fd53fe1ec7a1bf833f882bca59042423b))
+
 # [18.2.1](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv18.2.0&sourceBranch=refs%2Ftags%2Fv18.2.1) (2020-06-15)
 
 ### Fixes
