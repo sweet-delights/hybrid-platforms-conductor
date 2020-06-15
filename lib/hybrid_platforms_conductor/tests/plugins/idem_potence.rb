@@ -31,13 +31,17 @@ module HybridPlatformsConductor
             deployer.use_why_run = true
             result = deployer.deploy_on(@node)
             assert_equal result.size, 1, "Wrong number of nodes being tested: #{result.size}"
-            tested_node, (exit_status, _stdout, _stderr) = result.first
+            tested_node, (exit_status, stdout, stderr) = result.first
             if exit_status.is_a?(Symbol)
               # In debug mode, the logger is the normal one, already outputting the error. No need to get it back from the logs.
               error "Check-node could not run because of error: #{exit_status}.", log_debug? ? nil : "---------- Error ----------\n#{File.read(deployer.stderr_device).strip}\n-------------------------"
             else
               assert_equal tested_node, @node, "Wrong node being tested: #{tested_node} should be #{@node}"
               assert_equal exit_status, 0, "Check-node returned error code #{exit_status}"
+              # Check that the output of the check-node returns no changes.
+              @nodes_handler.platform_for(@node).parse_deploy_output(stdout, stderr).each do |task_info|
+                error "Task #{task_info[:name]} is not idempotent", JSON.pretty_generate(task_info) if task_info[:status] == :changed
+              end
             end
           end
         end
