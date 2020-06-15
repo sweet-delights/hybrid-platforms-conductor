@@ -62,10 +62,10 @@ Here are some ways to install it.
 ```bash
 mkdir ruby
 cd ruby
-wget https://cache.ruby-lang.org/pub/ruby/2.6/ruby-2.6.6.tar.gz
-tar xvzf ruby-2.6.6.tar.gz
-cd ruby-2.6.6
-sudo apt-get install -y build-essential zlib1g-dev libyaml-dev libssl-dev libgdbm-dev libreadline-dev libncurses5-dev libffi-dev
+wget https://cache.ruby-lang.org/pub/ruby/2.7/ruby-2.7.1.tar.gz
+tar xvzf ruby-2.7.1.tar.gz
+cd ruby-2.7.1
+sudo apt install -y build-essential zlib1g-dev libyaml-dev libssl-dev libgdbm-dev libreadline-dev libncurses5-dev libffi-dev libgdbm-compat-dev bison
 ./configure
 make
 sudo make install
