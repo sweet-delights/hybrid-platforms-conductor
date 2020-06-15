@@ -15,9 +15,9 @@ describe 'ssh_run executable' do
 
   it 'executes a single command on a node' do
     with_test_platform_for_ssh_run do
-      expect_ssh_executor_runs([proc do |actions, timeout: nil, concurrent: false, log_to_dir: 'run_logs', log_to_stdout: true|
+      expect_actions_executor_runs([proc do |actions, timeout: nil, concurrent: false, log_to_dir: 'run_logs', log_to_stdout: true|
         expect(actions).to eq(['node1'] => [{ remote_bash: ['echo Hello'] }])
-        test_ssh_executor.stdout_device << "Hello\n"
+        test_actions_executor.stdout_device << "Hello\n"
         { 'node1' => [0, "Hello\n", ''] }
       end])
       exit_code, stdout, stderr = run 'ssh_run', '--node', 'node1', '--command', 'echo Hello'
@@ -31,9 +31,9 @@ describe 'ssh_run executable' do
     with_test_platform_for_ssh_run do |repository|
       commands_file = "#{repository}/commands.txt"
       File.write(commands_file, "echo Hello1\necho Hello2\n")
-      expect_ssh_executor_runs([proc do |actions, timeout: nil, concurrent: false, log_to_dir: 'run_logs', log_to_stdout: true|
+      expect_actions_executor_runs([proc do |actions, timeout: nil, concurrent: false, log_to_dir: 'run_logs', log_to_stdout: true|
         expect(actions).to eq(['node1'] => [{ remote_bash: [{ file: commands_file }] }])
-        test_ssh_executor.stdout_device << "Hello1\nHello2\n"
+        test_actions_executor.stdout_device << "Hello1\nHello2\n"
         { 'node1' => [0, "Hello1\nHello2\n", ''] }
       end])
       exit_code, stdout, stderr = run 'ssh_run', '--node', 'node1', '--command-file', commands_file
@@ -46,10 +46,10 @@ describe 'ssh_run executable' do
 
   it 'executes a single command on a node with timeout' do
     with_test_platform_for_ssh_run do
-      expect_ssh_executor_runs([proc do |actions, timeout: nil, concurrent: false, log_to_dir: 'run_logs', log_to_stdout: true|
+      expect_actions_executor_runs([proc do |actions, timeout: nil, concurrent: false, log_to_dir: 'run_logs', log_to_stdout: true|
         expect(timeout).to eq 5
         expect(actions).to eq(['node1'] => [{ remote_bash: ['echo Hello'] }])
-        test_ssh_executor.stdout_device << "Hello\n"
+        test_actions_executor.stdout_device << "Hello\n"
         { 'node1' => [0, "Hello\n", ''] }
       end])
       exit_code, stdout, stderr = run 'ssh_run', '--node', 'node1', '--command', 'echo Hello', '--timeout', '5'
@@ -61,9 +61,9 @@ describe 'ssh_run executable' do
 
   it 'executes a single command on a node and captures stderr correctly' do
     with_test_platform_for_ssh_run do
-      expect_ssh_executor_runs([proc do |actions, timeout: nil, concurrent: false, log_to_dir: 'run_logs', log_to_stdout: true|
+      expect_actions_executor_runs([proc do |actions, timeout: nil, concurrent: false, log_to_dir: 'run_logs', log_to_stdout: true|
         expect(actions).to eq(['node1'] => [{ remote_bash: ['echo Hello 2>&1'] }])
-        test_ssh_executor.stderr_device << "Hello\n"
+        test_actions_executor.stderr_device << "Hello\n"
         { 'node1' => [0, '', "Hello\n"] }
       end])
       exit_code, stdout, stderr = run 'ssh_run', '--node', 'node1', '--command', 'echo Hello 2>&1'
@@ -75,10 +75,10 @@ describe 'ssh_run executable' do
 
   it 'executes a single command on several nodes' do
     with_test_platform_for_ssh_run do
-      expect_ssh_executor_runs([proc do |actions, timeout: nil, concurrent: false, log_to_dir: 'run_logs', log_to_stdout: true|
+      expect_actions_executor_runs([proc do |actions, timeout: nil, concurrent: false, log_to_dir: 'run_logs', log_to_stdout: true|
         expect(concurrent).to eq false
         expect(actions).to eq(%w[node1 node2] => [{ remote_bash: ['echo Hello'] }])
-        test_ssh_executor.stdout_device << "Hello\nHello\n"
+        test_actions_executor.stdout_device << "Hello\nHello\n"
         { 'node1' => [0, "Hello\nHello\n", ''] }
       end])
       exit_code, stdout, stderr = run 'ssh_run', '--node', 'node1', '--node', 'node2', '--command', 'echo Hello'
@@ -90,9 +90,9 @@ describe 'ssh_run executable' do
 
   it 'executes several commands' do
     with_test_platform_for_ssh_run do
-      expect_ssh_executor_runs([proc do |actions, timeout: nil, concurrent: false, log_to_dir: 'run_logs', log_to_stdout: true|
+      expect_actions_executor_runs([proc do |actions, timeout: nil, concurrent: false, log_to_dir: 'run_logs', log_to_stdout: true|
         expect(actions).to eq(['node1'] => [{ remote_bash: ['echo Hello1', 'echo Hello2'] }])
-        test_ssh_executor.stdout_device << "Hello1\nHello2\n"
+        test_actions_executor.stdout_device << "Hello1\nHello2\n"
         { 'node1' => [0, "Hello1\nHello2\n", ''] }
       end])
       exit_code, stdout, stderr = run 'ssh_run', '--node', 'node1', '--command', 'echo Hello1', '--command', 'echo Hello2'
@@ -109,14 +109,14 @@ describe 'ssh_run executable' do
       File.write(commands_file_1, "echo Hello1\necho Hello2\n")
       commands_file_2 = "#{repository}/commands2.txt"
       File.write(commands_file_1, "echo Hello4\necho Hello5\n")
-      expect_ssh_executor_runs([proc do |actions, timeout: nil, concurrent: false, log_to_dir: 'run_logs', log_to_stdout: true|
+      expect_actions_executor_runs([proc do |actions, timeout: nil, concurrent: false, log_to_dir: 'run_logs', log_to_stdout: true|
         expect(actions).to eq(['node1'] => [{ remote_bash: [
           { file: commands_file_1 },
           'echo Hello3',
           { file: commands_file_2 },
           'echo Hello6'
         ] }])
-        test_ssh_executor.stdout_device << "Hello1\nHello2\nHello3\nHello4\nHello5\nHello6\n"
+        test_actions_executor.stdout_device << "Hello1\nHello2\nHello3\nHello4\nHello5\nHello6\n"
         { 'node1' => [0, "Hello1\nHello2\nHello3\nHello4\nHello5\nHello6\n", ''] }
       end])
       exit_code, stdout, stderr = run 'ssh_run', '--node', 'node1', '--commands-file', commands_file_1, '--command', 'echo Hello3', '--commands-file', commands_file_2, '--command', 'echo Hello6'
@@ -133,10 +133,10 @@ describe 'ssh_run executable' do
 
   it 'executes in parallel' do
     with_test_platform_for_ssh_run do
-      expect_ssh_executor_runs([proc do |actions, timeout: nil, concurrent: false, log_to_dir: 'run_logs', log_to_stdout: true|
+      expect_actions_executor_runs([proc do |actions, timeout: nil, concurrent: false, log_to_dir: 'run_logs', log_to_stdout: true|
         expect(concurrent).to eq true
         expect(actions).to eq(%w[node1 node2] => [{ remote_bash: ['echo Hello'] }])
-        test_ssh_executor.stdout_device << "Hello\nHello\n"
+        test_actions_executor.stdout_device << "Hello\nHello\n"
         { 'node1' => [0, "Hello\nHello\n", ''] }
       end])
       exit_code, stdout, stderr = run 'ssh_run', '--node', 'node1', '--node', 'node2', '--command', 'echo Hello', '--parallel'
@@ -148,7 +148,7 @@ describe 'ssh_run executable' do
 
   it 'executes an interactive session on a node' do
     with_test_platform_for_ssh_run do
-      expect_ssh_executor_runs([proc do |actions, timeout: nil, concurrent: false, log_to_dir: 'run_logs', log_to_stdout: true|
+      expect_actions_executor_runs([proc do |actions, timeout: nil, concurrent: false, log_to_dir: 'run_logs', log_to_stdout: true|
         expect(actions).to eq(['node1'] => [{ interactive: true }])
         { 'node1' => [0, '', ''] }
       end])

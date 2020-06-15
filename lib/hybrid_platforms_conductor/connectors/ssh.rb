@@ -56,7 +56,7 @@ module HybridPlatformsConductor
         @ssh_dirs = {}
         # Mutex protecting the map to make sure it's thread-safe
         @ssh_dirs_mutex = Mutex.new
-        # Temporary directory used by all SshExecutors, even from different processes
+        # Temporary directory used by all ActionsExecutors, even from different processes
         @tmp_dir = "#{Dir.tmpdir}/#{TMP_SSH_SUB_DIR}"
         FileUtils.mkdir_p @tmp_dir
       end
@@ -366,7 +366,7 @@ module HybridPlatformsConductor
                     begin
                       exit_status, _stdout, _stderr = @cmd_runner.run_cmd ssh_control_master_start_cmd, log_to_stdout: log_debug?, no_exception: no_exception, timeout: timeout
                     rescue CmdRunner::UnexpectedExitCodeError
-                      raise SshExecutor::ConnectionError, "Error while starting SSH Control Master with #{ssh_control_master_start_cmd}"
+                      raise ActionsExecutor::ConnectionError, "Error while starting SSH Control Master with #{ssh_control_master_start_cmd}"
                     end
                     if exit_status == 0
                       log_debug "[ ControlMaster - #{ssh_url} ] - ControlMaster created"
@@ -382,7 +382,7 @@ module HybridPlatformsConductor
                     begin
                       exit_status, _stdout, _stderr = @cmd_runner.run_cmd ssh_control_master_check_cmd, log_to_stdout: log_debug?, no_exception: no_exception, timeout: timeout
                     rescue CmdRunner::UnexpectedExitCodeError
-                      raise SshExecutor::ConnectionError, "Error while checking SSH Control Master with #{ssh_control_master_check_cmd}"
+                      raise ActionsExecutor::ConnectionError, "Error while checking SSH Control Master with #{ssh_control_master_check_cmd}"
                     end
                     if exit_status == 0
                       log_debug "[ ControlMaster - #{ssh_url} ] - ControlMaster checked ok"
@@ -481,7 +481,7 @@ module HybridPlatformsConductor
       # * *port* (String): The port. Can be a string as ssh config uses wildchars.
       # * *user* (String): The user
       def control_master_file(host, port, user)
-        "#{@tmp_dir}/hpc_ssh_executor_mux_#{host}_#{port}_#{user}"
+        "#{@tmp_dir}/hpc_actions_executor_mux_#{host}_#{port}_#{user}"
       end
 
       # Provide a bootstrapped ssh executable that includes an SSH config allowing access to nodes.

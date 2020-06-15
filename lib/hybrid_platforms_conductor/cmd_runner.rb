@@ -38,7 +38,7 @@ module HybridPlatformsConductor
       @dry_run = false
     end
 
-    # Complete an option parser with options meant to control this SSH executor
+    # Complete an option parser with options meant to control this Actions Executor
     #
     # Parameters::
     # * *options_parser* (OptionParser): The option parser to complete

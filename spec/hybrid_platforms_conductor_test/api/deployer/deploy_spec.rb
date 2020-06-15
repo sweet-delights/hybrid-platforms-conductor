@@ -8,8 +8,8 @@ describe HybridPlatformsConductor::Deployer do
       with_test_platform({ nodes: { 'node' => {} } }, true) do |repository|
         FileUtils.touch "#{repository}/new_file"
         with_connections_mocked_on ['node'] do
-          test_ssh_executor.connector(:ssh).ssh_user = 'test_user'
-          expect_ssh_executor_runs([
+          test_actions_executor.connector(:ssh).ssh_user = 'test_user'
+          expect_actions_executor_runs([
             # First run, we expect the mutex to be setup, and the deployment actions to be run
             proc { |actions_per_nodes| expect_actions_to_deploy_on(actions_per_nodes, 'node') },
             # Second run, we expect the mutex to be released

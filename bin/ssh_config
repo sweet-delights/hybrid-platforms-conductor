@@ -7,8 +7,8 @@ executable = HybridPlatformsConductor::Executable.new(nodes_selection_options: f
     ssh_exec = file_path
   end
 end
-ssh_executor = executable.ssh_executor
+actions_executor = executable.actions_executor
 
 executable.parse_options!
 
-executable.out ssh_executor.connector(:ssh).ssh_config(ssh_exec: ssh_exec)
+executable.out actions_executor.connector(:ssh).ssh_config(ssh_exec: ssh_exec)

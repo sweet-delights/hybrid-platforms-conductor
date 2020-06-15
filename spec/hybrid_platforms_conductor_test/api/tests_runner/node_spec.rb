@@ -108,12 +108,12 @@ describe HybridPlatformsConductor::TestsRunner do
         test_tests_runner.tests = [:node_test]
         test_tests_runner.max_threads_nodes = 6
         HybridPlatformsConductorTest::TestPlugins::Node.sleeps = { node_test: {
-          'node11' => 1.2,
-          'node12' => 0.2,
-          'node13' => 0.6,
-          'node21' => 0.8,
-          'node22' => 0.4,
-          'node23' => 1
+          'node11' => 3.0,
+          'node12' => 0.5,
+          'node13' => 1.5,
+          'node21' => 2.0,
+          'node22' => 1.0,
+          'node23' => 2.5
         } }
         expect(test_tests_runner.run_tests([{ all: true }])).to eq 0
         expect(HybridPlatformsConductorTest::TestPlugins::Node.runs).to eq [
@@ -132,7 +132,7 @@ describe HybridPlatformsConductor::TestsRunner do
         test_tests_runner.tests = [:node_test]
         test_tests_runner.max_threads_nodes = 3
         HybridPlatformsConductorTest::TestPlugins::Node.sleeps = { node_test: {
-          'node11' => 1.2,
+          'node11' => 1.4,
           'node12' => 0.2,
           'node13' => 0.6,
           'node21' => 0.8,
@@ -140,11 +140,11 @@ describe HybridPlatformsConductor::TestsRunner do
           'node23' => 1
         } }
         # Here is the sequence:
-        # Thread 1: +-node11 1.2--------------------------------------------+
+        # Thread 1: +-node11 1.4--------------------------------------------+
         # Thread 2: +-node12 0.2-+-node21 0.8--------------+-node23 1.0-----|---+
         # Thread 3: +-node13 0.6-|------------+-node22 0.5-|------------+   |   |
         #           |            |            |            |            |   |   |
-        # Time    : 0            0.2          0.6          1.0          1.1 1.2 2.0
+        # Time    : 0            0.2          0.6          1.0          1.1 1.4 2.0
         expect(test_tests_runner.run_tests([{ all: true }])).to eq 0
         expect(HybridPlatformsConductorTest::TestPlugins::Node.runs).to eq [
           [:node_test, 'node12'],

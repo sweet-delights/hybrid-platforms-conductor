@@ -5,7 +5,7 @@ require 'thread'
 require 'docker-api'
 require 'hybrid_platforms_conductor/logger_helpers'
 require 'hybrid_platforms_conductor/nodes_handler'
-require 'hybrid_platforms_conductor/ssh_executor'
+require 'hybrid_platforms_conductor/actions_executor'
 require 'hybrid_platforms_conductor/cmd_runner'
 require 'hybrid_platforms_conductor/executable'
 
@@ -123,13 +123,13 @@ module HybridPlatformsConductor
     # * *logger_stderr* (Logger): Logger to be used for stderr [default = Logger.new(STDERR)]
     # * *cmd_runner* (CmdRunner): Command executor to be used. [default = CmdRunner.new]
     # * *nodes_handler* (NodesHandler): Nodes handler to be used. [default = NodesHandler.new]
-    # * *ssh_executor* (SshExecutor): Ssh executor to be used. [default = SshExecutor.new]
-    def initialize(logger: Logger.new(STDOUT), logger_stderr: Logger.new(STDERR), cmd_runner: CmdRunner.new, nodes_handler: NodesHandler.new, ssh_executor: SshExecutor.new)
+    # * *actions_executor* (ActionsExecutor): Actions Executor to be used. [default = ActionsExecutor.new]
+    def initialize(logger: Logger.new(STDOUT), logger_stderr: Logger.new(STDERR), cmd_runner: CmdRunner.new, nodes_handler: NodesHandler.new, actions_executor: ActionsExecutor.new)
       @logger = logger
       @logger_stderr = logger_stderr
       @cmd_runner = cmd_runner
       @nodes_handler = nodes_handler
-      @ssh_executor = ssh_executor
+      @actions_executor = actions_executor
       @nodes = []
       @secrets = []
       @allow_deploy_non_master = false
@@ -201,10 +201,10 @@ module HybridPlatformsConductor
       @nodes = @nodes_handler.select_nodes(nodes_selectors.flatten)
       # Get the platforms that are impacted
       @platforms = @nodes.map { |node| @nodes_handler.platform_for(node) }.uniq
-      # Setup command runner and SSH executor in plugins
+      # Setup command runner and Actions Executor in plugins
       @platforms.each do |platform_handler|
         platform_handler.cmd_runner = @cmd_runner
-        platform_handler.ssh_executor = @ssh_executor
+        platform_handler.actions_executor = @actions_executor
       end
       if !@use_why_run && !@allow_deploy_non_master
         # Check that master is checked out correctly before deploying.
@@ -306,12 +306,12 @@ module HybridPlatformsConductor
                     end
                   sub_executable = Executable.new(logger: sub_logger, logger_stderr: sub_logger_stderr)
                   nodes_handler = sub_executable.nodes_handler
-                  ssh_executor = sub_executable.ssh_executor
+                  actions_executor = sub_executable.actions_executor
                   deployer = sub_executable.deployer
                   nodes_handler.override_metadata_of node, :host_ip, container_ip
                   nodes_handler.invalidate_metadata_of node, :host_keys
-                  ssh_executor.connector(:ssh).ssh_user = 'root'
-                  ssh_executor.connector(:ssh).passwords[node] = 'root_pwd'
+                  actions_executor.connector(:ssh).ssh_user = 'root'
+                  actions_executor.connector(:ssh).passwords[node] = 'root_pwd'
                   deployer.force_direct_deploy = true
                   deployer.allow_deploy_non_master = true
                   deployer.prepare_for_local_environment
@@ -414,7 +414,7 @@ module HybridPlatformsConductor
       outputs = {}
       section "#{@use_why_run ? 'Checking' : 'Deploying'} on #{@nodes.size} nodes" do
         # Prepare all the control masters here, as they will be reused for the whole process, including mutexes, deployment and logs saving
-        @ssh_executor.with_connections_prepared_to(@nodes, no_exception: true) do
+        @actions_executor.with_connections_prepared_to(@nodes, no_exception: true) do
 
           # Register the secrets in all the platforms
           @secrets.each do |json_file|
@@ -430,11 +430,11 @@ module HybridPlatformsConductor
           end
 
           # Get the ssh user directly from the connector
-          ssh_user = @ssh_executor.connector(:ssh).ssh_user
+          ssh_user = @actions_executor.connector(:ssh).ssh_user
 
           # Deploy for real
           @nodes_handler.prefetch_metadata_of @nodes, :image
-          outputs = @ssh_executor.execute_actions(
+          outputs = @actions_executor.execute_actions(
             Hash[@nodes.map do |node|
               image_id = @nodes_handler.get_image_of(node)
               # Install My_company corporate certificates if present
@@ -501,7 +501,7 @@ module HybridPlatformsConductor
             log_to_stdout: !@concurrent_execution
           )
           # Free eventual locks
-          @ssh_executor.execute_actions(
+          @actions_executor.execute_actions(
             Hash[@nodes.map do |node|
               [
                 node,
@@ -528,8 +528,8 @@ module HybridPlatformsConductor
     def save_logs(logs)
       section "Saving deployment logs for #{logs.size} nodes" do
         Dir.mktmpdir('hybrid_platforms_conductor-logs') do |tmp_dir|
-          ssh_user = @ssh_executor.connector(:ssh).ssh_user
-          @ssh_executor.execute_actions(
+          ssh_user = @actions_executor.connector(:ssh).ssh_user
+          @actions_executor.execute_actions(
             Hash[logs.map do |node, (exit_status, stdout, stderr)|
               # Create a log file to be scp with all relevant info
               now = Time.now.utc

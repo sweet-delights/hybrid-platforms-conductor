@@ -1,4 +1,4 @@
-describe HybridPlatformsConductor::SshExecutor do
+describe HybridPlatformsConductor::ActionsExecutor do
 
   context 'checking connector plugin ssh' do
 
@@ -9,7 +9,7 @@ describe HybridPlatformsConductor::SshExecutor do
       # Result::
       # * Connector: Connector to be tested
       def test_connector
-        test_ssh_executor.connector(:ssh)
+        test_actions_executor.connector(:ssh)
       end
 
       it 'creates an SSH master to 1 node' do
@@ -128,7 +128,7 @@ describe HybridPlatformsConductor::SshExecutor do
           nodes_connections_to_mock = { 'node' => { connection: '192.168.42.42', user: 'test_user' } }
           step = 0
           second_thread = Thread.new do
-            # Use a different environment: CmdRunner, NodesHandler, SshExecutor
+            # Use a different environment: CmdRunner, NodesHandler, ActionsExecutor
             second_cmd_runner = HybridPlatformsConductor::CmdRunner.new logger: logger, logger_stderr: logger
             with_cmd_runner_mocked(
               init_commands +
@@ -140,11 +140,11 @@ describe HybridPlatformsConductor::SshExecutor do
               cmd_runner: second_cmd_runner
             ) do
               second_nodes_handler = HybridPlatformsConductor::NodesHandler.new logger: logger, logger_stderr: logger, cmd_runner: second_cmd_runner
-              second_ssh_executor = HybridPlatformsConductor::SshExecutor.new logger: logger, logger_stderr: logger, cmd_runner: second_cmd_runner, nodes_handler: second_nodes_handler
-              second_ssh_executor.connector(:ssh).ssh_user = 'test_user'
+              second_actions_executor = HybridPlatformsConductor::ActionsExecutor.new logger: logger, logger_stderr: logger, cmd_runner: second_cmd_runner, nodes_handler: second_nodes_handler
+              second_actions_executor.connector(:ssh).ssh_user = 'test_user'
               # Wait for the first thread to create ControlMaster
               sleep 0.1 while step == 0
-              second_ssh_executor.connector(:ssh).with_connection_to(['node']) do
+              second_actions_executor.connector(:ssh).with_connection_to(['node']) do
                 step = 2
                 # Wait for the first thread to release the ControlMaster
                 sleep 0.1 while step == 2
@@ -325,7 +325,7 @@ describe HybridPlatformsConductor::SshExecutor do
           ) do
             test_connector.ssh_user = 'test_user'
             # Fake a ControlMaster file that is stalled
-            File.write(test_ssh_executor.connector(:ssh).send(:control_master_file, '192.168.42.42', '22', 'test_user'), '')
+            File.write(test_actions_executor.connector(:ssh).send(:control_master_file, '192.168.42.42', '22', 'test_user'), '')
             test_connector.with_connection_to(['node']) do
             end
           end

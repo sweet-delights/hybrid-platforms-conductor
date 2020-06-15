@@ -151,7 +151,7 @@ module HybridPlatformsConductor
       # Package the repository, ready to be deployed on artefacts or directly to a node.
       # [API] - This method is mandatory.
       # [API] - @cmd_runner is accessible.
-      # [API] - @ssh_executor is accessible.
+      # [API] - @actions_executor is accessible.
       def package
         # This method should take all actions to prepare the repository to be deployed on nodes later.
         # Usually it is meant to package the deployment scripts.
@@ -163,7 +163,7 @@ module HybridPlatformsConductor
       # This method won't be called in case of a direct deploy to the node.
       # [API] - This method is mandatory.
       # [API] - @cmd_runner is accessible.
-      # [API] - @ssh_executor is accessible.
+      # [API] - @actions_executor is accessible.
       #
       # Parameters::
       # * *node* (String): Node to deliver for
@@ -194,7 +194,7 @@ module HybridPlatformsConductor
       # Register secrets given in JSON format
       # [API] - This method is mandatory.
       # [API] - @cmd_runner is accessible.
-      # [API] - @ssh_executor is accessible.
+      # [API] - @actions_executor is accessible.
       #
       # Parameters::
       # * *json* (Hash<String,Object>): JSON secrets
@@ -208,7 +208,7 @@ module HybridPlatformsConductor
       # It is called once per platform.
       # [API] - This method is optional.
       # [API] - @cmd_runner is accessible.
-      # [API] - @ssh_executor is accessible.
+      # [API] - @actions_executor is accessible.
       #
       # Parameters::
       # * *use_why_run* (Boolean): Do we use a why-run mode? [default = true]
@@ -222,7 +222,7 @@ module HybridPlatformsConductor
       # Those actions can be executed in parallel with other deployments on other nodes. They must be thread safe.
       # [API] - This method is mandatory.
       # [API] - @cmd_runner is accessible.
-      # [API] - @ssh_executor is accessible.
+      # [API] - @actions_executor is accessible.
       #
       # Parameters::
       # * *node* (String): Node to deploy on
@@ -233,7 +233,7 @@ module HybridPlatformsConductor
         # This method returns all the actions to execute to deploy on a node.
         # The use_why_run switch is on if the deployment should just be simulated.
         # Those actions (bash commands, scp of files, ruby code...) should be thread safe as they can be executed in parallel with other deployment actions for other nodes in case of a concurrent deployment on several nodes.
-        # The complete description of an action can be found in ssh_executor.rb file, in the execute_actions_on method description.
+        # The complete description of an action can be found in actions_executor.rb file, in the execute_actions_on method description.
         [
           {
             scp: {
@@ -252,7 +252,7 @@ module HybridPlatformsConductor
       # Prepare a why-run deployment so that a JSON file describing the nodes will be output in the run_logs.
       # [API] - This method is mandatory.
       # [API] - @cmd_runner is accessible.
-      # [API] - @ssh_executor is accessible.
+      # [API] - @actions_executor is accessible.
       # [API] - @deployer is accessible.
       def prepare_why_run_deploy_for_json_dump
         # This method is used to prepare a deployment action that should dump JSON info from the node itself.

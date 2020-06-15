@@ -223,7 +223,6 @@ Most of the executables have a `--help` switch that dump their possible usage in
 
 Example:
 ```
-=> ./bin/deploy --help
 Usage: ./bin/deploy [options]
 
 Main options:
@@ -240,12 +239,16 @@ Nodes selection options:
     -n, --node NODE                  Select a specific node. Can be a regular expression to select several nodes if used with enclosing "/" characters. (can be used several times).
         --nodes-service SERVICE      Select nodes implementing a given service (can be used several times)
 
-SSH executor options:
+Command runner options:
+    -s, --show-commands              Display the commands that would be run instead of running them
+
+Actions Executor options:
+    -m, --max-threads NBR            Set the number of threads to use for concurrent queries (defaults to 16)
+
+Connector ssh options:
     -g, --ssh-gateway-user USER      Name of the gateway user to be used by the gateways. Can also be set from environment variable hpc_ssh_gateway_user. Defaults to ubradm.
     -j, --ssh-no-control-master      If used, don't create SSH control masters for connections.
-    -m, --max-threads NBR            Set the number of threads to use for concurrent queries (defaults to 16)
     -q, --ssh-no-host-key-checking   If used, don't check for SSH host keys.
-    -s, --show-commands              Display the SSH commands that would be run instead of running them
     -u, --ssh-user USER              Name of user to be used in SSH connections (defaults to hpc_ssh_user or USER environment variables)
     -w, --password                   If used, then expect SSH connections to ask for a password.
     -y GATEWAYS_CONF,                Name of the gateways configuration to be used. Can also be set from environment variable hpc_ssh_gateways_conf. Defaults to munich.
@@ -261,6 +264,7 @@ Deployer options:
 Deployer options specific to platforms of type chef:
     -r, --run-list MODIFIER:PARAMS   Apply a modification to the run-list to be run on the nodes. Can be used several times. Possible modifiers are:
                                        MODIFIER: append - Append a run_list after the node's run_list. - PARAMS: run_list to append after. Ex: site_debug::dump_node,git
+                                       MODIFIER: prepend - Prepend a run_list before the node's run_list. - PARAMS: run_list to prepend before. Ex: site_debug::dump_node,git
 ```
 
 <a name="tools_list"></a>
@@ -291,10 +295,13 @@ Main options:
 Nodes handler options:
     -o, --show-nodes                 Display the list of possible nodes and exit
 
-SSH executor options:
+Command runner options:
+    -s, --show-commands              Display the commands that would be run instead of running them
+
+Connector ssh options:
     -g, --ssh-gateway-user USER      Name of the gateway user to be used by the gateways. Can also be set from environment variable hpc_ssh_gateway_user. Defaults to ubradm.
     -j, --ssh-no-control-master      If used, don't create SSH control masters for connections.
-    -s, --show-commands              Display the SSH commands that would be run instead of running them
+    -q, --ssh-no-host-key-checking   If used, don't check for SSH host keys.
     -u, --ssh-user USER              Name of user to be used in SSH connections (defaults to hpc_ssh_user or USER environment variables)
     -w, --password                   If used, then expect SSH connections to ask for a password.
     -y GATEWAYS_CONF,                Name of the gateways configuration to be used. Can also be set from environment variable hpc_ssh_gateways_conf. Defaults to munich.
@@ -308,6 +315,7 @@ Deployer options:
 Deployer options specific to platforms of type chef:
     -r, --run-list MODIFIER:PARAMS   Apply a modification to the run-list to be run on the nodes. Can be used several times. Possible modifiers are:
                                        MODIFIER: append - Append a run_list after the node's run_list. - PARAMS: run_list to append after. Ex: site_debug::dump_node,git
+                                       MODIFIER: prepend - Prepend a run_list before the node's run_list. - PARAMS: run_list to prepend before. Ex: site_debug::dump_node,git
 ```
 
 Usage examples:
@@ -328,7 +336,7 @@ Usage examples:
 Example of output:
 ```
 => ./bin/check-node --node node12had01
-SSH executor configuration used:
+Actions Executor configuration used:
  * User: a_usernme
  * Dry run: false
  * Max threads used: 16
@@ -399,12 +407,16 @@ Nodes selection options:
     -n, --node NODE                  Select a specific node. Can be a regular expression to select several nodes if used with enclosing "/" characters. (can be used several times).
         --nodes-service SERVICE      Select nodes implementing a given service (can be used several times)
 
-SSH executor options:
+Command runner options:
+    -s, --show-commands              Display the commands that would be run instead of running them
+
+Actions Executor options:
+    -m, --max-threads NBR            Set the number of threads to use for concurrent queries (defaults to 16)
+
+Connector ssh options:
     -g, --ssh-gateway-user USER      Name of the gateway user to be used by the gateways. Can also be set from environment variable hpc_ssh_gateway_user. Defaults to ubradm.
     -j, --ssh-no-control-master      If used, don't create SSH control masters for connections.
-    -m, --max-threads NBR            Set the number of threads to use for concurrent queries (defaults to 16)
     -q, --ssh-no-host-key-checking   If used, don't check for SSH host keys.
-    -s, --show-commands              Display the SSH commands that would be run instead of running them
     -u, --ssh-user USER              Name of user to be used in SSH connections (defaults to hpc_ssh_user or USER environment variables)
     -w, --password                   If used, then expect SSH connections to ask for a password.
     -y GATEWAYS_CONF,                Name of the gateways configuration to be used. Can also be set from environment variable hpc_ssh_gateways_conf. Defaults to munich.
@@ -420,6 +432,7 @@ Deployer options:
 Deployer options specific to platforms of type chef:
     -r, --run-list MODIFIER:PARAMS   Apply a modification to the run-list to be run on the nodes. Can be used several times. Possible modifiers are:
                                        MODIFIER: append - Append a run_list after the node's run_list. - PARAMS: run_list to append after. Ex: site_debug::dump_node,git
+                                       MODIFIER: prepend - Prepend a run_list before the node's run_list. - PARAMS: run_list to prepend before. Ex: site_debug::dump_node,git
 ```
 
 Usage examples:
@@ -458,7 +471,7 @@ Usage examples:
 Example of output:
 ```
 => ./bin/deploy --node node12had01 --why-run
-SSH executor configuration used:
+Actions Executor configuration used:
  * User: a_usernme
  * Dry run: false
  * Max threads used: 16
@@ -530,7 +543,7 @@ Nodes selection options:
     -n, --node NODE                  Select a specific node. Can be a regular expression to select several nodes if used with enclosing "/" characters. (can be used several times).
     -r, --nodes-service SERVICE      Select nodes implementing a given service (can be used several times)
 
-SSH executor options:
+Actions Executor options:
     -g, --ssh-gateway-user USER      Name of the gateway user to be used by the gateways. Can also be set from environment variable hpc_ssh_gateway_user. Defaults to ubradm.
     -j, --ssh-no-control-master      If used, don't create SSH control masters for connections.
     -m, --max-threads NBR            Set the number of threads to use for concurrent queries (defaults to 16)
@@ -597,10 +610,13 @@ Main options:
 Nodes handler options:
     -o, --show-nodes                 Display the list of possible nodes and exit
 
-SSH executor options:
+Command runner options:
+    -s, --show-commands              Display the commands that would be run instead of running them
+
+Connector ssh options:
     -g, --ssh-gateway-user USER      Name of the gateway user to be used by the gateways. Can also be set from environment variable hpc_ssh_gateway_user. Defaults to ubradm.
     -j, --ssh-no-control-master      If used, don't create SSH control masters for connections.
-    -s, --show-commands              Display the SSH commands that would be run instead of running them
+    -q, --ssh-no-host-key-checking   If used, don't check for SSH host keys.
     -u, --ssh-user USER              Name of user to be used in SSH connections (defaults to hpc_ssh_user or USER environment variables)
     -w, --password                   If used, then expect SSH connections to ask for a password.
     -y GATEWAYS_CONF,                Name of the gateways configuration to be used. Can also be set from environment variable hpc_ssh_gateways_conf. Defaults to munich.
@@ -660,7 +676,7 @@ Host gw.data.ti
 Host *
   User a_usernme
   # Default control socket path to be used when multiplexing SSH connections
-  ControlPath /tmp/ssh_executor_mux_%h_%p_%r
+  ControlPath /tmp/actions_executor_mux_%h_%p_%r
   PubkeyAcceptedKeyTypes +ssh-dss
 
 # AD_Win2012_NP0 - 172.16.16.105 - ./cloned_platforms/xae-chef-repo - AD of QlikSense Server (primary AD of Non-production) - AD_Win2012_NP0
@@ -745,10 +761,6 @@ Main options:
     -d, --debug                      Activate debug mode
     -h, --help                       Display help and exit
 
-Reports handler options:
-    -c, --locale LOCALE_CODE         Generate the report in the given format. Possible codes are formats specific. [confluence: en], [stdout: en], [mediawiki: en]
-    -f, --format FORMAT              Generate the report in the given format. Possible formats are confluence, mediawiki, stdout. Default: stdout.
-
 Nodes handler options:
     -o, --show-nodes                 Display the list of possible nodes and exit
 
@@ -758,6 +770,13 @@ Nodes selection options:
     -l, --nodes-list LIST            Select nodes defined in a nodes list (can be used several times)
     -n, --node NODE                  Select a specific node. Can be a regular expression to select several nodes if used with enclosing "/" characters. (can be used several times).
     -r, --nodes-service SERVICE      Select nodes implementing a given service (can be used several times)
+
+Command runner options:
+    -s, --show-commands              Display the commands that would be run instead of running them
+
+Reports handler options:
+    -c, --locale LOCALE_CODE         Generate the report in the given format. Possible codes are formats specific. [confluence: en], [stdout: en], [mediawiki: en]
+    -f, --format FORMAT              Generate the report in the given format. Possible formats are confluence, mediawiki, stdout. Default: stdout.
 ```
 
 Usage examples:
@@ -849,7 +868,7 @@ Usage: ./bin/last_deploys [options]
 Main options:
     -d, --debug                      Activate debug mode
     -h, --help                       Display help and exit
-        --sort-by SORT               Specify a sort. Possible values are: admin, chef_commit_comment, chef_commit_id, datetime, git_branch, git_repo, host. Each value can append _desc to specify a reverse sorting. Defaults to host.
+        --sort-by SORT               Specify a sort. Possible values are: admin, commit_comment, datetime, node, repo_name. Each value can append _desc to specify a reverse sorting. Defaults to node.
 
 Nodes handler options:
     -o, --show-nodes                 Display the list of possible nodes and exit
@@ -861,12 +880,16 @@ Nodes selection options:
     -n, --node NODE                  Select a specific node. Can be a regular expression to select several nodes if used with enclosing "/" characters. (can be used several times).
     -r, --nodes-service SERVICE      Select nodes implementing a given service (can be used several times)
 
-SSH executor options:
+Command runner options:
+    -s, --show-commands              Display the commands that would be run instead of running them
+
+Actions Executor options:
+    -m, --max-threads NBR            Set the number of threads to use for concurrent queries (defaults to 64)
+
+Connector ssh options:
     -g, --ssh-gateway-user USER      Name of the gateway user to be used by the gateways. Can also be set from environment variable hpc_ssh_gateway_user. Defaults to ubradm.
     -j, --ssh-no-control-master      If used, don't create SSH control masters for connections.
-    -m, --max-threads NBR            Set the number of threads to use for concurrent queries (defaults to 64)
     -q, --ssh-no-host-key-checking   If used, don't check for SSH host keys.
-    -s, --show-commands              Display the SSH commands that would be run instead of running them
     -u, --ssh-user USER              Name of user to be used in SSH connections (defaults to hpc_ssh_user or USER environment variables)
     -w, --password                   If used, then expect SSH connections to ask for a password.
     -y GATEWAYS_CONF,                Name of the gateways configuration to be used. Can also be set from environment variable hpc_ssh_gateways_conf. Defaults to munich.
@@ -923,18 +946,15 @@ Nodes selection options:
     -b, --nodes-platform PLATFORM    Select nodes belonging to a given platform name. Available platforms are: ansible-repo, chef-repo (can be used several times)
     -l, --nodes-list LIST            Select nodes defined in a nodes list (can be used several times)
     -n, --node NODE                  Select a specific node. Can be a regular expression to select several nodes if used with enclosing "/" characters. (can be used several times).
-    -r, --nodes-service SERVICE      Select nodes implementing a given service (can be used several times)
+        --nodes-service SERVICE      Select nodes implementing a given service (can be used several times)
 
-JSON dump options:
-    -k, --skip-run                   Skip the actual gathering of dumps in run_logs. If set, the current run_logs content will be used.
-    -j, --json-dir DIRECTORY         Specify the output directory in which JSON files are being written. Defaults to nodes_json.
+Command runner options:
+    -s, --show-commands              Display the commands that would be run instead of running them
 
-SSH executor options:
+Connector ssh options:
     -g, --ssh-gateway-user USER      Name of the gateway user to be used by the gateways. Can also be set from environment variable hpc_ssh_gateway_user. Defaults to ubradm.
-    -j, --ssh-no-control-master      If used, don't create SSH control masters for connections.
-    -m, --max-threads NBR            Set the number of threads to use for concurrent queries (defaults to 16)
+        --ssh-no-control-master      If used, don't create SSH control masters for connections.
     -q, --ssh-no-host-key-checking   If used, don't check for SSH host keys.
-    -s, --show-commands              Display the SSH commands that would be run instead of running them
     -u, --ssh-user USER              Name of user to be used in SSH connections (defaults to hpc_ssh_user or USER environment variables)
     -w, --password                   If used, then expect SSH connections to ask for a password.
     -y GATEWAYS_CONF,                Name of the gateways configuration to be used. Can also be set from environment variable hpc_ssh_gateways_conf. Defaults to munich.
@@ -944,6 +964,16 @@ Deployer options:
     -e, --secrets JSON_FILE_NAME     Specify a JSON file storing secrets (can be specified several times).
     -i, --direct-deploy              Don't use artefacts servers while deploying.
     -t, --timeout SECS               Timeout in seconds to wait for each chef run. Only used in why-run mode. (defaults to 30)
+    -W, --why-run                    Use the why-run mode to see what would be the result of the deploy instead of deploying it for real.
+
+Deployer options specific to platforms of type chef:
+    -r, --run-list MODIFIER:PARAMS   Apply a modification to the run-list to be run on the nodes. Can be used several times. Possible modifiers are:
+                                       MODIFIER: append - Append a run_list after the node's run_list. - PARAMS: run_list to append after. Ex: site_debug::dump_node,git
+                                       MODIFIER: prepend - Prepend a run_list before the node's run_list. - PARAMS: run_list to prepend before. Ex: site_debug::dump_node,git
+
+JSON dump options:
+    -k, --skip-run                   Skip the actual gathering of dumps in run_logs. If set, the current run_logs content will be used.
+    -j, --json-dir DIRECTORY         Specify the output directory in which JSON files are being written. Defaults to nodes_json.
 ```
 
 Usage examples:
@@ -986,29 +1016,16 @@ Main options:
     -d, --debug                      Activate debug mode
     -h, --help                       Display help and exit
 
-Topographer options:
-    -F, --from HOSTS_OPTIONS         Specify options for the set of nodes to start from (enclose them with ""). Default: all nodes. HOSTS_OPTIONS follows the following:
-                                         -a, --all-nodes                  Select all nodes
-                                         -b, --nodes-platform PLATFORM    Select nodes belonging to a given platform name. Available platforms are: ansible-repo, chef-repo (can be used several times)
-                                         -l, --nodes-list LIST            Select hosts defined in a nodes list (can be used several times)
-                                         -n, --node NODE                  Select a specific node. Can be a regular expression to select several nodes if used with enclosing "/" characters. (can be used several times).
-    -k, --skip-run                   Skip the actual gathering of JSON node files. If set, the current files in nodes_json will be used.
-    -p, --output FORMAT:FILE_NAME    Specify a format and file name. Can be used several times. FORMAT can be one of graphviz, json, svg. Ex.: graphviz:graph.gv
-    -T, --to HOSTS_OPTIONS           Specify options for the set of nodes to get to (enclose them with ""). Default: all nodes. HOSTS_OPTIONS follows the following:
-                                         -a, --all-nodes                  Select all nodes
-                                         -b, --nodes-platform PLATFORM    Select nodes belonging to a given platform name. Available platforms are: ansible-repo, chef-repo (can be used several times)
-                                         -l, --nodes-list LIST            Select hosts defined in a nodes list (can be used several times)
-                                         -n, --node NODE                  Select a specific node. Can be a regular expression to select several nodes if used with enclosing "/" characters. (can be used several times).
-
 Nodes handler options:
     -o, --show-nodes                 Display the list of possible nodes and exit
 
-SSH executor options:
+Command runner options:
+    -s, --show-commands              Display the commands that would be run instead of running them
+
+Connector ssh options:
     -g, --ssh-gateway-user USER      Name of the gateway user to be used by the gateways. Can also be set from environment variable hpc_ssh_gateway_user. Defaults to ubradm.
-    -j, --ssh-no-control-master      If used, don't create SSH control masters for connections.
-    -m, --max-threads NBR            Set the number of threads to use for concurrent queries (defaults to 16)
+        --ssh-no-control-master      If used, don't create SSH control masters for connections.
     -q, --ssh-no-host-key-checking   If used, don't check for SSH host keys.
-    -s, --show-commands              Display the SSH commands that would be run instead of running them
     -u, --ssh-user USER              Name of user to be used in SSH connections (defaults to hpc_ssh_user or USER environment variables)
     -w, --password                   If used, then expect SSH connections to ask for a password.
     -y GATEWAYS_CONF,                Name of the gateways configuration to be used. Can also be set from environment variable hpc_ssh_gateways_conf. Defaults to munich.
@@ -1018,6 +1035,25 @@ Deployer options:
     -e, --secrets JSON_FILE_NAME     Specify a JSON file storing secrets (can be specified several times).
     -i, --direct-deploy              Don't use artefacts servers while deploying.
     -t, --timeout SECS               Timeout in seconds to wait for each chef run. Only used in why-run mode. (defaults to 30)
+
+JSON dump options:
+    -j, --json-dir DIRECTORY         Specify the output directory in which JSON files are being written. Defaults to nodes_json.
+
+Topographer options:
+    -F, --from HOSTS_OPTIONS         Specify options for the set of nodes to start from (enclose them with ""). Default: all nodes. HOSTS_OPTIONS follows the following:
+                                         -a, --all-nodes                  Select all nodes
+                                         -b, --nodes-platform PLATFORM    Select nodes belonging to a given platform name. Available platforms are: ansible-repo, chef-repo (can be used several times)
+                                         -l, --nodes-list LIST            Select nodes defined in a nodes list (can be used several times)
+                                         -n, --node NODE                  Select a specific node. Can be a regular expression to select several nodes if used with enclosing "/" characters. (can be used several times).
+                                         -r, --nodes-service SERVICE      Select nodes implementing a given service (can be used several times)
+    -k, --skip-run                   Skip the actual gathering of JSON node files. If set, the current files in nodes_json will be used.
+    -p, --output FORMAT:FILE_NAME    Specify a format and file name. Can be used several times. FORMAT can be one of graphviz, json, svg. Ex.: graphviz:graph.gv
+    -T, --to HOSTS_OPTIONS           Specify options for the set of nodes to get to (enclose them with ""). Default: all nodes. HOSTS_OPTIONS follows the following:
+                                         -a, --all-nodes                  Select all nodes
+                                         -b, --nodes-platform PLATFORM    Select nodes belonging to a given platform name. Available platforms are: ansible-repo, chef-repo (can be used several times)
+                                         -l, --nodes-list LIST            Select nodes defined in a nodes list (can be used several times)
+                                         -n, --node NODE                  Select a specific node. Can be a regular expression to select several nodes if used with enclosing "/" characters. (can be used several times).
+                                         -r, --nodes-service SERVICE      Select nodes implementing a given service (can be used several times)
 ```
 
 Usage examples:
@@ -1072,7 +1108,7 @@ Usage: ./bin/test [options]
 
 Main options:
     -d, --debug                      Activate debug mode
-    -h, --help                       Display help and exit.
+    -h, --help                       Display help and exit
 
 Nodes handler options:
     -o, --show-nodes                 Display the list of possible nodes and exit
@@ -1084,12 +1120,13 @@ Nodes selection options:
     -n, --node NODE                  Select a specific node. Can be a regular expression to select several nodes if used with enclosing "/" characters. (can be used several times).
         --nodes-service SERVICE      Select nodes implementing a given service (can be used several times)
 
-SSH executor options:
+Command runner options:
+    -s, --show-commands              Display the commands that would be run instead of running them
+
+Connector ssh options:
     -g, --ssh-gateway-user USER      Name of the gateway user to be used by the gateways. Can also be set from environment variable hpc_ssh_gateway_user. Defaults to ubradm.
     -j, --ssh-no-control-master      If used, don't create SSH control masters for connections.
-    -m, --max-threads NBR            Set the number of threads to use for concurrent queries (defaults to 64)
     -q, --ssh-no-host-key-checking   If used, don't check for SSH host keys.
-    -s, --show-commands              Display the SSH commands that would be run instead of running them
     -u, --ssh-user USER              Name of user to be used in SSH connections (defaults to hpc_ssh_user or USER environment variables)
     -w, --password                   If used, then expect SSH connections to ask for a password.
     -y GATEWAYS_CONF,                Name of the gateways configuration to be used. Can also be set from environment variable hpc_ssh_gateways_conf. Defaults to munich.
@@ -1097,15 +1134,15 @@ SSH executor options:
 
 Deployer options:
     -e, --secrets JSON_FILE_NAME     Specify a JSON file storing secrets (can be specified several times).
-    -i, --direct-deploy              Don't use artefacts servers while deploying.
+        --direct-deploy              Don't use artefacts servers while deploying.
 
 Tests runner options:
     -i, --tests-list FILE_NAME       Specify a tests file name. The file should contain a list of tests name (1 per line). Can be used several times.
     -k, --skip-run                   Skip running the check-node commands for real, and just analyze existing run logs.
-    -r, --report REPORT_NAME         Specify a report name. Can be used several times. Can be all for all reports. Possible values: confluence, stdout (defaults to stdout).
-    -t, --test TEST_NAME             Specify a test name. Can be used several times. Can be all for all tests. Possible values: chef_executables, chef_success, chef_woulds, connection, deploy_freshness, executables, food_critic, group_ids, hostname, ip, linear_strategy, obsolete_home_dirs, obsolete_users, orphan_files, private_ips, public_ips, rubocop, spectre, unused_recipes, unused_roles, user_ids, users_without_roles, veids (defaults to all).
-        --max-threads-ssh NBR_THREADS
-                                     Specify the max number of threads to parallelize tests connecting using SSH on nodes (defaults to 64).
+    -r, --report REPORT              Specify a report name. Can be used several times. Can be all for all reports. Possible values: confluence, stdout (defaults to stdout).
+    -t, --test TEST                  Specify a test name. Can be used several times. Can be all for all tests. Possible values: ansible_repo_molecule_cdh_admins, ansible_repo_molecule_cdh_datanodes, ansible_repo_molecule_cdh_db, ansible_repo_molecule_cdh_gateways, ansible_repo_molecule_cdh_services, ansible_repo_molecule_common, ansible_repo_molecule_data_gateway, ansible_repo_molecule_dev_servers, ansible_repo_molecule_ds_servers, ansible_repo_molecule_dsnodes, ansible_repo_molecule_import_gateway, ansible_repo_molecule_notebooks, ansible_repo_molecule_tnz_data_gateway, bitbucket_conf, can_be_checked, check_from_scratch, chef_executables, chef_success, chef_woulds, connection, deploy_freshness, deploy_from_scratch, deploy_removes_root_access, executables, food_critic, group_ids, hostname, idem_potence, ip, linear_strategy, obsolete_home_dirs, obsolete_users, orphan_files, private_ips, public_ips, rubocop, spectre, ci_conf, ci_masters_ok, unused_files, unused_node_attributes, unused_recipes, unused_templates, unused_roles, unused_users, user_ids, users_without_roles, veids (defaults to all).
+        --max-threads-connections NBR_THREADS
+                                     Specify the max number of threads to parallelize tests connecting on nodes (defaults to 64).
         --max-threads-nodes NBR_THREADS
                                      Specify the max number of threads to parallelize tests at node level (defaults to 8).
         --max-threads-platforms NBR_THREADS
@@ -1201,6 +1238,9 @@ Main options:
 
 Nodes handler options:
     -o, --show-nodes                 Display the list of possible nodes and exit
+
+Command runner options:
+    -s, --show-commands              Display the commands that would be run instead of running them
 ```
 
 Usage examples:
@@ -1271,30 +1311,46 @@ Nodes selection options:
 * `--node NODE`: Select a single node. A regular expression can also be used when `NODE` is enclosed with `/` character (the regular expression grammar is [the Ruby one](http://ruby-doc.org/core-2.5.0/Regexp.html)). Examples: `--node my_node_1`, `--node /my_node_.+/`.
 * `--nodes-service SERVICE`: Select all nodes that implement a given service.
 
-## SSH Executor options
+## Command Runner options
 
-The SSH Executor options are used to drive how SSH commands are executed.
+The Command Runner options are used to drive how commands are executed.
 
 ```
-SSH executor options:
-    -d, --debug                      Activate verbose logs
+Command runner options:
+    -s, --show-commands              Display the commands that would be run instead of running them
+```
+
+* `--show-commands`: Display the commands the tool would execute, without executing them. Useful to understand or debug the tool's behaviour.
+
+## Actions Executor options
+
+The Actions Executor options are used to drive how actions are executed.
+
+```
+Actions Executor options:
+    -m, --max-threads NBR            Set the number of threads to use for concurrent queries (defaults to 16)
+```
+
+* `--max-threads NBR`: Specify the maximal number of threads to use when concurrent execution is performed.
+
+## Connector SSH options
+
+The SSH connector options are used to drive how SSH connections are handled.
+
+```
+Connector ssh options:
     -g, --ssh-gateway-user USER      Name of the gateway user to be used by the gateways. Can also be set from environment variable hpc_ssh_gateway_user. Defaults to ubradm.
     -j, --ssh-no-control-master      If used, don't create SSH control masters for connections.
-    -m, --max-threads NBR            Set the number of threads to use for concurrent queries (defaults to 64)
     -q, --ssh-no-host-key-checking   If used, don't check for SSH host keys.
-    -s, --show-commands              Display the SSH commands that would be run instead of running them
     -u, --ssh-user USER              Name of user to be used in SSH connections (defaults to hpc_ssh_user or USER environment variables)
     -w, --password                   If used, then expect SSH connections to ask for a password.
     -y GATEWAYS_CONF,                Name of the gateways configuration to be used. Can also be set from environment variable hpc_ssh_gateways_conf. Defaults to munich.
         --ssh-gateways-conf
 ```
 
-* `--debug`: Activate verbose logging.
 * `--ssh-gateway-user USER`: Specify the user to be used through the gateway accessing the nodes.
 * `--ssh-no-control-master`: If specified, don't use an SSH control master: it will open/close an SSH connection for every command it needs to run.
-* `--max-threads NBR`: Specify the maximal number of threads to use when concurrent SSH execution is performed.
 * `--ssh-no-host-key-checking`: If specified, make sure SSH connections don't check for host keys.
-* `--show-commands`: Display the commands the tool would execute, without executing them. Useful to understand or debug the tool's behaviour.
 * `--ssh-user USER`: Specify the user to be used on the node being accessed by the tool. It is recommended to set the default value of this option in the `hpc_ssh_user` environment variable. If both this option and the `hpc_ssh_user` variables are omitted, then the `USER` environment variable is used.
 * `--password`: When specified, then don't use `-o BatchMode=yes` on SSH commands so that if connection needs a password it will be asked. Useful to deploy on accounts not having key authentication yet.
 * `--ssh-gateways-conf GATEWAYS_CONF`: Specify the gateway configuration name to be used. Gateway configurations are defined in the platforms definition file (`./platforms.rb`). It is recommended to set the default value of this option in the `hpc_ssh_gateways_conf` environment variable.
@@ -1364,10 +1420,10 @@ Test Runner options are used to drive the running of tests.
 Tests runner options:
     -i, --tests-list FILE_NAME       Specify a tests file name. The file should contain a list of tests name (1 per line). Can be used several times.
     -k, --skip-run                   Skip running the check-node commands for real, and just analyze existing run logs.
-    -r, --report REPORT_NAME         Specify a report name. Can be used several times. Can be all for all reports. Possible values: confluence, stdout (defaults to stdout).
-    -t, --test TEST_NAME             Specify a test name. Can be used several times. Can be all for all tests. Possible values: chef_executables, chef_success, chef_woulds, connection, deploy_freshness, executables, food_critic, group_ids, hostname, ip, linear_strategy, obsolete_home_dirs, obsolete_users, orphan_files, private_ips, public_ips, rubocop, spectre, unused_recipes, unused_roles, user_ids, users_without_roles, veids (defaults to all).
-        --max-threads-ssh NBR_THREADS
-                                     Specify the max number of threads to parallelize tests connecting using SSH on nodes (defaults to 64).
+    -r, --report REPORT              Specify a report name. Can be used several times. Can be all for all reports. Possible values: confluence, stdout (defaults to stdout).
+    -t, --test TEST                  Specify a test name. Can be used several times. Can be all for all tests. Possible values: ansible_repo_molecule_cdh_admins, ansible_repo_molecule_cdh_datanodes, ansible_repo_molecule_cdh_db, ansible_repo_molecule_cdh_gateways, ansible_repo_molecule_cdh_services, ansible_repo_molecule_common, ansible_repo_molecule_data_gateway, ansible_repo_molecule_dev_servers, ansible_repo_molecule_ds_servers, ansible_repo_molecule_dsnodes, ansible_repo_molecule_import_gateway, ansible_repo_molecule_notebooks, ansible_repo_molecule_tnz_data_gateway, bitbucket_conf, can_be_checked, check_from_scratch, chef_executables, chef_success, chef_woulds, connection, deploy_freshness, deploy_from_scratch, deploy_removes_root_access, executables, food_critic, group_ids, hostname, idem_potence, ip, linear_strategy, obsolete_home_dirs, obsolete_users, orphan_files, private_ips, public_ips, rubocop, spectre, ci_conf, ci_masters_ok, unused_files, unused_node_attributes, unused_recipes, unused_templates, unused_roles, unused_users, user_ids, users_without_roles, veids (defaults to all).
+        --max-threads-connections NBR_THREADS
+                                     Specify the max number of threads to parallelize tests connecting on nodes (defaults to 64).
         --max-threads-nodes NBR_THREADS
                                      Specify the max number of threads to parallelize tests at node level (defaults to 8).
         --max-threads-platforms NBR_THREADS
@@ -1378,7 +1434,7 @@ Tests runner options:
 * `--skip-run`: Don't fetch the information from the nodes themselves, but use the previous output from the `run_logs` directory. Useful if executing the command several times.
 * `--test TEST_NAME`: Specify the test to be performed.
 * `--tests-list FILE_NAME`: Give a file containing a list of tests names. The file can also containg comment lines starting with `#`.
-* `--max-threads-ssh NBR_THREADS`: Make sure that there won't be more than `NBR_THREADS` simultaneous SSH connections used by node tests using SSH.
+* `--max-threads-connections NBR_THREADS`: Make sure that there won't be more than `NBR_THREADS` simultaneous connections to nodes.
 * `--max-threads-nodes NBR_THREADS`: Make sure that there won't be more than `NBR_THREADS` simultaneous tests run in parallel at node level. Those include Docker tests.
 * `--max-threads-platforms NBR_THREADS`: Make sure that there won't be more than `NBR_THREADS` simultaneous tests run in parallel at platform level. Those include Molecule, linter tests...
 
@@ -1405,7 +1461,7 @@ Test that Public IPs are assigned correctly.
 
 Test that VEIDs are assigned correctly.
 
-## Tests executing SSH on nodes
+## Tests executing connections on nodes
 
 ### connection
 
@@ -1453,7 +1509,7 @@ smtp_passwd = secret 'smtp_pass'
 <a name="development_api"></a>
 # Development API
 
-In case you want to develop other tools using SSH access and nodes configurations, here is the Ruby API you can use in your scripts.
+In case you want to develop other tools using access and nodes configurations, here is the Ruby API you can use in your scripts.
 You can check current executables (`./bin/deploy`, `./bin/last_deploys`, `./bin/report`...) to have concrete examples on how to use platforms handled by HPCs Conductor Ruby API.
 
 ## NodesHandler
@@ -1479,76 +1535,76 @@ hosts = nodes_handler.known_nodes
 puts nodes_handler.get_description_of 'node23hst-nn2'
 ```
 
-## SshExecutor
+## ActionsExecutor
 
-The `SshExecutor` library gives powerful ways to connect to hosts using SSH and perform commands there.
+The `ActionsExecutor` library gives powerful ways to connect to hosts using and perform commands there.
 It can handle host names resolution, SSH proxy settings, timeouts, parallel threads, logs in files...
 
 Main usage:
 ```ruby
-require 'hybrid_platforms_conductor/ssh_executor'
+require 'hybrid_platforms_conductor/actions_executor'
 
-ssh_executor = SshExecutor.new
+actions_executor = ActionsExecutor.new
 ```
 
-Then handful of methods can be used on this `ssh_executor` object.
-Check the [SshExecutor public methods](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/browse/lib/hybrid_platforms_conductor/ssh_executor.rb) to have an exhaustive list.
+Then handful of methods can be used on this `actions_executor` object.
+Check the [ActionsExecutor public methods](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/browse/lib/hybrid_platforms_conductor/actions_executor.rb) to have an exhaustive list.
 
 Examples:
 ```ruby
 # Set the SSH user name to be used in SSH connections
-ssh_executor.connector(:ssh).ssh_user = 'a_usernme'
+actions_executor.connector(:ssh).ssh_user = 'a_usernme'
 
 # Set the "Dry run" flag that will display SSH commands without actually executing them
-ssh_executor.dry_run = true
+actions_executor.dry_run = true
 
 # Activate log debugs
-ssh_executor.debug = true
+actions_executor.debug = true
 
 # Run the hostname command on node23hst-nn1
-ssh_executor.execute_actions('node23hst-nn1' => { remote_bash: 'hostname' })
+actions_executor.execute_actions('node23hst-nn1' => { remote_bash: 'hostname' })
 
 # Run the echo command on node23hst-nn1 by first setting environment variables
-ssh_executor.execute_actions('node23hst-nn1' => { remote_bash: { env: { 'MY_ENV' => 'value' }, commands: 'echo "${MY_ENV}"' } })
+actions_executor.execute_actions('node23hst-nn1' => { remote_bash: { env: { 'MY_ENV' => 'value' }, commands: 'echo "${MY_ENV}"' } })
 
 # Run the commands defined in file my_cmds.list on node23hst-nn1
-ssh_executor.execute_actions('node23hst-nn1' => { remote_bash: { file: 'my_cmds.list' } })
+actions_executor.execute_actions('node23hst-nn1' => { remote_bash: { file: 'my_cmds.list' } })
 
 # Run the hostname command on both node23hst-nn1 and node23hst-nn2 with timeout of 5 seconds
-ssh_executor.execute_actions({ ['node23hst-nn1', 'node23hst-nn2'] => { remote_bash: 'hostname' } }, timeout: 5)
+actions_executor.execute_actions({ ['node23hst-nn1', 'node23hst-nn2'] => { remote_bash: 'hostname' } }, timeout: 5)
 
 # Run the hostname and ls commands on both node23hst-nn1 and node23hst-nn2
-ssh_executor.execute_actions(['node23hst-nn1', 'node23hst-nn2'] => { remote_bash: ['hostname', 'ls'] })
+actions_executor.execute_actions(['node23hst-nn1', 'node23hst-nn2'] => { remote_bash: ['hostname', 'ls'] })
 
 # Run the commands hostname and the ones specified in my_cmds.list file on node23hst-nn1
-ssh_executor.execute_actions('node23hst-nn1' => { remote_bash: ['hostname', { file: 'my_cmds.list' }] })
+actions_executor.execute_actions('node23hst-nn1' => { remote_bash: ['hostname', { file: 'my_cmds.list' }] })
 
 # Run the hostname command on node23hst-nn1 and the ls command on node23hst-nn2
-ssh_executor.execute_actions('node23hst-nn1' => { remote_bash: 'hostname' }, 'node23hst-nn2' => { remote_bash: 'ls' } )
+actions_executor.execute_actions('node23hst-nn1' => { remote_bash: 'hostname' }, 'node23hst-nn2' => { remote_bash: 'ls' } )
 
 # Run an interactive shell on node23hst-nn1
-ssh_executor.execute_actions('node23hst-nn1' => { interactive: true })
+actions_executor.execute_actions('node23hst-nn1' => { interactive: true })
 
 # Run an scp command on node23hst-nn1
-ssh_executor.execute_actions('node23hst-nn1' => { scp: [['my/local_file', 'my/remote_file']] })
+actions_executor.execute_actions('node23hst-nn1' => { scp: [['my/local_file', 'my/remote_file']] })
 
 # Run 2 scp commands on node23hst-nn1
-ssh_executor.execute_actions('node23hst-nn1' => { scp: [['my/local_file1', 'my/remote_file1'], ['my/local_file2', 'my/remote_file2']] })
+actions_executor.execute_actions('node23hst-nn1' => { scp: [['my/local_file1', 'my/remote_file1'], ['my/local_file2', 'my/remote_file2']] })
 
 # Run 1 scp command + 1 hostname command on node23hst-nn1
-ssh_executor.execute_actions('node23hst-nn1' => [{ scp: [['my/local_file', 'my/remote_file']] }, { remote_bash: 'hostname'}])
+actions_executor.execute_actions('node23hst-nn1' => [{ scp: [['my/local_file', 'my/remote_file']] }, { remote_bash: 'hostname'}])
 
 # Run the hostname command on all hosts
-ssh_executor.execute_actions({ all: true } => { remote_bash: 'hostname' })
+actions_executor.execute_actions({ all: true } => { remote_bash: 'hostname' })
 
 # Run the hostname command on all hosts containing xae
-ssh_executor.execute_actions('/xae/' => { remote_bash: 'hostname' })
+actions_executor.execute_actions('/xae/' => { remote_bash: 'hostname' })
 
 # Run the hostname command on all hosts defined in the hosts list named my_host_list (file present in hosts_lists/my_host_list)
-ssh_executor.execute_actions({ list: 'my_host_list' } => { remote_bash: 'hostname' })
+actions_executor.execute_actions({ list: 'my_host_list' } => { remote_bash: 'hostname' })
 
 # Run the hostname command on all hosts containing xae, using parallel execution (log files will be output in run_logs/*.stdout)
-ssh_executor.execute_actions({ '/xae/' => { remote_bash: 'hostname' } }, concurrent: true)
+actions_executor.execute_actions({ '/xae/' => { remote_bash: 'hostname' } }, concurrent: true)
 ```
 
 <a name="extending"></a>

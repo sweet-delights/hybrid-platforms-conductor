@@ -1,7 +1,7 @@
 require 'optparse'
 require 'logger'
 require 'hybrid_platforms_conductor/nodes_handler'
-require 'hybrid_platforms_conductor/ssh_executor'
+require 'hybrid_platforms_conductor/actions_executor'
 require 'hybrid_platforms_conductor/cmd_runner'
 require 'hybrid_platforms_conductor/deployer'
 require 'hybrid_platforms_conductor/json_dumper'
@@ -58,7 +58,7 @@ module HybridPlatformsConductor
       # Possible Conductor components this executable can use
       @cmd_runner = nil
       @nodes_handler = nil
-      @ssh_executor = nil
+      @actions_executor = nil
       @deployer = nil
       @json_dumper = nil
       @reports_handler = nil
@@ -86,13 +86,13 @@ module HybridPlatformsConductor
       @nodes_handler
     end
 
-    # Get a singleton SSH Executor
+    # Get a singleton Actions Executor
     #
     # Result::
-    # * SshExecutor: The SSH Executor to be used by this executable
-    def ssh_executor
-      @ssh_executor = SshExecutor.new(logger: @logger, logger_stderr: @logger_stderr, cmd_runner: cmd_runner, nodes_handler: nodes_handler) if @ssh_executor.nil?
-      @ssh_executor
+    # * ActionsExecutor: The Actions Executor to be used by this executable
+    def actions_executor
+      @actions_executor = ActionsExecutor.new(logger: @logger, logger_stderr: @logger_stderr, cmd_runner: cmd_runner, nodes_handler: nodes_handler) if @actions_executor.nil?
+      @actions_executor
     end
 
     # Get a singleton Deployer
@@ -100,7 +100,7 @@ module HybridPlatformsConductor
     # Result::
     # * Deployer: The Deployer to be used by this executable
     def deployer
-      @deployer = Deployer.new(logger: @logger, logger_stderr: @logger_stderr, cmd_runner: cmd_runner, nodes_handler: nodes_handler, ssh_executor: ssh_executor) if @deployer.nil?
+      @deployer = Deployer.new(logger: @logger, logger_stderr: @logger_stderr, cmd_runner: cmd_runner, nodes_handler: nodes_handler, actions_executor: actions_executor) if @deployer.nil?
       @deployer
     end
 
@@ -127,7 +127,7 @@ module HybridPlatformsConductor
     # Result::
     # * TestsRunner: The Reports Handler to be used by this executable
     def tests_runner
-      @tests_runner = TestsRunner.new(logger: @logger, logger_stderr: @logger_stderr, cmd_runner: cmd_runner, nodes_handler: nodes_handler, ssh_executor: ssh_executor, deployer: deployer) if @tests_runner.nil?
+      @tests_runner = TestsRunner.new(logger: @logger, logger_stderr: @logger_stderr, cmd_runner: cmd_runner, nodes_handler: nodes_handler, actions_executor: actions_executor, deployer: deployer) if @tests_runner.nil?
       @tests_runner
     end
 
@@ -159,14 +159,14 @@ module HybridPlatformsConductor
         @nodes_handler.options_parse(opts) if @nodes_handler
         @nodes_handler.options_parse_nodes_selectors(opts, @selected_nodes) if @nodes_selection_options
         @cmd_runner.options_parse(opts) if @cmd_runner
-        @ssh_executor.options_parse(opts, parallel: @parallel_options) if @ssh_executor
+        @actions_executor.options_parse(opts, parallel: @parallel_options) if @actions_executor
         @deployer.options_parse(opts, parallel_switch: @parallel_options, plugins_options: @plugins_options, timeout_options: @timeout_options, why_run_switch: @check_options) if @deployer
         @json_dumper.options_parse(opts) if @json_dumper
         @reports_handler.options_parse(opts) if @reports_handler
         @tests_runner.options_parse(opts) if @tests_runner
         @topographer.options_parse(opts) if @topographer
       end.parse!
-      @ssh_executor.validate_params if @ssh_executor
+      @actions_executor.validate_params if @actions_executor
       @deployer.validate_params if @deployer
       @reports_handler.validate_params if @reports_handler
       @topographer.validate_params if @topographer

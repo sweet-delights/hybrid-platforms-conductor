@@ -43,7 +43,7 @@ module HybridPlatformsConductorTest
             ssh_commands_per_connection << [
               /^.+\/ssh #{with_batch_mode ? '-o BatchMode=yes ' : ''}-o ControlMaster=yes -o ControlPersist=yes #{Regexp.escape(node_connection_info[:user])}@ti\.#{Regexp.escape(node)} true$/,
               proc do
-                control_file = test_ssh_executor.connector(:ssh).send(:control_master_file, node_connection_info[:connection], '22', node_connection_info[:user])
+                control_file = test_actions_executor.connector(:ssh).send(:control_master_file, node_connection_info[:connection], '22', node_connection_info[:user])
                 # Fail if the ControlMaster file already exists, as would SSH do if the file is stalled
                 if File.exist?(control_file)
                   [255, '', "Control file #{control_file} already exists"]
@@ -66,7 +66,7 @@ module HybridPlatformsConductorTest
               /^.+\/ssh -O exit #{Regexp.escape(node_connection_info[:user])}@ti\.#{Regexp.escape(node)} 2>&1 \| grep -v 'Exit request sent\.'$/,
               proc do
                 # Really mock the control file deletion
-                File.unlink(test_ssh_executor.connector(:ssh).send(:control_master_file, node_connection_info[:connection], '22', node_connection_info[:user]))
+                File.unlink(test_actions_executor.connector(:ssh).send(:control_master_file, node_connection_info[:connection], '22', node_connection_info[:user]))
                 [1, '', '']
               end
             ]

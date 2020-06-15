@@ -96,7 +96,7 @@ describe HybridPlatformsConductor::TestsRunner do
       'platform2' => { nodes: { 'node21' => {}, 'node22' => {} } }
     ) do
       register_test_plugins(test_tests_runner, several_tests: HybridPlatformsConductorTest::TestPlugins::SeveralChecks)
-      # Mock the SSH Executor and Deployer expected calls
+      # Mock the Actions Executor and Deployer expected calls
       expect(test_deployer).to receive(:deploy_on).with(%w[node11 node12 node21 node22]).once do
         expect(test_deployer.use_why_run).to eq true
         {
@@ -106,7 +106,7 @@ describe HybridPlatformsConductor::TestsRunner do
           'node22' => [0, 'node22 check ok', 'node22 stderr']
         }
       end
-      expect_ssh_executor_runs([proc do |actions|
+      expect_actions_executor_runs([proc do |actions|
         node_suffixes = %w[11 12 21 22]
         expect(actions.size).to eq node_suffixes.size
         node_suffixes.each do |node_suffix|

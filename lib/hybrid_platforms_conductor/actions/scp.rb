@@ -9,7 +9,7 @@ module HybridPlatformsConductor
       # This is called by the constructor itself, when an action is instantiated to be executed for a node.
       # [API] - This method is optional
       # [API] - @cmd_runner is accessible
-      # [API] - @ssh_executor is accessible
+      # [API] - @actions_executor is accessible
       #
       # Parameters::
       # * *mappings* (Hash<String or Symbol, Object>): Set of couples source => destination_dir to copy files or directories from the local file system to the remote file system.
@@ -35,7 +35,7 @@ module HybridPlatformsConductor
       # Execute the action
       # [API] - This method is mandatory
       # [API] - @cmd_runner is accessible
-      # [API] - @ssh_executor is accessible
+      # [API] - @actions_executor is accessible
       # [API] - @action_info is accessible with the action details
       # [API] - @node (String) can be used to know on which node the action is to be executed
       # [API] - @connector (Connector or nil) can be used to access the node's connector if the action needs remote connection

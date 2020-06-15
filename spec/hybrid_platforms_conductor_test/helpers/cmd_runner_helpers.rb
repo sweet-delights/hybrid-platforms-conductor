@@ -14,7 +14,6 @@ module HybridPlatformsConductorTest
       # * *cmd_runner* (CmdRunner): The CmdRunner to mock [default: test_cmd_runner]
       # * Proc: Code called with the command runner mocked
       def with_cmd_runner_mocked(commands, cmd_runner: test_cmd_runner)
-        # Mock the calls to CmdRunner made by the SSH connections
         unexpected_commands = []
         remaining_expected_commands = commands.clone
         # We need to protect the access to this array as the mocked commands can be called by competing threads

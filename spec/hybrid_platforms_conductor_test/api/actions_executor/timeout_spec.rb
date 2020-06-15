@@ -1,4 +1,4 @@
-describe HybridPlatformsConductor::SshExecutor do
+describe HybridPlatformsConductor::ActionsExecutor do
 
   context 'checking timeouts' do
 
@@ -14,7 +14,7 @@ describe HybridPlatformsConductor::SshExecutor do
 
     it 'executes an action without timeout' do
       with_test_platform_for_timeouts_tests do
-        expect(test_ssh_executor.execute_actions(
+        expect(test_actions_executor.execute_actions(
           'node' => { test_action: { code: proc do |stdout, _stderr, action|
             expect(action.timeout).to eq nil
             stdout << 'Hello'
@@ -25,7 +25,7 @@ describe HybridPlatformsConductor::SshExecutor do
 
     it 'executes an action with timeout' do
       with_test_platform_for_timeouts_tests do
-        expect(test_ssh_executor.execute_actions(
+        expect(test_actions_executor.execute_actions(
           { 'node' => { test_action: { code: proc do |stdout, _stderr, action|
             expect(action.timeout).to eq 1
             stdout << 'Hello'
@@ -37,7 +37,7 @@ describe HybridPlatformsConductor::SshExecutor do
 
     it 'executes an action that fails because of timeout' do
       with_test_platform_for_timeouts_tests do
-        expect(test_ssh_executor.execute_actions(
+        expect(test_actions_executor.execute_actions(
           { 'node' => { test_action: { code: proc do |_stdout, _stderr, action|
             raise HybridPlatformsConductor::CmdRunner::TimeoutError
           end } } },
@@ -48,7 +48,7 @@ describe HybridPlatformsConductor::SshExecutor do
 
     it 'executes an action that fails because of timeout and outputs data before' do
       with_test_platform_for_timeouts_tests do
-        expect(test_ssh_executor.execute_actions(
+        expect(test_actions_executor.execute_actions(
           { 'node' => { test_action: { code: proc do |stdout, _stderr, action|
             stdout << 'Hello'
             raise HybridPlatformsConductor::CmdRunner::TimeoutError
@@ -60,7 +60,7 @@ describe HybridPlatformsConductor::SshExecutor do
 
     it 'executes several actions with latter ones failing because of timeout' do
       with_test_platform_for_timeouts_tests do
-        expect(test_ssh_executor.execute_actions(
+        expect(test_actions_executor.execute_actions(
           { 'node' => [
             { test_action: { code: proc do |stdout|
               sleep 1
@@ -77,7 +77,7 @@ describe HybridPlatformsConductor::SshExecutor do
 
     it 'executes several actions with a decreasing timeout' do
       with_test_platform_for_timeouts_tests do
-        expect(test_ssh_executor.execute_actions(
+        expect(test_actions_executor.execute_actions(
           { 'node' => [
             { test_action: { code: proc do |stdout, _stderr, action|
               expect(action.timeout).to eq 5
