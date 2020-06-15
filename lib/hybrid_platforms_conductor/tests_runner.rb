@@ -400,6 +400,7 @@ module HybridPlatformsConductor
               end
             rescue
               test.error "Uncaught exception during test preparation: #{$!}#{log_debug? ? "\n#{$!.backtrace.join("\n")}" : ''}"
+              test.executed
             end
             @tests_run << test
             tests_on_nodes << test_name
@@ -529,7 +530,7 @@ module HybridPlatformsConductor
               rescue
                 # If an exception occurred, make sure all concerned nodes are reporting the error
                 nodes_to_test.each do |node|
-                  error "Error while checking check-node output: #{$!}", node: node
+                  error "Error while checking check-node output: #{$!}#{log_debug? ? "\n#{$!.backtrace.join("\n")}" : ''}", node: node
                 end
                 {}
               end
