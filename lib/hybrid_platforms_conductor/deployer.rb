@@ -249,6 +249,7 @@ module HybridPlatformsConductor
     #   * Parameters::
     #     * *deployer* (Deployer): A new Deployer configured to override access to the node through the Docker container
     #     * *ip* (String): IP address of the container
+    #     * *docker_container* (Docker::Container): The Docker container
     def with_docker_container_for(node, container_id: '', reuse_container: false)
       docker_ok = false
       begin
@@ -334,7 +335,7 @@ module HybridPlatformsConductor
                   deployer.prepare_for_local_environment
                   # Ignore secrets that might have been given: in Docker containers we always use dummy secrets
                   deployer.secrets = [JSON.parse(File.read("#{nodes_handler.hybrid_platforms_dir}/dummy_secrets.json"))]
-                  yield deployer, container_ip
+                  yield deployer, container_ip, docker_container
                 end
               else
                 raise "Docker container #{container_name} was started on IP #{container_ip} but did not have its SSH server running"
@@ -361,8 +362,6 @@ module HybridPlatformsConductor
         @nodes_handler.platform(platform_name).prepare_deploy_for_local_testing
       end
     end
-
-    private
 
     # Wait for a given ip/port to be listening before continuing.
     # Fail in case it timeouts.
@@ -393,6 +392,8 @@ module HybridPlatformsConductor
       log_debug "#{host}:#{port} is#{port_listening ? '' : ' not'} opened."
       port_listening
     end
+
+    private
 
     # Package the repository, ready to be sent to artefact repositories.
     def package
