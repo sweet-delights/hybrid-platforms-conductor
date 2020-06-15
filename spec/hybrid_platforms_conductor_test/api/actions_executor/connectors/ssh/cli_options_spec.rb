@@ -38,7 +38,7 @@ describe HybridPlatformsConductor::ActionsExecutor do
             expect(test_connector.ssh_gateway_user).to eq 'another_user'
             {}
           end])
-          exit_code, stdout, stderr = run 'ssh_run', '--node', 'node', '--command', 'echo Hello', '--ssh-gateway-user', 'another_user'
+          exit_code, stdout, stderr = run 'run', '--node', 'node', '--command', 'echo Hello', '--ssh-gateway-user', 'another_user'
           expect(exit_code).to eq 0
           expect(stdout).to eq ''
           expect(stderr).to eq ''
@@ -51,7 +51,7 @@ describe HybridPlatformsConductor::ActionsExecutor do
             expect(test_connector.ssh_gateways_conf).to eq :test_gateway2
             {}
           end])
-          exit_code, stdout, stderr = run 'ssh_run', '--node', 'node', '--command', 'echo Hello', '--ssh-gateways-conf', 'test_gateway2'
+          exit_code, stdout, stderr = run 'run', '--node', 'node', '--command', 'echo Hello', '--ssh-gateways-conf', 'test_gateway2'
           expect(exit_code).to eq 0
           expect(stdout).to eq ''
           expect(stderr).to eq ''
@@ -64,7 +64,7 @@ describe HybridPlatformsConductor::ActionsExecutor do
             expect(test_connector.ssh_use_control_master).to eq false
             {}
           end])
-          exit_code, stdout, stderr = run 'ssh_run', '--node', 'node', '--command', 'echo Hello', '--ssh-no-control-master'
+          exit_code, stdout, stderr = run 'run', '--node', 'node', '--command', 'echo Hello', '--ssh-no-control-master'
           expect(exit_code).to eq 0
           expect(stdout).to eq ''
           expect(stderr).to eq ''
@@ -77,7 +77,7 @@ describe HybridPlatformsConductor::ActionsExecutor do
             expect(test_connector.ssh_strict_host_key_checking).to eq false
             {}
           end])
-          exit_code, stdout, stderr = run 'ssh_run', '--node', 'node', '--command', 'echo Hello', '--ssh-no-host-key-checking'
+          exit_code, stdout, stderr = run 'run', '--node', 'node', '--command', 'echo Hello', '--ssh-no-host-key-checking'
           expect(exit_code).to eq 0
           expect(stdout).to eq ''
           expect(stderr).to eq ''
@@ -90,7 +90,7 @@ describe HybridPlatformsConductor::ActionsExecutor do
             expect(test_connector.ssh_user).to eq 'ssh_new_user'
             {}
           end])
-          exit_code, stdout, stderr = run 'ssh_run', '--node', 'node', '--command', 'echo Hello', '--ssh-user', 'ssh_new_user'
+          exit_code, stdout, stderr = run 'run', '--node', 'node', '--command', 'echo Hello', '--ssh-user', 'ssh_new_user'
           expect(exit_code).to eq 0
           expect(stdout).to eq ''
           expect(stderr).to eq ''
@@ -101,7 +101,7 @@ describe HybridPlatformsConductor::ActionsExecutor do
         ENV.delete 'hpc_ssh_user'
         ENV.delete 'USER'
         with_test_platform_for_cli do
-          expect { run 'ssh_run', '--node', 'node', '--command', 'echo Hello' }.to raise_error(RuntimeError, 'No SSH user name specified. Please use --ssh-user option or hpc_ssh_user environment variable to set it.')
+          expect { run 'run', '--node', 'node', '--command', 'echo Hello' }.to raise_error(RuntimeError, 'No SSH user name specified. Please use --ssh-user option or hpc_ssh_user environment variable to set it.')
         end
       end
 
@@ -111,7 +111,7 @@ describe HybridPlatformsConductor::ActionsExecutor do
             expect(test_connector.auth_password).to eq true
             {}
           end])
-          exit_code, stdout, stderr = run 'ssh_run', '--node', 'node', '--command', 'echo Hello', '--password'
+          exit_code, stdout, stderr = run 'run', '--node', 'node', '--command', 'echo Hello', '--password'
           expect(exit_code).to eq 0
           expect(stdout).to eq ''
           expect(stderr).to eq ''

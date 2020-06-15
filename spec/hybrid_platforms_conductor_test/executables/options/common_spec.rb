@@ -28,7 +28,7 @@ describe 'executables\' common options' do
     'report' => ['--node', 'node1', '--format', 'stdout'],
     'setup' => ['--help'],
     'ssh_config' => [],
-    'ssh_run' => ['--node', 'node1', '--show-commands', '--interactive', '--ssh-no-control-master'],
+    'run' => ['--node', 'node1', '--show-commands', '--interactive', '--ssh-no-control-master'],
     'test' => ['--help']
     # TODO: Add topograph in the tests suite
     # 'topograph' => ['--from', '--node node1', '--to', '--node node1', '--skip-run', '--output', 'graphviz:graph.gv'],

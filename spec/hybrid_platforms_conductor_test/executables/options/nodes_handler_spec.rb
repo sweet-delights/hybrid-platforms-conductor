@@ -67,7 +67,7 @@ describe 'executables\' Nodes Handler options' do
 
   it 'displays info about nodes' do
     with_test_platform_for_nodes_handler_options do
-      exit_code, stdout, stderr = run 'ssh_run', '--show-nodes'
+      exit_code, stdout, stderr = run 'run', '--show-nodes'
       expect(exit_code).to eq 0
       expect(stdout).to eq(
 '* Known platforms:

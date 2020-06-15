@@ -22,7 +22,7 @@ module HybridPlatformsConductor
             "#{CmdRunner.executables_prefix}last_deploys --node #{example_node} --show-commands",
             "#{CmdRunner.executables_prefix}report --node #{example_node} --format stdout",
             "#{CmdRunner.executables_prefix}ssh_config",
-            "#{CmdRunner.executables_prefix}ssh_run --node #{example_node} --show-commands --interactive",
+            "#{CmdRunner.executables_prefix}run --node #{example_node} --show-commands --interactive",
             "#{CmdRunner.executables_prefix}setup --help",
             "#{CmdRunner.executables_prefix}test --help",
             "#{CmdRunner.executables_prefix}topograph --from \"--node #{example_node}\" --to \"--node #{example_node}\" --skip-run --output graphviz:graph.gv"
