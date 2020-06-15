@@ -1,3 +1,9 @@
+# [18.0.4](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv18.0.3&sourceBranch=refs%2Ftags%2Fv18.0.4) (2020-06-15)
+
+### Fixes
+
+* stdout logs are saved in deployment logs even when deployment fails ([005fe6da](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/commits/005fe6da2dcefaa1fe8b35743a41c08cc9f856ac))
+
 # [18.0.3](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv18.0.2&sourceBranch=refs%2Ftags%2Fv18.0.3) (2020-06-15)
 
 ### Fixes
