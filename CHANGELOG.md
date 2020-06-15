@@ -1,3 +1,9 @@
+# [18.2.4](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv18.2.3&sourceBranch=refs%2Ftags%2Fv18.2.4) (2020-06-15)
+
+### Fixes
+
+* Make sure idempotence tests don't fail because of root access being removed ([7cf47697](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/commits/7cf47697a2d86e7862c40124ffbdd1f6de152254))
+
 # [18.2.3](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv18.2.2&sourceBranch=refs%2Ftags%2Fv18.2.3) (2020-06-15)
 
 ### Fixes
