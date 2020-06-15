@@ -23,7 +23,7 @@ module HybridPlatformsConductor
 
         # Check my_test_plugin.rb.sample documentation for signature details.
         def test_for_node
-          @deployer.with_docker_container_for(@node, container_id: 'idem_potence') do |deployer|
+          @deployer.with_docker_container_for(@node, container_id: 'idem_potence', reuse_container: log_debug?) do |deployer|
             deployer.deploy_on(@node)
             # Now that the node has been deployed, use the a_testadmin user for the check-node (as root has no more access)
             deployer.instance_variable_get(:@actions_executor).connector(:ssh).ssh_user = 'a_testadmin'
