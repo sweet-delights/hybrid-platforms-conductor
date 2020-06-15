@@ -13,10 +13,16 @@ module HybridPlatformsConductor
           'CVE-2017-5754' => 'Meltdown'
         }
 
+        SPECTRE_CMD = <<~EOS
+          sudo /bin/bash <<'EOAction'
+          #{File.read("#{__dir__}/../spectre-meltdown-checker.sh")}
+          EOAction
+        EOS
+
         # Check my_test_plugin.rb.sample documentation for signature details.
         def test_on_node
           {
-            File.read("#{File.dirname(__FILE__)}/../spectre-meltdown-checker.sh") => {
+            SPECTRE_CMD => {
               validator: proc do |stdout|
                 VULNERABILITIES_TO_CHECK.each do |id, name|
                   id_regexp = /#{Regexp.escape(id)}/
