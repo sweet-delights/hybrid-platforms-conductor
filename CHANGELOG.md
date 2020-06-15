@@ -1,3 +1,9 @@
+# [18.2.7](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv18.2.6&sourceBranch=refs%2Ftags%2Fv18.2.7) (2020-06-15)
+
+### Fixes
+
+* Corrected Spectre test ([b5669230](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/commits/b5669230fd86f4d7160b40dc1be1ea44f0e3635a))
+
 # [18.2.6](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv18.2.5&sourceBranch=refs%2Ftags%2Fv18.2.6) (2020-06-15)
 
 ### Fixes
