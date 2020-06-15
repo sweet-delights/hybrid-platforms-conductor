@@ -1,3 +1,9 @@
+# [18.0.1](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv18.0.0&sourceBranch=refs%2Ftags%2Fv18.0.1) (2020-06-15)
+
+### Fixes
+
+* [Breaking] Renamed SSH Executor to Actions Executor ([2d1aa9e6](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/commits/2d1aa9e6c0600dc3aeae6fb6bb785f09d409b3d1))
+
 # [18.0.0](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv17.0.1&sourceBranch=refs%2Ftags%2Fv18.0.0) (2020-06-15)
 
 ### Breaking changes
