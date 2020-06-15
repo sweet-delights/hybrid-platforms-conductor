@@ -1,3 +1,9 @@
+# [18.0.2](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv18.0.1&sourceBranch=refs%2Ftags%2Fv18.0.2) (2020-06-15)
+
+### Fixes
+
+* [Breaking] Renamed ssh_run into run ([e6ad77f8](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/commits/e6ad77f8a13dece5d8e8155827839c8f75d3dfb4))
+
 # [18.0.1](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv18.0.0&sourceBranch=refs%2Ftags%2Fv18.0.1) (2020-06-15)
 
 ### Fixes
