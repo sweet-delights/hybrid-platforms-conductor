@@ -1,3 +1,9 @@
+# [18.2.1](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv18.2.0&sourceBranch=refs%2Ftags%2Fv18.2.1) (2020-06-15)
+
+### Fixes
+
+* Retry SSH connections when remote system is booting up ([0c645b2a](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/commits/0c645b2aefc233fe223d6b703362b29dfd5d7613))
+
 # [18.2.0](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv18.1.0&sourceBranch=refs%2Ftags%2Fv18.2.0) (2020-06-15)
 
 ### New features
