@@ -1,3 +1,9 @@
+# [18.0.0](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv17.0.1&sourceBranch=refs%2Ftags%2Fv18.0.0) (2020-06-15)
+
+### Breaking changes
+
+* [Breaking] Support for connectors plugins to connect with ssh or other means to our nodes ([49a326c6](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/commits/49a326c68d3bc28f2b83a82783c449e87043e4c6))
+
 # [17.0.1](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv17.0.0&sourceBranch=refs%2Ftags%2Fv17.0.1) (2020-06-01)
 
 ### Fixes
