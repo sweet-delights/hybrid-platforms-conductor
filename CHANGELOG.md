@@ -1,3 +1,9 @@
+# [18.2.8](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv18.2.7&sourceBranch=refs%2Ftags%2Fv18.2.8) (2020-06-17)
+
+### Fixes
+
+* Update Ruby install doc now that 2.7 is used in CI ([33765afc](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/commits/33765afce20fb5a731310d1c1f6e6345d055f110))
+
 # [18.2.7](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv18.2.6&sourceBranch=refs%2Ftags%2Fv18.2.7) (2020-06-15)
 
 ### Fixes
