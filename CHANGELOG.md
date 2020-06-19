@@ -1,3 +1,9 @@
+# [18.2.9](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv18.2.8&sourceBranch=refs%2Ftags%2Fv18.2.9) (2020-06-19)
+
+### Fixes
+
+* Dump detailed differences in case of idempotence failures ([f9139c08](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/commits/f9139c08f50f5d983a5cea28d51f4c8ce2cd1bfb))
+
 # [18.2.8](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv18.2.7&sourceBranch=refs%2Ftags%2Fv18.2.8) (2020-06-17)
 
 ### Fixes
