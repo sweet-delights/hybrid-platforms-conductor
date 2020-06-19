@@ -279,6 +279,7 @@ module HybridPlatformsConductor
       #   * *status* (Symbol): Task status. Should be on of:
       #     * *:changed*: The task has been changed
       #     * *:identical*: The task has not been changed
+      #   * *diffs* (String): Differences, if any
       def parse_deploy_output(stdout, stderr)
         tasks = []
         stdout.split("\n").each do |line|

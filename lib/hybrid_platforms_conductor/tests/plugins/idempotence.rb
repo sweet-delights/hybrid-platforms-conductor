@@ -38,7 +38,13 @@ module HybridPlatformsConductor
                 assert_equal exit_status, 0, "Check-node returned error code #{exit_status}"
                 # Check that the output of the check-node returns no changes.
                 @nodes_handler.platform_for(@node).parse_deploy_output(stdout, stderr).each do |task_info|
-                  error "Task #{task_info[:name]} is not idempotent", JSON.pretty_generate(task_info) if task_info[:status] == :changed
+                  if task_info[:status] == :changed
+                    extra_details = task_info.slice(*(task_info.keys - %i[name status diffs]))
+                    error_details = []
+                    error_details << "----- Changes:\n#{task_info[:diffs].strip}\n-----" if task_info[:diffs]
+                    error_details << "----- Additional details:\n#{JSON.pretty_generate(extra_details)}\n-----" unless extra_details.empty?
+                    error "Task #{task_info[:name]} is not idempotent", error_details.empty? ? nil : error_details.join("\n")
+                  end
                 end
               end
             else
