@@ -35,13 +35,19 @@ module HybridPlatformsConductor
                 assert_equal tested_node, @node, "Wrong node being tested: #{tested_node} should be #{@node}"
                 assert_equal exit_status, 0, "Check-node returned error code #{exit_status}"
                 # Check that the output of the check-node returns no changes.
+                ignored_tasks = @nodes_handler.platform_for(@node).metadata.dig('test', 'idempotence', 'ignored_tasks') || {}
                 @nodes_handler.platform_for(@node).parse_deploy_output(stdout, stderr).each do |task_info|
                   if task_info[:status] == :changed
-                    extra_details = task_info.slice(*(task_info.keys - %i[name status diffs]))
-                    error_details = []
-                    error_details << "----- Changes:\n#{task_info[:diffs].strip}\n-----" if task_info[:diffs]
-                    error_details << "----- Additional details:\n#{JSON.pretty_generate(extra_details)}\n-----" unless extra_details.empty?
-                    error "Task #{task_info[:name]} is not idempotent", error_details.empty? ? nil : error_details.join("\n")
+                    if ignored_tasks.key?(task_info[:name])
+                      # It was expected that this task is not idempotent
+                      log_debug "Task #{task_info[:name]} was expected to not be idempotent. Reason: #{ignored_tasks[task_info[:name]]}"
+                    else
+                      extra_details = task_info.slice(*(task_info.keys - %i[name status diffs]))
+                      error_details = []
+                      error_details << "----- Changes:\n#{task_info[:diffs].strip}\n-----" if task_info[:diffs]
+                      error_details << "----- Additional details:\n#{JSON.pretty_generate(extra_details)}\n-----" unless extra_details.empty?
+                      error "Task #{task_info[:name]} is not idempotent", error_details.empty? ? nil : error_details.join("\n")
+                    end
                   end
                 end
               end
