@@ -311,6 +311,8 @@ module HybridPlatformsConductor
               if wait_for_port(container_ip, 22)
                 log_debug "Docker container #{container_name} started using IP #{container_ip}."
                 Dir.mktmpdir('hybrid_platforms_conductor-docker-logs') do |docker_logs_dir|
+                  stdout_file = nil
+                  stderr_file = nil
                   sub_logger, sub_logger_stderr =
                     if log_debug?
                       [@logger, @logger_stderr]
@@ -322,20 +324,35 @@ module HybridPlatformsConductor
                       log_debug "Docker logs files for #{container_name} are #{stdout_file} and #{stderr_file}"
                       [Logger.new(stdout_file, level: :info), Logger.new(stderr_file, level: :info)]
                     end
-                  sub_executable = Executable.new(logger: sub_logger, logger_stderr: sub_logger_stderr)
-                  nodes_handler = sub_executable.nodes_handler
-                  actions_executor = sub_executable.actions_executor
-                  deployer = sub_executable.deployer
-                  nodes_handler.override_metadata_of node, :host_ip, container_ip
-                  nodes_handler.invalidate_metadata_of node, :host_keys
-                  actions_executor.connector(:ssh).ssh_user = 'root'
-                  actions_executor.connector(:ssh).passwords[node] = 'root_pwd'
-                  deployer.force_direct_deploy = true
-                  deployer.allow_deploy_non_master = true
-                  deployer.prepare_for_local_environment
-                  # Ignore secrets that might have been given: in Docker containers we always use dummy secrets
-                  deployer.secrets = [JSON.parse(File.read("#{nodes_handler.hybrid_platforms_dir}/dummy_secrets.json"))]
-                  yield deployer, container_ip, docker_container
+                  begin
+                    sub_executable = Executable.new(logger: sub_logger, logger_stderr: sub_logger_stderr)
+                    nodes_handler = sub_executable.nodes_handler
+                    actions_executor = sub_executable.actions_executor
+                    deployer = sub_executable.deployer
+                    nodes_handler.override_metadata_of node, :host_ip, container_ip
+                    nodes_handler.invalidate_metadata_of node, :host_keys
+                    actions_executor.connector(:ssh).ssh_user = 'root'
+                    actions_executor.connector(:ssh).passwords[node] = 'root_pwd'
+                    deployer.force_direct_deploy = true
+                    deployer.allow_deploy_non_master = true
+                    deployer.prepare_for_local_environment
+                    # Ignore secrets that might have been given: in Docker containers we always use dummy secrets
+                    deployer.secrets = [JSON.parse(File.read("#{nodes_handler.hybrid_platforms_dir}/dummy_secrets.json"))]
+                    yield deployer, container_ip, docker_container
+                  rescue
+                    # Make sure Docker logs are being output to better investigate errors if we were not already outputing them in debug mode
+                    messages = []
+                    unless stdout_file.nil?
+                      docker_stdout = File.read(stdout_file).strip
+                      messages << "----- Docker container #{container_name} STDOUT -----\n#{docker_stdout}\n-----" unless docker_stdout.empty?
+                    end
+                    unless stderr_file.nil?
+                      docker_stderr = File.read(stderr_file)
+                      messages << "----- Docker container #{container_name} STDERR -----\n#{docker_stderr}\n-----" unless docker_stderr.empty?
+                    end
+                    log_error "Docker outputs from container #{container_name}:\n#{messages.join("\n")}" unless messages.empty?
+                    raise
+                  end
                 end
               else
                 raise "Docker container #{container_name} was started on IP #{container_ip} but did not have its SSH server running"
