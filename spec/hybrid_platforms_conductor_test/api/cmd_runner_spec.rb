@@ -44,15 +44,27 @@ describe HybridPlatformsConductor::CmdRunner do
     end
   end
 
-  it 'fails when the command does not exit to the expected code' do
+  it 'fails when the command does not exit with the expected code' do
     with_repository do |repository|
       expect { test_cmd_runner.run_cmd 'exit 1', expected_code: 2 }.to raise_error(HybridPlatformsConductor::CmdRunner::UnexpectedExitCodeError, 'Command exit 1 returned error code 1 (expected 2).')
+    end
+  end
+
+  it 'fails when the command does not exit with one of the expected codes' do
+    with_repository do |repository|
+      expect { test_cmd_runner.run_cmd 'exit 1', expected_code: [0, 2, 3] }.to raise_error(HybridPlatformsConductor::CmdRunner::UnexpectedExitCodeError, 'Command exit 1 returned error code 1 (expected 0, 2, 3).')
     end
   end
 
   it 'does not fail when the command exits with the expected code' do
     with_repository do |repository|
       expect(test_cmd_runner.run_cmd 'exit 2', expected_code: 2).to eq [2, '', '']
+    end
+  end
+
+  it 'does not fail when the command exits with one of the expected codes' do
+    with_repository do |repository|
+      expect(test_cmd_runner.run_cmd 'exit 2', expected_code: [0, 2, 3]).to eq [2, '', '']
     end
   end
 
