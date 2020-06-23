@@ -40,7 +40,7 @@ describe HybridPlatformsConductor::Deployer do
     it 'gives a docker container for a node that is running SSH correctly' do
       with_test_docker_platform do |_docker_deployer, docker_ip|
         message = nil
-        Net::SSH.start(docker_ip, 'root', password: 'root_pwd', auth_methods: ['password']) do |ssh|
+        Net::SSH.start(docker_ip, 'root', password: 'root_pwd', auth_methods: ['password'], verify_host_key: :never) do |ssh|
           message = ssh.exec!('echo UpAndRunning')
         end
         expect(message).to eq "UpAndRunning\n"
@@ -56,7 +56,7 @@ describe HybridPlatformsConductor::Deployer do
         expect(docker_deployer.deploy_on('node')).to eq('node' => [0, "Real deployment done on node\n", ''])
         # Check deployed data
         data_read = nil
-        Net::SSH.start(docker_ip, 'root', password: 'root_pwd', auth_methods: ['password']) do |ssh|
+        Net::SSH.start(docker_ip, 'root', password: 'root_pwd', auth_methods: ['password'], verify_host_key: :never) do |ssh|
           data_read = ssh.exec!('cat deployed_file')
         end
         expect(data_read).to eq "#{data}\n"
@@ -71,7 +71,7 @@ describe HybridPlatformsConductor::Deployer do
         # Check deployed logs
         # Hash<String, String>: Log content, per log file name
         logs = {}
-        Net::SSH.start(docker_ip, 'root', password: 'root_pwd', auth_methods: ['password']) do |ssh|
+        Net::SSH.start(docker_ip, 'root', password: 'root_pwd', auth_methods: ['password'], verify_host_key: :never) do |ssh|
           ssh.exec!('ls /var/log/deployments').split("\n").each do |log_file|
             logs[log_file] = ssh.exec!("cat /var/log/deployments/#{log_file}")
           end
