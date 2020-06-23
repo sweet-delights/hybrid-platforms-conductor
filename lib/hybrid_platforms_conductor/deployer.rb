@@ -341,16 +341,8 @@ module HybridPlatformsConductor
                     yield deployer, container_ip, docker_container
                   rescue
                     # Make sure Docker logs are being output to better investigate errors if we were not already outputing them in debug mode
-                    messages = []
-                    unless stdout_file.nil?
-                      docker_stdout = File.read(stdout_file).strip
-                      messages << "----- Docker container #{container_name} STDOUT -----\n#{docker_stdout}\n-----" unless docker_stdout.empty?
-                    end
-                    unless stderr_file.nil?
-                      docker_stderr = File.read(stderr_file)
-                      messages << "----- Docker container #{container_name} STDERR -----\n#{docker_stderr}\n-----" unless docker_stderr.empty?
-                    end
-                    log_error "Docker outputs from container #{container_name}:\n#{messages.join("\n")}" unless messages.empty?
+                    stdouts = deployer.stdouts_to_s
+                    log_error "Docker outputs from container #{container_name}:\n#{stdouts}" unless stdouts.nil?
                     raise
                   end
                 end

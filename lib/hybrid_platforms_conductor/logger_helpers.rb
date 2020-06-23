@@ -277,6 +277,24 @@ module HybridPlatformsConductor
       end
     end
 
+    # Return a string describing the stdout and stderr if they were logged into files.
+    # Useful for debugging.
+    #
+    # Result::
+    # * String: The corresponding stdout and stderr info, or nil if none
+    def stdouts_to_s
+      messages = []
+      if self.stdout_device.is_a?(File) && File.exist?(self.stdout_device.path)
+        stdout = File.read(self.stdout_device.path).strip
+        messages << "----- STDOUT -----\n#{stdout}\n-----" unless stdout.empty?
+      end
+      if self.stderr_device.is_a?(File) && File.exist?(self.stderr_device.path)
+        stderr = File.read(self.stderr_device.path).strip
+        messages << "----- STDERR -----\n#{stderr}\n-----" unless stderr.empty?
+      end
+      messages.empty? ? nil : messages.join("\n")
+    end
+
   end
 
 end
