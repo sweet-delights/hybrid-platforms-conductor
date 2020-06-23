@@ -64,7 +64,7 @@ module HybridPlatformsConductor
       # Parse the logs
       FileUtils.mkdir_p @dump_dir
       nodes.each do |node|
-        stdout_file_name = "run_logs/#{node}.stdout"
+        stdout_file_name = "#{@nodes_handler.hybrid_platforms_dir}/run_logs/#{node}.stdout"
         if File.exist?(stdout_file_name)
           stdout = File.read(stdout_file_name).split("\n")
           dump_begin_idx = stdout.index('===== Node JSON dump BEGIN =====')

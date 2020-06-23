@@ -131,11 +131,12 @@ describe HybridPlatformsConductor::TestsRunner do
 
     it 'reuses run_logs logs instead of running check-node when we ask for it' do
       with_test_platform_for_node_check_tests do
-        FileUtils.mkdir_p './run_logs'
-        File.write('./run_logs/node11.stdout', 'node11 check ok from logs')
-        File.write('./run_logs/node12.stdout', 'node12 check ok from logs')
-        File.write('./run_logs/node21.stdout', 'node21 check ok from logs')
-        File.write('./run_logs/node22.stdout', 'node22 check ok from logs')
+        run_logs_dir = "#{ENV['hpc_platforms']}/run_logs"
+        FileUtils.mkdir_p run_logs_dir
+        File.write("#{run_logs_dir}/node11.stdout", 'node11 check ok from logs')
+        File.write("#{run_logs_dir}/node12.stdout", 'node12 check ok from logs')
+        File.write("#{run_logs_dir}/node21.stdout", 'node21 check ok from logs')
+        File.write("#{run_logs_dir}/node22.stdout", 'node22 check ok from logs')
         test_tests_runner.tests = [:node_check_test]
         expect(test_deployer).not_to receive(:deploy_on)
         test_tests_runner.skip_run = true
@@ -151,11 +152,12 @@ describe HybridPlatformsConductor::TestsRunner do
 
     it 'fails when some run_logs are missing' do
       with_test_platform_for_node_check_tests do
-        FileUtils.mkdir_p './run_logs'
-        File.write('./run_logs/node11.stdout', 'node11 check ok from logs')
-        File.write('./run_logs/node12.stdout', 'node12 check ok from logs')
-        FileUtils.rm_f './run_logs/node21.stdout'
-        File.write('./run_logs/node22.stdout', 'node22 check ok from logs')
+        run_logs_dir = "#{ENV['hpc_platforms']}/run_logs"
+        FileUtils.mkdir_p run_logs_dir
+        File.write("#{run_logs_dir}/node11.stdout", 'node11 check ok from logs')
+        File.write("#{run_logs_dir}/node12.stdout", 'node12 check ok from logs')
+        FileUtils.rm_f "#{run_logs_dir}/node21.stdout"
+        File.write("#{run_logs_dir}/node22.stdout", 'node22 check ok from logs')
         test_tests_runner.tests = [:node_check_test]
         expect(test_deployer).not_to receive(:deploy_on)
         test_tests_runner.skip_run = true

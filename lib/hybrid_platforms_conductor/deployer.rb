@@ -178,7 +178,7 @@ module HybridPlatformsConductor
       options_parser.on('-i', '--direct-deploy', 'Don\'t use artefacts servers while deploying.') do
         @force_direct_deploy = true
       end
-      options_parser.on('-p', '--parallel', 'Execute the commands in parallel (put the standard output in files ./run_logs/*.stdout)') do
+      options_parser.on('-p', '--parallel', 'Execute the commands in parallel (put the standard output in files <hybrid-platforms-dir>/run_logs/*.stdout)') do
         @concurrent_execution = true
       end if parallel_switch
       options_parser.on('-t', '--timeout SECS', "Timeout in seconds to wait for each chef run. Only used in why-run mode. (defaults to #{@timeout.nil? ? 'no timeout' : @timeout})") do |nbr_secs|

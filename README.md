@@ -265,7 +265,7 @@ Deployer options:
                                      * Local path to a JSON file
                                      * URL of the form http[s]://<url>:<secret_id> to get a secret JSON file from a Thycotic Secret Server at the given URL.
     -i, --direct-deploy              Don't use artefacts servers while deploying.
-    -p, --parallel                   Execute the commands in parallel (put the standard output in files ./run_logs/*.stdout)
+    -p, --parallel                   Execute the commands in parallel (put the standard output in files <hybrid-platforms-dir>/run_logs/*.stdout)
     -t, --timeout SECS               Timeout in seconds to wait for each chef run. Only used in why-run mode. (defaults to no timeout)
     -W, --why-run                    Use the why-run mode to see what would be the result of the deploy instead of deploying it for real.
 
@@ -437,7 +437,7 @@ Deployer options:
                                      * Local path to a JSON file
                                      * URL of the form http[s]://<url>:<secret_id> to get a secret JSON file from a Thycotic Secret Server at the given URL.
     -i, --direct-deploy              Don't use artefacts servers while deploying.
-    -p, --parallel                   Execute the commands in parallel (put the standard output in files ./run_logs/*.stdout)
+    -p, --parallel                   Execute the commands in parallel (put the standard output in files <hybrid-platforms-dir>/run_logs/*.stdout)
     -t, --timeout SECS               Timeout in seconds to wait for each chef run. Only used in why-run mode. (defaults to no timeout)
     -W, --why-run                    Use the why-run mode to see what would be the result of the deploy instead of deploying it for real.
 
@@ -542,7 +542,7 @@ Main options:
     -c, --command CMD                Command to execute (can't be used with --interactive) (can be used several times, commands will be executed sequentially)
     -f, --commands-file FILE_NAME    Execute commands taken from a file (can't be used with --interactive) (can be used several times, commands will be executed sequentially)
     -i, --interactive                Run an interactive SSH session instead of executing a command (can't be used with --command or --commands-file)
-    -p, --parallel                   Execute the commands in parallel (put the standard output in files ./run_logs/*.stdout)
+    -p, --parallel                   Execute the commands in parallel (put the standard output in files <hybrid-platforms-dir>/run_logs/*.stdout)
     -t, --timeout SECS               Timeout in seconds to wait for each command (defaults to no timeout)
 
 Nodes handler options:
@@ -1387,7 +1387,7 @@ Deployer options:
                                      * Local path to a JSON file
                                      * URL of the form http[s]://<url>:<secret_id> to get a secret JSON file from a Thycotic Secret Server at the given URL.
     -i, --direct-deploy              Don't use artefacts servers while deploying.
-    -p, --parallel                   Execute the commands in parallel (put the standard output in files ./run_logs/*.stdout)
+    -p, --parallel                   Execute the commands in parallel (put the standard output in files <hybrid-platforms-dir>/run_logs/*.stdout)
     -t, --timeout SECS               Timeout in seconds to wait for each chef run. Only used in why-run mode. (defaults to no timeout)
     -W, --why-run                    Use the why-run mode to see what would be the result of the deploy instead of deploying it for real.
 ```

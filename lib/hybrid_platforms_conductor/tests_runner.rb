@@ -512,7 +512,7 @@ module HybridPlatformsConductor
           outputs =
             if @skip_run
               Hash[nodes_to_test.map do |node|
-                run_log_file_name = "./run_logs/#{node}.stdout"
+                run_log_file_name = "#{@nodes_handler.hybrid_platforms_dir}/run_logs/#{node}.stdout"
                 [
                   node,
                   # TODO: Find a way to also save stderr and the status code
