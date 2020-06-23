@@ -61,7 +61,10 @@ module HybridPlatformsConductor
     # * *log_to_stdout* (Boolean): Do we send the output to stdout? [default: true]
     # * *log_stdout_to_io* (IO or nil): IO to send command's stdout to, or nil for none. [default: nil]
     # * *log_stderr_to_io* (IO or nil): IO to send command's stderr to, or nil for none. [default: nil]
-    # * *expected_code* (Integer or Array<Integer>): Return codes (or single one) that is expected [default: 0]
+    # * *expected_code* (Integer, Symbol or Array<Integer or Symbol>): Return codes (or single one) that is expected [default: 0]
+    #   Symbol error codes can be used:
+    #   * *command_error*: The command could not be executed
+    #   * *timeout*: The command ended in timeout
     # * *timeout* (Integer or nil): Timeout to apply for the command to be run, or nil for no timeout [default: nil]
     # * *no_exception* (Boolean): If true, don't throw exception in case of error [default: false]
     # Result::
