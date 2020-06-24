@@ -308,7 +308,7 @@ module HybridPlatformsConductor
             begin
               container_ip = docker_container.json['NetworkSettings']['IPAddress']
               # Wait for the container to be up and running
-              if wait_for_port(container_ip, 22)
+              if wait_for_port(container_ip, 22, 300)
                 log_debug "Docker container #{container_name} started using IP #{container_ip}."
                 Dir.mktmpdir('hybrid_platforms_conductor-docker-logs') do |docker_logs_dir|
                   stdout_file = nil
