@@ -147,7 +147,7 @@ module HybridPlatformsConductor
           elapsed = Time.now - start_time
           log_debug "Finished in #{elapsed} seconds with exit status #{exit_status} (#{(expected_code.include?(exit_status) ? 'success'.light_green : 'failure'.light_red).bold})"
         end
-        unless exit_status != expected_code
+        unless exit_status == expected_code
           error_title = "Command '#{cmd.split("\n").first}' returned error code #{exit_status} (expected #{expected_code})."
           error_desc = ''
           # Careful not to dump full cmd in a non debug log_error as it can contain secrets
