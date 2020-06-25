@@ -103,14 +103,19 @@ module HybridPlatformsConductor
           end
         start_time = Time.now if log_debug?
         begin
+          # Make sure we keep a trace of stdout and stderr, even if it was not asked, just to use it in case of exceptions raised
+          cmd_result_stdout = ''
+          cmd_result_stderr = ''
           # Route IOs
           stdout_queue = Queue.new
           stderr_queue = Queue.new
           IoRouter.with_io_router(
-            stdout_queue => (log_stdout_to_io ? [log_stdout_to_io] : []) +
+            stdout_queue => [cmd_result_stdout] +
+              (log_stdout_to_io ? [log_stdout_to_io] : []) +
               (log_to_stdout ? [@logger] : []) +
               (file_output.nil? ? [] : [file_output]),
-            stderr_queue => (log_stderr_to_io ? [log_stderr_to_io] : []) +
+            stderr_queue => [cmd_result_stderr] +
+              (log_stderr_to_io ? [log_stderr_to_io] : []) +
               (log_to_stdout ? [@logger_stderr] : []) +
               (file_output.nil? ? [] : [file_output])
           ) do
@@ -128,15 +133,13 @@ module HybridPlatformsConductor
             cmd_stderr = cmd_result.err
           end
         rescue TTY::Command::TimeoutExceeded
-          log_error "Timeout of #{timeout} seconds has been triggered while executing #{cmd}"
           exit_status = :timeout
-          cmd_stdout = ''
-          cmd_stderr = "Timeout of #{timeout} triggered"
+          cmd_stdout = cmd_result_stdout
+          cmd_stderr = "#{cmd_result_stderr.empty? ? '' : "#{cmd_result_stderr}\n"}Timeout of #{timeout} triggered"
         rescue
-          log_error "Error while executing #{cmd}: #{$!}\n#{$!.backtrace.join("\n")}"
           exit_status = :command_error
-          cmd_stdout = ''
-          cmd_stderr = "#{$!}\n#{$!.backtrace.join("\n")}"
+          cmd_stdout = cmd_result_stdout
+          cmd_stderr = "#{cmd_result_stderr.empty? ? '' : "#{cmd_result_stderr}\n"}#{$!}\n#{$!.backtrace.join("\n")}"
         ensure
           file_output.close unless file_output.nil?
         end
@@ -145,7 +148,7 @@ module HybridPlatformsConductor
           log_debug "Finished in #{elapsed} seconds with exit status #{exit_status} (#{(expected_code.include?(exit_status) ? 'success'.light_green : 'failure'.light_red).bold})"
         end
         unless expected_code.include?(exit_status)
-          error_title = "Command #{cmd.split("\n").first} returned error code #{exit_status} (expected #{expected_code.join(', ')})."
+          error_title = "Command '#{cmd.split("\n").first}' returned error code #{exit_status} (expected #{expected_code.join(', ')})."
           error_desc = ''
           # Careful not to dump full cmd in a non debug log_error as it can contain secrets
           error_desc << "---------- COMMAND ----------\n#{cmd}\n" if log_debug?
