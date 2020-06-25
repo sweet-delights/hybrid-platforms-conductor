@@ -28,7 +28,7 @@ module HybridPlatformsConductor
               # As sshd is certainly being restarted, start and stop the container to reload it.
               docker_container.stop
               docker_container.start
-              raise "Docker container on IP #{ip_address} did not manage to restart its SSH server" unless deployer.wait_for_port(ip_address, 22, 300)
+              raise "Docker container on IP #{ip_address} did not manage to restart its SSH server" unless deployer.wait_for_port(ip_address, 22, 3600)
 
               # Check that we can't connect with root
               ssh_ok = false
