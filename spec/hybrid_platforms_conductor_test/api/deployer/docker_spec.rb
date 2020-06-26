@@ -69,7 +69,7 @@ describe HybridPlatformsConductor::Deployer do
       with_test_docker_platform do |docker_deployer, docker_nodes_handler|
         docker_deployer.restart 'node'
         message = nil
-        Net::SSH.start(docker_ip, 'root', password: 'root_pwd', auth_methods: ['password'], verify_host_key: :never) do |ssh|
+        Net::SSH.start(docker_nodes_handler.get_host_ip_of('node'), 'root', password: 'root_pwd', auth_methods: ['password'], verify_host_key: :never) do |ssh|
           message = ssh.exec!('echo UpAndRunning')
         end
         expect(message).to eq "UpAndRunning\n"
