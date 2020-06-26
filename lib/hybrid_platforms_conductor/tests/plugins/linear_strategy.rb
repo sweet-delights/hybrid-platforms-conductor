@@ -17,7 +17,7 @@ module HybridPlatformsConductor
             log_to_stdout: log_debug?
           )
           stdout.split("\n").each do |merge_commit_id|
-            _exit_status, stdout, _stderr = @cmd_runner.run_cmd(<<~EOS, log_to_stdout: log_debug?, no_exception: true, expected_code: 1)
+            _exit_status, stdout, _stderr = @cmd_runner.run_cmd(<<~EOS, log_to_stdout: log_debug?, no_exception: true, expected_code: [0, 1])
               cd #{@platform.repository_path} && \
               git --no-pager log \
                 $(git merge-base \
