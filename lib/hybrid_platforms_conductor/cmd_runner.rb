@@ -61,7 +61,10 @@ module HybridPlatformsConductor
     # * *log_to_stdout* (Boolean): Do we send the output to stdout? [default: true]
     # * *log_stdout_to_io* (IO or nil): IO to send command's stdout to, or nil for none. [default: nil]
     # * *log_stderr_to_io* (IO or nil): IO to send command's stderr to, or nil for none. [default: nil]
-    # * *expected_code* (Integer): Return code that is expected [default: 0]
+    # * *expected_code* (Integer, Symbol or Array<Integer or Symbol>): Return codes (or single one) that is expected [default: 0]
+    #   Symbol error codes can be used:
+    #   * *command_error*: The command could not be executed
+    #   * *timeout*: The command ended in timeout
     # * *timeout* (Integer or nil): Timeout to apply for the command to be run, or nil for no timeout [default: nil]
     # * *no_exception* (Boolean): If true, don't throw exception in case of error [default: false]
     # Result::
@@ -78,9 +81,10 @@ module HybridPlatformsConductor
       timeout: nil,
       no_exception: false
     )
+      expected_code = [expected_code] unless expected_code.is_a?(Array)
       if @dry_run
         out cmd
-        return expected_code, '', ''
+        return expected_code.first, '', ''
       else
         log_debug "#{timeout.nil? ? '' : "[ Timeout #{timeout} ] - "}#{cmd.light_cyan.bold}"
         exit_status = nil
@@ -138,10 +142,10 @@ module HybridPlatformsConductor
         end
         if log_debug?
           elapsed = Time.now - start_time
-          log_debug "Finished in #{elapsed} seconds with exit status #{exit_status} (#{(exit_status == expected_code ? 'success'.light_green : 'failure'.light_red).bold})"
+          log_debug "Finished in #{elapsed} seconds with exit status #{exit_status} (#{(expected_code.include?(exit_status) ? 'success'.light_green : 'failure'.light_red).bold})"
         end
-        if exit_status != expected_code
-          error_title = "Command #{cmd.split("\n").first} returned error code #{exit_status} (expected #{expected_code})."
+        unless expected_code.include?(exit_status)
+          error_title = "Command #{cmd.split("\n").first} returned error code #{exit_status} (expected #{expected_code.join(', ')})."
           error_desc = ''
           # Careful not to dump full cmd in a non debug log_error as it can contain secrets
           error_desc << "---------- COMMAND ----------\n#{cmd}\n" if log_debug?
