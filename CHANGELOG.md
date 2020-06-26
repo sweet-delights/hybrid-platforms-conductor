@@ -1,3 +1,10 @@
+# [18.3.2](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv18.3.1&sourceBranch=refs%2Ftags%2Fv18.3.2) (2020-06-26)
+
+### Fixes
+
+* Dump Docker logs in case of errors even if not in debug mode ([c58331df](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/commits/c58331df13296fa412eabe933c7fd6c88a80ef1b))
+* Make git linear strategy test less verbose ([b10a4791](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/commits/b10a479183fcde7c1137eabe041dde27d7c87d2a))
+
 # [18.3.1](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv18.3.0&sourceBranch=refs%2Ftags%2Fv18.3.1) (2020-06-26)
 
 ### Fixes
