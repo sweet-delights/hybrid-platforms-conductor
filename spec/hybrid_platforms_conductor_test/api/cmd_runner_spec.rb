@@ -116,6 +116,12 @@ describe HybridPlatformsConductor::CmdRunner do
     end
   end
 
+  it 'returns the timeout error with previously output stdout and stderr when the command times out as expected' do
+    with_repository do |repository|
+      expect(test_cmd_runner.run_cmd 'echo TestStderr 1>&2 ; sleep 1 ; echo TestStdout ; sleep 5 ; echo NeverDisplayed', timeout: 2, expected_code: :timeout).to eq [:timeout, "TestStdout\n", "TestStderr\n\nTimeout of 2 triggered"]
+    end
+  end
+
   it 'displays commands instead of unning them with dry-run' do
     with_repository do |repository|
       cmd_runner = test_cmd_runner
