@@ -22,7 +22,7 @@ module HybridPlatformsConductor
               #   Authentication failed.
               docker_container.stop
               docker_container.start
-              raise "Docker container on IP #{container_ip} did not manage to restart its SSH server" unless deployer.wait_for_port(container_ip, 22)
+              raise "Docker container on IP #{container_ip} did not manage to restart its SSH server" unless deployer.wait_for_port(container_ip, 22, 3600)
               # Now that the node has been deployed, use the a_testadmin user for the check-node (as root has no more access)
               deployer.instance_variable_get(:@actions_executor).connector(:ssh).ssh_user = 'a_testadmin'
               deployer.instance_variable_get(:@actions_executor).connector(:ssh).passwords.delete(@node)
