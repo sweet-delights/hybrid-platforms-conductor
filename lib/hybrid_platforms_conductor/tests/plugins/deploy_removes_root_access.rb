@@ -12,7 +12,7 @@ module HybridPlatformsConductor
 
         # Check my_test_plugin.rb.sample documentation for signature details.
         def test_for_node
-          @deployer.with_docker_container_for(@node, container_id: 'deploy_removes_root_access', reuse_container: log_debug?) do |deployer, ip_address|
+          @deployer.with_docker_container_for(@node, container_id: 'deploy_removes_root_access', reuse_container: log_debug?) do |deployer, ip_address, docker_container|
             # Check that we can connect with root
             ssh_ok = false
             begin
@@ -24,6 +24,11 @@ module HybridPlatformsConductor
             assert_equal ssh_ok, true, 'Root does not have access from the empty image'
             if ssh_ok
               deployer.deploy_on(@node)
+
+              # As sshd is certainly being restarted, start and stop the container to reload it.
+              docker_container.stop
+              docker_container.start
+              raise "Docker container on IP #{ip_address} did not manage to restart its SSH server" unless deployer.wait_for_port(ip_address, 22, 3600)
 
               # Check that we can't connect with root
               ssh_ok = false
