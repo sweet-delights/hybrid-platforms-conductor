@@ -12,7 +12,7 @@ module HybridPlatformsConductor
 
         # Check my_test_plugin.rb.sample documentation for signature details.
         def test_for_node
-          @deployer.with_docker_container_for(@node, container_id: 'idempotence', reuse_container: log_debug?) do |deployer, container_ip, docker_container|
+          @deployer.with_docker_container_for(@node, container_id: 'idempotence', reuse_container: log_debug?) do |deployer|
             # First deploy as root
             exit_status, _stdout, _stderr = deployer.deploy_on(@node)[@node]
             if exit_status == 0
@@ -20,9 +20,7 @@ module HybridPlatformsConductor
               # Otherwise you'll get the following error upon reconnection:
               #   System is booting up. See pam_nologin(8)
               #   Authentication failed.
-              docker_container.stop
-              docker_container.start
-              raise "Docker container on IP #{container_ip} did not manage to restart its SSH server" unless deployer.wait_for_port(container_ip, 22, 3600)
+              deployer.restart @node
               # Now that the node has been deployed, use the a_testadmin user for the check-node (as root has no more access)
               deployer.instance_variable_get(:@actions_executor).connector(:ssh).ssh_user = 'a_testadmin'
               deployer.instance_variable_get(:@actions_executor).connector(:ssh).passwords.delete(@node)
@@ -48,7 +46,7 @@ module HybridPlatformsConductor
                 end
               end
             else
-              error 'Unable to deploy from scratch. Fix this before testing idempotence.'
+              error 'Unable to deploy from scratch. Fix this before testing idempotence.', log_debug? ? nil : deployer.stdouts_to_s
             end
           end
         end
