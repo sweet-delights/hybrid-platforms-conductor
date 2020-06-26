@@ -1,3 +1,9 @@
+# [18.3.0](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv18.2.9&sourceBranch=refs%2Ftags%2Fv18.3.0) (2020-06-26)
+
+### New features
+
+* [Feature] Make CmdRunner able to expect several exit codes ([33e8a3ff](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/commits/33e8a3ff77133e86f76b39537e4537d7e67b8152))
+
 # [18.2.9](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv18.2.8&sourceBranch=refs%2Ftags%2Fv18.2.9) (2020-06-19)
 
 ### Fixes
