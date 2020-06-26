@@ -18,7 +18,7 @@ module HybridPlatformsConductor
             tested_node, (exit_status, _stdout, _stderr) = result.first
             if exit_status.is_a?(Symbol)
               # In debug mode, the logger is the normal one, already outputting the error. No need to get it back from the logs.
-              error "Check-node could not run because of error: #{exit_status}.", log_debug? ? nil : "---------- Error ----------\n#{File.read(deployer.stderr_device).strip}\n-------------------------"
+              error "Check-node could not run because of error: #{exit_status}.", log_debug? ? nil : deployer.stdouts_to_s
             else
               assert_equal tested_node, @node, "Wrong node being tested: #{tested_node} should be #{@node}"
               assert_equal exit_status, 0, "Check-node returned error code #{exit_status}"
