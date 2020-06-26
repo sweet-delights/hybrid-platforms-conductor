@@ -81,7 +81,7 @@ module HybridPlatformsConductor
       timeout: nil,
       no_exception: false
     )
-      expected_code = [expected_code] if expected_code.is_a?(Integer)
+      expected_code = [expected_code] unless expected_code.is_a?(Array)
       if @dry_run
         out cmd
         return expected_code.first, '', ''

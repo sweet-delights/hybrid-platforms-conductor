@@ -74,6 +74,24 @@ describe HybridPlatformsConductor::CmdRunner do
     end
   end
 
+  it 'does not fail when the command can\'t be run and we specify no exception' do
+    with_repository do |repository|
+      exit_status, stdout, stderr = test_cmd_runner.run_cmd 'unknown_command', no_exception: true
+      expect(exit_status).to eq :command_error
+      expect(stdout).to eq ''
+      expect(stderr).to match /^No such file or directory - unknown_command.*/
+    end
+  end
+
+  it 'does not fail when the command is expected to not be run' do
+    with_repository do |repository|
+      exit_status, stdout, stderr = test_cmd_runner.run_cmd 'unknown_command', expected_code: :command_error
+      expect(exit_status).to eq :command_error
+      expect(stdout).to eq ''
+      expect(stderr).to match /^No such file or directory - unknown_command.*/
+    end
+  end
+
   it 'fails when the command times out' do
     with_repository do |repository|
       expect { test_cmd_runner.run_cmd 'sleep 5', timeout: 1 }.to raise_error(HybridPlatformsConductor::CmdRunner::TimeoutError, 'Command sleep 5 returned error code timeout (expected 0).')
@@ -83,6 +101,12 @@ describe HybridPlatformsConductor::CmdRunner do
   it 'returns the timeout error when the command times out and we specify no exception' do
     with_repository do |repository|
       expect(test_cmd_runner.run_cmd 'sleep 5', timeout: 1, no_exception: true).to eq [:timeout, '', 'Timeout of 1 triggered']
+    end
+  end
+
+  it 'returns the timeout error when the command is expected to time out' do
+    with_repository do |repository|
+      expect(test_cmd_runner.run_cmd 'sleep 5', timeout: 1, expected_code: :timeout).to eq [:timeout, '', 'Timeout of 1 triggered']
     end
   end
 
