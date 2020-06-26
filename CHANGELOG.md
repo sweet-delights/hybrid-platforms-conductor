@@ -1,3 +1,10 @@
+# [18.3.3](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv18.3.2&sourceBranch=refs%2Ftags%2Fv18.3.3) (2020-06-26)
+
+### Fixes
+
+* Make sure tests won't fail because of local SSH settings ([0610991e](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/commits/0610991e3e901771209ed98a26e93364c0cccf28))
+* Increase Docker container start timeouts as CI is really slow ([574a2e46](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/commits/574a2e46e7e24d28f5910b6cf252a649569c188e))
+
 # [18.3.2](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv18.3.1&sourceBranch=refs%2Ftags%2Fv18.3.2) (2020-06-26)
 
 ### Fixes
