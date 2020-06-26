@@ -1,3 +1,9 @@
+# [18.3.1](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv18.3.0&sourceBranch=refs%2Ftags%2Fv18.3.1) (2020-06-26)
+
+### Fixes
+
+* Bug correction that did not detect missing root access correctly ([b4a46a66](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/commits/b4a46a66a20ceac06ac59960a2689623f309fda9))
+
 # [18.3.0](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv18.2.9&sourceBranch=refs%2Ftags%2Fv18.3.0) (2020-06-26)
 
 ### New features
