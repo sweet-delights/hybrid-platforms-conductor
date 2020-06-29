@@ -84,8 +84,9 @@ module HybridPlatformsConductor
       # * *tested_object* (Object): The object being tested
       # * *expected_object* (Object): The object being expected
       # * *error_msg* (String): Error message to associate in case of inequality
-      def assert_equal(tested_object, expected_object, error_msg)
-        error error_msg unless tested_object == expected_object
+      # * *details* (String or nil): Additional details, or nil if none [default = nil]
+      def assert_equal(tested_object, expected_object, error_msg, details = nil)
+        error error_msg, details unless tested_object == expected_object
       end
 
       # Assert a String match
@@ -94,8 +95,9 @@ module HybridPlatformsConductor
       # * *tested_object* (String): The object being tested
       # * *expected_object* (Regex): The object being expected
       # * *error_msg* (String): Error message to associate in case of inequality
-      def assert_match(tested_object, expected_object, error_msg)
-        error error_msg unless tested_object =~ expected_object
+      # * *details* (String or nil): Additional details, or nil if none [default = nil]
+      def assert_match(tested_object, expected_object, error_msg, details = nil)
+        error error_msg, details unless tested_object =~ expected_object
       end
 
       # Register an error
