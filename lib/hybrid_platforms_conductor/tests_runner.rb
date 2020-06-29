@@ -420,6 +420,7 @@ module HybridPlatformsConductor
               remote_bash: cmds_list.map do |(cmd, _test_info)|
                 [
                   "echo '#{CMD_SEPARATOR}'",
+                  ">&2 echo '#{CMD_SEPARATOR}'",
                   cmd,
                   "echo \"$?\""
                 ]
@@ -448,14 +449,17 @@ module HybridPlatformsConductor
               # Skip the first section, as it can contain SSH banners
               cmd_stdouts = stdout.split("#{CMD_SEPARATOR}\n")[1..-1]
               cmd_stdouts = [] if cmd_stdouts.nil?
-              cmds_to_run[node].zip(cmd_stdouts).each do |(cmd, test_info), cmd_stdout|
+              cmd_stderrs = stderr.split("#{CMD_SEPARATOR}\n")[1..-1]
+              cmd_stderrs = [] if cmd_stderrs.nil?
+              cmds_to_run[node].zip(cmd_stdouts, cmd_stderrs).each do |(cmd, test_info), cmd_stdout, cmd_stderr|
                 cmd_stdout = '' if cmd_stdout.nil?
+                cmd_stderr = '' if cmd_stderr.nil?
                 stdout_lines = cmd_stdout.split("\n")
                 # Last line of stdout is the return code
                 return_code = stdout_lines.empty? ? :command_cant_run : Integer(stdout_lines.last)
-                test_info[:test].error "Command returned error code #{return_code}" unless return_code == 0
+                test_info[:test].error "Command '#{cmd}' returned error code #{return_code}", "----- STDOUT:\n#{stdout_lines[0..-2].join("\n")}\n----- STDERR:\n#{cmd_stderr}" unless return_code == 0
                 begin
-                  test_info[:validator].call(stdout_lines[0..-2], return_code)
+                  test_info[:validator].call(stdout_lines[0..-2], cmd_stderr.split("\n"), return_code)
                 rescue
                   test_info[:test].error "Uncaught exception during validation: #{$!}#{log_debug? ? "\n#{$!.backtrace.join("\n")}" : ''}"
                 end
