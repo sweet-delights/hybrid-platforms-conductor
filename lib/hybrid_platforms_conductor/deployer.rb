@@ -248,8 +248,7 @@ module HybridPlatformsConductor
     # * Proc: Code called when the container is ready. The container will be stopped at the end of execution.
     #   * Parameters::
     #     * *deployer* (Deployer): A new Deployer configured to override access to the node through the Docker container
-    #     * *ip* (String): IP address of the container
-    #     * *docker_container* (Docker::Container): The Docker container
+    #     * *nodes_handler* (NodesHandler): A new NodesHandler configured to override access to the node through the Docker container
     def with_docker_container_for(node, container_id: '', reuse_container: false)
       docker_ok = false
       begin
@@ -269,7 +268,7 @@ module HybridPlatformsConductor
           Deployer.with_image_semaphore(image_tag) do
             docker_image = Docker::Image.all.find { |search_image| !search_image.info['RepoTags'].nil? && search_image.info['RepoTags'].include?("#{image_tag}:latest") }
             unless docker_image
-              log_debug "Creating Docker image #{image_tag}..."
+              log_debug "[Docker for #{node}] - Creating Docker image #{image_tag}..."
               Excon.defaults[:read_timeout] = 600
               docker_image = Docker::Image.build_from_dir(@nodes_handler.docker_image_dir(image))
               docker_image.tag repo: image_tag
@@ -289,7 +288,7 @@ module HybridPlatformsConductor
                   old_docker_container.stop
                   old_docker_container.remove
                 end
-                log_debug "Creating Docker container #{container_name}..."
+                log_debug "[Docker for #{node}] - Creating Docker container #{container_name}..."
                 # We add the SYS_PTRACE capability as some images need to restart services (for example postfix) and those services need the rights to ls in /proc/{PID}/exe to check if a status is running. Without SYS_PTRACE such ls returns permission denied and the service can't be stopped (as init.d always returns it as stopped even when running).
                 # We add the privileges as some containers need to install and configure the udev package, which needs RW access to /sys.
                 # We add the bind to cgroup volume to be able to test systemd specifics (enabling/disabling services for example).
@@ -303,51 +302,44 @@ module HybridPlatformsConductor
                   Hostname: "#{node}.testdomain"
                 )
               end
-            # Run the container
-            docker_container.start
             begin
-              container_ip = docker_container.json['NetworkSettings']['IPAddress']
-              # Wait for the container to be up and running
-              if wait_for_port(container_ip, 22, 300)
-                log_debug "Docker container #{container_name} started using IP #{container_ip}."
-                Dir.mktmpdir('hybrid_platforms_conductor-docker-logs') do |docker_logs_dir|
-                  stdout_file = nil
-                  stderr_file = nil
-                  sub_logger, sub_logger_stderr =
-                    if log_debug?
-                      [@logger, @logger_stderr]
-                    else
-                      FileUtils.mkdir_p docker_logs_dir
-                      stdout_file = "#{docker_logs_dir}/#{container_name}.stdout"
-                      stderr_file = "#{docker_logs_dir}/#{container_name}.stderr"
-                      [stdout_file, stderr_file].each { |file| File.unlink(file) if File.exist?(file) }
-                      log_debug "Docker logs files for #{container_name} are #{stdout_file} and #{stderr_file}"
-                      [Logger.new(stdout_file, level: :info), Logger.new(stderr_file, level: :info)]
-                    end
-                  begin
-                    sub_executable = Executable.new(logger: sub_logger, logger_stderr: sub_logger_stderr)
-                    nodes_handler = sub_executable.nodes_handler
-                    actions_executor = sub_executable.actions_executor
-                    deployer = sub_executable.deployer
-                    nodes_handler.override_metadata_of node, :host_ip, container_ip
-                    nodes_handler.invalidate_metadata_of node, :host_keys
-                    actions_executor.connector(:ssh).ssh_user = 'root'
-                    actions_executor.connector(:ssh).passwords[node] = 'root_pwd'
-                    deployer.force_direct_deploy = true
-                    deployer.allow_deploy_non_master = true
-                    deployer.prepare_for_local_environment
-                    # Ignore secrets that might have been given: in Docker containers we always use dummy secrets
-                    deployer.secrets = [JSON.parse(File.read("#{nodes_handler.hybrid_platforms_dir}/dummy_secrets.json"))]
-                    yield deployer, container_ip, docker_container
-                  rescue
-                    # Make sure Docker logs are being output to better investigate errors if we were not already outputing them in debug mode
-                    stdouts = deployer.stdouts_to_s
-                    log_error "Docker outputs from container #{container_name}:\n#{stdouts}" unless stdouts.nil?
-                    raise
+              # Create different NodesHandler and Deployer to handle this Docker container in place of the real node.
+              Dir.mktmpdir('hybrid_platforms_conductor-docker-logs') do |docker_logs_dir|
+                stdout_file = nil
+                stderr_file = nil
+                sub_logger, sub_logger_stderr =
+                  if log_debug?
+                    [@logger, @logger_stderr]
+                  else
+                    FileUtils.mkdir_p docker_logs_dir
+                    stdout_file = "#{docker_logs_dir}/#{container_name}.stdout"
+                    stderr_file = "#{docker_logs_dir}/#{container_name}.stderr"
+                    [stdout_file, stderr_file].each { |file| File.unlink(file) if File.exist?(file) }
+                    [Logger.new(stdout_file, level: :info), Logger.new(stderr_file, level: :info)]
                   end
+                begin
+                  sub_executable = Executable.new(logger: sub_logger, logger_stderr: sub_logger_stderr)
+                  nodes_handler = sub_executable.nodes_handler
+                  actions_executor = sub_executable.actions_executor
+                  deployer = sub_executable.deployer
+                  nodes_handler.override_metadata_of node, :docker_container, docker_container
+                  # Make sure the node is started
+                  deployer.restart node
+                  # Setup test environment for this container
+                  actions_executor.connector(:ssh).ssh_user = 'root'
+                  actions_executor.connector(:ssh).passwords[node] = 'root_pwd'
+                  deployer.force_direct_deploy = true
+                  deployer.allow_deploy_non_master = true
+                  deployer.prepare_for_local_environment
+                  # Ignore secrets that might have been given: in Docker containers we always use dummy secrets
+                  deployer.secrets = [JSON.parse(File.read("#{nodes_handler.hybrid_platforms_dir}/dummy_secrets.json"))]
+                  yield deployer, nodes_handler
+                rescue
+                  # Make sure Docker logs are being output to better investigate errors if we were not already outputing them in debug mode
+                  stdouts = deployer.stdouts_to_s
+                  log_error "[Docker for #{node}] - Docker outputs from container #{container_name}:\n#{stdouts}" unless stdouts.nil?
+                  raise
                 end
-              else
-                raise "Docker container #{container_name} was started on IP #{container_ip} but did not have its SSH server running"
               end
             ensure
               docker_container.stop
@@ -371,6 +363,34 @@ module HybridPlatformsConductor
         @nodes_handler.platform(platform_name).prepare_deploy_for_local_testing
       end
     end
+
+    # Restart a node.
+    # Currently this is used only in case of Docker containers instantiated with with_docker_container_for.
+    # When infra provisioning will be implemented correctly (PROJECT-594) this part should be made generic and outside of the Deployer.
+    #
+    # Parameters::
+    # * *node* (String): Node to be restarted.
+    def restart(node)
+      docker_container = @nodes_handler.get_docker_container_of(node)
+      raise "Can't restart #{node} as it is not instantiated as a Docker container" if docker_container.nil?
+      # As sshd is certainly being restarted, start and stop the container to reload it.
+      docker_container.stop
+      log_debug "[Docker for #{node}] - Start container..."
+      docker_container.start
+      log_debug "[Docker for #{node}] - Container started."
+      # Get its IP that could have changed upon restart
+      # cf https://github.com/moby/moby/issues/2801
+      docker_container_ip = docker_container.json['NetworkSettings']['IPAddress']
+      old_docker_container_ip = @nodes_handler.get_host_ip_of node
+      unless docker_container_ip == old_docker_container_ip
+        @nodes_handler.override_metadata_of node, :host_ip, docker_container_ip
+        @nodes_handler.invalidate_metadata_of node, :host_keys
+      end
+      raise "Docker container for #{node} on IP #{docker_container_ip} did not manage to have a running SSH server" unless wait_for_port(docker_container_ip, 22, 300)
+      log_debug "[Docker for #{node}] - Container started with SSH running on IP #{docker_container_ip}."
+    end
+
+    private
 
     # Wait for a given ip/port to be listening before continuing.
     # Fail in case it timeouts.
@@ -401,8 +421,6 @@ module HybridPlatformsConductor
       log_debug "#{host}:#{port} is#{port_listening ? '' : ' not'} opened."
       port_listening
     end
-
-    private
 
     # Package the repository, ready to be sent to artefact repositories.
     def package

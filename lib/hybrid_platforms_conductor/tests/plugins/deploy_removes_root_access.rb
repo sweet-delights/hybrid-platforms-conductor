@@ -12,28 +12,24 @@ module HybridPlatformsConductor
 
         # Check my_test_plugin.rb.sample documentation for signature details.
         def test_for_node
-          @deployer.with_docker_container_for(@node, container_id: 'deploy_removes_root_access', reuse_container: log_debug?) do |deployer, ip_address, docker_container|
+          @deployer.with_docker_container_for(@node, container_id: 'deploy_removes_root_access', reuse_container: log_debug?) do |deployer, nodes_handler|
             # Check that we can connect with root
             ssh_ok = false
             begin
-              Net::SSH.start(ip_address, 'root', password: 'root_pwd', auth_methods: ['password'], verify_host_key: :never) do |ssh|
+              Net::SSH.start(nodes_handler.get_host_ip_of(@node), 'root', password: 'root_pwd', auth_methods: ['password'], verify_host_key: :never) do |ssh|
                 ssh_ok = ssh.exec!('echo Works').strip == 'Works'
               end
             rescue
             end
             assert_equal ssh_ok, true, 'Root does not have access from the empty image'
             if ssh_ok
-              deployer.deploy_on(@node)
-
+              deployer.deploy_on @node
               # As sshd is certainly being restarted, start and stop the container to reload it.
-              docker_container.stop
-              docker_container.start
-              raise "Docker container on IP #{ip_address} did not manage to restart its SSH server" unless deployer.wait_for_port(ip_address, 22, 3600)
-
+              deployer.restart @node
               # Check that we can't connect with root
               ssh_ok = false
               begin
-                Net::SSH.start(ip_address, 'root', password: 'root_pwd', auth_methods: ['password'], verify_host_key: :never) do |ssh|
+                Net::SSH.start(nodes_handler.get_host_ip_of(@node), 'root', password: 'root_pwd', auth_methods: ['password'], verify_host_key: :never) do |ssh|
                   ssh_ok = ssh.exec!('echo Works').strip == 'Works'
                 end
               rescue
