@@ -1,3 +1,9 @@
+# [18.3.4](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv18.3.3&sourceBranch=refs%2Ftags%2Fv18.3.4) (2020-06-30)
+
+### Fixes
+
+* Workaround IPs being changed during tests by CI ([9f30af36](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/commits/9f30af36d9518294316eab6723a32e3d354eab59))
+
 # [18.3.3](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv18.3.2&sourceBranch=refs%2Ftags%2Fv18.3.3) (2020-06-26)
 
 ### Fixes
