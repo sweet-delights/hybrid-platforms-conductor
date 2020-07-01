@@ -31,6 +31,7 @@ describe HybridPlatformsConductor::NodesHandler do
       [{ platform: 'platform2' }] => %w[node4 node5 node6],
       [{ service: 'service1' }] => %w[node2 node5],
       ['/node[12]/', { service: 'service1' }] => %w[node1 node2 node5],
+      [{ git_diff: { platform: 'platform2' } }] => %w[node4 node5 node6]
     }.each do |nodes_selectors, expected_nodes|
 
       it "selects nodes correctly: #{nodes_selectors} resolves to #{expected_nodes}" do
@@ -50,6 +51,54 @@ describe HybridPlatformsConductor::NodesHandler do
     it 'ignore unknown nodes when asked' do
       with_test_platform_for_nodes do
         expect(test_nodes_handler.select_nodes(['node1', 'node7'], ignore_unknowns: true).sort).to eq %w[node1 node7].sort
+      end
+    end
+
+    it 'selects the correct diff impacts' do
+      with_test_platform_for_nodes do
+        expect(test_nodes_handler).to receive(:impacted_nodes_from_git_diff).with(
+          'platform2',
+          from_commit: 'master',
+          to_commit: nil,
+          smallest_set: false
+        ) { [%w[node4 node6], [], [], false] }
+        expect(test_nodes_handler.select_nodes([{ git_diff: { platform: 'platform2' } }]).sort).to eq %w[node4 node6].sort
+      end
+    end
+
+    it 'selects the correct diff impacts with from commit' do
+      with_test_platform_for_nodes do
+        expect(test_nodes_handler).to receive(:impacted_nodes_from_git_diff).with(
+          'platform2',
+          from_commit: 'from_commit',
+          to_commit: nil,
+          smallest_set: false
+        ) { [%w[node4 node6], [], [], false] }
+        expect(test_nodes_handler.select_nodes([{ git_diff: { platform: 'platform2', from_commit: 'from_commit' } }]).sort).to eq %w[node4 node6].sort
+      end
+    end
+
+    it 'selects the correct diff impacts with to commit' do
+      with_test_platform_for_nodes do
+        expect(test_nodes_handler).to receive(:impacted_nodes_from_git_diff).with(
+          'platform2',
+          from_commit: 'master',
+          to_commit: 'to_commit',
+          smallest_set: false
+        ) { [%w[node4 node6], [], [], false] }
+        expect(test_nodes_handler.select_nodes([{ git_diff: { platform: 'platform2', to_commit: 'to_commit' } }]).sort).to eq %w[node4 node6].sort
+      end
+    end
+
+    it 'selects the correct diff impacts with smallest set' do
+      with_test_platform_for_nodes do
+        expect(test_nodes_handler).to receive(:impacted_nodes_from_git_diff).with(
+          'platform2',
+          from_commit: 'master',
+          to_commit: nil,
+          smallest_set: true
+        ) { [%w[node4 node6], [], [], false] }
+        expect(test_nodes_handler.select_nodes([{ git_diff: { platform: 'platform2', smallest_set: true } }]).sort).to eq %w[node4 node6].sort
       end
     end
 
