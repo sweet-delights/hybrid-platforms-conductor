@@ -19,7 +19,7 @@ describe HybridPlatformsConductor::PlatformHandler do
   end
 
   it 'returns the correct info when platform is a Git repository' do
-    with_repository(as_git: true) do |repository|
+    with_repository('my_remote_platform', as_git: true) do |repository|
       with_platforms "test_platform path: '#{repository}'" do
         register_platform_handlers test: HybridPlatformsConductorTest::TestPlatformHandler
         self.test_platforms_info = { 'my_remote_platform' => {} }
@@ -48,7 +48,7 @@ describe HybridPlatformsConductor::PlatformHandler do
   end
 
   it 'returns the differing files in the info when platform is a Git repository' do
-    with_repository(as_git: true) do |repository|
+    with_repository('my_remote_platform', as_git: true) do |repository|
       with_platforms "test_platform path: '#{repository}'" do
         register_platform_handlers test: HybridPlatformsConductorTest::TestPlatformHandler
         self.test_platforms_info = { 'my_remote_platform' => {} }

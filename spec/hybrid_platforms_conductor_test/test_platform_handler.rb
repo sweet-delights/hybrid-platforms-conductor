@@ -20,6 +20,9 @@ module HybridPlatformsConductorTest
       #   * Parameters::
       #     * *secrets* (Object): JSON object containing the secrets
       # * *prepare_deploy_for_local_testing* (Proc): Code called when the plugin has to prepare for a local deployment
+      # * *impacted_nodes* (Array<String>): Impacted nodes returned by impacts_from
+      # * *impacted_services* (Array<String>): Impacted services returned by impacts_from
+      # * *impacted_global* (Boolean): Impacted global returned by impacts_from
       # Hash<String, Hash<Symbol,Object> >
       attr_accessor :platforms_info
 
@@ -35,6 +38,8 @@ module HybridPlatformsConductorTest
       end
 
     end
+
+    attr_reader :files_diffs
 
     # Register test classes
     # [API] - This method is optional
@@ -161,6 +166,30 @@ module HybridPlatformsConductorTest
     # [API] - This method is mandatory.
     def prepare_deploy_for_local_testing
       platform_info[:prepare_deploy_for_local_testing].call if platform_info.key?(:prepare_deploy_for_local_testing)
+    end
+
+    # Get the list of impacted nodes and services from a files diff.
+    # [API] - This method is optional
+    #
+    # Parameters::
+    # * *files_diffs* (Hash< String, Hash< Symbol, Object > >): List of diffs info, per file name having a diff. Diffs info have the following properties:
+    #   * *moved_to* (String): The new file path, in case it has been moved [optional]
+    #   * *diff* (String): The diff content
+    # Result::
+    # * Array<String>: The list of nodes impacted by this diff
+    # * Array<String>: The list of services impacted by this diff
+    # * Boolean: Are there some files that have a global impact (meaning all nodes are potentially impacted by this diff)?
+    def impacts_from(files_diffs)
+      @files_diffs = files_diffs
+      if platform_info.key?(:impacted_nodes) || platform_info.key?(:impacted_services) || platform_info.key?(:impacted_global)
+        [
+          platform_info[:impacted_nodes] || [],
+          platform_info[:impacted_services] || [],
+          platform_info[:impacted_global] || false
+        ]
+      else
+        super
+      end
     end
 
     private

@@ -25,7 +25,7 @@ module HybridPlatformsConductorTest
             git.config('user.name', 'Thats Me')
             git.config('user.email', 'email@email.com')
             git.commit('Test commit')
-            git.add_remote('origin', 'https://my_remote.com/path/to/my_remote_platform.git')
+            git.add_remote('origin', "https://my_remote.com/path/to/#{File.basename(dir)}.git")
           end
         end
         begin
