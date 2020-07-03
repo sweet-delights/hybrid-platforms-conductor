@@ -286,11 +286,11 @@ module HybridPlatformsConductor
       messages = []
       if self.stdout_device.is_a?(File) && File.exist?(self.stdout_device.path)
         stdout = File.read(self.stdout_device.path).strip
-        messages << "----- STDOUT -----\n#{stdout}\n-----" unless stdout.empty?
+        messages << "----- STDOUT BEGIN - #{self.stdout_device.path} -----\n#{stdout}\n----- STDOUT END - #{self.stdout_device.path} -----" unless stdout.empty?
       end
       if self.stderr_device.is_a?(File) && File.exist?(self.stderr_device.path)
         stderr = File.read(self.stderr_device.path).strip
-        messages << "----- STDERR -----\n#{stderr}\n-----" unless stderr.empty?
+        messages << "----- STDERR BEGIN - #{self.stderr_device.path} -----\n#{stderr}\n----- STDERR END - #{self.stderr_device.path} -----" unless stderr.empty?
       end
       messages.empty? ? nil : messages.join("\n")
     end
