@@ -57,11 +57,13 @@ module HybridPlatformsConductorTest
         @actions_executor = nil
         @deployer = nil
         @tests_runner = nil
+        ENV.delete 'hpc_platforms'
         ENV.delete 'hpc_ssh_gateways_conf'
-        ENV.delete 'ti_gateways_user'
+        ENV.delete 'hpc_ssh_gateway_user'
         ENV.delete 'hpc_thycotic_user'
         ENV.delete 'hpc_thycotic_password'
         ENV.delete 'hpc_thycotic_domain'
+        ENV.delete 'hpc_certificates'
         # Set the necessary Hybrid Platforms Conductor environment variables
         ENV['hpc_ssh_user'] = 'test_user'
         HybridPlatformsConductor::Deployer.packaged_platforms.clear
