@@ -24,7 +24,7 @@ describe HybridPlatformsConductor::Deployer do
         ") do
           register_platform_handlers test: HybridPlatformsConductorTest::TestPlatformHandler
           prepared_for_local_testing = false
-          self.test_platforms_info = { 'my_remote_platform' => {
+          self.test_platforms_info = { 'platform' => {
             nodes: { 'node' => { meta: { host_ip: '192.168.42.42', image: 'test_image' } } },
             prepare_deploy_for_local_testing: proc { prepared_for_local_testing = true }
           } }
@@ -53,7 +53,7 @@ describe HybridPlatformsConductor::Deployer do
       with_test_docker_platform do |docker_deployer, docker_nodes_handler|
         # Generate a random string to make sure we are not victim of previous data that would be in the Docker image.
         data = SecureRandom.hex
-        test_platforms_info['my_remote_platform'][:nodes]['node'][:deploy_data] = data
+        test_platforms_info['platform'][:nodes]['node'][:deploy_data] = data
         # Deploy
         expect(docker_deployer.deploy_on('node')).to eq('node' => [0, "Real deployment done on node\n", ''])
         # Check deployed data
@@ -78,7 +78,7 @@ describe HybridPlatformsConductor::Deployer do
 
     it 'saves logs in the docker container as well' do
       with_test_docker_platform do |docker_deployer, docker_nodes_handler, repository|
-        test_platforms_info['my_remote_platform'][:nodes]['node'][:deploy_data] = 'DeployedData'
+        test_platforms_info['platform'][:nodes]['node'][:deploy_data] = 'DeployedData'
         # Deploy
         expect(docker_deployer.deploy_on('node')).to eq('node' => [0, "Real deployment done on node\n", ''])
         # Check deployed logs
@@ -96,7 +96,7 @@ describe HybridPlatformsConductor::Deployer do
           date: /\d\d\d\d-\d\d-\d\d \d\d:\d\d:\d\d/,
           user: 'root',
           debug: 'No',
-          repo_name: 'my_remote_platform',
+          repo_name: 'platform',
           commit_id: Git.open(repository).log.first.sha,
           commit_message: 'Test commit',
           diff_files: 'docker_image/Dockerfile',

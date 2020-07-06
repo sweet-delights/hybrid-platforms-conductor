@@ -453,7 +453,7 @@ module HybridPlatformsConductor
           string_nodes.concat(@platforms[nodes_selector[:platform]].known_nodes) if nodes_selector.key?(:platform)
           if nodes_selector.key?(:service)
             prefetch_metadata_of known_nodes, :services
-            string_nodes.concat(known_nodes.select { |node| get_services_of(node).include?(nodes_selector[:service]) })
+            string_nodes.concat(known_nodes.select { |node| (get_services_of(node) || []).include?(nodes_selector[:service]) })
           end
         end
       end
@@ -494,6 +494,64 @@ module HybridPlatformsConductor
       for_each_element_in(nodes.sort, parallel: parallel, nbr_threads_max: nbr_threads_max, progress: progress) do |node|
         yield node
       end
+    end
+
+    # Get the list of impacted nodes from a git diff on a platform
+    #
+    # Parameters::
+    # * *platform_name* (String): The platform's name
+    # * *from_commit* (String): Commit ID to check from [default: 'master']
+    # * *to_commit* (String or nil): Commit ID to check to, or nil for currently checked-out files [default: nil]
+    # * *smallest_set* (Boolean): Smallest set of impacted nodes? [default: false]
+    # Result::
+    # * Array<String>: The list of nodes impacted by this diff (counting direct impacts, services and global files impacted)
+    # * Array<String>: The list of nodes directly impacted by this diff
+    # * Array<String>: The list of services impacted by this diff
+    # * Boolean: Are there some files that have a global impact (meaning all nodes are potentially impacted by this diff)?
+    def impacted_nodes_from_git_diff(platform_name, from_commit: 'master', to_commit: nil, smallest_set: false)
+      platform = platform(platform_name)
+      raise "Unkown platform #{platform_name}. Possible platforms are #{@platforms.keys.sort.join(', ')}" if platform.nil?
+      _exit_status, stdout, _stderr = @cmd_runner.run_cmd "cd #{platform.repository_path} && git --no-pager diff --no-color #{from_commit} #{to_commit.nil? ? '' : to_commit}", log_to_stdout: log_debug?
+      # Parse the git diff output to create a structured diff
+      # Hash< String, Hash< Symbol, Object > >: List of diffs info, per file name having a diff. Diffs info have the following properties:
+      # * *moved_to* (String): The new file path, in case it has been moved [optional]
+      # * *diff* (String): The diff content
+      files_diffs = {}
+      current_file_diff = nil
+      stdout.split("\n").each do |line|
+        case line
+        when /^diff --git a\/(.+) b\/(.+)$/
+          # A new file diff
+          from, to = $1, $2
+          current_file_diff = {
+            diff: ''
+          }
+          current_file_diff[:moved_to] = to unless from == to
+          files_diffs[from] = current_file_diff
+        else
+          current_file_diff[:diff] << "#{current_file_diff[:diff].empty? ? '' : "\n"}#{line}" unless current_file_diff.nil?
+        end
+      end
+      impacted_nodes, impacted_services, impact_global = platform.impacts_from files_diffs
+      impacted_services.sort!
+      impacted_services.uniq!
+      impacted_nodes.sort!
+      impacted_nodes.uniq!
+      [
+        if impact_global
+          platform.known_nodes.sort
+        else
+          (
+            impacted_nodes + impacted_services.map do |service|
+              service_nodes = select_nodes([{ service: service }])
+              smallest_set ? [service_nodes.first] : service_nodes
+            end
+          ).flatten.sort.uniq
+        end,
+        impacted_nodes,
+        impacted_services,
+        impact_global
+      ]
     end
 
     private

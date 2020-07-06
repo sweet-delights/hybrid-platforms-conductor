@@ -38,6 +38,26 @@ module HybridPlatformsConductor
       self.init if self.respond_to?(:init)
     end
 
+    # Get the list of impacted nodes and services from a files diff.
+    # [API] - This is the default implementation, and is meant to be overriden by Platform Handlers.
+    #
+    # Parameters::
+    # * *files_diffs* (Hash< String, Hash< Symbol, Object > >): List of diffs info, per file name having a diff. Diffs info have the following properties:
+    #   * *moved_to* (String): The new file path, in case it has been moved [optional]
+    #   * *diff* (String): The diff content
+    # Result::
+    # * Array<String>: The list of nodes impacted by this diff
+    # * Array<String>: The list of services impacted by this diff
+    # * Boolean: Are there some files that have a global impact (meaning all nodes are potentially impacted by this diff)?
+    def impacts_from(files_diffs)
+      # By default, consider all nodes of the platform are impacted by whatever diff.
+      [
+        [],
+        [],
+        true
+      ]
+    end
+
     # Get some information from this platform.
     # This information identifies the code level that is currently checked out.
     #
