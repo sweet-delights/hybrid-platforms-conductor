@@ -1,3 +1,21 @@
+# [19.0.0](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv18.3.4&sourceBranch=refs%2Ftags%2Fv19.0.0) (2020-07-06)
+
+### Breaking changes
+
+* [Breaking] Make stderr available to tests running remote commands on nodes ([1d7455cd](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/commits/1d7455cd380fa34ae330a83ebffe2745cc5cf924))
+
+### New features
+
+* [Feature] Add impacted_nodes_from_git_diff in NodesHandler API ([852b0089](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/commits/852b00897dd02c71a64c0578c336d2a7d6055472))
+* [Feature] Add a way to specify idempotence exceptions at tasks level from hpc.json ([8e496ff8](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/commits/8e496ff88afd9a4d8518f1488ae0d833cabf13fd))
+
+### Fixes
+
+* Group Docker tests in 1 test to save Docker resources on the CI ([2936ece3](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/commits/2936ece328916dc9475bace2183bcc44e1bfd653))
+* Make Docker container handling more robust ([a6294e9a](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/commits/a6294e9af3ca5f9009db24d2053f5c94e8110dc0))
+* Moved orphan files exceptions to hpc.json ([a13ce57d](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/commits/a13ce57ddab1cb9260b5927204a0384d9e0acdb7))
+* Make sure files are accessed using absolute paths to avoid thread-safety issues with current directory setting ([4c26ddbd](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/commits/4c26ddbdbb38c8f58630c0a376836c74a1cbf986))
+
 # [18.3.4](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv18.3.3&sourceBranch=refs%2Ftags%2Fv18.3.4) (2020-06-30)
 
 ### Fixes
