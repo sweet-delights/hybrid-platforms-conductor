@@ -375,11 +375,15 @@ module HybridPlatformsConductor
       raise "Can't restart #{node} as it is not instantiated as a Docker container" if docker_container.nil?
       # As sshd is certainly being restarted, start and stop the container to reload it.
       docker_container.stop
+      raise "Docker container for #{node} did not manage to be stopped" unless wait_for_docker_container_in_state(docker_container, ['created', 'exited'])
       log_debug "[Docker for #{node}] - Start container..."
       docker_container.start
+      raise "Docker container for #{node} did not manage to be started" unless wait_for_docker_container_in_state(docker_container, 'running')
       log_debug "[Docker for #{node}] - Container started."
       # Get its IP that could have changed upon restart
       # cf https://github.com/moby/moby/issues/2801
+      # Make sure we refresh its info before querying it, as we could hit a cache of a previous IP.
+      docker_container.refresh!
       docker_container_ip = docker_container.json['NetworkSettings']['IPAddress']
       old_docker_container_ip = @nodes_handler.get_host_ip_of node
       unless docker_container_ip == old_docker_container_ip
@@ -392,8 +396,37 @@ module HybridPlatformsConductor
 
     private
 
+    # Wait for a Docker container to be in a given state.
+    #
+    # Parameters::
+    # * *docker_container* (Docker::Container): Docker container to inspect
+    # * *states* (String or Array<String>): States (or single state) the container should be in
+    # * *timeout* (Integer): Timeout before failing, in seconds [default = 30]
+    # Result::
+    # * Boolean: Is the container in the expected state?
+    def wait_for_docker_container_in_state(docker_container, states, timeout = 30)
+      states = [states] if states.is_a?(String)
+      log_debug "Wait for Docker container #{docker_container.info['Name']} to be in state #{states.join(', ')} (timeout #{timeout})..."
+      current_state = nil
+      remaining_timeout = timeout
+      until states.include?(current_state)
+        start_time = Time.now
+        current_state =
+          begin
+            docker_container.refresh!.info['State']['Status']
+          rescue
+            log_warn "Error while reading state of Docker container #{docker_container.info['Name']}: #{$!}"
+            "Error #{$!}"
+          end
+        sleep 1 unless states.include?(current_state)
+        remaining_timeout -= Time.now - start_time
+        break if remaining_timeout <= 0
+      end
+      log_debug "Docker container #{docker_container.info['Name']} is in state #{current_state}"
+      states.include?(current_state)
+    end
+
     # Wait for a given ip/port to be listening before continuing.
-    # Fail in case it timeouts.
     #
     # Parameters::
     # * *host* (String): Host to reach
