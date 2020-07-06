@@ -1,3 +1,10 @@
+# [19.1.0](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv19.0.0&sourceBranch=refs%2Ftags%2Fv19.1.0) (2020-07-06)
+
+### New features
+
+* [Feature] Add get_impacted_nodes executable to have simple reports on nodes impacted by a git diff ([5ebb4f8f](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/commits/5ebb4f8ffc3382c51ccd0a8553e85a369bcd1c91))
+* [Feature] Add a new nodes selector to select based on nodes impacted by a git diff ([0638f6a3](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/commits/0638f6a3c0b6476e37d23a445a03fd09984f1648))
+
 # [19.0.0](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv18.3.4&sourceBranch=refs%2Ftags%2Fv19.0.0) (2020-07-06)
 
 ### Breaking changes
