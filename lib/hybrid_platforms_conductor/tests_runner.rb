@@ -313,7 +313,7 @@ module HybridPlatformsConductor
               begin
                 test.test
               rescue
-                test.error "Uncaught exception during test: #{$!}#{log_debug? ? "\n#{$!.backtrace.join("\n")}" : ''}"
+                test.error "Uncaught exception during test: #{$!}", $!.backtrace.join("\n")
               end
               test.executed
               @tests_run << test
@@ -343,7 +343,7 @@ module HybridPlatformsConductor
                   begin
                     test.test_on_platform
                   rescue
-                    test.error "Uncaught exception during test: #{$!}#{log_debug? ? "\n#{$!.backtrace.join("\n")}" : ''}"
+                    test.error "Uncaught exception during test: #{$!}", $!.backtrace.join("\n")
                   end
                   test.executed
                   @tests_run << test
@@ -399,7 +399,7 @@ module HybridPlatformsConductor
                 ]
               end
             rescue
-              test.error "Uncaught exception during test preparation: #{$!}#{log_debug? ? "\n#{$!.backtrace.join("\n")}" : ''}"
+              test.error "Uncaught exception during test preparation: #{$!}", $!.backtrace.join("\n")
               test.executed
             end
             @tests_run << test
@@ -490,7 +490,7 @@ module HybridPlatformsConductor
                 begin
                   test.test_for_node
                 rescue
-                  test.error "Uncaught exception during test: #{$!}#{log_debug? ? "\n#{$!.backtrace.join("\n")}" : ''}"
+                  test.error "Uncaught exception during test: #{$!}", $!.backtrace.join("\n")
                 end
                 test.executed
                 @tests_run << test
@@ -553,7 +553,7 @@ module HybridPlatformsConductor
                   begin
                     test.test_on_check_node(stdout, stderr, exit_status)
                   rescue
-                    test.error "Uncaught exception during test: #{$!}#{log_debug? ? "\n#{$!.backtrace.join("\n")}" : ''}"
+                    test.error "Uncaught exception during test: #{$!}", $!.backtrace.join("\n")
                   end
                 end
                 test.executed
