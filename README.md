@@ -244,6 +244,14 @@ Nodes selection options:
     -l, --nodes-list LIST            Select nodes defined in a nodes list (can be used several times)
     -n, --node NODE                  Select a specific node. Can be a regular expression to select several nodes if used with enclosing "/" characters. (can be used several times).
         --nodes-service SERVICE      Select nodes implementing a given service (can be used several times)
+        --nodes-git-impact GIT_IMPACT
+                                     Select nodes impacted by a git diff from a platform (can be used several times).
+                                     GIT_IMPACT has the format PLATFORM:FROM_COMMIT:TO_COMMIT:FLAGS
+                                     * PLATFORM: Name of the platform to check git diff from. Available platforms are: ansible-repo, chef-repo
+                                     * FROM_COMMIT: Commit ID or refspec from which we perform the diff. If ommitted, defaults to master
+                                     * TO_COMMIT: Commit ID ot refspec to which we perform the diff. If ommitted, defaults to the currently checked-out files
+                                     * FLAGS: Extra comma-separated flags. The following flags are supported:
+                                       - min: If specified then each impacted service will select only 1 node implementing this service. If not specified then all nodes implementing the impacted services will be selected.
 
 Command runner options:
     -s, --show-commands              Display the commands that would be run instead of running them
@@ -416,6 +424,14 @@ Nodes selection options:
     -l, --nodes-list LIST            Select nodes defined in a nodes list (can be used several times)
     -n, --node NODE                  Select a specific node. Can be a regular expression to select several nodes if used with enclosing "/" characters. (can be used several times).
         --nodes-service SERVICE      Select nodes implementing a given service (can be used several times)
+        --nodes-git-impact GIT_IMPACT
+                                     Select nodes impacted by a git diff from a platform (can be used several times).
+                                     GIT_IMPACT has the format PLATFORM:FROM_COMMIT:TO_COMMIT:FLAGS
+                                     * PLATFORM: Name of the platform to check git diff from. Available platforms are: ansible-repo, chef-repo
+                                     * FROM_COMMIT: Commit ID or refspec from which we perform the diff. If ommitted, defaults to master
+                                     * TO_COMMIT: Commit ID ot refspec to which we perform the diff. If ommitted, defaults to the currently checked-out files
+                                     * FLAGS: Extra comma-separated flags. The following flags are supported:
+                                       - min: If specified then each impacted service will select only 1 node implementing this service. If not specified then all nodes implementing the impacted services will be selected.
 
 Command runner options:
     -s, --show-commands              Display the commands that would be run instead of running them
@@ -554,6 +570,14 @@ Nodes selection options:
     -l, --nodes-list LIST            Select nodes defined in a nodes list (can be used several times)
     -n, --node NODE                  Select a specific node. Can be a regular expression to select several nodes if used with enclosing "/" characters. (can be used several times).
     -r, --nodes-service SERVICE      Select nodes implementing a given service (can be used several times)
+        --nodes-git-impact GIT_IMPACT
+                                     Select nodes impacted by a git diff from a platform (can be used several times).
+                                     GIT_IMPACT has the format PLATFORM:FROM_COMMIT:TO_COMMIT:FLAGS
+                                     * PLATFORM: Name of the platform to check git diff from. Available platforms are: ansible-repo, chef-repo
+                                     * FROM_COMMIT: Commit ID or refspec from which we perform the diff. If ommitted, defaults to master
+                                     * TO_COMMIT: Commit ID ot refspec to which we perform the diff. If ommitted, defaults to the currently checked-out files
+                                     * FLAGS: Extra comma-separated flags. The following flags are supported:
+                                       - min: If specified then each impacted service will select only 1 node implementing this service. If not specified then all nodes implementing the impacted services will be selected.
 
 Command runner options:
     -s, --show-commands              Display the commands that would be run instead of running them
@@ -786,6 +810,14 @@ Nodes selection options:
     -l, --nodes-list LIST            Select nodes defined in a nodes list (can be used several times)
     -n, --node NODE                  Select a specific node. Can be a regular expression to select several nodes if used with enclosing "/" characters. (can be used several times).
     -r, --nodes-service SERVICE      Select nodes implementing a given service (can be used several times)
+        --nodes-git-impact GIT_IMPACT
+                                     Select nodes impacted by a git diff from a platform (can be used several times).
+                                     GIT_IMPACT has the format PLATFORM:FROM_COMMIT:TO_COMMIT:FLAGS
+                                     * PLATFORM: Name of the platform to check git diff from. Available platforms are: ansible-repo, chef-repo
+                                     * FROM_COMMIT: Commit ID or refspec from which we perform the diff. If ommitted, defaults to master
+                                     * TO_COMMIT: Commit ID ot refspec to which we perform the diff. If ommitted, defaults to the currently checked-out files
+                                     * FLAGS: Extra comma-separated flags. The following flags are supported:
+                                       - min: If specified then each impacted service will select only 1 node implementing this service. If not specified then all nodes implementing the impacted services will be selected.
 
 Command runner options:
     -s, --show-commands              Display the commands that would be run instead of running them
@@ -895,6 +927,14 @@ Nodes selection options:
     -l, --nodes-list LIST            Select nodes defined in a nodes list (can be used several times)
     -n, --node NODE                  Select a specific node. Can be a regular expression to select several nodes if used with enclosing "/" characters. (can be used several times).
     -r, --nodes-service SERVICE      Select nodes implementing a given service (can be used several times)
+        --nodes-git-impact GIT_IMPACT
+                                     Select nodes impacted by a git diff from a platform (can be used several times).
+                                     GIT_IMPACT has the format PLATFORM:FROM_COMMIT:TO_COMMIT:FLAGS
+                                     * PLATFORM: Name of the platform to check git diff from. Available platforms are: ansible-repo, chef-repo
+                                     * FROM_COMMIT: Commit ID or refspec from which we perform the diff. If ommitted, defaults to master
+                                     * TO_COMMIT: Commit ID ot refspec to which we perform the diff. If ommitted, defaults to the currently checked-out files
+                                     * FLAGS: Extra comma-separated flags. The following flags are supported:
+                                       - min: If specified then each impacted service will select only 1 node implementing this service. If not specified then all nodes implementing the impacted services will be selected.
 
 Command runner options:
     -s, --show-commands              Display the commands that would be run instead of running them
@@ -963,6 +1003,14 @@ Nodes selection options:
     -l, --nodes-list LIST            Select nodes defined in a nodes list (can be used several times)
     -n, --node NODE                  Select a specific node. Can be a regular expression to select several nodes if used with enclosing "/" characters. (can be used several times).
         --nodes-service SERVICE      Select nodes implementing a given service (can be used several times)
+        --nodes-git-impact GIT_IMPACT
+                                     Select nodes impacted by a git diff from a platform (can be used several times).
+                                     GIT_IMPACT has the format PLATFORM:FROM_COMMIT:TO_COMMIT:FLAGS
+                                     * PLATFORM: Name of the platform to check git diff from. Available platforms are: ansible-repo, chef-repo
+                                     * FROM_COMMIT: Commit ID or refspec from which we perform the diff. If ommitted, defaults to master
+                                     * TO_COMMIT: Commit ID ot refspec to which we perform the diff. If ommitted, defaults to the currently checked-out files
+                                     * FLAGS: Extra comma-separated flags. The following flags are supported:
+                                       - min: If specified then each impacted service will select only 1 node implementing this service. If not specified then all nodes implementing the impacted services will be selected.
 
 Command runner options:
     -s, --show-commands              Display the commands that would be run instead of running them
@@ -1066,6 +1114,14 @@ Topographer options:
                                          -l, --nodes-list LIST            Select nodes defined in a nodes list (can be used several times)
                                          -n, --node NODE                  Select a specific node. Can be a regular expression to select several nodes if used with enclosing "/" characters. (can be used several times).
                                          -r, --nodes-service SERVICE      Select nodes implementing a given service (can be used several times)
+                                             --nodes-git-impact GIT_IMPACT
+                                                                          Select nodes impacted by a git diff from a platform (can be used several times).
+                                                                          GIT_IMPACT has the format PLATFORM:FROM_COMMIT:TO_COMMIT:FLAGS
+                                                                          * PLATFORM: Name of the platform to check git diff from. Available platforms are: ansible-repo, chef-repo
+                                                                          * FROM_COMMIT: Commit ID or refspec from which we perform the diff. If ommitted, defaults to master
+                                                                          * TO_COMMIT: Commit ID ot refspec to which we perform the diff. If ommitted, defaults to the currently checked-out files
+                                                                          * FLAGS: Extra comma-separated flags. The following flags are supported:
+                                                                            - min: If specified then each impacted service will select only 1 node implementing this service. If not specified then all nodes implementing the impacted services will be selected.
     -k, --skip-run                   Skip the actual gathering of JSON node files. If set, the current files in nodes_json will be used.
     -p, --output FORMAT:FILE_NAME    Specify a format and file name. Can be used several times. FORMAT can be one of graphviz, json, svg. Ex.: graphviz:graph.gv
     -T, --to HOSTS_OPTIONS           Specify options for the set of nodes to get to (enclose them with ""). Default: all nodes. HOSTS_OPTIONS follows the following:
@@ -1074,6 +1130,14 @@ Topographer options:
                                          -l, --nodes-list LIST            Select nodes defined in a nodes list (can be used several times)
                                          -n, --node NODE                  Select a specific node. Can be a regular expression to select several nodes if used with enclosing "/" characters. (can be used several times).
                                          -r, --nodes-service SERVICE      Select nodes implementing a given service (can be used several times)
+                                             --nodes-git-impact GIT_IMPACT
+                                                                          Select nodes impacted by a git diff from a platform (can be used several times).
+                                                                          GIT_IMPACT has the format PLATFORM:FROM_COMMIT:TO_COMMIT:FLAGS
+                                                                          * PLATFORM: Name of the platform to check git diff from. Available platforms are: ansible-repo, chef-repo
+                                                                          * FROM_COMMIT: Commit ID or refspec from which we perform the diff. If ommitted, defaults to master
+                                                                          * TO_COMMIT: Commit ID ot refspec to which we perform the diff. If ommitted, defaults to the currently checked-out files
+                                                                          * FLAGS: Extra comma-separated flags. The following flags are supported:
+                                                                            - min: If specified then each impacted service will select only 1 node implementing this service. If not specified then all nodes implementing the impacted services will be selected.
 ```
 
 Usage examples:
@@ -1139,6 +1203,14 @@ Nodes selection options:
     -l, --nodes-list LIST            Select nodes defined in a nodes list (can be used several times)
     -n, --node NODE                  Select a specific node. Can be a regular expression to select several nodes if used with enclosing "/" characters. (can be used several times).
         --nodes-service SERVICE      Select nodes implementing a given service (can be used several times)
+        --nodes-git-impact GIT_IMPACT
+                                     Select nodes impacted by a git diff from a platform (can be used several times).
+                                     GIT_IMPACT has the format PLATFORM:FROM_COMMIT:TO_COMMIT:FLAGS
+                                     * PLATFORM: Name of the platform to check git diff from. Available platforms are: ansible-repo, chef-repo
+                                     * FROM_COMMIT: Commit ID or refspec from which we perform the diff. If ommitted, defaults to master
+                                     * TO_COMMIT: Commit ID ot refspec to which we perform the diff. If ommitted, defaults to the currently checked-out files
+                                     * FLAGS: Extra comma-separated flags. The following flags are supported:
+                                       - min: If specified then each impacted service will select only 1 node implementing this service. If not specified then all nodes implementing the impacted services will be selected.
 
 Command runner options:
     -s, --show-commands              Display the commands that would be run instead of running them
@@ -1181,6 +1253,9 @@ Usage examples:
 
 # Execute all tests on all nodes, but reuse the content of run_logs instead of why-run deployments
 ./bin/test --all-nodes --skip-run
+
+# Execute the check_from_scratch test on all nodes impacted by changes made on the branch my_branch
+./bin/test --test check_from_scratch --nodes-git-impact chef-repo::my_branch
 ```
 
 Here is an example of output:
@@ -1325,6 +1400,14 @@ Nodes selection options:
     -l, --nodes-list LIST            Select nodes defined in a nodes list (can be used several times)
     -n, --node NODE                  Select a specific node. Can be a regular expression to select several nodes if used with enclosing "/" characters. (can be used several times).
     -r, --nodes-service SERVICE      Select nodes implementing a given service (can be used several times)
+        --nodes-git-impact GIT_IMPACT
+                                     Select nodes impacted by a git diff from a platform (can be used several times).
+                                     GIT_IMPACT has the format PLATFORM:FROM_COMMIT:TO_COMMIT:FLAGS
+                                     * PLATFORM: Name of the platform to check git diff from. Available platforms are: ansible-repo, chef-repo
+                                     * FROM_COMMIT: Commit ID or refspec from which we perform the diff. If ommitted, defaults to master
+                                     * TO_COMMIT: Commit ID ot refspec to which we perform the diff. If ommitted, defaults to the currently checked-out files
+                                     * FLAGS: Extra comma-separated flags. The following flags are supported:
+                                       - min: If specified then each impacted service will select only 1 node implementing this service. If not specified then all nodes implementing the impacted services will be selected.
 ```
 
 * `--all-nodes`: Select all the known nodes.
@@ -1332,6 +1415,7 @@ Nodes selection options:
 * `--nodes-list LIST`: Specify a hosts list name as selector. Hosts list are a named group of hosts, and are defined by each platform if they make sense. For example all the nodes belonging to the same cluster could be part of a nodes list.
 * `--node NODE`: Select a single node. A regular expression can also be used when `NODE` is enclosed with `/` character (the regular expression grammar is [the Ruby one](http://ruby-doc.org/core-2.5.0/Regexp.html)). Examples: `--node my_node_1`, `--node /my_node_.+/`.
 * `--nodes-service SERVICE`: Select all nodes that implement a given service.
+* `--nodes-git-impact GIT_IMPACT`: Select nodes that are impacted by a git diff on a platform. 2 commit ids or refspecs can be specified for the diff. Examples: `--nodes-git-impact chef-repo::my_branch` will select all nodes that are impacted by the diffs made between `my_branch` and `master` on the git repository belong to the `chef-repo` platform.
 
 ## Command Runner options
 

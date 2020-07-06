@@ -139,6 +139,25 @@ module HybridPlatformsConductor
       options_parser.on('-r', '--nodes-service SERVICE', 'Select nodes implementing a given service (can be used several times)') do |service|
         nodes_selectors << { service: service }
       end
+      options_parser.on(
+        '--nodes-git-impact GIT_IMPACT',
+        'Select nodes impacted by a git diff from a platform (can be used several times).',
+        'GIT_IMPACT has the format PLATFORM:FROM_COMMIT:TO_COMMIT:FLAGS',
+        "* PLATFORM: Name of the platform to check git diff from. Available platforms are: #{@platforms.keys.sort.join(', ')}",
+        '* FROM_COMMIT: Commit ID or refspec from which we perform the diff. If ommitted, defaults to master',
+        '* TO_COMMIT: Commit ID ot refspec to which we perform the diff. If ommitted, defaults to the currently checked-out files',
+        '* FLAGS: Extra comma-separated flags. The following flags are supported:',
+        '  - min: If specified then each impacted service will select only 1 node implementing this service. If not specified then all nodes implementing the impacted services will be selected.'
+      ) do |nodes_git_impact|
+        platform_name, from_commit, to_commit, flags = nodes_git_impact.split(':')
+        flags = (flags || '').split(',')
+        raise "Invalid platform in --nodes-git-impact: #{platform_name}. Possible values are: #{@platforms.keys.sort.join(', ')}." unless @platforms.key?(platform_name)
+        nodes_selector = { platform: platform_name }
+        nodes_selector[:from_commit] = from_commit if from_commit && !from_commit.empty?
+        nodes_selector[:to_commit] = to_commit if to_commit && !to_commit.empty?
+        nodes_selector[:smallest_set] = true if flags.include?('min')
+        nodes_selectors << { git_diff: nodes_selector }
+      end
     end
 
     # Get the list of known platform names
@@ -429,6 +448,11 @@ module HybridPlatformsConductor
     #   * *list* (String): Name of a nodes list.
     #   * *platform* (String): Name of a platform containing nodes.
     #   * *service* (String): Name of a service implemented by nodes.
+    #   * *git_diff* (Hash<Symbol,Object>): Info about a git diff that impacts nodes:
+    #     * *platform* (String): Name of the platform on which checking the git diff
+    #     * *from_commit* (String): Commit ID to check from [default: 'master']
+    #     * *to_commit* (String or nil): Commit ID to check to, or nil for currently checked-out files [default: nil]
+    #     * *smallest_set* (Boolean): Smallest set of impacted nodes? [default: false]
     #
     # Parameters::
     # * *nodes_selectors* (Array<Object>): List of node selectors (can be a single element).
@@ -454,6 +478,21 @@ module HybridPlatformsConductor
           if nodes_selector.key?(:service)
             prefetch_metadata_of known_nodes, :services
             string_nodes.concat(known_nodes.select { |node| (get_services_of(node) || []).include?(nodes_selector[:service]) })
+          end
+          if nodes_selector.key?(:git_diff)
+            # Default values
+            git_diff_info = {
+              from_commit: 'master',
+              to_commit: nil,
+              smallest_set: false
+            }.merge(nodes_selector[:git_diff])
+            all_impacted_nodes, _impacted_nodes, _impacted_services, _impact_global = impacted_nodes_from_git_diff(
+              git_diff_info[:platform],
+              from_commit: git_diff_info[:from_commit],
+              to_commit: git_diff_info[:to_commit],
+              smallest_set: git_diff_info[:smallest_set]
+            )
+            string_nodes.concat(all_impacted_nodes)
           end
         end
       end

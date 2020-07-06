@@ -41,7 +41,23 @@ describe 'executables\' nodes selection options' do
     ['--nodes-platform', 'platform_2'] => [{ platform: 'platform_2' }],
     ['--nodes-service', 'service1'] => [{ service: 'service1' }],
     ['--node', 'node11', '--node', 'node12'] => %w[node11 node12],
-    ['--nodes-service', 'service1', '--nodes-platform', 'platform_2'] => [{ service: 'service1' }, { platform: 'platform_2' }]
+    ['--nodes-service', 'service1', '--nodes-platform', 'platform_2'] => [{ service: 'service1' }, { platform: 'platform_2' }],
+    ['--nodes-git-impact', 'platform_2'] => [{ git_diff: { platform: 'platform_2' } }],
+    ['--nodes-git-impact', 'platform_2:from_commit'] => [
+      { git_diff: { platform: 'platform_2', from_commit: 'from_commit' } }
+    ],
+    ['--nodes-git-impact', 'platform_2:from_commit:to_commit'] => [
+      { git_diff: { platform: 'platform_2', from_commit: 'from_commit', to_commit: 'to_commit' } }
+    ],
+    ['--nodes-git-impact', 'platform_2:from_commit:to_commit:min'] => [
+      { git_diff: { platform: 'platform_2', from_commit: 'from_commit', to_commit: 'to_commit', smallest_set: true } }
+    ],
+    ['--nodes-git-impact', 'platform_2::to_commit:min'] => [
+      { git_diff: { platform: 'platform_2', to_commit: 'to_commit', smallest_set: true } }
+    ],
+    ['--nodes-git-impact', 'platform_2:::min'] => [
+      { git_diff: { platform: 'platform_2', smallest_set: true } }
+    ]
   }.each do |args, expected_nodes|
 
     it "resolves '#{args.join(' ')}' into #{expected_nodes.join(', ')}" do
