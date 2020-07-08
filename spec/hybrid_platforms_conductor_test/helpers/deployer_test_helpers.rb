@@ -14,6 +14,38 @@ module HybridPlatformsConductorTest
 
         context "testing deployment#{check_mode ? ' in why-run mode' : ''}" do
 
+          # Get expected actions for a deployment
+          #
+          # Parameters::
+          # * *nodes* (Array<String>): Expected nodes that should be deployed [default: ['node']]
+          # * *sudo* (Boolean): Do we expect sudo to be used in commands? [default: true]
+          # * *check_mode* (Boolean): Are we testing in check mode? [default: @check_mode]
+          # * *mocked_deploy_result* (Hash or nil): Mocked result of the deployment actions, or nil to use the helper's default [default: nil]
+          def expected_actions_for_deploy_on(
+            nodes: ['node'],
+            sudo: true,
+            check_mode: @check_mode,
+            mocked_deploy_result: nil
+          )
+            actions = [
+              # First run, we expect the mutex to be setup, and the deployment actions to be run
+              proc do |actions_per_nodes|
+                expect_actions_to_deploy_on(
+                  actions_per_nodes,
+                  nodes,
+                  check: check_mode,
+                  sudo: sudo,
+                  mocked_result: mocked_deploy_result
+                )
+              end,
+              # Second run, we expect the mutex to be released
+              proc { |actions_per_nodes| expect_actions_to_unlock(actions_per_nodes, nodes, sudo: sudo) }
+            ]
+            # Third run, we expect logs to be uploaded on the node (only if not check mode)
+            actions << proc { |actions_per_nodes| expect_actions_to_upload_logs(actions_per_nodes, nodes, sudo: sudo) } unless check_mode
+            actions
+          end
+
           # Prepare a platform ready to test deployments on.
           #
           # Parameters::
@@ -43,17 +75,7 @@ module HybridPlatformsConductorTest
                 nodes_info[:nodes].keys.each do |node|
                   test_platforms_info[platform_name][:nodes][node][:deliver_on_artefact_for] = proc { delivered_nodes << node }
                 end
-                if expect_default_actions
-                  default_actions = [
-                    # First run, we expect the mutex to be setup, and the deployment actions to be run
-                    proc { |actions_per_nodes| expect_actions_to_deploy_on(actions_per_nodes, nodes_info[:nodes].keys, check: check_mode, sudo: expect_sudo) },
-                    # Second run, we expect the mutex to be released
-                    proc { |actions_per_nodes| expect_actions_to_unlock(actions_per_nodes, nodes_info[:nodes].keys, sudo: expect_sudo) }
-                  ]
-                  # Third run, we expect logs to be uploaded on the node (only if not check mode)
-                  default_actions << proc { |actions_per_nodes| expect_actions_to_upload_logs(actions_per_nodes, nodes_info[:nodes].keys, sudo: expect_sudo) } unless check_mode
-                  expect_actions_executor_runs(default_actions) 
-                end
+                expect_actions_executor_runs(expected_actions_for_deploy_on(nodes: nodes_info[:nodes].keys, check_mode: check_mode, sudo: expect_sudo)) if expect_default_actions
                 test_deployer.use_why_run = true if check_mode
                 yield repository
                 expect(packaged_times).to eq expect_packaged_times
@@ -359,6 +381,451 @@ module HybridPlatformsConductorTest
             with_test_platform({ nodes: { 'node' => {} } }, !@check_mode) do 
               expect { test_deployer.restart('node') }.to raise_error 'Can\'t restart node as it is not instantiated as a Docker container'
             end
+          end
+
+          context 'checking deployment retries' do
+
+            # Prepare a platform ready to test deployments' retries on.
+            #
+            # Parameters::
+            # * *nodes_info* (Hash): Node info to give the platform [default: { nodes: { 'node' => {} } }]
+            # * Proc: Code called once the platform is ready for testing the deployer
+            #   * Parameters::
+            #     * *repository* (String): Path to the repository
+            def with_platform_to_retry_deploy(nodes_info: { nodes: { 'node' => {} } })
+              with_platform_to_deploy(nodes_info: nodes_info, expect_default_actions: false) do |repository|
+                # Generate the hpc.json with the non-deterministic errors
+                File.write("#{repository}/hpc.json", {
+                  "retriable_errors": [
+                    {
+                      "nodes": nodes_info[:nodes].keys,
+                      "errors_on_stdout": [
+                        "stdout non-deterministic error"
+                      ],
+                      "errors_on_stderr": [
+                        "stderr non-deterministic error",
+                        "/stderr regexp error \\d+/"
+                      ]
+                    },
+                    {
+                      "nodes": nodes_info[:nodes].keys,
+                      "errors_on_stdout": [
+                        "/stdout regexp error \\d+/"
+                      ]
+                    },
+                    {
+                      "nodes": ["other_node"],
+                      "errors_on_stdout": [
+                        "/.*/"
+                      ]
+                    }
+                  ]
+                }.to_json)
+                yield repository
+              end
+            end
+
+            # Mock a sequential list of deployments
+            #
+            # Parameters::
+            # * *statuses* (Array<Hash<String,Status> or Status>)>): List of mocked deployment statuses per node name, or just the status for the default node.
+            #   A status is a triplet [Integer or Symbol, String, String]: exit status, stdout and stderr.
+            def mock_deploys_with(statuses)
+              expect_actions_executor_runs(statuses.map do |status|
+                status = { 'node' => status } if status.is_a?(Array)
+                expected_actions_for_deploy_on(
+                  nodes: status.keys,
+                  mocked_deploy_result: status
+                )
+              end.flatten)
+            end
+
+            it 'restarts deployment for a non-deterministic error' do
+              with_platform_to_retry_deploy do
+                test_deployer.nbr_retries_on_error = 1
+                mock_deploys_with [
+                  [1, "Error: This is a stdout non-deterministic error\nDeploy failed\n", ''],
+                  [0, 'Deploy ok', '']
+                ]
+                expect(test_deployer.deploy_on('node')).to eq('node' => [
+                  0,
+                  <<~EOS,
+                    Error: This is a stdout non-deterministic error
+                    Deploy failed
+
+                    Deployment exit status code: 1
+                    !!! Retry deployment due to non-deterministic error (0 remaining attempts)...
+                    Deploy ok
+                  EOS
+                  <<~EOS
+                    !!! 1 retriable errors detected in this deployment:
+                    * stdout non-deterministic error
+
+                    !!! Retry deployment due to non-deterministic error (0 remaining attempts)...
+
+                  EOS
+                ])
+              end
+            end
+
+            it 'restarts deployment for a non-deterministic error matched with a Regexp' do
+              with_platform_to_retry_deploy do
+                test_deployer.nbr_retries_on_error = 1
+                mock_deploys_with [
+                  [1, "Error: This is a stdout regexp error 42\nDeploy failed\n", ''],
+                  [0, 'Deploy ok', '']
+                ]
+                expect(test_deployer.deploy_on('node')).to eq('node' => [
+                  0,
+                  <<~EOS,
+                    Error: This is a stdout regexp error 42
+                    Deploy failed
+
+                    Deployment exit status code: 1
+                    !!! Retry deployment due to non-deterministic error (0 remaining attempts)...
+                    Deploy ok
+                  EOS
+                  <<~EOS
+                    !!! 1 retriable errors detected in this deployment:
+                    * /stdout regexp error \\d+/ matched 'stdout regexp error 42'
+
+                    !!! Retry deployment due to non-deterministic error (0 remaining attempts)...
+
+                  EOS
+                ])
+              end
+            end
+
+            it 'restarts deployment for a non-deterministic error on stderr' do
+              with_platform_to_retry_deploy do
+                test_deployer.nbr_retries_on_error = 1
+                mock_deploys_with [
+                  [1, '', "Error: This is a stderr non-deterministic error\nDeploy failed\n"],
+                  [0, 'Deploy ok', '']
+                ]
+                expect(test_deployer.deploy_on('node')).to eq('node' => [
+                  0,
+                  <<~EOS,
+
+                    Deployment exit status code: 1
+                    !!! Retry deployment due to non-deterministic error (0 remaining attempts)...
+                    Deploy ok
+                  EOS
+                  <<~EOS
+                    Error: This is a stderr non-deterministic error
+                    Deploy failed
+                    !!! 1 retriable errors detected in this deployment:
+                    * stderr non-deterministic error
+
+                    !!! Retry deployment due to non-deterministic error (0 remaining attempts)...
+
+                  EOS
+                ])
+              end
+            end
+
+            it 'restarts deployment for a non-deterministic error on stderr matched with a Regexp' do
+              with_platform_to_retry_deploy do
+                test_deployer.nbr_retries_on_error = 1
+                mock_deploys_with [
+                  [1, '', "Error: This is a stderr regexp error 42\nDeploy failed\n"],
+                  [0, 'Deploy ok', '']
+                ]
+                expect(test_deployer.deploy_on('node')).to eq('node' => [
+                  0,
+                  <<~EOS,
+
+                    Deployment exit status code: 1
+                    !!! Retry deployment due to non-deterministic error (0 remaining attempts)...
+                    Deploy ok
+                  EOS
+                  <<~EOS
+                    Error: This is a stderr regexp error 42
+                    Deploy failed
+                    !!! 1 retriable errors detected in this deployment:
+                    * /stderr regexp error \\d+/ matched 'stderr regexp error 42'
+
+                    !!! Retry deployment due to non-deterministic error (0 remaining attempts)...
+
+                  EOS
+                ])
+              end
+            end
+
+            it 'stops restarting deployments for a non-deterministic error when errors has disappeared, even if retries were remaining' do
+              with_platform_to_retry_deploy do
+                test_deployer.nbr_retries_on_error = 5
+                mock_deploys_with [
+                  [1, "Error: This is a stdout non-deterministic error 1\nDeploy failed", ''],
+                  [1, "Error: This is a stdout non-deterministic error 2\nDeploy failed", ''],
+                  [0, 'Deploy ok', '']
+                ]
+                expect(test_deployer.deploy_on('node')).to eq('node' => [
+                  0,
+                  <<~EOS,
+                    Error: This is a stdout non-deterministic error 1
+                    Deploy failed
+                    Deployment exit status code: 1
+                    !!! Retry deployment due to non-deterministic error (4 remaining attempts)...
+                    Error: This is a stdout non-deterministic error 2
+                    Deploy failed
+
+                    Deployment exit status code: 1
+                    !!! Retry deployment due to non-deterministic error (3 remaining attempts)...
+                    Deploy ok
+                  EOS
+                  <<~EOS
+                    !!! 1 retriable errors detected in this deployment:
+                    * stdout non-deterministic error
+
+                    !!! Retry deployment due to non-deterministic error (4 remaining attempts)...
+                    !!! 1 retriable errors detected in this deployment:
+                    * stdout non-deterministic error
+
+
+                    !!! Retry deployment due to non-deterministic error (3 remaining attempts)...
+
+                  EOS
+                ])
+              end
+            end
+
+            it 'stops restarting deployments for a non-deterministic error that became deterministic, even if retries were remaining' do
+              with_platform_to_retry_deploy do
+                test_deployer.nbr_retries_on_error = 5
+                mock_deploys_with [
+                  [1, "Error: This is a stdout non-deterministic error 1\nDeploy failed", ''],
+                  [1, "Error: This is a stdout non-deterministic error 2\nDeploy failed", ''],
+                  [1, "Error: This is a stdout deterministic error 3\nDeploy failed", '']
+                ]
+                expect(test_deployer.deploy_on('node')).to eq('node' => [
+                  1,
+                  <<~EOS,
+                    Error: This is a stdout non-deterministic error 1
+                    Deploy failed
+                    Deployment exit status code: 1
+                    !!! Retry deployment due to non-deterministic error (4 remaining attempts)...
+                    Error: This is a stdout non-deterministic error 2
+                    Deploy failed
+
+                    Deployment exit status code: 1
+                    !!! Retry deployment due to non-deterministic error (3 remaining attempts)...
+                    Error: This is a stdout deterministic error 3
+                    Deploy failed
+                  EOS
+                  <<~EOS
+                    !!! 1 retriable errors detected in this deployment:
+                    * stdout non-deterministic error
+
+                    !!! Retry deployment due to non-deterministic error (4 remaining attempts)...
+                    !!! 1 retriable errors detected in this deployment:
+                    * stdout non-deterministic error
+
+
+                    !!! Retry deployment due to non-deterministic error (3 remaining attempts)...
+
+                  EOS
+                ])
+              end
+            end
+
+            it 'does not restart deployment for a deterministic error' do
+              with_platform_to_retry_deploy do
+                test_deployer.nbr_retries_on_error = 5
+                mock_deploys_with [
+                  [1, "Error: This is a stdout deterministic error\nDeploy failed\n", '']
+                ]
+                expect(test_deployer.deploy_on('node')).to eq('node' => [
+                  1,
+                  <<~EOS,
+                    Error: This is a stdout deterministic error
+                    Deploy failed
+                  EOS
+                  ''
+                ])
+              end
+            end
+
+            it 'does not restart deployment for a non-deterministic error logged during a successful deploy' do
+              with_platform_to_retry_deploy do
+                test_deployer.nbr_retries_on_error = 5
+                mock_deploys_with [
+                  [0, "Error: This is a stdout non-deterministic error\nDeploy failed\n", '']
+                ]
+                expect(test_deployer.deploy_on('node')).to eq('node' => [
+                  0,
+                  <<~EOS,
+                    Error: This is a stdout non-deterministic error
+                    Deploy failed
+                  EOS
+                  ''
+                ])
+              end
+            end
+
+            it 'does not restart deployment for a non-deterministic error if retries are 0' do
+              with_platform_to_retry_deploy do
+                test_deployer.nbr_retries_on_error = 0
+                mock_deploys_with [
+                  [1, "Error: This is a stdout non-deterministic error\nDeploy failed\n", '']
+                ]
+                expect(test_deployer.deploy_on('node')).to eq('node' => [
+                  1,
+                  <<~EOS,
+                    Error: This is a stdout non-deterministic error
+                    Deploy failed
+                  EOS
+                  ''
+                ])
+              end
+            end
+
+            it 'restarts deployment for non-deterministic errors with a limited amount of retries' do
+              with_platform_to_retry_deploy do
+                test_deployer.nbr_retries_on_error = 2
+                mock_deploys_with [
+                  [1, "Error: This is a stdout non-deterministic error 1\nDeploy failed", ''],
+                  [1, "Error: This is a stdout non-deterministic error 2\nDeploy failed", ''],
+                  [1, "Error: This is a stdout non-deterministic error 3\nDeploy failed", '']
+                ]
+                expect(test_deployer.deploy_on('node')).to eq('node' => [
+                  1,
+                  <<~EOS,
+                    Error: This is a stdout non-deterministic error 1
+                    Deploy failed
+                    Deployment exit status code: 1
+                    !!! Retry deployment due to non-deterministic error (1 remaining attempts)...
+                    Error: This is a stdout non-deterministic error 2
+                    Deploy failed
+
+                    Deployment exit status code: 1
+                    !!! Retry deployment due to non-deterministic error (0 remaining attempts)...
+                    Error: This is a stdout non-deterministic error 3
+                    Deploy failed
+                  EOS
+                  <<~EOS
+                    !!! 1 retriable errors detected in this deployment:
+                    * stdout non-deterministic error
+
+                    !!! Retry deployment due to non-deterministic error (1 remaining attempts)...
+                    !!! 1 retriable errors detected in this deployment:
+                    * stdout non-deterministic error
+
+
+                    !!! Retry deployment due to non-deterministic error (0 remaining attempts)...
+
+                  EOS
+                ])
+              end
+            end
+
+            it 'restarts deployment for non-deterministic errors only on nodes needing it' do
+              with_platform_to_retry_deploy(nodes_info: { nodes: {
+                'node1' => {},
+                'node2' => {},
+                'node3' => {},
+                'node4' => {}
+              } }) do
+                test_deployer.nbr_retries_on_error = 2
+                # Some nodes deploy successfully,
+                # others have deterministic errors,
+                # others have non-deterministic errors being corrected
+                # others have non-deterministic errors not being corrected
+                mock_deploys_with [
+                  {
+                    'node1' => [1, "Error: This is a stdout non-deterministic error\n[node1] Deploy failed\n", ''],
+                    'node2' => [0, '[node2] Deploy ok', ''],
+                    'node3' => [1, "Error: This is a stdout non-deterministic error\n[node3] Deploy failed\n", ''],
+                    'node4' => [1, "Error: This is a stdout non-deterministic error\n[node4] Deploy failed\n", '']
+                  },
+                  {
+                    'node1' => [0, '[node1] Deploy ok', ''],
+                    'node3' => [1, "Error: This is a stdout deterministic error\n[node3] Deploy failed\n", ''],
+                    'node4' => [1, "Error: This is a stdout non-deterministic error\n[node4] Deploy failed\n", '']
+                  },
+                  {
+                    'node4' => [1, "Error: This is a stdout non-deterministic error\n[node4] Deploy failed\n", '']
+                  }
+                ]
+                expect(test_deployer.deploy_on(%w[node1 node2 node3 node4])).to eq(
+                  'node1' => [
+                    0,
+                    <<~EOS,
+                      Error: This is a stdout non-deterministic error
+                      [node1] Deploy failed
+
+                      Deployment exit status code: 1
+                      !!! Retry deployment due to non-deterministic error (1 remaining attempts)...
+                      [node1] Deploy ok
+                    EOS
+                    <<~EOS
+                      !!! 1 retriable errors detected in this deployment:
+                      * stdout non-deterministic error
+
+                      !!! Retry deployment due to non-deterministic error (1 remaining attempts)...
+
+                    EOS
+                  ],
+                  'node2' => [
+                    0,
+                    '[node2] Deploy ok',
+                    ''
+                  ],
+                  'node3' => [
+                    1,
+                    <<~EOS,
+                      Error: This is a stdout non-deterministic error
+                      [node3] Deploy failed
+
+                      Deployment exit status code: 1
+                      !!! Retry deployment due to non-deterministic error (1 remaining attempts)...
+                      Error: This is a stdout deterministic error
+                      [node3] Deploy failed
+
+                    EOS
+                    <<~EOS
+                      !!! 1 retriable errors detected in this deployment:
+                      * stdout non-deterministic error
+
+                      !!! Retry deployment due to non-deterministic error (1 remaining attempts)...
+
+                    EOS
+                  ],
+                  'node4' => [
+                    1,
+                    <<~EOS,
+                      Error: This is a stdout non-deterministic error
+                      [node4] Deploy failed
+
+                      Deployment exit status code: 1
+                      !!! Retry deployment due to non-deterministic error (1 remaining attempts)...
+                      Error: This is a stdout non-deterministic error
+                      [node4] Deploy failed
+
+
+                      Deployment exit status code: 1
+                      !!! Retry deployment due to non-deterministic error (0 remaining attempts)...
+                      Error: This is a stdout non-deterministic error
+                      [node4] Deploy failed
+
+                    EOS
+                    <<~EOS
+                      !!! 1 retriable errors detected in this deployment:
+                      * stdout non-deterministic error
+
+                      !!! Retry deployment due to non-deterministic error (1 remaining attempts)...
+                      !!! 1 retriable errors detected in this deployment:
+                      * stdout non-deterministic error
+
+
+                      !!! Retry deployment due to non-deterministic error (0 remaining attempts)...
+
+                    EOS
+                  ]
+                )
+              end
+            end
+
           end
 
         end

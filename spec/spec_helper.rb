@@ -16,10 +16,12 @@ require 'hybrid_platforms_conductor_test'
 #
 # See http://rubydoc.info/gems/rspec-core/RSpec/Core/Configuration
 RSpec.configure do |config|
+
   # rspec-expectations config goes here. You can use an alternate
   # assertion/expectation library such as wrong or the stdlib/minitest
   # assertions if you prefer.
   config.expect_with :rspec do |expectations|
+
     # This option will default to `true` in RSpec 4. It makes the `description`
     # and `failure_message` of custom matchers include text for helper methods
     # defined using `chain`, e.g.:
@@ -28,6 +30,10 @@ RSpec.configure do |config|
     # ...rather than:
     #     # => "be bigger than 2"
     expectations.include_chain_clauses_in_custom_matcher_descriptions = true
+
+    # Increase the diffs length being output, as some tests are dealing with a few lines of stdout
+    expectations.max_formatted_output_length = 65536
+
   end
 
   # Add our own helpers

@@ -117,6 +117,10 @@ module HybridPlatformsConductor
     #   Boolean
     attr_reader :local_environment
 
+    # Number of retries to do in case of non-deterministic errors during deployment
+    #   Integer
+    attr_accessor :nbr_retries_on_error
+
     # Constructor
     #
     # Parameters::
@@ -131,7 +135,6 @@ module HybridPlatformsConductor
       @cmd_runner = cmd_runner
       @nodes_handler = nodes_handler
       @actions_executor = actions_executor
-      @nodes = []
       @secrets = []
       @allow_deploy_non_master = false
       # Default values
@@ -140,6 +143,7 @@ module HybridPlatformsConductor
       @concurrent_execution = false
       @force_direct_deploy = false
       @local_environment = false
+      @nbr_retries_on_error = 0
     end
 
     # Complete an option parser with options meant to control this Deployer
@@ -215,28 +219,100 @@ module HybridPlatformsConductor
     # Result::
     # * Hash<String, [Integer or Symbol, String, String]>: Exit status code (or Symbol in case of error or dry run), standard output and error for each node that has been deployed.
     def deploy_on(*nodes_selectors)
-      @nodes = @nodes_handler.select_nodes(nodes_selectors.flatten)
+      nodes = @nodes_handler.select_nodes(nodes_selectors.flatten)
       # Get the platforms that are impacted
-      @platforms = @nodes.map { |node| @nodes_handler.platform_for(node) }.uniq
+      platforms = nodes.map { |node| @nodes_handler.platform_for(node) }.uniq
       # Setup command runner and Actions Executor in plugins
-      @platforms.each do |platform_handler|
+      platforms.each do |platform_handler|
         platform_handler.cmd_runner = @cmd_runner
         platform_handler.actions_executor = @actions_executor
       end
       if !@use_why_run && !@allow_deploy_non_master
         # Check that master is checked out correctly before deploying.
         # Check it on every platform having at least 1 node to be deployed.
-        @platforms.each do |platform_handler|
+        platforms.each do |platform_handler|
           _exit_status, stdout, _stderr = @cmd_runner.run_cmd "cd #{platform_handler.repository_path} && git status | head -n 1"
           raise "Please checkout master before deploying on #{platform_handler.repository_path}. !!! Only master should be deployed !!!" if stdout.strip != 'On branch master'
         end
       end
       # Package
-      package
+      package(platforms)
       # Deliver package on artefacts
-      deliver_on_artefacts unless @force_direct_deploy
+      deliver_on_artefacts(nodes) unless @force_direct_deploy
+      # Register the secrets in all the platforms
+      @secrets.each do |secret_json|
+        platforms.each do |platform_handler|
+          platform_handler.register_secrets(secret_json)
+        end
+      end
+      # Prepare for deployment
+      platforms.each do |platform_handler|
+        platform_handler.prepare_for_deploy(nodes, use_why_run: @use_why_run) if platform_handler.respond_to?(:prepare_for_deploy)
+      end
       # Launch deployment processes
-      deploy
+      results = {}
+
+      section "#{@use_why_run ? 'Checking' : 'Deploying'} on #{nodes.size} nodes" do
+        # Prepare all the control masters here, as they will be reused for the whole process, including mutexes, deployment and logs saving
+        @actions_executor.with_connections_prepared_to(nodes, no_exception: true) do
+
+          nbr_retries = @nbr_retries_on_error
+          remaining_nodes_to_deploy = nodes
+          while nbr_retries >= 0 && !remaining_nodes_to_deploy.empty?
+            last_deploy_results = deploy(remaining_nodes_to_deploy)
+            if nbr_retries > 0
+              # Check if we need to retry deployment on some nodes
+              # Only parse the last deployment attempt logs
+              retriable_nodes = Hash[
+                remaining_nodes_to_deploy.
+                  map do |node|
+                    exit_status, stdout, stderr = last_deploy_results[node]
+                    if exit_status == 0
+                      nil
+                    else
+                      retriable_errors = retriable_errors_from(node, exit_status, stdout, stderr)
+                      if retriable_errors.empty?
+                        nil
+                      else
+                        # Log the issue in the stderr of the deployment
+                        stderr << "!!! #{retriable_errors.size} retriable errors detected in this deployment:\n#{retriable_errors.map { |error| "* #{error}" }.join("\n")}\n"
+                        [node, retriable_errors]
+                      end
+                    end
+                  end.
+                  compact
+              ]
+              unless retriable_nodes.empty?
+                log_warn <<~EOS.strip
+                  Retry deployment for #{retriable_nodes.size} nodes as they got non-deterministic errors (#{nbr_retries} retries remaining):
+                  #{retriable_nodes.map { |node, retriable_errors| "  * #{node}:\n#{retriable_errors.map { |error| "    - #{error}" }.join("\n")}" }.join("\n")}
+                EOS
+              end
+              remaining_nodes_to_deploy = retriable_nodes.keys
+            end
+            # Merge deployment results
+            results.merge!(last_deploy_results) do |node, (exit_status_1, stdout_1, stderr_1), (exit_status_2, stdout_2, stderr_2)|
+              [
+                exit_status_2,
+                <<~EOS,
+                  #{stdout_1}
+                  Deployment exit status code: #{exit_status_1}
+                  !!! Retry deployment due to non-deterministic error (#{nbr_retries} remaining attempts)...
+                  #{stdout_2}
+                EOS
+                <<~EOS
+                  #{stderr_1}
+                  !!! Retry deployment due to non-deterministic error (#{nbr_retries} remaining attempts)...
+                  #{stderr_2}
+                EOS
+              ]
+            end
+            nbr_retries -= 1
+          end
+
+        end
+      end
+      results
     end
 
     # Instantiate a test Docker container for a given node.
@@ -396,6 +472,42 @@ module HybridPlatformsConductor
 
     private
 
+    # Get the list of retriable errors a node got from deployment logs.
+    # Useful to know if an error is non-deterministic (due to external and temporary factors).
+    #
+    # Parameters::
+    # * *node* (String): Node having the error
+    # * *exit_status* (Integer or Symbol): The deployment exit status
+    # * *stdout* (String): Deployment stdout
+    # * *stderr* (String): Deployment stderr
+    # Result::
+    # * Array<String>: List of retriable errors that have been matched
+    def retriable_errors_from(node, exit_status, stdout, stderr)
+      # List of retriable errors for this node, as exact string match or regexps.
+      # Array<String or Regexp>
+      retriable_errors_on_stdout = []
+      retriable_errors_on_stderr = []
+      (@nodes_handler.platform_for(node).metadata.dig('retriable_errors') || []).each do |retriable_error_info|
+        if retriable_error_info['nodes'].include?(node)
+          retriable_errors_on_stdout.concat(retriable_error_info['errors_on_stdout'].map { |error| error =~ /^\/(.+)\/$/ ? Regexp.new($1) : error }) if retriable_error_info['errors_on_stdout']
+          retriable_errors_on_stderr.concat(retriable_error_info['errors_on_stderr'].map { |error| error =~ /^\/(.+)\/$/ ? Regexp.new($1) : error }) if retriable_error_info['errors_on_stderr']
+        end
+      end
+      {
+        stdout => retriable_errors_on_stdout,
+        stderr => retriable_errors_on_stderr
+      }.map do |output, retriable_errors|
+        retriable_errors.map do |error|
+          if error.is_a?(String)
+            output.include?(error) ? error : nil
+          else
+            error_match = output.match error
+            error_match ? "/#{error.source}/ matched '#{error_match[0]}'" : nil
+          end
+        end.compact
+      end.flatten.uniq
+    end
+
     # Wait for a Docker container to be in a given state.
     #
     # Parameters::
@@ -456,9 +568,12 @@ module HybridPlatformsConductor
     end
 
     # Package the repository, ready to be sent to artefact repositories.
-    def package
+    #
+    # Parameters::
+    # * *platforms* (Array<PlatformHandler>): List of platforms to be packaged before deployment
+    def package(platforms)
       section 'Packaging current repositories' do
-        @platforms.each do |platform|
+        platforms.each do |platform|
           # Don't package it twice. Make sure the check is thread-safe.
           Deployer.with_platform_to_package_semaphore(platform) do
             platform_name = platform.info[:repo_name]
@@ -475,9 +590,12 @@ module HybridPlatformsConductor
 
     # Deliver the packaged repository on all needed artefacts.
     # Prerequisite: package has been called before.
-    def deliver_on_artefacts
+    #
+    # Parameters::
+    # * *nodes* (Array<String>): List of nodes
+    def deliver_on_artefacts(nodes)
       section 'Delivering on artefacts repositories' do
-        @nodes.each do |node|
+        nodes.each do |node|
           @nodes_handler.platform_for(node).deliver_on_artefact_for(node)
         end
       end
@@ -486,114 +604,100 @@ module HybridPlatformsConductor
     # Deploy on all the nodes.
     # Prerequisite: deliver_on_artefacts has been called before in case of non-direct deployment.
     #
+    # Parameters::
+    # * *nodes* (Array<String>): List of nodes
     # Result::
     # * Hash<String, [Integer or Symbol, String, String]>: Exit status code (or Symbol in case of error or dry run), standard output and error for each node.
-    def deploy
+    def deploy(nodes)
       outputs = {}
-      section "#{@use_why_run ? 'Checking' : 'Deploying'} on #{@nodes.size} nodes" do
-        # Prepare all the control masters here, as they will be reused for the whole process, including mutexes, deployment and logs saving
-        @actions_executor.with_connections_prepared_to(@nodes, no_exception: true) do
 
-          # Register the secrets in all the platforms
-          @secrets.each do |secret_json|
-            @platforms.each do |platform_handler|
-              platform_handler.register_secrets(secret_json)
-            end
-          end
+      # Get the ssh user directly from the connector
+      ssh_user = @actions_executor.connector(:ssh).ssh_user
 
-          # Prepare for deployment
-          @platforms.each do |platform_handler|
-            platform_handler.prepare_for_deploy(@nodes, use_why_run: @use_why_run) if platform_handler.respond_to?(:prepare_for_deploy)
-          end
-
-          # Get the ssh user directly from the connector
-          ssh_user = @actions_executor.connector(:ssh).ssh_user
-
-          # Deploy for real
-          @nodes_handler.prefetch_metadata_of @nodes, :image
-          outputs = @actions_executor.execute_actions(
-            Hash[@nodes.map do |node|
-              image_id = @nodes_handler.get_image_of(node)
-              # Install My_company corporate certificates if present
-              certificate_actions =
-                if @local_environment && ENV['hpc_certificates']
-                  if File.exist?(ENV['hpc_certificates'])
-                    log_debug "Deploy certificates from #{ENV['hpc_certificates']}"
-                    case image_id
-                    when 'debian_9', 'debian_10'
-                      [
-                        {
-                          remote_bash: "#{ssh_user == 'root' ? '' : 'sudo '}apt update && #{ssh_user == 'root' ? '' : 'sudo '}apt install -y ca-certificates"
-                        },
-                        {
-                          scp: {
-                            ENV['hpc_certificates'] => '/usr/local/share/ca-certificates',
-                            :sudo => ssh_user != 'root'
-                          },
-                          remote_bash: "#{ssh_user == 'root' ? '' : 'sudo '}update-ca-certificates"
-                        }
+      # Deploy for real
+      @nodes_handler.prefetch_metadata_of nodes, :image
+      outputs = @actions_executor.execute_actions(
+        Hash[nodes.map do |node|
+          image_id = @nodes_handler.get_image_of(node)
+          # Install My_company corporate certificates if present
+          certificate_actions =
+            if @local_environment && ENV['hpc_certificates']
+              if File.exist?(ENV['hpc_certificates'])
+                log_debug "Deploy certificates from #{ENV['hpc_certificates']}"
+                case image_id
+                when 'debian_9', 'debian_10'
+                  [
+                    {
+                      remote_bash: "#{ssh_user == 'root' ? '' : 'sudo '}apt update && #{ssh_user == 'root' ? '' : 'sudo '}apt install -y ca-certificates"
+                    },
+                    {
+                      scp: {
+                        ENV['hpc_certificates'] => '/usr/local/share/ca-certificates',
+                        :sudo => ssh_user != 'root'
+                      },
+                      remote_bash: "#{ssh_user == 'root' ? '' : 'sudo '}update-ca-certificates"
+                    }
+                  ]
+                when 'centos_7'
+                  [
+                    {
+                      remote_bash: "#{ssh_user == 'root' ? '' : 'sudo '}yum install -y ca-certificates"
+                    },
+                    {
+                      scp: Hash[Dir.glob("#{ENV['hpc_certificates']}/*.crt").map do |cert_file|
+                        [
+                          cert_file,
+                          '/etc/pki/ca-trust/source/anchors'
+                        ]
+                      end].merge(sudo: ssh_user != 'root'),
+                      remote_bash: [
+                        "#{ssh_user == 'root' ? '' : 'sudo '}update-ca-trust enable",
+                        "#{ssh_user == 'root' ? '' : 'sudo '}update-ca-trust extract"
                       ]
-                    when 'centos_7'
-                      [
-                        {
-                          remote_bash: "#{ssh_user == 'root' ? '' : 'sudo '}yum install -y ca-certificates"
-                        },
-                        {
-                          scp: Hash[Dir.glob("#{ENV['hpc_certificates']}/*.crt").map do |cert_file|
-                            [
-                              cert_file,
-                              '/etc/pki/ca-trust/source/anchors'
-                            ]
-                          end].merge(sudo: ssh_user != 'root'),
-                          remote_bash: [
-                            "#{ssh_user == 'root' ? '' : 'sudo '}update-ca-trust enable",
-                            "#{ssh_user == 'root' ? '' : 'sudo '}update-ca-trust extract"
-                          ]
-                        }
-                      ]
-                    else
-                      raise "Unknown image ID for node #{node}: #{image_id}. Check metadata for this node."
-                    end
-                  else
-                    raise "Missing path referenced by the hpc_certificates environment variable: #{ENV['hpc_certificates']}"
-                  end
+                    }
+                  ]
                 else
-                  []
+                  raise "Unknown image ID for node #{node}: #{image_id}. Check metadata for this node."
                 end
-              [
-                node,
-                [
-                  # Install the mutex lock and acquire it
-                  {
-                    scp: { "#{__dir__}/mutex_dir" => '.' },
-                    remote_bash: "while ! #{ssh_user == 'root' ? '' : 'sudo '}./mutex_dir lock /tmp/hybrid_platforms_conductor_deploy_lock \"$(ps -o ppid= -p $$)\"; do echo -e 'Another deployment is running on #{node}. Waiting for it to finish to continue...' ; sleep 5 ; done"
-                  }
-                ] +
-                  certificate_actions +
-                  @nodes_handler.platform_for(node).actions_to_deploy_on(node, use_why_run: @use_why_run)
-              ]
-            end],
-            timeout: @timeout,
-            concurrent: @concurrent_execution,
-            log_to_stdout: !@concurrent_execution
-          )
-          # Free eventual locks
-          @actions_executor.execute_actions(
-            Hash[@nodes.map do |node|
-              [
-                node,
-                { remote_bash: "#{ssh_user == 'root' ? '' : 'sudo '}./mutex_dir unlock /tmp/hybrid_platforms_conductor_deploy_lock" }
-              ]
-            end],
-            timeout: 10,
-            concurrent: true,
-            log_to_dir: nil
-          )
+              else
+                raise "Missing path referenced by the hpc_certificates environment variable: #{ENV['hpc_certificates']}"
+              end
+            else
+              []
+            end
+          [
+            node,
+            [
+              # Install the mutex lock and acquire it
+              {
+                scp: { "#{__dir__}/mutex_dir" => '.' },
+                remote_bash: "while ! #{ssh_user == 'root' ? '' : 'sudo '}./mutex_dir lock /tmp/hybrid_platforms_conductor_deploy_lock \"$(ps -o ppid= -p $$)\"; do echo -e 'Another deployment is running on #{node}. Waiting for it to finish to continue...' ; sleep 5 ; done"
+              }
+            ] +
+              certificate_actions +
+              @nodes_handler.platform_for(node).actions_to_deploy_on(node, use_why_run: @use_why_run)
+          ]
+        end],
+        timeout: @timeout,
+        concurrent: @concurrent_execution,
+        log_to_stdout: !@concurrent_execution
+      )
+      # Free eventual locks
+      @actions_executor.execute_actions(
+        Hash[nodes.map do |node|
+          [
+            node,
+            { remote_bash: "#{ssh_user == 'root' ? '' : 'sudo '}./mutex_dir unlock /tmp/hybrid_platforms_conductor_deploy_lock" }
+          ]
+        end],
+        timeout: 10,
+        concurrent: true,
+        log_to_dir: nil
+      )
 
-          # Save logs
-          save_logs(outputs) if !@use_why_run && !@cmd_runner.dry_run
-        end
-      end
+      # Save logs
+      save_logs(outputs) if !@use_why_run && !@cmd_runner.dry_run
+
       outputs
     end
 
