@@ -248,6 +248,18 @@ describe 'executables\' Deployer options' do
     end
   end
 
+  it 'uses retries on errors' do
+    with_test_platform_for_deployer_options do |repository|
+      expect(test_deployer).to receive(:deploy_on).with(['node']) do
+        expect(test_deployer.nbr_retries_on_error).to eq 42
+        {}
+      end
+      exit_code, stdout, stderr = run 'deploy', '--node', 'node', '--retries-on-error', '42'
+      expect(exit_code).to eq 0
+      expect(stderr).to eq ''
+    end
+  end
+
   it 'can add options that are specific to a platform handler' do
     HybridPlatformsConductorTest::TestPlatformHandler.global_info[:options_parse_for_deploy] = proc do |options_parser|
       options_parser.on('-r', '--new-awesome-option', 'A great option') {}

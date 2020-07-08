@@ -191,6 +191,9 @@ module HybridPlatformsConductor
       options_parser.on('-W', '--why-run', 'Use the why-run mode to see what would be the result of the deploy instead of deploying it for real.') do
         @use_why_run = true
       end if why_run_switch
+      options_parser.on('--retries-on-error NBR', "Number of retries in case of non-deterministic errors (defaults to #{@nbr_retries_on_error})") do |nbr_retries|
+        @nbr_retries_on_error = nbr_retries.to_i
+      end
       # Add options that are specific to some platform handlers
       @nodes_handler.platform_types.sort_by { |platform_type, _platform_handler_class| platform_type }.each do |platform_type, platform_handler_class|
         if platform_handler_class.respond_to?(:options_parse_for_deploy)
