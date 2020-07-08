@@ -37,7 +37,7 @@ describe HybridPlatformsConductor::ActionsExecutor do
               raise 'Failing action'
             end
           } })
-        ).to eq('node1' => [:failed_action, "action_stdout\n", "action_stderr\nFailing action"])
+        ).to eq('node1' => [:failed_action, "action_stdout\n", "action_stderr\nFailing action\n"])
       end
     end
 
@@ -77,7 +77,7 @@ describe HybridPlatformsConductor::ActionsExecutor do
         ).to eq('node1' => [
           :failed_command,
           "action_stdout\n",
-          "action_stderr\nCommand 'echo action_stdout && >&2 echo action_stderr && exit 1' returned error code 1 (expected 0)."
+          "action_stderr\nCommand 'echo action_stdout && >&2 echo action_stderr && exit 1' returned error code 1 (expected 0).\n"
         ])
       end
     end
