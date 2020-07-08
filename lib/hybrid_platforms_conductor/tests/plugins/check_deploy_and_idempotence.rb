@@ -37,6 +37,7 @@ module HybridPlatformsConductor
 
               # ===== Deploy from scratch
               deployer.use_why_run = false
+              deployer.nbr_retries_on_error = 3
               exit_status, _stdout, _stderr = deployer.deploy_on(@node)[@node]
               assert_equal exit_status, 0, "Deploy from scratch returned error code #{exit_status}", log_debug? ? nil : deployer.stdouts_to_s
               if exit_status == 0
@@ -73,6 +74,7 @@ module HybridPlatformsConductor
                     deployer.instance_variable_get(:@actions_executor).connector(:ssh).passwords.delete(@node)
                   end
                   deployer.use_why_run = true
+                  deployer.nbr_retries_on_error = 0
                   exit_status, stdout, stderr = deployer.deploy_on(@node)[@node]
                   assert_equal exit_status, 0, "Check-node after deployment returned error code #{exit_status}", log_debug? ? nil : deployer.stdouts_to_s
                   # Check that the output of the check-node returns no changes.

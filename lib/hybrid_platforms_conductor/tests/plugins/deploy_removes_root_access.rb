@@ -23,6 +23,7 @@ module HybridPlatformsConductor
             end
             assert_equal ssh_ok, true, 'Root does not have access from the empty image'
             if ssh_ok
+              deployer.nbr_retries_on_error = 3
               deployer.deploy_on @node
               # As sshd is certainly being restarted, start and stop the container to reload it.
               deployer.restart @node

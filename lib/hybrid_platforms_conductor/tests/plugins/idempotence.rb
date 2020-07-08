@@ -14,6 +14,7 @@ module HybridPlatformsConductor
         def test_for_node
           @deployer.with_docker_container_for(@node, container_id: 'idempotence', reuse_container: log_debug?) do |deployer|
             # First deploy as root
+            deployer.nbr_retries_on_error = 3
             exit_status, _stdout, _stderr = deployer.deploy_on(@node)[@node]
             if exit_status == 0
               # As it's possible sshd has to be restarted because of a change in its conf, restart the container.
@@ -25,6 +26,7 @@ module HybridPlatformsConductor
               deployer.instance_variable_get(:@actions_executor).connector(:ssh).ssh_user = 'a_testadmin'
               deployer.instance_variable_get(:@actions_executor).connector(:ssh).passwords.delete(@node)
               deployer.use_why_run = true
+              deployer.nbr_retries_on_error = 0
               result = deployer.deploy_on(@node)
               assert_equal result.size, 1, "Wrong number of nodes being tested: #{result.size}"
               tested_node, (exit_status, stdout, stderr) = result.first
