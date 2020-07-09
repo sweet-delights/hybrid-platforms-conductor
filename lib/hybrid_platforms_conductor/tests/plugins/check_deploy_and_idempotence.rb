@@ -75,6 +75,8 @@ module HybridPlatformsConductor
                   end
                   deployer.use_why_run = true
                   deployer.nbr_retries_on_error = 0
+                  # For the idempotence testing activate log debugs, so that in case of failures we have full details
+                  deployer.log_level = :debug
                   exit_status, stdout, stderr = deployer.deploy_on(@node)[@node]
                   assert_equal exit_status, 0, "Check-node after deployment returned error code #{exit_status}", log_debug? ? nil : deployer.stdouts_to_s
                   # Check that the output of the check-node returns no changes.
