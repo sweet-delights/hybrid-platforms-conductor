@@ -2,12 +2,12 @@ require 'logger'
 require 'tmpdir'
 require 'time'
 require 'thread'
-require 'docker-api'
-require 'hybrid_platforms_conductor/logger_helpers'
-require 'hybrid_platforms_conductor/nodes_handler'
 require 'hybrid_platforms_conductor/actions_executor'
 require 'hybrid_platforms_conductor/cmd_runner'
 require 'hybrid_platforms_conductor/executable'
+require 'hybrid_platforms_conductor/logger_helpers'
+require 'hybrid_platforms_conductor/nodes_handler'
+require 'hybrid_platforms_conductor/plugins'
 require 'hybrid_platforms_conductor/thycotic'
 
 module HybridPlatformsConductor
@@ -36,38 +36,6 @@ module HybridPlatformsConductor
         end
       end
 
-      # Run a code block globally protected by a semaphore dedicated to a Docker image
-      #
-      # Parameters::
-      # * *image_tag* (String): The image tag
-      # * Proc: Code called with semaphore granted
-      def with_image_semaphore(image_tag)
-        # First, check if the semaphore exists, and create it if it does not.
-        # This part should also be thread-safe.
-        @global_semaphore.synchronize do
-          @docker_image_semaphores[image_tag] = Mutex.new unless @docker_image_semaphores.key?(image_tag)
-        end
-        @docker_image_semaphores[image_tag].synchronize do
-          yield
-        end
-      end
-
-      # Run a code block globally protected by a semaphore dedicated to a Docker container
-      #
-      # Parameters::
-      # * *container* (String): The container name
-      # * Proc: Code called with semaphore granted
-      def with_container_semaphore(container)
-        # First, check if the semaphore exists, and create it if it does not.
-        # This part should also be thread-safe.
-        @global_semaphore.synchronize do
-          @docker_container_semaphores[container] = Mutex.new unless @docker_container_semaphores.key?(container)
-        end
-        @docker_container_semaphores[container].synchronize do
-          yield
-        end
-      end
-
       # List of platform names that have been packaged.
       # Make this at class level as several Deployer instances can be used in a multi-thread environmnent.
       #   Array<String>
@@ -78,12 +46,6 @@ module HybridPlatformsConductor
     @packaged_platforms = []
     # This is a global semaphore used to ensure all other semaphores are created correctly in multithread
     @global_semaphore = Mutex.new
-    # The access to Docker images should be protected as it runs in multithread.
-    # Semaphore per image name
-    @docker_image_semaphores = {}
-    # The access to Docker containers should be protected as it runs in multithread
-    # Semaphore per container name
-    @docker_container_semaphores = {}
     # The access to platforms to package should be protected as it runs in multithread
     # Semaphore per platform name
     @platform_to_package_semaphores = {}
@@ -137,6 +99,7 @@ module HybridPlatformsConductor
       @actions_executor = actions_executor
       @secrets = []
       @allow_deploy_non_master = false
+      @provisioners = Plugins.new(:provisioner, logger: @logger, logger_stderr: @logger_stderr)
       # Default values
       @use_why_run = false
       @timeout = nil
@@ -320,120 +283,56 @@ module HybridPlatformsConductor
       results
     end
 
-    # Instantiate a test Docker container for a given node.
+    # Provision a test instance for a given node.
     #
     # Parameters::
+    # * *provisioner_id* (Symbol): The provisioner ID to be used
     # * *node* (String): The node for which we want the image
-    # * *container_id* (String): An ID to differentiate different containers for the same node [default: '']
-    # * *reuse_container* (Boolean): Do ew reuse an eventual existing container? [default: false]
+    # * *environment* (String): An ID to differentiate different running instances for the same node
+    # * *reuse_container* (Boolean): Do we reuse an eventual existing container? [default: false]
     # * Proc: Code called when the container is ready. The container will be stopped at the end of execution.
     #   * Parameters::
     #     * *deployer* (Deployer): A new Deployer configured to override access to the node through the Docker container
-    #     * *nodes_handler* (NodesHandler): A new NodesHandler configured to override access to the node through the Docker container
-    def with_docker_container_for(node, container_id: '', reuse_container: false)
-      docker_ok = false
-      begin
-        Docker.validate_version!
-        docker_ok = true
-      rescue
-        raise "Docker is not installed correctly. Please install it. Error: #{$!}"
-      end
-      if docker_ok
-        # Get the image name for this node
-        image = @nodes_handler.get_image_of(node).to_sym
-        # Find if we have such an image registered
-        if @nodes_handler.known_docker_images.include?(image)
-          # Build the image if it does not exist
-          image_tag = "hpc_image_#{image}"
-          docker_image = nil
-          Deployer.with_image_semaphore(image_tag) do
-            docker_image = Docker::Image.all.find { |search_image| !search_image.info['RepoTags'].nil? && search_image.info['RepoTags'].include?("#{image_tag}:latest") }
-            unless docker_image
-              log_debug "[Docker for #{node}] - Creating Docker image #{image_tag}..."
-              Excon.defaults[:read_timeout] = 600
-              docker_image = Docker::Image.build_from_dir(@nodes_handler.docker_image_dir(image))
-              docker_image.tag repo: image_tag
-            end
-          end
-          container_name = "hpc_container_#{node}_#{container_id}"
-          # Add PID and process start time to the ID to make sure other containers used by other runs are not being reused.
-          container_name << "_#{Process.pid}_#{(Time.now - Process.clock_gettime(Process::CLOCK_BOOTTIME)).strftime('%Y%m%d%H%M%S')}" unless reuse_container
-          Deployer.with_container_semaphore(container_name) do
-            old_docker_container = Docker::Container.all(all: true).find { |container| container.info['Names'].include? "/#{container_name}" }
-            docker_container =
-              if reuse_container && old_docker_container
-                old_docker_container
-              else
-                if old_docker_container
-                  # Remove the previous container
-                  old_docker_container.stop
-                  old_docker_container.remove
-                end
-                log_debug "[Docker for #{node}] - Creating Docker container #{container_name}..."
-                # We add the SYS_PTRACE capability as some images need to restart services (for example postfix) and those services need the rights to ls in /proc/{PID}/exe to check if a status is running. Without SYS_PTRACE such ls returns permission denied and the service can't be stopped (as init.d always returns it as stopped even when running).
-                # We add the privileges as some containers need to install and configure the udev package, which needs RW access to /sys.
-                # We add the bind to cgroup volume to be able to test systemd specifics (enabling/disabling services for example).
-                Docker::Container.create(
-                  name: container_name,
-                  image: image_tag,
-                  CapAdd: 'SYS_PTRACE',
-                  Privileged: true,
-                  Binds: ['/sys/fs/cgroup:/sys/fs/cgroup:ro'],
-                  # Some playbooks need the hostname to be set to a correct FQDN
-                  Hostname: "#{node}.testdomain"
-                )
-              end
-            begin
-              # Create different NodesHandler and Deployer to handle this Docker container in place of the real node.
-              Dir.mktmpdir('hybrid_platforms_conductor-docker-logs') do |docker_logs_dir|
-                stdout_file = nil
-                stderr_file = nil
-                sub_logger, sub_logger_stderr =
-                  if log_debug?
-                    [@logger, @logger_stderr]
-                  else
-                    FileUtils.mkdir_p docker_logs_dir
-                    stdout_file = "#{docker_logs_dir}/#{container_name}.stdout"
-                    stderr_file = "#{docker_logs_dir}/#{container_name}.stderr"
-                    [stdout_file, stderr_file].each { |file| File.unlink(file) if File.exist?(file) }
-                    [Logger.new(stdout_file, level: :info), Logger.new(stderr_file, level: :info)]
-                  end
-                begin
-                  sub_executable = Executable.new(logger: sub_logger, logger_stderr: sub_logger_stderr)
-                  nodes_handler = sub_executable.nodes_handler
-                  actions_executor = sub_executable.actions_executor
-                  deployer = sub_executable.deployer
-                  nodes_handler.override_metadata_of node, :docker_container, docker_container
-                  # Make sure the node is started
-                  deployer.restart node
-                  # Setup test environment for this container
-                  actions_executor.connector(:ssh).ssh_user = 'root'
-                  actions_executor.connector(:ssh).passwords[node] = 'root_pwd'
-                  deployer.force_direct_deploy = true
-                  deployer.allow_deploy_non_master = true
-                  deployer.prepare_for_local_environment
-                  # Ignore secrets that might have been given: in Docker containers we always use dummy secrets
-                  deployer.secrets = [JSON.parse(File.read("#{nodes_handler.hybrid_platforms_dir}/dummy_secrets.json"))]
-                  yield deployer, nodes_handler
-                rescue
-                  # Make sure Docker logs are being output to better investigate errors if we were not already outputing them in debug mode
-                  stdouts = deployer.stdouts_to_s
-                  log_error "[Docker for #{node}] - Encountered exception #{$!}\n#{$!.backtrace.join("\n")}\n-----\nDocker outputs from container #{container_name}:\n#{stdouts}" unless stdouts.nil?
-                  raise
-                end
-              end
-            ensure
-              docker_container.stop
-              log_debug "Docker container #{container_name} stopped."
-              unless reuse_container
-                docker_container.remove
-                log_debug "Docker container #{container_name} removed."
-              end
-            end
-          end
+    #     * *instance* (Provisioner): The provisioned instance
+    def with_test_provisioned_instance(provisioner_id, node, environment:, reuse_container: false)
+      # Add PID and process start time to the ID to make sure other containers used by other runs are not being reused.
+      environment << "_#{Process.pid}_#{(Time.now - Process.clock_gettime(Process::CLOCK_BOOTTIME)).strftime('%Y%m%d%H%M%S')}" unless reuse_container
+      # Create different NodesHandler and Deployer to handle this Docker container in place of the real node.
+      sub_logger, sub_logger_stderr =
+        if log_debug?
+          [@logger, @logger_stderr]
         else
-          raise "Unknown Docker image #{image} defined for node #{node}"
+          [Logger.new(StringIO.new, level: :info), Logger.new(StringIO.new, level: :info)]
         end
+      begin
+        sub_executable = Executable.new(logger: sub_logger, logger_stderr: sub_logger_stderr)
+        instance = @provisioners[provisioner_id].new(
+          node,
+          environment: environment,
+          logger: @logger,
+          logger_stderr: @logger_stderr,
+          cmd_runner: @cmd_runner,
+          # Here we use the NodesHandler that will be bound to the sub-Deployer only, as the node's metadata might be modified by the Provisioner.
+          nodes_handler: sub_executable.nodes_handler
+        )
+        instance.with_running_instance(stop_on_exit: true, destroy_on_exit: !reuse_container, port: 22) do
+          actions_executor = sub_executable.actions_executor
+          deployer = sub_executable.deployer
+          # Setup test environment for this container
+          actions_executor.connector(:ssh).ssh_user = 'root'
+          actions_executor.connector(:ssh).passwords[node] = 'root_pwd'
+          deployer.force_direct_deploy = true
+          deployer.allow_deploy_non_master = true
+          deployer.prepare_for_local_environment
+          # Ignore secrets that might have been given: in Docker containers we always use dummy secrets
+          deployer.secrets = [JSON.parse(File.read("#{@nodes_handler.hybrid_platforms_dir}/dummy_secrets.json"))]
+          yield deployer, instance
+        end
+      rescue
+        # Make sure Docker logs are being output to better investigate errors if we were not already outputing them in debug mode
+        stdouts = sub_executable.stdouts_to_s
+        log_error "[ #{node}/#{environment} ] - Encountered unhandled exception #{$!}\n#{$!.backtrace.join("\n")}\n-----\n#{stdouts}" unless stdouts.nil?
+        raise
       end
     end
 
@@ -443,36 +342,6 @@ module HybridPlatformsConductor
       @nodes_handler.known_platforms.each do |platform_name|
         @nodes_handler.platform(platform_name).prepare_deploy_for_local_testing
       end
-    end
-
-    # Restart a node.
-    # Currently this is used only in case of Docker containers instantiated with with_docker_container_for.
-    # When infra provisioning will be implemented correctly (PROJECT-594) this part should be made generic and outside of the Deployer.
-    #
-    # Parameters::
-    # * *node* (String): Node to be restarted.
-    def restart(node)
-      docker_container = @nodes_handler.get_docker_container_of(node)
-      raise "Can't restart #{node} as it is not instantiated as a Docker container" if docker_container.nil?
-      # As sshd is certainly being restarted, start and stop the container to reload it.
-      docker_container.stop
-      raise "Docker container for #{node} did not manage to be stopped" unless wait_for_docker_container_in_state(docker_container, ['created', 'exited'])
-      log_debug "[Docker for #{node}] - Start container..."
-      docker_container.start
-      raise "Docker container for #{node} did not manage to be started" unless wait_for_docker_container_in_state(docker_container, 'running')
-      log_debug "[Docker for #{node}] - Container started."
-      # Get its IP that could have changed upon restart
-      # cf https://github.com/moby/moby/issues/2801
-      # Make sure we refresh its info before querying it, as we could hit a cache of a previous IP.
-      docker_container.refresh!
-      docker_container_ip = docker_container.json['NetworkSettings']['IPAddress']
-      old_docker_container_ip = @nodes_handler.get_host_ip_of node
-      unless docker_container_ip == old_docker_container_ip
-        @nodes_handler.override_metadata_of node, :host_ip, docker_container_ip
-        @nodes_handler.invalidate_metadata_of node, :host_keys
-      end
-      raise "Docker container for #{node} on IP #{docker_container_ip} did not manage to have a running SSH server" unless wait_for_port(docker_container_ip, 22, 300)
-      log_debug "[Docker for #{node}] - Container started with SSH running on IP #{docker_container_ip}."
     end
 
     private
@@ -511,65 +380,6 @@ module HybridPlatformsConductor
           end
         end.compact
       end.flatten.uniq
-    end
-
-    # Wait for a Docker container to be in a given state.
-    #
-    # Parameters::
-    # * *docker_container* (Docker::Container): Docker container to inspect
-    # * *states* (String or Array<String>): States (or single state) the container should be in
-    # * *timeout* (Integer): Timeout before failing, in seconds [default = 30]
-    # Result::
-    # * Boolean: Is the container in the expected state?
-    def wait_for_docker_container_in_state(docker_container, states, timeout = 30)
-      states = [states] if states.is_a?(String)
-      log_debug "Wait for Docker container #{docker_container.info['Name']} to be in state #{states.join(', ')} (timeout #{timeout})..."
-      current_state = nil
-      remaining_timeout = timeout
-      until states.include?(current_state)
-        start_time = Time.now
-        current_state =
-          begin
-            docker_container.refresh!.info['State']['Status']
-          rescue
-            log_warn "Error while reading state of Docker container #{docker_container.info['Name']}: #{$!}"
-            "Error #{$!}"
-          end
-        sleep 1 unless states.include?(current_state)
-        remaining_timeout -= Time.now - start_time
-        break if remaining_timeout <= 0
-      end
-      log_debug "Docker container #{docker_container.info['Name']} is in state #{current_state}"
-      states.include?(current_state)
-    end
-
-    # Wait for a given ip/port to be listening before continuing.
-    #
-    # Parameters::
-    # * *host* (String): Host to reach
-    # * *port* (Integer): Port to wait for
-    # * *timeout* (Integer): Timeout before failing, in seconds [default = 30]
-    # Result::
-    # * Boolean: Is port listening?
-    def wait_for_port(host, port, timeout = 30)
-      log_debug "Wait for #{host}:#{port} to be opened (timeout #{timeout})..."
-      port_listening = false
-      remaining_timeout = timeout
-      until port_listening
-        start_time = Time.now
-        port_listening =
-          begin
-            Socket.tcp(host, port, connect_timeout: remaining_timeout) { true }
-          rescue Errno::ECONNREFUSED, Errno::EHOSTUNREACH, Errno::EADDRNOTAVAIL, Errno::ETIMEDOUT
-            log_warn "Can't connect to #{host}:#{port}: #{$!}"
-            false
-          end
-        sleep 1 unless port_listening
-        remaining_timeout -= Time.now - start_time
-        break if remaining_timeout <= 0
-      end
-      log_debug "#{host}:#{port} is#{port_listening ? '' : ' not'} opened."
-      port_listening
     end
 
     # Package the repository, ready to be sent to artefact repositories.

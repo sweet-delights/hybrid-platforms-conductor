@@ -277,20 +277,26 @@ module HybridPlatformsConductor
       end
     end
 
-    # Return a string describing the stdout and stderr if they were logged into files.
+    # Return a string describing the stdout and stderr if they were logged into files or StringIO.
     # Useful for debugging.
     #
     # Result::
     # * String: The corresponding stdout and stderr info, or nil if none
     def stdouts_to_s
       messages = []
-      if self.stdout_device.is_a?(File) && File.exist?(self.stdout_device.path)
-        stdout = File.read(self.stdout_device.path).strip
-        messages << "----- STDOUT BEGIN - #{self.stdout_device.path} -----\n#{stdout}\n----- STDOUT END - #{self.stdout_device.path} -----" unless stdout.empty?
-      end
-      if self.stderr_device.is_a?(File) && File.exist?(self.stderr_device.path)
-        stderr = File.read(self.stderr_device.path).strip
-        messages << "----- STDERR BEGIN - #{self.stderr_device.path} -----\n#{stderr}\n----- STDERR END - #{self.stderr_device.path} -----" unless stderr.empty?
+      {
+        'STDOUT' => self.stdout_device,
+        'STDERR' => self.stderr_device
+      }.each do |name, device|
+        if device.is_a?(File)
+          if File.exist?(device.path)
+            content = File.read(device.path).strip
+            messages << "----- #{name} BEGIN - #{device.path} -----\n#{content}\n----- #{name} END - #{device.path} -----" unless content.empty?
+          end
+        elsif device.is_a?(StringIO)
+          content = device.string
+          messages << "----- #{name} BEGIN -----\n#{content}\n----- #{name} END -----" unless content.empty?
+        end
       end
       messages.empty? ? nil : messages.join("\n")
     end

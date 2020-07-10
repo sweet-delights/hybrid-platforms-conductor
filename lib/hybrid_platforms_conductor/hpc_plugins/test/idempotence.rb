@@ -12,7 +12,7 @@ module HybridPlatformsConductor
 
         # Check my_test_plugin.rb.sample documentation for signature details.
         def test_for_node
-          @deployer.with_docker_container_for(@node, container_id: 'idempotence', reuse_container: log_debug?) do |deployer|
+          @deployer.with_test_provisioned_instance(:docker, @node, environment: 'idempotence', reuse_container: log_debug?) do |deployer|
             # First deploy as root
             deployer.nbr_retries_on_error = 3
             exit_status, _stdout, _stderr = deployer.deploy_on(@node)[@node]

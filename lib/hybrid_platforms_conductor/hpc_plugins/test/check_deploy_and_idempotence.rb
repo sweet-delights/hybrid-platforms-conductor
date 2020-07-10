@@ -16,11 +16,11 @@ module HybridPlatformsConductor
 
         # Check my_test_plugin.rb.sample documentation for signature details.
         def test_for_node
-          @deployer.with_docker_container_for(@node, container_id: 'check_deploy_idempotence', reuse_container: log_debug?) do |deployer, nodes_handler|
+          @deployer.with_test_provisioned_instance(:podman, @node, environment: 'check_deploy_and_idempotence', reuse_container: log_debug?) do |deployer, instance|
             # Check that we can connect with root
             ssh_ok = false
             begin
-              Net::SSH.start(nodes_handler.get_host_ip_of(@node), 'root', password: 'root_pwd', auth_methods: ['password'], verify_host_key: :never) do |ssh|
+              Net::SSH.start(instance.ip, 'root', password: 'root_pwd', auth_methods: ['password'], verify_host_key: :never) do |ssh|
                 ssh_ok = ssh.exec!('echo Works').strip == 'Works'
               end
             rescue
@@ -45,21 +45,14 @@ module HybridPlatformsConductor
                 # Otherwise you'll get the following error upon reconnection:
                 #   System is booting up. See pam_nologin(8)
                 #   Authentication failed.
-                restart_ok = false
-                begin
-                  deployer.restart @node
-                  restart_ok = true
-                rescue
-                  error "Exception while restarting Docker container: #{$!}", log_debug? ? nil : deployer.stdouts_to_s
-                end
-
-                if restart_ok
+                instance.stop
+                instance.with_running_instance(port: 22) do
 
                   # ===== Deploy removes root access
                   # Check that we can't connect with root
                   ssh_ok = false
                   begin
-                    Net::SSH.start(nodes_handler.get_host_ip_of(@node), 'root', password: 'root_pwd', auth_methods: ['password'], verify_host_key: :never) do |ssh|
+                    Net::SSH.start(instance.ip, 'root', password: 'root_pwd', auth_methods: ['password'], verify_host_key: :never) do |ssh|
                       ssh_ok = ssh.exec!('echo Works').strip == 'Works'
                     end
                   rescue
