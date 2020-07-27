@@ -276,6 +276,7 @@ Deployer options:
     -p, --parallel                   Execute the commands in parallel (put the standard output in files <hybrid-platforms-dir>/run_logs/*.stdout)
     -t, --timeout SECS               Timeout in seconds to wait for each chef run. Only used in why-run mode. (defaults to no timeout)
     -W, --why-run                    Use the why-run mode to see what would be the result of the deploy instead of deploying it for real.
+        --retries-on-error NBR       Number of retries in case of non-deterministic errors (defaults to 0)
 
 Deployer options specific to platforms of type chef:
     -r, --run-list MODIFIER:PARAMS   Apply a modification to the run-list to be run on the nodes. Can be used several times. Possible modifiers are:
@@ -329,6 +330,7 @@ Deployer options:
                                      * URL of the form http[s]://<url>:<secret_id> to get a secret JSON file from a Thycotic Secret Server at the given URL.
     -i, --direct-deploy              Don't use artefacts servers while deploying.
     -t, --timeout SECS               Timeout in seconds to wait for each chef run. Only used in why-run mode. (defaults to no timeout)
+        --retries-on-error NBR       Number of retries in case of non-deterministic errors (defaults to 0)
 
 Deployer options specific to platforms of type chef:
     -r, --run-list MODIFIER:PARAMS   Apply a modification to the run-list to be run on the nodes. Can be used several times. Possible modifiers are:
@@ -456,6 +458,7 @@ Deployer options:
     -p, --parallel                   Execute the commands in parallel (put the standard output in files <hybrid-platforms-dir>/run_logs/*.stdout)
     -t, --timeout SECS               Timeout in seconds to wait for each chef run. Only used in why-run mode. (defaults to no timeout)
     -W, --why-run                    Use the why-run mode to see what would be the result of the deploy instead of deploying it for real.
+        --retries-on-error NBR       Number of retries in case of non-deterministic errors (defaults to 0)
 
 Deployer options specific to platforms of type chef:
     -r, --run-list MODIFIER:PARAMS   Apply a modification to the run-list to be run on the nodes. Can be used several times. Possible modifiers are:
@@ -1031,6 +1034,7 @@ Deployer options:
     -i, --direct-deploy              Don't use artefacts servers while deploying.
     -t, --timeout SECS               Timeout in seconds to wait for each chef run. Only used in why-run mode. (defaults to 30)
     -W, --why-run                    Use the why-run mode to see what would be the result of the deploy instead of deploying it for real.
+        --retries-on-error NBR       Number of retries in case of non-deterministic errors (defaults to 0)
 
 Deployer options specific to platforms of type chef:
     -r, --run-list MODIFIER:PARAMS   Apply a modification to the run-list to be run on the nodes. Can be used several times. Possible modifiers are:
@@ -1103,6 +1107,7 @@ Deployer options:
                                      * URL of the form http[s]://<url>:<secret_id> to get a secret JSON file from a Thycotic Secret Server at the given URL.
     -i, --direct-deploy              Don't use artefacts servers while deploying.
     -t, --timeout SECS               Timeout in seconds to wait for each chef run. Only used in why-run mode. (defaults to 30)
+        --retries-on-error NBR       Number of retries in case of non-deterministic errors (defaults to 0)
 
 JSON dump options:
     -j, --json-dir DIRECTORY         Specify the output directory in which JSON files are being written. Defaults to nodes_json.
@@ -1280,6 +1285,7 @@ Deployer options:
                                      * Local path to a JSON file
                                      * URL of the form http[s]://<url>:<secret_id> to get a secret JSON file from a Thycotic Secret Server at the given URL.
         --direct-deploy              Don't use artefacts servers while deploying.
+        --retries-on-error NBR       Number of retries in case of non-deterministic errors (defaults to 0)
 
 Tests runner options:
     -i, --tests-list FILE_NAME       Specify a tests file name. The file should contain a list of tests name (1 per line). Can be used several times.
@@ -1525,6 +1531,7 @@ Deployer options:
     -p, --parallel                   Execute the commands in parallel (put the standard output in files <hybrid-platforms-dir>/run_logs/*.stdout)
     -t, --timeout SECS               Timeout in seconds to wait for each chef run. Only used in why-run mode. (defaults to no timeout)
     -W, --why-run                    Use the why-run mode to see what would be the result of the deploy instead of deploying it for real.
+        --retries-on-error NBR       Number of retries in case of non-deterministic errors (defaults to 0)
 ```
 
 * `--secrets SECRETS_LOCATION`: Specify a JSON file storing secrets that can be used by the deployment process. Secrets are values that are needed for deployment but that should not be part of the platforms repositories (such as passwords).
@@ -1535,6 +1542,23 @@ Deployer options:
 * `--parallel`: Specify that the deployment process should perform concurrently on the different nodes it has to deploy to.
 * `--timeout SECS`: Specify the timeout (in seconds) to apply while deploying. This can be set only in why-run mode.
 * `--why-run`: Specify the why-run mode. The why-run mode is used to simulate a deployment on the nodes, and report what a real deployment would have changed on the node.
+* `--retries-on-error NBR`: Specify the number of retries deploys can do in case of non-deterministic errors.
+  Non-deterministic errors are matched using a set of strings or regular expressions that can be configured in the `hpc.json` file of any platform, using the `retriable_errors` property:
+  For example:
+```json
+  "retriable_errors": [
+    {
+      "nodes": ["node12hst-nn9"],
+      "errors_on_stdout": [
+        "This is a raw string error that will be matched against stdout",
+        "/This is a regexp match ending with.* error/"
+      ],
+      "errors_on_stderr": [
+        "This is a raw string error that will be matched against stderr"
+      ]
+    }
+  ]
+```
 
 ## JSON dump options
 
