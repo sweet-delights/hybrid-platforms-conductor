@@ -1,3 +1,10 @@
+# [19.1.2](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv19.1.1&sourceBranch=refs%2Ftags%2Fv19.1.2) (2020-07-27)
+
+### Fixes
+
+* Make Docker tests use retries during deployments for non-deterministic failures ([c4774fa8](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/commits/c4774fa89659d2848f1776b07b4735ad3ee29db5))
+* Merge pull request #141 in PROJECThybrid_platforms_conductor from ~USERNME/hybrid_platforms_conductor:PROJECT-757_command_line_option_to_retries to master ([ff2c8965](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/commits/ff2c896552e1eeef7aceadbc4b25c23c355e3e7b))
+
 # [19.1.1](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv19.1.0&sourceBranch=refs%2Ftags%2Fv19.1.1) (2020-07-27)
 
 ### Fixes
