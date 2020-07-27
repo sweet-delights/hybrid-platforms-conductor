@@ -131,7 +131,7 @@ describe HybridPlatformsConductor::ActionsExecutor do
           'node3' => { test_action: { code: proc { |stdout| stdout << 'Action 3' } } }
         )).to eq(
           'node1' => [0, 'Action 1', ''],
-          'node2' => [:failed_command, '', 'Command returned 1'],
+          'node2' => [:failed_command, '', "Command returned 1\n"],
           'node3' => [0, 'Action 3', '']
         )
       end
@@ -159,7 +159,7 @@ describe HybridPlatformsConductor::ActionsExecutor do
           'node3' => { test_action: { code: proc { |stdout| stdout << 'Action 3' } } }
         )).to eq(
           'node1' => [0, 'Action 1', ''],
-          'node2' => [:connection_error, '', 'Can\'t connect'],
+          'node2' => [:connection_error, '', "Can't connect\n"],
           'node3' => [0, 'Action 3', '']
         )
       end
@@ -173,7 +173,7 @@ describe HybridPlatformsConductor::ActionsExecutor do
           'node3' => { test_action: { code: proc { |stdout| stdout << 'Action 3' } } }
         )).to eq(
           'node1' => [0, 'Action 1', ''],
-          'node2' => [:failed_action, '', 'Strange error'],
+          'node2' => [:failed_action, '', "Strange error\n"],
           'node3' => [0, 'Action 3', '']
         )
       end
