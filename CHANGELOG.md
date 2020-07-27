@@ -1,3 +1,10 @@
+# [19.1.1](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv19.1.0&sourceBranch=refs%2Ftags%2Fv19.1.1) (2020-07-27)
+
+### Fixes
+
+* Remove duplicate info in logs and make sure lines don't get appended ([8eb54b5c](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/commits/8eb54b5c719ebdd8e3e1f93b416e1e659c1e9932))
+* Add nbr_retries_on_error accessor in the Deployer API to retry non-deterministic errors ([431eb9ed](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/commits/431eb9ed1576277dafbbbc318a82bbb275f12afe))
+
 # [19.1.0](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv19.0.0&sourceBranch=refs%2Ftags%2Fv19.1.0) (2020-07-06)
 
 ### New features
