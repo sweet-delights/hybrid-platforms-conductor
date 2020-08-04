@@ -179,6 +179,21 @@ describe HybridPlatformsConductor::ActionsExecutor do
       end
     end
 
+    it 'returns errors without failing for actions on nodes having no connectors' do
+      with_test_platform_for_actions do
+        test_actions_executor.connector(:test_connector).accept_nodes = %w[node1 node3]
+        expect(test_actions_executor.execute_actions(
+          'node1' => { test_action: { need_connector: true, code: proc { |stdout| stdout << 'Action 1' } } },
+          'node2' => { test_action: { need_connector: true, code: proc { |stdout| stdout << 'Action 2' } } },
+          'node3' => { test_action: { need_connector: true, code: proc { |stdout| stdout << 'Action 3' } } }
+        )).to eq(
+          'node1' => [0, 'Action 1', ''],
+          'node2' => [:no_connector, '', 'Unable to get a connector to node2'],
+          'node3' => [0, 'Action 3', '']
+        )
+      end
+    end
+
   end
 
 end

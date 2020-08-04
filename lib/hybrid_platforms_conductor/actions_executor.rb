@@ -147,14 +147,22 @@ module HybridPlatformsConductor
         end
       end
       result = Hash[actions_per_node.keys.map { |node| [node, nil] }]
-      with_connections_prepared_to(nodes_needing_connectors) do |connected_nodes|
-        log_debug "Running actions on #{actions_per_node.size} nodes#{log_to_dir.nil? ? '' : " (logs dumped in #{log_to_dir})"}"
+      with_connections_prepared_to(nodes_needing_connectors, no_exception: true) do |connected_nodes|
+        missing_nodes = []
+        connected_nodes.each do |node, connector|
+          if connector.is_a?(Symbol)
+            result[node] = [connector, '', "Unable to get a connector to #{node}"]
+            missing_nodes << node
+          end
+        end
+        accessible_nodes = actions_per_node.keys - missing_nodes
+        log_debug "Running actions on #{accessible_nodes.size} nodes#{log_to_dir.nil? ? '' : " (logs dumped in #{log_to_dir})"}"
         # Prepare the result (stdout or nil per node)
-        unless actions_per_node.empty?
+        unless accessible_nodes.empty?
           # If we run in parallel then clone the connectors, so that each node has its own instance for thread-safe code.
           connected_nodes = Hash[connected_nodes.map { |node, connector| [node, connector.clone] }] if concurrent
           @nodes_handler.for_each_node_in(
-            actions_per_node.keys,
+            accessible_nodes,
             parallel: concurrent,
             nbr_threads_max: @max_threads,
             progress: 'Executing actions'
@@ -183,7 +191,7 @@ module HybridPlatformsConductor
     # * *no_exception* (Boolean): Should we continue even if some nodes can't be connected to? [default: false]
     # * Proc: Code called with connections prepared
     #   * Parameters::
-    #     * *connected_nodes* (Hash<String, Connector>): Prepared connectors, per node name
+    #     * *connected_nodes* (Hash<String, Connector or Symbol>): Prepared connectors (or Symbol in case of failure with no_exception), per node name
     def with_connections_prepared_to(nodes, no_exception: false)
       # Make sure every node needing connectors finds a connector
       nodes_needing_connectors = Hash[nodes.map { |node| [node, nil] }]
@@ -207,7 +215,12 @@ module HybridPlatformsConductor
         if connector_name.nil?
           # All plugins have been prepared.
           # Call our client code.
-          yield nodes_needing_connectors
+          yield Hash[nodes_needing_connectors.map do |node, selected_connector|
+            [
+              node,
+              selected_connector.nil? ? :no_connector : selected_connector
+            ]
+          end]
         else
           connector = @connector_plugins[connector_name]
           selected_nodes = nodes_needing_connectors.select { |_node, selected_connector| selected_connector == connector }.keys
