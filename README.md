@@ -23,7 +23,7 @@ The way it works is by having a simple configuration file having an extensive DS
   * [Common command line options](#common_options)
   * [List of tests available](#tests_list)
   * [Using secrets](#secrets)
-  * [Environment variables](#env_variables)
+  * [Credentials](#credentials)
   * [Development API](#development_api)
   * [Extending Hybrid Platforms Conductor features](#extending)
   * [Development corner](#development_corner)
