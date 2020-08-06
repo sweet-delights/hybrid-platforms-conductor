@@ -9,8 +9,6 @@ module HybridPlatformsConductor
     # Export in the Mediawiki format
     class Confluence < ReportPlugin
 
-      include HybridPlatformsConductor::Confluence
-
       # Give the list of supported locales by this report generator
       # [API] - This method is mandatory.
       #
@@ -27,9 +25,26 @@ module HybridPlatformsConductor
       # * *nodes* (Array<String>): List of nodes
       # * *locale_code* (Symbol): The locale code
       def report_for(nodes, locale_code)
-        @nodes = nodes
-        confluence_page_update('763977681', render('confluence_inventory'))
-        out 'Confluence page updated. Please visit https://www.site.my_company.net/confluence/display/TIU/Platforms+inventory'
+        confluence_info = @nodes_handler.confluence_info
+        if confluence_info
+          if confluence_info[:inventory_report_page_id]
+            @nodes = nodes
+            HybridPlatformsConductor::Confluence.with_confluence(
+              confluence_info[:url],
+              @logger,
+              @logger_stderr,
+              user_name: ENV['hpc_confluence_user'],
+              password: ENV['hpc_confluence_password']
+            ) do |confluence|
+              confluence.update_page(confluence_info[:inventory_report_page_id], render('confluence_inventory'))
+            end
+            out "Inventory report Confluence page updated. Please visit #{confluence_info[:url]}/pages/viewpage.action?pageId=#{confluence_info[:inventory_report_page_id]}"
+          else
+            log_warn 'No inventory_report_page_id in the Confluence information defined. Ignoring the Confluence report.'
+          end
+        else
+          log_warn 'No Confluence information defined. Ignoring the Confluence report.'
+        end
       end
 
       private

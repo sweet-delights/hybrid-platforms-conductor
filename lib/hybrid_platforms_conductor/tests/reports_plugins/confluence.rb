@@ -11,11 +11,6 @@ module HybridPlatformsConductor
       # Report tests results on a generated Confluence page
       class Confluence < Tests::ReportsPlugin
 
-        include HybridPlatformsConductor::Confluence
-
-        # Confluence page ID to publish the report
-        CONFLUENCE_PAGE_ID = '764722340'
-
         # Maximum errors to be reported by item
         MAX_ERROR_ITEMS_DISPLAYED = 10
 
@@ -27,18 +22,37 @@ module HybridPlatformsConductor
 
         # Handle tests reports
         def report
-          # Get previous percentages for the evolution
-          @previous_success_percentages = confluence_page_storage_format(CONFLUENCE_PAGE_ID).
-            at('h1:contains("Evolution")').
-            search('~ structured-macro:first-of-type').
-            css('table td').
-            map { |td_element| td_element.text }.
-            each_slice(2).
-            to_a.
-            map { |(time_str, value_str)| [Time.parse("#{time_str} UTC"), value_str.to_f] }
-          @nbr_cells_in_status_bars = NBR_CELLS_IN_STATUS_BARS
-          log_error 'Unable to extract previous percentages from Confluence page' if @previous_success_percentages.empty?
-          confluence_page_update(CONFLUENCE_PAGE_ID, render('confluence'))
+          confluence_info = @nodes_handler.confluence_info
+          if confluence_info
+            if confluence_info[:tests_report_page_id]
+              @nodes = nodes
+              HybridPlatformsConductor::Confluence.with_confluence(
+                confluence_info[:url],
+                @logger,
+                @logger_stderr,
+                user_name: ENV['hpc_confluence_user'],
+                password: ENV['hpc_confluence_password']
+              ) do |confluence|
+                # Get previous percentages for the evolution
+                @previous_success_percentages = confluence.page_storage_format(confluence_info[:tests_report_page_id]).
+                  at('h1:contains("Evolution")').
+                  search('~ structured-macro:first-of-type').
+                  css('table td').
+                  map { |td_element| td_element.text }.
+                  each_slice(2).
+                  to_a.
+                  map { |(time_str, value_str)| [Time.parse("#{time_str} UTC"), value_str.to_f] }
+                @nbr_cells_in_status_bars = NBR_CELLS_IN_STATUS_BARS
+                log_error 'Unable to extract previous percentages from Confluence page' if @previous_success_percentages.empty?
+                confluence.update_page(confluence_info[:tests_report_page_id], render('confluence'))
+              end
+              out "Inventory report Confluence page updated. Please visit #{confluence_info[:url]}/pages/viewpage.action?pageId=#{confluence_info[:tests_report_page_id]}"
+            else
+              log_warn 'No tests_report_page_id in the Confluence information defined. Ignoring the Confluence report.'
+            end
+          else
+            log_warn 'No Confluence information defined. Ignoring the Confluence report.'
+          end
         end
 
         private
