@@ -13,7 +13,6 @@ module HybridPlatformsConductor
     include LoggerHelpers
 
     # Provide a Bitbucket connector, and make sure the password is being cleaned when exiting.
-    # Forward the current loggers.
     #
     # Parameters::
     # * *bitbucket_url* (String): The Bitbucket URL

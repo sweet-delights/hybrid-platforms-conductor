@@ -161,7 +161,7 @@ describe HybridPlatformsConductor::NodesHandler do
                 ]
               }
             }
-          },
+          }
         ]
       end
     end

@@ -105,7 +105,7 @@ module HybridPlatformsConductor
       @docker_images[image] = dir
     end
 
-    # Register new bitbucket repositories
+    # Register new Bitbucket repositories
     #
     # Parameters::
     # * *url* (String): URL to the Bitbucket server
