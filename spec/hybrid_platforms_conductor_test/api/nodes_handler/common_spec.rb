@@ -90,6 +90,7 @@ describe HybridPlatformsConductor::NodesHandler do
             'repo3',
             'repo4'
           ],
+          jenkins_ci_url: 'https://my_jenkins.com',
           checks: {
             branch_permissions: [
               {
@@ -116,6 +117,7 @@ describe HybridPlatformsConductor::NodesHandler do
               name: 'repo1',
               project: 'PR1',
               url: 'https://my_bb1.my_domain.com/scm/pr1/repo1.git',
+              jenkins_ci_url: nil,
               checks: {}
             }
           },
@@ -125,6 +127,7 @@ describe HybridPlatformsConductor::NodesHandler do
               name: 'repo2',
               project: 'PR1',
               url: 'https://my_bb1.my_domain.com/scm/pr1/repo2.git',
+              jenkins_ci_url: nil,
               checks: {}
             }
           },
@@ -134,6 +137,7 @@ describe HybridPlatformsConductor::NodesHandler do
               name: 'repo3',
               project: 'PR2',
               url: 'https://my_bb2.my_domain.com/scm/pr2/repo3.git',
+              jenkins_ci_url: 'https://my_jenkins.com/job/repo3',
               checks: {
                 branch_permissions: [
                   {
@@ -151,6 +155,7 @@ describe HybridPlatformsConductor::NodesHandler do
               name: 'repo4',
               project: 'PR2',
               url: 'https://my_bb2.my_domain.com/scm/pr2/repo4.git',
+              jenkins_ci_url: 'https://my_jenkins.com/job/repo4',
               checks: {
                 branch_permissions: [
                   {

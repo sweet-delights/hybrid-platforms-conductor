@@ -111,12 +111,14 @@ module HybridPlatformsConductor
     # * *url* (String): URL to the Bitbucket server
     # * *project* (String): Project name from the Bitbucket server, storing repositories
     # * *repos* (Array<String> or Symbol): List of repository names from this project, or :all for all [default: :all]
+    # * *jenkins_ci_url* (String or nil): Corresponding Jenkins CI URL, or nil if none [default: nil]
     # * *checks* (Hash<Symbol, Object>): Checks definition to be perform on those repositories (see the NodesHandler#for_each_bitbucket_repo to know the structure) [default: {}]
-    def bitbucket_repos(url:, project:, repos: :all, checks: {})
+    def bitbucket_repos(url:, project:, repos: :all, jenkins_ci_url: nil, checks: {})
       @bitbucket_repos << {
         url: url,
         project: project,
         repos: repos,
+        jenkins_ci_url: jenkins_ci_url,
         checks: checks
       }
     end
