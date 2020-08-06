@@ -59,6 +59,13 @@ module HybridPlatformsConductor
       @logger_stderr = logger_stderr
     end
 
+    # Provide a helper to clear password from memory for security.
+    # To be used when the client knows it won't use the API anymore.
+    def clear_password
+      @confluence_password.replace('gotyou!' * 100) unless @confluence_password.nil?
+      GC.start
+    end
+
     # Return a Confluence storage format content from a page ID
     #
     # Parameters::
