@@ -29,13 +29,7 @@ module HybridPlatformsConductor
         if confluence_info
           if confluence_info[:inventory_report_page_id]
             @nodes = nodes
-            HybridPlatformsConductor::Confluence.with_confluence(
-              confluence_info[:url],
-              @logger,
-              @logger_stderr,
-              user_name: ENV['hpc_confluence_user'],
-              password: ENV['hpc_confluence_password']
-            ) do |confluence|
+            HybridPlatformsConductor::Confluence.with_confluence(confluence_info[:url], @logger, @logger_stderr) do |confluence|
               confluence.update_page(confluence_info[:inventory_report_page_id], render('confluence_inventory'))
             end
             out "Inventory report Confluence page updated. Please visit #{confluence_info[:url]}/pages/viewpage.action?pageId=#{confluence_info[:inventory_report_page_id]}"

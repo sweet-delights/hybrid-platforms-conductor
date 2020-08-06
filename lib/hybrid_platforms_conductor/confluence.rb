@@ -1,9 +1,9 @@
-require 'net/http'
-require 'uri'
 require 'json'
+require 'net/http'
 require 'nokogiri'
+require 'uri'
 require 'hybrid_platforms_conductor/logger_helpers'
-require 'hybrid_platforms_conductor/netrc'
+require 'hybrid_platforms_conductor/credentials'
 
 module HybridPlatformsConductor
 
@@ -18,30 +18,13 @@ module HybridPlatformsConductor
     # * *confluence_url* (String): The Confluence URL
     # * *logger* (Logger): Logger to be used
     # * *logger_stderr* (Logger): Logger to be used for stderr
-    # * *user_name* (String): Confluence user name to be used when querying the API [default: Read from .netrc]
-    # * *password* (String): Confluence password to be used when querying the API [default: Read from .netrc]
     # * Proc: Code called with the Confluence instance.
     #   * *confluence* (Confluence): The Confluence instance to use.
-    def self.with_confluence(confluence_url, logger, logger_stderr, user_name: nil, password: nil)
-      if user_name.nil? || password.nil?
-        # Read credentials from netrc
-        Netrc.with_netrc_for(URI.parse(confluence_url).host.downcase) do |netrc_user, netrc_password|
-          # Clone them as exiting the block will erase them
-          user_name ||= netrc_user.dup
-          password ||= netrc_password.dup
-        end
-      end
-      confluence = Confluence.new(confluence_url, user_name, password, logger: logger, logger_stderr: logger_stderr)
-      begin
-        yield confluence
-      ensure
-        confluence.clear_password
+    def self.with_confluence(confluence_url, logger, logger_stderr)
+      Credentials.with_credentials_for(:confluence, logger, logger_stderr, url: confluence_url) do |confluence_user, confluence_password|
+        yield Confluence.new(confluence_url, confluence_user, confluence_password, logger: logger, logger_stderr: logger_stderr)
       end
     end
-
-    # The Confluence URL
-    # String
-    attr_reader :confluence_url
 
     # Constructor
     #
@@ -57,13 +40,6 @@ module HybridPlatformsConductor
       @confluence_password = confluence_password
       @logger = logger
       @logger_stderr = logger_stderr
-    end
-
-    # Provide a helper to clear password from memory for security.
-    # To be used when the client knows it won't use the API anymore.
-    def clear_password
-      @confluence_password.replace('gotyou!' * 100) unless @confluence_password.nil?
-      GC.start
     end
 
     # Return a Confluence storage format content from a page ID
