@@ -1,3 +1,9 @@
+# [19.2.0](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv19.1.2&sourceBranch=refs%2Ftags%2Fv19.2.0) (2020-08-07)
+
+### New features
+
+* [Feature] Remove My_company references from Bitbucket configuration ([007b75be](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/commits/007b75beeecfd791b04efaf34d725852821401a2))
+
 # [19.1.2](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv19.1.1&sourceBranch=refs%2Ftags%2Fv19.1.2) (2020-07-27)
 
 ### Fixes
