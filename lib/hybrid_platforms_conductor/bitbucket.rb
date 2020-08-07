@@ -1,5 +1,6 @@
 require 'logger'
 require 'open-uri'
+require 'uri'
 require 'json'
 require 'hybrid_platforms_conductor/logger_helpers'
 require 'hybrid_platforms_conductor/netrc'
@@ -11,49 +12,26 @@ module HybridPlatformsConductor
 
     include LoggerHelpers
 
-    # List of Bitbucket repositories to check
-    # Array< String or Hash<Symbol,Object> >: List of project names, or project details. Project details can have the following properties:
-    # * *name* (String): Repository name (mandatory and default value if using a simple String instead of Hash).
-    # * *project* (String): Project name [default: 'ATI']
-    BITBUCKET_REPOS = [
-      'ansible-repo',
-      'chef-repo',
-      'ci-helpers',
-      'devops-jenkins-jobs',
-      'infra-repo',
-      'ti-calcite',
-      'hybrid-platforms',
-      'ti-sql-web',
-      'ti-websql-confs',
-      'ti_datasync',
-      'ti_dredger',
-      'hybrid_platforms_conductor',
-      'hybrid_platforms_conductor-ansible',
-      'hybrid_platforms_conductor-chef',
-      'ti_rails_debian',
-      'ti_sqlegalize'
-    ]
-
     # Provide a Bitbucket connector, and make sure the password is being cleaned when exiting.
-    # Forward the current loggers.
     #
     # Parameters::
+    # * *bitbucket_url* (String): The Bitbucket URL
     # * *logger* (Logger): Logger to be used
     # * *logger_stderr* (Logger): Logger to be used for stderr
     # * *user_name* (String): Bitbucket user name to be used when querying the API [default: Read from .netrc]
     # * *password* (String): Bitbucket password to be used when querying the API [default: Read from .netrc]
     # * Proc: Code called with the Bitbucket instance.
     #   * *bitbucket* (Bitbucket): The Bitbucket instance to use.
-    def self.with_bitbucket(logger, logger_stderr, user_name: nil, password: nil)
+    def self.with_bitbucket(bitbucket_url, logger, logger_stderr, user_name: nil, password: nil)
       if user_name.nil? || password.nil?
         # Read credentials from netrc
-        Netrc.with_netrc_for('www.site.my_company.net') do |netrc_user, netrc_password|
+        Netrc.with_netrc_for(URI.parse(bitbucket_url).host.downcase) do |netrc_user, netrc_password|
           # Clone them as exiting the block will erase them
           user_name ||= netrc_user.dup
           password ||= netrc_password.dup
         end
       end
-      bitbucket = Bitbucket.new(user_name, password, logger: logger, logger_stderr: logger_stderr)
+      bitbucket = Bitbucket.new(bitbucket_url, user_name, password, logger: logger, logger_stderr: logger_stderr)
       begin
         yield bitbucket
       ensure
@@ -61,49 +39,30 @@ module HybridPlatformsConductor
       end
     end
 
+    # The Bitbucket URL
+    # String
+    attr_reader :bitbucket_url
+
     # Constructor
     #
     # Parameters::
+    # * *bitbucket_url* (String): The Bitbucket URL
     # * *bitbucket_user_name* (String): Bitbucket user name to be used when querying the API
     # * *bitbucket_password* (String): Bitbucket password to be used when querying the API
     # * *logger* (Logger): Logger to be used [default = Logger.new(STDOUT)]
     # * *logger_stderr* (Logger): Logger to be used for stderr [default = Logger.new(STDERR)]
-    def initialize(bitbucket_user_name, bitbucket_password, logger: Logger.new(STDOUT), logger_stderr: Logger.new(STDERR))
+    def initialize(bitbucket_url, bitbucket_user_name, bitbucket_password, logger: Logger.new(STDOUT), logger_stderr: Logger.new(STDERR))
+      @bitbucket_url = bitbucket_url
       @bitbucket_user_name = bitbucket_user_name
       @bitbucket_password = bitbucket_password
       @logger = logger
       @logger_stderr = logger_stderr
     end
 
-    # List of Bitbucket repositories handled by the DEVOPS team.
-    # This includes repositories from ATI and AAR projects.
-    #
-    # Result::
-    # * Array< Hash<Symbol,Object> >: List of project details:
-    #   * *name* (String): Repository name.
-    #   * *project* (String): Project name.
-    #   * *url* (String): Project Git URL
-    def acu_dat_dos_repos
-      BITBUCKET_REPOS.map do |ati_repo_name|
-        {
-          name: ati_repo_name,
-          project: 'ATI',
-          url: "https://www.site.my_company.net/git/scm/project#{ati_repo_name}.git"
-        }
-      end +
-        repos('AAR')['values'].map do |repo_info|
-          {
-            name: repo_info['slug'],
-            project: 'AAR',
-            url: "https://www.site.my_company.net/git/scm/aar/#{repo_info['slug']}.git"
-          }
-        end
-    end
-
     # Provide a helper to clear password from memory for security.
     # To be used when the client knows it won't use the API anymore.
     def clear_password
-      @bitbucket_password.replace('gotyou!' * 100)
+      @bitbucket_password.replace('gotyou!' * 100) unless @bitbucket_password.nil?
       GC.start
     end
 
@@ -163,12 +122,12 @@ module HybridPlatformsConductor
     # Result::
     # * Object: Returned JSON
     def get_api(path, api_domain: 'api', api_version: '1.0', retries: 0)
-      api_url = "https://www.site.my_company.net/git/rest/#{api_domain}/#{api_version}/#{path}"
+      api_url = "#{@bitbucket_url}/rest/#{api_domain}/#{api_version}/#{path}"
       log_debug "Call Bitbucket API #{@bitbucket_user_name}@#{api_url}..."
       http_response = nil
       loop do
         begin
-          http_response = open(api_url, http_basic_authentication: [@bitbucket_user_name, @bitbucket_password])
+          http_response = URI.open(api_url, http_basic_authentication: [@bitbucket_user_name, @bitbucket_password])
         rescue
           raise if retries == 0
           log_warn "Got error #{$!} on #{@bitbucket_user_name}@#{api_url}. Will retry #{retries} times..."

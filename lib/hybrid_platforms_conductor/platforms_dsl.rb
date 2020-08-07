@@ -105,6 +105,22 @@ module HybridPlatformsConductor
       @docker_images[image] = dir
     end
 
+    # Register new Bitbucket repositories
+    #
+    # Parameters::
+    # * *url* (String): URL to the Bitbucket server
+    # * *project* (String): Project name from the Bitbucket server, storing repositories
+    # * *repos* (Array<String> or Symbol): List of repository names from this project, or :all for all [default: :all]
+    # * *checks* (Hash<Symbol, Object>): Checks definition to be perform on those repositories (see the NodesHandler#for_each_bitbucket_repo to know the structure) [default: {}]
+    def bitbucket_repos(url:, project:, repos: :all, checks: {})
+      @bitbucket_repos << {
+        url: url,
+        project: project,
+        repos: repos,
+        checks: checks
+      }
+    end
+
   end
 
 end
