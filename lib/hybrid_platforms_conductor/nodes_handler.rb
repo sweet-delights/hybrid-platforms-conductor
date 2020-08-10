@@ -50,6 +50,9 @@ module HybridPlatformsConductor
       # Array< Hash<Symbol, Object> >
       # Each definition is just mapping the signature of #bitbucket_repos from platforms_dsl
       @bitbucket_repos = []
+      # Confluence configuration (can be nil if none)
+      # Hash<Symbol, Object> or nil. See #confluence_info to know details.
+      @confluence = nil
       # List of platform handler per known node
       # Hash<String, PlatformHandler>
       @nodes_platform = {}
@@ -633,6 +636,17 @@ module HybridPlatformsConductor
           end
         end
       end
+    end
+
+    # Return the Confluence information
+    #
+    # Result::
+    # * Hash<Symbol, Object> or nil: The Confluence information, or nil if none
+    #   * *url* (String): The Confluence URL.
+    #   * *inventory_report_page_id* (String or nil): Confluence page id used for inventory reports, or nil if none.
+    #   * *tests_report_page_id* (String or nil): Confluence page id used for test reports, or nil if none.
+    def confluence_info
+      @confluence
     end
 
     private
