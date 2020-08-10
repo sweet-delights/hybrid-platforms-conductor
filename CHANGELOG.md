@@ -1,3 +1,14 @@
+# [19.3.0](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv19.2.0&sourceBranch=refs%2Ftags%2Fv19.3.0) (2020-08-10)
+
+### New features
+
+* [Feature] Move Confluence configuration to platforms.rb so that it is not hardcoded anymore in Conductor ([04ba777a](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/commits/04ba777afe37504ee11c8d57d22d1489801c2303))
+
+### Fixes
+
+* Log unhandled Docker exceptions - should not happen, but help in debugging when it does ([8ae4c9cb](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/commits/8ae4c9cb382b1b14f850c0ffe52c62e46dfda788))
+* Report errors instead of failing when no connector is available to a node ([dad1d671](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/commits/dad1d671a8d3101248fb6d510cbe6373b08d0adb))
+
 # [19.2.0](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv19.1.2&sourceBranch=refs%2Ftags%2Fv19.2.0) (2020-08-07)
 
 ### New features
