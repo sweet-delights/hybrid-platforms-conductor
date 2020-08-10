@@ -31,11 +31,11 @@ describe HybridPlatformsConductor::ActionsExecutor do
       end
     end
 
-    it 'fails when no connector can connect to the needed node' do
+    it 'returns an error when no connector can connect to the needed node' do
       with_test_platform_for_connections do
-        expect do
-          test_actions_executor.execute_actions('node1' => { test_action: { need_connector: true } })
-        end.to raise_error(/The following nodes have no possible connector to them: node1/)
+        expect(test_actions_executor.execute_actions('node1' => { test_action: { need_connector: true } })).to eq(
+          'node1' => [:no_connector, '', 'Unable to get a connector to node1']
+        )
       end
     end
 
@@ -73,15 +73,6 @@ describe HybridPlatformsConductor::ActionsExecutor do
          [:connectable_nodes_from, %w[node1 node3]],
          [:with_connection_to, %w[node1 node3]]
         ]
-      end
-    end
-
-    it 'fails to connect when at least 1 node has no possible connector' do
-      with_test_platform_for_connections do
-        test_actions_executor.connector(:test_connector).accept_nodes = %w[node1 node3]
-        expect do
-          test_actions_executor.execute_actions(%w[node1 node2 node3 node4] => { test_action: { need_connector: true } })
-        end.to raise_error(/The following nodes have no possible connector to them: node2, node4/)
       end
     end
 
@@ -193,7 +184,7 @@ describe HybridPlatformsConductor::ActionsExecutor do
             'node1' => test_actions_executor.connector(:test_connector),
             'node2' => test_actions_executor.connector(:test_connector_2),
             'node3' => test_actions_executor.connector(:test_connector),
-            'node4' => nil
+            'node4' => :no_connector
           )
         end
       end
