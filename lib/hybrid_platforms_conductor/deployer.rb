@@ -416,7 +416,7 @@ module HybridPlatformsConductor
                 rescue
                   # Make sure Docker logs are being output to better investigate errors if we were not already outputing them in debug mode
                   stdouts = deployer.stdouts_to_s
-                  log_error "[Docker for #{node}] - Docker outputs from container #{container_name}:\n#{stdouts}" unless stdouts.nil?
+                  log_error "[Docker for #{node}] - Encountered exception #{$!}\n#{$!.backtrace.join("\n")}\n-----\nDocker outputs from container #{container_name}:\n#{stdouts}" unless stdouts.nil?
                   raise
                 end
               end
