@@ -611,6 +611,7 @@ module HybridPlatformsConductor
     #       * *name* (String): Repository name.
     #       * *project* (String): Project name.
     #       * *url* (String): Project Git URL.
+    #       * *jenkins_ci_url* (String or nil): Corresponding Jenkins CI URL, or nil if none.
     #       * *checks* (Hash<Symbol, Object>): Checks to be performed on this repository:
     #         * *branch_permissions* (Array< Hash<Symbol, Object> >): List of branch permissions to check [optional]
     #           * *type* (String): Type of branch permissions to check. Examples of values are 'fast-forward-only', 'no-deletes', 'pull-request-only'.
@@ -631,6 +632,7 @@ module HybridPlatformsConductor
               name: name,
               project: bitbucket_repo_info[:project],
               url: "#{bitbucket_repo_info[:url]}/scm/#{bitbucket_repo_info[:project].downcase}/#{name}.git",
+              jenkins_ci_url: bitbucket_repo_info[:jenkins_ci_url].nil? ? nil : "#{bitbucket_repo_info[:jenkins_ci_url]}/job/#{name}",
               checks: bitbucket_repo_info[:checks]
             }
           end

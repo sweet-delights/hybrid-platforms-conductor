@@ -17,7 +17,7 @@ module HybridPlatformsConductor
             repo_id = "#{repo_info[:project]}/#{repo_info[:name]}"
             settings_pr = bitbucket.settings_pr(repo_info[:project], repo_info[:name])
             default_reviewers = bitbucket.default_reviewers(repo_info[:project], repo_info[:name])
-            # There is a post Webhook to the CIv2
+            # There can be a post Webhook to Jenkins CI
             # TODO: Find a way to query the Post Webhook plugin API
             # Branch permissions
             if repo_info[:checks][:branch_permissions]
