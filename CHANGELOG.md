@@ -1,3 +1,9 @@
+# [20.0.0](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv19.3.0&sourceBranch=refs%2Ftags%2Fv20.0.0) (2020-08-11)
+
+### Breaking changes
+
+* [Breaking] Harmonized and hardened the way credentials to external services are being set ([960c4a52](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/commits/960c4a527bfdcabc0d03da9cc7bec5508b524550))
+
 # [19.3.0](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv19.2.0&sourceBranch=refs%2Ftags%2Fv19.3.0) (2020-08-10)
 
 ### New features
