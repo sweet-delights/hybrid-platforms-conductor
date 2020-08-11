@@ -1,3 +1,9 @@
+# [21.0.0](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv20.0.0&sourceBranch=refs%2Ftags%2Fv21.0.0) (2020-08-11)
+
+### Breaking changes
+
+* [Breaking] Renamed CI concepts into generic Jenkins CI and moved its configuration in platforms.rb ([ea665054](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/commits/ea6650545246c6d6b426af7254d958d90ad491b7))
+
 # [20.0.0](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv19.3.0&sourceBranch=refs%2Ftags%2Fv20.0.0) (2020-08-11)
 
 ### Breaking changes
