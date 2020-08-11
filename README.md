@@ -23,6 +23,7 @@ The way it works is by having a simple configuration file having an extensive DS
   * [Common command line options](#common_options)
   * [List of tests available](#tests_list)
   * [Using secrets](#secrets)
+  * [Credentials](#credentials)
   * [Development API](#development_api)
   * [Extending Hybrid Platforms Conductor features](#extending)
   * [Development corner](#development_corner)
@@ -186,15 +187,15 @@ Those values can be overridden by the tools command lines options if needed (alw
 export hpc_ssh_user=<your_default_ssh_user_name>
 export hpc_ssh_gateways_conf=<your_default_gateway_configuration>
 export hpc_certificates=<path_to_dir_containing_crt_certificates>
-export hpc_thycotic_domain=<thycotic_authorization_domain>
-export hpc_thycotic_user=<thycotic_authorization_user>
-export hpc_thycotic_password=<thycotic_authorization_password>
+export hpc_domain_for_thycotic=<thycotic_authorization_domain>
+export hpc_user_for_thycotic=<thycotic_authorization_user>
+export hpc_password_for_thycotic=<thycotic_authorization_password>
 ```
 
 * `hpc_certificates` is an optional variable pointing to a directory containing `.crt` Base-64 encoded certificates. Those certificates will automatically be deployed on nodes handled by the Conductor. This can be useful when working from local environments that are subject to corporate certificates.
-* `hpc_thycotic_domain` should contain the domain used when authenticating on a Thycotic server. This is ignored unless you use the `--secrets` option pointing to a Thycotic server. For the My_company Thycotic server the value is `mucmspdom`.
-* `hpc_thycotic_user` can contain the user used when authenticating on a Thycotic server. This is ignored unless you use the `--secrets` option pointing to a Thycotic server. If absent then the value is retrieved from the `~/.netrc` file.
-* `hpc_thycotic_password` can contain the password used when authenticating on a Thycotic server. This is ignored unless you use the `--secrets` option pointing to a Thycotic server. If absent then the value is retrieved from the `~/.netrc` file.
+* `hpc_domain_for_thycotic` should contain the domain used when authenticating on a Thycotic server. This is ignored unless you use the `--secrets` option pointing to a Thycotic server. For the My_company Thycotic server the value is `mucmspdom`.
+* `hpc_user_for_thycotic` can contain the user used when authenticating on a Thycotic server. This is ignored unless you use the `--secrets` option pointing to a Thycotic server. If absent then the value is retrieved from the `~/.netrc` file.
+* `hpc_password_for_thycotic` can contain the password used when authenticating on a Thycotic server. This is ignored unless you use the `--secrets` option pointing to a Thycotic server. If absent then the value is retrieved from the `~/.netrc` file.
 
 Unless you use the commands from directory containing the file `platforms.rb`, you'll have to set the `hpc_platforms` environment variable to the path containing the `platforms.rb` file.
 For example if the file `/path/to/hybrid-platforms/platforms.rb` exists:
@@ -1690,6 +1691,36 @@ smtp_passwd = secret 'smtp_pass'
 {
     "smtp_pass": "vjhwkjn23412"
 }
+```
+
+<a name="credentials"></a>
+# Credentials
+
+Some tools or tests require authentication using user/password to an external resource. Examples of such tools are Bitbucket, Thycotic, Confluence...
+Credentials can be given using either environment variables or by parsing the user's `.netrc` file.
+
+In case a process needs a credential that has not been set, a warning message will be output so that the user knows which credential is missing, and eventually for which URL.
+
+Following sub-sections explain the different ways of setting such credentials.
+
+## Environment variables
+
+Environment variables used for credentials are always named following this convention: `hpc_user_for_<credential_id>` and `hpc_password_for_<credential_id>`.
+For example, credentials to connect to Bitbucket can be set this way:
+```bash
+export hpc_user_for_bitbucket=my_bitbucket_name
+export hpc_password_for_bitbucket=my_bitbucket_PaSsWoRd
+```
+
+## .netrc file
+
+The user can have a `~/.netrc` file containing users and passwords for a list of host names.
+The `.netrc` specification is defined by [gnu.org here](https://www.gnu.org/software/inetutils/manual/html_node/The-_002enetrc-file.html).
+
+Here is an example of `.netrc` file defining credentials for some host names:
+```
+machine my_host.my_domain1.com login my_user password My_PaSsWoRd
+machine my_other_host.my_domain2.com login my_other_user password Pa$$w0Rd!
 ```
 
 <a name="development_api"></a>

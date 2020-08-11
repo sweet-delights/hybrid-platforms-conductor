@@ -60,9 +60,9 @@ module HybridPlatformsConductorTest
         ENV.delete 'hpc_platforms'
         ENV.delete 'hpc_ssh_gateways_conf'
         ENV.delete 'hpc_ssh_gateway_user'
-        ENV.delete 'hpc_thycotic_user'
-        ENV.delete 'hpc_thycotic_password'
-        ENV.delete 'hpc_thycotic_domain'
+        ENV.delete 'hpc_user_for_thycotic'
+        ENV.delete 'hpc_password_for_thycotic'
+        ENV.delete 'hpc_domain_for_thycotic'
         ENV.delete 'hpc_certificates'
         # Set the necessary Hybrid Platforms Conductor environment variables
         ENV['hpc_ssh_user'] = 'test_user'

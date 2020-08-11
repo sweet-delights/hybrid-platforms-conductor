@@ -1,4 +1,4 @@
-require 'hybrid_platforms_conductor/netrc'
+require 'hybrid_platforms_conductor/credentials'
 
 module HybridPlatformsConductor
 
@@ -21,20 +21,14 @@ module HybridPlatformsConductor
       host =
         case project
         when 'ATI'
-          'my_ci.domain.my_company.net'
+          'http://my_ci.domain.my_company.net'
         when 'AAR'
-          'nceciprodba69.etv.nce.my_company.net'
+          'http://nceciprodba69.etv.nce.my_company.net'
         else
           raise "Unknown project space: #{project}"
         end
-      Netrc.with_netrc_for(host) do |ci_user, ci_password|
-        ci_user = ENV['ci_user'] unless ENV['ci_user'].nil?
-        ci_password = ENV['ci_password'].dup unless ENV['ci_password'].nil?
-        yield "http://#{host}", ci_user, ci_password
-        unless ENV['ci_password'].nil?
-          ci_password.replace('GotYou!' * 100)
-          GC.start
-        end
+      Credentials.with_credentials_for(:ci, @logger, @logger_stderr, url: host) do |ci_user, ci_password|
+        yield host, ci_user, ci_password
       end
     end
 

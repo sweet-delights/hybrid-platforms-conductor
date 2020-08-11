@@ -1,7 +1,7 @@
 require 'base64'
 require 'savon'
+require 'hybrid_platforms_conductor/credentials'
 require 'hybrid_platforms_conductor/logger_helpers'
-require 'hybrid_platforms_conductor/netrc'
 
 module HybridPlatformsConductor
 
@@ -10,34 +10,40 @@ module HybridPlatformsConductor
 
     include LoggerHelpers
 
+    # Provide a Thycotic connector, and make sure the password is being cleaned when exiting.
+    #
+    # Parameters::
+    # * *thycotic_url* (String): The Thycotic URL
+    # * *logger* (Logger): Logger to be used
+    # * *logger_stderr* (Logger): Logger to be used for stderr
+    # * *domain* (String): Domain to use for authentication to Thycotic [default: ENV['hpc_domain_for_thycotic']]
+    # * Proc: Code called with the Thyctotic instance.
+    #   * *thycotic* (Thyctotic): The Thyctotic instance to use.
+    def self.with_thycotic(thycotic_url, logger, logger_stderr, domain: ENV['hpc_domain_for_thycotic'])
+      Credentials.with_credentials_for(:thycotic, logger, logger_stderr, url: thycotic_url) do |thycotic_user, thycotic_password|
+        yield Thycotic.new(thycotic_url, thycotic_user, thycotic_password, logger: logger, logger_stderr: logger_stderr)
+      end
+    end
+
     # Constructor
     #
     # Parameters::
     # * *url* (String): URL of the Thycotic Secret Server
+    # * *user* (String): User name to be used to connect to Thycotic
+    # * *password* (String): Password to be used to connect to Thycotic
+    # * *domain* (String): Domain to use for authentication to Thycotic [default: ENV['hpc_domain_for_thycotic']]
     # * *logger* (Logger): Logger to be used [default: Logger.new(STDOUT)]
     # * *logger_stderr* (Logger): Logger to be used for stderr [default: Logger.new(STDERR)]
-    # * *user* (String or nil): User name to be used to connect to Thycotic, or nil to get it from netrc [default: ENV['hpc_thycotic_user']]
-    # * *password* (String or nil): Password to be used to connect to Thycotic, or nil to get it from netrc [default: ENV['hpc_thycotic_password']]
-    # * *domain* (String): Domain to use for authentication to Thycotic [default: ENV['hpc_thycotic_domain']]
     def initialize(
       url,
+      user,
+      password,
+      domain: ENV['hpc_domain_for_thycotic'],
       logger: Logger.new(STDOUT),
-      logger_stderr: Logger.new(STDERR),
-      user: ENV['hpc_thycotic_user'],
-      password: ENV['hpc_thycotic_password'],
-      domain: ENV['hpc_thycotic_domain']
+      logger_stderr: Logger.new(STDERR)
     )
       @logger = logger
       @logger_stderr = logger_stderr
-      if user.nil? || password.nil?
-        host = url.match(/^https?:\/\/([^\/]+)\/.+$/)[1]
-        Netrc.with_netrc_for(host) do |thycotic_user, thycotic_password|
-          user = thycotic_user.clone if user.nil?
-          password = thycotic_password.clone if password.nil?
-        end
-        raise "Unable to get Thycotic\'s user from .netrc file for host #{host}" if user.nil?
-        raise "Unable to get Thycotic\'s password from .netrc file for host #{host}" if password.nil?
-      end
       # Get a token to this SOAP API
       @client = Savon.client(
         wsdl: "#{url}/webservices/SSWebservice.asmx?wsdl",

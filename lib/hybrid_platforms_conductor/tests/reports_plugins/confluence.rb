@@ -26,13 +26,7 @@ module HybridPlatformsConductor
           if confluence_info
             if confluence_info[:tests_report_page_id]
               @nodes = nodes
-              HybridPlatformsConductor::Confluence.with_confluence(
-                confluence_info[:url],
-                @logger,
-                @logger_stderr,
-                user_name: ENV['hpc_confluence_user'],
-                password: ENV['hpc_confluence_password']
-              ) do |confluence|
+              HybridPlatformsConductor::Confluence.with_confluence(confluence_info[:url], @logger, @logger_stderr) do |confluence|
                 # Get previous percentages for the evolution
                 @previous_success_percentages = confluence.page_storage_format(confluence_info[:tests_report_page_id]).
                   at('h1:contains("Evolution")').

@@ -1,9 +1,9 @@
+require 'json'
 require 'logger'
 require 'open-uri'
 require 'uri'
-require 'json'
+require 'hybrid_platforms_conductor/credentials'
 require 'hybrid_platforms_conductor/logger_helpers'
-require 'hybrid_platforms_conductor/netrc'
 
 module HybridPlatformsConductor
 
@@ -18,24 +18,11 @@ module HybridPlatformsConductor
     # * *bitbucket_url* (String): The Bitbucket URL
     # * *logger* (Logger): Logger to be used
     # * *logger_stderr* (Logger): Logger to be used for stderr
-    # * *user_name* (String): Bitbucket user name to be used when querying the API [default: Read from .netrc]
-    # * *password* (String): Bitbucket password to be used when querying the API [default: Read from .netrc]
     # * Proc: Code called with the Bitbucket instance.
     #   * *bitbucket* (Bitbucket): The Bitbucket instance to use.
-    def self.with_bitbucket(bitbucket_url, logger, logger_stderr, user_name: nil, password: nil)
-      if user_name.nil? || password.nil?
-        # Read credentials from netrc
-        Netrc.with_netrc_for(URI.parse(bitbucket_url).host.downcase) do |netrc_user, netrc_password|
-          # Clone them as exiting the block will erase them
-          user_name ||= netrc_user.dup
-          password ||= netrc_password.dup
-        end
-      end
-      bitbucket = Bitbucket.new(bitbucket_url, user_name, password, logger: logger, logger_stderr: logger_stderr)
-      begin
-        yield bitbucket
-      ensure
-        bitbucket.clear_password
+    def self.with_bitbucket(bitbucket_url, logger, logger_stderr)
+      Credentials.with_credentials_for(:bitbucket, logger, logger_stderr, url: bitbucket_url) do |bitbucket_user, bitbucket_password|
+        yield Bitbucket.new(bitbucket_url, bitbucket_user, bitbucket_password, logger: logger, logger_stderr: logger_stderr)
       end
     end
 
@@ -57,13 +44,6 @@ module HybridPlatformsConductor
       @bitbucket_password = bitbucket_password
       @logger = logger
       @logger_stderr = logger_stderr
-    end
-
-    # Provide a helper to clear password from memory for security.
-    # To be used when the client knows it won't use the API anymore.
-    def clear_password
-      @bitbucket_password.replace('gotyou!' * 100) unless @bitbucket_password.nil?
-      GC.start
     end
 
     # Get the repositories of a given project.

@@ -167,11 +167,13 @@ module HybridPlatformsConductor
           if secrets_location =~ /^(https?:\/\/.+):(\d+)$/
             url = $1
             secret_id = $2
-            thycotic = Thycotic.new(url, logger: @logger)
-            secret_file_item_id = thycotic.get_secret(secret_id).dig(:secret, :items, :secret_item, :id)
-            raise "Unable to fetch secret file ID #{secrets_location}" if secret_file_item_id.nil?
-            secret = thycotic.download_file_attachment_by_item_id(secret_id, secret_file_item_id)
-            raise "Unable to fetch secret file attachment from #{secrets_location}" if secret.nil?
+            secret = nil
+            Thycotic.with_thycotic(url, @logger, @logger_stderr) do |thycotic|
+              secret_file_item_id = thycotic.get_secret(secret_id).dig(:secret, :items, :secret_item, :id)
+              raise "Unable to fetch secret file ID #{secrets_location}" if secret_file_item_id.nil?
+              secret = thycotic.download_file_attachment_by_item_id(secret_id, secret_file_item_id)
+              raise "Unable to fetch secret file attachment from #{secrets_location}" if secret.nil?
+            end
             secret
           else
             raise "Missing secret file: #{secrets_location}" unless File.exist?(secrets_location)
