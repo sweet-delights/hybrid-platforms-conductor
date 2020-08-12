@@ -162,7 +162,7 @@ describe HybridPlatformsConductor::TestsRunner do
   end
 
   # Specific test registered by the test platform handler
-  class SpecificPlatformHandlerTest < HybridPlatformsConductor::Tests::Test
+  class SpecificPlatformHandlerTest < HybridPlatformsConductor::Test
 
     class << self
       attr_accessor :run

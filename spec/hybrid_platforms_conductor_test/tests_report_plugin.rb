@@ -1,7 +1,7 @@
 module HybridPlatformsConductorTest
 
   # Report plugins for tests
-  class TestsReportPlugin < HybridPlatformsConductor::Tests::ReportsPlugin
+  class TestsReportPlugin < HybridPlatformsConductor::TestReport
 
     class << self
       # Reports (that can be compared), per report name

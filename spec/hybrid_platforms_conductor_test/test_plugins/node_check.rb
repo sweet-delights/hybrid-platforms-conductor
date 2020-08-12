@@ -3,7 +3,7 @@ module HybridPlatformsConductorTest
   module TestPlugins
 
     # Test plugin at node level using check-node results
-    class NodeCheck < HybridPlatformsConductor::Tests::Test
+    class NodeCheck < HybridPlatformsConductor::Test
 
       class << self
 

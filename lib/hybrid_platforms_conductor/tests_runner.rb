@@ -1,10 +1,11 @@
 require 'logger'
+require 'hybrid_platforms_conductor/actions_executor'
 require 'hybrid_platforms_conductor/logger_helpers'
 require 'hybrid_platforms_conductor/nodes_handler'
 require 'hybrid_platforms_conductor/parallel_threads'
-require 'hybrid_platforms_conductor/actions_executor'
-require 'hybrid_platforms_conductor/tests/test'
-require 'hybrid_platforms_conductor/tests/reports_plugin'
+require 'hybrid_platforms_conductor/plugins'
+require 'hybrid_platforms_conductor/test'
+require 'hybrid_platforms_conductor/test_report'
 
 module HybridPlatformsConductor
 
@@ -53,51 +54,20 @@ module HybridPlatformsConductor
       @nodes_handler = nodes_handler
       @actions_executor = actions_executor
       @deployer = deployer
-      Tests::Test.nodes_handler = nodes_handler
-      # The list of tests plugins, with their associated class
-      # Hash< Symbol, Class >
-      @tests_plugins = Hash[Dir.
-        glob("#{__dir__}/tests/plugins/*.rb").
-        map do |file_name|
-          test_name = File.basename(file_name, '.rb').to_sym
-          require file_name
-          [
-            test_name,
-            Tests::Plugins.const_get(test_name.to_s.split('_').collect(&:capitalize).join.to_sym)
-          ]
-        end]
+      Test.nodes_handler = nodes_handler
+      @tests_plugins = Plugins.new(:test, logger: @logger, logger_stderr: @logger_stderr)
       # The list of tests reports plugins, with their associated class
       # Hash< Symbol, Class >
-      @reports_plugins = Hash[Dir.
-        glob("#{__dir__}/tests/reports_plugins/*.rb").
-        map do |file_name|
-          plugin_name = File.basename(file_name, '.rb').to_sym
-          require file_name
-          [
-            plugin_name,
-            Tests::ReportsPlugins.const_get(plugin_name.to_s.split('_').collect(&:capitalize).join.to_sym)
-          ]
-        end]
-      # Register test classes from plugins
-      @nodes_handler.platform_types.each do |platform_type, platform_handler_class|
-        if platform_handler_class.respond_to?(:tests)
-          platform_handler_class.tests.each do |test_name, test_class|
-            raise "Cannot register #{test_name} from platform #{platform_type} as it's already registered for another platform" if @tests_plugins.key?(test_name)
-            @tests_plugins[test_name] = test_class
-          end
-        end
-      end
+      @reports_plugins = Plugins.new(:test_report, logger: @logger, logger_stderr: @logger_stderr)
       # Register test classes from platforms
       @nodes_handler.known_platforms.each do |platform_name|
         platform = @nodes_handler.platform(platform_name)
         if platform.respond_to?(:tests)
           platform.tests.each do |test_name, test_class|
-            raise "Cannot register #{test_name} from platform #{platform} as it's already registered for another platform" if @tests_plugins.key?(test_name)
             @tests_plugins[test_name] = test_class
           end
         end
-      end
-      # Do we skip running check-node?
+      end      # Do we skip running check-node?
       @skip_run = false
       # List of tests to be performed
       @tests = []
@@ -284,7 +254,7 @@ module HybridPlatformsConductor
     # * Test: Corresponding test
     def new_test(test_name, platform: nil, node: nil, ignore_expected_failure: false)
       platform = @nodes_handler.platform_for(node) unless node.nil?
-      (test_name.nil? ? Tests::Test : @tests_plugins[test_name]).new(
+      (test_name.nil? ? Test : @tests_plugins[test_name]).new(
         @logger,
         @logger_stderr,
         @cmd_runner,

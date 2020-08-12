@@ -3,7 +3,7 @@ module HybridPlatformsConductorTest
   module TestPlugins
 
     # Test plugin at global level
-    class Global < HybridPlatformsConductor::Tests::Test
+    class Global < HybridPlatformsConductor::Test
 
       class << self
 

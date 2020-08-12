@@ -1,7 +1,7 @@
 module HybridPlatformsConductorTest
 
   # Report plugin for tests
-  class ReportPlugin < HybridPlatformsConductor::ReportPlugin
+  class ReportPlugin < HybridPlatformsConductor::Report
 
     class << self
 

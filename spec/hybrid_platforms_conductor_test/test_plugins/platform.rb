@@ -3,7 +3,7 @@ module HybridPlatformsConductorTest
   module TestPlugins
 
     # Test plugin at platform level
-    class Platform < HybridPlatformsConductor::Tests::Test
+    class Platform < HybridPlatformsConductor::Test
 
       class << self
 

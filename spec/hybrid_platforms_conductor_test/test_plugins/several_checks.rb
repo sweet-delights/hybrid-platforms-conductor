@@ -3,7 +3,7 @@ module HybridPlatformsConductorTest
   module TestPlugins
 
     # Test plugin at several levels
-    class SeveralChecks < HybridPlatformsConductor::Tests::Test
+    class SeveralChecks < HybridPlatformsConductor::Test
 
       class << self
 

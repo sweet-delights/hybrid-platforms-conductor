@@ -66,6 +66,8 @@ module HybridPlatformsConductor
       @topographer = nil
       # Initialize the loggers
       set_loggers_format
+      # We set the debug format right now before calling the options parser, just in case some option parsing needs debugging (like plugins discovery)
+      self.log_level = :debug if ARGV.include?('--debug') || ARGV.include?('-d')
     end
 
     # Get a singleton Command Runner
