@@ -67,7 +67,8 @@ module HybridPlatformsConductor
             @tests_plugins[test_name] = test_class
           end
         end
-      end      # Do we skip running check-node?
+      end
+      # Do we skip running check-node?
       @skip_run = false
       # List of tests to be performed
       @tests = []
