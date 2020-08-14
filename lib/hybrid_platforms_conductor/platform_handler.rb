@@ -1,14 +1,13 @@
 require 'json'
+require 'hybrid_platforms_conductor/plugin'
 
 module HybridPlatformsConductor
 
   # Common ancestor to any platform handler
-  class PlatformHandler
+  class PlatformHandler < Plugin
 
     # Make it so that we can sort lists of platforms
     include Comparable
-
-    include LoggerHelpers
 
     # Repository path
     #   String
@@ -30,8 +29,7 @@ module HybridPlatformsConductor
     # * *repository_path* (String): Repository path
     # * *nodes_handler* (NodesHandler): Nodes handler that can be used to get info about nodes.
     def initialize(logger, logger_stderr, platform_type, repository_path, nodes_handler)
-      @logger = logger
-      @logger_stderr = logger_stderr
+      super(logger: logger, logger_stderr: logger_stderr)
       @platform_type = platform_type
       @repository_path = repository_path
       @nodes_handler = nodes_handler

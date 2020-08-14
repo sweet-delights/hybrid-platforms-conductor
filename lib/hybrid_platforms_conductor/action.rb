@@ -1,11 +1,10 @@
 require 'hybrid_platforms_conductor/logger_helpers'
+require 'hybrid_platforms_conductor/plugin'
 
 module HybridPlatformsConductor
 
   # Base class for any action that could be run on a node.
-  class Action
-
-    include LoggerHelpers
+  class Action < Plugin
 
     # Constructor
     #
@@ -22,8 +21,7 @@ module HybridPlatformsConductor
       actions_executor: ActionsExecutor.new,
       action_info: nil
     )
-      @logger = logger
-      @logger_stderr = logger_stderr
+      super(logger: logger, logger_stderr: logger_stderr)
       @cmd_runner = cmd_runner
       @actions_executor = actions_executor
       @action_info = action_info

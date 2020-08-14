@@ -1,11 +1,10 @@
 require 'hybrid_platforms_conductor/logger_helpers'
+require 'hybrid_platforms_conductor/plugin'
 
 module HybridPlatformsConductor
 
   # Base class for test reports plugins
-  class TestReport
-
-    include LoggerHelpers
+  class TestReport < Plugin
 
     # Constructor
     #
@@ -17,8 +16,7 @@ module HybridPlatformsConductor
     # * *tested_platforms* (Array<PlatformHandler>): List of platforms tests were run on.
     # * *tests* (Array<Test>): List of tests.
     def initialize(logger, logger_stderr, nodes_handler, tested_nodes, tested_platforms, tests)
-      @logger = logger
-      @logger_stderr = logger_stderr
+      super(logger: logger, logger_stderr: logger_stderr)
       @nodes_handler = nodes_handler
       @tested_nodes = tested_nodes.uniq.sort
       @tested_platforms = tested_platforms

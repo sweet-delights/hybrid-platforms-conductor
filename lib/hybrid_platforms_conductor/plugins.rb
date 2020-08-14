@@ -54,8 +54,15 @@ module HybridPlatformsConductor
       if @plugins.key?(plugin_id)
         log_warn "[ #{@plugins_type} ] - A plugin of type #{@plugins_type} named #{plugin_id} is already registered. Can't overwrite #{@plugins[plugin_id]} with #{plugin_class.name}. Will ignore #{plugin_class.name}."
       else
-        log_debug "[ #{@plugins_type} ] - Register #{plugin_id} to #{plugin_class.name}."
-        @plugins[plugin_id] = @init_plugin.nil? ? plugin_class : @init_plugin.call(plugin_class)
+        # Set the logger in the class so that we can use it in class methods
+        plugin_class.logger = @logger
+        plugin_class.logger_stderr = @logger_stderr
+        if plugin_class.valid?
+          log_debug "[ #{@plugins_type} ] - Register #{plugin_id} to #{plugin_class.name}."
+          @plugins[plugin_id] = @init_plugin.nil? ? plugin_class : @init_plugin.call(plugin_class)
+        else
+          log_error "[ #{@plugins_type} ] - The plugin #{plugin_id} (#{plugin_class.name}) is missing some dependencies to be activated. Will ignore it."
+        end
       end
     end
 
