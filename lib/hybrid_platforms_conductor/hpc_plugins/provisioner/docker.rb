@@ -10,11 +10,11 @@ module HybridPlatformsConductor
       # Provision Docker containers
       class Docker < HybridPlatformsConductor::Provisioner
 
-        # Are dependencies met before using an instance of this plugin?
+        # Are dependencies met before using this plugin?
         # [API] - This method is optional
         #
         # Result::
-        # * Boolean: Are dependencies met before using an instance of this plugin?
+        # * Boolean: Are dependencies met before using this plugin?
         def self.valid?
           docker_ok = false
           begin
