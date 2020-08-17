@@ -1,7 +1,3 @@
-# This file is an example of a platform handler plugin.
-# Platform handler plugins should be stored in a separate Git repository, and packaged as Rubygems that are then included in Gemfile.
-# This way their discovery is automatic.
-# The PlatformHandlerPlugin example contains example of code that could be used to write a plugin for a new platform type.
 require 'hybrid_platforms_conductor/platform_handler'
 
 module HybridPlatformsConductor
@@ -18,6 +14,15 @@ module HybridPlatformsConductor
       # * @repository_path (String): The repository on which this platform handler instance will perform (/path/to/repository)
       # * @nodes_handler (NodesHandler): Nodes handler used to access information about the platforms
       class PlatformHandlerPlugin < HybridPlatformsConductor::PlatformHandler
+
+        # Are dependencies met before using this plugin?
+        # [API] - This method is optional
+        #
+        # Result::
+        # * Boolean: Are dependencies met before using this plugin?
+        def self.valid?
+          true
+        end
 
         # Register test classes at the platform level.
         # This will be called for each platform of this type.

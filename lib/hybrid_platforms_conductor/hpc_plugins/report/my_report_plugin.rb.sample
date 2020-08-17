@@ -15,6 +15,15 @@ module HybridPlatformsConductor
       # * @nodes_handler (NodesHandler): Nodes handler used to access information about the platforms
       class MyReportPlugin < HybridPlatformsConductor::Report
 
+        # Are dependencies met before using this plugin?
+        # [API] - This method is optional
+        #
+        # Result::
+        # * Boolean: Are dependencies met before using this plugin?
+        def self.valid?
+          true
+        end
+
         # Give the list of supported locales by this report generator
         # [API] - This method is mandatory.
         #

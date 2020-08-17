@@ -7,6 +7,15 @@ module HybridPlatformsConductor
       # Sample connector
       class MyConnector < HybridPlatformsConductor::Connector
 
+        # Are dependencies met before using this plugin?
+        # [API] - This method is optional
+        #
+        # Result::
+        # * Boolean: Are dependencies met before using this plugin?
+        def self.valid?
+          true
+        end
+
         # Initialize the connector.
         # This can be used to initialize global variables that are used for this connector
         # [API] - This method is optional

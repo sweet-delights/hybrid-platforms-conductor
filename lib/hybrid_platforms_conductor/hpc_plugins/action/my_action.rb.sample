@@ -7,6 +7,15 @@ module HybridPlatformsConductor
       # Example of an action plugin
       class MyAction < HybridPlatformsConductor::Action
 
+        # Are dependencies met before using this plugin?
+        # [API] - This method is optional
+        #
+        # Result::
+        # * Boolean: Are dependencies met before using this plugin?
+        def self.valid?
+          true
+        end
+
         # Setup the action.
         # This is called by the constructor itself, when an action is instantiated to be executed for a node.
         # [API] - This method is optional

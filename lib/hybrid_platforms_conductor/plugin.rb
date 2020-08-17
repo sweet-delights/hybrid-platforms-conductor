@@ -12,11 +12,11 @@ module HybridPlatformsConductor
       # Class loggers
       attr_accessor :logger, :logger_stderr
 
-      # Are dependencies met before using an instance of this plugin?
+      # Are dependencies met before using this plugin?
       # This method can be overriden by any plugin
       #
       # Result::
-      # * Boolean: Are dependencies met before using an instance of this plugin?
+      # * Boolean: Are dependencies met before using this plugin?
       def valid?
         true
       end
