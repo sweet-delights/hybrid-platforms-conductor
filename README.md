@@ -2012,6 +2012,18 @@ Examples of platform handlers are:
 
 Check the [sample plugin file](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/browse/lib/hybrid_platforms_conductor/hpc_plugins/platform_handler/platform_handler_plugin.rb.sample) to know more about the API that needs to be implemented by such plugins.
 
+## Plugin type `provisioner`
+
+These plugins add new ways to provision infrastructure, used by the [`Deployer`](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/browse/lib/hybrid_platforms_conductor/deployer.rb)
+
+Examples of provisioners are:
+* Docker: Provision Docker containers
+* Podman: Provision Podman pods
+* Terraform: Provision nodes through Terraform
+* Proxmox: Provision containers or VMs using Proxmox
+
+Check the [sample plugin file](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/browse/lib/hybrid_platforms_conductor/hpc_plugins/provisioner/my_provisioner.rb.sample) to know more about the API that needs to be implemented by such plugins.
+
 ## Plugin type `report`
 
 These plugins add new ways to publish inventory reports produced by the [`ReportsHandler`](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/browse/lib/hybrid_platforms_conductor/reports_handler.rb)
