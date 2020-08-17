@@ -289,14 +289,14 @@ module HybridPlatformsConductor
     # * *provisioner_id* (Symbol): The provisioner ID to be used
     # * *node* (String): The node for which we want the image
     # * *environment* (String): An ID to differentiate different running instances for the same node
-    # * *reuse_container* (Boolean): Do we reuse an eventual existing container? [default: false]
+    # * *reuse_instance* (Boolean): Do we reuse an eventual existing instance? [default: false]
     # * Proc: Code called when the container is ready. The container will be stopped at the end of execution.
     #   * Parameters::
     #     * *deployer* (Deployer): A new Deployer configured to override access to the node through the Docker container
     #     * *instance* (Provisioner): The provisioned instance
-    def with_test_provisioned_instance(provisioner_id, node, environment:, reuse_container: false)
+    def with_test_provisioned_instance(provisioner_id, node, environment:, reuse_instance: false)
       # Add PID and process start time to the ID to make sure other containers used by other runs are not being reused.
-      environment << "_#{Process.pid}_#{(Time.now - Process.clock_gettime(Process::CLOCK_BOOTTIME)).strftime('%Y%m%d%H%M%S')}" unless reuse_container
+      environment << "_#{Process.pid}_#{(Time.now - Process.clock_gettime(Process::CLOCK_BOOTTIME)).strftime('%Y%m%d%H%M%S')}" unless reuse_instance
       # Create different NodesHandler and Deployer to handle this Docker container in place of the real node.
       sub_logger, sub_logger_stderr =
         if log_debug?
@@ -315,7 +315,7 @@ module HybridPlatformsConductor
           # Here we use the NodesHandler that will be bound to the sub-Deployer only, as the node's metadata might be modified by the Provisioner.
           nodes_handler: sub_executable.nodes_handler
         )
-        instance.with_running_instance(stop_on_exit: true, destroy_on_exit: !reuse_container, port: 22) do
+        instance.with_running_instance(stop_on_exit: true, destroy_on_exit: !reuse_instance, port: 22) do
           actions_executor = sub_executable.actions_executor
           deployer = sub_executable.deployer
           # Setup test environment for this container

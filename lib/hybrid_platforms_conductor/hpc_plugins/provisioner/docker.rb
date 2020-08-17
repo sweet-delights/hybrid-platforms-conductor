@@ -48,7 +48,7 @@ module HybridPlatformsConductor
                 docker_image.tag repo: image_tag
               end
             end
-            container_name = "hpc_container_#{@node}_#{@environment}"
+            container_name = "hpc_docker_container_#{@node}_#{@environment}"
             container_futex_file = "#{Dir.tmpdir}/hpc_docker_container_futexes/#{image_tag}"
             FileUtils.mkdir_p File.dirname(container_futex_file)
             Futex.new(container_futex_file).open do
@@ -57,11 +57,6 @@ module HybridPlatformsConductor
                 if old_docker_container
                   old_docker_container
                 else
-                  if old_docker_container
-                    # Remove the previous container
-                    old_docker_container.stop
-                    old_docker_container.remove
-                  end
                   log_debug "[ #{@node}/#{@environment} ] - Creating Docker container #{container_name}..."
                   # We add the SYS_PTRACE capability as some images need to restart services (for example postfix) and those services need the rights to ls in /proc/{PID}/exe to check if a status is running. Without SYS_PTRACE such ls returns permission denied and the service can't be stopped (as init.d always returns it as stopped even when running).
                   # We add the privileges as some containers need to install and configure the udev package, which needs RW access to /sys.
@@ -86,6 +81,7 @@ module HybridPlatformsConductor
         # Prerequisite: create has been called before
         # [API] - This method is mandatory
         def start
+          log_debug "[ #{@node}/#{@environment} ] - Start Docker Container #{@container.refresh!.info['Name'][1..-1]} ..."
           @container.start
         end
 
@@ -93,22 +89,29 @@ module HybridPlatformsConductor
         # Prerequisite: create has been called before
         # [API] - This method is mandatory
         def stop
+          log_debug "[ #{@node}/#{@environment} ] - Stop Docker Container #{@container.refresh!.info['Name'][1..-1]} ..."
           @container.stop
-          log_debug "[ #{@node}/#{@environment} ] - Docker Container #{@container.info['Name'][1..-1]} stopped"
         end
 
         # Destroy an instance
         # Prerequisite: create has been called before
         # [API] - This method is mandatory
         def destroy
+          log_debug "[ #{@node}/#{@environment} ] - Destroy Docker Container #{@container.refresh!.info['Name'][1..-1]} ..."
           @container.remove
+          @container = nil
         end
 
         # Return the state of an instance
         # [API] - This method is mandatory
         #
         # Result::
-        # * Symbol: The state the instance is in
+        # * Symbol: The state the instance is in. Possible values are:
+        #   * *:missing*: The instance does not exist
+        #   * *:created*: The instance has been created but is not running
+        #   * *:running*: The instance is running
+        #   * *:exited*: The instance has run and is now stopped
+        #   * *:error*: The instance is in error
         def state
           if !defined?(@container) || @container.nil?
             :missing

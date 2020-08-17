@@ -1,0 +1,78 @@
+require 'hybrid_platforms_conductor/provisioner'
+
+module HybridPlatformsConductor
+
+  module HpcPlugins
+
+    module Provisioner
+
+      class MyProvisioner < HybridPlatformsConductor::Provisioner
+
+        # Are dependencies met before using this plugin?
+        # [API] - This method is optional
+        #
+        # Result::
+        # * Boolean: Are dependencies met before using this plugin?
+        def self.valid?
+          true
+        end
+
+        # Create an instance.
+        # Reuse an existing one if it already exists.
+        # [API] - This method is mandatory
+        def create
+          @vm = InfraAPI.create_vm_for(@nodes_handler.get_image_of(@node))
+        end
+
+        # Start an instance
+        # Prerequisite: create has been called before
+        # [API] - This method is mandatory
+        def start
+          @vm.start
+        end
+
+        # Stop an instance
+        # Prerequisite: create has been called before
+        # [API] - This method is mandatory
+        def stop
+          @vm.stop
+        end
+
+        # Destroy an instance
+        # Prerequisite: create has been called before
+        # [API] - This method is mandatory
+        def destroy
+          @vm.remove
+        end
+
+        # Return the state of an instance
+        # [API] - This method is mandatory
+        #
+        # Result::
+        # * Symbol: The state the instance is in. Possible values are:
+        #   * *:missing*: The instance does not exist
+        #   * *:created*: The instance has been created but is not running
+        #   * *:running*: The instance is running
+        #   * *:exited*: The instance has run and is now stopped
+        #   * *:error*: The instance is in error
+        def state
+          @vm.state.to_sym
+        end
+
+        # Return the IP address of an instance.
+        # Prerequisite: create has been called before.
+        # [API] - This method is optional
+        #
+        # Result::
+        # * String or nil: The instance IP address, or nil if this information is not relevant
+        def ip
+          @vm.ip_address
+        end
+
+      end
+
+    end
+
+  end
+
+end
