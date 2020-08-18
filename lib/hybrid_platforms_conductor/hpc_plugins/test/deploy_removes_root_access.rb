@@ -12,7 +12,7 @@ module HybridPlatformsConductor
 
         # Check my_test_plugin.rb.sample documentation for signature details.
         def test_for_node
-          @deployer.with_test_provisioned_instance(:docker, @node, environment: 'deploy_removes_root_access', reuse_container: log_debug?) do |deployer, instance|
+          @deployer.with_test_provisioned_instance(:docker, @node, environment: 'deploy_removes_root_access', reuse_instance: log_debug?) do |deployer, instance|
             # Check that we can connect with root
             ssh_ok = false
             begin

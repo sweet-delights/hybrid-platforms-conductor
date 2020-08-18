@@ -11,7 +11,7 @@ module HybridPlatformsConductor
 
         # Check my_test_plugin.rb.sample documentation for signature details.
         def test_for_node
-          @deployer.with_test_provisioned_instance(:docker, @node, environment: 'deploy_from_scratch', reuse_container: log_debug?) do |deployer|
+          @deployer.with_test_provisioned_instance(:docker, @node, environment: 'deploy_from_scratch', reuse_instance: log_debug?) do |deployer|
             deployer.nbr_retries_on_error = 3
             deployer.log_level = :debug
             result = deployer.deploy_on(@node)
