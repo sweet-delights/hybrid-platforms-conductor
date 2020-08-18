@@ -46,6 +46,7 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Docker do
     with_test_docker_platform(environment) do |instance|
       expect(::Docker::Container).to receive(:create).and_call_original
       instance.create
+      instance.wait_for_state! :created
       begin
         # Test that the instance is created
         expect(::Docker::Container.all(all: true).find { |container| container.info['Names'].include? "/hpc_docker_container_node_#{environment}" }).not_to eq nil
@@ -60,6 +61,7 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Docker do
   it 'reuses an instance already created' do
     with_test_docker_platform do |instance|
       instance.create
+      instance.wait_for_state! :created
       begin
         expect(::Docker::Container).not_to receive(:create)
         instance.create
@@ -76,6 +78,7 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Docker do
       instance.create
       begin
         instance.start
+        instance.wait_for_state! :running
         # Test that the instance is running correctly
         message = nil
         Net::SSH.start(instance.ip, 'root', password: 'root_pwd', auth_methods: ['password'], verify_host_key: :never) do |ssh|
@@ -97,6 +100,7 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Docker do
       instance.create
       begin
         instance.start
+        instance.wait_for_state! :running
         instance.stop
         expect(instance.state).to eq :exited
       ensure
@@ -110,6 +114,7 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Docker do
     # Make sure we use a unique environment for this test
     with_test_docker_platform("test_#{Process.pid}_#{(Time.now - Process.clock_gettime(Process::CLOCK_BOOTTIME)).strftime('%Y%m%d%H%M%S')}") do |instance|
       instance.create
+      instance.wait_for_state! :created
       instance.destroy
       expect(instance.state).to eq :missing
     end
