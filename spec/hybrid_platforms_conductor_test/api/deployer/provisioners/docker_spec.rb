@@ -18,7 +18,7 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Docker do
       FileUtils.mkdir_p docker_image_path
       FileUtils.cp "#{__dir__}/Dockerfile", "#{docker_image_path}/Dockerfile"
       with_platforms("
-        docker_image :test_image, '#{docker_image_path}'
+        os_image :test_image, '#{docker_image_path}'
         test_platform path: '#{repository}'
       ") do
         register_platform_handlers test: HybridPlatformsConductorTest::TestPlatformHandler

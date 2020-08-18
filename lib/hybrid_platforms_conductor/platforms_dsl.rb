@@ -86,14 +86,14 @@ module HybridPlatformsConductor
       @gateways[gateway_conf] = ssh_def_erb
     end
 
-    # Register a new Docker image
+    # Register a new OS image
     #
     # Parameters::
     # * *image* (Symbol): Name of the Docker image
     # * *dir* (String): Directory containing the Dockerfile defining the image
-    def docker_image(image, dir)
-      raise "Docker image #{image} already defined to #{@docker_images[image]}" if @docker_images.key?(image)
-      @docker_images[image] = dir
+    def os_image(image, dir)
+      raise "OS image #{image} already defined to #{@os_images[image]}" if @os_images.key?(image)
+      @os_images[image] = dir
     end
 
     # Register new Bitbucket repositories

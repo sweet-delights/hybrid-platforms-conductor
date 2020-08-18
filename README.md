@@ -156,14 +156,14 @@ Host gw.data.ti
 '
 
 # Define images that are referenced by the platforms inventory
-docker_image :centos, '/path/to/centos/docker_image'
+os_image :centos, '/path/to/centos/os_image'
 ```
 
 `platforms.rb` file is a Ruby file that can use all public methods of [this file](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/browse/lib/hybrid_platforms_conductor/platforms_dsl.rb), as a DSL.
 In particular the following methods are important:
 * `<platform_type>_platform`: Used to declare a new platform, providing either a local path to it (using `path: '/path/to/files'`) or a git repository to it (using `git: 'git_url'`).
 * `gateway`: Used to declare a new gateway, with 2 parameters: its name (as a Symbol) and its SSH configuration (as a String).
-* `docker_image`: Used to declare a new image, with its corresponding path containing a Docker file (used to instantiate test Docker containers for nodes using this image). It takes 2 parameters: its name (as a Symbol) and its directory path (as a String).
+* `os_image`: Used to declare a new OS image, with its corresponding. This is used to define properties that are OS specific, like a Docker file (used to instantiate test Docker containers for nodes using this image). It takes 2 parameters: its name (as a Symbol) and its directory path (as a String).
 * `hybrid_platforms_dir`: Used to get the directory in which the `platforms.rb` file is stored.
 
 ## 2. Install dependencies
