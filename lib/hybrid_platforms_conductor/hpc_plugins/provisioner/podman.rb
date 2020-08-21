@@ -110,8 +110,7 @@ module HybridPlatformsConductor
         # Result::
         # * String: The Podman command
         def podman_cmd
-          _exit_status, stdout, _stderr = @cmd_runner.run_cmd 'whoami'
-          stdout.strip == 'root' ? 'podman' : 'sudo podman'
+          @cmd_runner.root? ? 'podman' : 'sudo podman'
         end
 
       end
