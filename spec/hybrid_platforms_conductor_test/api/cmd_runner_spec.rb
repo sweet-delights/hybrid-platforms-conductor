@@ -140,6 +140,12 @@ describe HybridPlatformsConductor::CmdRunner do
     end
   end
 
+  it 'returns the currently logged user' do
+    cmd_runner = test_cmd_runner
+    expect(cmd_runner).to receive(:run_cmd).with('whoami') { [0, 'test_user', ''] }
+    expect(cmd_runner.whoami).to eq 'test_user'
+  end
+
   it 'returns non-root user when user is not root' do
     cmd_runner = test_cmd_runner
     expect(cmd_runner).to receive(:run_cmd).with('whoami') { [0, 'not_root', ''] }

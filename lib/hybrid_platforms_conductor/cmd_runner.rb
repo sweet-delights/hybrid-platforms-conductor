@@ -161,8 +161,20 @@ module HybridPlatformsConductor
     # Result::
     # Boolean: Is the current user root?
     def root?
-      _exit_status, stdout, _stderr = run_cmd 'whoami'
-      stdout.strip == 'root'
+      whoami == 'root'
+    end
+
+    # Who is the local user?
+    # Keep a cache of it.
+    #
+    # Result::
+    # String: Name of the local user
+    def whoami
+      unless defined?(@whoami)
+        _exit_status, stdout, _stderr = run_cmd 'whoami', log_to_stdout: log_debug?
+        @whoami = stdout.strip
+      end
+      @whoami
     end
 
   end
