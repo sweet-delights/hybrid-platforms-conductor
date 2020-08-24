@@ -77,7 +77,7 @@ module HybridPlatformsConductor
             :missing
           else
             begin
-              _exit_status, stdout, _stderr = @cmd_runner.run_cmd "#{podman_cmd} inspect #{@container}"
+              _exit_status, stdout, _stderr = @cmd_runner.run_cmd "#{podman_cmd} container inspect #{@container}"
               status = JSON.parse(stdout).first['State']['Status'].to_sym
               status = :created if status == :configured
               status
@@ -106,11 +106,13 @@ module HybridPlatformsConductor
 
         # Get the Podman command.
         # Handle sudo rights if needed.
+        # Keep a cache of it for performance.
         #
         # Result::
         # * String: The Podman command
         def podman_cmd
-          @cmd_runner.root? ? 'podman' : 'sudo podman'
+          @podman_cmd = @cmd_runner.root? ? 'podman' : 'sudo podman' unless defined?(@podman_cmd)
+          @podman_cmd
         end
 
       end
