@@ -89,6 +89,17 @@ module HybridPlatformsConductor
       end
     end
 
+    # Initialize loggers
+    #
+    # Parameters::
+    # * *logger* (Logger): Logger used for stdout
+    # * *logger_stderr* (Logger): Logger used for stderr
+    def init_loggers(logger, logger_stderr)
+      @logger = logger
+      @logger_stderr = logger_stderr
+      set_loggers_format
+    end
+
     # Set loggers to the desired format
     def set_loggers_format
       [@logger, @logger_stderr].each do |logger|

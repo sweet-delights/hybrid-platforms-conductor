@@ -43,10 +43,9 @@ module HybridPlatformsConductor
     # * *logger* (Logger): Logger to be used [default = Logger.new(STDOUT)]
     # * *logger_stderr* (Logger): Logger to be used for stderr [default = Logger.new(STDERR)]
     def initialize(id, url: nil, logger: Logger.new(STDOUT), logger_stderr: Logger.new(STDERR))
+      init_loggers(logger, logger_stderr)
       @id = id
       @url = url
-      @logger = logger
-      @logger_stderr = logger_stderr
       @user = nil
       @password = nil
       @retrieved = false

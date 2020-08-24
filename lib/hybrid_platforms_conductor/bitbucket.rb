@@ -39,11 +39,10 @@ module HybridPlatformsConductor
     # * *logger* (Logger): Logger to be used [default = Logger.new(STDOUT)]
     # * *logger_stderr* (Logger): Logger to be used for stderr [default = Logger.new(STDERR)]
     def initialize(bitbucket_url, bitbucket_user_name, bitbucket_password, logger: Logger.new(STDOUT), logger_stderr: Logger.new(STDERR))
+      init_loggers(logger, logger_stderr)
       @bitbucket_url = bitbucket_url
       @bitbucket_user_name = bitbucket_user_name
       @bitbucket_password = bitbucket_password
-      @logger = logger
-      @logger_stderr = logger_stderr
     end
 
     # Get the repositories of a given project.

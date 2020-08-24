@@ -79,8 +79,7 @@ module HybridPlatformsConductor
     #   * *json_files_dir* (String): Directory from which JSON files are taken. [default = nodes_json]
     #   * *connections_max_level* (Integer or nil): Number maximal of recursive passes to get hostname connections (nil means no limit). [default = nil]
     def initialize(logger: Logger.new(STDOUT), logger_stderr: Logger.new(STDERR), nodes_handler: NodesHandler.new, json_dumper: JsonDumper.new, config: {})
-      @logger = logger
-      @logger_stderr = logger_stderr
+      init_loggers(logger, logger_stderr)
       @nodes_handler = nodes_handler
       @json_dumper = json_dumper
       @config = Topographer.default_config.merge(config)

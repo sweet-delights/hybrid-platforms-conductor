@@ -87,10 +87,7 @@ module HybridPlatformsConductorTest
       # Result::
       # * ActionsExecutor: ActionsExecutor on which we can do testing
       def test_actions_executor
-        unless @actions_executor
-          @actions_executor = HybridPlatformsConductor::ActionsExecutor.new logger: logger, logger_stderr: logger, cmd_runner: test_cmd_runner, nodes_handler: test_nodes_handler
-          @actions_executor.set_loggers_format
-        end
+        @actions_executor = HybridPlatformsConductor::ActionsExecutor.new logger: logger, logger_stderr: logger, cmd_runner: test_cmd_runner, nodes_handler: test_nodes_handler unless @actions_executor
         @actions_executor
       end
 

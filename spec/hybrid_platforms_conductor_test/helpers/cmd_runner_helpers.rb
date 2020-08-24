@@ -81,10 +81,7 @@ module HybridPlatformsConductorTest
       # Result::
       # * CmdRunner: CmdRunner on which we can do testing
       def test_cmd_runner
-        unless @cmd_runner
-          @cmd_runner = HybridPlatformsConductor::CmdRunner.new logger: logger, logger_stderr: logger
-          @cmd_runner.set_loggers_format
-        end
+        @cmd_runner = HybridPlatformsConductor::CmdRunner.new logger: logger, logger_stderr: logger unless @cmd_runner
         @cmd_runner
       end
 

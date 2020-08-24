@@ -48,8 +48,7 @@ module HybridPlatformsConductor
     # * *actions_executor* (ActionsExecutor): Actions Executor to be used for the tests [default = ActionsExecutor.new]
     # * *deployer* (Deployer): Deployer to be used for the tests needed why-run deployments [default = Deployer.new]
     def initialize(logger: Logger.new(STDOUT), logger_stderr: Logger.new(STDERR), cmd_runner: CmdRunner.new, nodes_handler: NodesHandler.new, actions_executor: ActionsExecutor.new, deployer: Deployer.new)
-      @logger = logger
-      @logger_stderr = logger_stderr
+      init_loggers(logger, logger_stderr)
       @cmd_runner = cmd_runner
       @nodes_handler = nodes_handler
       @actions_executor = actions_executor

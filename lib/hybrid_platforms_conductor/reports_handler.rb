@@ -24,8 +24,7 @@ module HybridPlatformsConductor
     # * *logger_stderr* (Logger): Logger to be used for stderr [default = Logger.new(STDERR)]
     # * *nodes_handler* (NodesHandler): Nodes handler to be used. [default = NodesHandler.new]
     def initialize(logger: Logger.new(STDOUT), logger_stderr: Logger.new(STDERR), nodes_handler: NodesHandler.new)
-      @logger = logger
-      @logger_stderr = logger_stderr
+      init_loggers(logger, logger_stderr)
       @nodes_handler = nodes_handler
       # The list of reports plugins, with their associated class
       # Hash< Symbol, Class >

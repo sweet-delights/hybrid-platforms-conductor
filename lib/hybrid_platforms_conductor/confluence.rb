@@ -35,11 +35,10 @@ module HybridPlatformsConductor
     # * *logger* (Logger): Logger to be used [default = Logger.new(STDOUT)]
     # * *logger_stderr* (Logger): Logger to be used for stderr [default = Logger.new(STDERR)]
     def initialize(confluence_url, confluence_user_name, confluence_password, logger: Logger.new(STDOUT), logger_stderr: Logger.new(STDERR))
+      init_loggers(logger, logger_stderr)
       @confluence_url = confluence_url
       @confluence_user_name = confluence_user_name
       @confluence_password = confluence_password
-      @logger = logger
-      @logger_stderr = logger_stderr
     end
 
     # Return a Confluence storage format content from a page ID
