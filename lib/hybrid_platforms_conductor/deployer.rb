@@ -313,7 +313,8 @@ module HybridPlatformsConductor
           logger_stderr: @logger_stderr,
           cmd_runner: @cmd_runner,
           # Here we use the NodesHandler that will be bound to the sub-Deployer only, as the node's metadata might be modified by the Provisioner.
-          nodes_handler: sub_executable.nodes_handler
+          nodes_handler: sub_executable.nodes_handler,
+          actions_executor: @actions_executor
         )
         instance.with_running_instance(stop_on_exit: true, destroy_on_exit: !reuse_instance, port: 22) do
           actions_executor = sub_executable.actions_executor

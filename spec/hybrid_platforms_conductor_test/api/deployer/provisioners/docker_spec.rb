@@ -21,10 +21,8 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Docker do
         test_platform path: '#{repository}'
       ") do
         register_platform_handlers test: HybridPlatformsConductorTest::TestPlatformHandler
-        prepared_for_local_testing = false
         self.test_platforms_info = { 'platform' => {
-          nodes: { 'node' => { meta: { host_ip: '192.168.42.42', image: 'test_image' } } },
-          prepare_deploy_for_local_testing: proc { prepared_for_local_testing = true }
+          nodes: { 'node' => { meta: { host_ip: '192.168.42.42', image: 'test_image' } } }
         } }
         instance = HybridPlatformsConductor::HpcPlugins::Provisioner::Docker.new(
           'node',
@@ -32,7 +30,8 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Docker do
           logger: logger,
           logger_stderr: logger,
           cmd_runner: test_cmd_runner,
-          nodes_handler: test_nodes_handler
+          nodes_handler: test_nodes_handler,
+          actions_executor: test_actions_executor
         )
         yield instance, repository
       end
