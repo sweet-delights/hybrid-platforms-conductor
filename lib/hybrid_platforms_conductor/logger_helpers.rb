@@ -1,4 +1,6 @@
 require 'colorize'
+require 'logger'
+require 'ruby-progressbar'
 
 module HybridPlatformsConductor
 

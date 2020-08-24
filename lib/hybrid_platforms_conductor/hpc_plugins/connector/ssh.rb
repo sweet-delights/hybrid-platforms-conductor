@@ -1,3 +1,5 @@
+require 'erb'
+
 module HybridPlatformsConductor
 
   module HpcPlugins
@@ -7,12 +9,60 @@ module HybridPlatformsConductor
       # Connect to node using SSH
       class Ssh < HybridPlatformsConductor::Connector
 
+        module PlatformsDslSsh
+
+          # Initialize the DSL
+          def init_ssh
+            # List of gateway configurations, per gateway config name
+            # Hash<Symbol, String>
+            @gateways = {}
+          end
+
+          # Register a new gateway configuration
+          #
+          # Parameters::
+          # * *gateway_conf* (Symbol): Name of the gateway configuration
+          # * *ssh_def_erb* (String): Corresponding SSH ERB configuration
+          def gateway(gateway_conf, ssh_def_erb)
+            raise "Gateway #{gateway_conf} already defined to #{@gateways[gateway_conf]}" if @gateways.key?(gateway_conf)
+            @gateways[gateway_conf] = ssh_def_erb
+          end
+
+          # Get the list of known gateway configurations
+          #
+          # Result::
+          # * Array<Symbol>: List of known gateway configuration names
+          def known_gateways
+            @gateways.keys
+          end
+
+          # Get the SSH configuration for a given gateway configuration name and a list of variables that could be used in the gateway template.
+          #
+          # Parameters::
+          # * *gateway_conf* (Symbol): Name of the gateway configuration.
+          # * *variables* (Hash<Symbol,Object>): The possible variables to interpolate in the ERB gateway template [default = {}].
+          # Result::
+          # * String: The corresponding SSH configuration
+          def ssh_for_gateway(gateway_conf, variables = {})
+            erb_context = self.clone
+            def erb_context.get_binding
+              binding
+            end
+            variables.each do |var_name, var_value|
+              erb_context.instance_variable_set("@#{var_name}".to_sym, var_value)
+            end
+            ERB.new(@gateways[gateway_conf]).result(erb_context.get_binding)
+          end
+
+        end
+        self.extend_platforms_dsl_with PlatformsDslSsh, :init_ssh
+
         # Name of the gateway user to be used. [default: ENV['hpc_ssh_gateway_user'] or ubradm]
         #   String
         attr_accessor :ssh_gateway_user
 
-        # Name of the gateways configuration. [default: ENV['hpc_ssh_gateways_conf'] or munich]
-        #   Symbol
+        # Name of the gateways configuration, or nil if no gateway. [default: ENV['hpc_ssh_gateways_conf'] or nil]
+        #   Symbol or nil
         attr_accessor :ssh_gateways_conf
 
         # User name used in SSH connections. [default: ENV['hpc_ssh_user'] or ENV['USER']]
@@ -51,7 +101,7 @@ module HybridPlatformsConductor
           @ssh_strict_host_key_checking = true
           @passwords = {}
           @auth_password = false
-          @ssh_gateways_conf = ENV['hpc_ssh_gateways_conf'].nil? ? :munich : ENV['hpc_ssh_gateways_conf'].to_sym
+          @ssh_gateways_conf = ENV['hpc_ssh_gateways_conf'].nil? ? nil : ENV['hpc_ssh_gateways_conf'].to_sym
           @ssh_gateway_user = ENV['hpc_ssh_gateway_user'].nil? ? 'ubradm' : ENV['hpc_ssh_gateway_user']
           # The map of existing ssh directories that have been created, per node that can access them
           # Array< String, Array<String> >
@@ -86,7 +136,7 @@ module HybridPlatformsConductor
           options_parser.on('-w', '--password', 'If used, then expect SSH connections to ask for a password.') do
             @auth_password = true
           end
-          options_parser.on('-y', '--ssh-gateways-conf GATEWAYS_CONF', "Name of the gateways configuration to be used. Can also be set from environment variable hpc_ssh_gateways_conf. Defaults to #{@ssh_gateways_conf}.") do |gateway|
+          options_parser.on('-y', '--ssh-gateways-conf GATEWAYS_CONF', "Name of the gateways configuration to be used. Can also be set from environment variable hpc_ssh_gateways_conf.") do |gateway|
             @ssh_gateways_conf = gateway.to_sym
           end
         end
@@ -98,7 +148,7 @@ module HybridPlatformsConductor
         def validate_params
           raise 'No SSH user name specified. Please use --ssh-user option or hpc_ssh_user environment variable to set it.' if @ssh_user.nil? || @ssh_user.empty?
           known_gateways = @nodes_handler.known_gateways
-          raise "Unknown gateway configuration provided: #{@ssh_gateways_conf}. Possible values are: #{known_gateways.join(', ')}." unless known_gateways.include?(@ssh_gateways_conf)
+          raise "Unknown gateway configuration provided: #{@ssh_gateways_conf}. Possible values are: #{known_gateways.join(', ')}." if !@ssh_gateways_conf.nil? && !known_gateways.include?(@ssh_gateways_conf)
         end
 
         # Select nodes where this connector can connect.
@@ -234,7 +284,7 @@ module HybridPlatformsConductor
             # GATEWAYS #
             ############
 
-            #{@nodes_handler.known_gateways.include?(@ssh_gateways_conf) ? @nodes_handler.ssh_for_gateway(@ssh_gateways_conf, ssh_exec: ssh_exec, user: @ssh_user) : ''}
+            #{@ssh_gateways_conf.nil? || !@nodes_handler.known_gateways.include?(@ssh_gateways_conf) ? '' : @nodes_handler.ssh_for_gateway(@ssh_gateways_conf, ssh_exec: ssh_exec, user: @ssh_user)}
 
             #############
             # ENDPOINTS #

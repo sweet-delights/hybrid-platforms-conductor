@@ -1,4 +1,4 @@
-require 'logger'
+require 'json'
 require 'tmpdir'
 require 'time'
 require 'thread'

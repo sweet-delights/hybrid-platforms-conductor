@@ -21,6 +21,19 @@ module HybridPlatformsConductor
         true
       end
 
+      # Extend the platforms DSL used when parsing the latforms.rb file with a given Mixin.
+      # This can be used by any plugin to add plugin-specific configuration in the platforms.rb file.
+      #
+      # Parameters::
+      # * *mixin* (Module): Mixin to add to the Platforms DSL
+      # * *init_method* (Symbol or nil): The initializer method of this Mixin, or nil if none [default = nil]
+      def extend_platforms_dsl_with(mixin, init_method = nil)
+        PlatformsDsl.include mixin
+        PlatformsDsl.mixin_initializers << init_method unless init_method.nil?
+        # Make sure NodesHandler includes again the Dsl so that it gets refreshed with new methods
+        NodesHandler.include PlatformsDsl
+      end
+
     end
 
     # Constructor

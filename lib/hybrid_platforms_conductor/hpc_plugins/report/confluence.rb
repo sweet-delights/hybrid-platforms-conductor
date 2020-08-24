@@ -1,6 +1,7 @@
 require 'erubis'
 require 'hybrid_platforms_conductor/report'
 require 'hybrid_platforms_conductor/confluence'
+require 'hybrid_platforms_conductor/common_platforms_dsl/confluence'
 
 module HybridPlatformsConductor
 
@@ -10,6 +11,8 @@ module HybridPlatformsConductor
 
       # Export in the Mediawiki format
       class Confluence < HybridPlatformsConductor::Report
+
+        self.extend_platforms_dsl_with CommonPlatformsDsl::Confluence, :init_confluence
 
         # Give the list of supported locales by this report generator
         # [API] - This method is mandatory.

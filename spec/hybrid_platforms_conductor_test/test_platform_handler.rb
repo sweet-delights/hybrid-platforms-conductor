@@ -11,7 +11,6 @@ module HybridPlatformsConductorTest
       # * *nodes* (Hash< String, Hash<Symbol,Object> >): List of nodes, and their associated info (per node name) [default: {}]:
       #   * *meta* (Hash<String,Object>): JSON object storing metadata about this node
       #   * *services* (Array<String>): Services bound to this node
-      #   * *default_gateway* (String): Default gateway
       #   * *deliver_on_artefact_for* (Proc): Code called when a packages repository has to be delivered for a given node
       #   * *deploy_data* (String or nil): Data to be deployed, or nil to not deploy for real [default: nil]
       # * *nodes_lists* (Hash< String, Array< String > >): Nodes lists, per list name [default: {}]

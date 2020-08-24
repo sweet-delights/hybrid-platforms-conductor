@@ -24,6 +24,22 @@ module HybridPlatformsConductor
           true
         end
 
+        # Add a Mixin to the DSL parsing the platforms configuration file.
+        # This can be used by any plugin to add plugin-specific configuration getters and setters, accessible later from NodesHandler instances.
+        # An optional initializer can also be given.
+        # [API] - Those calls are optional
+        module MyDSLExtension
+
+          attr_accessor :my_property
+
+          # Initialize the DSL
+          def init_my_dsl_extension
+            @my_property = 42
+          end
+
+        end
+        self.extend_platforms_dsl_with MyDSLExtension, :init_my_dsl_extension
+
         # Give the list of supported locales by this report generator
         # [API] - This method is mandatory.
         #

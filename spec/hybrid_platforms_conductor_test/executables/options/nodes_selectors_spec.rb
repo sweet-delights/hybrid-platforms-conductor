@@ -23,11 +23,8 @@ describe 'executables\' nodes selection options' do
             'node22' => { services: ['service1'] }
           }
         }
-      },
-      false,
-      'gateway :test_gateway, \'Host test_gateway\''
+      }
     ) do |repository|
-      ENV['hpc_ssh_gateways_conf'] = 'test_gateway'
       yield repository
     end
   end
