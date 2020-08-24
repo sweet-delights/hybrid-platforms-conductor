@@ -79,6 +79,7 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Docker do
       begin
         instance.start
         instance.wait_for_state! :running
+        instance.wait_for_port! 22
         # Test that the instance is running correctly
         message = nil
         Net::SSH.start(instance.ip, 'root', password: 'root_pwd', auth_methods: ['password'], verify_host_key: :never) do |ssh|
