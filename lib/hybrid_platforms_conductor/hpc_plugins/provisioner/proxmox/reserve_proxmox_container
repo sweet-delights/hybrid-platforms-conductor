@@ -1,0 +1,115 @@
+#!/usr/bin/env ruby
+# This scripts allows an atomic resource reservation to clients that need to create LXC containers.
+# It handles:
+# * An intelligent resources allocation algorithm to balance usage among cluster PVE nodes.
+# * A retry mechanism if the resources are fully reserved.
+# * An expiration mechanism that removes expired containers before assigning new ones to protect resources.
+# It guarantees that:
+# * Any IP and VM ID reserved through this script will not be reserved by another concurrent process (unless the container becomes expired).
+# * If reservation is granted, creating this container will not exceed resources limits specified in the config.
+# * The returned reserved VM ID and IP are not created.
+
+# Usage: ./reserve_proxmox_container [options]
+#     -c, --cpus NBR                   Set the number of CPUs to reserve for the new container (default: 2)
+#     -d, --disk-gb GB                 Set the number of gigabytes of disk to reserve for the new container (default: 4)
+#     -h, --help                       Display help and exit
+#     -m, --max-retries NBR            Set the maximum number of retries to attempt (default: 240)
+#     -o, --config FILE                Set the path to the file storing configuration (default: ./config.json)
+#     -r, --ram-mb MB                  Set the number of megabytes of RAM to reserve for the new container (default: 1024)
+#     -w, --wait-before-retry SECS     Set the number of seconds to wait between retries (default: 4)
+
+# Result:
+# There can be some logs but the script ends with a line containing '===== JSON =====' followed by parseable JSON.
+# Resulting JSON has the following structure in case of success:
+# * *pve_node* (String): Name of the pve node on which the creation has been reserved
+# * *vm_id* (Integer): VM ID reserved
+# * *vm_ip* (String): VM IP reserved
+# Resulting JSON has the following structure in case of error:
+# * *error* (String): The error message
+
+# Uses:
+# * A config file (given through --config option) that describes the available resources as JSON.
+#   Check ProxmoxWaiter#initialize signature for the structure's description of this file.
+# * The environment variables:
+#   * *hpc_user_for_proxmox*: User to be used to query Proxmox API
+#   * *hpc_password_for_proxmox*: Password to be used to query Proxmox API
+
+require 'json'
+
+reserved_resource = nil
+
+begin
+
+  # As this script is meant to be run in an SSH session, make sure we automatically flush stdout/stderr.
+  # Otherwise it will wait for the script completion before dumping everything, which is annoying as we want to track when it waits for hours.
+  $stdout.sync = true
+  $stderr.sync = true
+
+  require 'optparse'
+  require 'time'
+  require 'tmpdir'
+  require "#{__dir__}/proxmox_waiter"
+
+  # Define here default values
+  nbr_cpus = 2
+  ram_mb = 1024
+  disk_gb = 4
+  wait_time_before_retry_secs = 60
+  # Don't hesitate to retry for a few hours, as resources are taken by tests that can run for a few hours sometimes.
+  max_retries = 240
+  config_file = "#{__dir__}/config.json"
+
+  OptionParser.new do |opts|
+    opts.banner = "Usage: #{$0} [options]"
+    opts.on('-c', '--cpus NBR', "Set the number of CPUs to reserve for the new container (default: #{nbr_cpus})") do |nbr|
+      nbr_cpus = Integer(nbr)
+    end
+    opts.on('-d', '--disk-gb GB', "Set the number of gigabytes of disk to reserve for the new container (default: #{disk_gb})") do |gb|
+      disk_gb = Integer(gb)
+    end
+    opts.on('-h', '--help', 'Display help and exit') do
+      puts opts
+      exit 0
+    end
+    opts.on('-m', '--max-retries NBR', "Set the maximum number of retries to attempt (default: #{max_retries})") do |nbr|
+      max_retries = Integer(nbr)
+    end
+    opts.on('-o', '--config FILE', "Set the path to the file storing configuration (default: #{config_file})") do |file|
+      config_file = file
+    end
+    opts.on('-r', '--ram-mb MB', "Set the number of megabytes of RAM to reserve for the new container (default: #{ram_mb})") do |mb|
+      ram_mb = Integer(mb)
+    end
+    opts.on('-w', '--wait-before-retry SECS', "Set the number of seconds to wait between retries (default: #{disk_gb})") do |secs|
+      wait_time_before_retry_secs = Integer(secs)
+    end
+  end.parse!
+
+  idx_retry = 0
+  while idx_retry < max_retries
+    puts "[ #{Time.now.utc.strftime('%F %T')} ] - Reserve #{nbr_cpus} CPUs, #{ram_mb} MB RAM and #{disk_gb} GB disks in a Proxmox container (attempt ##{idx_retry}/#{max_retries})"
+    reserved_resource = ProxmoxWaiter.new(
+      config_file,
+      ENV['hpc_user_for_proxmox'],
+      ENV['hpc_password_for_proxmox']
+    ).reserve(nbr_cpus, ram_mb, disk_gb)
+    if reserved_resource.is_a?(Symbol)
+      # We are missing some resources to get the resource.
+      # Try again.
+      puts "Could not reserve the resource because of error: #{reserved_resource}. Waiting #{wait_time_before_retry_secs} seconds before trying again."
+      reserved_resource = { error: reserved_resource }
+      sleep wait_time_before_retry_secs
+    else
+      break
+    end
+    idx_retry += 1
+  end
+
+rescue
+  reserved_resource = {
+    error: "Unhandled exception from reserve_proxmox_container: #{$!}\n#{$!.backtrace.join("\n")}"
+  }
+end
+
+puts '===== JSON ====='
+puts reserved_resource.to_json
