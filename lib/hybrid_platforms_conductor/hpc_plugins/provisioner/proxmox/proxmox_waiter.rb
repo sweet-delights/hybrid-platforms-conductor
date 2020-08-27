@@ -231,11 +231,8 @@ class ProxmoxWaiter
                   # Warn if nothing is known about it as well.
                   puts "[ #{pve_node}/#{vm_id} ] - WARN - Container exists but is not part of our allocation db. Consider it expired."
                   # Register it in the allocations for future reference
-                  ip_found = ip_of(pve_node, vm_id)
-                  raise "[ #{pve_node}/#{vm_id} ] - Unable to get IP back from LXC container" if ip_found.nil?
                   @allocations[pve_node] = {} unless @allocations.key?(pve_node)
                   @allocations[pve_node][vm_id.to_s] = {
-                    'ip' => ip_found,
                     # Make sure it is considered expired
                     'reservation_date' => (@expiration_date - 60).strftime('%FT%T')
                   }
