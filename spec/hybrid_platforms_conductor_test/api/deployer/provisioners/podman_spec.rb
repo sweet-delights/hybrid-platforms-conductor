@@ -1,22 +1,20 @@
-require 'net/ssh'
-require 'securerandom'
 require 'hybrid_platforms_conductor/hpc_plugins/provisioner/podman'
 
 describe HybridPlatformsConductor::HpcPlugins::Provisioner::Podman do
 
-  # Setup a test platform with a test Docker image
+  # Setup a test platform with a test Podman image
   #
   # Parameters::
   # * *environment* (String): Environment to use [default = 'test']
   # * Proc: Code called when everything is setup
   #   * Parameters::
-  #     * *docker_instance* (Provisioner): A new Provisioner instance targeting the Docker container
+  #     * *instance* (Provisioner): A new Provisioner instance targeting the Podman container
   #     * *repository* (String): The platforms' repository
   def with_test_podman_platform(environment = 'test')
     with_repository('platform') do |repository|
       docker_image_path = "#{repository}/docker_image"
       FileUtils.mkdir_p docker_image_path
-      FileUtils.cp "#{__dir__}/Dockerfile", "#{docker_image_path}/Dockerfile"
+      FileUtils.cp "#{__dir__}/docker/Dockerfile", "#{docker_image_path}/Dockerfile"
       with_platforms("
         os_image :test_image, '#{docker_image_path}'
         test_platform path: '#{repository}'
