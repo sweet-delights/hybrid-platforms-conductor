@@ -34,6 +34,51 @@ module HybridPlatformsConductorTest
 
   end
 
+  class RandomClassWithPlatformsDslExtension < HybridPlatformsConductor::Plugin
+
+    module MyPlatformsDslExtension
+
+      attr_reader :my_property
+
+      # Set property
+      #
+      # Parameters::
+      # * *value* (Integer): Value to be set
+      def set_my_property(value)
+        @my_property = value * 2
+      end
+
+    end
+
+    extend_platforms_dsl_with MyPlatformsDslExtension
+
+  end
+
+  class RandomClassWithPlatformsDslExtensionAndInitializer < HybridPlatformsConductor::Plugin
+
+    module MyPlatformsDslExtension
+
+      attr_reader :my_other_property
+
+      # Initializer
+      def init_my_dsl
+        @my_other_property = 42
+      end
+
+      # Set property
+      #
+      # Parameters::
+      # * *value* (Integer): Value to be set
+      def set_my_other_property(value)
+        @my_other_property += value
+      end
+
+    end
+
+    extend_platforms_dsl_with MyPlatformsDslExtension, :init_my_dsl
+
+  end
+
 end
 
 describe HybridPlatformsConductor::Plugins do
@@ -163,6 +208,32 @@ describe HybridPlatformsConductor::Plugins do
       # Mock the discovery of Ruby gems
       expect(Gem).not_to receive(:loaded_specs)
       expect(HybridPlatformsConductor::Plugins.new(:test_plugin_type, parse_gems: false, logger: logger, logger_stderr: logger).keys).to eq []
+    end
+  end
+
+  it 'extends the platforms DSL from a plugin' do
+    with_repository('platform') do |repository|
+      with_platforms("
+        test_platform path: '#{repository}'
+        set_my_property 42
+      ") do
+        register_platform_handlers test: HybridPlatformsConductorTest::TestPlatformHandler
+        self.test_platforms_info = { 'platform' => {} }
+        expect(test_nodes_handler.my_property).to eq 84
+      end
+    end
+  end
+
+  it 'extends the platforms DSL with an initializer from a plugin' do
+    with_repository('platform') do |repository|
+      with_platforms("
+        test_platform path: '#{repository}'
+        set_my_other_property 66
+      ") do
+        register_platform_handlers test: HybridPlatformsConductorTest::TestPlatformHandler
+        self.test_platforms_info = { 'platform' => {} }
+        expect(test_nodes_handler.my_other_property).to eq 108
+      end
     end
   end
 

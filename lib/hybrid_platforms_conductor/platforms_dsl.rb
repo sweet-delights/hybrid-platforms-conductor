@@ -67,17 +67,13 @@ module HybridPlatformsConductor
       end
 
     end
-    @mixin_initializers = nil
+    @mixin_initializers = []
 
     # Initialize the module variables
     def initialize_platforms_dsl
       # Directory in which platforms are cloned
       @git_platforms_dir = "#{hybrid_platforms_dir}/cloned_platforms"
       PlatformsDsl.nodes_handler = self
-      # Make sure we don't overwrite the mixin_initializers variable a second time, in case we instantiate 2 NodesHandler instances:
-      # * The first instance would have initialized the variable correctly based on the required plugins
-      # * The second instance will not require the plugins file anymore, so re-initializing it would remove plugin initializers
-      PlatformsDsl.mixin_initializers = [] if PlatformsDsl.mixin_initializers.nil?
       PlatformsDsl.define_platform_handler_helpers
       # Make sure plugins can decorate our DSL with their owns additions as well
       # Therefore we parse all possible plugin types
