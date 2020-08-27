@@ -1,5 +1,4 @@
 require 'net/ssh'
-require 'securerandom'
 require 'hybrid_platforms_conductor/hpc_plugins/provisioner/docker'
 
 describe HybridPlatformsConductor::HpcPlugins::Provisioner::Docker do
@@ -16,7 +15,7 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Docker do
     with_repository('platform') do |repository|
       docker_image_path = "#{repository}/docker_image"
       FileUtils.mkdir_p docker_image_path
-      FileUtils.cp "#{__dir__}/Dockerfile", "#{docker_image_path}/Dockerfile"
+      FileUtils.cp "#{__dir__}/docker/Dockerfile", "#{docker_image_path}/Dockerfile"
       with_platforms("
         os_image :test_image, '#{docker_image_path}'
         test_platform path: '#{repository}'
