@@ -409,22 +409,45 @@ class ProxmoxWaiter
     @gets_cache[path]
   end
 
+  # Timeout in seconds before giving up on a lock
+  LOCK_TIMEOUT = 30
+
   # Get the IP address of a given LXC container
   #
   # Parameters::
   # * *pve_node* (String): The PVE node having the container
   # * *vm_id* (Integer): The VM ID
   # Result::
-  # * String or nil: The corresponding IP address, or nil if not found
+  # * String or nil: The corresponding IP address, or nil if not found (could be that the container has disappeared, as this method is used also for containers not part of our sync node)
   def ip_of(pve_node, vm_id)
     ip_found = nil
-    lxc_config = api_get("nodes/#{pve_node}/lxc/#{vm_id}/config")
-    raise "Config for #{pve_node}/#{vm_id} does not contain net0 information: #{lxc_config}" if lxc_config['net0'].nil?
-    lxc_config['net0'].split(',').each do |net_info|
-      property, value = net_info.split('=')
-      if property == 'ip'
-        ip_found = value.split('/').first
+    config_path = "nodes/#{pve_node}/lxc/#{vm_id}/config"
+    lxc_config = nil
+    begin_time = Time.now
+    loop do
+      lxc_config = api_get(config_path)
+      if lxc_config.key?('lock')
+        # The node is currently doing some task. Wait for the lock to be released.
+        puts "Node #{pve_node}/#{vm_id} is being locked (reason: #{lxc_config['lock']}). Wait for the lock to be released..."
+        @gets_cache.delete(config_path)
+        sleep 1
+      else
         break
+      end
+      if Time.now - begin_time > LOCK_TIMEOUT
+        puts "!!! Timeout while waiting for #{pve_node}/#{vm_id} to be unlocked (reason: #{lxc_config['lock']})."
+        break
+      end
+    end
+    if lxc_config['net0'].nil?
+      puts "!!! Config for #{pve_node}/#{vm_id} does not contain net0 information: #{lxc_config}"
+    else
+      lxc_config['net0'].split(',').each do |net_info|
+        property, value = net_info.split('=')
+        if property == 'ip'
+          ip_found = value.split('/').first
+          break
+        end
       end
     end
     ip_found
