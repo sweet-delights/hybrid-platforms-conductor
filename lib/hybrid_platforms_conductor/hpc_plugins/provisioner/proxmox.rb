@@ -1,5 +1,6 @@
 require 'json'
 require 'proxmox'
+require 'digest'
 require 'hybrid_platforms_conductor/actions_executor'
 require 'hybrid_platforms_conductor/provisioner'
 
@@ -57,35 +58,51 @@ module HybridPlatformsConductor
 
         extend_platforms_dsl_with PlatformsDSLProxmox, :init_proxmox
 
+        # Maximum size in chars of hostnames set in Proxmox
+        MAX_PROXMOX_HOSTNAME_SIZE = 65
+
         # Create an instance.
         # Reuse an existing one if it already exists.
         # [API] - This method is mandatory
         def create
           # First check if we already have a test container that corresponds to this node and environment
-          vm_hostname = hostname
           @lxc_details = nil
           with_proxmox do |proxmox|
             proxmox.get('nodes').each do |node_info|
               if proxmox_test_info[:test_config][:pve_nodes].include?(node_info['node']) && node_info['status'] == 'online'
                 proxmox.get("nodes/#{node_info['node']}/lxc").each do |lxc_info|
                   vm_id = lxc_info['vmid'].to_i
-                  if vm_id.between?(*proxmox_test_info[:test_config][:vm_ids_range]) && lxc_info['name'] == vm_hostname
-                    # Get back the IP
-                    ip_found = nil
-                    proxmox.get("nodes/#{node_info['node']}/lxc/#{vm_id}/config")['net0'].split(',').each do |net_info|
-                      property, value = net_info.split('=')
-                      if property == 'ip'
-                        ip_found = value.split('/').first
+                  if vm_id.between?(*proxmox_test_info[:test_config][:vm_ids_range])
+                    # Check if the description contains our ID
+                    vm_description_lines = (lxc_info['description'] || '').split("\n")
+                    hpc_marker_idx = vm_description_lines.index('===== HPC info =====')
+                    unless hpc_marker_idx.nil?
+                      # Get the HPC info associated to this VM
+                      # Hash<Symbol,String>
+                      vm_hpc_info = Hash[vm_description_lines[hpc_marker_idx + 1..-1].map do |line|
+                        property, value = line.split(': ')
+                        [property.to_sym, value]
+                      end]
+                      if vm_hpc_info[:node] == @node && vm_hpc_info[:environment] == @environment
+                        # Found it
+                        # Get back the IP
+                        ip_found = nil
+                        proxmox.get("nodes/#{node_info['node']}/lxc/#{vm_id}/config")['net0'].split(',').each do |net_info|
+                          property, value = net_info.split('=')
+                          if property == 'ip'
+                            ip_found = value.split('/').first
+                            break
+                          end
+                        end
+                        raise "[ #{@node}/#{@environment} ] - Unable to get IP back from LXC container nodes/#{node_info['node']}/lxc/#{vm_id}/config" if ip_found.nil?
+                        @lxc_details = {
+                          pve_node: node_info['node'],
+                          vm_id: vm_id,
+                          vm_ip: ip_found
+                        }
                         break
                       end
                     end
-                    raise "[ #{@node}/#{@environment} ] - Unable to get IP back from LXC container nodes/#{node_info['node']}/lxc/#{vm_id}/config" if ip_found.nil?
-                    @lxc_details = {
-                      pve_node: node_info['node'],
-                      vm_id: vm_id,
-                      vm_ip: ip_found
-                    }
-                    break
                   end
                 end
                 break if @lxc_details
@@ -113,12 +130,22 @@ module HybridPlatformsConductor
                   # Get an authorization from the Proxmox cluster to create an LXC container for the node we want
                   @lxc_details = request_lxc_creation_for(min_resources_to_deploy[:cpus], min_resources_to_deploy[:ram_mb], min_resources_to_deploy[:disk_gb])
                   with_proxmox do |proxmox|
+                    # Hostname in Proxmox is capped at 65 chars.
+                    # Make sure we don't get over it, but still use a unique one.
+                    hostname = "#{@node}.#{@environment}.hpc-test.com".gsub('_', '-')
+                    if hostname.size > MAX_PROXMOX_HOSTNAME_SIZE
+                      # Truncate it, but add a unique ID in it.
+                      # In the end the hostname looks like:
+                      # <truncated_node_environment>.<unique_id>.hpc-test.com
+                      hostname = ".#{Digest::MD5.hexdigest(hostname)[0..7]}.hpc-test.com"
+                      hostname = "#{@node}.#{@environment}"[0..MAX_PROXMOX_HOSTNAME_SIZE - hostname.size - 1] + hostname
+                    end
                     wait_for_proxmox_task(
                       proxmox,
                       proxmox.post("nodes/#{@lxc_details[:pve_node]}/lxc", {
                         ostemplate: pve_template,
                         vmid: @lxc_details[:vm_id],
-                        hostname: vm_hostname,
+                        hostname: hostname,
                         cores: min_resources_to_deploy[:cpus],
                         cpulimit: min_resources_to_deploy[:cpus],
                         memory: min_resources_to_deploy[:ram_mb],
@@ -126,7 +153,12 @@ module HybridPlatformsConductor
                         nameserver: @lxc_details[:vm_dns_servers].join(' '),
                         searchdomain: @lxc_details[:vm_search_domain],
                         net0: "name=eth0,bridge=vmbr0,gw=#{@lxc_details[:vm_gateway]},ip=#{@lxc_details[:vm_ip]}/32",
-                        password: 'root_pwd'
+                        password: 'root_pwd',
+                        description: <<~EOS
+                          ===== HPC info =====
+                          node: #{@node}
+                          environment: #{@environment}
+                        EOS
                       })
                     )
                   end
@@ -319,15 +351,6 @@ module HybridPlatformsConductor
           reserve_proxmox_result = JSON.parse(stdout_lines[stdout_lines.index('===== JSON =====') + 1..-1].join("\n")).transform_keys(&:to_sym)
           raise "[ #{@node}/#{@environment} ] - Error returned by reserve_proxmox_container: #{reserve_proxmox_result[:error]}" if reserve_proxmox_result.key?(:error)
           reserve_proxmox_result.merge(proxmox_test_info[:vm_config])
-        end
-
-        # Hostname that will be used for this node/environment in the LXC container.
-        # Make sure it is unique as it will be used to find existing LXC containers among the Proxmox cluster.
-        #
-        # Result::
-        # * String: Hostname
-        def hostname
-          "#{@node}.#{@environment}.hpc-test.domain.com".gsub('_', '-')
         end
 
         # Get details about the proxmox instance to be used

@@ -34,7 +34,11 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
                   [
                     {
                       'vmid' => '1042',
-                      'name' => 'node.test.hpc-test.domain.com'
+                      'description' => <<~EOS
+                        ===== HPC info =====
+                        node: node
+                        environment: test
+                      EOS
                     }
                   ]
                 end

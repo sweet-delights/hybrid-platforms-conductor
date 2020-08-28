@@ -98,7 +98,11 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
                   [
                     {
                       'vmid' => '1042',
-                      'name' => 'node.test.hpc-test.domain.com'
+                      'description' => <<~EOS
+                        ===== HPC info =====
+                        node: node
+                        environment: test
+                      EOS
                     }
                   ]
                 end
@@ -170,7 +174,11 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
                 [
                   {
                     'vmid' => '1042',
-                    'name' => 'node.other_env.hpc-test.domain.com'
+                    'description' => <<~EOS
+                      ===== HPC info =====
+                      node: node
+                      environment: other_env
+                    EOS
                   }
                 ]
               end
@@ -199,7 +207,11 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
                 [
                   {
                     'vmid' => '100',
-                    'name' => 'node.test.hpc-test.domain.com'
+                    'description' => <<~EOS
+                      ===== HPC info =====
+                      node: node
+                      environment: test
+                    EOS
                   }
                 ]
               end

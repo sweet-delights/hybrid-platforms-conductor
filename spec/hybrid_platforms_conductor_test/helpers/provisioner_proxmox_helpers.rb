@@ -143,7 +143,7 @@ module HybridPlatformsConductorTest
             {
               cores: cpus,
               cpulimit: cpus,
-              hostname: 'node.test.hpc-test.domain.com',
+              hostname: 'node.test.hpc-test.com',
               memory: ram_mb,
               nameserver: '8.8.8.8',
               net0: 'name=eth0,bridge=vmbr0,gw=192.168.0.1,ip=192.168.0.100/32',
@@ -151,7 +151,12 @@ module HybridPlatformsConductorTest
               password: 'root_pwd',
               rootfs: "local-lvm:#{disk_gb}",
               searchdomain: 'my-domain.com',
-              vmid: 1024
+              vmid: 1024,
+              description: <<~EOS
+                ===== HPC info =====
+                node: node
+                environment: test
+              EOS
             }
           ) do
             'UPID:pve_node_name:0000A504:6DEABF24:5F44669B:create::root@pam:'
