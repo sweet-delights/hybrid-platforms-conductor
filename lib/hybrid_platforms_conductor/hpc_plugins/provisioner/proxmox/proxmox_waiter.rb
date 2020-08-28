@@ -418,7 +418,9 @@ class ProxmoxWaiter
   # * String or nil: The corresponding IP address, or nil if not found
   def ip_of(pve_node, vm_id)
     ip_found = nil
-    api_get("nodes/#{pve_node}/lxc/#{vm_id}/config")['net0'].split(',').each do |net_info|
+    lxc_config = api_get("nodes/#{pve_node}/lxc/#{vm_id}/config")
+    raise "Config for #{pve_node}/#{vm_id} does not contain net0 information: #{lxc_config}" if lxc_config['net0'].nil?
+    lxc_config['net0'].split(',').each do |net_info|
       property, value = net_info.split('=')
       if property == 'ip'
         ip_found = value.split('/').first
