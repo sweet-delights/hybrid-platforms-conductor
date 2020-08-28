@@ -113,18 +113,18 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
                 expect(proxmox).to receive(:get).with('nodes/pve_node_name/lxc') do
                   [
                     {
-                      'vmid' => '1042',
-                      'description' => <<~EOS
-                        ===== HPC info =====
-                        node: node
-                        environment: test
-                      EOS
+                      'vmid' => '1042'
                     }
                   ]
                 end
                 expect(proxmox).to receive(:get).with('nodes/pve_node_name/lxc/1042/config') do
                   {
-                    'net0' => 'ip=192.168.0.101/32'
+                    'net0' => 'ip=192.168.0.101/32',
+                    'description' => <<~EOS
+                      ===== HPC info =====
+                      node: node
+                      environment: test
+                    EOS
                   }
                 end
               end
@@ -189,14 +189,18 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
               expect(proxmox).to receive(:get).with('nodes/pve_node_name/lxc') do
                 [
                   {
-                    'vmid' => '1042',
-                    'description' => <<~EOS
-                      ===== HPC info =====
-                      node: node
-                      environment: other_env
-                    EOS
+                    'vmid' => '1042'
                   }
                 ]
+              end
+              expect(proxmox).to receive(:get).with('nodes/pve_node_name/lxc/1042/config') do
+                {
+                  'description' => <<~EOS
+                    ===== HPC info =====
+                    node: node
+                    environment: other_environment
+                  EOS
+                }
               end
             end
           ),
@@ -222,12 +226,7 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
               expect(proxmox).to receive(:get).with('nodes/pve_node_name/lxc') do
                 [
                   {
-                    'vmid' => '100',
-                    'description' => <<~EOS
-                      ===== HPC info =====
-                      node: node
-                      environment: test
-                    EOS
+                    'vmid' => '100'
                   }
                 ]
               end

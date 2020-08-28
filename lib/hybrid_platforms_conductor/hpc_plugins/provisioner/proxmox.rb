@@ -71,10 +71,11 @@ module HybridPlatformsConductor
             proxmox.get('nodes').each do |node_info|
               if proxmox_test_info[:test_config][:pve_nodes].include?(node_info['node']) && node_info['status'] == 'online'
                 proxmox.get("nodes/#{node_info['node']}/lxc").each do |lxc_info|
-                  vm_id = lxc_info['vmid'].to_i
+                  vm_id = Integer(lxc_info['vmid'])
                   if vm_id.between?(*proxmox_test_info[:test_config][:vm_ids_range])
                     # Check if the description contains our ID
-                    vm_description_lines = (lxc_info['description'] || '').split("\n")
+                    lxc_config = proxmox.get("nodes/#{node_info['node']}/lxc/#{vm_id}/config")
+                    vm_description_lines = (lxc_config['description'] || '').split("\n")
                     hpc_marker_idx = vm_description_lines.index('===== HPC info =====')
                     unless hpc_marker_idx.nil?
                       # Get the HPC info associated to this VM
@@ -87,7 +88,7 @@ module HybridPlatformsConductor
                         # Found it
                         # Get back the IP
                         ip_found = nil
-                        proxmox.get("nodes/#{node_info['node']}/lxc/#{vm_id}/config")['net0'].split(',').each do |net_info|
+                        lxc_config['net0'].split(',').each do |net_info|
                           property, value = net_info.split('=')
                           if property == 'ip'
                             ip_found = value.split('/').first
