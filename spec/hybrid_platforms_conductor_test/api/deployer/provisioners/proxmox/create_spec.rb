@@ -13,6 +13,22 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
           mock_proxmox_to_create_node
         ]
         instance.create
+        expect(@proxmox_create_options[:hostname]).to eq 'node.test.hpc-test.com'
+      end
+    end
+
+    it 'creates an instance for an environment exceeding hostname size limit' do
+      env_name = 'really_big_environment_name_that_will_exceed_for_sure_the_limit_of_hostnames_' * 10
+      expected_hostname = 'node.really_big_environment_name_that_will.6c3a1827.hpc-test.com'
+      with_test_proxmox_platform(environment: env_name) do |instance|
+        mock_proxmox_calls_with [
+          # 1 - The info on existing containers
+          mock_proxmox_to_get_nodes_info,
+          # 2 - The creation of the container
+          mock_proxmox_to_create_node(hostname: expected_hostname, environment: env_name)
+        ]
+        instance.create
+        expect(@proxmox_create_options[:hostname]).to eq expected_hostname
       end
     end
 

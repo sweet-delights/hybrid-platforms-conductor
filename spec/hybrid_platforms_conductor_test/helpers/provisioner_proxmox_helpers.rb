@@ -8,11 +8,12 @@ module HybridPlatformsConductorTest
       #
       # Parameters::
       # * *node_metadata* (Hash<Symbol,Object>): Extra node metadata [default: {}]
+      # * *environment* (String): Environment to be used [default: 'test']
       # * Proc: Code called when everything is setup
       #   * Parameters::
       #     * *instance* (Provisioner): A new Provisioner instance targeting the Proxmox instance
       #     * *repository* (String): The platforms' repository
-      def with_test_proxmox_platform(node_metadata: {})
+      def with_test_proxmox_platform(node_metadata: {}, environment: 'test')
         with_repository('platform') do |repository|
           os_image_path = "#{repository}/os_image"
           FileUtils.mkdir_p os_image_path
@@ -53,7 +54,7 @@ module HybridPlatformsConductorTest
             } }
             instance = HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox.new(
               'node',
-              environment: 'test',
+              environment: environment,
               logger: logger,
               logger_stderr: logger,
               cmd_runner: test_cmd_runner,
@@ -108,6 +109,8 @@ module HybridPlatformsConductorTest
       # Parameters::
       # * *proxmox_user* (String or nil): Proxmox user used to connect to Proxmox API [default: nil]
       # * *proxmox_password* (String or nil): Proxmox password used to connect to Proxmox API [default: nil]
+      # * *hostname* (String): Hostname that should be mocked [default: 'node.test.hpc-test.com']
+      # * *environment* (String): Environment name that should be mocked [default: 'test']
       # * *cpus* (Integer): Number of CPUs to reserve [default: 2]
       # * *ram_mb* (Integer): RAM MB to reserve [default: 1024]
       # * *disk_gb* (Integer): Disk GB to reserve [default: 10]
@@ -117,6 +120,8 @@ module HybridPlatformsConductorTest
       def mock_proxmox_to_create_node(
         proxmox_user: nil,
         proxmox_password: nil,
+        hostname: 'node.test.hpc-test.com',
+        environment: 'test',
         cpus: 2,
         ram_mb: 1024,
         disk_gb: 10,
@@ -143,7 +148,7 @@ module HybridPlatformsConductorTest
             {
               cores: cpus,
               cpulimit: cpus,
-              hostname: 'node.test.hpc-test.com',
+              hostname: hostname,
               memory: ram_mb,
               nameserver: '8.8.8.8',
               net0: 'name=eth0,bridge=vmbr0,gw=192.168.0.1,ip=192.168.0.100/32',
@@ -155,10 +160,11 @@ module HybridPlatformsConductorTest
               description: <<~EOS
                 ===== HPC info =====
                 node: node
-                environment: test
+                environment: #{environment}
               EOS
             }
-          ) do
+          ) do |_path, options|
+            @proxmox_create_options = options
             'UPID:pve_node_name:0000A504:6DEABF24:5F44669B:create::root@pam:'
           end
           # Mock checking creation task status
