@@ -262,7 +262,7 @@ module HybridPlatformsConductor
             sleep 1
             task_status = proxmox.task_status(task)
           end
-          if task_status == 'OK'
+          if task_status.split(':').last == 'OK'
             log_debug "[ #{@node}/#{@environment} ] - Proxmox task #{task} completed."
           else
             raise "[ #{@node}/#{@environment} ] - Proxmox task #{task} completed with status #{task_status}"

@@ -219,7 +219,9 @@ class ProxmoxWaiter
           expired_ram_mb_used = 0
           found_vm_ids = api_get("nodes/#{pve_node}/lxc").map do |lxc_info|
             vm_id = Integer(lxc_info['vmid'])
-            lxc_disk_gb_used = lxc_info['maxdisk'] / (1024 * 1024 * 1024)
+            # Some times the Proxmox API returns maxdisk as a String (but not always) even if it is documented as Integer here: https://pve.proxmox.com/pve-docs/api-viewer/#/nodes/{node}/lxc.
+            # TODO: Remove the Integer conversion when Proxmox API will be fixed.
+            lxc_disk_gb_used = Integer(lxc_info['maxdisk']) / (1024 * 1024 * 1024)
             lxc_ram_mb_used = lxc_info['maxmem'] / (1024 * 1024)
             if vm_id.between?(*@config['vm_ids_range'])
               # This is supposed to be a VM we handle.
