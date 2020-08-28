@@ -59,7 +59,7 @@ module HybridPlatformsConductor
         extend_platforms_dsl_with PlatformsDSLProxmox, :init_proxmox
 
         # Maximum size in chars of hostnames set in Proxmox
-        MAX_PROXMOX_HOSTNAME_SIZE = 65
+        MAX_PROXMOX_HOSTNAME_SIZE = 64
 
         # Create an instance.
         # Reuse an existing one if it already exists.
@@ -132,12 +132,12 @@ module HybridPlatformsConductor
                   with_proxmox do |proxmox|
                     # Hostname in Proxmox is capped at 65 chars.
                     # Make sure we don't get over it, but still use a unique one.
-                    hostname = "#{@node}.#{@environment}.hpc-test.com".gsub('_', '-')
+                    hostname = "#{@node}.#{@environment}.hpc-test.com"
                     if hostname.size > MAX_PROXMOX_HOSTNAME_SIZE
                       # Truncate it, but add a unique ID in it.
                       # In the end the hostname looks like:
                       # <truncated_node_environment>.<unique_id>.hpc-test.com
-                      hostname = ".#{Digest::MD5.hexdigest(hostname)[0..7]}.hpc-test.com"
+                      hostname = "-#{Digest::MD5.hexdigest(hostname)[0..7]}.hpc-test.com"
                       hostname = "#{@node}.#{@environment}"[0..MAX_PROXMOX_HOSTNAME_SIZE - hostname.size - 1] + hostname
                     end
                     wait_for_proxmox_task(
@@ -145,7 +145,7 @@ module HybridPlatformsConductor
                       proxmox.post("nodes/#{@lxc_details[:pve_node]}/lxc", {
                         ostemplate: pve_template,
                         vmid: @lxc_details[:vm_id],
-                        hostname: hostname,
+                        hostname: hostname.gsub('_', '-'),
                         cores: min_resources_to_deploy[:cpus],
                         cpulimit: min_resources_to_deploy[:cpus],
                         memory: min_resources_to_deploy[:ram_mb],

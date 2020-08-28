@@ -19,7 +19,7 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
 
     it 'creates an instance for an environment exceeding hostname size limit' do
       env_name = 'really_big_environment_name_that_will_exceed_for_sure_the_limit_of_hostnames_' * 10
-      expected_hostname = 'node.really_big_environment_name_that_will.6c3a1827.hpc-test.com'
+      expected_hostname = 'node.really-big-environment-name-that-will-76ce77cc.hpc-test.com'
       with_test_proxmox_platform(environment: env_name) do |instance|
         mock_proxmox_calls_with [
           # 1 - The info on existing containers
