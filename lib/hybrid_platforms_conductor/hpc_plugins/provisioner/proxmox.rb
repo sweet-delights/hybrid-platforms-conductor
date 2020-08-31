@@ -19,7 +19,7 @@ module HybridPlatformsConductor
 
         def check_response(response)
           log_debug "Response from Proxmox API: #{response}"
-          log_error "Response from Proxmox API: #{response}" if response.code >= 400 && !log_debug?
+          log_warn "Response from Proxmox API: #{response}" if response.code >= 400 && !log_debug?
           super
         end
 
@@ -142,9 +142,11 @@ module HybridPlatformsConductor
                       hostname = "-#{Digest::MD5.hexdigest(hostname)[0..7]}.hpc-test.com"
                       hostname = "#{@node}.#{@environment}"[0..MAX_PROXMOX_HOSTNAME_SIZE - hostname.size - 1] + hostname
                     end
-                    wait_for_proxmox_task(
+                    run_proxmox_task(
                       proxmox,
-                      proxmox.post("nodes/#{@lxc_details[:pve_node]}/lxc", {
+                      :post,
+                      "nodes/#{@lxc_details[:pve_node]}/lxc",
+                      {
                         ostemplate: pve_template,
                         vmid: @lxc_details[:vm_id],
                         hostname: hostname.gsub('_', '-'),
@@ -161,7 +163,7 @@ module HybridPlatformsConductor
                           node: #{@node}
                           environment: #{@environment}
                         EOS
-                      })
+                      }
                     )
                   end
                 else
@@ -182,7 +184,7 @@ module HybridPlatformsConductor
         def start
           log_debug "[ #{@node}/#{@environment} ] - Start Proxmox LXC Container ..."
           with_proxmox do |proxmox|
-            wait_for_proxmox_task(proxmox, proxmox.post("nodes/#{@lxc_details[:pve_node]}/lxc/#{@lxc_details[:vm_id]}/status/start"))
+            run_proxmox_task(proxmox, :post, "nodes/#{@lxc_details[:pve_node]}/lxc/#{@lxc_details[:vm_id]}/status/start")
           end
         end
 
@@ -192,7 +194,7 @@ module HybridPlatformsConductor
         def stop
           log_debug "[ #{@node}/#{@environment} ] - Stop Proxmox LXC Container ..."
           with_proxmox do |proxmox|
-            wait_for_proxmox_task(proxmox, proxmox.post("nodes/#{@lxc_details[:pve_node]}/lxc/#{@lxc_details[:vm_id]}/status/stop"))
+            run_proxmox_task(proxmox, :post, "nodes/#{@lxc_details[:pve_node]}/lxc/#{@lxc_details[:vm_id]}/status/stop")
           end
         end
 
@@ -202,7 +204,7 @@ module HybridPlatformsConductor
         def destroy
           log_debug "[ #{@node}/#{@environment} ] - Delete Proxmox LXC Container ..."
           with_proxmox do |proxmox|
-            wait_for_proxmox_task(proxmox, proxmox.delete("nodes/#{@lxc_details[:pve_node]}/lxc/#{@lxc_details[:vm_id]}"))
+            run_proxmox_task(proxmox, :delete, "nodes/#{@lxc_details[:pve_node]}/lxc/#{@lxc_details[:vm_id]}")
           end
         end
 
@@ -283,6 +285,38 @@ module HybridPlatformsConductor
           end
         end
 
+        # Maximum number of retries to perform on the Proxmox API.
+        NBR_RETRIES_MAX = 5
+
+        # Minimum seconds to wait between retries
+        RETRY_WAIT_TIME_SECS = 5
+
+        # Run a Proxmox task.
+        # Handle a retry mechanism in case of 5xx errors.
+        #
+        # Parameters::
+        # * *proxmox* (Proxmox): The Proxmox instance
+        # * *http_method* (Symbol): The HTTP method to call on the Proxmox instance
+        # * *args* (Array): The list of arguments to give to the call
+        def run_proxmox_task(proxmox, http_method, *args)
+          task = nil
+          idx_try = 0
+          while task.nil? do
+            task = proxmox.send(http_method, *args)
+            if task =~ /^NOK: error code = 5\d\d$/
+              log_warn "[ #{@node}/#{@environment} ] - Proxmox API call #{http_method} #{args.first} returned error #{task} (attempt ##{idx_try}/#{NBR_RETRIES_MAX})"
+              task = nil
+              idx_try += 1
+              break if idx_try == NBR_RETRIES_MAX
+              sleep RETRY_WAIT_TIME_SECS + rand(5)
+            end
+          end
+          if task.nil?
+            raise "[ #{@node}/#{@environment} ] - Proxmox API call #{http_method} #{args.first} is constantly failing. Giving up."
+          else
+            wait_for_proxmox_task(proxmox, task)
+          end
+        end
         # Wait for a given Proxmox task completion
         #
         # Parameters::

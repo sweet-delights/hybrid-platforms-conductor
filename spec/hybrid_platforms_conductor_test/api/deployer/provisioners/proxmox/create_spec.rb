@@ -97,6 +97,49 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
       end
     end
 
+    it 'retries calls to the API when getting back errors 5xx' do
+      with_test_proxmox_platform do |instance|
+        mock_proxmox_calls_with [
+          # 1 - The info on existing containers
+          mock_proxmox_to_get_nodes_info,
+          # 2 - The creation of the container - fail a few times
+          mock_proxmox_to_create_node(nbr_api_errors: 3)
+        ]
+        # To speed up the test, alter the wait time between retries.
+        old_wait_secs = HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox.const_get(:RETRY_WAIT_TIME_SECS)
+        begin
+          HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox.send(:remove_const, :RETRY_WAIT_TIME_SECS)
+          HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox.const_set(:RETRY_WAIT_TIME_SECS, 1)
+          instance.create
+        ensure
+          HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox.send(:remove_const, :RETRY_WAIT_TIME_SECS)
+          HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox.const_set(:RETRY_WAIT_TIME_SECS, old_wait_secs)
+        end
+        expect(@proxmox_create_options[:hostname]).to eq 'node.test.hpc-test.com'
+      end
+    end
+
+    it 'fails to create an instance when the Proxmox API fails too many times' do
+      with_test_proxmox_platform do |instance|
+        mock_proxmox_calls_with [
+          # 1 - The info on existing containers
+          mock_proxmox_to_get_nodes_info,
+          # 2 - The creation of the container - fail too many times
+          mock_proxmox_to_create_node(nbr_api_errors: HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox.const_get(:NBR_RETRIES_MAX), task_status: nil)
+        ]
+        # To speed up the test, alter the wait time between retries.
+        old_wait_secs = HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox.const_get(:RETRY_WAIT_TIME_SECS)
+        begin
+          HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox.send(:remove_const, :RETRY_WAIT_TIME_SECS)
+          HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox.const_set(:RETRY_WAIT_TIME_SECS, 1)
+          expect { instance.create }.to raise_error '[ node/test ] - Proxmox API call post nodes/pve_node_name/lxc is constantly failing. Giving up.'
+        ensure
+          HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox.send(:remove_const, :RETRY_WAIT_TIME_SECS)
+          HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox.const_set(:RETRY_WAIT_TIME_SECS, old_wait_secs)
+        end
+      end
+    end
+
     it 'reuses an existing instance' do
       with_test_proxmox_platform do |instance|
         mock_proxmox_calls_with(

@@ -114,7 +114,9 @@ module HybridPlatformsConductorTest
       # * *cpus* (Integer): Number of CPUs to reserve [default: 2]
       # * *ram_mb* (Integer): RAM MB to reserve [default: 1024]
       # * *disk_gb* (Integer): Disk GB to reserve [default: 10]
-      # * *task_status* (String): Proxmox creation task status [default: 'OK']
+      # * *task_name* (String): Proxmox creation task name [default: 'UPID:pve_node_name:0000A504:6DEABF24:5F44669B:create::root@pam:']
+      # * *task_status* (String or nil): Proxmox creation task status, or nil if no task status query is to be expected [default: 'OK']
+      # * *nbr_api_errors* (Integer): Number of API errors 500 to mock before getting a successful query [defaults: 0]
       # Result::
       # * Proc: Code called in place of Proxmox.new. Signature is the same as Proxmox.new.
       def mock_proxmox_to_create_node(
@@ -125,7 +127,9 @@ module HybridPlatformsConductorTest
         cpus: 2,
         ram_mb: 1024,
         disk_gb: 10,
-        task_status: 'OK'
+        task_name: 'UPID:pve_node_name:0000A504:6DEABF24:5F44669B:create::root@pam:',
+        task_status: 'OK',
+        nbr_api_errors: 0
       )
         proc do |url, pve_node, user, password, realm, options|
           expect(url).to eq 'https://my-proxmox.my-domain.com:8006/api2/json/'
@@ -143,7 +147,8 @@ module HybridPlatformsConductorTest
             # Nothing
           end
           # Mock creating a new container
-          expect(proxmox).to receive(:post).with(
+          idx_try = 0
+          expect(proxmox).to receive(:post).exactly(nbr_api_errors + (task_status.nil? ? 0 : 1)).times.with(
             'nodes/pve_node_name/lxc',
             {
               cores: cpus,
@@ -165,11 +170,14 @@ module HybridPlatformsConductorTest
             }
           ) do |_path, options|
             @proxmox_create_options = options
-            'UPID:pve_node_name:0000A504:6DEABF24:5F44669B:create::root@pam:'
+            idx_try += 1
+            idx_try <= nbr_api_errors ? 'NOK: error code = 500' : task_name
           end
-          # Mock checking creation task status
-          expect(proxmox).to receive(:task_status).with('UPID:pve_node_name:0000A504:6DEABF24:5F44669B:create::root@pam:') do
-            task_status
+          unless task_status.nil?
+            # Mock checking creation task status
+            expect(proxmox).to receive(:task_status).with(task_name) do
+              task_status
+            end
           end
           proxmox
         end
