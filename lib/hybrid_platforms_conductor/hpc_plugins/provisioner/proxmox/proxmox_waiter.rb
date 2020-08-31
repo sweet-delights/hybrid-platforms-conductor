@@ -9,6 +9,9 @@ require 'time'
 # Multi-process safe.
 class ProxmoxWaiter
 
+  # Integer: Timeout in seconds to get the futex on the allocations JSON file
+  FUTEX_TIMEOUT = 60
+
   # Constructor
   #
   # Parameters::
@@ -168,7 +171,7 @@ class ProxmoxWaiter
   #   * *@allocations* (Hash): Store the allocations db. It can be modified by the client code, and modifications will automatically be written back to disk upon exit.
   #   * *@expiration_date* (Time): The expiration date to be considered when selecting expired VMs
   def start
-    Futex.new(@config['allocations_file']).open do
+    Futex.new(@config['allocations_file'], timeout: FUTEX_TIMEOUT).open do
       # Read the current allocation file, in an atomic way
       @allocations = File.exist?(@config['allocations_file']) ? JSON.parse(File.read(@config['allocations_file'])) : {}
       @expiration_date = Time.now.utc - @config['expiration_period_secs']
