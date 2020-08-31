@@ -19,6 +19,7 @@ module HybridPlatformsConductor
 
         def check_response(response)
           log_debug "Response from Proxmox API: #{response}"
+          log_error "Response from Proxmox API: #{response}" if response.code >= 400 && !log_debug?
           super
         end
 
