@@ -96,7 +96,7 @@ module HybridPlatformsConductor
                   found_keys << "#{type} #{key}"
                 end
               end
-              results[host] = found_keys unless found_keys.empty?
+              results[host] = found_keys.sort unless found_keys.empty?
             else
               log_warn "Unable to get host key for #{host}. Ignoring it. Accessing #{host} might require manual acceptance of its host key."
             end
