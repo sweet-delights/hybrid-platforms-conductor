@@ -304,7 +304,7 @@ module HybridPlatformsConductor
           while task.nil? do
             task = proxmox.send(http_method, *args)
             if task =~ /^NOK: error code = 5\d\d$/
-              log_warn "[ #{@node}/#{@environment} ] - Proxmox API call #{http_method} #{args.first} returned error #{task} (attempt ##{idx_try}/#{NBR_RETRIES_MAX})"
+              log_warn "[ #{@node}/#{@environment} ] - Proxmox API call #{http_method} #{args} returned error #{task} (attempt ##{idx_try}/#{NBR_RETRIES_MAX})"
               task = nil
               idx_try += 1
               break if idx_try == NBR_RETRIES_MAX
@@ -312,7 +312,7 @@ module HybridPlatformsConductor
             end
           end
           if task.nil?
-            raise "[ #{@node}/#{@environment} ] - Proxmox API call #{http_method} #{args.first} is constantly failing. Giving up."
+            raise "[ #{@node}/#{@environment} ] - Proxmox API call #{http_method} #{args} is constantly failing. Giving up."
           else
             wait_for_proxmox_task(proxmox, task)
           end
