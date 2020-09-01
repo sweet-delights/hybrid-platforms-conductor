@@ -124,11 +124,11 @@ module HybridPlatformsConductor
                 if pve_template
                   # Query the inventory to know about minimum resources needed to deploy the node.
                   # Provide default values if they are not part of the metadata.
-                  min_resources_to_deploy = @nodes_handler.get_deploy_resources_min_of(@node) || {
+                  min_resources_to_deploy = {
                     cpus: 2,
                     ram_mb: 1024,
                     disk_gb: 10
-                  }
+                  }.merge(@nodes_handler.get_deploy_resources_min_of(@node) || {})
                   # Get an authorization from the Proxmox cluster to create an LXC container for the node we want
                   @lxc_details = request_lxc_creation_for(min_resources_to_deploy[:cpus], min_resources_to_deploy[:ram_mb], min_resources_to_deploy[:disk_gb])
                   with_proxmox do |proxmox|
