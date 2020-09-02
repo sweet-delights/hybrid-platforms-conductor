@@ -361,15 +361,17 @@ module HybridPlatformsConductorTest
       # * *cpus* (Integer): Number of CPUs to reserve [default: 2]
       # * *ram_mb* (Integer): RAM MB to reserve [default: 1024]
       # * *disk_gb* (Integer): Disk GB to reserve [default: 10]
+      # * *release_vm_id* (Integer or nil): VM ID expected to be released, or nil if none [default: nil]
       def mock_call_to_reserve_proxmox_container(
         proxmox_user: nil,
         proxmox_password: nil,
         error: nil,
         cpus: 2,
         ram_mb: 1024,
-        disk_gb: 10
+        disk_gb: 10,
+        release_vm_id: nil
       )
-        expect_actions_executor_runs [
+        runs = [
           proc do |actions|
             expect(actions.keys).to eq ['node']
             expect(actions['node'].size).to eq 3
@@ -405,6 +407,43 @@ module HybridPlatformsConductorTest
             EOS
           end
         ]
+        if release_vm_id
+          runs << proc do |actions|
+            expect(actions.keys).to eq ['node']
+            expect(actions['node'].size).to eq 3
+            # First action should be to copy the reserve_proxmox_container code
+            expect(actions['node'][0].keys).to eq [:scp]
+            expect(actions['node'][0][:scp].first[0]).to match /^.+\/hpc_plugins\/provisioner\/proxmox\/$/
+            expect(actions['node'][0][:scp].first[1]).to eq '.'
+            # Second action should be to copy the ProxmoxWaiter config
+            expect(actions['node'][1]).to eq({ scp: { 'config.json' => './proxmox' } })
+            # Third action should be to execute reserve_proxmox_container
+            expect(actions['node'][2]).to eq({
+              remote_bash: {
+                commands: "./proxmox/reserve_proxmox_container --release #{release_vm_id}",
+                env: {
+                  'hpc_user_for_proxmox' => proxmox_user,
+                  'hpc_password_for_proxmox' => proxmox_password
+                }
+              }
+            })
+            result =
+              if error
+                { error: error }
+              else
+                {
+                  pve_node: 'pve_node_name',
+                  vm_id: 1024,
+                  vm_ip: '192.168.0.100'
+                }
+              end
+            { 'node' => [0, <<~EOS, ''] }
+              ===== JSON =====
+              #{JSON.pretty_generate(result)}
+            EOS
+          end
+        end
+        expect_actions_executor_runs runs
       end
 
       # Mock a series of Proxmox calls, and expect them to occur.
@@ -418,6 +457,7 @@ module HybridPlatformsConductorTest
       # * *ram_mb* (Integer): RAM MB to reserve [default: 1024]
       # * *disk_gb* (Integer): Disk GB to reserve [default: 10]
       # * *reserve* (Boolean): Do we expect the resource reservation to occur? [default: true]
+      # * *release_vm_id* (Integer or nil): VM ID expected to be released, or nil if none [default: nil]
       def mock_proxmox_calls_with(
         calls,
         proxmox_user: nil,
@@ -426,9 +466,10 @@ module HybridPlatformsConductorTest
         cpus: 2,
         ram_mb: 1024,
         disk_gb: 10,
-        reserve: true
+        reserve: true,
+        release_vm_id: nil
       )
-        if reserve
+        if reserve || release_vm_id
           # Mock querying reserve_proxmox_container
           mock_call_to_reserve_proxmox_container(
             proxmox_user: proxmox_user,
@@ -436,7 +477,8 @@ module HybridPlatformsConductorTest
             error: error,
             cpus: cpus,
             ram_mb: ram_mb,
-            disk_gb: disk_gb
+            disk_gb: disk_gb,
+            release_vm_id: release_vm_id
           )
         end
         expect(::Proxmox::Proxmox).to receive(:new).exactly(calls.size).times do |url, pve_node, user, password, realm, options|
@@ -601,19 +643,17 @@ module HybridPlatformsConductorTest
         end
       end
 
-      # Call the reserve_proxmox_container script and get its result as JSON.
+      # Call the reserve_proxmox_container script using a given ARGV.
       # Prerequisite: This is called within a with_sync_node session.
       #
       # Parameters::
-      # * *cpus* (Integer): Required CPUs
-      # * *ram_mb* (Integer): Required RAM MB
-      # * *disk_gb* (Integer): Required Disk GB
+      # * *argv* (Array<String>): ARGV to give the command
       # * *config* (Hash): Configuration overriding defaults to store in the config file [default: {}]
       # * *max_retries* (Integer): Specify the max number of retries [default: 1]
       # * *allocations* (Hash): Content of the allocations db file [default: {}]
       # Result::
       # * Hash: JSON result of the call
-      def call_reserve_proxmox_container(cpus, ram_mb, disk_gb, config: {}, max_retries: 1, allocations: {})
+      def call_reserve_proxmox_container_with(argv, config: {}, max_retries: 1, allocations: {})
         # Make sure we set default values in the config
         config = {
           proxmox_api_url: 'https://my-proxmox.my-domain.com:8006',
@@ -641,10 +681,7 @@ module HybridPlatformsConductorTest
         # Call the script by loading the Ruby file mocking the ARGV and ENV variables
         old_argv = ARGV.dup
         old_stdout = $stdout
-        ARGV.replace([
-          '--cpus', cpus.to_s,
-          '--ram-mb', ram_mb.to_s,
-          '--disk-gb', disk_gb.to_s,
+        ARGV.replace(argv + [
           '--max-retries', max_retries.to_s,
           '--wait-before-retry', '0'
         ])
@@ -662,6 +699,52 @@ module HybridPlatformsConductorTest
         end
         stdout_lines = @stdout.split("\n")
         JSON.parse(stdout_lines[stdout_lines.index('===== JSON =====') + 1..-1].join("\n")).transform_keys(&:to_sym)
+      end
+
+      # Call the reserve_proxmox_container script and get its result as JSON.
+      # Prerequisite: This is called within a with_sync_node session.
+      #
+      # Parameters::
+      # * *cpus* (Integer): Required CPUs
+      # * *ram_mb* (Integer): Required RAM MB
+      # * *disk_gb* (Integer): Required Disk GB
+      # * *config* (Hash): Configuration overriding defaults to store in the config file [default: {}]
+      # * *max_retries* (Integer): Specify the max number of retries [default: 1]
+      # * *allocations* (Hash): Content of the allocations db file [default: {}]
+      # Result::
+      # * Hash: JSON result of the call
+      def call_reserve_proxmox_container(cpus, ram_mb, disk_gb, config: {}, max_retries: 1, allocations: {})
+        call_reserve_proxmox_container_with(
+          [
+            '--cpus', cpus.to_s,
+            '--ram-mb', ram_mb.to_s,
+            '--disk-gb', disk_gb.to_s
+          ],
+          config: config,
+          max_retries: max_retries,
+          allocations: allocations
+        )
+      end
+
+      # Call the reserve_proxmox_container script to release a VM and get its result as JSON.
+      # Prerequisite: This is called within a with_sync_node session.
+      #
+      # Parameters::
+      # * *vm_id* (Integer): VM ID to release
+      # * *config* (Hash): Configuration overriding defaults to store in the config file [default: {}]
+      # * *max_retries* (Integer): Specify the max number of retries [default: 1]
+      # * *allocations* (Hash): Content of the allocations db file [default: {}]
+      # Result::
+      # * Hash: JSON result of the call
+      def call_release_proxmox_container(vm_id, config: {}, max_retries: 1, allocations: {})
+        call_reserve_proxmox_container_with(
+          [
+            '--release', vm_id.to_s
+          ],
+          config: config,
+          max_retries: max_retries,
+          allocations: allocations
+        )
       end
 
     end

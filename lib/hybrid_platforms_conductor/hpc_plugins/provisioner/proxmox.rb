@@ -203,6 +203,7 @@ module HybridPlatformsConductor
         # [API] - This method is mandatory
         def destroy
           log_debug "[ #{@node}/#{@environment} ] - Delete Proxmox LXC Container ..."
+          release_lxc_container(@lxc_details[:vm_id])
           with_proxmox do |proxmox|
             run_proxmox_task(proxmox, :delete, "nodes/#{@lxc_details[:pve_node]}/lxc/#{@lxc_details[:vm_id]}")
           end
@@ -317,6 +318,7 @@ module HybridPlatformsConductor
             wait_for_proxmox_task(proxmox, task)
           end
         end
+
         # Wait for a given Proxmox task completion
         #
         # Parameters::
@@ -337,23 +339,13 @@ module HybridPlatformsConductor
           end
         end
 
-        # Query the Proxmox cluster to get authorization to create an LXC container that will use some resources.
-        # The returned VM ID/IP does not exist in the Proxmox cluster, and their usage is reserved for our node/environment.
+        # Execute a command on the sync node and get back its JSON result
         #
         # Parameters::
-        # * *cpus* (Integer): Number of CPUs required
-        # * *ram_mb* (Integer): Megabytes of RAM required
-        # * *disk_gb* (Integer): Gigabytes of disk required
+        # * *cmd* (String): The command to execute
         # Result::
-        # * Hash<Symbol, Object>: The details of the authorized container to be created:
-        #   * *pve_node* (String): Name of the node on which the container is to be created
-        #   * *vm_id* (Integer): Container ID to be used
-        #   * *vm_ip* (String): IP address allocated for the LXC container to be created
-        #   * *vm_dns_servers* (Array<String>): List of DNS servers to use
-        #   * *vm_search_domain* (String): DNS search domain to use
-        #   * *vm_gateway* (String): Gateway to use
-        def request_lxc_creation_for(cpus, ram_mb, disk_gb)
-          log_debug "[ #{@node}/#{@environment} ] - Request LXC creation for #{cpus} CPUs, #{ram_mb} MB RAM, #{disk_gb} GB disk..."
+        # * Hash<Symbol,Object>: The result
+        def run_cmd_on_sync_node(cmd)
           # Create the ProxmoxWaiter config in a file to be uploaded
           File.write(
             'config.json',
@@ -371,7 +363,7 @@ module HybridPlatformsConductor
                   { scp: { 'config.json' => './proxmox' } },
                   {
                     remote_bash: {
-                      commands: "./proxmox/reserve_proxmox_container --cpus #{cpus} --ram-mb #{ram_mb} --disk-gb #{disk_gb}",
+                      commands: "./proxmox/#{cmd}",
                       env: {
                         'hpc_user_for_proxmox' => user,
                         'hpc_password_for_proxmox' => password
@@ -384,9 +376,43 @@ module HybridPlatformsConductor
             )[proxmox_test_info[:sync_node]]
           end
           stdout_lines = stdout.split("\n")
-          reserve_proxmox_result = JSON.parse(stdout_lines[stdout_lines.index('===== JSON =====') + 1..-1].join("\n")).transform_keys(&:to_sym)
-          raise "[ #{@node}/#{@environment} ] - Error returned by reserve_proxmox_container: #{reserve_proxmox_result[:error]}" if reserve_proxmox_result.key?(:error)
-          reserve_proxmox_result.merge(proxmox_test_info[:vm_config])
+          result = JSON.parse(stdout_lines[stdout_lines.index('===== JSON =====') + 1..-1].join("\n")).transform_keys(&:to_sym)
+          raise "[ #{@node}/#{@environment} ] - Error returned by #{cmd}: #{result[:error]}" if result.key?(:error)
+          result
+        end
+
+        # Query the Proxmox cluster to get authorization to create an LXC container that will use some resources.
+        # The returned VM ID/IP does not exist in the Proxmox cluster, and their usage is reserved for our node/environment.
+        #
+        # Parameters::
+        # * *cpus* (Integer): Number of CPUs required
+        # * *ram_mb* (Integer): Megabytes of RAM required
+        # * *disk_gb* (Integer): Gigabytes of disk required
+        # Result::
+        # * Hash<Symbol, Object>: The details of the authorized container to be created:
+        #   * *pve_node* (String): Name of the node on which the container is to be created
+        #   * *vm_id* (Integer): Container ID to be used
+        #   * *vm_ip* (String): IP address allocated for the LXC container to be created
+        #   * *vm_dns_servers* (Array<String>): List of DNS servers to use
+        #   * *vm_search_domain* (String): DNS search domain to use
+        #   * *vm_gateway* (String): Gateway to use
+        def request_lxc_creation_for(cpus, ram_mb, disk_gb)
+          log_debug "[ #{@node}/#{@environment} ] - Request LXC creation for #{cpus} CPUs, #{ram_mb} MB RAM, #{disk_gb} GB disk..."
+          run_cmd_on_sync_node("reserve_proxmox_container --cpus #{cpus} --ram-mb #{ram_mb} --disk-gb #{disk_gb}").merge(proxmox_test_info[:vm_config])
+        end
+
+        # Contact the sync node to notify a container release
+        #
+        # Parameters::
+        # * *vm_id* (Integer): The VM ID to be released
+        # Result::
+        # * Hash<Symbol, Object>: The details of the released container:
+        #   * *pve_node* (String): Name of the node on which the container was reserved (if found)
+        #   * *vm_ip* (String): IP address allocated for the released LXC container (if found)
+        #   * *reservation_date* (String): Reservation date of this LXC container (if found)
+        def release_lxc_container(vm_id)
+          log_debug "[ #{@node}/#{@environment} ] - Release LXC VM #{vm_id}..."
+          run_cmd_on_sync_node "reserve_proxmox_container --release #{vm_id}"
         end
 
         # Get details about the proxmox instance to be used

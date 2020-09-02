@@ -58,7 +58,7 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
           ],
           error: 'Error while getting resources'
         )
-        expect { instance.create }.to raise_error '[ node/test ] - Error returned by reserve_proxmox_container: Error while getting resources'
+        expect { instance.create }.to raise_error '[ node/test ] - Error returned by reserve_proxmox_container --cpus 2 --ram-mb 1024 --disk-gb 10: Error while getting resources'
       end
     end
 

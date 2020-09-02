@@ -12,6 +12,7 @@
 # Usage: ./reserve_proxmox_container [options]
 #     -c, --cpus NBR                   Set the number of CPUs to reserve for the new container (default: 2)
 #     -d, --disk-gb GB                 Set the number of gigabytes of disk to reserve for the new container (default: 4)
+#     -e, --release VMID               Mark a VM ID to be released. If used then other parameters for resources reserve are ignored.
 #     -h, --help                       Display help and exit
 #     -m, --max-retries NBR            Set the maximum number of retries to attempt (default: 240)
 #     -o, --config FILE                Set the path to the file storing configuration (default: ./config.json)
@@ -54,6 +55,7 @@ begin
   nbr_cpus = 2
   ram_mb = 1024
   disk_gb = 4
+  vm_id_to_release = nil
   wait_time_before_retry_secs = 60
   # Don't hesitate to retry for a few hours, as resources are taken by tests that can run for a few hours sometimes.
   max_retries = 240
@@ -66,6 +68,9 @@ begin
     end
     opts.on('-d', '--disk-gb GB', "Set the number of gigabytes of disk to reserve for the new container (default: #{disk_gb})") do |gb|
       disk_gb = Integer(gb)
+    end
+    opts.on('-e', '--release VMID', 'Mark a VM ID to be released. If used then other parameters for resources reserve are ignored.') do |vm_id_str|
+      vm_id_to_release = Integer(vm_id_str)
     end
     opts.on('-h', '--help', 'Display help and exit') do
       puts opts
@@ -87,16 +92,23 @@ begin
 
   idx_retry = 0
   while idx_retry < max_retries
-    puts "[ #{Time.now.utc.strftime('%F %T')} ] - Reserve #{nbr_cpus} CPUs, #{ram_mb} MB RAM and #{disk_gb} GB disks in a Proxmox container (attempt ##{idx_retry}/#{max_retries})"
-    reserved_resource = ProxmoxWaiter.new(
+    proxmox_waiter = ProxmoxWaiter.new(
       config_file,
       ENV['hpc_user_for_proxmox'],
       ENV['hpc_password_for_proxmox']
-    ).reserve(nbr_cpus, ram_mb, disk_gb)
+    )
+    reserved_resource =
+      if vm_id_to_release.nil?
+        puts "[ #{Time.now.utc.strftime('%F %T')} ] - Reserve #{nbr_cpus} CPUs, #{ram_mb} MB RAM and #{disk_gb} GB disks in a Proxmox container (attempt ##{idx_retry}/#{max_retries})"
+        proxmox_waiter.reserve(nbr_cpus, ram_mb, disk_gb)
+      else
+        puts "[ #{Time.now.utc.strftime('%F %T')} ] - Release VM ID #{vm_id_to_release} (attempt ##{idx_retry}/#{max_retries})"
+        proxmox_waiter.release(vm_id_to_release)
+      end
     if reserved_resource.is_a?(Symbol)
       # We are missing some resources to get the resource.
       # Try again.
-      puts "Could not reserve the resource because of error: #{reserved_resource}. Waiting #{wait_time_before_retry_secs} seconds before trying again."
+      puts "Could not perform the operation because of error: #{reserved_resource}. Waiting #{wait_time_before_retry_secs} seconds before trying again."
       reserved_resource = { error: reserved_resource }
       sleep wait_time_before_retry_secs
     else

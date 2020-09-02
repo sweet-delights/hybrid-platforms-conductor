@@ -45,25 +45,6 @@ class ProxmoxWaiter
     @config = JSON.parse(File.read(config_file))
     # Cache of get queries to the API
     @gets_cache = {}
-    # Connect to Proxmox's API
-    @proxmox = Proxmox::Proxmox.new(
-      "#{@config['proxmox_api_url']}/api2/json/",
-      # Proxmox uses the hostname as the node name so make the default API node derived from the URL.
-      # cf https://pve.proxmox.com/wiki/Renaming_a_PVE_node
-      URI.parse(@config['proxmox_api_url']).host.downcase.split('.').first,
-      proxmox_user,
-      proxmox_password,
-      'pam',
-      { verify_ssl: false }
-    )
-    # Check connectivity before going further
-    begin
-      nodes_info = api_get('nodes')
-      # Get the list of PVE nodes by default
-      @config['pve_nodes'] = nodes_info.map { |node_info| node_info['node'] } unless @config['pve_nodes']
-    rescue
-      raise "Unable to connect to Proxmox API #{@config['proxmox_api_url']} with user #{proxmox_user}: #{$!}"
-    end
   end
 
   # Reserve resources for a new container.
@@ -160,6 +141,38 @@ class ProxmoxWaiter
     reserved_resource
   end
 
+  # Release a VM ID.
+  #
+  # Parameters::
+  # * *vm_id* (Integer): VM ID to be released
+  # Result::
+  # * Hash<Symbol, Object> or Symbol: Released resource info, or Symbol in case of error.
+  #   The following properties are set as resource info:
+  #   * *pve_node* (String): Node on which the container has been released (if found).
+  #   * *vm_ip* (String): The VM IP that has been released (if found).
+  #   * *reservation_date* (String): The VM reservation date (if found).
+  #   Possible error codes returned are:
+  #   None
+  def release(vm_id)
+    reserved_resource = {}
+    start(connect: false) do
+      vm_id_str = vm_id.to_s
+      @allocations.each do |pve_node, pve_node_info|
+        if pve_node_info.key?(vm_id_str)
+          # Found it
+          deleted_info = pve_node_info.delete(vm_id_str)
+          reserved_resource = {
+            pve_node: pve_node,
+            vm_ip: deleted_info['ip'],
+            reservation_date: deleted_info['reservation_date']
+          }
+          break
+        end
+      end
+    end
+    reserved_resource
+  end
+
   private
 
   # Grab the lock to start a new atomic session.
@@ -167,12 +180,35 @@ class ProxmoxWaiter
   # Update the allocations file with any modification that has been done on the @allocations
   #
   # Parameters::
+  # * *connect* (Boolean): Do we need the Proxmox connection? [default: true]
   # * Proc: Client code with the session started.
   #   The following instance variables are set:
   #   * *@allocations* (Hash): Store the allocations db. It can be modified by the client code, and modifications will automatically be written back to disk upon exit.
   #   * *@expiration_date* (Time): The expiration date to be considered when selecting expired VMs
-  def start
+  #   * *@proxmox* (Proxmox or nil): The Proxmox instance, or nil if connect is false
+  def start(connect: true)
     Futex.new(@config['allocations_file'], timeout: FUTEX_TIMEOUT).open do
+      if connect
+        # Connect to Proxmox's API
+        @proxmox = Proxmox::Proxmox.new(
+          "#{@config['proxmox_api_url']}/api2/json/",
+          # Proxmox uses the hostname as the node name so make the default API node derived from the URL.
+          # cf https://pve.proxmox.com/wiki/Renaming_a_PVE_node
+          URI.parse(@config['proxmox_api_url']).host.downcase.split('.').first,
+          proxmox_user,
+          proxmox_password,
+          'pam',
+          { verify_ssl: false }
+        )
+        # Check connectivity before going further
+        begin
+          nodes_info = api_get('nodes')
+          # Get the list of PVE nodes by default
+          @config['pve_nodes'] = nodes_info.map { |node_info| node_info['node'] } unless @config['pve_nodes']
+        rescue
+          raise "Unable to connect to Proxmox API #{@config['proxmox_api_url']} with user #{proxmox_user}: #{$!}"
+        end
+      end
       # Read the current allocation file, in an atomic way
       @allocations = File.exist?(@config['allocations_file']) ? JSON.parse(File.read(@config['allocations_file'])) : {}
       @expiration_date = Time.now.utc - @config['expiration_period_secs']
@@ -181,6 +217,7 @@ class ProxmoxWaiter
       File.write(@config['allocations_file'], @allocations.to_json)
       @allocations = nil
       @expiration_date = nil
+      @proxmox = nil
     end
   end
 
