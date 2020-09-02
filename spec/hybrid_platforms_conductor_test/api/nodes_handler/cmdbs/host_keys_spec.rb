@@ -47,7 +47,7 @@ describe HybridPlatformsConductor::NodesHandler do
           expect(cmdb(:host_keys).get_host_keys(['test_node'], { 'test_node' => { host_ip: '192.168.42.42' } })).to eq('test_node' => [
             'ssh-rsa fake_host_key_rsa',
             'ssh-ed25519 fake_host_key_ed25519'
-          ])
+          ].sort)
         end
       end
     end
