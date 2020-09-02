@@ -30,6 +30,74 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
         end
       end
 
+      it 'makes sure to not use an IP already assigned to another container that has been reserved but not yet created and not expired' do
+        with_sync_node do
+          mock_proxmox(mocked_pve_nodes: {
+            'pve_node_name' => {
+              lxc_containers: {
+                1050 => { ip: '192.168.0.100' }
+              }
+            }
+          })
+          expect(call_reserve_proxmox_container(2, 1024, 1,
+            config: {
+              vm_ips_list: %w[
+                192.168.0.100
+                192.168.0.101
+                192.168.0.102
+              ]
+            },
+            allocations: {
+              'pve_node_name' => {
+                # Make sure it is not expired
+                '1' => {
+                  reservation_date: (Time.now - 60).utc.strftime('%FT%T'),
+                  ip: '192.168.0.101'
+                }
+              }
+            }
+          )).to eq(
+            pve_node: 'pve_node_name',
+            vm_id: 1000,
+            vm_ip: '192.168.0.102'
+          )
+        end
+      end
+
+      it 'can reuse an IP already assigned to another container that has been reserved but is missing and has expired' do
+        with_sync_node do
+          mock_proxmox(mocked_pve_nodes: {
+            'pve_node_name' => {
+              lxc_containers: {
+                1050 => { ip: '192.168.0.100' }
+              }
+            }
+          })
+          expect(call_reserve_proxmox_container(2, 1024, 1,
+            config: {
+              vm_ips_list: %w[
+                192.168.0.100
+                192.168.0.101
+                192.168.0.102
+              ]
+            },
+            allocations: {
+              'pve_node_name' => {
+                # Make sure it is expired
+                '1' => {
+                  reservation_date: (Time.now - 31 * 24 * 60 * 60).utc.strftime('%FT%T'),
+                  ip: '192.168.0.101'
+                }
+              }
+            }
+          )).to eq(
+            pve_node: 'pve_node_name',
+            vm_id: 1000,
+            vm_ip: '192.168.0.101'
+          )
+        end
+      end
+
       it 'makes sure to not use an IP already assigned to another container even outside the VM ID range' do
         with_sync_node do
           mock_proxmox(mocked_pve_nodes: {

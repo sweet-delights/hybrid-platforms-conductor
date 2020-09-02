@@ -27,6 +27,7 @@ class ProxmoxWaiter
   #     Hash< pve_node_name, Hash< vm_id,  Hash > >
   #     Each VM info has the following properties:
   #     * *reservation_date* (String): UTC time stamp of this VM reservation, in ISO-8601 format (YYYY-MM-DDTHH:MM:SS)
+  #     * *ip* (String): IP used for this VM
   #   * *pve_nodes* (Array<String>): List of PVE nodes allowed to spawn new containers [default: all]
   #   * *vm_ips_list* (Array<String>): The list of IPs that are available for the Proxomx containers.
   #   * *vm_ids_range* ([Integer, Integer]): Minimum and maximum reservable VM ID
@@ -239,7 +240,8 @@ class ProxmoxWaiter
                   @allocations[pve_node] = {} unless @allocations.key?(pve_node)
                   @allocations[pve_node][vm_id.to_s] = {
                     # Make sure it is considered expired
-                    'reservation_date' => (@expiration_date - 60).strftime('%FT%T')
+                    'reservation_date' => (@expiration_date - 60).strftime('%FT%T'),
+                    'ip' => ip_of(pve_node, vm_id)
                   }
                 end
                 expired_disk_gb_used += lxc_disk_gb_used
@@ -255,12 +257,13 @@ class ProxmoxWaiter
             vm_id.to_s
           end
           if @allocations.key?(pve_node)
-            # Remove from our db the VM IDs that are missing (they have been deleted in the Proxmox instance and we don't know about it)
-            @allocations[pve_node].delete_if do |vm_id_str, _vm_info|
-              if found_vm_ids.include?(vm_id_str)
+            # Remove from our db the VM IDs that are missing and expired (they have been deleted in the Proxmox instance and we don't know about it).
+            # The VM IDs that are missing but that are not supposed to expire might just be not created yet, so don't remove them.
+            @allocations[pve_node].delete_if do |vm_id_str, vm_info|
+              if found_vm_ids.include?(vm_id_str) || Time.parse("#{vm_info['reservation_date']} UTC") >= @expiration_date
                 false
               else
-                puts "[ #{pve_node}/#{vm_id_str} ] - WARN - This container was part of allocations done by this script, but does not exist anymore in the PVE node. Removing it from the allocations db."
+                puts "[ #{pve_node}/#{vm_id_str} ] - WARN - This container was part of allocations done by this script, but does not exist anymore in the PVE node and is expired. Removing it from the allocations db."
                 true
               end
             end
@@ -327,9 +330,10 @@ class ProxmoxWaiter
         # Success
         @allocations[pve_node] = {} unless @allocations.key?(pve_node)
         vm_info = {
-          'reservation_date' => Time.now.utc.strftime('%FT%T')
+          'reservation_date' => Time.now.utc.strftime('%FT%T'),
+          'ip' => selected_vm_ip
         }
-        puts "[ #{pve_node}/#{selected_vm_id} ] - New LXC container reserved at ip #{selected_vm_ip}: #{JSON.pretty_generate(vm_info)}"
+        puts "[ #{pve_node}/#{selected_vm_id} ] - New LXC container reserved: #{JSON.pretty_generate(vm_info)}"
         @allocations[pve_node][selected_vm_id.to_s] = vm_info
         [selected_vm_id, selected_vm_ip]
       end
@@ -371,12 +375,14 @@ class ProxmoxWaiter
   # * Array<String>: List of available IPs
   def free_ips
     # Consider all nodes and all IPs to ensure we won't create any conflict, even outside our allowed range
-    @config['vm_ips_list'] - api_get('nodes').map do |pve_node_info|
-      pve_node = pve_node_info['node']
-      api_get("nodes/#{pve_node}/lxc").map do |lxc_info|
-        ip_of(pve_node, Integer(lxc_info['vmid']))
-      end.compact
-    end.flatten
+    @config['vm_ips_list'] -
+      api_get('nodes').map do |pve_node_info|
+        pve_node = pve_node_info['node']
+        api_get("nodes/#{pve_node}/lxc").map do |lxc_info|
+          ip_of(pve_node, Integer(lxc_info['vmid']))
+        end.compact
+      end.flatten -
+      @allocations.values.map { |pve_node_info| pve_node_info.values.map { |vm_info| vm_info['ip'] } }.flatten
   end
 
   # Return the list of available VM IDs
@@ -384,9 +390,11 @@ class ProxmoxWaiter
   # Result::
   # * Array<Integer>: List of available VM IDs
   def free_vm_ids
-    Range.new(*@config['vm_ids_range']).to_a - api_get('nodes').map do |pve_node_info|
-      api_get("nodes/#{pve_node_info['node']}/lxc").map { |lxc_info| Integer(lxc_info['vmid']) }
-    end.flatten
+    Range.new(*@config['vm_ids_range']).to_a -
+      api_get('nodes').map do |pve_node_info|
+        api_get("nodes/#{pve_node_info['node']}/lxc").map { |lxc_info| Integer(lxc_info['vmid']) }
+      end.flatten -
+      @allocations.values.map { |pve_node_info| pve_node_info.keys.map { |vm_id_str| Integer(vm_id_str) } }.flatten
   end
 
   # Wait for a given Proxmox task completion

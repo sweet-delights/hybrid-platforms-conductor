@@ -19,12 +19,15 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
           expect(call_reserve_proxmox_container(2, 1024, 1, allocations: {
             'pve_node_name' => {
               # Make sure it is expired
-              '1000' => { reservation_date: (Time.now - 31 * 24 * 60 * 60).utc.strftime('%FT%T') }
+              '1000' => {
+                reservation_date: (Time.now - 31 * 24 * 60 * 60).utc.strftime('%FT%T'),
+                ip: '192.168.0.100'
+              }
             }
           })).to eq(
             pve_node: 'pve_node_name',
             vm_id: 1001,
-            vm_ip: '192.168.0.100'
+            vm_ip: '192.168.0.101'
           )
         end
       end
@@ -42,7 +45,10 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
           expect(call_reserve_proxmox_container(2, 1024, 1, allocations: {
             'pve_node_name' => {
               # Make sure it is expired
-              '1000' => { reservation_date: (Time.now - 31 * 24 * 60 * 60).utc.strftime('%FT%T') }
+              '1000' => {
+                reservation_date: (Time.now - 31 * 24 * 60 * 60).utc.strftime('%FT%T'),
+                ip: '192.168.0.100'
+              }
             }
           })).to eq(
             pve_node: 'pve_node_name',
@@ -72,7 +78,10 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
           expect(call_reserve_proxmox_container(2, 1024, 1, allocations: {
             'pve_node_name' => {
               # Make sure it is expired
-              '1000' => { reservation_date: (Time.now - 31 * 24 * 60 * 60).utc.strftime('%FT%T') }
+              '1000' => {
+                reservation_date: (Time.now - 31 * 24 * 60 * 60).utc.strftime('%FT%T'),
+                ip: '192.168.0.100'
+              }
             }
           })).to eq(
             pve_node: 'pve_node_name',
@@ -99,9 +108,18 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
           })
           expect(call_reserve_proxmox_container(2, 1024, 1, allocations: {
             'pve_node_name' => {
-              '1000' => { reservation_date: Time.now.utc.strftime('%FT%T') },
-              '1001' => { reservation_date: (Time.now - 31 * 24 * 60 * 60).utc.strftime('%FT%T') },
-              '1002' => { reservation_date: Time.now.utc.strftime('%FT%T') }
+              '1000' => {
+                reservation_date: Time.now.utc.strftime('%FT%T'),
+                ip: '192.168.0.100'
+              },
+              '1001' => {
+                reservation_date: (Time.now - 31 * 24 * 60 * 60).utc.strftime('%FT%T'),
+                ip: '192.168.0.101'
+              },
+              '1002' => {
+                reservation_date: Time.now.utc.strftime('%FT%T'),
+                ip: '192.168.0.102'
+              }
             }
           })).to eq(
             pve_node: 'pve_node_name',
@@ -129,9 +147,18 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
           })
           expect(call_reserve_proxmox_container(2, 1024, 1, allocations: {
             'pve_node_name' => {
-              '1000' => { reservation_date: Time.now.utc.strftime('%FT%T') },
-              '1001' => { reservation_date: (Time.now - 31 * 24 * 60 * 60).utc.strftime('%FT%T') },
-              '1002' => { reservation_date: Time.now.utc.strftime('%FT%T') }
+              '1000' => {
+                reservation_date: Time.now.utc.strftime('%FT%T'),
+                ip: '192.168.0.100'
+              },
+              '1001' => {
+                reservation_date: (Time.now - 31 * 24 * 60 * 60).utc.strftime('%FT%T'),
+                ip: '192.168.0.101'
+              },
+              '1002' => {
+                reservation_date: Time.now.utc.strftime('%FT%T'),
+                ip: '192.168.0.102'
+              }
             }
           })).to eq(error: 'not_enough_resources')
           expect(@proxmox_actions).to eq []
@@ -152,9 +179,18 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
           })
           expect(call_reserve_proxmox_container(2, 1024, 1, allocations: {
             'pve_node_name' => {
-              '1000' => { reservation_date: Time.now.utc.strftime('%FT%T') },
-              '1001' => { reservation_date: (Time.now - 31 * 24 * 60 * 60).utc.strftime('%FT%T') },
-              '1002' => { reservation_date: (Time.now - 31 * 24 * 60 * 60).utc.strftime('%FT%T') }
+              '1000' => {
+                reservation_date: Time.now.utc.strftime('%FT%T'),
+                ip: '192.168.0.100'
+              },
+              '1001' => {
+                reservation_date: (Time.now - 31 * 24 * 60 * 60).utc.strftime('%FT%T'),
+                ip: '192.168.0.101'
+              },
+              '1002' => {
+                reservation_date: (Time.now - 31 * 24 * 60 * 60).utc.strftime('%FT%T'),
+                ip: '192.168.0.102'
+              }
             }
           })).to eq(
             pve_node: 'pve_node_name',
@@ -184,9 +220,18 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
           })
           expect(call_reserve_proxmox_container(2, 1024, 1, allocations: {
             'pve_node_name' => {
-              '1000' => { reservation_date: Time.now.utc.strftime('%FT%T') },
-              '1001' => { reservation_date: (Time.now - 31 * 24 * 60 * 60).utc.strftime('%FT%T') },
-              '1002' => { reservation_date: (Time.now - 31 * 24 * 60 * 60).utc.strftime('%FT%T') }
+              '1000' => {
+                reservation_date: Time.now.utc.strftime('%FT%T'),
+                ip: '192.168.0.100'
+              },
+              '1001' => {
+                reservation_date: (Time.now - 31 * 24 * 60 * 60).utc.strftime('%FT%T'),
+                ip: '192.168.0.101'
+              },
+              '1002' => {
+                reservation_date: (Time.now - 31 * 24 * 60 * 60).utc.strftime('%FT%T'),
+                ip: '192.168.0.102'
+              }
             }
           })).to eq(
             pve_node: 'pve_node_name',
@@ -220,10 +265,16 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
           })
           expect(call_reserve_proxmox_container(2, 1024, 1, config: { pve_nodes: nil }, allocations: {
             'pve_node_1' => {
-              '1000' => { reservation_date: (Time.now - 31 * 24 * 60 * 60).utc.strftime('%FT%T') }
+              '1000' => {
+                reservation_date: (Time.now - 31 * 24 * 60 * 60).utc.strftime('%FT%T'),
+                ip: '192.168.0.100'
+              }
             },
             'pve_node_2' => {
-              '1001' => { reservation_date: (Time.now - 31 * 24 * 60 * 60).utc.strftime('%FT%T') }
+              '1001' => {
+                reservation_date: (Time.now - 31 * 24 * 60 * 60).utc.strftime('%FT%T'),
+                ip: '192.168.0.101'
+              }
             }
           })).to eq(
             pve_node: 'pve_node_2',
@@ -265,12 +316,24 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
             },
             allocations: {
               'pve_node_1' => {
-                '1000' => { reservation_date: Time.now.utc.strftime('%FT%T') },
-                '1001' => { reservation_date: (Time.now - 31 * 24 * 60 * 60).utc.strftime('%FT%T') }
+                '1000' => {
+                  reservation_date: Time.now.utc.strftime('%FT%T'),
+                  ip: '192.168.0.100'
+                },
+                '1001' => {
+                  reservation_date: (Time.now - 31 * 24 * 60 * 60).utc.strftime('%FT%T'),
+                  ip: '192.168.0.101'
+                }
               },
               'pve_node_2' => {
-                '1002' => { reservation_date: Time.now.utc.strftime('%FT%T') },
-                '1003' => { reservation_date: (Time.now - 31 * 24 * 60 * 60).utc.strftime('%FT%T') }
+                '1002' => {
+                  reservation_date: Time.now.utc.strftime('%FT%T'),
+                  ip: '192.168.0.102'
+                },
+                '1003' => {
+                  reservation_date: (Time.now - 31 * 24 * 60 * 60).utc.strftime('%FT%T'),
+                  ip: '192.168.0.103'
+                }
               }
             }
           )).to eq(
@@ -307,9 +370,18 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
             },
             allocations: {
               'pve_node_name' => {
-                '1000' => { reservation_date: Time.now.utc.strftime('%FT%T') },
-                '1001' => { reservation_date: (Time.now - 31 * 24 * 60 * 60).utc.strftime('%FT%T') },
-                '1002' => { reservation_date: Time.now.utc.strftime('%FT%T') }
+                '1000' => {
+                  reservation_date: Time.now.utc.strftime('%FT%T'),
+                  ip: '192.168.0.100'
+                },
+                '1001' => {
+                  reservation_date: (Time.now - 31 * 24 * 60 * 60).utc.strftime('%FT%T'),
+                  ip: '192.168.0.101'
+                },
+                '1002' => {
+                  reservation_date: Time.now.utc.strftime('%FT%T'),
+                  ip: '192.168.0.102'
+                }
               }
             }
           )).to eq(
@@ -348,9 +420,18 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
             },
             allocations: {
               'pve_node_name' => {
-                '1000' => { reservation_date: Time.now.utc.strftime('%FT%T') },
-                '1001' => { reservation_date: (Time.now - 31 * 24 * 60 * 60).utc.strftime('%FT%T') },
-                '1002' => { reservation_date: Time.now.utc.strftime('%FT%T') }
+                '1000' => {
+                  reservation_date: Time.now.utc.strftime('%FT%T'),
+                  ip: '192.168.0.100'
+                },
+                '1001' => {
+                  reservation_date: (Time.now - 31 * 24 * 60 * 60).utc.strftime('%FT%T'),
+                  ip: '192.168.0.101'
+                },
+                '1002' => {
+                  reservation_date: Time.now.utc.strftime('%FT%T'),
+                  ip: '192.168.0.102'
+                }
               }
             }
           )).to eq(
@@ -394,9 +475,18 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
             },
             allocations: {
               'pve_node_name' => {
-                '1000' => { reservation_date: Time.now.utc.strftime('%FT%T') },
-                '1001' => { reservation_date: (Time.now - 31 * 24 * 60 * 60).utc.strftime('%FT%T') },
-                '1002' => { reservation_date: Time.now.utc.strftime('%FT%T') }
+                '1000' => {
+                  reservation_date: Time.now.utc.strftime('%FT%T'),
+                  ip: '192.168.0.100'
+                },
+                '1001' => {
+                  reservation_date: (Time.now - 31 * 24 * 60 * 60).utc.strftime('%FT%T'),
+                  ip: '192.168.0.101'
+                },
+                '1002' => {
+                  reservation_date: Time.now.utc.strftime('%FT%T'),
+                  ip: '192.168.0.102'
+                }
               }
             }
           )).to eq(
