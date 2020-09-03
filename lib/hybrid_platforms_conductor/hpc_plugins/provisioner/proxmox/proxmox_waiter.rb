@@ -43,6 +43,8 @@ class ProxmoxWaiter
   # * *proxmox_password* (String): Proxmox password to be used to connect to the API.
   def initialize(config_file, proxmox_user, proxmox_password)
     @config = JSON.parse(File.read(config_file))
+    @proxmox_user = proxmox_user
+    @proxmox_password = proxmox_password
     # Cache of get queries to the API
     @gets_cache = {}
   end
@@ -195,8 +197,8 @@ class ProxmoxWaiter
           # Proxmox uses the hostname as the node name so make the default API node derived from the URL.
           # cf https://pve.proxmox.com/wiki/Renaming_a_PVE_node
           URI.parse(@config['proxmox_api_url']).host.downcase.split('.').first,
-          proxmox_user,
-          proxmox_password,
+          @proxmox_user,
+          @proxmox_password,
           'pam',
           { verify_ssl: false }
         )

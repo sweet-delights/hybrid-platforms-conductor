@@ -203,10 +203,10 @@ module HybridPlatformsConductor
         # [API] - This method is mandatory
         def destroy
           log_debug "[ #{@node}/#{@environment} ] - Delete Proxmox LXC Container ..."
-          release_lxc_container(@lxc_details[:vm_id])
           with_proxmox do |proxmox|
             run_proxmox_task(proxmox, :delete, "nodes/#{@lxc_details[:pve_node]}/lxc/#{@lxc_details[:vm_id]}")
           end
+          release_lxc_container(@lxc_details[:vm_id])
         end
 
         # Return the state of an instance
