@@ -189,6 +189,7 @@ class ProxmoxWaiter
   #   * *@expiration_date* (Time): The expiration date to be considered when selecting expired VMs
   #   * *@proxmox* (Proxmox or nil): The Proxmox instance, or nil if connect is false
   def start(connect: true)
+    # Read the current allocation file, in an atomic way
     Futex.new(@config['allocations_file'], timeout: FUTEX_TIMEOUT).open do
       if connect
         # Connect to Proxmox's API
@@ -208,18 +209,20 @@ class ProxmoxWaiter
           # Get the list of PVE nodes by default
           @config['pve_nodes'] = nodes_info.map { |node_info| node_info['node'] } unless @config['pve_nodes']
         rescue
-          raise "Unable to connect to Proxmox API #{@config['proxmox_api_url']} with user #{proxmox_user}: #{$!}"
+          raise "Unable to connect to Proxmox API #{@config['proxmox_api_url']} with user #{@proxmox_user}: #{$!}"
         end
       end
-      # Read the current allocation file, in an atomic way
       @allocations = File.exist?(@config['allocations_file']) ? JSON.parse(File.read(@config['allocations_file'])) : {}
       @expiration_date = Time.now.utc - @config['expiration_period_secs']
-      yield
-    ensure
-      File.write(@config['allocations_file'], @allocations.to_json)
-      @allocations = nil
-      @expiration_date = nil
-      @proxmox = nil
+      begin
+        yield
+      ensure
+        # Make sure we don't overwrite the file if an exception occurred before initializing @allocations
+        File.write(@config['allocations_file'], @allocations.to_json) unless @allocations.nil?
+        @allocations = nil
+        @expiration_date = nil
+        @proxmox = nil
+      end
     end
   end
 
