@@ -353,7 +353,7 @@ module HybridPlatformsConductor
         # Result::
         # * String: The task status
         def task_status(proxmox, pve_node, task)
-          status_info = proxmox.get("nodes/#{pve_node}/tasks/#{URI.encode(task)}/status")
+          status_info = proxmox.get("nodes/#{pve_node}/tasks/#{task}/status")
           "#{status_info['status']}#{status_info['exitstatus'] ? ":#{status_info['exitstatus']}" : ''}"
         end
 

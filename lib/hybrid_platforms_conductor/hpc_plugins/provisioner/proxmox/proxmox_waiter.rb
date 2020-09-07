@@ -424,7 +424,7 @@ class ProxmoxWaiter
           ip_of(pve_node, Integer(lxc_info['vmid']))
         end.compact
       end.flatten -
-      @allocations.values.map { |pve_node_info| pve_node_info.values.map { |vm_info| vm_info['ip'] } }.flatten
+      @allocations.values.map { |pve_node_info| pve_node_info.values.map { |vm_info| vm_info['ip'] }.compact }.flatten
   end
 
   # Return the list of available VM IDs
@@ -461,7 +461,7 @@ class ProxmoxWaiter
   # Result::
   # * String: The task status
   def task_status(pve_node, task)
-    status_info = @proxmox.get("nodes/#{pve_node}/tasks/#{URI.encode(task)}/status")
+    status_info = @proxmox.get("nodes/#{pve_node}/tasks/#{task}/status")
     "#{status_info['status']}#{status_info['exitstatus'] ? ":#{status_info['exitstatus']}" : ''}"
   end
 
@@ -492,7 +492,10 @@ class ProxmoxWaiter
     begin_time = Time.now
     loop do
       lxc_config = api_get(config_path)
-      if lxc_config.key?('lock')
+      if lxc_config.is_a?(String)
+        puts "Node #{pve_node}/#{vm_id} got an error while checking for its config: #{lxc_config}. Might be that the VM has disappeared. Ignore it."
+        lxc_config = nil
+      elsif lxc_config.key?('lock')
         # The node is currently doing some task. Wait for the lock to be released.
         puts "Node #{pve_node}/#{vm_id} is being locked (reason: #{lxc_config['lock']}). Wait for the lock to be released..."
         @gets_cache.delete(config_path)
@@ -505,7 +508,7 @@ class ProxmoxWaiter
         break
       end
     end
-    if lxc_config['net0'].nil?
+    if lxc_config.nil? || lxc_config['net0'].nil?
       puts "!!! Config for #{pve_node}/#{vm_id} does not contain net0 information: #{lxc_config}"
     else
       lxc_config['net0'].split(',').each do |net_info|
