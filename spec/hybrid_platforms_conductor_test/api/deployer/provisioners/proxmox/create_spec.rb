@@ -132,7 +132,7 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
         begin
           HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox.send(:remove_const, :RETRY_WAIT_TIME_SECS)
           HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox.const_set(:RETRY_WAIT_TIME_SECS, 1)
-          expect { instance.create }.to raise_error '[ node/test ] - Proxmox API call post ["nodes/pve_node_name/lxc", {:ostemplate=>"template_storage/os_image.tar.gz", :vmid=>1024, :hostname=>"node.test.hpc-test.com", :cores=>2, :cpulimit=>2, :memory=>1024, :rootfs=>"local-lvm:10", :nameserver=>"8.8.8.8", :searchdomain=>"my-domain.com", :net0=>"name=eth0,bridge=vmbr0,gw=192.168.0.1,ip=192.168.0.100/32", :password=>"root_pwd", :description=>"===== HPC info =====\nnode: node\nenvironment: test\n"}] is constantly failing. Giving up.'
+          expect { instance.create }.to raise_error '[ node/test ] - Proxmox API call post nodes/pve_node_name/lxc [{:ostemplate=>"template_storage/os_image.tar.gz", :vmid=>1024, :hostname=>"node.test.hpc-test.com", :cores=>2, :cpulimit=>2, :memory=>1024, :rootfs=>"local-lvm:10", :nameserver=>"8.8.8.8", :searchdomain=>"my-domain.com", :net0=>"name=eth0,bridge=vmbr0,gw=192.168.0.1,ip=192.168.0.100/32", :password=>"root_pwd", :description=>"===== HPC info =====\nnode: node\nenvironment: test\n"}] is constantly failing. Giving up.'
         ensure
           HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox.send(:remove_const, :RETRY_WAIT_TIME_SECS)
           HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox.const_set(:RETRY_WAIT_TIME_SECS, old_wait_secs)

@@ -396,10 +396,10 @@ class ProxmoxWaiter
           puts "[ #{pve_node}/#{vm_id} ] - LXC container has been created on #{vm_info['reservation_date']}. It is now expired."
           if api_get("nodes/#{pve_node}/lxc/#{vm_id}/status/current")['status'] == 'running'
             puts "[ #{pve_node}/#{vm_id} ] - Stop LXC container"
-            wait_for_proxmox_task(@proxmox.post("nodes/#{pve_node}/lxc/#{vm_id}/status/stop"))
+            wait_for_proxmox_task(pve_node, @proxmox.post("nodes/#{pve_node}/lxc/#{vm_id}/status/stop"))
           end
           puts "[ #{pve_node}/#{vm_id} ] - Destroy LXC container"
-          wait_for_proxmox_task(@proxmox.delete("nodes/#{pve_node}/lxc/#{vm_id}"))
+          wait_for_proxmox_task(pve_node, @proxmox.delete("nodes/#{pve_node}/lxc/#{vm_id}"))
           true
         else
           false
@@ -442,14 +442,27 @@ class ProxmoxWaiter
   # Wait for a given Proxmox task completion
   #
   # Parameters::
+  # * *pve_node* (String): The PVE node on which the task is run
   # * *task* (String): The task ID
-  def wait_for_proxmox_task(task)
+  def wait_for_proxmox_task(pve_node, task)
     raise "Invalid task: #{task}" if task[0..3] == 'NOK:'
-    while @proxmox.task_status(task) == 'running'
+    while task_status(pve_node, task) == 'running'
       puts "Wait for Proxmox task #{task} to complete..."
       sleep 1
     end
     puts "Proxmox task #{task} completed."
+  end
+
+  # Get task status
+  #
+  # Parameters::
+  # * *pve_node* (String): Node on which the task status is to be queried
+  # * *task* (String): Task ID to query
+  # Result::
+  # * String: The task status
+  def task_status(pve_node, task)
+    status_info = @proxmox.get("nodes/#{pve_node}/tasks/#{URI.encode(task)}/status")
+    "#{status_info['status']}#{status_info['exitstatus'] ? ":#{status_info['exitstatus']}" : ''}"
   end
 
   # Get a path from the API it returns its JSON result.

@@ -174,9 +174,9 @@ module HybridPlatformsConductorTest
             idx_try <= nbr_api_errors ? 'NOK: error code = 500' : task_name
           end
           unless task_status.nil?
-            # Mock checking creation task status
-            expect(proxmox).to receive(:task_status).with(task_name) do
-              task_status
+            # Mock checking task status
+            expect(proxmox).to receive(:get).with("nodes/pve_node_name/tasks/#{task_name}/status") do
+              { 'status' => task_status }
             end
           end
           proxmox
@@ -216,9 +216,9 @@ module HybridPlatformsConductorTest
           expect(proxmox).to receive(:post).with('nodes/pve_node_name/lxc/1024/status/start') do
             'UPID:pve_node_name:0000A504:6DEABF24:5F44669B:start::root@pam:'
           end
-          # Mock checking creation task status
-          expect(proxmox).to receive(:task_status).with('UPID:pve_node_name:0000A504:6DEABF24:5F44669B:start::root@pam:') do
-            task_status
+          # Mock checking task status
+          expect(proxmox).to receive(:get).with('nodes/pve_node_name/tasks/UPID:pve_node_name:0000A504:6DEABF24:5F44669B:start::root@pam:/status') do
+            { 'status' => task_status }
           end
           proxmox
         end
@@ -257,9 +257,9 @@ module HybridPlatformsConductorTest
           expect(proxmox).to receive(:post).with('nodes/pve_node_name/lxc/1024/status/stop') do
             'UPID:pve_node_name:0000A504:6DEABF24:5F44669B:stop::root@pam:'
           end
-          # Mock checking creation task status
-          expect(proxmox).to receive(:task_status).with('UPID:pve_node_name:0000A504:6DEABF24:5F44669B:stop::root@pam:') do
-            task_status
+          # Mock checking task status
+          expect(proxmox).to receive(:get).with('nodes/pve_node_name/tasks/UPID:pve_node_name:0000A504:6DEABF24:5F44669B:stop::root@pam:/status') do
+            { 'status' => task_status }
           end
           proxmox
         end
@@ -298,9 +298,9 @@ module HybridPlatformsConductorTest
           expect(proxmox).to receive(:delete).with('nodes/pve_node_name/lxc/1024') do
             'UPID:pve_node_name:0000A504:6DEABF24:5F44669B:destroy::root@pam:'
           end
-          # Mock checking creation task status
-          expect(proxmox).to receive(:task_status).with('UPID:pve_node_name:0000A504:6DEABF24:5F44669B:destroy::root@pam:') do
-            task_status
+          # Mock checking task status
+          expect(proxmox).to receive(:get).with('nodes/pve_node_name/tasks/UPID:pve_node_name:0000A504:6DEABF24:5F44669B:destroy::root@pam:/status') do
+            { 'status' => task_status }
           end
           proxmox
         end
@@ -591,6 +591,13 @@ module HybridPlatformsConductorTest
                   {
                     'status' => pve_nodes[pve_node_name][:lxc_containers][Integer(vmid)][:status]
                   }
+                when /^nodes\/([^\/]+)\/tasks\/([^\/]+)\/status$/
+                  pve_node_name = $1
+                  task = $2
+                  # Mock tasks completion
+                  {
+                    'status' => 'OK'
+                  }
                 else
                   raise "Unknown Proxmox API get call: #{path}. Please adapt the test framework."
                 end
@@ -620,10 +627,6 @@ module HybridPlatformsConductorTest
                 else
                   raise "Unknown Proxmox API post call: #{path}. Please adapt the test framework."
                 end
-              end
-              # Mock tasks completion
-              allow(proxmox).to receive(:task_status) do |task_name|
-                'OK'
               end
               proxmox
             end

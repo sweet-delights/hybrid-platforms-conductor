@@ -145,7 +145,8 @@ module HybridPlatformsConductor
                     run_proxmox_task(
                       proxmox,
                       :post,
-                      "nodes/#{@lxc_details[:pve_node]}/lxc",
+                      @lxc_details[:pve_node],
+                      'lxc',
                       {
                         ostemplate: pve_template,
                         vmid: @lxc_details[:vm_id],
@@ -184,7 +185,7 @@ module HybridPlatformsConductor
         def start
           log_debug "[ #{@node}/#{@environment} ] - Start Proxmox LXC Container ..."
           with_proxmox do |proxmox|
-            run_proxmox_task(proxmox, :post, "nodes/#{@lxc_details[:pve_node]}/lxc/#{@lxc_details[:vm_id]}/status/start")
+            run_proxmox_task(proxmox, :post, @lxc_details[:pve_node], "lxc/#{@lxc_details[:vm_id]}/status/start")
           end
         end
 
@@ -194,7 +195,7 @@ module HybridPlatformsConductor
         def stop
           log_debug "[ #{@node}/#{@environment} ] - Stop Proxmox LXC Container ..."
           with_proxmox do |proxmox|
-            run_proxmox_task(proxmox, :post, "nodes/#{@lxc_details[:pve_node]}/lxc/#{@lxc_details[:vm_id]}/status/stop")
+            run_proxmox_task(proxmox, :post, @lxc_details[:pve_node], "lxc/#{@lxc_details[:vm_id]}/status/stop")
           end
         end
 
@@ -204,7 +205,7 @@ module HybridPlatformsConductor
         def destroy
           log_debug "[ #{@node}/#{@environment} ] - Delete Proxmox LXC Container ..."
           with_proxmox do |proxmox|
-            run_proxmox_task(proxmox, :delete, "nodes/#{@lxc_details[:pve_node]}/lxc/#{@lxc_details[:vm_id]}")
+            run_proxmox_task(proxmox, :delete, @lxc_details[:pve_node], "lxc/#{@lxc_details[:vm_id]}")
           end
           release_lxc_container(@lxc_details[:vm_id])
         end
@@ -298,14 +299,16 @@ module HybridPlatformsConductor
         # Parameters::
         # * *proxmox* (Proxmox): The Proxmox instance
         # * *http_method* (Symbol): The HTTP method to call on the Proxmox instance
-        # * *args* (Array): The list of arguments to give to the call
-        def run_proxmox_task(proxmox, http_method, *args)
+        # * *pve_node* (String): Node on which the task is to be performed
+        # * *sub_path* (String): API sub-path to use (in the node API path)
+        # * *args* (Array): The list of additionnal arguments to give to the call
+        def run_proxmox_task(proxmox, http_method, pve_node, sub_path, *args)
           task = nil
           idx_try = 0
           while task.nil? do
-            task = proxmox.send(http_method, *args)
+            task = proxmox.send(http_method, "nodes/#{pve_node}/#{sub_path}", *args)
             if task =~ /^NOK: error code = 5\d\d$/
-              log_warn "[ #{@node}/#{@environment} ] - Proxmox API call #{http_method} #{args} returned error #{task} (attempt ##{idx_try}/#{NBR_RETRIES_MAX})"
+              log_warn "[ #{@node}/#{@environment} ] - Proxmox API call #{http_method} nodes/#{pve_node}/#{sub_path} #{args} returned error #{task} (attempt ##{idx_try}/#{NBR_RETRIES_MAX})"
               task = nil
               idx_try += 1
               break if idx_try == NBR_RETRIES_MAX
@@ -313,9 +316,9 @@ module HybridPlatformsConductor
             end
           end
           if task.nil?
-            raise "[ #{@node}/#{@environment} ] - Proxmox API call #{http_method} #{args} is constantly failing. Giving up."
+            raise "[ #{@node}/#{@environment} ] - Proxmox API call #{http_method} nodes/#{pve_node}/#{sub_path} #{args} is constantly failing. Giving up."
           else
-            wait_for_proxmox_task(proxmox, task)
+            wait_for_proxmox_task(proxmox, pve_node, task)
           end
         end
 
@@ -323,20 +326,35 @@ module HybridPlatformsConductor
         #
         # Parameters::
         # * *proxmox* (Proxmox): The Proxmox instance
+        # * *pve_node* (String): Node on which the task is to be performed
         # * *task* (String): The task ID
-        def wait_for_proxmox_task(proxmox, task)
+        def wait_for_proxmox_task(proxmox, pve_node, task)
           raise "Invalid task: #{task}" if task[0..3] == 'NOK:'
-          task_status = proxmox.task_status(task)
-          while task_status == 'running'
+          status = nil
+          loop do
+            status = task_status(proxmox, pve_node, task)
+            break unless status == 'running'
             log_debug "[ #{@node}/#{@environment} ] - Wait for Proxmox task #{task} to complete..."
             sleep 1
-            task_status = proxmox.task_status(task)
           end
-          if task_status.split(':').last == 'OK'
+          if status.split(':').last == 'OK'
             log_debug "[ #{@node}/#{@environment} ] - Proxmox task #{task} completed."
           else
-            raise "[ #{@node}/#{@environment} ] - Proxmox task #{task} completed with status #{task_status}"
+            raise "[ #{@node}/#{@environment} ] - Proxmox task #{task} completed with status #{status}"
           end
+        end
+
+        # Get task status
+        #
+        # Parameters::
+        # * *proxmox* (Proxmox): The Proxmox instance
+        # * *pve_node* (String): Node on which the task status is to be queried
+        # * *task* (String): Task ID to query
+        # Result::
+        # * String: The task status
+        def task_status(proxmox, pve_node, task)
+          status_info = proxmox.get("nodes/#{pve_node}/tasks/#{URI.encode(task)}/status")
+          "#{status_info['status']}#{status_info['exitstatus'] ? ":#{status_info['exitstatus']}" : ''}"
         end
 
         # Execute a command on the sync node and get back its JSON result
