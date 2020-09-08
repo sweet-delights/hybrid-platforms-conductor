@@ -493,22 +493,23 @@ class ProxmoxWaiter
     loop do
       lxc_config = api_get(config_path)
       if lxc_config.is_a?(String)
-        puts "Node #{pve_node}/#{vm_id} got an error while checking for its config: #{lxc_config}. Might be that the VM has disappeared. Ignore it."
-        lxc_config = nil
+        puts "Node #{pve_node}/#{vm_id} got an error while checking for its config: #{lxc_config}. Might be that the VM has disappeared."
+        lxc_config = { 'lock' => "Error: #{lxc_config}" }
       elsif lxc_config.key?('lock')
         # The node is currently doing some task. Wait for the lock to be released.
         puts "Node #{pve_node}/#{vm_id} is being locked (reason: #{lxc_config['lock']}). Wait for the lock to be released..."
-        @gets_cache.delete(config_path)
         sleep 1
       else
         break
       end
+      # Make sure we don't cache the error or the lock
+      @gets_cache.delete(config_path)
       if Time.now - begin_time > LOCK_TIMEOUT
         puts "!!! Timeout while waiting for #{pve_node}/#{vm_id} to be unlocked (reason: #{lxc_config['lock']})."
         break
       end
     end
-    if lxc_config.nil? || lxc_config['net0'].nil?
+    if lxc_config['net0'].nil?
       puts "!!! Config for #{pve_node}/#{vm_id} does not contain net0 information: #{lxc_config}"
     else
       lxc_config['net0'].split(',').each do |net_info|
