@@ -153,34 +153,10 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
             # Make sure those containers are not expired
             allocations: {
               'pve_node_name' => {
-                '1000' => {
-                  ip: '192.168.1.100',
-                  nbr_cpus: 2,
-                  ram_mb: 1024,
-                  disk_gb: 10,
-                  reservation_date: (Time.now - 60).utc.strftime('%FT%T')
-                },
-                '1001' => {
-                  ip: '192.168.1.101',
-                  nbr_cpus: 2,
-                  ram_mb: 1024,
-                  disk_gb: 10,
-                  reservation_date: (Time.now - 60).utc.strftime('%FT%T')
-                },
-                '1002' => {
-                  ip: '192.168.1.102',
-                  nbr_cpus: 2,
-                  ram_mb: 1024,
-                  disk_gb: 10,
-                  reservation_date: (Time.now - 60).utc.strftime('%FT%T')
-                },
-                '1003' => {
-                  ip: '192.168.1.103',
-                  nbr_cpus: 2,
-                  ram_mb: 1024,
-                  disk_gb: 10,
-                  reservation_date: (Time.now - 60).utc.strftime('%FT%T')
-                }
+                '1000' => { reservation_date: (Time.now - 60).utc.strftime('%FT%T') },
+                '1001' => { reservation_date: (Time.now - 60).utc.strftime('%FT%T') },
+                '1002' => { reservation_date: (Time.now - 60).utc.strftime('%FT%T') },
+                '1003' => { reservation_date: (Time.now - 60).utc.strftime('%FT%T') }
               }
             }
           )).to eq(error: 'exceeded_number_of_vms')

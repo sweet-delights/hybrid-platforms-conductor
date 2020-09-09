@@ -12,17 +12,14 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
             'pve_node_name' => {
               memory_total: 4 * 1024 * 1024 * 1024,
               lxc_containers: {
-                1000 => { maxmem: 1024 * 1024 * 1024 }
+                1000 => { ip: '192.168.0.100', maxmem: 1024 * 1024 * 1024 }
               }
             }
           })
           expect(call_reserve_proxmox_container(2, 1024, 1, allocations: {
             'pve_node_name' => {
               # Make sure it is expired
-              '1000' => {
-                reservation_date: (Time.now - 31 * 24 * 60 * 60).utc.strftime('%FT%T'),
-                ip: '192.168.0.100'
-              }
+              '1000' => { reservation_date: (Time.now - 31 * 24 * 60 * 60).utc.strftime('%FT%T') }
             }
           })).to eq(
             pve_node: 'pve_node_name',
@@ -38,17 +35,14 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
             'pve_node_name' => {
               memory_total: 4 * 1024 * 1024 * 1024,
               lxc_containers: {
-                1000 => { maxmem: 4 * 1024 * 1024 * 1024 }
+                1000 => { ip: '192.168.0.100', maxmem: 4 * 1024 * 1024 * 1024 }
               }
             }
           })
           expect(call_reserve_proxmox_container(2, 1024, 1, allocations: {
             'pve_node_name' => {
               # Make sure it is expired
-              '1000' => {
-                reservation_date: (Time.now - 31 * 24 * 60 * 60).utc.strftime('%FT%T'),
-                ip: '192.168.0.100'
-              }
+              '1000' => { reservation_date: (Time.now - 31 * 24 * 60 * 60).utc.strftime('%FT%T') }
             }
           })).to eq(
             pve_node: 'pve_node_name',
@@ -57,7 +51,17 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
           )
           expect(@proxmox_actions).to eq [
             [:post, 'nodes/pve_node_name/lxc/1000/status/stop'],
-            [:delete, 'nodes/pve_node_name/lxc/1000']
+            [:delete, 'nodes/pve_node_name/lxc/1000'],
+            [:post, 'nodes/pve_node_name/lxc', {
+              'cores' => 2,
+              'cpulimit' => 2,
+              'hostname' => 'test.hostname.my-domain.com',
+              'memory' => 1024,
+              'net0' => 'name=eth0,bridge=vmbr0,gw=172.16.16.16,ip=192.168.0.100/32',
+              'ostemplate' => 'test_template.iso',
+              'rootfs' => 'local-lvm:1',
+              'vmid' => 1000
+            }]
           ]
         end
       end
@@ -69,6 +73,7 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
               memory_total: 4 * 1024 * 1024 * 1024,
               lxc_containers: {
                 1000 => {
+                  ip: '192.168.0.100',
                   maxmem: 4 * 1024 * 1024 * 1024,
                   status: 'stopped'
                 }
@@ -78,10 +83,7 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
           expect(call_reserve_proxmox_container(2, 1024, 1, allocations: {
             'pve_node_name' => {
               # Make sure it is expired
-              '1000' => {
-                reservation_date: (Time.now - 31 * 24 * 60 * 60).utc.strftime('%FT%T'),
-                ip: '192.168.0.100'
-              }
+              '1000' => { reservation_date: (Time.now - 31 * 24 * 60 * 60).utc.strftime('%FT%T') }
             }
           })).to eq(
             pve_node: 'pve_node_name',
@@ -89,7 +91,17 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
             vm_ip: '192.168.0.100'
           )
           expect(@proxmox_actions).to eq [
-            [:delete, 'nodes/pve_node_name/lxc/1000']
+            [:delete, 'nodes/pve_node_name/lxc/1000'],
+            [:post, 'nodes/pve_node_name/lxc', {
+              'cores' => 2,
+              'cpulimit' => 2,
+              'hostname' => 'test.hostname.my-domain.com',
+              'memory' => 1024,
+              'net0' => 'name=eth0,bridge=vmbr0,gw=172.16.16.16,ip=192.168.0.100/32',
+              'ostemplate' => 'test_template.iso',
+              'rootfs' => 'local-lvm:1',
+              'vmid' => 1000
+            }]
           ]
         end
       end
@@ -108,18 +120,9 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
           })
           expect(call_reserve_proxmox_container(2, 1024, 1, allocations: {
             'pve_node_name' => {
-              '1000' => {
-                reservation_date: Time.now.utc.strftime('%FT%T'),
-                ip: '192.168.0.100'
-              },
-              '1001' => {
-                reservation_date: (Time.now - 31 * 24 * 60 * 60).utc.strftime('%FT%T'),
-                ip: '192.168.0.101'
-              },
-              '1002' => {
-                reservation_date: Time.now.utc.strftime('%FT%T'),
-                ip: '192.168.0.102'
-              }
+              '1000' => { reservation_date: Time.now.utc.strftime('%FT%T') },
+              '1001' => { reservation_date: (Time.now - 31 * 24 * 60 * 60).utc.strftime('%FT%T') },
+              '1002' => { reservation_date: Time.now.utc.strftime('%FT%T') }
             }
           })).to eq(
             pve_node: 'pve_node_name',
@@ -128,7 +131,17 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
           )
           expect(@proxmox_actions).to eq [
             [:post, 'nodes/pve_node_name/lxc/1001/status/stop'],
-            [:delete, 'nodes/pve_node_name/lxc/1001']
+            [:delete, 'nodes/pve_node_name/lxc/1001'],
+            [:post, 'nodes/pve_node_name/lxc', {
+              'cores' => 2,
+              'cpulimit' => 2,
+              'hostname' => 'test.hostname.my-domain.com',
+              'memory' => 1024,
+              'net0' => 'name=eth0,bridge=vmbr0,gw=172.16.16.16,ip=192.168.0.101/32',
+              'ostemplate' => 'test_template.iso',
+              'rootfs' => 'local-lvm:1',
+              'vmid' => 1001
+            }]
           ]
         end
       end
@@ -147,18 +160,9 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
           })
           expect(call_reserve_proxmox_container(2, 1024, 1, allocations: {
             'pve_node_name' => {
-              '1000' => {
-                reservation_date: Time.now.utc.strftime('%FT%T'),
-                ip: '192.168.0.100'
-              },
-              '1001' => {
-                reservation_date: (Time.now - 31 * 24 * 60 * 60).utc.strftime('%FT%T'),
-                ip: '192.168.0.101'
-              },
-              '1002' => {
-                reservation_date: Time.now.utc.strftime('%FT%T'),
-                ip: '192.168.0.102'
-              }
+              '1000' => { reservation_date: Time.now.utc.strftime('%FT%T') },
+              '1001' => { reservation_date: (Time.now - 31 * 24 * 60 * 60).utc.strftime('%FT%T') },
+              '1002' => { reservation_date: Time.now.utc.strftime('%FT%T') }
             }
           })).to eq(error: 'not_enough_resources')
           expect(@proxmox_actions).to eq []
@@ -179,18 +183,9 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
           })
           expect(call_reserve_proxmox_container(2, 1024, 1, allocations: {
             'pve_node_name' => {
-              '1000' => {
-                reservation_date: Time.now.utc.strftime('%FT%T'),
-                ip: '192.168.0.100'
-              },
-              '1001' => {
-                reservation_date: (Time.now - 31 * 24 * 60 * 60).utc.strftime('%FT%T'),
-                ip: '192.168.0.101'
-              },
-              '1002' => {
-                reservation_date: (Time.now - 31 * 24 * 60 * 60).utc.strftime('%FT%T'),
-                ip: '192.168.0.102'
-              }
+              '1000' => { reservation_date: Time.now.utc.strftime('%FT%T') },
+              '1001' => { reservation_date: (Time.now - 31 * 24 * 60 * 60).utc.strftime('%FT%T') },
+              '1002' => { reservation_date: (Time.now - 31 * 24 * 60 * 60).utc.strftime('%FT%T') }
             }
           })).to eq(
             pve_node: 'pve_node_name',
@@ -201,7 +196,17 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
             [:post, 'nodes/pve_node_name/lxc/1001/status/stop'],
             [:delete, 'nodes/pve_node_name/lxc/1001'],
             [:post, 'nodes/pve_node_name/lxc/1002/status/stop'],
-            [:delete, 'nodes/pve_node_name/lxc/1002']
+            [:delete, 'nodes/pve_node_name/lxc/1002'],
+            [:post, 'nodes/pve_node_name/lxc', {
+              'cores' => 2,
+              'cpulimit' => 2,
+              'hostname' => 'test.hostname.my-domain.com',
+              'memory' => 1024,
+              'net0' => 'name=eth0,bridge=vmbr0,gw=172.16.16.16,ip=192.168.0.101/32',
+              'ostemplate' => 'test_template.iso',
+              'rootfs' => 'local-lvm:1',
+              'vmid' => 1001
+            }]
           ]
         end
       end
@@ -220,18 +225,9 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
           })
           expect(call_reserve_proxmox_container(2, 1024, 1, allocations: {
             'pve_node_name' => {
-              '1000' => {
-                reservation_date: Time.now.utc.strftime('%FT%T'),
-                ip: '192.168.0.100'
-              },
-              '1001' => {
-                reservation_date: (Time.now - 31 * 24 * 60 * 60).utc.strftime('%FT%T'),
-                ip: '192.168.0.101'
-              },
-              '1002' => {
-                reservation_date: (Time.now - 31 * 24 * 60 * 60).utc.strftime('%FT%T'),
-                ip: '192.168.0.102'
-              }
+              '1000' => { reservation_date: Time.now.utc.strftime('%FT%T') },
+              '1001' => { reservation_date: (Time.now - 31 * 24 * 60 * 60).utc.strftime('%FT%T') },
+              '1002' => { reservation_date: (Time.now - 31 * 24 * 60 * 60).utc.strftime('%FT%T') }
             }
           })).to eq(
             pve_node: 'pve_node_name',
@@ -240,7 +236,17 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
           )
           expect(@proxmox_actions).to eq [
             [:post, 'nodes/pve_node_name/lxc/1001/status/stop'],
-            [:delete, 'nodes/pve_node_name/lxc/1001']
+            [:delete, 'nodes/pve_node_name/lxc/1001'],
+            [:post, 'nodes/pve_node_name/lxc', {
+              'cores' => 2,
+              'cpulimit' => 2,
+              'hostname' => 'test.hostname.my-domain.com',
+              'memory' => 1024,
+              'net0' => 'name=eth0,bridge=vmbr0,gw=172.16.16.16,ip=192.168.0.101/32',
+              'ostemplate' => 'test_template.iso',
+              'rootfs' => 'local-lvm:1',
+              'vmid' => 1001
+            }]
           ]
         end
       end
@@ -265,23 +271,28 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
           })
           expect(call_reserve_proxmox_container(2, 1024, 1, config: { pve_nodes: nil }, allocations: {
             'pve_node_1' => {
-              '1000' => {
-                reservation_date: (Time.now - 31 * 24 * 60 * 60).utc.strftime('%FT%T'),
-                ip: '192.168.0.100'
-              }
+              '1000' => { reservation_date: (Time.now - 31 * 24 * 60 * 60).utc.strftime('%FT%T') }
             },
             'pve_node_2' => {
-              '1001' => {
-                reservation_date: (Time.now - 31 * 24 * 60 * 60).utc.strftime('%FT%T'),
-                ip: '192.168.0.101'
-              }
+              '1001' => { reservation_date: (Time.now - 31 * 24 * 60 * 60).utc.strftime('%FT%T') }
             }
           })).to eq(
             pve_node: 'pve_node_2',
             vm_id: 1002,
             vm_ip: '192.168.0.102'
           )
-          expect(@proxmox_actions).to eq []
+          expect(@proxmox_actions).to eq [
+            [:post, 'nodes/pve_node_2/lxc', {
+              'cores' => 2,
+              'cpulimit' => 2,
+              'hostname' => 'test.hostname.my-domain.com',
+              'memory' => 1024,
+              'net0' => 'name=eth0,bridge=vmbr0,gw=172.16.16.16,ip=192.168.0.102/32',
+              'ostemplate' => 'test_template.iso',
+              'rootfs' => 'local-lvm:1',
+              'vmid' => 1002
+            }]
+          ]
         end
       end
 
@@ -316,24 +327,12 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
             },
             allocations: {
               'pve_node_1' => {
-                '1000' => {
-                  reservation_date: Time.now.utc.strftime('%FT%T'),
-                  ip: '192.168.0.100'
-                },
-                '1001' => {
-                  reservation_date: (Time.now - 31 * 24 * 60 * 60).utc.strftime('%FT%T'),
-                  ip: '192.168.0.101'
-                }
+                '1000' => { reservation_date: Time.now.utc.strftime('%FT%T') },
+                '1001' => { reservation_date: (Time.now - 31 * 24 * 60 * 60).utc.strftime('%FT%T') }
               },
               'pve_node_2' => {
-                '1002' => {
-                  reservation_date: Time.now.utc.strftime('%FT%T'),
-                  ip: '192.168.0.102'
-                },
-                '1003' => {
-                  reservation_date: (Time.now - 31 * 24 * 60 * 60).utc.strftime('%FT%T'),
-                  ip: '192.168.0.103'
-                }
+                '1002' => { reservation_date: Time.now.utc.strftime('%FT%T') },
+                '1003' => { reservation_date: (Time.now - 31 * 24 * 60 * 60).utc.strftime('%FT%T') }
               }
             }
           )).to eq(
@@ -343,7 +342,17 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
           )
           expect(@proxmox_actions).to eq [
             [:post, 'nodes/pve_node_1/lxc/1001/status/stop'],
-            [:delete, 'nodes/pve_node_1/lxc/1001']
+            [:delete, 'nodes/pve_node_1/lxc/1001'],
+            [:post, 'nodes/pve_node_1/lxc', {
+              'cores' => 2,
+              'cpulimit' => 2,
+              'hostname' => 'test.hostname.my-domain.com',
+              'memory' => 1024,
+              'net0' => 'name=eth0,bridge=vmbr0,gw=172.16.16.16,ip=192.168.0.101/32',
+              'ostemplate' => 'test_template.iso',
+              'rootfs' => 'local-lvm:1',
+              'vmid' => 1001
+            }]
           ]
         end
       end
@@ -370,18 +379,9 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
             },
             allocations: {
               'pve_node_name' => {
-                '1000' => {
-                  reservation_date: Time.now.utc.strftime('%FT%T'),
-                  ip: '192.168.0.100'
-                },
-                '1001' => {
-                  reservation_date: (Time.now - 31 * 24 * 60 * 60).utc.strftime('%FT%T'),
-                  ip: '192.168.0.101'
-                },
-                '1002' => {
-                  reservation_date: Time.now.utc.strftime('%FT%T'),
-                  ip: '192.168.0.102'
-                }
+                '1000' => { reservation_date: Time.now.utc.strftime('%FT%T') },
+                '1001' => { reservation_date: (Time.now - 31 * 24 * 60 * 60).utc.strftime('%FT%T') },
+                '1002' => { reservation_date: Time.now.utc.strftime('%FT%T') }
               }
             }
           )).to eq(
@@ -391,7 +391,17 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
           )
           expect(@proxmox_actions).to eq [
             [:post, 'nodes/pve_node_name/lxc/1001/status/stop'],
-            [:delete, 'nodes/pve_node_name/lxc/1001']
+            [:delete, 'nodes/pve_node_name/lxc/1001'],
+            [:post, 'nodes/pve_node_name/lxc', {
+              'cores' => 2,
+              'cpulimit' => 2,
+              'hostname' => 'test.hostname.my-domain.com',
+              'memory' => 1024,
+              'net0' => 'name=eth0,bridge=vmbr0,gw=172.16.16.16,ip=192.168.0.101/32',
+              'ostemplate' => 'test_template.iso',
+              'rootfs' => 'local-lvm:1',
+              'vmid' => 1001
+            }]
           ]
         end
       end
@@ -420,18 +430,9 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
             },
             allocations: {
               'pve_node_name' => {
-                '1000' => {
-                  reservation_date: Time.now.utc.strftime('%FT%T'),
-                  ip: '192.168.0.100'
-                },
-                '1001' => {
-                  reservation_date: (Time.now - 31 * 24 * 60 * 60).utc.strftime('%FT%T'),
-                  ip: '192.168.0.101'
-                },
-                '1002' => {
-                  reservation_date: Time.now.utc.strftime('%FT%T'),
-                  ip: '192.168.0.102'
-                }
+                '1000' => { reservation_date: Time.now.utc.strftime('%FT%T') },
+                '1001' => { reservation_date: (Time.now - 31 * 24 * 60 * 60).utc.strftime('%FT%T') },
+                '1002' => { reservation_date: Time.now.utc.strftime('%FT%T') }
               }
             }
           )).to eq(
@@ -441,7 +442,17 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
           )
           expect(@proxmox_actions).to eq [
             [:post, 'nodes/pve_node_name/lxc/1001/status/stop'],
-            [:delete, 'nodes/pve_node_name/lxc/1001']
+            [:delete, 'nodes/pve_node_name/lxc/1001'],
+            [:post, 'nodes/pve_node_name/lxc', {
+              'cores' => 2,
+              'cpulimit' => 2,
+              'hostname' => 'test.hostname.my-domain.com',
+              'memory' => 1024,
+              'net0' => 'name=eth0,bridge=vmbr0,gw=172.16.16.16,ip=192.168.0.101/32',
+              'ostemplate' => 'test_template.iso',
+              'rootfs' => 'local-lvm:1',
+              'vmid' => 1001
+            }]
           ]
         end
       end
@@ -475,18 +486,9 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
             },
             allocations: {
               'pve_node_name' => {
-                '1000' => {
-                  reservation_date: Time.now.utc.strftime('%FT%T'),
-                  ip: '192.168.0.100'
-                },
-                '1001' => {
-                  reservation_date: (Time.now - 31 * 24 * 60 * 60).utc.strftime('%FT%T'),
-                  ip: '192.168.0.101'
-                },
-                '1002' => {
-                  reservation_date: Time.now.utc.strftime('%FT%T'),
-                  ip: '192.168.0.102'
-                }
+                '1000' => { reservation_date: Time.now.utc.strftime('%FT%T') },
+                '1001' => { reservation_date: (Time.now - 31 * 24 * 60 * 60).utc.strftime('%FT%T') },
+                '1002' => { reservation_date: Time.now.utc.strftime('%FT%T') }
               }
             }
           )).to eq(
@@ -496,7 +498,17 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
           )
           expect(@proxmox_actions).to eq [
             [:post, 'nodes/pve_node_name/lxc/1001/status/stop'],
-            [:delete, 'nodes/pve_node_name/lxc/1001']
+            [:delete, 'nodes/pve_node_name/lxc/1001'],
+            [:post, 'nodes/pve_node_name/lxc', {
+              'cores' => 2,
+              'cpulimit' => 2,
+              'hostname' => 'test.hostname.my-domain.com',
+              'memory' => 1024,
+              'net0' => 'name=eth0,bridge=vmbr0,gw=172.16.16.16,ip=192.168.0.101/32',
+              'ostemplate' => 'test_template.iso',
+              'rootfs' => 'local-lvm:1',
+              'vmid' => 1001
+            }]
           ]
         end
       end

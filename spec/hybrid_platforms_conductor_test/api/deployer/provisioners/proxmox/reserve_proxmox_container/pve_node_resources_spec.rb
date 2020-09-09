@@ -14,6 +14,18 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
             vm_id: 1000,
             vm_ip: '192.168.0.100'
           )
+          expect(@proxmox_actions).to eq [
+            [:post, 'nodes/pve_node_name/lxc', {
+              'cores' => 2,
+              'cpulimit' => 2,
+              'hostname' => 'test.hostname.my-domain.com',
+              'memory' => 1024,
+              'net0' => 'name=eth0,bridge=vmbr0,gw=172.16.16.16,ip=192.168.0.100/32',
+              'ostemplate' => 'test_template.iso',
+              'rootfs' => 'local-lvm:4',
+              'vmid' => 1000
+            }]
+          ]
         end
       end
 

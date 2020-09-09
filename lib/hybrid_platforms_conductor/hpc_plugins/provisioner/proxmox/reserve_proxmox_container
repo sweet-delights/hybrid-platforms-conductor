@@ -1,22 +1,20 @@
 #!/usr/bin/env ruby
-# This scripts allows an atomic resource reservation to clients that need to create LXC containers.
+# This scripts creates and destroys containers in an atomic way in a Proxmox cluster.
 # It handles:
 # * An intelligent resources allocation algorithm to balance usage among cluster PVE nodes.
 # * A retry mechanism if the resources are fully reserved.
 # * An expiration mechanism that removes expired containers before assigning new ones to protect resources.
 # It guarantees that:
 # * Any IP and VM ID reserved through this script will not be reserved by another concurrent process (unless the container becomes expired).
-# * If reservation is granted, creating this container will not exceed resources limits specified in the config.
-# * The returned reserved VM ID and IP are not created.
+# * If creation is granted, creating this container will not exceed resources limits specified in the config.
+# * The returned reserved VM ID and IP are already created.
 
 # Usage: ./reserve_proxmox_container [options]
-#     -c, --cpus NBR                   Set the number of CPUs to reserve for the new container (default: 2)
-#     -d, --disk-gb GB                 Set the number of gigabytes of disk to reserve for the new container (default: 4)
-#     -e, --release VMID               Mark a VM ID to be released. If used then other parameters for resources reserve are ignored.
+#     -c, --create FILE                Create a VM with the configuration stored in a given JSON file
+#     -d, --destroy VMID               Destroy a VM ID
 #     -h, --help                       Display help and exit
 #     -m, --max-retries NBR            Set the maximum number of retries to attempt (default: 240)
 #     -o, --config FILE                Set the path to the file storing configuration (default: ./config.json)
-#     -r, --ram-mb MB                  Set the number of megabytes of RAM to reserve for the new container (default: 1024)
 #     -w, --wait-before-retry SECS     Set the number of seconds to wait between retries (default: 4)
 
 # Result:
@@ -52,10 +50,8 @@ begin
   require "#{__dir__}/proxmox_waiter"
 
   # Define here default values
-  nbr_cpus = 2
-  ram_mb = 1024
-  disk_gb = 4
-  vm_id_to_release = nil
+  create_info = nil
+  destroy_vm_id = nil
   wait_time_before_retry_secs = 60
   # Don't hesitate to retry for a few hours, as resources are taken by tests that can run for a few hours sometimes.
   max_retries = 240
@@ -63,14 +59,11 @@ begin
 
   OptionParser.new do |opts|
     opts.banner = "Usage: #{$0} [options]"
-    opts.on('-c', '--cpus NBR', "Set the number of CPUs to reserve for the new container (default: #{nbr_cpus})") do |nbr|
-      nbr_cpus = Integer(nbr)
+    opts.on('-c', '--create FILE', 'Create a VM with the configuration stored in a given JSON file') do |file|
+      create_info = JSON.parse(File.read(file))
     end
-    opts.on('-d', '--disk-gb GB', "Set the number of gigabytes of disk to reserve for the new container (default: #{disk_gb})") do |gb|
-      disk_gb = Integer(gb)
-    end
-    opts.on('-e', '--release VMID', 'Mark a VM ID to be released. If used then other parameters for resources reserve are ignored.') do |vm_id_str|
-      vm_id_to_release = Integer(vm_id_str)
+    opts.on('-d', '--destroy VMID', 'Destroy a VM ID.') do |vm_id_str|
+      destroy_vm_id = Integer(vm_id_str)
     end
     opts.on('-h', '--help', 'Display help and exit') do
       puts opts
@@ -82,13 +75,12 @@ begin
     opts.on('-o', '--config FILE', "Set the path to the file storing configuration (default: #{config_file})") do |file|
       config_file = file
     end
-    opts.on('-r', '--ram-mb MB', "Set the number of megabytes of RAM to reserve for the new container (default: #{ram_mb})") do |mb|
-      ram_mb = Integer(mb)
-    end
-    opts.on('-w', '--wait-before-retry SECS', "Set the number of seconds to wait between retries (default: #{disk_gb})") do |secs|
+    opts.on('-w', '--wait-before-retry SECS', "Set the number of seconds to wait between retries (default: #{wait_time_before_retry_secs})") do |secs|
       wait_time_before_retry_secs = Integer(secs)
     end
   end.parse!
+
+  raise 'Either use --create or --destroy options. Not both.' if create_info && destroy_vm_id
 
   idx_retry = 0
   while idx_retry < max_retries
@@ -98,12 +90,12 @@ begin
       ENV['hpc_password_for_proxmox']
     )
     reserved_resource =
-      if vm_id_to_release.nil?
-        puts "[ #{Time.now.utc.strftime('%F %T')} ] - Reserve #{nbr_cpus} CPUs, #{ram_mb} MB RAM and #{disk_gb} GB disks in a Proxmox container (attempt ##{idx_retry}/#{max_retries})"
-        proxmox_waiter.reserve(nbr_cpus, ram_mb, disk_gb)
+      if destroy_vm_id.nil?
+        puts "[ #{Time.now.utc.strftime('%F %T')} ] - Create #{create_info} in a Proxmox container (attempt ##{idx_retry}/#{max_retries})"
+        proxmox_waiter.create(create_info)
       else
-        puts "[ #{Time.now.utc.strftime('%F %T')} ] - Release VM ID #{vm_id_to_release} (attempt ##{idx_retry}/#{max_retries})"
-        proxmox_waiter.release(vm_id_to_release)
+        puts "[ #{Time.now.utc.strftime('%F %T')} ] - Destroy VM ID #{destroy_vm_id} (attempt ##{idx_retry}/#{max_retries})"
+        proxmox_waiter.destroy(destroy_vm_id)
       end
     if reserved_resource.is_a?(Symbol)
       # We are missing some resources to get the resource.

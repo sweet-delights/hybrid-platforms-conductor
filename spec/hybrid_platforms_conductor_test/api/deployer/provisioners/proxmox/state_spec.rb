@@ -15,9 +15,7 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
         mock_proxmox_calls_with [
           # 1 - The info on existing containers
           mock_proxmox_to_get_nodes_info,
-          # 2 - The creation of the container
-          mock_proxmox_to_create_node,
-          # 3 - The status of the container
+          # 2 - The status of the container
           mock_proxmox_to_status_node
         ]
         instance.create

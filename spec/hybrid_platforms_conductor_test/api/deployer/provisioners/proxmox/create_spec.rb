@@ -8,12 +8,22 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
       with_test_proxmox_platform do |instance|
         mock_proxmox_calls_with [
           # 1 - The info on existing containers
-          mock_proxmox_to_get_nodes_info,
-          # 2 - The creation of the container
-          mock_proxmox_to_create_node
+          mock_proxmox_to_get_nodes_info
         ]
         instance.create
-        expect(@proxmox_create_options[:hostname]).to eq 'node.test.hpc-test.com'
+        expect(@proxmox_create_options).to eq({
+          'cores' => 2,
+          'cpulimit' => 2,
+          'description' => "===== HPC info =====\nnode: node\nenvironment: test\n",
+          'hostname' => 'node.test.hpc-test.com',
+          'memory' => 1024,
+          'nameserver' => '8.8.8.8',
+          'net0' => 'name=eth0,bridge=vmbr0,gw=192.168.0.1',
+          'ostemplate' => 'template_storage/os_image.tar.gz',
+          'password' => 'root_pwd',
+          'rootfs' => 'local-lvm:10',
+          'searchdomain' => 'my-domain.com'
+        })
       end
     end
 
@@ -23,12 +33,10 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
       with_test_proxmox_platform(environment: env_name) do |instance|
         mock_proxmox_calls_with [
           # 1 - The info on existing containers
-          mock_proxmox_to_get_nodes_info,
-          # 2 - The creation of the container
-          mock_proxmox_to_create_node(hostname: expected_hostname, environment: env_name)
+          mock_proxmox_to_get_nodes_info
         ]
         instance.create
-        expect(@proxmox_create_options[:hostname]).to eq expected_hostname
+        expect(@proxmox_create_options['hostname']).to eq expected_hostname
       end
     end
 
@@ -39,9 +47,7 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
         mock_proxmox_calls_with(
           [
             # 1 - The info on existing containers
-            mock_proxmox_to_get_nodes_info(proxmox_user: 'test_proxmox_user', proxmox_password: 'test_proxmox_password'),
-            # 2 - The creation of the container
-            mock_proxmox_to_create_node(proxmox_user: 'test_proxmox_user', proxmox_password: 'test_proxmox_password')
+            mock_proxmox_to_get_nodes_info(proxmox_user: 'test_proxmox_user', proxmox_password: 'test_proxmox_password')
           ],
           proxmox_user: 'test_proxmox_user',
           proxmox_password: 'test_proxmox_password'
@@ -56,9 +62,9 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
             # 1 - The info on existing containers
             mock_proxmox_to_get_nodes_info
           ],
-          error: 'Error while getting resources'
+          error_on_create: 'Error while getting resources'
         )
-        expect { instance.create }.to raise_error '[ node/test ] - Error returned by reserve_proxmox_container --cpus 2 --ram-mb 1024 --disk-gb 10: Error while getting resources'
+        expect { instance.create }.to raise_error /^\[ node\/test \] - Error returned by reserve_proxmox_container --create .+\/create_vm_.+\.json: Error while getting resources$/
       end
     end
 
@@ -73,70 +79,23 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
         mock_proxmox_calls_with(
           [
             # 1 - The info on existing containers
-            mock_proxmox_to_get_nodes_info,
-            # 2 - The creation of the container
-            mock_proxmox_to_create_node(cpus: 24, ram_mb: 4096, disk_gb: 20)
-          ],
-          cpus: 24,
-          ram_mb: 4096,
-          disk_gb: 20
+            mock_proxmox_to_get_nodes_info
+          ]
         )
         instance.create
-      end
-    end
-
-    it 'fails to create an instance when the Proxmox creation task ends in error' do
-      with_test_proxmox_platform do |instance|
-        mock_proxmox_calls_with [
-          # 1 - The info on existing containers
-          mock_proxmox_to_get_nodes_info,
-          # 2 - The creation of the container
-          mock_proxmox_to_create_node(task_status: 'ERROR')
-        ]
-        expect { instance.create }.to raise_error '[ node/test ] - Proxmox task UPID:pve_node_name:0000A504:6DEABF24:5F44669B:create::root@pam: completed with status ERROR'
-      end
-    end
-
-    it 'retries calls to the API when getting back errors 5xx' do
-      with_test_proxmox_platform do |instance|
-        mock_proxmox_calls_with [
-          # 1 - The info on existing containers
-          mock_proxmox_to_get_nodes_info,
-          # 2 - The creation of the container - fail a few times
-          mock_proxmox_to_create_node(nbr_api_errors: 3)
-        ]
-        # To speed up the test, alter the wait time between retries.
-        old_wait_secs = HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox.const_get(:RETRY_WAIT_TIME_SECS)
-        begin
-          HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox.send(:remove_const, :RETRY_WAIT_TIME_SECS)
-          HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox.const_set(:RETRY_WAIT_TIME_SECS, 1)
-          instance.create
-        ensure
-          HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox.send(:remove_const, :RETRY_WAIT_TIME_SECS)
-          HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox.const_set(:RETRY_WAIT_TIME_SECS, old_wait_secs)
-        end
-        expect(@proxmox_create_options[:hostname]).to eq 'node.test.hpc-test.com'
-      end
-    end
-
-    it 'fails to create an instance when the Proxmox API fails too many times' do
-      with_test_proxmox_platform do |instance|
-        mock_proxmox_calls_with [
-          # 1 - The info on existing containers
-          mock_proxmox_to_get_nodes_info,
-          # 2 - The creation of the container - fail too many times
-          mock_proxmox_to_create_node(nbr_api_errors: HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox.const_get(:NBR_RETRIES_MAX), task_status: nil)
-        ]
-        # To speed up the test, alter the wait time between retries.
-        old_wait_secs = HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox.const_get(:RETRY_WAIT_TIME_SECS)
-        begin
-          HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox.send(:remove_const, :RETRY_WAIT_TIME_SECS)
-          HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox.const_set(:RETRY_WAIT_TIME_SECS, 1)
-          expect { instance.create }.to raise_error '[ node/test ] - Proxmox API call post nodes/pve_node_name/lxc [{:ostemplate=>"template_storage/os_image.tar.gz", :vmid=>1024, :hostname=>"node.test.hpc-test.com", :cores=>2, :cpulimit=>2, :memory=>1024, :rootfs=>"local-lvm:10", :nameserver=>"8.8.8.8", :searchdomain=>"my-domain.com", :net0=>"name=eth0,bridge=vmbr0,gw=192.168.0.1,ip=192.168.0.100/32", :password=>"root_pwd", :description=>"===== HPC info =====\nnode: node\nenvironment: test\n"}] is constantly failing. Giving up.'
-        ensure
-          HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox.send(:remove_const, :RETRY_WAIT_TIME_SECS)
-          HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox.const_set(:RETRY_WAIT_TIME_SECS, old_wait_secs)
-        end
+        expect(@proxmox_create_options).to eq({
+          'cores' => 24,
+          'cpulimit' => 24,
+          'description' => "===== HPC info =====\nnode: node\nenvironment: test\n",
+          'hostname' => 'node.test.hpc-test.com',
+          'memory' => 4096,
+          'nameserver' => '8.8.8.8',
+          'net0' => 'name=eth0,bridge=vmbr0,gw=192.168.0.1',
+          'ostemplate' => 'template_storage/os_image.tar.gz',
+          'password' => 'root_pwd',
+          'rootfs' => 'local-lvm:20',
+          'searchdomain' => 'my-domain.com'
+        })
       end
     end
 
@@ -190,9 +149,7 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
                 'node' => 'pve_node_name'
               }
             ]
-          ),
-          # 2 - The creation of the container
-          mock_proxmox_to_create_node
+          )
         ]
         instance.create
       end
@@ -209,9 +166,7 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
                 'node' => 'pve_other_node_name'
               }
             ]
-          ),
-          # 2 - The creation of the container
-          mock_proxmox_to_create_node
+          )
         ]
         instance.create
       end
@@ -246,9 +201,7 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
                 }
               end
             end
-          ),
-          # 2 - The creation of the container
-          mock_proxmox_to_create_node
+          )
         ]
         instance.create
       end
@@ -274,9 +227,7 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
                 ]
               end
             end
-          ),
-          # 2 - The creation of the container
-          mock_proxmox_to_create_node
+          )
         ]
         instance.create
       end

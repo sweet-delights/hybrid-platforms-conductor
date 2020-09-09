@@ -129,44 +129,35 @@ module HybridPlatformsConductor
                     ram_mb: 1024,
                     disk_gb: 10
                   }.merge(@nodes_handler.get_deploy_resources_min_of(@node) || {})
-                  # Get an authorization from the Proxmox cluster to create an LXC container for the node we want
-                  @lxc_details = request_lxc_creation_for(min_resources_to_deploy[:cpus], min_resources_to_deploy[:ram_mb], min_resources_to_deploy[:disk_gb])
-                  with_proxmox do |proxmox|
-                    # Hostname in Proxmox is capped at 65 chars.
-                    # Make sure we don't get over it, but still use a unique one.
-                    hostname = "#{@node}.#{@environment}.hpc-test.com"
-                    if hostname.size > MAX_PROXMOX_HOSTNAME_SIZE
-                      # Truncate it, but add a unique ID in it.
-                      # In the end the hostname looks like:
-                      # <truncated_node_environment>.<unique_id>.hpc-test.com
-                      hostname = "-#{Digest::MD5.hexdigest(hostname)[0..7]}.hpc-test.com"
-                      hostname = "#{@node}.#{@environment}"[0..MAX_PROXMOX_HOSTNAME_SIZE - hostname.size - 1] + hostname
-                    end
-                    run_proxmox_task(
-                      proxmox,
-                      :post,
-                      @lxc_details[:pve_node],
-                      'lxc',
-                      {
-                        ostemplate: pve_template,
-                        vmid: @lxc_details[:vm_id],
-                        hostname: hostname.gsub('_', '-'),
-                        cores: min_resources_to_deploy[:cpus],
-                        cpulimit: min_resources_to_deploy[:cpus],
-                        memory: min_resources_to_deploy[:ram_mb],
-                        rootfs: "local-lvm:#{min_resources_to_deploy[:disk_gb]}",
-                        nameserver: @lxc_details[:vm_dns_servers].join(' '),
-                        searchdomain: @lxc_details[:vm_search_domain],
-                        net0: "name=eth0,bridge=vmbr0,gw=#{@lxc_details[:vm_gateway]},ip=#{@lxc_details[:vm_ip]}/32",
-                        password: 'root_pwd',
-                        description: <<~EOS
-                          ===== HPC info =====
-                          node: #{@node}
-                          environment: #{@environment}
-                        EOS
-                      }
-                    )
+                  # Create the Proxmox container from the sync node.
+                  vm_config = proxmox_test_info[:vm_config]
+                  # Hostname in Proxmox is capped at 65 chars.
+                  # Make sure we don't get over it, but still use a unique one.
+                  hostname = "#{@node}.#{@environment}.hpc-test.com"
+                  if hostname.size > MAX_PROXMOX_HOSTNAME_SIZE
+                    # Truncate it, but add a unique ID in it.
+                    # In the end the hostname looks like:
+                    # <truncated_node_environment>.<unique_id>.hpc-test.com
+                    hostname = "-#{Digest::MD5.hexdigest(hostname)[0..7]}.hpc-test.com"
+                    hostname = "#{@node}.#{@environment}"[0..MAX_PROXMOX_HOSTNAME_SIZE - hostname.size - 1] + hostname
                   end
+                  @lxc_details = request_lxc_creation_for(                      {
+                    ostemplate: pve_template,
+                    hostname: hostname.gsub('_', '-'),
+                    cores: min_resources_to_deploy[:cpus],
+                    cpulimit: min_resources_to_deploy[:cpus],
+                    memory: min_resources_to_deploy[:ram_mb],
+                    rootfs: "local-lvm:#{min_resources_to_deploy[:disk_gb]}",
+                    nameserver: vm_config[:vm_dns_servers].join(' '),
+                    searchdomain: vm_config[:vm_search_domain],
+                    net0: "name=eth0,bridge=vmbr0,gw=#{vm_config[:vm_gateway]}",
+                    password: 'root_pwd',
+                    description: <<~EOS
+                      ===== HPC info =====
+                      node: #{@node}
+                      environment: #{@environment}
+                    EOS
+                  })
                 else
                   raise "[ #{@node}/#{@environment} ] - No template found in #{proxmox_conf}"
                 end
@@ -204,9 +195,6 @@ module HybridPlatformsConductor
         # [API] - This method is mandatory
         def destroy
           log_debug "[ #{@node}/#{@environment} ] - Delete Proxmox LXC Container ..."
-          with_proxmox do |proxmox|
-            run_proxmox_task(proxmox, :delete, @lxc_details[:pve_node], "lxc/#{@lxc_details[:vm_id]}")
-          end
           release_lxc_container(@lxc_details[:vm_id])
         end
 
@@ -361,9 +349,10 @@ module HybridPlatformsConductor
         #
         # Parameters::
         # * *cmd* (String): The command to execute
+        # * *extra_files* (Array<String>): Extra files to include on the sync node [default: []]
         # Result::
         # * Hash<Symbol,Object>: The result
-        def run_cmd_on_sync_node(cmd)
+        def run_cmd_on_sync_node(cmd, extra_files: [])
           # Create the ProxmoxWaiter config in a file to be uploaded
           File.write(
             'config.json',
@@ -378,17 +367,20 @@ module HybridPlatformsConductor
               {
                 proxmox_test_info[:sync_node] => [
                   { scp: { "#{__dir__}/proxmox/" => '.' } },
-                  { scp: { 'config.json' => './proxmox' } },
-                  {
-                    remote_bash: {
-                      commands: "./proxmox/#{cmd}",
-                      env: {
-                        'hpc_user_for_proxmox' => user,
-                        'hpc_password_for_proxmox' => password
+                  { scp: { 'config.json' => './proxmox' } }
+                ] +
+                  extra_files.map { |file| { scp: { file => './proxmox' } } } +
+                  [
+                    {
+                      remote_bash: {
+                        commands: "./proxmox/#{cmd}",
+                        env: {
+                          'hpc_user_for_proxmox' => user,
+                          'hpc_password_for_proxmox' => password
+                        }
                       }
                     }
-                  }
-                ]
+                  ]
               },
               log_to_stdout: log_debug?
             )[proxmox_test_info[:sync_node]]
@@ -403,20 +395,24 @@ module HybridPlatformsConductor
         # The returned VM ID/IP does not exist in the Proxmox cluster, and their usage is reserved for our node/environment.
         #
         # Parameters::
-        # * *cpus* (Integer): Number of CPUs required
-        # * *ram_mb* (Integer): Megabytes of RAM required
-        # * *disk_gb* (Integer): Gigabytes of disk required
+        # * *vm_info* (Hash<symbol,Object>): The VM info we want to create
         # Result::
         # * Hash<Symbol, Object>: The details of the authorized container to be created:
         #   * *pve_node* (String): Name of the node on which the container is to be created
         #   * *vm_id* (Integer): Container ID to be used
         #   * *vm_ip* (String): IP address allocated for the LXC container to be created
-        #   * *vm_dns_servers* (Array<String>): List of DNS servers to use
-        #   * *vm_search_domain* (String): DNS search domain to use
-        #   * *vm_gateway* (String): Gateway to use
-        def request_lxc_creation_for(cpus, ram_mb, disk_gb)
-          log_debug "[ #{@node}/#{@environment} ] - Request LXC creation for #{cpus} CPUs, #{ram_mb} MB RAM, #{disk_gb} GB disk..."
-          run_cmd_on_sync_node("reserve_proxmox_container --cpus #{cpus} --ram-mb #{ram_mb} --disk-gb #{disk_gb}").merge(proxmox_test_info[:vm_config])
+        def request_lxc_creation_for(vm_info)
+          log_debug "[ #{@node}/#{@environment} ] - Request LXC creation for #{vm_info}..."
+          # Create a unique file name
+          create_config_file = "#{Dir.tmpdir}/create_vm_#{@cmd_runner.whoami}_#{Process.pid}_#{Thread.current.object_id}_#{(Time.now - Process.clock_gettime(Process::CLOCK_BOOTTIME)).strftime('%Y%m%d%H%M%S')}.json"
+          File.write(create_config_file, vm_info.to_json)
+          created_vm_info = nil
+          begin
+            created_vm_info = run_cmd_on_sync_node("reserve_proxmox_container --create ./proxmox/#{File.basename(create_config_file)}", extra_files: [create_config_file])
+          ensure
+            File.unlink(create_config_file)
+          end
+          created_vm_info
         end
 
         # Contact the sync node to notify a container release
@@ -430,7 +426,7 @@ module HybridPlatformsConductor
         #   * *reservation_date* (String): Reservation date of this LXC container (if found)
         def release_lxc_container(vm_id)
           log_debug "[ #{@node}/#{@environment} ] - Release LXC VM #{vm_id}..."
-          run_cmd_on_sync_node "reserve_proxmox_container --release #{vm_id}"
+          run_cmd_on_sync_node "reserve_proxmox_container --destroy #{vm_id}"
         end
 
         # Get details about the proxmox instance to be used

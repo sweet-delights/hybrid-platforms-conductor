@@ -104,30 +104,20 @@ module HybridPlatformsConductorTest
       end
 
       # Get a mocking code corresponding to a call to Proxmox.new.
-      # This code should mock Proxmox creating a node
+      # This code should mock Proxmox starting a node
       #
       # Parameters::
       # * *proxmox_user* (String or nil): Proxmox user used to connect to Proxmox API [default: nil]
       # * *proxmox_password* (String or nil): Proxmox password used to connect to Proxmox API [default: nil]
-      # * *hostname* (String): Hostname that should be mocked [default: 'node.test.hpc-test.com']
-      # * *environment* (String): Environment name that should be mocked [default: 'test']
-      # * *cpus* (Integer): Number of CPUs to reserve [default: 2]
-      # * *ram_mb* (Integer): RAM MB to reserve [default: 1024]
-      # * *disk_gb* (Integer): Disk GB to reserve [default: 10]
-      # * *task_name* (String): Proxmox creation task name [default: 'UPID:pve_node_name:0000A504:6DEABF24:5F44669B:create::root@pam:']
-      # * *task_status* (String or nil): Proxmox creation task status, or nil if no task status query is to be expected [default: 'OK']
+      # * *task_name* (String): Proxmox start task name [default: 'UPID:pve_node_name:0000A504:6DEABF24:5F44669B:start::root@pam:']
+      # * *task_status* (String or nil): Proxmox start task status, or nil if no task status query is to be expected [default: 'OK']
       # * *nbr_api_errors* (Integer): Number of API errors 500 to mock before getting a successful query [defaults: 0]
       # Result::
       # * Proc: Code called in place of Proxmox.new. Signature is the same as Proxmox.new.
-      def mock_proxmox_to_create_node(
+      def mock_proxmox_to_start_node(
         proxmox_user: nil,
         proxmox_password: nil,
-        hostname: 'node.test.hpc-test.com',
-        environment: 'test',
-        cpus: 2,
-        ram_mb: 1024,
-        disk_gb: 10,
-        task_name: 'UPID:pve_node_name:0000A504:6DEABF24:5F44669B:create::root@pam:',
+        task_name: 'UPID:pve_node_name:0000A504:6DEABF24:5F44669B:start::root@pam:',
         task_status: 'OK',
         nbr_api_errors: 0
       )
@@ -146,79 +136,18 @@ module HybridPlatformsConductorTest
           expect(proxmox).to receive(:logger_stderr=) do
             # Nothing
           end
-          # Mock creating a new container
+          # Mock start a container
           idx_try = 0
-          expect(proxmox).to receive(:post).exactly(nbr_api_errors + (task_status.nil? ? 0 : 1)).times.with(
-            'nodes/pve_node_name/lxc',
-            {
-              cores: cpus,
-              cpulimit: cpus,
-              hostname: hostname,
-              memory: ram_mb,
-              nameserver: '8.8.8.8',
-              net0: 'name=eth0,bridge=vmbr0,gw=192.168.0.1,ip=192.168.0.100/32',
-              ostemplate: 'template_storage/os_image.tar.gz',
-              password: 'root_pwd',
-              rootfs: "local-lvm:#{disk_gb}",
-              searchdomain: 'my-domain.com',
-              vmid: 1024,
-              description: <<~EOS
-                ===== HPC info =====
-                node: node
-                environment: #{environment}
-              EOS
-            }
-          ) do |_path, options|
-            @proxmox_create_options = options
+          expect(proxmox).to receive(:post).exactly(nbr_api_errors + (task_status.nil? ? 0 : 1)).times.with('nodes/pve_node_name/lxc/1024/status/start') do
             idx_try += 1
             idx_try <= nbr_api_errors ? 'NOK: error code = 500' : task_name
           end
+          # Mock checking task status
           unless task_status.nil?
             # Mock checking task status
             expect(proxmox).to receive(:get).with("nodes/pve_node_name/tasks/#{task_name}/status") do
               { 'status' => task_status }
             end
-          end
-          proxmox
-        end
-      end
-
-      # Get a mocking code corresponding to a call to Proxmox.new.
-      # This code should mock Proxmox starting a node
-      #
-      # Parameters::
-      # * *proxmox_user* (String or nil): Proxmox user used to connect to Proxmox API [default: nil]
-      # * *proxmox_password* (String or nil): Proxmox password used to connect to Proxmox API [default: nil]
-      # * *task_status* (String): Proxmox start task status [default: 'OK']
-      # Result::
-      # * Proc: Code called in place of Proxmox.new. Signature is the same as Proxmox.new.
-      def mock_proxmox_to_start_node(
-        proxmox_user: nil,
-        proxmox_password: nil,
-        task_status: 'OK'
-      )
-        proc do |url, pve_node, user, password, realm, options|
-          expect(url).to eq 'https://my-proxmox.my-domain.com:8006/api2/json/'
-          expect(pve_node).to eq 'my-proxmox'
-          expect(user).to eq proxmox_user
-          expect(password).to eq proxmox_password
-          expect(realm).to eq 'pam'
-          expect(options[:verify_ssl]).to eq false
-          proxmox = double 'Proxmox create instance'
-          # Mock initialization
-          expect(proxmox).to receive(:logger=) do
-            # Nothing
-          end
-          expect(proxmox).to receive(:logger_stderr=) do
-            # Nothing
-          end
-          # Mock start a container
-          expect(proxmox).to receive(:post).with('nodes/pve_node_name/lxc/1024/status/start') do
-            'UPID:pve_node_name:0000A504:6DEABF24:5F44669B:start::root@pam:'
-          end
-          # Mock checking task status
-          expect(proxmox).to receive(:get).with('nodes/pve_node_name/tasks/UPID:pve_node_name:0000A504:6DEABF24:5F44669B:start::root@pam:/status') do
-            { 'status' => task_status }
           end
           proxmox
         end
@@ -357,43 +286,41 @@ module HybridPlatformsConductorTest
       # Parameters::
       # * *proxmox_user* (String or nil): Proxmox user used to connect to Proxmox API [default: nil]
       # * *proxmox_password* (String or nil): Proxmox password used to connect to Proxmox API [default: nil]
-      # * *error* (String or nil): Error to be mocked by reserve_proxmox_container, or nil in case of success [default: nil]
-      # * *cpus* (Integer): Number of CPUs to reserve [default: 2]
-      # * *ram_mb* (Integer): RAM MB to reserve [default: 1024]
-      # * *disk_gb* (Integer): Disk GB to reserve [default: 10]
+      # * *error_on_create* (String or nil): Error to be mocked by reserve_proxmox_container create, or nil in case of success [default: nil]
+      # * *error_on_destroy* (String or nil): Error to be mocked by reserve_proxmox_container destroy, or nil in case of success [default: nil]
       # * *release_vm_id* (Integer or nil): VM ID expected to be released, or nil if none [default: nil]
       def mock_call_to_reserve_proxmox_container(
         proxmox_user: nil,
         proxmox_password: nil,
-        error: nil,
-        cpus: 2,
-        ram_mb: 1024,
-        disk_gb: 10,
+        error_on_create: nil,
+        error_on_destroy: nil,
         release_vm_id: nil
       )
         runs = [
           proc do |actions|
             expect(actions.keys).to eq ['node']
-            expect(actions['node'].size).to eq 3
+            expect(actions['node'].size).to eq 4
             # First action should be to copy the reserve_proxmox_container code
             expect(actions['node'][0].keys).to eq [:scp]
             expect(actions['node'][0][:scp].first[0]).to match /^.+\/hpc_plugins\/provisioner\/proxmox\/$/
             expect(actions['node'][0][:scp].first[1]).to eq '.'
             # Second action should be to copy the ProxmoxWaiter config
             expect(actions['node'][1]).to eq({ scp: { 'config.json' => './proxmox' } })
-            # Third action should be to execute reserve_proxmox_container
-            expect(actions['node'][2]).to eq({
-              remote_bash: {
-                commands: "./proxmox/reserve_proxmox_container --cpus #{cpus} --ram-mb #{ram_mb} --disk-gb #{disk_gb}",
-                env: {
-                  'hpc_user_for_proxmox' => proxmox_user,
-                  'hpc_password_for_proxmox' => proxmox_password
-                }
-              }
+            # Third action should be to copy the VM info JSON file
+            expect(actions['node'][2].keys).to eq [:scp]
+            expect(actions['node'][2][:scp].first[0]).to match /^.+\/create_vm_.+\.json$/
+            @proxmox_create_options = JSON.parse(File.read(actions['node'][2][:scp].first[0]))
+            expect(actions['node'][2][:scp].first[1]).to eq './proxmox'
+            # Forth action should be to execute reserve_proxmox_container
+            expect(actions['node'][3].keys).to eq [:remote_bash]
+            expect(actions['node'][3][:remote_bash][:commands]).to match /^.\/proxmox\/reserve_proxmox_container --create .+\/create_vm_.+\.json$/
+            expect(actions['node'][3][:remote_bash][:env]).to eq({
+              'hpc_user_for_proxmox' => proxmox_user,
+              'hpc_password_for_proxmox' => proxmox_password
             })
             result =
-              if error
-                { error: error }
+              if error_on_create
+                { error: error_on_create }
               else
                 {
                   pve_node: 'pve_node_name',
@@ -420,7 +347,7 @@ module HybridPlatformsConductorTest
             # Third action should be to execute reserve_proxmox_container
             expect(actions['node'][2]).to eq({
               remote_bash: {
-                commands: "./proxmox/reserve_proxmox_container --release #{release_vm_id}",
+                commands: "./proxmox/reserve_proxmox_container --destroy #{release_vm_id}",
                 env: {
                   'hpc_user_for_proxmox' => proxmox_user,
                   'hpc_password_for_proxmox' => proxmox_password
@@ -428,8 +355,8 @@ module HybridPlatformsConductorTest
               }
             })
             result =
-              if error
-                { error: error }
+              if error_on_destroy
+                { error: error_on_destroy }
               else
                 {
                   pve_node: 'pve_node_name',
@@ -452,20 +379,16 @@ module HybridPlatformsConductorTest
       # * *calls* (Array<Proc>): List of mocked calls
       # * *proxmox_user* (String or nil): Proxmox user used to connect to Proxmox API [default: nil]
       # * *proxmox_password* (String or nil): Proxmox password used to connect to Proxmox API [default: nil]
-      # * *error* (String or nil): Error to be mocked by reserve_proxmox_container, or nil in case of success [default: nil]
-      # * *cpus* (Integer): Number of CPUs to reserve [default: 2]
-      # * *ram_mb* (Integer): RAM MB to reserve [default: 1024]
-      # * *disk_gb* (Integer): Disk GB to reserve [default: 10]
+      # * *error_on_create* (String or nil): Error to be mocked by reserve_proxmox_container create, or nil in case of success [default: nil]
+      # * *error_on_destroy* (String or nil): Error to be mocked by reserve_proxmox_container destroy, or nil in case of success [default: nil]
       # * *reserve* (Boolean): Do we expect the resource reservation to occur? [default: true]
       # * *release_vm_id* (Integer or nil): VM ID expected to be released, or nil if none [default: nil]
       def mock_proxmox_calls_with(
         calls,
         proxmox_user: nil,
         proxmox_password: nil,
-        error: nil,
-        cpus: 2,
-        ram_mb: 1024,
-        disk_gb: 10,
+        error_on_create: nil,
+        error_on_destroy: nil,
         reserve: true,
         release_vm_id: nil
       )
@@ -474,10 +397,8 @@ module HybridPlatformsConductorTest
           mock_call_to_reserve_proxmox_container(
             proxmox_user: proxmox_user,
             proxmox_password: proxmox_password,
-            error: error,
-            cpus: cpus,
-            ram_mb: ram_mb,
-            disk_gb: disk_gb,
+            error_on_create: error_on_create,
+            error_on_destroy: error_on_destroy,
             release_vm_id: release_vm_id
           )
         end
@@ -603,9 +524,12 @@ module HybridPlatformsConductorTest
                 end
               end
               # Mock some post actions
-              allow(proxmox).to receive(:post) do |path|
-                @proxmox_actions << [:post, path]
+              allow(proxmox).to receive(:post) do |path, args|
+                @proxmox_actions << [:post, path, args].compact
                 case path
+                when /^nodes\/([^\/]+)\/lxc$/
+                  pve_node_name = $1
+                  "UPID:#{pve_node_name}:0000A504:6DEABF24:5F44669B:create::root@pam:"
                 when /^nodes\/([^\/]+)\/lxc\/([^\/]+)\/status\/stop$/
                   pve_node_name = $1
                   vmid = $2
@@ -654,9 +578,10 @@ module HybridPlatformsConductorTest
       # * *config* (Hash): Configuration overriding defaults to store in the config file [default: {}]
       # * *max_retries* (Integer): Specify the max number of retries [default: 1]
       # * *allocations* (Hash): Content of the allocations db file [default: {}]
+      # * *create* (Hash or nil): Create file content, or nil if none [default: nil]
       # Result::
       # * Hash: JSON result of the call
-      def call_reserve_proxmox_container_with(argv, config: {}, max_retries: 1, allocations: {})
+      def call_reserve_proxmox_container_with(argv, config: {}, max_retries: 1, allocations: {}, create: nil)
         # Make sure we set default values in the config
         config = {
           proxmox_api_url: 'https://my-proxmox.my-domain.com:8006',
@@ -681,13 +606,19 @@ module HybridPlatformsConductorTest
         FileUtils.cp_r "#{__dir__}/../../../lib/hybrid_platforms_conductor/hpc_plugins/provisioner/proxmox", @repository
         File.write("#{@repository}/proxmox/config.json", config.to_json)
         File.write("#{@repository}/proxmox/allocations.json", allocations.to_json)
+        script_args = argv + [
+          '--max-retries', max_retries.to_s,
+          '--wait-before-retry', '0'
+        ]
+        unless create.nil?
+          create_file = "#{@repository}/proxmox/create_vm.json"
+          File.write(create_file, create.to_json)
+          script_args.concat(['--create', create_file])
+        end
         # Call the script by loading the Ruby file mocking the ARGV and ENV variables
         old_argv = ARGV.dup
         old_stdout = $stdout
-        ARGV.replace(argv + [
-          '--max-retries', max_retries.to_s,
-          '--wait-before-retry', '0'
-        ])
+        ARGV.replace(script_args)
         $stdout = StringIO.new unless logger.debug?
         begin
           load "#{@repository}/proxmox/reserve_proxmox_container"
@@ -718,14 +649,19 @@ module HybridPlatformsConductorTest
       # * Hash: JSON result of the call
       def call_reserve_proxmox_container(cpus, ram_mb, disk_gb, config: {}, max_retries: 1, allocations: {})
         call_reserve_proxmox_container_with(
-          [
-            '--cpus', cpus.to_s,
-            '--ram-mb', ram_mb.to_s,
-            '--disk-gb', disk_gb.to_s
-          ],
+          [],
           config: config,
           max_retries: max_retries,
-          allocations: allocations
+          allocations: allocations,
+          create: {
+            ostemplate: 'test_template.iso',
+            hostname: 'test.hostname.my-domain.com',
+            cores: cpus,
+            cpulimit: cpus,
+            memory: ram_mb,
+            rootfs: "local-lvm:#{disk_gb}",
+            net0: 'name=eth0,bridge=vmbr0,gw=172.16.16.16'
+          }
         )
       end
 
@@ -742,7 +678,7 @@ module HybridPlatformsConductorTest
       def call_release_proxmox_container(vm_id, config: {}, max_retries: 1, allocations: {})
         call_reserve_proxmox_container_with(
           [
-            '--release', vm_id.to_s
+            '--destroy', vm_id.to_s
           ],
           config: config,
           max_retries: max_retries,
