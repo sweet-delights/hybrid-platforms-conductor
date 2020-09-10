@@ -12,16 +12,12 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
             'pve_node_name' => {
               memory_total: 4 * 1024 * 1024 * 1024,
               lxc_containers: {
-                1000 => { ip: '192.168.0.100', maxmem: 1024 * 1024 * 1024 }
+                # Make sure it is expired
+                1000 => { ip: '192.168.0.100', maxmem: 1024 * 1024 * 1024, creation_date: (Time.now - 31 * 24 * 60 * 60).utc }
               }
             }
           })
-          expect(call_reserve_proxmox_container(2, 1024, 1, allocations: {
-            'pve_node_name' => {
-              # Make sure it is expired
-              '1000' => { reservation_date: (Time.now - 31 * 24 * 60 * 60).utc.strftime('%FT%T') }
-            }
-          })).to eq(
+          expect(call_reserve_proxmox_container(2, 1024, 1)).to eq(
             pve_node: 'pve_node_name',
             vm_id: 1001,
             vm_ip: '192.168.0.101'
@@ -31,38 +27,41 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
 
       it 'expires a VM when there are not enough free resources on a PVE node' do
         with_sync_node do
+          creation_date = (Time.now - 31 * 24 * 60 * 60).utc
           mock_proxmox(mocked_pve_nodes: {
             'pve_node_name' => {
               memory_total: 4 * 1024 * 1024 * 1024,
               lxc_containers: {
-                1000 => { ip: '192.168.0.100', maxmem: 4 * 1024 * 1024 * 1024 }
+                # Make sure it is expired
+                1000 => { ip: '192.168.0.100', maxmem: 4 * 1024 * 1024 * 1024, creation_date: creation_date }
               }
             }
           })
-          expect(call_reserve_proxmox_container(2, 1024, 1, allocations: {
-            'pve_node_name' => {
-              # Make sure it is expired
-              '1000' => { reservation_date: (Time.now - 31 * 24 * 60 * 60).utc.strftime('%FT%T') }
-            }
-          })).to eq(
+          expect(call_reserve_proxmox_container(2, 1024, 1)).to eq(
             pve_node: 'pve_node_name',
             vm_id: 1000,
             vm_ip: '192.168.0.100'
           )
-          expect(@proxmox_actions).to eq [
+          expect_proxmox_actions_to_be [
             [:post, 'nodes/pve_node_name/lxc/1000/status/stop'],
             [:delete, 'nodes/pve_node_name/lxc/1000'],
-            [:post, 'nodes/pve_node_name/lxc', {
-              'cores' => 2,
-              'cpulimit' => 2,
-              'hostname' => 'test.hostname.my-domain.com',
-              'memory' => 1024,
-              'net0' => 'name=eth0,bridge=vmbr0,gw=172.16.16.16,ip=192.168.0.100/32',
-              'ostemplate' => 'test_template.iso',
-              'rootfs' => 'local-lvm:1',
-              'vmid' => 1000
-            }]
+            [
+              :post,
+              'nodes/pve_node_name/lxc',
+              {
+                'cores' => 2,
+                'cpulimit' => 2,
+                'description' => /^===== HPC Info =====\nnode: test_node\nenvironment: test_env\ncreation_date: .+\n/,
+                'hostname' => 'test.hostname.my-domain.com',
+                'memory' => 1024,
+                'net0' => 'name=eth0,bridge=vmbr0,gw=172.16.16.16,ip=192.168.0.100/32',
+                'ostemplate' => 'test_template.iso',
+                'rootfs' => 'local-lvm:1',
+                'vmid' => 1000
+              }
+            ]
           ]
+          expect(Time.parse(@proxmox_actions[2][2]['description'].match(/^===== HPC Info =====\nnode: test_node\nenvironment: test_env\ncreation_date: (.+)\n/)[1])).to be > creation_date
         end
       end
 
@@ -75,26 +74,24 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
                 1000 => {
                   ip: '192.168.0.100',
                   maxmem: 4 * 1024 * 1024 * 1024,
-                  status: 'stopped'
+                  status: 'stopped',
+                  # Make sure it is expired
+                  creation_date: (Time.now - 31 * 24 * 60 * 60).utc
                 }
               }
             }
           })
-          expect(call_reserve_proxmox_container(2, 1024, 1, allocations: {
-            'pve_node_name' => {
-              # Make sure it is expired
-              '1000' => { reservation_date: (Time.now - 31 * 24 * 60 * 60).utc.strftime('%FT%T') }
-            }
-          })).to eq(
+          expect(call_reserve_proxmox_container(2, 1024, 1)).to eq(
             pve_node: 'pve_node_name',
             vm_id: 1000,
             vm_ip: '192.168.0.100'
           )
-          expect(@proxmox_actions).to eq [
+          expect_proxmox_actions_to_be [
             [:delete, 'nodes/pve_node_name/lxc/1000'],
             [:post, 'nodes/pve_node_name/lxc', {
               'cores' => 2,
               'cpulimit' => 2,
+              'description' => /^===== HPC Info =====\nnode: test_node\nenvironment: test_env\ncreation_date: .+\n/,
               'hostname' => 'test.hostname.my-domain.com',
               'memory' => 1024,
               'net0' => 'name=eth0,bridge=vmbr0,gw=172.16.16.16,ip=192.168.0.100/32',
@@ -112,29 +109,24 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
             'pve_node_name' => {
               memory_total: 8 * 1024 * 1024 * 1024,
               lxc_containers: {
-                1000 => { ip: '192.168.0.100', maxmem: 2 * 1024 * 1024 * 1024 },
-                1001 => { ip: '192.168.0.101', maxmem: 4 * 1024 * 1024 * 1024 },
-                1002 => { ip: '192.168.0.102', maxmem: 2 * 1024 * 1024 * 1024 }
+                1000 => { ip: '192.168.0.100', maxmem: 2 * 1024 * 1024 * 1024, creation_date: Time.now.utc },
+                1001 => { ip: '192.168.0.101', maxmem: 4 * 1024 * 1024 * 1024, creation_date: (Time.now - 31 * 24 * 60 * 60).utc },
+                1002 => { ip: '192.168.0.102', maxmem: 2 * 1024 * 1024 * 1024, creation_date: Time.now.utc }
               }
             }
           })
-          expect(call_reserve_proxmox_container(2, 1024, 1, allocations: {
-            'pve_node_name' => {
-              '1000' => { reservation_date: Time.now.utc.strftime('%FT%T') },
-              '1001' => { reservation_date: (Time.now - 31 * 24 * 60 * 60).utc.strftime('%FT%T') },
-              '1002' => { reservation_date: Time.now.utc.strftime('%FT%T') }
-            }
-          })).to eq(
+          expect(call_reserve_proxmox_container(2, 1024, 1)).to eq(
             pve_node: 'pve_node_name',
             vm_id: 1001,
             vm_ip: '192.168.0.101'
           )
-          expect(@proxmox_actions).to eq [
+          expect_proxmox_actions_to_be [
             [:post, 'nodes/pve_node_name/lxc/1001/status/stop'],
             [:delete, 'nodes/pve_node_name/lxc/1001'],
             [:post, 'nodes/pve_node_name/lxc', {
               'cores' => 2,
               'cpulimit' => 2,
+              'description' => /^===== HPC Info =====\nnode: test_node\nenvironment: test_env\ncreation_date: .+\n/,
               'hostname' => 'test.hostname.my-domain.com',
               'memory' => 1024,
               'net0' => 'name=eth0,bridge=vmbr0,gw=172.16.16.16,ip=192.168.0.101/32',
@@ -152,9 +144,9 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
             'pve_node_name' => {
               memory_total: 6 * 1024 * 1024 * 1024,
               lxc_containers: {
-                1000 => { ip: '192.168.0.100', maxmem: 2 * 1024 * 1024 * 1024 },
-                1001 => { ip: '192.168.0.101', maxmem: 2 * 1024 * 1024 * 1024 },
-                1002 => { ip: '192.168.0.102', maxmem: 2 * 1024 * 1024 * 1024 }
+                1000 => { ip: '192.168.0.100', maxmem: 2 * 1024 * 1024 * 1024, creation_date: Time.now.utc },
+                1001 => { ip: '192.168.0.101', maxmem: 2 * 1024 * 1024 * 1024, creation_date: (Time.now - 31 * 24 * 60 * 60).utc },
+                1002 => { ip: '192.168.0.102', maxmem: 2 * 1024 * 1024 * 1024, creation_date: Time.now.utc }
               }
             }
           })
@@ -166,16 +158,9 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
                 192.168.0.102
                 192.168.0.103
               ]
-            },
-            allocations: {
-              'pve_node_name' => {
-                '1000' => { reservation_date: Time.now.utc.strftime('%FT%T') },
-                '1001' => { reservation_date: (Time.now - 31 * 24 * 60 * 60).utc.strftime('%FT%T') },
-                '1002' => { reservation_date: Time.now.utc.strftime('%FT%T') }
-              }
             }
           )).to eq(error: 'not_enough_resources')
-          expect(@proxmox_actions).to eq []
+          expect_proxmox_actions_to_be []
         end
       end
 
@@ -185,24 +170,18 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
             'pve_node_name' => {
               memory_total: 8 * 1024 * 1024 * 1024,
               lxc_containers: {
-                1000 => { ip: '192.168.0.100', maxmem: 2 * 1024 * 1024 * 1024 },
-                1001 => { ip: '192.168.0.101', maxmem: 4 * 1024 * 1024 * 1024 },
-                1002 => { ip: '192.168.0.102', maxmem: 2 * 1024 * 1024 * 1024 }
+                1000 => { ip: '192.168.0.100', maxmem: 2 * 1024 * 1024 * 1024, creation_date: Time.now.utc },
+                1001 => { ip: '192.168.0.101', maxmem: 4 * 1024 * 1024 * 1024, creation_date: (Time.now - 31 * 24 * 60 * 60).utc },
+                1002 => { ip: '192.168.0.102', maxmem: 2 * 1024 * 1024 * 1024, creation_date: (Time.now - 31 * 24 * 60 * 60).utc }
               }
             }
           })
-          expect(call_reserve_proxmox_container(2, 1024, 1, allocations: {
-            'pve_node_name' => {
-              '1000' => { reservation_date: Time.now.utc.strftime('%FT%T') },
-              '1001' => { reservation_date: (Time.now - 31 * 24 * 60 * 60).utc.strftime('%FT%T') },
-              '1002' => { reservation_date: (Time.now - 31 * 24 * 60 * 60).utc.strftime('%FT%T') }
-            }
-          })).to eq(
+          expect(call_reserve_proxmox_container(2, 1024, 1)).to eq(
             pve_node: 'pve_node_name',
             vm_id: 1001,
             vm_ip: '192.168.0.101'
           )
-          expect(@proxmox_actions).to eq [
+          expect_proxmox_actions_to_be [
             [:post, 'nodes/pve_node_name/lxc/1001/status/stop'],
             [:delete, 'nodes/pve_node_name/lxc/1001'],
             [:post, 'nodes/pve_node_name/lxc/1002/status/stop'],
@@ -210,6 +189,7 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
             [:post, 'nodes/pve_node_name/lxc', {
               'cores' => 2,
               'cpulimit' => 2,
+              'description' => /^===== HPC Info =====\nnode: test_node\nenvironment: test_env\ncreation_date: .+\n/,
               'hostname' => 'test.hostname.my-domain.com',
               'memory' => 1024,
               'net0' => 'name=eth0,bridge=vmbr0,gw=172.16.16.16,ip=192.168.0.101/32',
@@ -227,29 +207,24 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
             'pve_node_name' => {
               memory_total: 8 * 1024 * 1024 * 1024,
               lxc_containers: {
-                1000 => { ip: '192.168.0.100', maxmem: 2 * 1024 * 1024 * 1024 },
-                1001 => { ip: '192.168.0.101', maxmem: 4 * 1024 * 1024 * 1024 },
-                2002 => { ip: '192.168.0.102', maxmem: 2 * 1024 * 1024 * 1024 }
+                1000 => { ip: '192.168.0.100', maxmem: 2 * 1024 * 1024 * 1024, creation_date: Time.now.utc },
+                1001 => { ip: '192.168.0.101', maxmem: 4 * 1024 * 1024 * 1024, creation_date: (Time.now - 31 * 24 * 60 * 60).utc },
+                2002 => { ip: '192.168.0.102', maxmem: 2 * 1024 * 1024 * 1024, creation_date: (Time.now - 31 * 24 * 60 * 60).utc }
               }
             }
           })
-          expect(call_reserve_proxmox_container(2, 1024, 1, allocations: {
-            'pve_node_name' => {
-              '1000' => { reservation_date: Time.now.utc.strftime('%FT%T') },
-              '1001' => { reservation_date: (Time.now - 31 * 24 * 60 * 60).utc.strftime('%FT%T') },
-              '1002' => { reservation_date: (Time.now - 31 * 24 * 60 * 60).utc.strftime('%FT%T') }
-            }
-          })).to eq(
+          expect(call_reserve_proxmox_container(2, 1024, 1)).to eq(
             pve_node: 'pve_node_name',
             vm_id: 1001,
             vm_ip: '192.168.0.101'
           )
-          expect(@proxmox_actions).to eq [
+          expect_proxmox_actions_to_be [
             [:post, 'nodes/pve_node_name/lxc/1001/status/stop'],
             [:delete, 'nodes/pve_node_name/lxc/1001'],
             [:post, 'nodes/pve_node_name/lxc', {
               'cores' => 2,
               'cpulimit' => 2,
+              'description' => /^===== HPC Info =====\nnode: test_node\nenvironment: test_env\ncreation_date: .+\n/,
               'hostname' => 'test.hostname.my-domain.com',
               'memory' => 1024,
               'net0' => 'name=eth0,bridge=vmbr0,gw=172.16.16.16,ip=192.168.0.101/32',
@@ -268,33 +243,27 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
             'pve_node_1' => {
               memory_total: 16 * 1024 * 1024 * 1024,
               lxc_containers: {
-                1000 => { ip: '192.168.0.100', maxmem: 14 * 1024 * 1024 * 1024 }
+                1000 => { ip: '192.168.0.100', maxmem: 14 * 1024 * 1024 * 1024, creation_date: (Time.now - 31 * 24 * 60 * 60).utc }
               }
             },
             # But this node has still a bit of resources left without expiring VMs
             'pve_node_2' => {
               memory_total: 16 * 1024 * 1024 * 1024,
               lxc_containers: {
-                1001 => { ip: '192.168.0.101', maxmem: 10 * 1024 * 1024 * 1024 }
+                1001 => { ip: '192.168.0.101', maxmem: 10 * 1024 * 1024 * 1024, creation_date: (Time.now - 31 * 24 * 60 * 60).utc }
               }
             }
           })
-          expect(call_reserve_proxmox_container(2, 1024, 1, config: { pve_nodes: nil }, allocations: {
-            'pve_node_1' => {
-              '1000' => { reservation_date: (Time.now - 31 * 24 * 60 * 60).utc.strftime('%FT%T') }
-            },
-            'pve_node_2' => {
-              '1001' => { reservation_date: (Time.now - 31 * 24 * 60 * 60).utc.strftime('%FT%T') }
-            }
-          })).to eq(
+          expect(call_reserve_proxmox_container(2, 1024, 1, config: { pve_nodes: nil })).to eq(
             pve_node: 'pve_node_2',
             vm_id: 1002,
             vm_ip: '192.168.0.102'
           )
-          expect(@proxmox_actions).to eq [
+          expect_proxmox_actions_to_be [
             [:post, 'nodes/pve_node_2/lxc', {
               'cores' => 2,
               'cpulimit' => 2,
+              'description' => /^===== HPC Info =====\nnode: test_node\nenvironment: test_env\ncreation_date: .+\n/,
               'hostname' => 'test.hostname.my-domain.com',
               'memory' => 1024,
               'net0' => 'name=eth0,bridge=vmbr0,gw=172.16.16.16,ip=192.168.0.102/32',
@@ -312,15 +281,15 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
             'pve_node_1' => {
               memory_total: 16 * 1024 * 1024 * 1024,
               lxc_containers: {
-                1000 => { ip: '192.168.0.100', maxmem: 8 * 1024 * 1024 * 1024 },
-                1001 => { ip: '192.168.0.101', maxmem: 6 * 1024 * 1024 * 1024 }
+                1000 => { ip: '192.168.0.100', maxmem: 8 * 1024 * 1024 * 1024, creation_date: Time.now.utc },
+                1001 => { ip: '192.168.0.101', maxmem: 6 * 1024 * 1024 * 1024, creation_date: (Time.now - 31 * 24 * 60 * 60).utc }
               }
             },
             'pve_node_2' => {
               memory_total: 16 * 1024 * 1024 * 1024,
               lxc_containers: {
-                1002 => { ip: '192.168.0.102', maxmem: 10 * 1024 * 1024 * 1024 },
-                1003 => { ip: '192.168.0.103', maxmem: 4 * 1024 * 1024 * 1024 }
+                1002 => { ip: '192.168.0.102', maxmem: 10 * 1024 * 1024 * 1024, creation_date: Time.now.utc },
+                1003 => { ip: '192.168.0.103', maxmem: 4 * 1024 * 1024 * 1024, creation_date: (Time.now - 31 * 24 * 60 * 60).utc }
               }
             }
           })
@@ -334,28 +303,19 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
                 192.168.0.103
                 192.168.0.104
               ]
-            },
-            allocations: {
-              'pve_node_1' => {
-                '1000' => { reservation_date: Time.now.utc.strftime('%FT%T') },
-                '1001' => { reservation_date: (Time.now - 31 * 24 * 60 * 60).utc.strftime('%FT%T') }
-              },
-              'pve_node_2' => {
-                '1002' => { reservation_date: Time.now.utc.strftime('%FT%T') },
-                '1003' => { reservation_date: (Time.now - 31 * 24 * 60 * 60).utc.strftime('%FT%T') }
-              }
             }
           )).to eq(
             pve_node: 'pve_node_1',
             vm_id: 1001,
             vm_ip: '192.168.0.101'
           )
-          expect(@proxmox_actions).to eq [
+          expect_proxmox_actions_to_be [
             [:post, 'nodes/pve_node_1/lxc/1001/status/stop'],
             [:delete, 'nodes/pve_node_1/lxc/1001'],
             [:post, 'nodes/pve_node_1/lxc', {
               'cores' => 2,
               'cpulimit' => 2,
+              'description' => /^===== HPC Info =====\nnode: test_node\nenvironment: test_env\ncreation_date: .+\n/,
               'hostname' => 'test.hostname.my-domain.com',
               'memory' => 1024,
               'net0' => 'name=eth0,bridge=vmbr0,gw=172.16.16.16,ip=192.168.0.101/32',
@@ -373,9 +333,9 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
             'pve_node_name' => {
               memory_total: 16 * 1024 * 1024 * 1024,
               lxc_containers: {
-                1000 => { ip: '192.168.0.100', maxmem: 1 * 1024 * 1024 * 1024 },
-                1001 => { ip: '192.168.0.101', maxmem: 1 * 1024 * 1024 * 1024 },
-                1002 => { ip: '192.168.0.102', maxmem: 1 * 1024 * 1024 * 1024 }
+                1000 => { ip: '192.168.0.100', maxmem: 1 * 1024 * 1024 * 1024, creation_date: Time.now.utc },
+                1001 => { ip: '192.168.0.101', maxmem: 1 * 1024 * 1024 * 1024, creation_date: (Time.now - 31 * 24 * 60 * 60).utc },
+                1002 => { ip: '192.168.0.102', maxmem: 1 * 1024 * 1024 * 1024, creation_date: Time.now.utc }
               }
             }
           })
@@ -386,25 +346,19 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
                 192.168.0.101
                 192.168.0.102
               ]
-            },
-            allocations: {
-              'pve_node_name' => {
-                '1000' => { reservation_date: Time.now.utc.strftime('%FT%T') },
-                '1001' => { reservation_date: (Time.now - 31 * 24 * 60 * 60).utc.strftime('%FT%T') },
-                '1002' => { reservation_date: Time.now.utc.strftime('%FT%T') }
-              }
             }
           )).to eq(
             pve_node: 'pve_node_name',
             vm_id: 1001,
             vm_ip: '192.168.0.101'
           )
-          expect(@proxmox_actions).to eq [
+          expect_proxmox_actions_to_be [
             [:post, 'nodes/pve_node_name/lxc/1001/status/stop'],
             [:delete, 'nodes/pve_node_name/lxc/1001'],
             [:post, 'nodes/pve_node_name/lxc', {
               'cores' => 2,
               'cpulimit' => 2,
+              'description' => /^===== HPC Info =====\nnode: test_node\nenvironment: test_env\ncreation_date: .+\n/,
               'hostname' => 'test.hostname.my-domain.com',
               'memory' => 1024,
               'net0' => 'name=eth0,bridge=vmbr0,gw=172.16.16.16,ip=192.168.0.101/32',
@@ -423,15 +377,15 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
             'pve_node_1' => {
               memory_total: 16 * 1024 * 1024 * 1024,
               lxc_containers: {
-                1000 => { ip: '192.168.0.100', maxmem: 1 * 1024 * 1024 * 1024 },
-                1002 => { ip: '192.168.0.102', maxmem: 1 * 1024 * 1024 * 1024 }
+                1000 => { ip: '192.168.0.100', maxmem: 1 * 1024 * 1024 * 1024, creation_date: Time.now.utc },
+                1002 => { ip: '192.168.0.102', maxmem: 1 * 1024 * 1024 * 1024, creation_date: Time.now.utc }
               }
             },
             # But this node is the only one having expired VMs
             'pve_node_2' => {
               memory_total: 2 * 1024 * 1024 * 1024,
               lxc_containers: {
-                1001 => { ip: '192.168.0.101', maxmem: 1 * 1024 * 1024 * 1024 }
+                1001 => { ip: '192.168.0.101', maxmem: 1 * 1024 * 1024 * 1024, creation_date: (Time.now - 31 * 24 * 60 * 60).utc }
               }
             }
           })
@@ -443,27 +397,19 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
                 192.168.0.101
                 192.168.0.102
               ]
-            },
-            allocations: {
-              'pve_node_1' => {
-                '1000' => { reservation_date: Time.now.utc.strftime('%FT%T') },
-                '1002' => { reservation_date: Time.now.utc.strftime('%FT%T') }
-              },
-              'pve_node_2' => {
-                '1001' => { reservation_date: (Time.now - 31 * 24 * 60 * 60).utc.strftime('%FT%T') }
-              }
             }
           )).to eq(
             pve_node: 'pve_node_1',
             vm_id: 1001,
             vm_ip: '192.168.0.101'
           )
-          expect(@proxmox_actions).to eq [
+          expect_proxmox_actions_to_be [
             [:post, 'nodes/pve_node_2/lxc/1001/status/stop'],
             [:delete, 'nodes/pve_node_2/lxc/1001'],
             [:post, 'nodes/pve_node_1/lxc', {
               'cores' => 2,
               'cpulimit' => 2,
+              'description' => /^===== HPC Info =====\nnode: test_node\nenvironment: test_env\ncreation_date: .+\n/,
               'hostname' => 'test.hostname.my-domain.com',
               'memory' => 1024,
               'net0' => 'name=eth0,bridge=vmbr0,gw=172.16.16.16,ip=192.168.0.101/32',
@@ -481,9 +427,9 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
             'pve_node_name' => {
               memory_total: 16 * 1024 * 1024 * 1024,
               lxc_containers: {
-                1000 => { ip: '192.168.0.100', maxmem: 1 * 1024 * 1024 * 1024 },
-                1001 => { ip: '192.168.0.101', maxmem: 1 * 1024 * 1024 * 1024 },
-                1002 => { ip: '192.168.0.102', maxmem: 1 * 1024 * 1024 * 1024 }
+                1000 => { ip: '192.168.0.100', maxmem: 1 * 1024 * 1024 * 1024, creation_date: Time.now.utc },
+                1001 => { ip: '192.168.0.101', maxmem: 1 * 1024 * 1024 * 1024, creation_date: (Time.now - 31 * 24 * 60 * 60).utc },
+                1002 => { ip: '192.168.0.102', maxmem: 1 * 1024 * 1024 * 1024, creation_date: Time.now.utc }
               }
             }
           })
@@ -496,25 +442,19 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
                 192.168.0.103
               ],
               vm_ids_range: [1000, 1002]
-            },
-            allocations: {
-              'pve_node_name' => {
-                '1000' => { reservation_date: Time.now.utc.strftime('%FT%T') },
-                '1001' => { reservation_date: (Time.now - 31 * 24 * 60 * 60).utc.strftime('%FT%T') },
-                '1002' => { reservation_date: Time.now.utc.strftime('%FT%T') }
-              }
             }
           )).to eq(
             pve_node: 'pve_node_name',
             vm_id: 1001,
             vm_ip: '192.168.0.101'
           )
-          expect(@proxmox_actions).to eq [
+          expect_proxmox_actions_to_be [
             [:post, 'nodes/pve_node_name/lxc/1001/status/stop'],
             [:delete, 'nodes/pve_node_name/lxc/1001'],
             [:post, 'nodes/pve_node_name/lxc', {
               'cores' => 2,
               'cpulimit' => 2,
+              'description' => /^===== HPC Info =====\nnode: test_node\nenvironment: test_env\ncreation_date: .+\n/,
               'hostname' => 'test.hostname.my-domain.com',
               'memory' => 1024,
               'net0' => 'name=eth0,bridge=vmbr0,gw=172.16.16.16,ip=192.168.0.101/32',
@@ -533,15 +473,15 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
             'pve_node_1' => {
               memory_total: 16 * 1024 * 1024 * 1024,
               lxc_containers: {
-                1000 => { ip: '192.168.0.100', maxmem: 1 * 1024 * 1024 * 1024 },
-                1002 => { ip: '192.168.0.102', maxmem: 1 * 1024 * 1024 * 1024 }
+                1000 => { ip: '192.168.0.100', maxmem: 1 * 1024 * 1024 * 1024, creation_date: Time.now.utc },
+                1002 => { ip: '192.168.0.102', maxmem: 1 * 1024 * 1024 * 1024, creation_date: Time.now.utc }
               }
             },
             # But this node is the only one having expired VMs
             'pve_node_2' => {
               memory_total: 2 * 1024 * 1024 * 1024,
               lxc_containers: {
-                1001 => { ip: '192.168.0.101', maxmem: 1 * 1024 * 1024 * 1024 }
+                1001 => { ip: '192.168.0.101', maxmem: 1 * 1024 * 1024 * 1024, creation_date: (Time.now - 31 * 24 * 60 * 60).utc }
               }
             }
           })
@@ -555,27 +495,19 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
                 192.168.0.103
               ],
               vm_ids_range: [1000, 1002]
-            },
-            allocations: {
-              'pve_node_1' => {
-                '1000' => { reservation_date: Time.now.utc.strftime('%FT%T') },
-                '1002' => { reservation_date: Time.now.utc.strftime('%FT%T') }
-              },
-              'pve_node_2' => {
-                '1001' => { reservation_date: (Time.now - 31 * 24 * 60 * 60).utc.strftime('%FT%T') }
-              }
             }
           )).to eq(
             pve_node: 'pve_node_1',
             vm_id: 1001,
             vm_ip: '192.168.0.101'
           )
-          expect(@proxmox_actions).to eq [
+          expect_proxmox_actions_to_be [
             [:post, 'nodes/pve_node_2/lxc/1001/status/stop'],
             [:delete, 'nodes/pve_node_2/lxc/1001'],
             [:post, 'nodes/pve_node_1/lxc', {
               'cores' => 2,
               'cpulimit' => 2,
+              'description' => /^===== HPC Info =====\nnode: test_node\nenvironment: test_env\ncreation_date: .+\n/,
               'hostname' => 'test.hostname.my-domain.com',
               'memory' => 1024,
               'net0' => 'name=eth0,bridge=vmbr0,gw=172.16.16.16,ip=192.168.0.101/32',
@@ -593,9 +525,9 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
             'pve_node_name' => {
               memory_total: 16 * 1024 * 1024 * 1024,
               lxc_containers: {
-                1000 => { ip: '192.168.0.100', maxmem: 1 * 1024 * 1024 * 1024 },
-                1001 => { ip: '192.168.0.101', maxmem: 1 * 1024 * 1024 * 1024 },
-                1002 => { ip: '192.168.0.102', maxmem: 1 * 1024 * 1024 * 1024 }
+                1000 => { ip: '192.168.0.100', maxmem: 1 * 1024 * 1024 * 1024, creation_date: Time.now.utc },
+                1001 => { ip: '192.168.0.101', maxmem: 1 * 1024 * 1024 * 1024, creation_date: (Time.now - 31 * 24 * 60 * 60).utc },
+                1002 => { ip: '192.168.0.102', maxmem: 1 * 1024 * 1024 * 1024, creation_date: Time.now.utc }
               }
             }
           })
@@ -613,25 +545,19 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
                 ram_percent_used_max: 0.75,
                 disk_percent_used_max: 0.75
               }
-            },
-            allocations: {
-              'pve_node_name' => {
-                '1000' => { reservation_date: Time.now.utc.strftime('%FT%T') },
-                '1001' => { reservation_date: (Time.now - 31 * 24 * 60 * 60).utc.strftime('%FT%T') },
-                '1002' => { reservation_date: Time.now.utc.strftime('%FT%T') }
-              }
             }
           )).to eq(
             pve_node: 'pve_node_name',
             vm_id: 1001,
             vm_ip: '192.168.0.101'
           )
-          expect(@proxmox_actions).to eq [
+          expect_proxmox_actions_to_be [
             [:post, 'nodes/pve_node_name/lxc/1001/status/stop'],
             [:delete, 'nodes/pve_node_name/lxc/1001'],
             [:post, 'nodes/pve_node_name/lxc', {
               'cores' => 2,
               'cpulimit' => 2,
+              'description' => /^===== HPC Info =====\nnode: test_node\nenvironment: test_env\ncreation_date: .+\n/,
               'hostname' => 'test.hostname.my-domain.com',
               'memory' => 1024,
               'net0' => 'name=eth0,bridge=vmbr0,gw=172.16.16.16,ip=192.168.0.101/32',
@@ -650,15 +576,15 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
             'pve_node_1' => {
               memory_total: 16 * 1024 * 1024 * 1024,
               lxc_containers: {
-                1000 => { ip: '192.168.0.100', maxmem: 1 * 1024 * 1024 * 1024 },
-                1002 => { ip: '192.168.0.102', maxmem: 1 * 1024 * 1024 * 1024 }
+                1000 => { ip: '192.168.0.100', maxmem: 1 * 1024 * 1024 * 1024, creation_date: Time.now.utc },
+                1002 => { ip: '192.168.0.102', maxmem: 1 * 1024 * 1024 * 1024, creation_date: Time.now.utc }
               }
             },
             # But this node is the only one having expired VMs
             'pve_node_2' => {
               memory_total: 2 * 1024 * 1024 * 1024,
               lxc_containers: {
-                1001 => { ip: '192.168.0.101', maxmem: 1 * 1024 * 1024 * 1024 }
+                1001 => { ip: '192.168.0.101', maxmem: 1 * 1024 * 1024 * 1024, creation_date: (Time.now - 31 * 24 * 60 * 60).utc }
               }
             }
           })
@@ -677,27 +603,19 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
                 ram_percent_used_max: 0.75,
                 disk_percent_used_max: 0.75
               }
-            },
-            allocations: {
-              'pve_node_1' => {
-                '1000' => { reservation_date: Time.now.utc.strftime('%FT%T') },
-                '1002' => { reservation_date: Time.now.utc.strftime('%FT%T') }
-              },
-              'pve_node_2' => {
-                '1001' => { reservation_date: (Time.now - 31 * 24 * 60 * 60).utc.strftime('%FT%T') }
-              }
             }
           )).to eq(
             pve_node: 'pve_node_1',
             vm_id: 1001,
             vm_ip: '192.168.0.101'
           )
-          expect(@proxmox_actions).to eq [
+          expect_proxmox_actions_to_be [
             [:post, 'nodes/pve_node_2/lxc/1001/status/stop'],
             [:delete, 'nodes/pve_node_2/lxc/1001'],
             [:post, 'nodes/pve_node_1/lxc', {
               'cores' => 2,
               'cpulimit' => 2,
+              'description' => /^===== HPC Info =====\nnode: test_node\nenvironment: test_env\ncreation_date: .+\n/,
               'hostname' => 'test.hostname.my-domain.com',
               'memory' => 1024,
               'net0' => 'name=eth0,bridge=vmbr0,gw=172.16.16.16,ip=192.168.0.101/32',

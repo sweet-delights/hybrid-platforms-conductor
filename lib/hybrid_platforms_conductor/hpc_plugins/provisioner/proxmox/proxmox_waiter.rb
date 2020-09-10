@@ -9,7 +9,7 @@ require 'time'
 # Multi-process safe.
 class ProxmoxWaiter
 
-  # Integer: Timeout in seconds to get the futex on the allocations JSON file
+  # Integer: Timeout in seconds to get the futex
   FUTEX_TIMEOUT = 60
 
   # Constructor
@@ -18,15 +18,7 @@ class ProxmoxWaiter
   # * *config_file* (String): Path to a JSON file containing a configuration for ProxmoxWaiter.
   #   Here is the file structure:
   #   * *proxmox_api_url* (String): Proxmox API URL.
-  #   * *allocations_file* (String): Path to the allocations JSON file.
-  #     This file should be common to any instance of ProxmoxWaiter using the same resources.
-  #     A file-lock will be used on it to ensure atomicity of operations.
-  #     This file is generated if missing.
-  #     File structure is the reserved VM info, per VM ID, per PVE node name:
-  #     Hash< String,        Hash< String, Hash > > 
-  #     Hash< pve_node_name, Hash< vm_id,  Hash > >
-  #     Each VM info has the following properties:
-  #     * *reservation_date* (String): UTC time stamp of this VM reservation, in ISO-8601 format (YYYY-MM-DDTHH:MM:SS)
+  #   * *futex_file* (String): Path to the file serving as a futex.
   #   * *pve_nodes* (Array<String>): List of PVE nodes allowed to spawn new containers [default: all]
   #   * *vm_ips_list* (Array<String>): The list of IPs that are available for the Proxomx containers.
   #   * *vm_ids_range* ([Integer, Integer]): Minimum and maximum reservable VM ID
@@ -77,7 +69,7 @@ class ProxmoxWaiter
       # * the free IPs
       # * the free VM IDs
       # In such case, even when free resources on PVE nodes are enough to host the new container, we still need to clean-up before.
-      nbr_vms = @allocations.map { |pve_node, pve_node_info| pve_node_info.size }.sum
+      nbr_vms = nbr_vms_handled_by_us
       if nbr_vms >= @config['limits']['nbr_vms_max'] || free_ips.empty? || free_vm_ids.empty?
         puts 'Hitting at least 1 hard-limit. Check if we can destroy expired containers.'
         puts "[ Hard limit reached ] - Already #{nbr_vms} are created (max is #{@config['limits']['nbr_vms_max']})." if nbr_vms >= @config['limits']['nbr_vms_max']
@@ -85,14 +77,14 @@ class ProxmoxWaiter
         puts '[ Hard limit reached ] - No more available VM IDs.' if free_vm_ids.empty?
         clean_up_done = false
         # Check if we can remove some expired ones
-        @allocations.each do |pve_node, pve_node_info|
-          if pve_node_info.any? { |vm_id, vm_info| Integer(vm_id).between?(*@config['vm_ids_range']) && Time.parse("#{vm_info['reservation_date']} UTC") < @expiration_date }
+        @config['pve_nodes'].each do |pve_node|
+          if api_get("nodes/#{pve_node}/lxc").any? { |lxc_info| is_vm_expired?(pve_node, Integer(lxc_info['vmid'])) }
             destroy_expired_vms_on(pve_node)
             clean_up_done = true
           end
         end
         if clean_up_done
-          nbr_vms = @allocations.map { |pve_node, pve_node_info| pve_node_info.size }.sum
+          nbr_vms = nbr_vms_handled_by_us
           if nbr_vms >= @config['limits']['nbr_vms_max']
             puts "[ Hard limit reached ] - Still too many running VMs after clean-up: #{nbr_vms}."
             reserved_resource = :exceeded_number_of_vms
@@ -156,6 +148,7 @@ class ProxmoxWaiter
             completed_vm_info = vm_info.dup
             completed_vm_info['vmid'] = vm_id_or_error
             completed_vm_info['net0'] = "#{completed_vm_info['net0']},ip=#{ip}/32"
+            completed_vm_info['description'] = "#{completed_vm_info['description']}creation_date: #{Time.now.utc.strftime('%FT%T')}\n"
             wait_for_proxmox_task(selected_pve_node, @proxmox.post("nodes/#{selected_pve_node}/lxc", completed_vm_info))
             reserved_resource = {
               pve_node: selected_pve_node,
@@ -177,12 +170,10 @@ class ProxmoxWaiter
   # * Hash<Symbol, Object> or Symbol: Released resource info, or Symbol in case of error.
   #   The following properties are set as resource info:
   #   * *pve_node* (String): Node on which the container has been released (if found).
-  #   * *reservation_date* (String): The VM reservation date (if found).
   #   Possible error codes returned are:
   #   None
   def destroy(vm_id)
     found_pve_node = nil
-    found_reservation_date = nil
     start do
       vm_id_str = vm_id.to_s
       # Destroy the VM ID
@@ -200,22 +191,8 @@ class ProxmoxWaiter
         end
         puts "Could not find any PVE node hosting VM #{vm_id}"
       end
-      @allocations.each do |pve_node, pve_node_info|
-        if pve_node_info.key?(vm_id_str)
-          # Found it
-          deleted_info = pve_node_info.delete(vm_id_str)
-          found_reservation_date = deleted_info['reservation_date']
-          if found_pve_node.nil?
-            found_pve_node = pve_node
-          elsif found_pve_node != pve_node
-            puts "VM #{vm_id} has been found on PVE node #{found_pve_node} but it was registered initially on PVE node #{pve_node}"
-          end
-          break
-        end
-      end
     end
     reserved_resource = {}
-    reserved_resource[:reservation_date] = found_reservation_date unless found_reservation_date.nil?
     reserved_resource[:pve_node] = found_pve_node unless found_pve_node.nil?
     reserved_resource
   end
@@ -224,17 +201,15 @@ class ProxmoxWaiter
 
   # Grab the lock to start a new atomic session.
   # Make sure the lock is released at the end of the session.
-  # Update the allocations file with any modification that has been done on the @allocations
   #
   # Parameters::
   # * Proc: Client code with the session started.
   #   The following instance variables are set:
-  #   * *@allocations* (Hash): Store the allocations db. It can be modified by the client code, and modifications will automatically be written back to disk upon exit.
   #   * *@expiration_date* (Time): The expiration date to be considered when selecting expired VMs
   #   * *@proxmox* (Proxmox): The Proxmox instance
   def start
-    # Read the current allocation file, in an atomic way
-    Futex.new(@config['allocations_file'], timeout: FUTEX_TIMEOUT).open do
+    # Perform any operation in an atomic way
+    Futex.new(@config['futex_file'], timeout: FUTEX_TIMEOUT).open do
       # Connect to Proxmox's API
       @proxmox = Proxmox::Proxmox.new(
         "#{@config['proxmox_api_url']}/api2/json/",
@@ -254,14 +229,10 @@ class ProxmoxWaiter
       rescue
         raise "Unable to connect to Proxmox API #{@config['proxmox_api_url']} with user #{@proxmox_user}: #{$!}"
       end
-      @allocations = File.exist?(@config['allocations_file']) ? JSON.parse(File.read(@config['allocations_file'])) : {}
       @expiration_date = Time.now.utc - @config['expiration_period_secs']
       begin
         yield
       ensure
-        # Make sure we don't overwrite the file if an exception occurred before initializing @allocations
-        File.write(@config['allocations_file'], @allocations.to_json) unless @allocations.nil?
-        @allocations = nil
         @expiration_date = nil
         @proxmox = nil
       end
@@ -311,44 +282,14 @@ class ProxmoxWaiter
             # TODO: Remove the Integer conversion when Proxmox API will be fixed.
             lxc_disk_gb_used = Integer(lxc_info['maxdisk']) / (1024 * 1024 * 1024)
             lxc_ram_mb_used = lxc_info['maxmem'] / (1024 * 1024)
-            if vm_id.between?(*@config['vm_ids_range'])
-              # This is supposed to be a VM we handle.
-              # Check in the allocations if it is expired.
-              allocation_info = @allocations.dig pve_node, vm_id.to_s
-              if allocation_info.nil? || Time.parse("#{allocation_info['reservation_date']} UTC") < @expiration_date
-                # This VM is expired.
-                if allocation_info.nil?
-                  # Warn if nothing is known about it as well.
-                  puts "[ #{pve_node}/#{vm_id} ] - WARN - Container exists but is not part of our allocation db. Consider it expired."
-                  # Register it in the allocations for future reference
-                  @allocations[pve_node] = {} unless @allocations.key?(pve_node)
-                  @allocations[pve_node][vm_id.to_s] = {
-                    # Make sure it is considered expired
-                    'reservation_date' => (@expiration_date - 60).strftime('%FT%T')
-                  }
-                end
-                expired_disk_gb_used += lxc_disk_gb_used
-                expired_ram_mb_used += lxc_ram_mb_used
-              else
-                disk_gb_used += lxc_disk_gb_used
-                ram_mb_used += lxc_ram_mb_used
-              end
+            if is_vm_expired?(pve_node, vm_id)
+              expired_disk_gb_used += lxc_disk_gb_used
+              expired_ram_mb_used += lxc_ram_mb_used
             else
               disk_gb_used += lxc_disk_gb_used
               ram_mb_used += lxc_ram_mb_used
             end
             vm_id.to_s
-          end
-          if @allocations.key?(pve_node)
-            # Remove from our db the VM IDs that are missing (they have been deleted in the Proxmox instance and we don't know about it).
-            @allocations[pve_node].delete_if do |vm_id_str, vm_info|
-              if found_vm_ids.include?(vm_id_str)
-                false
-              else
-                puts "[ #{pve_node}/#{vm_id_str} ] - WARN - This container was part of allocations done by this script, but does not exist anymore in the PVE node. Removing it from the allocations db."
-                true
-              end
-            end
           end
           puts "[ #{pve_node} ] - RAM MB usage: #{ram_mb_used + expired_ram_mb_used} / #{ram_mb_total} (#{expired_ram_mb_used} MB from expired containers)"
           puts "[ #{pve_node} ] - Disk GB usage: #{disk_gb_used + expired_disk_gb_used} / #{disk_gb_total} (#{expired_disk_gb_used} GB from expired containers)"
@@ -382,8 +323,56 @@ class ProxmoxWaiter
     end]
   end
 
+  # Is a given VM expired?
+  #
+  # Parameters::
+  # * *pve_node* (String): The PVE node hosting this VM
+  # * *vm_id* (Integer): The VM ID
+  # Result::
+  # * Boolean: Is the given VM expired?
+  def is_vm_expired?(pve_node, vm_id)
+    if vm_id.between?(*@config['vm_ids_range'])
+      # Get its reservation date from the notes
+      creation_date = vm_metadata(pve_node, vm_id)[:creation_date]
+      creation_date.nil? || Time.parse("#{creation_date} UTC") < @expiration_date
+    else
+      false
+    end
+  end
+
+  # Get the metadata we associate to VMs.
+  # It can be empty if no metadata found.
+  #
+  # Parameters::
+  # * *pve_node* (String): The PVE node hosting this VM
+  # * *vm_id* (Integer): The VM ID
+  # Result::
+  # * Hash<Symbol, String>: The metadata
+  def vm_metadata(pve_node, vm_id)
+    lxc_config = api_get("nodes/#{pve_node}/lxc/#{vm_id}/config")
+    vm_description_lines = (lxc_config['description'] || '').split("\n")
+    hpc_marker_idx = vm_description_lines.index('===== HPC Info =====')
+    if hpc_marker_idx.nil?
+      {}
+    else
+      Hash[vm_description_lines[hpc_marker_idx + 1..-1].map do |line|
+        property, value = line.split(': ')
+        [property.to_sym, value]
+      end]
+    end
+  end
+
+  # Count the number of VMs handled by us currently existing.
+  #
+  # Result::
+  # * Integer: Number of VMs handled by us
+  def nbr_vms_handled_by_us
+    @config['pve_nodes'].map do |pve_node|
+      api_get("nodes/#{pve_node}/lxc").select { |lxc_info| Integer(lxc_info['vmid']).between?(*@config['vm_ids_range']) }.size
+    end.sum
+  end
+
   # Reserve resources for a new container on a PVE node, and assign a new VM ID and IP to it.
-  # Update the allocations db with this new info.
   # Prerequisites:
   # * This method should be called in a #start block
   #
@@ -410,12 +399,7 @@ class ProxmoxWaiter
         :no_available_vm_id
       else
         # Success
-        @allocations[pve_node] = {} unless @allocations.key?(pve_node)
-        vm_info = {
-          'reservation_date' => Time.now.utc.strftime('%FT%T')
-        }
-        puts "[ #{pve_node}/#{selected_vm_id} ] - New LXC container reserved (IP #{selected_vm_ip}): #{JSON.pretty_generate(vm_info)}"
-        @allocations[pve_node][selected_vm_id.to_s] = vm_info
+        puts "[ #{pve_node}/#{selected_vm_id} ] - New LXC container reserved with IP #{selected_vm_ip}"
         [selected_vm_id, selected_vm_ip]
       end
     end
@@ -427,22 +411,16 @@ class ProxmoxWaiter
   # Parameters::
   # * *pve_node* (String): PVE node to delete expired VMs from.
   def destroy_expired_vms_on(pve_node)
-    if @allocations.key?(pve_node)
-      @allocations[pve_node].delete_if do |vm_id_str, vm_info|
-        vm_id = Integer(vm_id_str)
-        if vm_id.between?(*@config['vm_ids_range']) &&
-          Time.parse("#{vm_info['reservation_date']} UTC") < @expiration_date
-          puts "[ #{pve_node}/#{vm_id} ] - LXC container has been created on #{vm_info['reservation_date']}. It is now expired."
-          destroy_vm_on(pve_node, vm_id)
-          true
-        else
-          false
-        end
+    api_get("nodes/#{pve_node}/lxc").each do |lxc_info|
+      vm_id = Integer(lxc_info['vmid'])
+      if is_vm_expired?(pve_node, vm_id)
+        puts "[ #{pve_node}/#{vm_id} ] - LXC container has been created on #{vm_metadata(pve_node, vm_id)[:creation_date]}. It is now expired."
+        destroy_vm_on(pve_node, vm_id)
       end
-      # Invalidate the API cache for anything related to this PVE node
-      pve_node_paths_regexp = /^nodes\/#{Regexp.escape(pve_node)}\/.+$/
-      @gets_cache.delete_if { |path, _result| path =~ pve_node_paths_regexp }
     end
+    # Invalidate the API cache for anything related to this PVE node
+    pve_node_paths_regexp = /^nodes\/#{Regexp.escape(pve_node)}\/.+$/
+    @gets_cache.delete_if { |path, _result| path =~ pve_node_paths_regexp }
   end
 
   # Destroy a VM on a PVE node.
@@ -483,8 +461,7 @@ class ProxmoxWaiter
     Range.new(*@config['vm_ids_range']).to_a -
       api_get('nodes').map do |pve_node_info|
         api_get("nodes/#{pve_node_info['node']}/lxc").map { |lxc_info| Integer(lxc_info['vmid']) }
-      end.flatten -
-      @allocations.values.map { |pve_node_info| pve_node_info.keys.map { |vm_id_str| Integer(vm_id_str) } }.flatten
+      end.flatten
   end
 
   # Wait for a given Proxmox task completion

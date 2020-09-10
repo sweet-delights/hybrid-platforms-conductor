@@ -14,10 +14,11 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
             vm_id: 1000,
             vm_ip: '192.168.0.100'
           )
-          expect(@proxmox_actions).to eq [
+          expect_proxmox_actions_to_be [
             [:post, 'nodes/pve_node_name/lxc', {
               'cores' => 2,
               'cpulimit' => 2,
+              'description' => /^===== HPC Info =====\nnode: test_node\nenvironment: test_env\ncreation_date: .+\n/,
               'hostname' => 'test.hostname.my-domain.com',
               'memory' => 1024,
               'net0' => 'name=eth0,bridge=vmbr0,gw=172.16.16.16,ip=192.168.0.100/32',

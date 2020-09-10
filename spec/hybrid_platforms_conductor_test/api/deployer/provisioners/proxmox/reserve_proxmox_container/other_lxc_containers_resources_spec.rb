@@ -136,10 +136,11 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
           mock_proxmox(mocked_pve_nodes: {
             'pve_node_name' => {
               lxc_containers: {
-                1000 => {},
-                1001 => {},
-                1002 => {},
-                1003 => {}
+                # Make sure those containers are not expired
+                1000 => { creation_date: (Time.now - 60).utc },
+                1001 => { creation_date: (Time.now - 60).utc },
+                1002 => { creation_date: (Time.now - 60).utc },
+                1003 => { creation_date: (Time.now - 60).utc }
               }
             }
           })
@@ -149,16 +150,7 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
               cpu_loads_thresholds: [10, 10, 10],
               ram_percent_used_max: 0.75,
               disk_percent_used_max: 0.75
-            } },
-            # Make sure those containers are not expired
-            allocations: {
-              'pve_node_name' => {
-                '1000' => { reservation_date: (Time.now - 60).utc.strftime('%FT%T') },
-                '1001' => { reservation_date: (Time.now - 60).utc.strftime('%FT%T') },
-                '1002' => { reservation_date: (Time.now - 60).utc.strftime('%FT%T') },
-                '1003' => { reservation_date: (Time.now - 60).utc.strftime('%FT%T') }
-              }
-            }
+            } }
           )).to eq(error: 'exceeded_number_of_vms')
         end
       end
@@ -168,8 +160,9 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
           mock_proxmox(mocked_pve_nodes: {
             'pve_node_name' => {
               lxc_containers: {
-                1000 => {},
-                1001 => {},
+                # Make sure those containers are not expired
+                1000 => { creation_date: (Time.now - 60).utc },
+                1001 => { creation_date: (Time.now - 60).utc },
                 1 => {},
                 2 => {}
               }
@@ -181,14 +174,7 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
               cpu_loads_thresholds: [10, 10, 10],
               ram_percent_used_max: 0.75,
               disk_percent_used_max: 0.75
-            } },
-            # Make sure those containers are not expired
-            allocations: {
-              'pve_node_name' => {
-                '1000' => { reservation_date: (Time.now - 60).utc.strftime('%FT%T') },
-                '1001' => { reservation_date: (Time.now - 60).utc.strftime('%FT%T') }
-              }
-            }
+            } }
           )).to eq({
             pve_node: 'pve_node_name',
             vm_id: 1002,

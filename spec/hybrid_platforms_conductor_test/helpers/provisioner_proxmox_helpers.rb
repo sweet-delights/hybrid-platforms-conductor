@@ -448,7 +448,8 @@ module HybridPlatformsConductorTest
                     maxmem: 1024 * 1024 * 1024,
                     cpus: 1,
                     ip: "192.168.0.#{(vm_id % 254) + 1}",
-                    status: 'running'
+                    status: 'running',
+                    creation_date: (Time.now - 60).utc
                   }.merge(vm_info)
                 ]
               end]
@@ -504,7 +505,8 @@ module HybridPlatformsConductorTest
                   pve_node_name = $1
                   vmid = $2
                   {
-                    'net0' => "ip=#{pve_nodes[pve_node_name][:lxc_containers][Integer(vmid)][:ip]}/32"
+                    'net0' => "ip=#{pve_nodes[pve_node_name][:lxc_containers][Integer(vmid)][:ip]}/32",
+                    'description' => "===== HPC Info =====\nnode: test_node\nenvironment: test_env\ncreation_date: #{pve_nodes[pve_node_name][:lxc_containers][Integer(vmid)][:creation_date].strftime('%FT%T')}\n"
                   }
                 when /^nodes\/([^\/]+)\/lxc\/([^\/]+)\/status\/current$/
                   pve_node_name = $1
@@ -577,15 +579,14 @@ module HybridPlatformsConductorTest
       # * *argv* (Array<String>): ARGV to give the command
       # * *config* (Hash): Configuration overriding defaults to store in the config file [default: {}]
       # * *max_retries* (Integer): Specify the max number of retries [default: 1]
-      # * *allocations* (Hash): Content of the allocations db file [default: {}]
       # * *create* (Hash or nil): Create file content, or nil if none [default: nil]
       # Result::
       # * Hash: JSON result of the call
-      def call_reserve_proxmox_container_with(argv, config: {}, max_retries: 1, allocations: {}, create: nil)
+      def call_reserve_proxmox_container_with(argv, config: {}, max_retries: 1, create: nil)
         # Make sure we set default values in the config
         config = {
           proxmox_api_url: 'https://my-proxmox.my-domain.com:8006',
-          allocations_file: "#{@repository}/proxmox/allocations.json",
+          futex_file: "#{@repository}/proxmox/allocations.futex",
           pve_nodes: ['pve_node_name'],
           vm_ips_list: %w[
             192.168.0.100
@@ -605,7 +606,6 @@ module HybridPlatformsConductorTest
         }.merge(config)
         FileUtils.cp_r "#{__dir__}/../../../lib/hybrid_platforms_conductor/hpc_plugins/provisioner/proxmox", @repository
         File.write("#{@repository}/proxmox/config.json", config.to_json)
-        File.write("#{@repository}/proxmox/allocations.json", allocations.to_json)
         script_args = argv + [
           '--max-retries', max_retries.to_s,
           '--wait-before-retry', '0'
@@ -644,18 +644,17 @@ module HybridPlatformsConductorTest
       # * *disk_gb* (Integer): Required Disk GB
       # * *config* (Hash): Configuration overriding defaults to store in the config file [default: {}]
       # * *max_retries* (Integer): Specify the max number of retries [default: 1]
-      # * *allocations* (Hash): Content of the allocations db file [default: {}]
       # Result::
       # * Hash: JSON result of the call
-      def call_reserve_proxmox_container(cpus, ram_mb, disk_gb, config: {}, max_retries: 1, allocations: {})
+      def call_reserve_proxmox_container(cpus, ram_mb, disk_gb, config: {}, max_retries: 1)
         call_reserve_proxmox_container_with(
           [],
           config: config,
           max_retries: max_retries,
-          allocations: allocations,
           create: {
             ostemplate: 'test_template.iso',
             hostname: 'test.hostname.my-domain.com',
+            description: "===== HPC Info =====\nnode: test_node\nenvironment: test_env\n",
             cores: cpus,
             cpulimit: cpus,
             memory: ram_mb,
@@ -672,18 +671,41 @@ module HybridPlatformsConductorTest
       # * *vm_id* (Integer): VM ID to release
       # * *config* (Hash): Configuration overriding defaults to store in the config file [default: {}]
       # * *max_retries* (Integer): Specify the max number of retries [default: 1]
-      # * *allocations* (Hash): Content of the allocations db file [default: {}]
       # Result::
       # * Hash: JSON result of the call
-      def call_release_proxmox_container(vm_id, config: {}, max_retries: 1, allocations: {})
+      def call_release_proxmox_container(vm_id, config: {}, max_retries: 1)
         call_reserve_proxmox_container_with(
           [
             '--destroy', vm_id.to_s
           ],
           config: config,
-          max_retries: max_retries,
-          allocations: allocations
+          max_retries: max_retries
         )
+      end
+
+      # Expect a list of Proxmox API calls to match a given list.
+      # Handle Regexp in the expectation.
+      #
+      # Parameters::
+      # * *expected_proxmox_actions* (Array<Array>): Expected Proxmox actions
+      def expect_proxmox_actions_to_be(expected_proxmox_actions)
+        expect(@proxmox_actions.size).to eq expected_proxmox_actions.size
+        @proxmox_actions.zip(expected_proxmox_actions).each do |proxmox_action, expected_proxmox_action|
+          expect(proxmox_action.size).to eq expected_proxmox_action.size
+          expect(proxmox_action[0..1]).to eq expected_proxmox_action[0..1]
+          if proxmox_action.size >= 3
+            # The third argument is a Hash that might have Regexp in the expectation
+            expect(proxmox_action[2].keys.sort).to eq expected_proxmox_action[2].keys.sort
+            proxmox_action[2].each do |property, value|
+              expected_value = expected_proxmox_action[2][property]
+              if expected_value.is_a?(Regexp)
+                expect(value).to match expected_value
+              else
+                expect(value).to eq expected_value
+              end
+            end
+          end
+        end
       end
 
     end

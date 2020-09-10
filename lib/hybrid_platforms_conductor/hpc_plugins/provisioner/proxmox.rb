@@ -358,7 +358,7 @@ module HybridPlatformsConductor
             'config.json',
             (proxmox_test_info[:test_config].merge(
               proxmox_api_url: proxmox_test_info[:api_url],
-              allocations_file: '/tmp/hpc_proxmox_allocations.json'
+              futex_file: '/tmp/hpc_proxmox_allocations.futex'
             )).to_json
           )
           stdout = nil
@@ -422,8 +422,6 @@ module HybridPlatformsConductor
         # Result::
         # * Hash<Symbol, Object>: The details of the released container:
         #   * *pve_node* (String): Name of the node on which the container was reserved (if found)
-        #   * *vm_ip* (String): IP address allocated for the released LXC container (if found)
-        #   * *reservation_date* (String): Reservation date of this LXC container (if found)
         def release_lxc_container(vm_id)
           log_debug "[ #{@node}/#{@environment} ] - Release LXC VM #{vm_id}..."
           run_cmd_on_sync_node "reserve_proxmox_container --destroy #{vm_id}"
