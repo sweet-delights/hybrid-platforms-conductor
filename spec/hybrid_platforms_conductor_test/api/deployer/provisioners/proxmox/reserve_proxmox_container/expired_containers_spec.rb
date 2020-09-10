@@ -158,13 +158,23 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
               }
             }
           })
-          expect(call_reserve_proxmox_container(2, 1024, 1, allocations: {
-            'pve_node_name' => {
-              '1000' => { reservation_date: Time.now.utc.strftime('%FT%T') },
-              '1001' => { reservation_date: (Time.now - 31 * 24 * 60 * 60).utc.strftime('%FT%T') },
-              '1002' => { reservation_date: Time.now.utc.strftime('%FT%T') }
+          expect(call_reserve_proxmox_container(2, 1024, 1,
+            config: {
+              vm_ips_list: %w[
+                192.168.0.100
+                192.168.0.101
+                192.168.0.102
+                192.168.0.103
+              ]
+            },
+            allocations: {
+              'pve_node_name' => {
+                '1000' => { reservation_date: Time.now.utc.strftime('%FT%T') },
+                '1001' => { reservation_date: (Time.now - 31 * 24 * 60 * 60).utc.strftime('%FT%T') },
+                '1002' => { reservation_date: Time.now.utc.strftime('%FT%T') }
+              }
             }
-          })).to eq(error: 'not_enough_resources')
+          )).to eq(error: 'not_enough_resources')
           expect(@proxmox_actions).to eq []
         end
       end
@@ -406,6 +416,65 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
         end
       end
 
+      it 'expires VMs from non-selected PVE nodes even if free resources are available when IPs are all used' do
+        with_sync_node do
+          mock_proxmox(mocked_pve_nodes: {
+            # Make sure this node should be selected
+            'pve_node_1' => {
+              memory_total: 16 * 1024 * 1024 * 1024,
+              lxc_containers: {
+                1000 => { ip: '192.168.0.100', maxmem: 1 * 1024 * 1024 * 1024 },
+                1002 => { ip: '192.168.0.102', maxmem: 1 * 1024 * 1024 * 1024 }
+              }
+            },
+            # But this node is the only one having expired VMs
+            'pve_node_2' => {
+              memory_total: 2 * 1024 * 1024 * 1024,
+              lxc_containers: {
+                1001 => { ip: '192.168.0.101', maxmem: 1 * 1024 * 1024 * 1024 }
+              }
+            }
+          })
+          expect(call_reserve_proxmox_container(2, 1024, 1,
+            config: {
+              pve_nodes: nil,
+              vm_ips_list: %w[
+                192.168.0.100
+                192.168.0.101
+                192.168.0.102
+              ]
+            },
+            allocations: {
+              'pve_node_1' => {
+                '1000' => { reservation_date: Time.now.utc.strftime('%FT%T') },
+                '1002' => { reservation_date: Time.now.utc.strftime('%FT%T') }
+              },
+              'pve_node_2' => {
+                '1001' => { reservation_date: (Time.now - 31 * 24 * 60 * 60).utc.strftime('%FT%T') }
+              }
+            }
+          )).to eq(
+            pve_node: 'pve_node_1',
+            vm_id: 1001,
+            vm_ip: '192.168.0.101'
+          )
+          expect(@proxmox_actions).to eq [
+            [:post, 'nodes/pve_node_2/lxc/1001/status/stop'],
+            [:delete, 'nodes/pve_node_2/lxc/1001'],
+            [:post, 'nodes/pve_node_1/lxc', {
+              'cores' => 2,
+              'cpulimit' => 2,
+              'hostname' => 'test.hostname.my-domain.com',
+              'memory' => 1024,
+              'net0' => 'name=eth0,bridge=vmbr0,gw=172.16.16.16,ip=192.168.0.101/32',
+              'ostemplate' => 'test_template.iso',
+              'rootfs' => 'local-lvm:1',
+              'vmid' => 1001
+            }]
+          ]
+        end
+      end
+
       it 'expires VMs even if free resources are available when VM IDs are all used' do
         with_sync_node do
           mock_proxmox(mocked_pve_nodes: {
@@ -444,6 +513,67 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
             [:post, 'nodes/pve_node_name/lxc/1001/status/stop'],
             [:delete, 'nodes/pve_node_name/lxc/1001'],
             [:post, 'nodes/pve_node_name/lxc', {
+              'cores' => 2,
+              'cpulimit' => 2,
+              'hostname' => 'test.hostname.my-domain.com',
+              'memory' => 1024,
+              'net0' => 'name=eth0,bridge=vmbr0,gw=172.16.16.16,ip=192.168.0.101/32',
+              'ostemplate' => 'test_template.iso',
+              'rootfs' => 'local-lvm:1',
+              'vmid' => 1001
+            }]
+          ]
+        end
+      end
+
+      it 'expires VMs from non-selected PVE nodes even if free resources are available when VM IDs are all used' do
+        with_sync_node do
+          mock_proxmox(mocked_pve_nodes: {
+            # Make sure this node should be selected
+            'pve_node_1' => {
+              memory_total: 16 * 1024 * 1024 * 1024,
+              lxc_containers: {
+                1000 => { ip: '192.168.0.100', maxmem: 1 * 1024 * 1024 * 1024 },
+                1002 => { ip: '192.168.0.102', maxmem: 1 * 1024 * 1024 * 1024 }
+              }
+            },
+            # But this node is the only one having expired VMs
+            'pve_node_2' => {
+              memory_total: 2 * 1024 * 1024 * 1024,
+              lxc_containers: {
+                1001 => { ip: '192.168.0.101', maxmem: 1 * 1024 * 1024 * 1024 }
+              }
+            }
+          })
+          expect(call_reserve_proxmox_container(2, 1024, 1,
+            config: {
+              pve_nodes: nil,
+              vm_ips_list: %w[
+                192.168.0.100
+                192.168.0.101
+                192.168.0.102
+                192.168.0.103
+              ],
+              vm_ids_range: [1000, 1002]
+            },
+            allocations: {
+              'pve_node_1' => {
+                '1000' => { reservation_date: Time.now.utc.strftime('%FT%T') },
+                '1002' => { reservation_date: Time.now.utc.strftime('%FT%T') }
+              },
+              'pve_node_2' => {
+                '1001' => { reservation_date: (Time.now - 31 * 24 * 60 * 60).utc.strftime('%FT%T') }
+              }
+            }
+          )).to eq(
+            pve_node: 'pve_node_1',
+            vm_id: 1001,
+            vm_ip: '192.168.0.101'
+          )
+          expect(@proxmox_actions).to eq [
+            [:post, 'nodes/pve_node_2/lxc/1001/status/stop'],
+            [:delete, 'nodes/pve_node_2/lxc/1001'],
+            [:post, 'nodes/pve_node_1/lxc', {
               'cores' => 2,
               'cpulimit' => 2,
               'hostname' => 'test.hostname.my-domain.com',
@@ -500,6 +630,72 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
             [:post, 'nodes/pve_node_name/lxc/1001/status/stop'],
             [:delete, 'nodes/pve_node_name/lxc/1001'],
             [:post, 'nodes/pve_node_name/lxc', {
+              'cores' => 2,
+              'cpulimit' => 2,
+              'hostname' => 'test.hostname.my-domain.com',
+              'memory' => 1024,
+              'net0' => 'name=eth0,bridge=vmbr0,gw=172.16.16.16,ip=192.168.0.101/32',
+              'ostemplate' => 'test_template.iso',
+              'rootfs' => 'local-lvm:1',
+              'vmid' => 1001
+            }]
+          ]
+        end
+      end
+
+      it 'expires VMs from non-selected PVE nodes even if free resources are available when the maximum number of VMs has been reached' do
+        with_sync_node do
+          mock_proxmox(mocked_pve_nodes: {
+            # Make sure this node should be selected
+            'pve_node_1' => {
+              memory_total: 16 * 1024 * 1024 * 1024,
+              lxc_containers: {
+                1000 => { ip: '192.168.0.100', maxmem: 1 * 1024 * 1024 * 1024 },
+                1002 => { ip: '192.168.0.102', maxmem: 1 * 1024 * 1024 * 1024 }
+              }
+            },
+            # But this node is the only one having expired VMs
+            'pve_node_2' => {
+              memory_total: 2 * 1024 * 1024 * 1024,
+              lxc_containers: {
+                1001 => { ip: '192.168.0.101', maxmem: 1 * 1024 * 1024 * 1024 }
+              }
+            }
+          })
+          expect(call_reserve_proxmox_container(2, 1024, 1,
+            config: {
+              pve_nodes: nil,
+              vm_ips_list: %w[
+                192.168.0.100
+                192.168.0.101
+                192.168.0.102
+                192.168.0.103
+              ],
+              limits: {
+                nbr_vms_max: 3,
+                cpu_loads_thresholds: [10, 10, 10],
+                ram_percent_used_max: 0.75,
+                disk_percent_used_max: 0.75
+              }
+            },
+            allocations: {
+              'pve_node_1' => {
+                '1000' => { reservation_date: Time.now.utc.strftime('%FT%T') },
+                '1002' => { reservation_date: Time.now.utc.strftime('%FT%T') }
+              },
+              'pve_node_2' => {
+                '1001' => { reservation_date: (Time.now - 31 * 24 * 60 * 60).utc.strftime('%FT%T') }
+              }
+            }
+          )).to eq(
+            pve_node: 'pve_node_1',
+            vm_id: 1001,
+            vm_ip: '192.168.0.101'
+          )
+          expect(@proxmox_actions).to eq [
+            [:post, 'nodes/pve_node_2/lxc/1001/status/stop'],
+            [:delete, 'nodes/pve_node_2/lxc/1001'],
+            [:post, 'nodes/pve_node_1/lxc', {
               'cores' => 2,
               'cpulimit' => 2,
               'hostname' => 'test.hostname.my-domain.com',

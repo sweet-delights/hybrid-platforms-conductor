@@ -72,10 +72,17 @@ class ProxmoxWaiter
     reserved_resource = nil
     start do
       pve_node_scores = pve_scores_for(nbr_cpus, ram_mb, disk_gb)
-      # Check if we are not exceeding the number of vms to be created
+      # Check if we are not exceeding hard-limits:
+      # * the number of vms to be created
+      # * the free IPs
+      # * the free VM IDs
+      # In such case, even when free resources on PVE nodes are enough to host the new container, we still need to clean-up before.
       nbr_vms = @allocations.map { |pve_node, pve_node_info| pve_node_info.size }.sum
-      if nbr_vms >= @config['limits']['nbr_vms_max']
-        puts "Already #{nbr_vms} are created (max is #{@config['limits']['nbr_vms_max']}). Check if we can destroy expired ones."
+      if nbr_vms >= @config['limits']['nbr_vms_max'] || free_ips.empty? || free_vm_ids.empty?
+        puts 'Hitting at least 1 hard-limit. Check if we can destroy expired containers.'
+        puts "[ Hard limit reached ] - Already #{nbr_vms} are created (max is #{@config['limits']['nbr_vms_max']})." if nbr_vms >= @config['limits']['nbr_vms_max']
+        puts '[ Hard limit reached ] - No more available IPs.' if free_ips.empty?
+        puts '[ Hard limit reached ] - No more available VM IDs.' if free_vm_ids.empty?
         clean_up_done = false
         # Check if we can remove some expired ones
         @allocations.each do |pve_node, pve_node_info|
@@ -87,29 +94,36 @@ class ProxmoxWaiter
         if clean_up_done
           nbr_vms = @allocations.map { |pve_node, pve_node_info| pve_node_info.size }.sum
           if nbr_vms >= @config['limits']['nbr_vms_max']
-            puts "Still too many running VMs after clean-up: #{nbr_vms}."
+            puts "[ Hard limit reached ] - Still too many running VMs after clean-up: #{nbr_vms}."
             reserved_resource = :exceeded_number_of_vms
+          elsif free_ips.empty?
+            puts '[ Hard limit reached ] - Still no available IP'
+            reserved_resource = :no_available_ip
+          elsif free_vm_ids.empty?
+            puts '[ Hard limit reached ] - Still no available VM ID'
+            reserved_resource = :no_available_vm_id
           end
         else
           puts 'Could not find any expired VM to destroy.'
           # There was nothing to clean. So wait for other processes to destroy their containers.
-          reserved_resource = :exceeded_number_of_vms
+          reserved_resource =
+            if nbr_vms >= @config['limits']['nbr_vms_max']
+              :exceeded_number_of_vms
+            elsif free_ips.empty?
+              :no_available_ip
+            else
+              :no_available_vm_id
+            end
         end
       end
       if reserved_resource.nil?
         # Select the best node, first keeping expired VMs if possible.
         # This is the index of the scores to be checked: if we can choose without recycling VMs, do it by considering score index 0.
         score_idx =
-          if pve_node_scores.all? { |_pve_node, (pve_node_score, _pve_node_score_without_expired)| pve_node_score.nil? }
+          if pve_node_scores.all? { |_pve_node, pve_node_scores| pve_node_scores[0].nil? }
             # No node was available without removing expired VMs.
             # Therefore we consider only scores without expired VMs.
             puts 'No PVE node has enough free resources without removing eventual expired VMs'
-            1
-          elsif free_ips.empty?
-            puts 'No more available IPs. Need to consider expired VMs to free some.'
-            1
-          elsif free_vm_ids.empty?
-            puts 'No more available VM IDs. Need to consider expired VMs to free some.'
             1
           else
             0
