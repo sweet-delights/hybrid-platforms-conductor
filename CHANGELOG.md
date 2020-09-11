@@ -1,3 +1,9 @@
+# [22.1.0](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv22.0.0&sourceBranch=refs%2Ftags%2Fv22.1.0) (2020-09-11)
+
+### New features
+
+* [Feature] Plugins can validate their dependencies before registration ([181bc3a3](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/commits/181bc3a3658be41779f8fb66511ae4de356b138d))
+
 # [22.0.0](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv21.0.0&sourceBranch=refs%2Ftags%2Fv22.0.0) (2020-09-11)
 
 ### Breaking changes
