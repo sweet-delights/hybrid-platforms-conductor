@@ -2,6 +2,7 @@ require 'hybrid_platforms_conductor/cmd_runner'
 require 'hybrid_platforms_conductor/cmdb'
 require 'hybrid_platforms_conductor/logger_helpers'
 require 'hybrid_platforms_conductor/parallel_threads'
+require 'hybrid_platforms_conductor/platform_handler'
 require 'hybrid_platforms_conductor/platforms_dsl'
 
 module HybridPlatformsConductor
