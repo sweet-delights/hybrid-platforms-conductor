@@ -294,6 +294,8 @@ module HybridPlatformsConductor
     #     * *deployer* (Deployer): A new Deployer configured to override access to the node through the Docker container
     #     * *instance* (Provisioner): The provisioned instance
     def with_test_provisioned_instance(provisioner_id, node, environment:, reuse_instance: false)
+      # Add the user to the environment to better track belongings on shared provisioners
+      environment = "#{@cmd_runner.whoami}_#{environment}"
       # Add PID and process start time to the ID to make sure other containers used by other runs are not being reused.
       environment << "_#{Process.pid}_#{(Time.now - Process.clock_gettime(Process::CLOCK_BOOTTIME)).strftime('%Y%m%d%H%M%S')}" unless reuse_instance
       # Create different NodesHandler and Deployer to handle this Docker container in place of the real node.
