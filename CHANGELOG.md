@@ -1,3 +1,9 @@
+# [23.1.1](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv23.1.0&sourceBranch=refs%2Ftags%2Fv23.1.1) (2020-09-11)
+
+### Fixes
+
+* Corrected useless debug logs in tests by simplifying loggers initialization ([26c6b09c](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/commits/26c6b09c6bc5c3da09898caa654133a8a0590d43))
+
 # [23.1.0](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv23.0.0&sourceBranch=refs%2Ftags%2Fv23.1.0) (2020-09-11)
 
 ### New features
