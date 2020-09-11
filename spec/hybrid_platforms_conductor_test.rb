@@ -5,6 +5,7 @@ require 'hybrid_platforms_conductor/cmd_runner'
 require 'hybrid_platforms_conductor/deployer'
 require 'hybrid_platforms_conductor/nodes_handler'
 require 'hybrid_platforms_conductor/platform_handler'
+require 'hybrid_platforms_conductor/provisioner'
 require 'hybrid_platforms_conductor/report'
 require 'hybrid_platforms_conductor/reports_handler'
 require 'hybrid_platforms_conductor/test'
@@ -39,6 +40,7 @@ require 'hybrid_platforms_conductor_test/test_plugins/node_check'
 require 'hybrid_platforms_conductor_test/test_plugins/node_ssh'
 require 'hybrid_platforms_conductor_test/test_plugins/platform'
 require 'hybrid_platforms_conductor_test/test_plugins/several_checks'
+require 'hybrid_platforms_conductor_test/test_provisioner'
 require 'hybrid_platforms_conductor_test/tests_report_plugin'
 
 module HybridPlatformsConductorTest
@@ -80,6 +82,8 @@ module HybridPlatformsConductorTest
         HybridPlatformsConductorTest::TestPlatformHandler.reset
         HybridPlatformsConductorTest::TestsReportPlugin.reports = []
         HybridPlatformsConductorTest::ReportPlugin.generated_reports = []
+        HybridPlatformsConductorTest::TestProvisioner.mocked_states = []
+        HybridPlatformsConductorTest::TestProvisioner.mocked_ip = nil
         HybridPlatformsConductorTest::TestPlugins::Global.nbr_runs = 0
         HybridPlatformsConductorTest::TestPlugins::Global.fail = false
         HybridPlatformsConductorTest::TestPlugins::Platform.runs = []

@@ -12,11 +12,11 @@ module HybridPlatformsConductor
 
         # Check my_test_plugin.rb.sample documentation for signature details.
         def test_for_node
-          @deployer.with_docker_container_for(@node, container_id: 'deploy_removes_root_access', reuse_container: log_debug?) do |deployer, nodes_handler|
+          @deployer.with_test_provisioned_instance(:docker, @node, environment: 'deploy_removes_root_access', reuse_instance: log_debug?) do |deployer, instance|
             # Check that we can connect with root
             ssh_ok = false
             begin
-              Net::SSH.start(nodes_handler.get_host_ip_of(@node), 'root', password: 'root_pwd', auth_methods: ['password'], verify_host_key: :never) do |ssh|
+              Net::SSH.start(instance.ip, 'root', password: 'root_pwd', auth_methods: ['password'], verify_host_key: :never) do |ssh|
                 ssh_ok = ssh.exec!('echo Works').strip == 'Works'
               end
             rescue
@@ -30,7 +30,7 @@ module HybridPlatformsConductor
               # Check that we can't connect with root
               ssh_ok = false
               begin
-                Net::SSH.start(nodes_handler.get_host_ip_of(@node), 'root', password: 'root_pwd', auth_methods: ['password'], verify_host_key: :never) do |ssh|
+                Net::SSH.start(instance.ip, 'root', password: 'root_pwd', auth_methods: ['password'], verify_host_key: :never) do |ssh|
                   ssh_ok = ssh.exec!('echo Works').strip == 'Works'
                 end
               rescue

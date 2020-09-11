@@ -377,12 +377,6 @@ module HybridPlatformsConductorTest
             end
           end
 
-          it 'refuses to restart nodes that have not been provisioned with Docker' do
-            with_test_platform({ nodes: { 'node' => {} } }, !@check_mode) do 
-              expect { test_deployer.restart('node') }.to raise_error 'Can\'t restart node as it is not instantiated as a Docker container'
-            end
-          end
-
           context 'checking deployment retries' do
 
             # Prepare a platform ready to test deployments' retries on.

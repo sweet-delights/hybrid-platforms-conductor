@@ -43,9 +43,9 @@ module HybridPlatformsConductor
       # List of gateway configurations, per gateway config name
       # Hash<Symbol, String>
       @gateways = {}
-      # List of Docker image directories, per image name
+      # List of OS image directories, per image name
       # Hash<Symbol, String>
-      @docker_images = {}
+      @os_images = {}
       # List of Bitbucket repositories definitions
       # Array< Hash<Symbol, Object> >
       # Each definition is just mapping the signature of #bitbucket_repos from platforms_dsl
@@ -246,8 +246,8 @@ module HybridPlatformsConductor
     #
     # Result::
     # * Array<Symbol>: List of known Docker images
-    def known_docker_images
-      @docker_images.keys
+    def known_os_images
+      @os_images.keys
     end
 
     # Get the directory containing a Docker image
@@ -256,8 +256,8 @@ module HybridPlatformsConductor
     # * *image* (Symbol): Image name
     # Result::
     # * String: Directory containing the Dockerfile of the image
-    def docker_image_dir(image)
-      @docker_images[image]
+    def os_image_dir(image)
+      @os_images[image]
     end
 
     # Get the list of known nodes lists
