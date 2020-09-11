@@ -213,7 +213,7 @@ class ProxmoxWaiter
   # * *msg* (String): Message to log
   def log(msg)
     puts msg
-    File.write(@log_file, "#{msg}\n")
+    File.open(@log_file, 'a') { |f| f.puts "[ #{Time.now.utc.strftime('%F %T')} ] - #{msg}" }
   end
 
   # Grab the lock to start a new atomic session.
