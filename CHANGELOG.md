@@ -1,3 +1,9 @@
+# [22.0.0](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv21.0.0&sourceBranch=refs%2Ftags%2Fv22.0.0) (2020-09-11)
+
+### Breaking changes
+
+* [Breaking] Harmonized the way plugins are integrated for any kind of plugin ([7a2dd942](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/commits/7a2dd942012df2fa976e6d4ff3aec8694f3dc5a3))
+
 # [21.0.0](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv20.0.0&sourceBranch=refs%2Ftags%2Fv21.0.0) (2020-08-11)
 
 ### Breaking changes
