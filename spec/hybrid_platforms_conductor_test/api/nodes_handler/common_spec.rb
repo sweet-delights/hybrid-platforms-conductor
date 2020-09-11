@@ -72,4 +72,10 @@ describe HybridPlatformsConductor::NodesHandler do
     end
   end
 
+  it 'returns the tests provisioner correctly' do
+    with_platforms 'tests_provisioner :test_provisioner' do
+      expect(test_nodes_handler.tests_provisioner_id).to eq :test_provisioner
+    end
+  end
+
 end

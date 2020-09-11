@@ -98,6 +98,14 @@ module HybridPlatformsConductor
       @os_images[image] = dir
     end
 
+    # Set which provisioner should be used for tests
+    #
+    # Parameters::
+    # * *provisioner* (Symbol): Plugin ID of the provisioner to be used for tests
+    def tests_provisioner(provisioner)
+      @tests_provisioner = provisioner
+    end
+
   end
 
 end

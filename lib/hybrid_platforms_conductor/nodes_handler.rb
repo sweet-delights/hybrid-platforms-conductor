@@ -37,6 +37,9 @@ module HybridPlatformsConductor
       # List of OS image directories, per image name
       # Hash<Symbol, String>
       @os_images = {}
+      # Plugin ID of the tests provisioner
+      # Symbol
+      @tests_provisioner = :docker
       # List of platform handler per known node
       # Hash<String, PlatformHandler>
       @nodes_platform = {}
@@ -573,6 +576,14 @@ module HybridPlatformsConductor
         impacted_services,
         impact_global
       ]
+    end
+
+    # Name of the provisioner to be used for tests
+    #
+    # Result::
+    # * Symbol: Provisioner to be used for tests
+    def tests_provisioner_id
+      @tests_provisioner
     end
 
   end
