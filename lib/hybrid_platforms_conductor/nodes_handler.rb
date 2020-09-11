@@ -36,7 +36,7 @@ module HybridPlatformsConductor
       @cmd_runner = cmd_runner
       # Directory in which we have platforms handled by HPCs definition
       @hybrid_platforms_dir = File.expand_path(ENV['hpc_platforms'].nil? ? '.' : ENV['hpc_platforms'])
-      @platform_types = PlatformsDsl.platform_types
+      @platform_types = Plugins.new(:platform_handler, logger: @logger, logger_stderr: @logger_stderr)
       # Keep a list of instantiated platform handlers per platform type
       # Hash<Symbol, Array<PlatformHandler> >
       @platform_handlers = {}
@@ -68,12 +68,28 @@ module HybridPlatformsConductor
       # List of CMDBs having the get_others method
       # Array< Cmdb >
       @cmdbs_others = []
-      # Parse available CMDBs, per CMDB name
-      # Hash<Symbol, Cmdb>
-      @cmdbs = {}
-      Dir.glob("#{__dir__}/cmdbs/*.rb").each do |file_name|
-        register_cmdb_from_file(file_name)
-      end
+      @cmdbs = Plugins.new(
+        :cmdb,
+        logger: @logger,
+        logger_stderr: @logger_stderr,
+        init_plugin: proc do |plugin_class|
+          cmdb = plugin_class.new(
+            logger: @logger,
+            logger_stderr: @logger_stderr,
+            nodes_handler: self,
+            cmd_runner: @cmd_runner
+          )
+          @cmdbs_others << cmdb if cmdb.respond_to?(:get_others)
+          cmdb.methods.each do |method|
+            if method.to_s =~ /^get_(.*)$/
+              property = $1.to_sym
+              @cmdbs_per_property[property] = [] unless @cmdbs_per_property.key?(property)
+              @cmdbs_per_property[property] << cmdb
+            end
+          end
+          cmdb
+        end
+      )
       # Cache of metadata per node
       # Hash<String, Hash<Symbol, Object> >
       @metadata = {}
@@ -649,32 +665,6 @@ module HybridPlatformsConductor
     #   * *tests_report_page_id* (String or nil): Confluence page id used for test reports, or nil if none.
     def confluence_info
       @confluence
-    end
-
-    private
-
-    # Register a CMDB plugin from a file
-    #
-    # Parameters::
-    # * *file_name* (String): The file name
-    def register_cmdb_from_file(file_name)
-      cmdb_name = File.basename(file_name, '.rb').to_sym
-      require file_name
-      cmdb = Cmdbs.const_get(cmdb_name.to_s.split('_').collect(&:capitalize).join.to_sym).new(
-        logger: @logger,
-        logger_stderr: @logger_stderr,
-        nodes_handler: self,
-        cmd_runner: @cmd_runner
-      )
-      @cmdbs_others << cmdb if cmdb.respond_to?(:get_others)
-      cmdb.methods.each do |method|
-        if method.to_s =~ /^get_(.*)$/
-          property = $1.to_sym
-          @cmdbs_per_property[property] = [] unless @cmdbs_per_property.key?(property)
-          @cmdbs_per_property[property] << cmdb
-        end
-      end
-      @cmdbs[cmdb_name] = cmdb
     end
 
   end

@@ -9,6 +9,7 @@ require 'hybrid_platforms_conductor/connector'
 require 'hybrid_platforms_conductor/io_router'
 require 'hybrid_platforms_conductor/logger_helpers'
 require 'hybrid_platforms_conductor/nodes_handler'
+require 'hybrid_platforms_conductor/plugins'
 
 module HybridPlatformsConductor
 
@@ -39,35 +40,20 @@ module HybridPlatformsConductor
       @nodes_handler = nodes_handler
       # Default values
       @max_threads = 16
-      # Parse available actions plugins, per action name
-      # Hash<Symbol, Class>
-      @action_plugins = Hash[Dir.
-        glob("#{__dir__}/actions/*.rb").
-        map do |file_name|
-          action_name = File.basename(file_name, '.rb').to_sym
-          require file_name
-          [
-            action_name,
-            Actions.const_get(action_name.to_s.split('_').collect(&:capitalize).join.to_sym)
-          ]
-        end]
-      # Parse available connector plugins, per connector name
-      # Hash<Symbol, Connector>
-      @connector_plugins = Hash[Dir.
-        glob("#{__dir__}/connectors/*.rb").
-        map do |file_name|
-          connector_name = File.basename(file_name, '.rb').to_sym
-          require file_name
-          [
-            connector_name,
-            Connectors.const_get(connector_name.to_s.split('_').collect(&:capitalize).join.to_sym).new(
-              logger: @logger,
-              logger_stderr: @logger_stderr,
-              cmd_runner: @cmd_runner,
-              nodes_handler: @nodes_handler
-            )
-          ]
-        end]
+      @action_plugins = Plugins.new(:action, logger: @logger, logger_stderr: @logger_stderr)
+      @connector_plugins = Plugins.new(
+        :connector,
+        logger: @logger,
+        logger_stderr: @logger_stderr,
+        init_plugin: proc do |plugin_class|
+          plugin_class.new(
+            logger: @logger,
+            logger_stderr: @logger_stderr,
+            cmd_runner: @cmd_runner,
+            nodes_handler: @nodes_handler
+          )
+        end
+      )
     end
 
     # Complete an option parser with options meant to control this Actions Executor

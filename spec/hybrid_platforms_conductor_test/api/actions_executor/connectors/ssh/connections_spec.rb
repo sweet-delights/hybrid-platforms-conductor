@@ -368,16 +368,16 @@ describe HybridPlatformsConductor::ActionsExecutor do
           ) do
             test_connector.ssh_user = 'test_user'
             # To speed up the test, alter the wait time between retries.
-            old_wait = HybridPlatformsConductor::Connectors::Ssh.const_get(:WAIT_TIME_FOR_BOOT)
+            old_wait = HybridPlatformsConductor::HpcPlugins::Connector::Ssh.const_get(:WAIT_TIME_FOR_BOOT)
             begin
-              HybridPlatformsConductor::Connectors::Ssh.send(:remove_const, :WAIT_TIME_FOR_BOOT)
-              HybridPlatformsConductor::Connectors::Ssh.const_set(:WAIT_TIME_FOR_BOOT, 1)
+              HybridPlatformsConductor::HpcPlugins::Connector::Ssh.send(:remove_const, :WAIT_TIME_FOR_BOOT)
+              HybridPlatformsConductor::HpcPlugins::Connector::Ssh.const_set(:WAIT_TIME_FOR_BOOT, 1)
               test_connector.with_connection_to(['node']) do
               end
               expect(nbr_boot_messages).to eq 3
             ensure
-              HybridPlatformsConductor::Connectors::Ssh.send(:remove_const, :WAIT_TIME_FOR_BOOT)
-              HybridPlatformsConductor::Connectors::Ssh.const_set(:WAIT_TIME_FOR_BOOT, old_wait)
+              HybridPlatformsConductor::HpcPlugins::Connector::Ssh.send(:remove_const, :WAIT_TIME_FOR_BOOT)
+              HybridPlatformsConductor::HpcPlugins::Connector::Ssh.const_set(:WAIT_TIME_FOR_BOOT, old_wait)
             end
           end
         end

@@ -57,7 +57,7 @@ describe HybridPlatformsConductor::ActionsExecutor do
         executed = false
         expect(test_actions_executor.execute_actions('node' => {
           ruby: proc do |stdout, stderr, action|
-            expect(action.is_a?(HybridPlatformsConductor::Actions::Ruby)).to eq true
+            expect(action.is_a?(HybridPlatformsConductor::HpcPlugins::Action::Ruby)).to eq true
             stdout << 'TestStdout'
             stderr << 'TestStderr'
             executed = true

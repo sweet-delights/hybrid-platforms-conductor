@@ -3,7 +3,7 @@ module HybridPlatformsConductorTest
   module TestPlugins
 
     # Test plugin at node level using SSH
-    class NodeSsh < HybridPlatformsConductor::Tests::Test
+    class NodeSsh < HybridPlatformsConductor::Test
 
       class << self
 

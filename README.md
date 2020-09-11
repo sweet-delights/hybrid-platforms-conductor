@@ -25,7 +25,7 @@ The way it works is by having a simple configuration file having an extensive DS
   * [Using secrets](#secrets)
   * [Credentials](#credentials)
   * [Development API](#development_api)
-  * [Extending Hybrid Platforms Conductor features](#extending)
+  * [Extending Hybrid Platforms Conductor with plugins](#extending)
   * [Development corner](#development_corner)
 
 <a name="requirements"></a>
@@ -1825,26 +1825,32 @@ actions_executor.execute_actions({ '/xae/' => { remote_bash: 'hostname' } }, con
 ```
 
 <a name="extending"></a>
-# Extending Hybrid Platforms Conductor features
+# Extending Hybrid Platforms Conductor with plugins
 
 Hybrid Platforms Conductor is built around plugins-oriented architecture that lets it easily being extended.
 This section gives some pointers on how to do it.
 
-## Supporting new platforms (like Chef, Puppet, Ansible...)
+Plugins are auto-discovered from any Rubygem that is part of a project, by parsing files named `hpc_plugins/<plugin_type>/<plugin_id>.rb`, wherever they are located in the included Rubygem. Those files then declare plugin classes that inherit from the plugin type's base class, named `HybridPlatformsConductor::<PluginType>`.
 
-To support new platforms a new Platform Handler plugin is needed. In order to keep dependencies handling independent from one Platform Handler to another, this is done in another git repository, having a Rubygem structure.
-Here are the steps to add such a new plugin.
-The plugin name needs to be `hybrid_platforms_conductor-<platform_type_name>` where `<platform_type_name>` should be unique among all the Platform Handler plugins available.
+Having such simple plugins engine allow projects to adapt their plugins' organization among different repositories or Rubygems they way they see fit.
 
-### 1. Create a new repository (local at first) containing at least the following structure
+The following sub-sections explain how to install a plugin and the different plugin types that are supported.
+
+## Example of plugin integration from a repository
+
+As an example, we will create a test plugin, named `my_hpc_test`, whose code is defined in a Rubygem named `my_hpc_plugin` in another repository.
+
+### 1. Create the other repository as a Rubygem with your plugin
 
 ```
-hybrid_platforms_conductor-<platform_type_name>/ (repository root)
+my_hpc_plugin/ (repository root)
 |-- Gemfile
-|-- hybrid_platforms_conductor-<platform_type_name>.gemspec
+|-- my_hpc_plugin.gemspec
 `-- lib/
-    `-- hybrid_platforms_conductor/
-        `-- <platform_type_name>.rb
+    `-- my_hpc_plugin/
+        `-- hpc_plugins/
+            `-- test/
+                `-- my_hpc_test.rb
 ```
 
 #### Gemfile
@@ -1852,14 +1858,14 @@ hybrid_platforms_conductor-<platform_type_name>/ (repository root)
 The `Gemfile` file should have this simple content:
 
 ```ruby
-source 'http://rubygems.org'
+source 'https://rubygems.org'
 
 gemspec
 ```
 
-#### hybrid_platforms_conductor-<platform_type_name>.gemspec
+#### my_hpc_plugin.gemspec
 
-The `hybrid_platforms_conductor-<platform_type_name>.gemspec` should contain the Rubygem declaration, with all needed dependencies.
+The gemspec file should contain the Rubygem declaration, with all needed dependencies.
 
 A basic working example of such a file is this:
 
@@ -1867,14 +1873,14 @@ A basic working example of such a file is this:
 require 'date'
 
 Gem::Specification.new do |s|
-  s.name = 'hybrid_platforms_conductor-<platform_type_name>'
+  s.name = 'my_hpc_plugin'
   s.version = '0.0.1'
   s.date = Date.today.to_s
   s.authors     = ['<Your Name>']
-  s.email       = ['<your_email>@my_company.com']
-  s.summary     = 'Hybrid Platforms Conductor - Platform Handler <platform_type_name>'
-  s.description = 'Hybrid Platforms Conductor Plugin to handle platforms of type <platform_type_name>'
-  s.homepage    = 'http://my_company.com'
+  s.email       = ['<your_email>@domain.com']
+  s.summary     = 'Plugin for Hybrid Platforms Conductor adding test my_hpc_test'
+  s.description = 'Hybrid Platforms Conductor Plugin to test great things'
+  s.homepage    = 'http://my_domain.com'
   s.license     = 'Proprietary'
 
   s.files = Dir['{bin,lib,spec}/**/*']
@@ -1888,24 +1894,55 @@ Gem::Specification.new do |s|
 end
 ```
 
-#### lib/hybrid_platforms_conductor/<platform_type_name>.rb
+#### lib/my_hpc_plugin/hpc_plugins/test/my_hpc_test.rb
 
-This file will declare your plugin and implement all the methods that Hybrid Platforms Conductor need to pilot a platform of this type.
+This file declares the test plugin and implement all the methods that Hybrid Platforms Conductor need to pilot a platform of this type.
 
-You can take its content directly from the [Platform Handler plugin sample file](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/browse/lib/hybrid_platforms_conductor/platform_handlers/platform_handler_plugin.rb.sample), and adapt it.
+In our example we'll just check a dummy assertion.
 
-### 2. Reference this new repository in your TI Platforms Gemfile
+```ruby
+module MyHpcPlugin
 
-This is done in the `Gemfile` of platforms handled by HPCs project, declaring all available Platform Handler plugins to be used.
+  module HpcPlugins
+
+    module Test
+
+      # Simple test plugin.
+      # Make sure it inherits the correct HybridPlatformsConductor base class.
+      # Make sure this file is in a hpc_plugins/<plugin_type> directory.
+      class MyHpcTest < HybridPlatformsConductor::Test
+
+        # Check my_test_plugin.rb.sample documentation for signature details.
+        def test
+          assert_equal 2 + 2, 4, 'If you see this message you have a serious problem with your CPU'
+        end
+
+      end
+
+    end
+
+  end
+
+end
+```
+
+### 2. Reference this new repository in your application's Gemfile
+
+This is done in the `Gemfile` of the project that is already using Hybrid Platforms Conductor.
 
 Adding this line to the file is enough:
 ```ruby
-gem 'hybrid_platforms_conductor-<platform_type_name>', path: '/path/to/hybrid_platforms_conductor-<platform_type_name>'
+gem 'my_hpc_plugin', path: '/path/to/my_hpc_plugin'
 ```
 
-Later when your Platform Plugin Rubygem is part of a Git repository you may change it to:
+Later when your Rubygem is part of a Git repository you may change it to:
 ```ruby
-gem 'hybrid_platforms_conductor-<platform_type_name>', git: '<GIT URL for hybrid_platforms_conductor-<platform_type_name>>'
+gem 'my_hpc_plugin', git: '<GIT URL for my_hpc_plugin.git>'
+```
+
+Even later when your Rubygem is packaged and deployed as Rubygem you may change it to:
+```ruby
+gem 'my_hpc_plugin'
 ```
 
 Once this Gemfile is modified, don't forget to fetch the new dependency:
@@ -1914,9 +1951,50 @@ bundle install
 ```
 In case the plugin is referenced using a local path, then there is no need to re-issue `bundle install` when the plugin files change (good to develop locally your plugin).
 
-### 4. Declare a platform using this new Platform Handler plugin
+### 3. Your plugin is ready to use
 
-This is done by registering the platform in the `./platforms.rb` file of platforms handled by HPCs project.
+Your test plugin can now be used directly from Hybrid Platforms Conductor.
+
+```bash
+./bin/test --test my_hpc_test
+```
+
+## Plugin type `action`
+
+These plugins are meant to define new action types that can be used by the [`ActionsExecutor`](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/browse/lib/hybrid_platforms_conductor/actions_executor.rb).
+
+Examples of actions are:
+* Remote bash: Execute remote bash on the node
+* Ruby: Execute Ruby code
+
+Check the [sample plugin file](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/browse/lib/hybrid_platforms_conductor/hpc_plugins/action/my_action.rb.sample) to know more about the API that needs to be implemented by such plugins.
+
+## Plugin type `cmdb`
+
+These plugins allow to retrieve metadata associated to a node, returned by the [`NodesHandler`](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/browse/lib/hybrid_platforms_conductor/nodes_handler.rb). New plugins can be used to retrieve new properties that can then be used by Hybrid Platforms Conductor.
+
+Examples of CMDBs are:
+* Host keys: Get host keys associated to nodes
+* Host IPs: Get a node's host IP
+
+Check the [sample plugin file](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/browse/lib/hybrid_platforms_conductor/hpc_plugins/cmdb/my_cmdb.rb.sample) to know more about the API that needs to be implemented by such plugins.
+
+## Plugin type `connector`
+
+These plugins give ways for the [`ActionsExecutor`](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/browse/lib/hybrid_platforms_conductor/actions_executor.rb) to connect to nodes when some actions require it (like the remote code executions for example).
+
+Examples of connectors are:
+* SSH: Connect to a node using SSH
+* Docker: Connect using a Docker socket
+* awscli: Connect using awscli
+
+Check the [sample plugin file](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/browse/lib/hybrid_platforms_conductor/hpc_plugins/connector/my_connector.rb.sample) to know more about the API that needs to be implemented by such plugins.
+
+## Plugin type `platform_handler`
+
+These plugins are used to support different types of platforms' repositories, returned by the [`NodesHandler`](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/browse/lib/hybrid_platforms_conductor/nodes_handler.rb)
+
+Platforms are registered in the `./platforms.rb` file of your project.
 
 Example from a locally checked out platform:
 ```ruby
@@ -1928,67 +2006,41 @@ Example from a platform present in a Git repository:
 <platform_type_name>_platform git: '<git_url_to_the_platform_code>'
 ```
 
-### 5. Test your new Platform Handler plugin
+Examples of platform handlers are:
+* Chef: Handle a platform using Chef
+* Ansible: Handle a platform using Ansible
 
-Now your Platform Handler plugin should be ready to use.
-It should appear when you issue the following command:
+Check the [sample plugin file](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/browse/lib/hybrid_platforms_conductor/hpc_plugins/platform_handler/platform_handler_plugin.rb.sample) to know more about the API that needs to be implemented by such plugins.
 
-```bash
-./bin/setup --show-nodes
-```
+## Plugin type `report`
 
-Example of output:
-```
-=> ./bin/setup --show-nodes
-* Known platforms:
-* <platform_type_name>: /path/to/hybrid_platforms_conductor-<platform_type_name>
-* chef: ./cloned_platforms/xae-chef-repo
+These plugins add new ways to publish inventory reports produced by the [`ReportsHandler`](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/browse/lib/hybrid_platforms_conductor/reports_handler.rb)
 
-[...]
-```
+Examples of reports are:
+* stdout: Just dump inventory on stdout
+* Mediawiki: Dump inventory in a Mediawiki page
 
-From there, all Hybrid Platforms Conductor tools are aware of your new platform using your new plugin.
-Then you can develop your plugin by editing the file `lib/hybrid_platforms_conductor/<platform_type_name>.rb` and implement all needed functionality.
+Check the [sample plugin file](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/browse/lib/hybrid_platforms_conductor/hpc_plugins/report/my_report_plugin.rb.sample) to know more about the API that needs to be implemented by such plugins.
 
-### 6. [Optional] Add new binaries that are platform specifics
+## Plugin type `test`
 
-You can also add new binaries by creating a `./bin` directory in your plugin root folder.
-They will also be made available automatically by issuing a `bundle install` command in platforms handled by HPCs project directory.
+These plugins add available tests to the [`TestsRunner`](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/browse/lib/hybrid_platforms_conductor/tests_runner.rb).
+Depending on the API they implement, they can define tests at global level, at platform level or at node level.
 
-You can get inspired by [existing binaries](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/browse/bin), to know how to write your own, using platforms handled by HPCs Conductor API.
+Examples of tests are:
+* Spectre: Test a node against Spectre vulnerability
+* Executables: Test that executables run without errors
+* Divergence: Test that a node has not diverged from the configuration stored in its platform handler
 
-## Adding new tests
+Check the [sample plugin file](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/browse/lib/hybrid_platforms_conductor/hpc_plugins/test/my_test_plugin.rb.sample) to know more about the API that needs to be implemented by such plugins.
 
-### Generic tests, applicable to all types of platforms
+## Plugin type `test_report`
 
-New tests are implemented by adding files in the `./lib/hybrid_platforms_conductor/tests/plugins` directory.
-Once new files are present in this directory, then the `test` executable is already able to use them, without further configuration.
+These plugins add new ways to publish tests reports, done by the [`TestsRunner`](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/browse/lib/hybrid_platforms_conductor/tests_runner.rb).
 
-You can take tests content directly from the [test plugin sample file](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/browse/lib/hybrid_platforms_conductor/tests/plugins/my_test_plugin.rb.sample), and adapt it.
-
-### Platform type specific tests, applicable to only platforms of a given type
-
-New platform type specific tests are implemented in the corresponding Platform Handler plugin.
-The `platform_tests` method from the Platform Handler plugin class registers new test classes.
-The test classes returned follow the same API as the [test plugin sample file](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/browse/lib/hybrid_platforms_conductor/tests/plugins/my_test_plugin.rb.sample).
-
-## Adding new reports formats
-
-It is possible to extend the `report` executable functionality by adding new report output formats.
-
-This is done by adding files in the `./lib/hybrid_platforms_conductor/reports` directory.
-Once new files are present in this directory, then the `report` executable is already able to use them, without further configuration.
-
-You can take report plugin content directly from the [report plugin sample file](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/browse/lib/hybrid_platforms_conductor/reports/my_report_plugin.rb.sample), and adapt it.
-
-## Adding new Topographer output formats
-
-It is possible to extend the `topographer` executable functionality by adding new output formats.
-
-This is done by adding files in the `./lib/hybrid_platforms_conductor/topographer/plugins` directory.
-Once new files are present in this directory, then the `topographer` executable is already able to use them, without further configuration.
-
-You can take topographer plugin content directly from the [topographer plugin sample file](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/browse/lib/hybrid_platforms_conductor/topographer/plugins/my_topographer_output_plugin.rb.sample), and adapt it.
+Examples of tests reports are:
+* stdout: Just dump tests results on stdout
+* Confluence: Dump tests reports in a Confluence page
 
 <a name="development_corner"></a>
 # Development corner

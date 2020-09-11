@@ -19,14 +19,15 @@ module HybridPlatformsConductorTest
       # Parameters::
       # * *cmdb_names* (Array<Symbol>): The test CMDBs to register [default = [:test_cmdb]]
       def register_test_cmdb(cmdb_names = [:test_cmdb])
-        # Reset current registered CMDBs
-        test_nodes_handler.instance_variable_set(:@cmdbs_per_property, {})
-        test_nodes_handler.instance_variable_set(:@cmdbs_others, [])
-        test_nodes_handler.instance_variable_set(:@cmdbs, {})
-        # Register only ours
-        cmdb_names.each do |cmdb_name|
-          test_nodes_handler.send(:register_cmdb_from_file, "#{__dir__}/../#{cmdb_name}.rb")
-        end
+        register_plugins(
+          :cmdb,
+          Hash[cmdb_names.map do |plugin_id|
+            [
+              plugin_id,
+              HybridPlatformsConductorTest::CmdbPlugins.const_get(plugin_id.to_s.split('_').collect(&:capitalize).join.to_sym)
+            ]
+          end]
+        )
       end
 
     end

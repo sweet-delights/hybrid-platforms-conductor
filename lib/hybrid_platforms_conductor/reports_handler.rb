@@ -1,5 +1,6 @@
 require 'logger'
 require 'hybrid_platforms_conductor/logger_helpers'
+require 'hybrid_platforms_conductor/plugins'
 
 module HybridPlatformsConductor
 
@@ -28,16 +29,7 @@ module HybridPlatformsConductor
       @nodes_handler = nodes_handler
       # The list of reports plugins, with their associated class
       # Hash< Symbol, Class >
-      @reports_plugins = Hash[Dir.
-        glob("#{File.dirname(__FILE__)}/reports/*.rb").
-        map do |file_name|
-          format = File.basename(file_name)[0..-4].to_sym
-          require file_name
-          [
-            format,
-            Reports.const_get(format.to_s.split('_').collect(&:capitalize).join.to_sym)
-          ]
-        end]
+      @reports_plugins = Plugins.new(:report, logger: @logger, logger_stderr: @logger_stderr)
       @format = :stdout
       @locale = @reports_plugins[@format].supported_locales.first
     end

@@ -1,43 +1,52 @@
 require 'fileutils'
 require 'tmpdir'
+require 'hybrid_platforms_conductor/actions_executor'
+require 'hybrid_platforms_conductor/cmd_runner'
+require 'hybrid_platforms_conductor/deployer'
 require 'hybrid_platforms_conductor/nodes_handler'
 require 'hybrid_platforms_conductor/platform_handler'
-require 'hybrid_platforms_conductor/cmd_runner'
-require 'hybrid_platforms_conductor/actions_executor'
-require 'hybrid_platforms_conductor/deployer'
-require 'hybrid_platforms_conductor/tests_runner'
+require 'hybrid_platforms_conductor/report'
 require 'hybrid_platforms_conductor/reports_handler'
-require 'hybrid_platforms_conductor/report_plugin'
-require 'hybrid_platforms_conductor/tests/test'
-require 'hybrid_platforms_conductor/tests/reports_plugin'
+require 'hybrid_platforms_conductor/test'
+require 'hybrid_platforms_conductor/test_report'
+require 'hybrid_platforms_conductor/tests_runner'
+require 'hybrid_platforms_conductor/hpc_plugins/cmdb/host_ip'
+require 'hybrid_platforms_conductor/hpc_plugins/cmdb/host_keys'
+require 'hybrid_platforms_conductor/hpc_plugins/cmdb/platform_handlers'
+require 'hybrid_platforms_conductor_test/cmdb_plugins/test_cmdb'
+require 'hybrid_platforms_conductor_test/cmdb_plugins/test_cmdb2'
+require 'hybrid_platforms_conductor_test/cmdb_plugins/test_cmdb_others'
+require 'hybrid_platforms_conductor_test/cmdb_plugins/test_cmdb_others2'
+require 'hybrid_platforms_conductor_test/helpers/actions_executor_helpers'
+require 'hybrid_platforms_conductor_test/helpers/cmd_runner_helpers'
+require 'hybrid_platforms_conductor_test/helpers/cmdb_helpers'
+require 'hybrid_platforms_conductor_test/helpers/connector_ssh_helpers'
+require 'hybrid_platforms_conductor_test/helpers/deployer_helpers'
+require 'hybrid_platforms_conductor_test/helpers/deployer_test_helpers'
+require 'hybrid_platforms_conductor_test/helpers/executables_helpers'
+require 'hybrid_platforms_conductor_test/helpers/nodes_handler_helpers'
+require 'hybrid_platforms_conductor_test/helpers/platform_handler_helpers'
+require 'hybrid_platforms_conductor_test/helpers/plugins_helpers'
+require 'hybrid_platforms_conductor_test/helpers/reports_handler_helpers'
+require 'hybrid_platforms_conductor_test/helpers/tests_runner_helpers'
+require 'hybrid_platforms_conductor_test/report_plugin'
 require 'hybrid_platforms_conductor_test/test_action'
 require 'hybrid_platforms_conductor_test/test_connector'
 require 'hybrid_platforms_conductor_test/test_platform_handler'
-require 'hybrid_platforms_conductor_test/tests_report_plugin'
-require 'hybrid_platforms_conductor_test/report_plugin'
-require 'hybrid_platforms_conductor_test/helpers/platform_handler_helpers'
-require 'hybrid_platforms_conductor_test/helpers/cmd_runner_helpers'
-require 'hybrid_platforms_conductor_test/helpers/connector_ssh_helpers'
-require 'hybrid_platforms_conductor_test/helpers/nodes_handler_helpers'
-require 'hybrid_platforms_conductor_test/helpers/actions_executor_helpers'
-require 'hybrid_platforms_conductor_test/helpers/deployer_helpers'
-require 'hybrid_platforms_conductor_test/helpers/deployer_test_helpers'
-require 'hybrid_platforms_conductor_test/helpers/tests_runner_helpers'
-require 'hybrid_platforms_conductor_test/helpers/reports_handler_helpers'
-require 'hybrid_platforms_conductor_test/helpers/executables_helpers'
-require 'hybrid_platforms_conductor_test/helpers/cmdb_helpers'
 require 'hybrid_platforms_conductor_test/test_plugins/global'
-require 'hybrid_platforms_conductor_test/test_plugins/platform'
 require 'hybrid_platforms_conductor_test/test_plugins/node'
-require 'hybrid_platforms_conductor_test/test_plugins/node_ssh'
 require 'hybrid_platforms_conductor_test/test_plugins/node_check'
+require 'hybrid_platforms_conductor_test/test_plugins/node_ssh'
+require 'hybrid_platforms_conductor_test/test_plugins/platform'
 require 'hybrid_platforms_conductor_test/test_plugins/several_checks'
+require 'hybrid_platforms_conductor_test/tests_report_plugin'
 
 module HybridPlatformsConductorTest
 
   # Helpers for the tests
   module Helpers
 
+    include PluginsHelpers
     include PlatformHandlerHelpers
     include CmdRunnerHelpers
     include ConnectorSshHelpers
@@ -93,6 +102,12 @@ module HybridPlatformsConductorTest
         FileUtils.rm_rf './run_logs'
         FileUtils.rm_rf './testadmin.key.pub'
         FileUtils.rm_rf '/tmp/hpc_ssh'
+        # Make sure CMDB plugin classes loaded by test framework are not added automatically
+        register_plugins(:cmdb, {
+          host_ip: HybridPlatformsConductor::HpcPlugins::Cmdb::HostIp,
+          host_keys: HybridPlatformsConductor::HpcPlugins::Cmdb::HostKeys,
+          platform_handlers: HybridPlatformsConductor::HpcPlugins::Cmdb::PlatformHandlers
+        })
       end
     end
 

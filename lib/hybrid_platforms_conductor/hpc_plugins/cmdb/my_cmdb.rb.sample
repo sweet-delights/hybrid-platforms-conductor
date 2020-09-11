@@ -1,0 +1,96 @@
+module HybridPlatformsConductor
+
+  module HpcPlugins
+
+    module Cmdb
+
+      # Example of a CMDB plugin
+      class MyCmdb < HybridPlatformsConductor::Cmdb
+
+        # get_* methods are automatically detected as possible metadata properties this plugin can fill.
+        # The property name filled by such method is given by the method's name: get_my_property will fill the :my_property metadata.
+        # The method get_others is used specifically to return properties whose name is unknown before fetching them.
+
+        # Return possible dependencies between properties.
+        # A property can need another property to be set before.
+        # For example an IP would need first to have the hostname to be known in order to be looked up.
+        # [API] - This method is optional
+        #
+        # Result::
+        # * Hash<Symbol, Symbol or Array<Symbol> >: The list of necessary properties (or single one) that should be set, per property name (:others can also be used here)
+        def property_dependencies
+          {
+            ip: :hostname
+          }
+        end
+
+        # Get a specific property for a given set of nodes.
+        # [API] - @nodes_handler can be used.
+        # [API] - @cmd_runner can be used.
+        #
+        # Parameters::
+        # * *nodes* (Array<String>): The nodes to lookup the property for.
+        # * *metadata* (Hash<String, Hash<Symbol,Object> >): Existing metadata for each node. Dependent properties should be present here.
+        # Result::
+        # * Hash<String, Object>: The corresponding property, per required node.
+        #     Nodes for which the property can't be fetched can be ommitted.
+        def get_ip(nodes, metadata)
+          Hash[nodes.map do |node|
+            _exit_status, stdout = @cmd_runner.run_cmd "getent hosts #{metadata[node][:hostname]}"
+            [node, stdout.strip.split(/\s+/).first]
+          end]
+        end
+
+        # Get a specific property for a given set of nodes.
+        # [API] - @nodes_handler can be used.
+        # [API] - @cmd_runner can be used.
+        #
+        # Parameters::
+        # * *nodes* (Array<String>): The nodes to lookup the property for.
+        # * *metadata* (Hash<String, Hash<Symbol,Object> >): Existing metadata for each node. Dependent properties should be present here.
+        # Result::
+        # * Hash<String, Object>: The corresponding property, per required node.
+        #     Nodes for which the property can't be fetched can be ommitted.
+        def get_description(nodes, metadata)
+          descriptions = {}
+          nodes.each do |node|
+            # Let's say the description of a node is stored in a text file of the node's name
+            desc_file = "/path/to/descriptions/#{node}.txt"
+            descriptions[node] = File.read(desc_file) if File.exist?(desc_file)
+          end
+          descriptions
+        end
+
+        # Get other properties for a given set of nodes.
+        # It's better to not use this method and prefer using methods naming the property being returned.
+        # As the nodes_handler can't know in advance which properties will be returned, it will call it every time there is a missing property.
+        # If this method always returns the same values, it would be clever to cache it here.
+        # [API] - This method is optional.
+        # [API] - @nodes_handler can be used.
+        # [API] - @cmd_runner can be used.
+        #
+        # Parameters::
+        # * *nodes* (Array<String>): The nodes to lookup the property for.
+        # * *metadata* (Hash<String, Hash<Symbol,Object> >): Existing metadata for each node. Dependent properties should be present here.
+        # Result::
+        # * Hash<String, Hash<Symbol,Object> >: The corresponding properties, per required node.
+        #     Nodes for which the property can't be fetched can be ommitted.
+        def get_others(nodes, metadata)
+          Hash[nodes.map do |node|
+            [
+              node,
+              {
+                property1: 42,
+                property2: 666
+              }
+            ]
+          end]
+        end
+
+      end
+
+    end
+
+  end
+
+end

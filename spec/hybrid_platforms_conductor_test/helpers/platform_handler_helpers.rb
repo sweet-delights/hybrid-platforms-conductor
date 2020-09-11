@@ -25,11 +25,7 @@ module HybridPlatformsConductorTest
       # Parameters::
       # * *platform_handlers* (Hash<Symbol,Class>): The platform handler classes, per platform type name
       def register_platform_handlers(platform_handlers)
-        # Register a test plugin internally
-        HybridPlatformsConductor::PlatformsDsl.instance_variable_set(:@platform_types, platform_handlers)
-        # Reload the NodesHandler so that these new plugins are defined correctly among instance methods.
-        load "#{__dir__}/../../../lib/hybrid_platforms_conductor/platforms_dsl.rb"
-        load "#{__dir__}/../../../lib/hybrid_platforms_conductor/nodes_handler.rb"
+        register_plugins(:platform_handler, platform_handlers)
       end
 
     end
