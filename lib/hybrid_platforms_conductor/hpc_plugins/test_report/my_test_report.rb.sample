@@ -1,0 +1,32 @@
+require 'hybrid_platforms_conductor/test_report'
+
+module HybridPlatformsConductor
+
+  module HpcPlugins
+
+    module TestReport
+
+      class MyTestReport < HybridPlatformsConductor::TestReport
+
+        # Are dependencies met before using this plugin?
+        # [API] - This method is optional
+        #
+        # Result::
+        # * Boolean: Are dependencies met before using this plugin?
+        def self.valid?
+          true
+        end
+
+        # Handle tests reports
+        def report
+          puts "#{@tested_nodes.size} nodes have been tested."
+          puts "#{@tests.select { |test| !test.errors.empty? }.size} tests have failed."
+        end
+
+      end
+
+    end
+
+  end
+
+end

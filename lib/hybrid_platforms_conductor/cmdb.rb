@@ -1,11 +1,10 @@
 require 'hybrid_platforms_conductor/logger_helpers'
+require 'hybrid_platforms_conductor/plugin'
 
 module HybridPlatformsConductor
 
   # Base class for any CMDB plugin
-  class Cmdb
-
-    include LoggerHelpers
+  class Cmdb < Plugin
 
     # Constructor
     #
@@ -20,8 +19,7 @@ module HybridPlatformsConductor
       nodes_handler: NodesHandler.new,
       cmd_runner: CmdRunner.new
     )
-      @logger = logger
-      @logger_stderr = logger_stderr
+      super(logger: logger, logger_stderr: logger_stderr)
       @nodes_handler = nodes_handler
       @cmd_runner = cmd_runner
     end

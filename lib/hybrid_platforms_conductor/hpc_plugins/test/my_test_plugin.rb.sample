@@ -28,6 +28,15 @@ module HybridPlatformsConductor
       # * error(message): Log an error.
       class MyTestPlugin < HybridPlatformsConductor::Test
 
+        # Are dependencies met before using this plugin?
+        # [API] - This method is optional
+        #
+        # Result::
+        # * Boolean: Are dependencies met before using this plugin?
+        def self.valid?
+          true
+        end
+
         # Run test
         def test
           # If this method is defined, it will be simply run as is.

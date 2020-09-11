@@ -1,11 +1,10 @@
 require 'hybrid_platforms_conductor/logger_helpers'
+require 'hybrid_platforms_conductor/plugin'
 
 module HybridPlatformsConductor
 
   # Base class for any connector
-  class Connector
-
-    include LoggerHelpers
+  class Connector < Plugin
 
     # Constructor
     #
@@ -20,8 +19,7 @@ module HybridPlatformsConductor
       cmd_runner: CmdRunner.new,
       nodes_handler: NodesHandler.new
     )
-      @logger = logger
-      @logger_stderr = logger_stderr
+      super(logger: logger, logger_stderr: logger_stderr)
       @cmd_runner = cmd_runner
       @nodes_handler = nodes_handler
       # If the connector has an initializer, use it

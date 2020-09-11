@@ -1,9 +1,10 @@
 require 'hybrid_platforms_conductor/logger_helpers'
+require 'hybrid_platforms_conductor/plugin'
 
 module HybridPlatformsConductor
 
   # Common ancestor to any test class
-  class Test
+  class Test < Plugin
 
     class << self
 
@@ -11,8 +12,6 @@ module HybridPlatformsConductor
       attr_accessor :nodes_handler
 
     end
-
-    include LoggerHelpers
 
     # Get errors encountered
     #   Array<String>
@@ -47,8 +46,7 @@ module HybridPlatformsConductor
     # * *node* (String): Node name for which the test is instantiated, or nil if global or platform specific [default: nil]
     # * *expected_failure* (String or nil): Expected failure, or nil if not expected to fail [default: nil]
     def initialize(logger, logger_stderr, cmd_runner, nodes_handler, deployer, name: 'unknown_test', platform: nil, node: nil, expected_failure: nil)
-      @logger = logger
-      @logger_stderr = logger_stderr
+      super(logger: logger, logger_stderr: logger_stderr)
       @cmd_runner = cmd_runner
       @nodes_handler = nodes_handler
       @deployer = deployer
