@@ -142,9 +142,10 @@ describe HybridPlatformsConductor::Plugins do
       # Mock the discovery of Ruby gems
       expect(Gem).to receive(:loaded_specs) do
         my_test_gem_spec = double('Test gemspec for gem my_test_gem')
-        expect(my_test_gem_spec).to receive(:files) do
+        expect(my_test_gem_spec).to receive(:full_gem_path) { '__gem_full_path__' }
+        expect(Dir).to receive(:glob).with('__gem_full_path__/lib/**/*.rb') do
           [
-            'lib/my_test_gem/hpc_plugins/test_plugin_type/test_plugin_id1.rb'
+            '__gem_full_path__/lib/my_test_gem/hpc_plugins/test_plugin_type/test_plugin_id1.rb'
           ]
         end
         {
@@ -168,17 +169,19 @@ describe HybridPlatformsConductor::Plugins do
       # Mock the discovery of Ruby gems
       expect(Gem).to receive(:loaded_specs).twice do
         my_test_gem_spec = double('Test gemspec for gem my_test_gem')
-        expect(my_test_gem_spec).to receive(:files) do
+        expect(my_test_gem_spec).to receive(:full_gem_path) { '__gem_full_path__' }
+        expect(Dir).to receive(:glob).with('__gem_full_path__/lib/**/*.rb') do
           [
-            'lib/my_test_gem/hpc_plugins/test_plugin_type/test_plugin_id1.rb',
-            'lib/my_test_gem/hpc_plugins/test_plugin_type/test_plugin_id2.rb'
+            '__gem_full_path__/lib/my_test_gem/hpc_plugins/test_plugin_type/test_plugin_id1.rb',
+            '__gem_full_path__/lib/my_test_gem/hpc_plugins/test_plugin_type/test_plugin_id2.rb'
           ]
         end
         my_test_gem2_spec = double('Test gemspec for gem my_test_gem2')
-        expect(my_test_gem2_spec).to receive(:files) do
+        expect(my_test_gem2_spec).to receive(:full_gem_path) { '__gem2_full_path__' }
+        expect(Dir).to receive(:glob).with('__gem2_full_path__/lib/**/*.rb') do
           [
-            'lib/my_test_gem2/sub_dir/hpc_plugins/test_plugin_type/test_plugin_id3.rb',
-            'lib/my_test_gem2/sub_dir/hpc_plugins/test_plugin_type2/test_plugin_id4.rb'
+            '__gem2_full_path__/lib/my_test_gem2/sub_dir/hpc_plugins/test_plugin_type/test_plugin_id3.rb',
+            '__gem2_full_path__/lib/my_test_gem2/sub_dir/hpc_plugins/test_plugin_type2/test_plugin_id4.rb'
           ]
         end
         {
