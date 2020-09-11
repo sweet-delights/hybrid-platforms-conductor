@@ -32,8 +32,7 @@ module HybridPlatformsConductor
       logger: Logger.new(STDOUT),
       logger_stderr: Logger.new(STDERR)
     )
-      @logger = logger
-      @logger_stderr = logger_stderr
+      init_loggers(logger, logger_stderr)
     end
 
   end

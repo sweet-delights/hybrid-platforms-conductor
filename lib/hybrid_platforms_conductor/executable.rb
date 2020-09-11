@@ -45,13 +45,12 @@ module HybridPlatformsConductor
       logger_stderr: Logger.new(STDERR, level: :info),
       &opts_block
     )
+      init_loggers(logger, logger_stderr)
       @check_options = check_options
       @nodes_selection_options = nodes_selection_options
       @parallel_options = parallel_options
       @plugins_options = plugins_options
       @timeout_options = timeout_options
-      @logger = logger
-      @logger_stderr = logger_stderr
       @opts_block = opts_block
       # List of nodes description selected
       @selected_nodes = []
@@ -65,7 +64,6 @@ module HybridPlatformsConductor
       @tests_runner = nil
       @topographer = nil
       # Initialize the loggers
-      set_loggers_format
       # We set the debug format right now before calling the options parser, just in case some option parsing needs debugging (like plugins discovery)
       self.log_level = :debug if ARGV.include?('--debug') || ARGV.include?('-d')
     end

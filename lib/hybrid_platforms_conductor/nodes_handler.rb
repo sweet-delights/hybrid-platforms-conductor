@@ -31,8 +31,7 @@ module HybridPlatformsConductor
     # * *logger_stderr* (Logger): Logger to be used for stderr [default: Logger.new(STDERR)]
     # * *cmd_runner* (CmdRunner): Command executor to be used. [default: CmdRunner.new]
     def initialize(logger: Logger.new(STDOUT), logger_stderr: Logger.new(STDERR), cmd_runner: CmdRunner.new)
-      @logger = logger
-      @logger_stderr = logger_stderr
+      init_loggers(logger, logger_stderr)
       @cmd_runner = cmd_runner
       # Directory in which we have platforms handled by HPCs definition
       @hybrid_platforms_dir = File.expand_path(ENV['hpc_platforms'].nil? ? '.' : ENV['hpc_platforms'])

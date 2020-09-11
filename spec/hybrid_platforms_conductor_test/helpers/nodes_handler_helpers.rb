@@ -116,10 +116,7 @@ module HybridPlatformsConductorTest
       # Result::
       # * NodesHandler: NodesHandler on which we can do testing
       def test_nodes_handler
-        unless @nodes_handler
-          @nodes_handler = HybridPlatformsConductor::NodesHandler.new logger: logger, logger_stderr: logger, cmd_runner: test_cmd_runner
-          @nodes_handler.set_loggers_format
-        end
+        @nodes_handler = HybridPlatformsConductor::NodesHandler.new logger: logger, logger_stderr: logger, cmd_runner: test_cmd_runner unless @nodes_handler
         @nodes_handler
       end
 
