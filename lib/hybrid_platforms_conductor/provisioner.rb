@@ -20,19 +20,22 @@ module HybridPlatformsConductor
     # * *logger_stderr* (Logger): Logger to be used for stderr [default: Logger.new(STDERR)]
     # * *cmd_runner* (CmdRunner): Command executor to be used. [default: CmdRunner.new]
     # * *nodes_handler* (NodesHandler): Nodes handler to be used. [default: NodesHandler.new]
+    # * *actions_executor* (ActionsExecutor): Actions Executor to be used. [default: ActionsExecutor.new]
     def initialize(
       node,
       environment: 'production',
       logger: Logger.new(STDOUT),
       logger_stderr: Logger.new(STDERR),
       cmd_runner: CmdRunner.new,
-      nodes_handler: NodesHandler.new
+      nodes_handler: NodesHandler.new,
+      actions_executor: ActionsExecutor.new
     )
       super(logger: logger, logger_stderr: logger_stderr)
       @node = node
       @environment = environment
       @cmd_runner = cmd_runner
       @nodes_handler = nodes_handler
+      @actions_executor = actions_executor
     end
 
     # Provision a running instance for the needed node and environment.
@@ -58,7 +61,9 @@ module HybridPlatformsConductor
         begin
           wait_for_state!(:running)
           instance_ip = ip
-          if !instance_ip.nil? && instance_ip != @nodes_handler.get_host_ip_of(@node)
+          if instance_ip.nil?
+            log_debug "[ #{@node}/#{@environment} ] - No host_ip linked to the instance."
+          elsif instance_ip != @nodes_handler.get_host_ip_of(@node)
             log_debug "[ #{@node}/#{@environment} ] - Set host_ip to #{instance_ip}."
             # The instance is running on an IP that is not the one registered by default in the metadata.
             # Make sure we update it.
