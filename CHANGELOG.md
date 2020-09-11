@@ -1,3 +1,9 @@
+# [23.1.2](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv23.1.1&sourceBranch=refs%2Ftags%2Fv23.1.2) (2020-09-11)
+
+### Fixes
+
+* Add user name to environments to better track belongings in shared provisioners ([8618a51f](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/commits/8618a51f50242be5f444b0de573452df59bd96fc))
+
 # [23.1.1](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv23.1.0&sourceBranch=refs%2Ftags%2Fv23.1.1) (2020-09-11)
 
 ### Fixes
