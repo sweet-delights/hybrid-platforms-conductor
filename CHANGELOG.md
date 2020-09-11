@@ -1,3 +1,9 @@
+# [23.3.0](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv23.2.0&sourceBranch=refs%2Ftags%2Fv23.3.0) (2020-09-11)
+
+### New features
+
+* [Feature] Provisioner used for tests is now configurable in platforms.rb ([b34b4dd0](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/commits/b34b4dd00056ee0a60ffa4c2808ca7a01177d56b))
+
 # [23.2.0](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv23.1.2&sourceBranch=refs%2Ftags%2Fv23.2.0) (2020-09-11)
 
 ### New features
