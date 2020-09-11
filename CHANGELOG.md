@@ -1,3 +1,9 @@
+# [23.2.0](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv23.1.2&sourceBranch=refs%2Ftags%2Fv23.2.0) (2020-09-11)
+
+### New features
+
+* [Feature] Plugins can now define the DSL they want in platforms.rb ([a0ff2c24](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/commits/a0ff2c24154e2c8a25d681b29f505c8d3c8a2ddc))
+
 # [23.1.2](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv23.1.1&sourceBranch=refs%2Ftags%2Fv23.1.2) (2020-09-11)
 
 ### Fixes
