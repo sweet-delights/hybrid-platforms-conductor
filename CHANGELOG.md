@@ -1,3 +1,9 @@
+# [23.3.1](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv23.3.0&sourceBranch=refs%2Ftags%2Fv23.3.1) (2020-09-11)
+
+### Fixes
+
+* [Hotfix] Missing require ([81e6dd20](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/commits/81e6dd201ab60f2c9463020826cf9e3c6b35456a))
+
 # [23.3.0](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv23.2.0&sourceBranch=refs%2Ftags%2Fv23.3.0) (2020-09-11)
 
 ### New features
