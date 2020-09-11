@@ -45,6 +45,7 @@ class ProxmoxWaiter
     # Hash< String,   Hash< Integer, Time                 > >
     # Hash< pve_node, Hash< vm_id,   time_seen_as_stopped > >
     @non_debug_stopped_containers = {}
+    @log_file = "proxmox_waiter_#{Time.now.utc.strftime('%Y%m%d%H%M%S')}_pid_#{Process.pid}.log"
   end
 
   # Reserve resources for a new container.
@@ -78,10 +79,10 @@ class ProxmoxWaiter
       # In such case, even when free resources on PVE nodes are enough to host the new container, we still need to clean-up before.
       nbr_vms = nbr_vms_handled_by_us
       if nbr_vms >= @config['limits']['nbr_vms_max'] || free_ips.empty? || free_vm_ids.empty?
-        puts 'Hitting at least 1 hard-limit. Check if we can destroy expired containers.'
-        puts "[ Hard limit reached ] - Already #{nbr_vms} are created (max is #{@config['limits']['nbr_vms_max']})." if nbr_vms >= @config['limits']['nbr_vms_max']
-        puts '[ Hard limit reached ] - No more available IPs.' if free_ips.empty?
-        puts '[ Hard limit reached ] - No more available VM IDs.' if free_vm_ids.empty?
+        log 'Hitting at least 1 hard-limit. Check if we can destroy expired containers.'
+        log "[ Hard limit reached ] - Already #{nbr_vms} are created (max is #{@config['limits']['nbr_vms_max']})." if nbr_vms >= @config['limits']['nbr_vms_max']
+        log '[ Hard limit reached ] - No more available IPs.' if free_ips.empty?
+        log '[ Hard limit reached ] - No more available VM IDs.' if free_vm_ids.empty?
         clean_up_done = false
         # Check if we can remove some expired ones
         @config['pve_nodes'].each do |pve_node|
@@ -93,17 +94,17 @@ class ProxmoxWaiter
         if clean_up_done
           nbr_vms = nbr_vms_handled_by_us
           if nbr_vms >= @config['limits']['nbr_vms_max']
-            puts "[ Hard limit reached ] - Still too many running VMs after clean-up: #{nbr_vms}."
+            log "[ Hard limit reached ] - Still too many running VMs after clean-up: #{nbr_vms}."
             reserved_resource = :exceeded_number_of_vms
           elsif free_ips.empty?
-            puts '[ Hard limit reached ] - Still no available IP'
+            log '[ Hard limit reached ] - Still no available IP'
             reserved_resource = :no_available_ip
           elsif free_vm_ids.empty?
-            puts '[ Hard limit reached ] - Still no available VM ID'
+            log '[ Hard limit reached ] - Still no available VM ID'
             reserved_resource = :no_available_vm_id
           end
         else
-          puts 'Could not find any expired VM to destroy.'
+          log 'Could not find any expired VM to destroy.'
           # There was nothing to clean. So wait for other processes to destroy their containers.
           reserved_resource =
             if nbr_vms >= @config['limits']['nbr_vms_max']
@@ -122,7 +123,7 @@ class ProxmoxWaiter
           if pve_node_scores.all? { |_pve_node, pve_node_scores| pve_node_scores[0].nil? }
             # No node was available without removing expired VMs.
             # Therefore we consider only scores without expired VMs.
-            puts 'No PVE node has enough free resources without removing eventual expired VMs'
+            log 'No PVE node has enough free resources without removing eventual expired VMs'
             1
           else
             0
@@ -137,10 +138,10 @@ class ProxmoxWaiter
         end
         if selected_pve_node.nil?
           # No PVE node can host our request.
-          puts 'Could not find any PVE node with enough free resources'
+          log 'Could not find any PVE node with enough free resources'
           reserved_resource = :not_enough_resources
         else
-          puts "[ #{selected_pve_node} ] - PVE node selected with score #{selected_pve_node_score}"
+          log "[ #{selected_pve_node} ] - PVE node selected with score #{selected_pve_node_score}"
           # We know on which PVE node we can instantiate our new container.
           # We have to purge expired VMs on this PVE node before reserving a new creation.
           destroy_expired_vms_on(selected_pve_node) if score_idx == 1
@@ -151,11 +152,11 @@ class ProxmoxWaiter
             reserved_resource = vm_id_or_error
           else
             # Create the container for real
-            puts "[ #{selected_pve_node}/#{vm_id_or_error} ] - Create LXC container"
             completed_vm_info = vm_info.dup
             completed_vm_info['vmid'] = vm_id_or_error
             completed_vm_info['net0'] = "#{completed_vm_info['net0']},ip=#{ip}/32"
             completed_vm_info['description'] = "#{completed_vm_info['description']}creation_date: #{Time.now.utc.strftime('%FT%T')}\n"
+            log "[ #{selected_pve_node}/#{vm_id_or_error} ] - Create LXC container"
             wait_for_proxmox_task(selected_pve_node, @proxmox.post("nodes/#{selected_pve_node}/lxc", completed_vm_info))
             reserved_resource = {
               pve_node: selected_pve_node,
@@ -196,7 +197,7 @@ class ProxmoxWaiter
             end
           end
         end
-        puts "Could not find any PVE node hosting VM #{vm_id}"
+        log "Could not find any PVE node hosting VM #{vm_id}"
       end
     end
     reserved_resource = {}
@@ -205,6 +206,15 @@ class ProxmoxWaiter
   end
 
   private
+
+  # Log a message to stdout and in the log file
+  #
+  # Parameters::
+  # * *msg* (String): Message to log
+  def log(msg)
+    puts msg
+    File.write(@log_file, "#{msg}\n")
+  end
 
   # Grab the lock to start a new atomic session.
   # Make sure the lock is released at the end of the session.
@@ -269,7 +279,7 @@ class ProxmoxWaiter
       # Get some resource usages stats from the node directly
       status_info = api_get("nodes/#{pve_node}/status")
       load_average = status_info['loadavg'].map { |load_str| Float(load_str) }
-      puts "[ #{pve_node} ] - Load average: #{load_average.join(', ')}"
+      log "[ #{pve_node} ] - Load average: #{load_average.join(', ')}"
       [
         pve_node,
         # If CPU load is too high, don't select the node anyway.
@@ -300,8 +310,8 @@ class ProxmoxWaiter
             end
             vm_id.to_s
           end
-          puts "[ #{pve_node} ] - RAM MB usage: #{ram_mb_used + expired_ram_mb_used} / #{ram_mb_total} (#{expired_ram_mb_used} MB from expired containers)"
-          puts "[ #{pve_node} ] - Disk GB usage: #{disk_gb_used + expired_disk_gb_used} / #{disk_gb_total} (#{expired_disk_gb_used} GB from expired containers)"
+          log "[ #{pve_node} ] - RAM MB usage: #{ram_mb_used + expired_ram_mb_used} / #{ram_mb_total} (#{expired_ram_mb_used} MB from expired containers)"
+          log "[ #{pve_node} ] - Disk GB usage: #{disk_gb_used + expired_disk_gb_used} / #{disk_gb_total} (#{expired_disk_gb_used} GB from expired containers)"
           # Evaluate the expected percentages of resources' usage if we were to add our new container to this PVE node.
           expected_ram_percent_used = (ram_mb_used + expired_ram_mb_used + ram_mb).to_f / ram_mb_total
           expected_disk_percent_used = (disk_gb_used + expired_disk_gb_used + disk_gb).to_f / disk_gb_total
@@ -325,7 +335,7 @@ class ProxmoxWaiter
           ]
         else
           # CPU load is too high. Don't select this node.
-          puts "[ #{pve_node} ] - Load average is too high for this PVE node to be selected (thresholds: : #{@config['limits']['cpu_loads_thresholds'].join(', ')})"
+          log "[ #{pve_node} ] - Load average is too high for this PVE node to be selected (thresholds: : #{@config['limits']['cpu_loads_thresholds'].join(', ')})"
           [nil, nil]
         end
       ]
@@ -429,7 +439,7 @@ class ProxmoxWaiter
         :no_available_vm_id
       else
         # Success
-        puts "[ #{pve_node}/#{selected_vm_id} ] - New LXC container reserved with IP #{selected_vm_ip}"
+        log "[ #{pve_node}/#{selected_vm_id} ] - New LXC container reserved with IP #{selected_vm_ip}"
         [selected_vm_id, selected_vm_ip]
       end
     end
@@ -444,7 +454,7 @@ class ProxmoxWaiter
     api_get("nodes/#{pve_node}/lxc").each do |lxc_info|
       vm_id = Integer(lxc_info['vmid'])
       if is_vm_expired?(pve_node, vm_id)
-        puts "[ #{pve_node}/#{vm_id} ] - LXC container has been created on #{vm_metadata(pve_node, vm_id)[:creation_date]}. It is now expired."
+        log "[ #{pve_node}/#{vm_id} ] - LXC container has been created on #{vm_metadata(pve_node, vm_id)[:creation_date]}. It is now expired."
         destroy_vm_on(pve_node, vm_id)
       end
     end
@@ -461,10 +471,10 @@ class ProxmoxWaiter
   # * *vm_id* (Integer): The VM ID to destroy
   def destroy_vm_on(pve_node, vm_id)
     if vm_state(pve_node, vm_id) == 'running'
-      puts "[ #{pve_node}/#{vm_id} ] - Stop LXC container"
+      log "[ #{pve_node}/#{vm_id} ] - Stop LXC container"
       wait_for_proxmox_task(pve_node, @proxmox.post("nodes/#{pve_node}/lxc/#{vm_id}/status/stop"))
     end
-    puts "[ #{pve_node}/#{vm_id} ] - Destroy LXC container"
+    log "[ #{pve_node}/#{vm_id} ] - Destroy LXC container"
     wait_for_proxmox_task(pve_node, @proxmox.delete("nodes/#{pve_node}/lxc/#{vm_id}"))
   end
 
@@ -502,10 +512,10 @@ class ProxmoxWaiter
   def wait_for_proxmox_task(pve_node, task)
     raise "Invalid task: #{task}" if task[0..3] == 'NOK:'
     while task_status(pve_node, task) == 'running'
-      puts "Wait for Proxmox task #{task} to complete..."
+      log "[ #{pve_node} ] - Wait for Proxmox task #{task} to complete..."
       sleep 1
     end
-    puts "Proxmox task #{task} completed."
+    log "[ #{pve_node} ] - Proxmox task #{task} completed."
   end
 
   # Get task status
@@ -559,11 +569,11 @@ class ProxmoxWaiter
     loop do
       lxc_config = api_get(config_path)
       if lxc_config.is_a?(String)
-        puts "Node #{pve_node}/#{vm_id} got an error while checking for its config: #{lxc_config}. Might be that the VM has disappeared."
+        log "[ #{pve_node}/#{vm_id} ] - Error while checking its config: #{lxc_config}. Might be that the VM has disappeared."
         lxc_config = { 'lock' => "Error: #{lxc_config}" }
       elsif lxc_config.key?('lock')
         # The node is currently doing some task. Wait for the lock to be released.
-        puts "Node #{pve_node}/#{vm_id} is being locked (reason: #{lxc_config['lock']}). Wait for the lock to be released..."
+        log "[ #{pve_node}/#{vm_id} ] - Node is being locked (reason: #{lxc_config['lock']}). Wait for the lock to be released..."
         sleep 1
       else
         break
@@ -571,12 +581,12 @@ class ProxmoxWaiter
       # Make sure we don't cache the error or the lock
       @gets_cache.delete(config_path)
       if Time.now - begin_time > LOCK_TIMEOUT
-        puts "!!! Timeout while waiting for #{pve_node}/#{vm_id} to be unlocked (reason: #{lxc_config['lock']})."
+        log "[ #{pve_node}/#{vm_id} ] - !!! Timeout while waiting for to be unlocked (reason: #{lxc_config['lock']})."
         break
       end
     end
     if lxc_config['net0'].nil?
-      puts "!!! Config for #{pve_node}/#{vm_id} does not contain net0 information: #{lxc_config}"
+      log "[ #{pve_node}/#{vm_id} ] - !!! Config does not contain net0 information: #{lxc_config}"
     else
       lxc_config['net0'].split(',').each do |net_info|
         property, value = net_info.split('=')
