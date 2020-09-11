@@ -21,6 +21,22 @@ module HybridPlatformsConductor
           true
         end
 
+        # Add a Mixin to the DSL parsing the platforms configuration file.
+        # This can be used by any plugin to add plugin-specific configuration getters and setters, accessible later from NodesHandler instances.
+        # An optional initializer can also be given.
+        # [API] - Those calls are optional
+        module MyDSLExtension
+
+          attr_accessor :my_property
+
+          # Initialize the DSL
+          def init_my_dsl_extension
+            @my_property = 42
+          end
+
+        end
+        self.extend_platforms_dsl_with MyDSLExtension, :init_my_dsl_extension
+
         # get_* methods are automatically detected as possible metadata properties this plugin can fill.
         # The property name filled by such method is given by the method's name: get_my_property will fill the :my_property metadata.
         # The method get_others is used specifically to return properties whose name is unknown before fetching them.

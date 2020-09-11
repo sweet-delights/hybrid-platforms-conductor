@@ -7,8 +7,7 @@ describe 'last_deploys executable' do
   #   * Parameters::
   #     * *repository* (String): Platform's repository
   def with_test_platform_for_last_deploys
-    with_test_platform({ nodes: { 'node1' => {}, 'node2' => {} } }, false, 'gateway :test_gateway, \'Host test_gateway\'') do |repository|
-      ENV['hpc_ssh_gateways_conf'] = 'test_gateway'
+    with_test_platform({ nodes: { 'node1' => {}, 'node2' => {} } }) do |repository|
       yield repository
     end
   end

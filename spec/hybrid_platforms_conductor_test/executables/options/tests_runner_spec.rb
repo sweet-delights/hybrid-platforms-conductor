@@ -1,20 +1,7 @@
 describe 'executables\' Tests Runner options' do
 
-  # Setup a platform for tests
-  #
-  # Parameters::
-  # * Proc: Code called when the platform is setup
-  #   * Parameters::
-  #     * *repository* (String): Platform's repository
-  def with_test_platform_for_tests_runner_options
-    with_test_platform({}, false, 'gateway :test_gateway, \'Host test_gateway\'') do |repository|
-      ENV['hpc_ssh_gateways_conf'] = 'test_gateway'
-      yield repository
-    end
-  end
-
   it 'specifies a given test to execute' do
-    with_test_platform_for_tests_runner_options do
+    with_test_platform do
       expect(test_tests_runner).to receive(:run_tests).with([]) do
         expect(test_tests_runner.tests.sort).to eq %i[my_test]
         0
@@ -27,7 +14,7 @@ describe 'executables\' Tests Runner options' do
   end
 
   it 'specifies several tests to execute' do
-    with_test_platform_for_tests_runner_options do
+    with_test_platform do
       expect(test_tests_runner).to receive(:run_tests).with([]) do
         expect(test_tests_runner.tests.sort).to eq %i[my_test1 my_test2]
         0
@@ -40,7 +27,7 @@ describe 'executables\' Tests Runner options' do
   end
 
   it 'specifies a tests file to execute' do
-    with_test_platform_for_tests_runner_options do |repository|
+    with_test_platform do |repository|
       tests_file = "#{repository}/my_tests.txt"
       File.write(tests_file, "my_test1\n# Comment to ignore\nmy_test2\n")
       expect(test_tests_runner).to receive(:run_tests).with([]) do
@@ -55,7 +42,7 @@ describe 'executables\' Tests Runner options' do
   end
 
   it 'specifies a mix of tests files and test names to execute' do
-    with_test_platform_for_tests_runner_options do |repository|
+    with_test_platform do |repository|
       tests_file1 = "#{repository}/my_tests1.txt"
       File.write(tests_file1, "my_test1\n# Comment to ignore\nmy_test2\n")
       tests_file2 = "#{repository}/my_tests2.txt"
@@ -72,7 +59,7 @@ describe 'executables\' Tests Runner options' do
   end
 
   it 'uses current run_logs instead of executing new check-nodes' do
-    with_test_platform_for_tests_runner_options do
+    with_test_platform do
       expect(test_tests_runner).to receive(:run_tests).with([]) do
         expect(test_tests_runner.skip_run).to eq true
         0
@@ -85,7 +72,7 @@ describe 'executables\' Tests Runner options' do
   end
 
   it 'reports into a given format' do
-    with_test_platform_for_tests_runner_options do
+    with_test_platform do
       expect(test_tests_runner).to receive(:run_tests).with([]) do
         expect(test_tests_runner.reports).to eq %i[my_report]
         0
@@ -98,7 +85,7 @@ describe 'executables\' Tests Runner options' do
   end
 
   it 'reports into several formats' do
-    with_test_platform_for_tests_runner_options do
+    with_test_platform do
       expect(test_tests_runner).to receive(:run_tests).with([]) do
         expect(test_tests_runner.reports.sort).to eq %i[my_report1 my_report2].sort
         0
@@ -111,7 +98,7 @@ describe 'executables\' Tests Runner options' do
   end
 
   it 'specifies the number of max threads for connections to nodes' do
-    with_test_platform_for_tests_runner_options do
+    with_test_platform do
       expect(test_tests_runner).to receive(:run_tests).with([]) do
         expect(test_tests_runner.max_threads_connection_on_nodes).to eq 43
         0
@@ -124,7 +111,7 @@ describe 'executables\' Tests Runner options' do
   end
 
   it 'specifies the number of max threads for node tests' do
-    with_test_platform_for_tests_runner_options do
+    with_test_platform do
       expect(test_tests_runner).to receive(:run_tests).with([]) do
         expect(test_tests_runner.max_threads_nodes).to eq 43
         0
@@ -137,7 +124,7 @@ describe 'executables\' Tests Runner options' do
   end
 
   it 'specifies the number of max threads for platform tests' do
-    with_test_platform_for_tests_runner_options do
+    with_test_platform do
       expect(test_tests_runner).to receive(:run_tests).with([]) do
         expect(test_tests_runner.max_threads_platforms).to eq 43
         0

@@ -7,8 +7,7 @@ describe 'executables\' Deployer options' do
   #   * Parameters::
   #     * *repository* (String): Platform's repository
   def with_test_platform_for_deployer_options
-    with_test_platform({ nodes: { 'node' => {} } }, false, 'gateway :test_gateway, \'Host test_gateway\'') do |repository|
-      ENV['hpc_ssh_gateways_conf'] = 'test_gateway'
+    with_test_platform({ nodes: { 'node' => {} } }) do |repository|
       yield repository
     end
   end

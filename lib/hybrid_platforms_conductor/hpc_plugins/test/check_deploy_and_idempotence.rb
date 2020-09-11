@@ -1,3 +1,4 @@
+require 'json'
 require 'hybrid_platforms_conductor/test_by_service'
 
 module HybridPlatformsConductor

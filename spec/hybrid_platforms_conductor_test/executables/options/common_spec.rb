@@ -9,10 +9,8 @@ describe 'executables\' common options' do
   def with_test_platform_for_common_options
     with_test_platform(
       { nodes: { 'node1' => { meta: { host_ip: '192.168.42.42' }, services: ['node1_service'] } } },
-      true,
-      'gateway :test_gateway, \'Host test_gateway\''
+      true
     ) do |repository|
-      ENV['hpc_ssh_gateways_conf'] = 'test_gateway'
       yield repository
     end
   end

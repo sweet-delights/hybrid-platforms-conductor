@@ -13,11 +13,8 @@ describe 'get_impacted_nodes executable' do
           'node1' => { services: %w[service1] },
           'node2' => { services: %w[service2] }
         }
-      },
-      false,
-      'gateway :test_gateway, \'Host test_gateway\''
+      }
     ) do |repository|
-      ENV['hpc_ssh_gateways_conf'] = 'test_gateway'
       yield repository
     end
   end

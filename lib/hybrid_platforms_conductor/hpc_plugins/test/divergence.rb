@@ -1,3 +1,5 @@
+require 'json'
+
 module HybridPlatformsConductor
 
   module HpcPlugins

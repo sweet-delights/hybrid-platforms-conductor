@@ -1,4 +1,3 @@
-require 'erb'
 require 'git'
 require 'hybrid_platforms_conductor/plugins'
 
@@ -11,6 +10,9 @@ module HybridPlatformsConductor
 
       # NodesHandler: A NodesHandler instance used to access platform handlers
       attr_accessor :nodes_handler
+
+      # Array<Symbol>: List of mixin initializers to call
+      attr_accessor :mixin_initializers
 
       # Define the helpers in the DSL for Platform Handlers
       # They are named <plugin_name>_platform.
@@ -65,6 +67,7 @@ module HybridPlatformsConductor
       end
 
     end
+    @mixin_initializers = []
 
     # Initialize the module variables
     def initialize_platforms_dsl
@@ -72,18 +75,17 @@ module HybridPlatformsConductor
       @git_platforms_dir = "#{hybrid_platforms_dir}/cloned_platforms"
       PlatformsDsl.nodes_handler = self
       PlatformsDsl.define_platform_handler_helpers
+      # Make sure plugins can decorate our DSL with their owns additions as well
+      # Therefore we parse all possible plugin types
+      Dir.glob("#{__dir__}/hpc_plugins/*").each do |plugin_dir|
+        Plugins.new(File.basename(plugin_dir).to_sym, logger: @logger, logger_stderr: @logger_stderr)
+      end
+      # Call initializers if needed
+      PlatformsDsl.mixin_initializers.each do |mixin_init_method|
+        self.send(mixin_init_method)
+      end
       # Read platforms file
       self.instance_eval(File.read("#{hybrid_platforms_dir}/platforms.rb"))
-    end
-
-    # Register a new gateway configuration
-    #
-    # Parameters::
-    # * *gateway_conf* (Symbol): Name of the gateway configuration
-    # * *ssh_def_erb* (String): Corresponding SSH ERB configuration
-    def gateway(gateway_conf, ssh_def_erb)
-      raise "Gateway #{gateway_conf} already defined to #{@gateways[gateway_conf]}" if @gateways.key?(gateway_conf)
-      @gateways[gateway_conf] = ssh_def_erb
     end
 
     # Register a new OS image
@@ -94,38 +96,6 @@ module HybridPlatformsConductor
     def os_image(image, dir)
       raise "OS image #{image} already defined to #{@os_images[image]}" if @os_images.key?(image)
       @os_images[image] = dir
-    end
-
-    # Register new Bitbucket repositories
-    #
-    # Parameters::
-    # * *url* (String): URL to the Bitbucket server
-    # * *project* (String): Project name from the Bitbucket server, storing repositories
-    # * *repos* (Array<String> or Symbol): List of repository names from this project, or :all for all [default: :all]
-    # * *jenkins_ci_url* (String or nil): Corresponding Jenkins CI URL, or nil if none [default: nil]
-    # * *checks* (Hash<Symbol, Object>): Checks definition to be perform on those repositories (see the NodesHandler#for_each_bitbucket_repo to know the structure) [default: {}]
-    def bitbucket_repos(url:, project:, repos: :all, jenkins_ci_url: nil, checks: {})
-      @bitbucket_repos << {
-        url: url,
-        project: project,
-        repos: repos,
-        jenkins_ci_url: jenkins_ci_url,
-        checks: checks
-      }
-    end
-
-    # Register a Confluence server
-    #
-    # Parameters::
-    # * *url* (String): URL to the Confluence server
-    # * *inventory_report_page_id* (String or nil): Confluence page id used for inventory reports, or nil if none [default: nil]
-    # * *tests_report_page_id* (String or nil): Confluence page id used for test reports, or nil if none [default: nil]
-    def confluence(url:, inventory_report_page_id: nil, tests_report_page_id: nil)
-      @confluence = {
-        url: url,
-        inventory_report_page_id: inventory_report_page_id,
-        tests_report_page_id: tests_report_page_id
-      }
     end
 
   end

@@ -1,5 +1,6 @@
 require 'nokogiri'
 require 'hybrid_platforms_conductor/credentials'
+require 'hybrid_platforms_conductor/common_platforms_dsl/bitbucket'
 
 module HybridPlatformsConductor
 
@@ -9,6 +10,8 @@ module HybridPlatformsConductor
 
       # Check that all repositories have a correct Jenkins CI configuration.
       class JenkinsCiConf < HybridPlatformsConductor::Test
+
+        self.extend_platforms_dsl_with CommonPlatformsDsl::Bitbucket, :init_bitbucket
 
         # Check my_test_plugin.rb.sample documentation for signature details.
         def test

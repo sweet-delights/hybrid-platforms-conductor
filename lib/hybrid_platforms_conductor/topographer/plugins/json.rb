@@ -1,3 +1,5 @@
+require 'json'
+
 module HybridPlatformsConductor
 
   class Topographer

@@ -1,5 +1,5 @@
 require 'git'
-require 'hybrid_platforms_conductor/bitbucket'
+require 'hybrid_platforms_conductor/common_platforms_dsl/bitbucket'
 
 module HybridPlatformsConductor
 
@@ -9,6 +9,8 @@ module HybridPlatformsConductor
 
       # Check that all repositories in Bitbucket have a consistent dev workflow.
       class BitbucketConf < HybridPlatformsConductor::Test
+
+        self.extend_platforms_dsl_with CommonPlatformsDsl::Bitbucket, :init_bitbucket
 
         # Check my_test_plugin.rb.sample documentation for signature details.
         def test

@@ -266,7 +266,7 @@ Connector ssh options:
     -q, --ssh-no-host-key-checking   If used, don't check for SSH host keys.
     -u, --ssh-user USER              Name of user to be used in SSH connections (defaults to hpc_ssh_user or USER environment variables)
     -w, --password                   If used, then expect SSH connections to ask for a password.
-    -y GATEWAYS_CONF,                Name of the gateways configuration to be used. Can also be set from environment variable hpc_ssh_gateways_conf. Defaults to munich.
+    -y GATEWAYS_CONF,                Name of the gateways configuration to be used. Can also be set from environment variable hpc_ssh_gateways_conf.
         --ssh-gateways-conf
 
 Deployer options:
@@ -322,7 +322,7 @@ Connector ssh options:
     -q, --ssh-no-host-key-checking   If used, don't check for SSH host keys.
     -u, --ssh-user USER              Name of user to be used in SSH connections (defaults to hpc_ssh_user or USER environment variables)
     -w, --password                   If used, then expect SSH connections to ask for a password.
-    -y GATEWAYS_CONF,                Name of the gateways configuration to be used. Can also be set from environment variable hpc_ssh_gateways_conf. Defaults to munich.
+    -y GATEWAYS_CONF,                Name of the gateways configuration to be used. Can also be set from environment variable hpc_ssh_gateways_conf.
         --ssh-gateways-conf
 
 Deployer options:
@@ -448,7 +448,7 @@ Connector ssh options:
     -q, --ssh-no-host-key-checking   If used, don't check for SSH host keys.
     -u, --ssh-user USER              Name of user to be used in SSH connections (defaults to hpc_ssh_user or USER environment variables)
     -w, --password                   If used, then expect SSH connections to ask for a password.
-    -y GATEWAYS_CONF,                Name of the gateways configuration to be used. Can also be set from environment variable hpc_ssh_gateways_conf. Defaults to munich.
+    -y GATEWAYS_CONF,                Name of the gateways configuration to be used. Can also be set from environment variable hpc_ssh_gateways_conf.
         --ssh-gateways-conf
 
 Deployer options:
@@ -595,7 +595,7 @@ Connector ssh options:
     -q, --ssh-no-host-key-checking   If used, don't check for SSH host keys.
     -u, --ssh-user USER              Name of user to be used in SSH connections (defaults to hpc_ssh_user or USER environment variables)
     -w, --password                   If used, then expect SSH connections to ask for a password.
-    -y GATEWAYS_CONF,                Name of the gateways configuration to be used. Can also be set from environment variable hpc_ssh_gateways_conf. Defaults to munich.
+    -y GATEWAYS_CONF,                Name of the gateways configuration to be used. Can also be set from environment variable hpc_ssh_gateways_conf.
         --ssh-gateways-conf
 ```
 
@@ -663,7 +663,7 @@ Connector ssh options:
     -q, --ssh-no-host-key-checking   If used, don't check for SSH host keys.
     -u, --ssh-user USER              Name of user to be used in SSH connections (defaults to hpc_ssh_user or USER environment variables)
     -w, --password                   If used, then expect SSH connections to ask for a password.
-    -y GATEWAYS_CONF,                Name of the gateways configuration to be used. Can also be set from environment variable hpc_ssh_gateways_conf. Defaults to munich.
+    -y GATEWAYS_CONF,                Name of the gateways configuration to be used. Can also be set from environment variable hpc_ssh_gateways_conf.
         --ssh-gateways-conf
 ```
 
@@ -952,7 +952,7 @@ Connector ssh options:
     -q, --ssh-no-host-key-checking   If used, don't check for SSH host keys.
     -u, --ssh-user USER              Name of user to be used in SSH connections (defaults to hpc_ssh_user or USER environment variables)
     -w, --password                   If used, then expect SSH connections to ask for a password.
-    -y GATEWAYS_CONF,                Name of the gateways configuration to be used. Can also be set from environment variable hpc_ssh_gateways_conf. Defaults to munich.
+    -y GATEWAYS_CONF,                Name of the gateways configuration to be used. Can also be set from environment variable hpc_ssh_gateways_conf.
         --ssh-gateways-conf
 ```
 
@@ -1025,7 +1025,7 @@ Connector ssh options:
     -q, --ssh-no-host-key-checking   If used, don't check for SSH host keys.
     -u, --ssh-user USER              Name of user to be used in SSH connections (defaults to hpc_ssh_user or USER environment variables)
     -w, --password                   If used, then expect SSH connections to ask for a password.
-    -y GATEWAYS_CONF,                Name of the gateways configuration to be used. Can also be set from environment variable hpc_ssh_gateways_conf. Defaults to munich.
+    -y GATEWAYS_CONF,                Name of the gateways configuration to be used. Can also be set from environment variable hpc_ssh_gateways_conf.
         --ssh-gateways-conf
 
 Deployer options:
@@ -1099,7 +1099,7 @@ Connector ssh options:
     -q, --ssh-no-host-key-checking   If used, don't check for SSH host keys.
     -u, --ssh-user USER              Name of user to be used in SSH connections (defaults to hpc_ssh_user or USER environment variables)
     -w, --password                   If used, then expect SSH connections to ask for a password.
-    -y GATEWAYS_CONF,                Name of the gateways configuration to be used. Can also be set from environment variable hpc_ssh_gateways_conf. Defaults to munich.
+    -y GATEWAYS_CONF,                Name of the gateways configuration to be used. Can also be set from environment variable hpc_ssh_gateways_conf.
         --ssh-gateways-conf
 
 Deployer options:
@@ -1278,7 +1278,7 @@ Connector ssh options:
     -q, --ssh-no-host-key-checking   If used, don't check for SSH host keys.
     -u, --ssh-user USER              Name of user to be used in SSH connections (defaults to hpc_ssh_user or USER environment variables)
     -w, --password                   If used, then expect SSH connections to ask for a password.
-    -y GATEWAYS_CONF,                Name of the gateways configuration to be used. Can also be set from environment variable hpc_ssh_gateways_conf. Defaults to munich.
+    -y GATEWAYS_CONF,                Name of the gateways configuration to be used. Can also be set from environment variable hpc_ssh_gateways_conf.
         --ssh-gateways-conf
 
 Deployer options:
@@ -1508,7 +1508,7 @@ Connector ssh options:
     -q, --ssh-no-host-key-checking   If used, don't check for SSH host keys.
     -u, --ssh-user USER              Name of user to be used in SSH connections (defaults to hpc_ssh_user or USER environment variables)
     -w, --password                   If used, then expect SSH connections to ask for a password.
-    -y GATEWAYS_CONF,                Name of the gateways configuration to be used. Can also be set from environment variable hpc_ssh_gateways_conf. Defaults to munich.
+    -y GATEWAYS_CONF,                Name of the gateways configuration to be used. Can also be set from environment variable hpc_ssh_gateways_conf.
         --ssh-gateways-conf
 ```
 
