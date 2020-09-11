@@ -1,3 +1,9 @@
+# [23.0.0](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv22.1.0&sourceBranch=refs%2Ftags%2Fv23.0.0) (2020-09-11)
+
+### Breaking changes
+
+* [Breaking] Added the concept of Provisioner and corresponding plugins to provision infra ([bcd9dae5](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/commits/bcd9dae5695d94e1b16d8a0362e68279e2271c70))
+
 # [22.1.0](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv22.0.0&sourceBranch=refs%2Ftags%2Fv22.1.0) (2020-09-11)
 
 ### New features
