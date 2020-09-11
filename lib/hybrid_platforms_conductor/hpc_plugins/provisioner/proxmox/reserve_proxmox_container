@@ -82,13 +82,14 @@ begin
 
   raise 'Either use --create or --destroy options. Not both.' if create_info && destroy_vm_id
 
+  proxmox_waiter = ProxmoxWaiter.new(
+    config_file,
+    ENV['hpc_user_for_proxmox'],
+    ENV['hpc_password_for_proxmox']
+  )
+
   idx_retry = 0
   while idx_retry < max_retries
-    proxmox_waiter = ProxmoxWaiter.new(
-      config_file,
-      ENV['hpc_user_for_proxmox'],
-      ENV['hpc_password_for_proxmox']
-    )
     reserved_resource =
       if destroy_vm_id.nil?
         puts "[ #{Time.now.utc.strftime('%F %T')} ] - Create #{create_info} in a Proxmox container (attempt ##{idx_retry}/#{max_retries})"
@@ -98,7 +99,7 @@ begin
         proxmox_waiter.destroy(destroy_vm_id)
       end
     if reserved_resource.is_a?(Symbol)
-      # We are missing some resources to get the resource.
+      # We got an error (missing resources, IPs...).
       # Try again.
       puts "Could not perform the operation because of error: #{reserved_resource}. Waiting #{wait_time_before_retry_secs} seconds before trying again."
       reserved_resource = { error: reserved_resource }

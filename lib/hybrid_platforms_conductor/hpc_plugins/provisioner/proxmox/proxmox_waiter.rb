@@ -10,7 +10,10 @@ require 'time'
 class ProxmoxWaiter
 
   # Integer: Timeout in seconds to get the futex
-  FUTEX_TIMEOUT = 60
+  # Take into account that some processes can be lengthy while the futex is taken:
+  # * POST/DELETE operations in the Proxmox API requires tasks to be performed which can take a few seconds, depending on the load.
+  # * Proxmox API sometimes fails to respond when containers are being locked temporarily (we have a 30 secs timeout for each one).
+  FUTEX_TIMEOUT = 120
 
   # Constructor
   #
@@ -25,6 +28,7 @@ class ProxmoxWaiter
   #   * *coeff_ram_consumption* (Integer): Importance coefficient to assign to the RAM consumption when selecting available PVE nodes
   #   * *coeff_disk_consumption* (Integer): Importance coefficient to assign to the disk consumption when selecting available PVE nodes
   #   * *expiration_period_secs* (Integer): Number of seconds defining the expiration period
+  #   * *expire_stopped_vm_timeout_secs* (Integer): Number of seconds before defining stopped VMs as expired
   #   * *limits* (Hash): Limits to be taken into account while reserving resources. Each property is optional and no property means no limit.
   #     * *nbr_vms_max* (Integer): Max number of VMs we can reserve.
   #     * *cpu_loads_thresholds* ([Float, Float, Float]): CPU load thresholds from which a PVE node should not be used (as soon as 1 of the value is greater than 1 of those thresholds, discard the node).
@@ -36,8 +40,11 @@ class ProxmoxWaiter
     @config = JSON.parse(File.read(config_file))
     @proxmox_user = proxmox_user
     @proxmox_password = proxmox_password
-    # Cache of get queries to the API
-    @gets_cache = {}
+    # Keep a memory of non-debug stopped containers, so that we can guess if they are expired or not after some time.
+    # Time when we noticed a given container is stopped, per VM ID, per PVE node
+    # Hash< String,   Hash< Integer, Time                 > >
+    # Hash< pve_node, Hash< vm_id,   time_seen_as_stopped > >
+    @non_debug_stopped_containers = {}
   end
 
   # Reserve resources for a new container.
@@ -221,6 +228,8 @@ class ProxmoxWaiter
         'pam',
         { verify_ssl: false }
       )
+      # Cache of get queries to the API
+      @gets_cache = {}
       # Check connectivity before going further
       begin
         nodes_info = api_get('nodes')
@@ -333,8 +342,29 @@ class ProxmoxWaiter
   def is_vm_expired?(pve_node, vm_id)
     if vm_id.between?(*@config['vm_ids_range'])
       # Get its reservation date from the notes
-      creation_date = vm_metadata(pve_node, vm_id)[:creation_date]
-      creation_date.nil? || Time.parse("#{creation_date} UTC") < @expiration_date
+      metadata = vm_metadata(pve_node, vm_id)
+      if metadata[:creation_date].nil? || Time.parse("#{metadata[:creation_date]} UTC") < @expiration_date
+        true
+      elsif vm_state(pve_node, vm_id) == 'running' || metadata[:debug] == 'true'
+        # Just in case it was previously remembered as a non-debug stopped container, clear it.
+        @non_debug_stopped_containers[pve_node].delete(vm_id) if @non_debug_stopped_containers.key?(pve_node)
+        false
+      else
+        # Check if it is not a left-over from a crash.
+        # If it stays not running for long and is not meant for debug purposes, then it is also considered expired.
+        # For this, remember previously seen containers that were stopped
+        first_time_seen_as_stopped = @non_debug_stopped_containers.dig pve_node, vm_id
+        if first_time_seen_as_stopped.nil?
+          # It is the first time we see it stopped.
+          # Remember it and consider it as non-expired.
+          @non_debug_stopped_containers[pve_node] = {} unless @non_debug_stopped_containers.key?(pve_node)
+          @non_debug_stopped_containers[pve_node][vm_id] = Time.now
+          false
+        else
+          # If it is stopped from more than the timeout, then consider it expired
+          Time.now - first_time_seen_as_stopped >= @config['expire_stopped_vm_timeout_secs']
+        end
+      end
     else
       false
     end
@@ -430,7 +460,7 @@ class ProxmoxWaiter
   # * *pve_node* (String): PVE node hosting the VM
   # * *vm_id* (Integer): The VM ID to destroy
   def destroy_vm_on(pve_node, vm_id)
-    if api_get("nodes/#{pve_node}/lxc/#{vm_id}/status/current")['status'] == 'running'
+    if vm_state(pve_node, vm_id) == 'running'
       puts "[ #{pve_node}/#{vm_id} ] - Stop LXC container"
       wait_for_proxmox_task(pve_node, @proxmox.post("nodes/#{pve_node}/lxc/#{vm_id}/status/stop"))
     end
@@ -498,6 +528,17 @@ class ProxmoxWaiter
   def api_get(path)
     @gets_cache[path] = @proxmox.get(path) unless @gets_cache.key?(path)
     @gets_cache[path]
+  end
+
+  # Get the state of a VM
+  #
+  # Parameters::
+  # * *pve_node* (String): The PVE node having the container
+  # * *vm_id* (Integer): The VM ID
+  # Result::
+  # * String: The state
+  def vm_state(pve_node, vm_id)
+    api_get("nodes/#{pve_node}/lxc/#{vm_id}/status/current")['status']
   end
 
   # Timeout in seconds before giving up on a lock

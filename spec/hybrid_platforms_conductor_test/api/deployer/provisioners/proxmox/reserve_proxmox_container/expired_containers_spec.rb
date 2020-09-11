@@ -627,6 +627,113 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
         end
       end
 
+      it 'does not expire a VM that is stopped for long time but still used for debug purposes' do
+        with_sync_node do
+          mock_proxmox(mocked_pve_nodes: {
+            'pve_node_name' => {
+              memory_total: 4 * 1024 * 1024 * 1024,
+              lxc_containers: {
+                # Make sure it is not expired
+                1000 => {
+                  ip: '192.168.0.100',
+                  maxmem: 4 * 1024 * 1024 * 1024,
+                  creation_date: Time.now.utc,
+                  status: 'stopped',
+                  debug: true
+                }
+              }
+            }
+          })
+          expect(call_reserve_proxmox_container(2, 1024, 1)).to eq(error: 'not_enough_resources')
+          expect_proxmox_actions_to_be []
+        end
+      end
+
+      it 'expires a VM that is stopped for long time and is not used for debug purposes' do
+        with_sync_node do
+          mock_proxmox(mocked_pve_nodes: [{
+            'pve_node_name' => {
+              memory_total: 4 * 1024 * 1024 * 1024,
+              lxc_containers: {
+                # Make sure it is not expired
+                1000 => {
+                  ip: '192.168.0.100',
+                  maxmem: 4 * 1024 * 1024 * 1024,
+                  creation_date: Time.now.utc,
+                  status: 'stopped',
+                  debug: false
+                }
+              }
+            }
+          }] * 3)
+          # Timeout for a non-debug stopped container to be considered expired is 3 seconds in tests
+          expect(call_reserve_proxmox_container(2, 1024, 1, max_retries: 5, wait_before_retry: 2)).to eq(
+            pve_node: 'pve_node_name',
+            vm_id: 1000,
+            vm_ip: '192.168.0.100'
+          )
+          expect_proxmox_actions_to_be [
+            [:delete, 'nodes/pve_node_name/lxc/1000'],
+            [:post, 'nodes/pve_node_name/lxc', {
+              'cores' => 2,
+              'cpulimit' => 2,
+              'description' => /^===== HPC Info =====\nnode: test_node\nenvironment: test_env\ncreation_date: .+\n/,
+              'hostname' => 'test.hostname.my-domain.com',
+              'memory' => 1024,
+              'net0' => 'name=eth0,bridge=vmbr0,gw=172.16.16.16,ip=192.168.0.100/32',
+              'ostemplate' => 'test_template.iso',
+              'rootfs' => 'local-lvm:1',
+              'vmid' => 1000
+            }]
+          ]
+        end
+      end
+
+      it 'does not expire a VM that is stopped for some time even when it is not used for debug purposes' do
+        with_sync_node do
+          mock_proxmox(mocked_pve_nodes: [{
+              # 2 seconds separate each run.
+              # Make sure the third and later runs mock the container as running instead of stopped
+              'pve_node_name' => {
+                memory_total: 4 * 1024 * 1024 * 1024,
+                lxc_containers: {
+                  # Make sure it is not expired
+                  1000 => {
+                    ip: '192.168.0.100',
+                    maxmem: 4 * 1024 * 1024 * 1024,
+                    creation_date: Time.now.utc,
+                    # Make it stopped first, then running
+                    status: 'stopped',
+                    debug: false
+                  }
+                }
+              }
+            }] * 2 +
+            [{
+              # 2 seconds separate each run.
+              # Make sure the third and later runs mock the container as running instead of stopped
+              'pve_node_name' => {
+                memory_total: 4 * 1024 * 1024 * 1024,
+                lxc_containers: {
+                  # Make sure it is not expired
+                  1000 => {
+                    ip: '192.168.0.100',
+                    maxmem: 4 * 1024 * 1024 * 1024,
+                    creation_date: Time.now.utc,
+                    # Make it stopped first, then running
+                    status: 'running',
+                    debug: false
+                  }
+                }
+              }
+            }] * 2
+          )
+          # Timeout for a non-debug stopped container to be considered expired is 3 seconds in tests
+          expect(call_reserve_proxmox_container(2, 1024, 1, max_retries: 4, wait_before_retry: 2)).to eq(error: 'not_enough_resources')
+          expect_proxmox_actions_to_be []
+        end
+      end
+
     end
 
   end

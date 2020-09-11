@@ -156,6 +156,7 @@ module HybridPlatformsConductor
                       ===== HPC info =====
                       node: #{@node}
                       environment: #{@environment}
+                      debug: #{log_debug? ? 'true' : 'false'}
                     EOS
                   })
                 else

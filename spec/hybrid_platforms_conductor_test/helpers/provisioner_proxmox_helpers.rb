@@ -427,6 +427,7 @@ module HybridPlatformsConductorTest
       #     * *cpus* (Integer): CPUs allocated to this VM [default: 1]
       #     * *ip* (String): IP allocated to this node [default: 192.168.0.<vmid % 254 + 1>]
       #     * *status* (String): Status of this node [default: 'running']
+      #     * *debug* (Boolean): Do we mark the VM as debug? [default: false]
       def mock_proxmox(
         proxmox_user: nil,
         proxmox_password: nil,
@@ -449,7 +450,8 @@ module HybridPlatformsConductorTest
                     cpus: 1,
                     ip: "192.168.0.#{(vm_id % 254) + 1}",
                     status: 'running',
-                    creation_date: (Time.now - 60).utc
+                    creation_date: (Time.now - 60).utc,
+                    debug: false
                   }.merge(vm_info)
                 ]
               end]
@@ -506,7 +508,13 @@ module HybridPlatformsConductorTest
                   vmid = $2
                   {
                     'net0' => "ip=#{pve_nodes[pve_node_name][:lxc_containers][Integer(vmid)][:ip]}/32",
-                    'description' => "===== HPC Info =====\nnode: test_node\nenvironment: test_env\ncreation_date: #{pve_nodes[pve_node_name][:lxc_containers][Integer(vmid)][:creation_date].strftime('%FT%T')}\n"
+                    'description' => <<~EOS
+                      ===== HPC Info =====
+                      node: test_node
+                      environment: test_env
+                      debug: #{pve_nodes[pve_node_name][:lxc_containers][Integer(vmid)][:debug] ? 'true' : 'false'}
+                      creation_date: #{pve_nodes[pve_node_name][:lxc_containers][Integer(vmid)][:creation_date].strftime('%FT%T')}
+                    EOS
                   }
                 when /^nodes\/([^\/]+)\/lxc\/([^\/]+)\/status\/current$/
                   pve_node_name = $1
@@ -579,10 +587,11 @@ module HybridPlatformsConductorTest
       # * *argv* (Array<String>): ARGV to give the command
       # * *config* (Hash): Configuration overriding defaults to store in the config file [default: {}]
       # * *max_retries* (Integer): Specify the max number of retries [default: 1]
+      # * *wait_before_retry* (Integer): Specify the number of seconds to wait before retry [default: 0]
       # * *create* (Hash or nil): Create file content, or nil if none [default: nil]
       # Result::
       # * Hash: JSON result of the call
-      def call_reserve_proxmox_container_with(argv, config: {}, max_retries: 1, create: nil)
+      def call_reserve_proxmox_container_with(argv, config: {}, max_retries: 1, wait_before_retry: 0, create: nil)
         # Make sure we set default values in the config
         config = {
           proxmox_api_url: 'https://my-proxmox.my-domain.com:8006',
@@ -597,6 +606,7 @@ module HybridPlatformsConductorTest
           coeff_ram_consumption: 10,
           coeff_disk_consumption: 1,
           expiration_period_secs: 24 * 60 * 60,
+          expire_stopped_vm_timeout_secs: 3,
           limits: {
             nbr_vms_max: 5,
             cpu_loads_thresholds: [10, 10, 10],
@@ -608,7 +618,7 @@ module HybridPlatformsConductorTest
         File.write("#{@repository}/proxmox/config.json", config.to_json)
         script_args = argv + [
           '--max-retries', max_retries.to_s,
-          '--wait-before-retry', '0'
+          '--wait-before-retry', wait_before_retry.to_s
         ]
         unless create.nil?
           create_file = "#{@repository}/proxmox/create_vm.json"
@@ -644,13 +654,15 @@ module HybridPlatformsConductorTest
       # * *disk_gb* (Integer): Required Disk GB
       # * *config* (Hash): Configuration overriding defaults to store in the config file [default: {}]
       # * *max_retries* (Integer): Specify the max number of retries [default: 1]
+      # * *wait_before_retry* (Integer): Specify the number of seconds to wait before retry [default: 0]
       # Result::
       # * Hash: JSON result of the call
-      def call_reserve_proxmox_container(cpus, ram_mb, disk_gb, config: {}, max_retries: 1)
+      def call_reserve_proxmox_container(cpus, ram_mb, disk_gb, config: {}, max_retries: 1, wait_before_retry: 0)
         call_reserve_proxmox_container_with(
           [],
           config: config,
           max_retries: max_retries,
+          wait_before_retry: wait_before_retry,
           create: {
             ostemplate: 'test_template.iso',
             hostname: 'test.hostname.my-domain.com',

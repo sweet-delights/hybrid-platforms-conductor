@@ -14,7 +14,7 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
         expect(@proxmox_create_options).to eq({
           'cores' => 2,
           'cpulimit' => 2,
-          'description' => "===== HPC info =====\nnode: node\nenvironment: test\n",
+          'description' => "===== HPC info =====\nnode: node\nenvironment: test\ndebug: false\n",
           'hostname' => 'node.test.hpc-test.com',
           'memory' => 1024,
           'nameserver' => '8.8.8.8',
@@ -86,7 +86,7 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
         expect(@proxmox_create_options).to eq({
           'cores' => 24,
           'cpulimit' => 24,
-          'description' => "===== HPC info =====\nnode: node\nenvironment: test\n",
+          'description' => "===== HPC info =====\nnode: node\nenvironment: test\ndebug: false\n",
           'hostname' => 'node.test.hpc-test.com',
           'memory' => 4096,
           'nameserver' => '8.8.8.8',
