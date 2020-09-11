@@ -1,3 +1,9 @@
+# [23.3.2](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv23.3.1&sourceBranch=refs%2Ftags%2Fv23.3.2) (2020-09-11)
+
+### Fixes
+
+* [Hotfix] Bug correction when parsing plugins from packed Rubygems containing non-standard chars ([a69c7894](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/commits/a69c7894dd19134ca7d3f6201f69ed20f2180171))
+
 # [23.3.1](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv23.3.0&sourceBranch=refs%2Ftags%2Fv23.3.1) (2020-09-11)
 
 ### Fixes
