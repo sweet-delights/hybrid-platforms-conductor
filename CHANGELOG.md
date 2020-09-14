@@ -1,3 +1,9 @@
+# [23.4.2](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv23.4.1&sourceBranch=refs%2Ftags%2Fv23.4.2) (2020-09-14)
+
+### Fixes
+
+* Sort host keys to remove useless warnings in metadata when ssh-keyscan returns different sort ([bb169d9b](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/commits/bb169d9b4435cd02b4ea134d9de5db873811e35a))
+
 # [23.4.1](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv23.4.0&sourceBranch=refs%2Ftags%2Fv23.4.1) (2020-09-14)
 
 ### Fixes
