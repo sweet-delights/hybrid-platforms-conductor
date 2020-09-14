@@ -136,7 +136,6 @@ module HybridPlatformsConductor
       unknown_tests = @tests - @tests_plugins.keys
       raise "Unknown test names: #{unknown_tests.join(', ')}" unless unknown_tests.empty?
       @nodes = @nodes_handler.select_nodes(nodes_selectors).uniq.sort
-      @tested_platforms = []
 
       # Keep a list of all tests that have run for the report
       # Array< Test >
@@ -148,8 +147,7 @@ module HybridPlatformsConductor
       run_tests_connection_on_nodes
       run_tests_on_check_nodes
 
-      @tested_platforms.uniq!
-      @tested_platforms.sort!
+      @tested_platforms = @tests_run.map { |test| test.platform }.compact.uniq.sort
 
       # Check that tests that were expected to fail did not succeed.
       @tests_run.each do |test|
@@ -272,65 +270,91 @@ module HybridPlatformsConductor
       )
     end
 
-    # Run tests that are global
-    def run_tests_global
-      tests_global = @tests.select { |test_name| @tests_plugins[test_name].method_defined?(:test) }.uniq.sort
-      unless tests_global.empty?
-        section "Run #{tests_global.size} global tests" do
-          tests_global.each do |test_name|
-            section "Run global test #{test_name}" do
-              test = new_test(test_name)
-              begin
-                test.test
-              rescue
-                test.error "Uncaught exception during test: #{$!}", $!.backtrace.join("\n")
+    # Run a test method on a set of test subjects.
+    # Provide harmonized logging, timings, exception handling...
+    # Make sure the tests should be run before running it.
+    #
+    # Parameters::
+    # * *title* (String): The title of such tests
+    # * *test_method* (Symbol): The test method to run (defined in tests plugins)
+    # * *test_subjects* (Array< Hash<Symbol,Object> >): List of test subjects. A test subject is defined as properties mapping the signature of the should_test_be_run_on and new_test methods.
+    # * *nbr_threads_max* (Integer): If > 1 then run the tests in parallel (with a limit in nuber of threads fixed by the value). Only when debug mode is false. [default: 1]
+    # * *tests_preparation* (Proc or nil): Code called to prepare tests, once test subjects have been selected, or nil if none [default: nil]
+    #   * Parameters::
+    #     * *selected_tests* (Array<Test>): List of selected tests.
+    # * *test_execution* (Proc): Code called to execute a test. Defaults to calling the test_method method on the test instance
+    #   * Parameters::
+    #     * *test* (Test): The test instance to be executed
+    def run_tests_on_subjects(
+      title,
+      test_method,
+      test_subjects,
+      nbr_threads_max: 1,
+      tests_preparation: nil,
+      test_execution: proc { |test| test.send(test_method) }
+    )
+      # Gather the list of tests to execute
+      tests_to_run = @tests.map do |test_name|
+        if @tests_plugins[test_name].method_defined?(test_method)
+          test_subjects.map do |test_subject|
+            should_test_be_run_on(test_name, **test_subject) ? new_test(test_name, **test_subject) : nil
+          end.compact
+        else
+          []
+        end
+      end.flatten
+      unless tests_to_run.empty?
+        section "Run #{tests_to_run.size} #{title}" do
+          tests_preparation.call(tests_to_run) unless tests_preparation.nil?
+          for_each_element_in(
+            tests_to_run,
+            parallel: !log_debug? && nbr_threads_max > 1,
+            nbr_threads_max: nbr_threads_max,
+            progress: "Run #{title}"
+          ) do |test|
+            test_category =
+              if test.platform.nil? && test.node.nil?
+                'Global'
+              elsif test.node.nil?
+                "Platform #{test.platform.info[:repo_name]}"
+              elsif test.platform.nil?
+                "Node #{test.node}"
+              else
+                "Platform #{test.platform.info[:repo_name]} / Node #{test.node}"
               end
-              test.executed
-              @tests_run << test
+            out "[ #{Time.now.utc.strftime('%F %T')} ] - [ #{test_category} ] - [ #{test.name} ] - Start test..."
+            begin_time = Time.now
+            begin
+              test_execution.call(test)
+            rescue
+              test.error "Uncaught exception during test: #{$!}", $!.backtrace.join("\n")
             end
+            end_time = Time.now
+            test.executed
+            out "[ #{Time.now.utc.strftime('%F %T')} ] - [ #{test_category} ] - [ #{test.name} ] - Test finished in #{end_time - begin_time} seconds."
           end
+          @tests_run.concat(tests_to_run)
         end
       end
     end
 
+    # Run tests that are global
+    def run_tests_global
+      run_tests_on_subjects(
+        'global tests',
+        :test,
+        [{}]
+      )
+    end
+
     # Run tests that are platform specific
     def run_tests_platform
-      tests_on_platform = @tests.select { |test_name| @tests_plugins[test_name].method_defined?(:test_on_platform) }.uniq.sort
-      unless tests_on_platform.empty?
-        section "Run #{tests_on_platform.size} platform tests" do
-          # Get the list of tests to be run
-          # Array<Proc>
-          tests_to_be_run = []
-          tests_on_platform.each do |test_name|
-            # Run this test for every platform allowed
-            @nodes_handler.known_platforms.each do |platform|
-              platform_handler = @nodes_handler.platform(platform)
-              @tested_platforms << platform_handler
-              if should_test_be_run_on(test_name, platform: platform_handler)
-                log_debug "Run platform test #{test_name} on #{platform_handler.info[:repo_name]}"
-                tests_to_be_run << proc do
-                  test = new_test(test_name, platform: platform_handler)
-                  begin
-                    test.test_on_platform
-                  rescue
-                    test.error "Uncaught exception during test: #{$!}", $!.backtrace.join("\n")
-                  end
-                  test.executed
-                  @tests_run << test
-                end
-              end
-            end
-          end
-          for_each_element_in(
-            tests_to_be_run,
-            parallel: !log_debug?,
-            nbr_threads_max: @max_threads_platforms,
-            progress: 'Run platforms tests'
-          ) do |test_code|
-            test_code.call
-          end
-        end
-      end
+      run_tests_on_subjects(
+        'platform tests',
+        :test_on_platform,
+        @nodes_handler.known_platforms.map { |platform| { platform: @nodes_handler.platform(platform) } },
+        nbr_threads_max: @max_threads_platforms
+      )
     end
 
     # Timeout in seconds given to the connection itself
@@ -348,22 +372,22 @@ module HybridPlatformsConductor
 
     # Run tests that are node specific and require a connection to the node
     def run_tests_connection_on_nodes
-      # Gather the list of commands to be run on each node with their corresponding test info, per node
-      # Hash< String, Array< [ String, Hash<Symbol,Object> ] > >
-      cmds_to_run = {}
-      # List of tests run on nodes
-      tests_on_nodes = []
-      @nodes.each do |node|
-        @tests.each do |test_name|
-          if @tests_plugins[test_name].method_defined?(:test_on_node) && should_test_be_run_on(test_name, node: node)
-            test = new_test(test_name, node: node)
+      run_tests_on_subjects(
+        'connected tests',
+        :test_on_node,
+        @nodes.map { |node| { node: node } },
+        tests_preparation: proc do |selected_tests|
+          # Gather the list of commands to be run on each node with their corresponding test info, per node
+          # Hash< String, Array< [ String, Hash<Symbol,Object> ] > >
+          @cmds_to_run = {}
+          selected_tests.each do |test|
             begin
               test.test_on_node.each do |cmd, test_info|
                 test_info_normalized = test_info.is_a?(Hash) ? test_info.clone : { validator: test_info }
                 test_info_normalized[:timeout] = DEFAULT_CMD_TIMEOUT unless test_info_normalized.key?(:timeout)
                 test_info_normalized[:test] = test
-                cmds_to_run[node] = [] unless cmds_to_run.key?(node)
-                cmds_to_run[node] << [
+                @cmds_to_run[test.node] = [] unless @cmds_to_run.key?(test.node)
+                @cmds_to_run[test.node] << [
                   cmd,
                   test_info_normalized
                 ]
@@ -372,103 +396,86 @@ module HybridPlatformsConductor
               test.error "Uncaught exception during test preparation: #{$!}", $!.backtrace.join("\n")
               test.executed
             end
-            @tests_run << test
-            tests_on_nodes << test_name
           end
-        end
-      end
-      # Run tests in 1 parallel shot
-      unless cmds_to_run.empty?
-        # Compute the timeout that will be applied, from the max timeout sum for every node that has tests to run
-        timeout = CONNECTION_TIMEOUT + cmds_to_run.map { |_node, cmds_list| cmds_list.inject(0) { |total_timeout, (_cmd, test_info)| test_info[:timeout] + total_timeout } }.max
-        # Run commands on nodes, in grouped way to avoid too many connections, per node
-        # Hash< String, Array<String> >
-        test_cmds = Hash[cmds_to_run.map do |node, cmds_list|
-          [
-            node,
-            {
-              remote_bash: cmds_list.map do |(cmd, _test_info)|
-                [
-                  "echo '#{CMD_SEPARATOR}'",
-                  ">&2 echo '#{CMD_SEPARATOR}'",
-                  cmd,
-                  "echo \"$?\""
-                ]
-              end.flatten
-            }
-          ]
-        end]
-        tests_on_nodes.uniq!
-        tests_on_nodes.sort!
-        section "Run #{tests_on_nodes.size} connected nodes tests #{tests_on_nodes.join(', ')} (timeout to #{timeout} secs)" do
-          start_time = Time.now
-          nbr_secs = nil
-          @actions_executor.max_threads = @max_threads_connection_on_nodes
-          @actions_executor.execute_actions(
-            test_cmds,
-            concurrent: !log_debug?,
-            log_to_dir: nil,
-            log_to_stdout: log_debug?,
-            timeout: timeout
-          ).each do |node, (exit_status, stdout, stderr)|
-            nbr_secs = (Time.now - start_time).round(1) if nbr_secs.nil?
-            if exit_status.is_a?(Symbol)
-              error("Error while executing tests: #{exit_status}: #{stderr}", node: node)
-            else
-              log_debug "----- Commands for #{node}:\n#{test_cmds[node][:remote_bash].join("\n")}\n----- STDOUT:\n#{stdout}\n----- STDERR:\n#{stderr}\n-----"
-              # Skip the first section, as it can contain SSH banners
-              cmd_stdouts = stdout.split("#{CMD_SEPARATOR}\n")[1..-1]
-              cmd_stdouts = [] if cmd_stdouts.nil?
-              cmd_stderrs = stderr.split("#{CMD_SEPARATOR}\n")[1..-1]
-              cmd_stderrs = [] if cmd_stderrs.nil?
-              cmds_to_run[node].zip(cmd_stdouts, cmd_stderrs).each do |(cmd, test_info), cmd_stdout, cmd_stderr|
+          # Compute the timeout that will be applied, from the max timeout sum for every node that has tests to run
+          timeout = CONNECTION_TIMEOUT + @cmds_to_run.map do |_node, cmds_list|
+            cmds_list.inject(0) { |total_timeout, (_cmd, test_info)| test_info[:timeout] + total_timeout }
+          end.max
+          # Run commands on nodes, in grouped way to avoid too many connections, per node
+          # Hash< String, Array<String> >
+          @test_cmds = Hash[@cmds_to_run.map do |node, cmds_list|
+            [
+              node,
+              {
+                remote_bash: cmds_list.map do |(cmd, _test_info)|
+                  [
+                    "echo '#{CMD_SEPARATOR}'",
+                    ">&2 echo '#{CMD_SEPARATOR}'",
+                    cmd,
+                    "echo \"$?\""
+                  ]
+                end.flatten
+              }
+            ]
+          end]
+          section "Run test commands on #{@test_cmds.keys.size} connected nodes (timeout to #{timeout} secs)" do
+            start_time = Time.now
+            nbr_secs = nil
+            @actions_executor.max_threads = @max_threads_connection_on_nodes
+            @actions_result = @actions_executor.execute_actions(
+              @test_cmds,
+              concurrent: !log_debug?,
+              log_to_dir: nil,
+              log_to_stdout: log_debug?,
+              timeout: timeout
+            )
+            log_debug "----- Total commands executed in #{(Time.now - start_time).round(1)} secs"
+          end
+        end,
+        test_execution: proc do |test|
+          exit_status, stdout, stderr = @actions_result[test.node]
+          if exit_status.is_a?(Symbol)
+            test.error "Error while executing tests: #{exit_status}: #{stderr}"
+          else
+            log_debug <<~EOS
+              ----- Commands for #{test.node}:
+              #{@test_cmds[test.node][:remote_bash].join("\n")}
+              ----- STDOUT:
+              #{stdout}
+              ----- STDERR:
+              #{stderr}
+              -----
+            EOS
+            # Skip the first section, as it can contain SSH banners
+            cmd_stdouts = stdout.split("#{CMD_SEPARATOR}\n")[1..-1]
+            cmd_stdouts = [] if cmd_stdouts.nil?
+            cmd_stderrs = stderr.split("#{CMD_SEPARATOR}\n")[1..-1]
+            cmd_stderrs = [] if cmd_stderrs.nil?
+            @cmds_to_run[test.node].zip(cmd_stdouts, cmd_stderrs).each do |(cmd, test_info), cmd_stdout, cmd_stderr|
+              # Find the section that corresponds to this test
+              if test_info[:test] == test
                 cmd_stdout = '' if cmd_stdout.nil?
                 cmd_stderr = '' if cmd_stderr.nil?
                 stdout_lines = cmd_stdout.split("\n")
                 # Last line of stdout is the return code
                 return_code = stdout_lines.empty? ? :command_cant_run : Integer(stdout_lines.last)
-                test_info[:test].error "Command '#{cmd}' returned error code #{return_code}", "----- STDOUT:\n#{stdout_lines[0..-2].join("\n")}\n----- STDERR:\n#{cmd_stderr}" unless return_code == 0
-                begin
-                  test_info[:validator].call(stdout_lines[0..-2], cmd_stderr.split("\n"), return_code)
-                rescue
-                  test_info[:test].error "Uncaught exception during validation: #{$!}#{log_debug? ? "\n#{$!.backtrace.join("\n")}" : ''}"
-                end
-                test_info[:test].executed
+                test.error "Command '#{cmd}' returned error code #{return_code}", "----- STDOUT:\n#{stdout_lines[0..-2].join("\n")}\n----- STDERR:\n#{cmd_stderr}" unless return_code == 0
+                test_info[:validator].call(stdout_lines[0..-2], cmd_stderr.split("\n"), return_code)
               end
             end
           end
-          log_debug "----- Total commands executed in #{nbr_secs} secs"
         end
-      end
+      )
     end
 
     # Run tests that are node specific
     def run_tests_for_nodes
-      tests_for_nodes = @tests.select { |test_name| @tests_plugins[test_name].method_defined?(:test_for_node) }.uniq.sort
-      unless tests_for_nodes.empty?
-        section "Run #{tests_for_nodes.size} nodes tests #{tests_for_nodes.join(', ')} on #{@nodes.size} nodes" do
-          @nodes_handler.for_each_node_in(
-            @nodes,
-            parallel: !log_debug?,
-            nbr_threads_max: @max_threads_nodes,
-            progress: 'Run nodes tests'
-          ) do |node|
-            tests_for_nodes.each do |test_name|
-              if should_test_be_run_on(test_name, node: node)
-                log_debug "Run node test #{test_name} on node #{node}..."
-                test = new_test(test_name, node: node)
-                begin
-                  test.test_for_node
-                rescue
-                  test.error "Uncaught exception during test: #{$!}", $!.backtrace.join("\n")
-                end
-                test.executed
-                @tests_run << test
-              end
-            end
-          end
-        end
-      end
+      run_tests_on_subjects(
+        'node tests',
+        :test_for_node,
+        @nodes.map { |node| { node: node } },
+        nbr_threads_max: @max_threads_nodes
+      )
     end
 
     # Timeout in seconds given to a check-node run
@@ -477,13 +484,13 @@ module HybridPlatformsConductor
 
     # Run tests that use check-node results
     def run_tests_on_check_nodes
-      # Group the check-node runs
-      tests_for_check_node = @tests.select { |test_name| @tests_plugins[test_name].method_defined?(:test_on_check_node) }.sort
-      unless tests_for_check_node.empty?
-        section "Run check-nodes tests #{tests_for_check_node.join(', ')}" do
-          # Compute the real list of hstnames that need check-node to be run, considering the filtering done by should_test_be_run_on.
-          nodes_to_test = @nodes.select { |node| tests_for_check_node.any? { |test_name| should_test_be_run_on(test_name, node: node) } }
-          outputs =
+      run_tests_on_subjects(
+        'check-node tests',
+        :test_on_check_node,
+        @nodes.map { |node| { node: node } },
+        tests_preparation: proc do |selected_tests|
+          nodes_to_test = selected_tests.map { |test| test.node }.uniq.sort
+          @outputs =
             if @skip_run
               Hash[nodes_to_test.map do |node|
                 run_log_file_name = "#{@nodes_handler.hybrid_platforms_dir}/run_logs/#{node}.stdout"
@@ -509,30 +516,23 @@ module HybridPlatformsConductor
                 {}
               end
             end
-          # Analyze output
-          outputs.each do |node, (exit_status, stdout, stderr)|
-            tests_for_check_node.each do |test_name|
-              if should_test_be_run_on(test_name, node: node)
-                test = new_test(test_name, node: node)
-                if stdout.nil?
-                  test.error 'No check-node log file found despite the run of check-node.'
-                elsif stdout.is_a?(Symbol)
-                  test.error "Check-node run failed: #{stdout}."
-                else
-                  test.error "Check-node returned error code #{exit_status}" unless exit_status == 0
-                  begin
-                    test.test_on_check_node(stdout, stderr, exit_status)
-                  rescue
-                    test.error "Uncaught exception during test: #{$!}", $!.backtrace.join("\n")
-                  end
-                end
-                test.executed
-                @tests_run << test
-              end
+        end,
+        test_execution: proc do |test|
+          exit_status, stdout, stderr = @outputs[test.node]
+          if stdout.nil?
+            test.error 'No check-node log file found despite the run of check-node.'
+          elsif stdout.is_a?(Symbol)
+            test.error "Check-node run failed: #{stdout}."
+          else
+            test.error "Check-node returned error code #{exit_status}" unless exit_status == 0
+            begin
+              test.test_on_check_node(stdout, stderr, exit_status)
+            rescue
+              test.error "Uncaught exception during test: #{$!}", $!.backtrace.join("\n")
             end
           end
         end
-      end
+      )
     end
 
     # Should the given test name be run on a given node or platform?
@@ -544,17 +544,22 @@ module HybridPlatformsConductor
     # Result::
     # * Boolean: Should the given test name be run on a given node or platform?
     def should_test_be_run_on(test_name, node: nil, platform: nil)
-      allowed_platform_types = @tests_plugins[test_name].only_on_platforms || @nodes_handler.platform_types.keys
-      node_platform = platform || @nodes_handler.platform_for(node)
-      if allowed_platform_types.include?(node_platform.platform_type)
-        if node.nil?
-          true
-        else
-          allowed_nodes = @tests_plugins[test_name].only_on_nodes || [node]
-          allowed_nodes.any? { |allowed_node| allowed_node.is_a?(String) ? allowed_node == node : node.match(allowed_node) }
-        end
+      if node.nil? && platform.nil?
+        # Global tests should always be run
+        true
       else
-        false
+        allowed_platform_types = @tests_plugins[test_name].only_on_platforms || @nodes_handler.platform_types.keys
+        node_platform = platform || @nodes_handler.platform_for(node)
+        if allowed_platform_types.include?(node_platform.platform_type)
+          if node.nil?
+            true
+          else
+            allowed_nodes = @tests_plugins[test_name].only_on_nodes || [node]
+            allowed_nodes.any? { |allowed_node| allowed_node.is_a?(String) ? allowed_node == node : node.match(allowed_node) }
+          end
+        else
+          false
+        end
       end
     end
 
