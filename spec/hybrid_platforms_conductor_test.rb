@@ -28,6 +28,7 @@ require 'hybrid_platforms_conductor_test/helpers/executables_helpers'
 require 'hybrid_platforms_conductor_test/helpers/nodes_handler_helpers'
 require 'hybrid_platforms_conductor_test/helpers/platform_handler_helpers'
 require 'hybrid_platforms_conductor_test/helpers/plugins_helpers'
+require 'hybrid_platforms_conductor_test/helpers/provisioner_proxmox_helpers'
 require 'hybrid_platforms_conductor_test/helpers/reports_handler_helpers'
 require 'hybrid_platforms_conductor_test/helpers/tests_runner_helpers'
 require 'hybrid_platforms_conductor_test/report_plugin'
@@ -51,7 +52,6 @@ module HybridPlatformsConductorTest
     include PluginsHelpers
     include PlatformHandlerHelpers
     include CmdRunnerHelpers
-    include ConnectorSshHelpers
     include NodesHandlerHelpers
     include ActionsExecutorHelpers
     include DeployerHelpers
@@ -59,6 +59,8 @@ module HybridPlatformsConductorTest
     include ReportsHandlerHelpers
     include ExecutablesHelpers
     include CmdbHelpers
+    include ConnectorSshHelpers
+    include ProvisionerProxmoxHelpers
 
     # Make sure the tested components are being reset before each test case
     RSpec.configure do |config|
@@ -71,6 +73,8 @@ module HybridPlatformsConductorTest
         ENV.delete 'hpc_platforms'
         ENV.delete 'hpc_ssh_gateways_conf'
         ENV.delete 'hpc_ssh_gateway_user'
+        ENV.delete 'hpc_user_for_proxmox'
+        ENV.delete 'hpc_password_for_proxmox'
         ENV.delete 'hpc_user_for_thycotic'
         ENV.delete 'hpc_password_for_thycotic'
         ENV.delete 'hpc_domain_for_thycotic'
