@@ -734,6 +734,51 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
         end
       end
 
+      it 'does not expire a VM that is stopped but has been recreated, even with the same VM ID when it is not used for debug purposes' do
+        with_sync_node do
+          creation_date_1 = (Time.now - 20).utc
+          creation_date_2 = (Time.now - 10).utc
+          mock_proxmox(mocked_pve_nodes: [{
+              # 2 seconds separate each run.
+              # Make sure the third and later runs mock the container as another one, still stopped
+              'pve_node_name' => {
+                memory_total: 4 * 1024 * 1024 * 1024,
+                lxc_containers: {
+                  # Make sure it is not expired
+                  1000 => {
+                    ip: '192.168.0.100',
+                    maxmem: 4 * 1024 * 1024 * 1024,
+                    creation_date: creation_date_1,
+                    status: 'stopped',
+                    debug: false
+                  }
+                }
+              }
+            }] * 2 +
+            [{
+              # 2 seconds separate each run.
+              # Make sure the third and later runs mock the container as another one, still stopped
+              'pve_node_name' => {
+                memory_total: 4 * 1024 * 1024 * 1024,
+                lxc_containers: {
+                  # Make sure it is not expired
+                  1000 => {
+                    ip: '192.168.0.100',
+                    maxmem: 4 * 1024 * 1024 * 1024,
+                    creation_date: creation_date_2,
+                    status: 'stopped',
+                    debug: false
+                  }
+                }
+              }
+            }] * 2
+          )
+          # Timeout for a non-debug stopped container to be considered expired is 3 seconds in tests
+          expect(call_reserve_proxmox_container(2, 1024, 1, max_retries: 4, wait_before_retry: 2)).to eq(error: 'not_enough_resources')
+          expect_proxmox_actions_to_be []
+        end
+      end
+
     end
 
   end

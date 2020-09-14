@@ -41,9 +41,10 @@ class ProxmoxWaiter
     @proxmox_user = proxmox_user
     @proxmox_password = proxmox_password
     # Keep a memory of non-debug stopped containers, so that we can guess if they are expired or not after some time.
-    # Time when we noticed a given container is stopped, per VM ID, per PVE node
-    # Hash< String,   Hash< Integer, Time                 > >
-    # Hash< pve_node, Hash< vm_id,   time_seen_as_stopped > >
+    # Time when we noticed a given container is stopped, per creation date, per VM ID, per PVE node
+    # We add the creation date as a VM ID can be reused (with a different creation date) and we want to make sure we don't think a newly created VM is here for longer that it should.
+    # Hash< String,   Hash< Integer, Hash< String,        Time                 > > >
+    # Hash< pve_node, Hash< vm_id,   Hash< creation_date, time_seen_as_stopped > > >
     @non_debug_stopped_containers = {}
     @log_file = "proxmox_waiter_#{Time.now.utc.strftime('%Y%m%d%H%M%S')}_pid_#{Process.pid}.log"
   end
@@ -357,7 +358,7 @@ class ProxmoxWaiter
       # Get its reservation date from the notes
       metadata = vm_metadata(pve_node, vm_id)
       if metadata[:creation_date].nil? || Time.parse("#{metadata[:creation_date]} UTC") < @expiration_date
-        log "[ #{pve_node}/#{vm_id} ] - [ Expired ] - Creation date is #{metadata[:creation_date].strftime('%F %T')}"
+        log "[ #{pve_node}/#{vm_id} ] - [ Expired ] - Creation date is #{metadata[:creation_date]}"
         true
       else
         state = vm_state(pve_node, vm_id)
@@ -370,20 +371,21 @@ class ProxmoxWaiter
           # Check if it is not a left-over from a crash.
           # If it stays not running for long and is not meant for debug purposes, then it is also considered expired.
           # For this, remember previously seen containers that were stopped
-          first_time_seen_as_stopped = @non_debug_stopped_containers.dig pve_node, vm_id
+          first_time_seen_as_stopped = @non_debug_stopped_containers.dig pve_node, vm_id, metadata[:creation_date]
           if first_time_seen_as_stopped.nil?
             # It is the first time we see it stopped.
             # Remember it and consider it as non-expired.
             @non_debug_stopped_containers[pve_node] = {} unless @non_debug_stopped_containers.key?(pve_node)
-            @non_debug_stopped_containers[pve_node][vm_id] = Time.now
-            log "[ #{pve_node}/#{vm_id} ] - Discovered non-debug container as stopped"
+            @non_debug_stopped_containers[pve_node][vm_id] = {} unless @non_debug_stopped_containers[pve_node].key?(vm_id)
+            @non_debug_stopped_containers[pve_node][vm_id][metadata[:creation_date]] = Time.now
+            log "[ #{pve_node}/#{vm_id} ] - Discovered non-debug container (created on #{metadata[:creation_date]}) as stopped"
             false
           elsif Time.now - first_time_seen_as_stopped >= @config['expire_stopped_vm_timeout_secs']
             # If it is stopped from more than the timeout, then consider it expired
-            log "[ #{pve_node}/#{vm_id} ] - [ Expired ] - Non-debug container is stopped since #{first_time_seen_as_stopped.strftime('%F %T')} (more than #{@config['expire_stopped_vm_timeout_secs']} seconds ago)"
+            log "[ #{pve_node}/#{vm_id} ] - [ Expired ] - Non-debug container (created on #{metadata[:creation_date]}) is stopped since #{first_time_seen_as_stopped.strftime('%F %T')} (more than #{@config['expire_stopped_vm_timeout_secs']} seconds ago)"
             true
           else
-            log "[ #{pve_node}/#{vm_id} ] - Non-debug container is stopped since #{first_time_seen_as_stopped.strftime('%F %T')} (less than #{@config['expire_stopped_vm_timeout_secs']} seconds ago)"
+            log "[ #{pve_node}/#{vm_id} ] - Non-debug container (created on #{metadata[:creation_date]}) is stopped since #{first_time_seen_as_stopped.strftime('%F %T')} (less than #{@config['expire_stopped_vm_timeout_secs']} seconds ago)"
             false
           end
         end
