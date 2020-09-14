@@ -1,3 +1,9 @@
+# [23.4.1](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv23.4.0&sourceBranch=refs%2Ftags%2Fv23.4.1) (2020-09-14)
+
+### Fixes
+
+* Improved tests output with timings and harmonized logging ([0344e9ba](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/commits/0344e9bad49d5b3b673d56d35cb29895ce1d7344))
+
 # [23.4.0](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv23.3.2&sourceBranch=refs%2Ftags%2Fv23.4.0) (2020-09-14)
 
 ### New features
