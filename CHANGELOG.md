@@ -1,3 +1,9 @@
+# [23.4.0](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv23.3.2&sourceBranch=refs%2Ftags%2Fv23.4.0) (2020-09-14)
+
+### New features
+
+* [Feature] Added Proxmox plugin as a provisioner ([5e5b0e3e](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/commits/5e5b0e3e1d5803d82cad4c3369be6a7124c20e08))
+
 # [23.3.2](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv23.3.1&sourceBranch=refs%2Ftags%2Fv23.3.2) (2020-09-11)
 
 ### Fixes
