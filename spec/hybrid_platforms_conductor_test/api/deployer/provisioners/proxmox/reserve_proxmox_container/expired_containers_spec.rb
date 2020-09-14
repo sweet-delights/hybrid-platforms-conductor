@@ -51,7 +51,7 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
               {
                 'cores' => 2,
                 'cpulimit' => 2,
-                'description' => /^===== HPC Info =====\nnode: test_node\nenvironment: test_env\ncreation_date: .+\n/,
+                'description' => /^===== HPC info =====\nnode: test_node\nenvironment: test_env\ncreation_date: .+\n/,
                 'hostname' => 'test.hostname.my-domain.com',
                 'memory' => 1024,
                 'net0' => 'name=eth0,bridge=vmbr0,gw=172.16.16.16,ip=192.168.0.100/32',
@@ -61,7 +61,7 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
               }
             ]
           ]
-          expect(Time.parse(@proxmox_actions[2][2]['description'].match(/^===== HPC Info =====\nnode: test_node\nenvironment: test_env\ncreation_date: (.+)\n/)[1])).to be > creation_date
+          expect(Time.parse(@proxmox_actions[2][2]['description'].match(/^===== HPC info =====\nnode: test_node\nenvironment: test_env\ncreation_date: (.+)\n/)[1])).to be > creation_date
         end
       end
 
@@ -91,7 +91,7 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
             [:post, 'nodes/pve_node_name/lxc', {
               'cores' => 2,
               'cpulimit' => 2,
-              'description' => /^===== HPC Info =====\nnode: test_node\nenvironment: test_env\ncreation_date: .+\n/,
+              'description' => /^===== HPC info =====\nnode: test_node\nenvironment: test_env\ncreation_date: .+\n/,
               'hostname' => 'test.hostname.my-domain.com',
               'memory' => 1024,
               'net0' => 'name=eth0,bridge=vmbr0,gw=172.16.16.16,ip=192.168.0.100/32',
@@ -126,7 +126,7 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
             [:post, 'nodes/pve_node_name/lxc', {
               'cores' => 2,
               'cpulimit' => 2,
-              'description' => /^===== HPC Info =====\nnode: test_node\nenvironment: test_env\ncreation_date: .+\n/,
+              'description' => /^===== HPC info =====\nnode: test_node\nenvironment: test_env\ncreation_date: .+\n/,
               'hostname' => 'test.hostname.my-domain.com',
               'memory' => 1024,
               'net0' => 'name=eth0,bridge=vmbr0,gw=172.16.16.16,ip=192.168.0.101/32',
@@ -189,7 +189,7 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
             [:post, 'nodes/pve_node_name/lxc', {
               'cores' => 2,
               'cpulimit' => 2,
-              'description' => /^===== HPC Info =====\nnode: test_node\nenvironment: test_env\ncreation_date: .+\n/,
+              'description' => /^===== HPC info =====\nnode: test_node\nenvironment: test_env\ncreation_date: .+\n/,
               'hostname' => 'test.hostname.my-domain.com',
               'memory' => 1024,
               'net0' => 'name=eth0,bridge=vmbr0,gw=172.16.16.16,ip=192.168.0.101/32',
@@ -224,7 +224,7 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
             [:post, 'nodes/pve_node_name/lxc', {
               'cores' => 2,
               'cpulimit' => 2,
-              'description' => /^===== HPC Info =====\nnode: test_node\nenvironment: test_env\ncreation_date: .+\n/,
+              'description' => /^===== HPC info =====\nnode: test_node\nenvironment: test_env\ncreation_date: .+\n/,
               'hostname' => 'test.hostname.my-domain.com',
               'memory' => 1024,
               'net0' => 'name=eth0,bridge=vmbr0,gw=172.16.16.16,ip=192.168.0.101/32',
@@ -263,7 +263,7 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
             [:post, 'nodes/pve_node_2/lxc', {
               'cores' => 2,
               'cpulimit' => 2,
-              'description' => /^===== HPC Info =====\nnode: test_node\nenvironment: test_env\ncreation_date: .+\n/,
+              'description' => /^===== HPC info =====\nnode: test_node\nenvironment: test_env\ncreation_date: .+\n/,
               'hostname' => 'test.hostname.my-domain.com',
               'memory' => 1024,
               'net0' => 'name=eth0,bridge=vmbr0,gw=172.16.16.16,ip=192.168.0.102/32',
@@ -315,7 +315,7 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
             [:post, 'nodes/pve_node_1/lxc', {
               'cores' => 2,
               'cpulimit' => 2,
-              'description' => /^===== HPC Info =====\nnode: test_node\nenvironment: test_env\ncreation_date: .+\n/,
+              'description' => /^===== HPC info =====\nnode: test_node\nenvironment: test_env\ncreation_date: .+\n/,
               'hostname' => 'test.hostname.my-domain.com',
               'memory' => 1024,
               'net0' => 'name=eth0,bridge=vmbr0,gw=172.16.16.16,ip=192.168.0.101/32',
@@ -358,7 +358,7 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
             [:post, 'nodes/pve_node_name/lxc', {
               'cores' => 2,
               'cpulimit' => 2,
-              'description' => /^===== HPC Info =====\nnode: test_node\nenvironment: test_env\ncreation_date: .+\n/,
+              'description' => /^===== HPC info =====\nnode: test_node\nenvironment: test_env\ncreation_date: .+\n/,
               'hostname' => 'test.hostname.my-domain.com',
               'memory' => 1024,
               'net0' => 'name=eth0,bridge=vmbr0,gw=172.16.16.16,ip=192.168.0.101/32',
@@ -409,7 +409,7 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
             [:post, 'nodes/pve_node_1/lxc', {
               'cores' => 2,
               'cpulimit' => 2,
-              'description' => /^===== HPC Info =====\nnode: test_node\nenvironment: test_env\ncreation_date: .+\n/,
+              'description' => /^===== HPC info =====\nnode: test_node\nenvironment: test_env\ncreation_date: .+\n/,
               'hostname' => 'test.hostname.my-domain.com',
               'memory' => 1024,
               'net0' => 'name=eth0,bridge=vmbr0,gw=172.16.16.16,ip=192.168.0.101/32',
@@ -454,7 +454,7 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
             [:post, 'nodes/pve_node_name/lxc', {
               'cores' => 2,
               'cpulimit' => 2,
-              'description' => /^===== HPC Info =====\nnode: test_node\nenvironment: test_env\ncreation_date: .+\n/,
+              'description' => /^===== HPC info =====\nnode: test_node\nenvironment: test_env\ncreation_date: .+\n/,
               'hostname' => 'test.hostname.my-domain.com',
               'memory' => 1024,
               'net0' => 'name=eth0,bridge=vmbr0,gw=172.16.16.16,ip=192.168.0.101/32',
@@ -507,7 +507,7 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
             [:post, 'nodes/pve_node_1/lxc', {
               'cores' => 2,
               'cpulimit' => 2,
-              'description' => /^===== HPC Info =====\nnode: test_node\nenvironment: test_env\ncreation_date: .+\n/,
+              'description' => /^===== HPC info =====\nnode: test_node\nenvironment: test_env\ncreation_date: .+\n/,
               'hostname' => 'test.hostname.my-domain.com',
               'memory' => 1024,
               'net0' => 'name=eth0,bridge=vmbr0,gw=172.16.16.16,ip=192.168.0.101/32',
@@ -557,7 +557,7 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
             [:post, 'nodes/pve_node_name/lxc', {
               'cores' => 2,
               'cpulimit' => 2,
-              'description' => /^===== HPC Info =====\nnode: test_node\nenvironment: test_env\ncreation_date: .+\n/,
+              'description' => /^===== HPC info =====\nnode: test_node\nenvironment: test_env\ncreation_date: .+\n/,
               'hostname' => 'test.hostname.my-domain.com',
               'memory' => 1024,
               'net0' => 'name=eth0,bridge=vmbr0,gw=172.16.16.16,ip=192.168.0.101/32',
@@ -615,7 +615,7 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
             [:post, 'nodes/pve_node_1/lxc', {
               'cores' => 2,
               'cpulimit' => 2,
-              'description' => /^===== HPC Info =====\nnode: test_node\nenvironment: test_env\ncreation_date: .+\n/,
+              'description' => /^===== HPC info =====\nnode: test_node\nenvironment: test_env\ncreation_date: .+\n/,
               'hostname' => 'test.hostname.my-domain.com',
               'memory' => 1024,
               'net0' => 'name=eth0,bridge=vmbr0,gw=172.16.16.16,ip=192.168.0.101/32',
@@ -677,7 +677,7 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
             [:post, 'nodes/pve_node_name/lxc', {
               'cores' => 2,
               'cpulimit' => 2,
-              'description' => /^===== HPC Info =====\nnode: test_node\nenvironment: test_env\ncreation_date: .+\n/,
+              'description' => /^===== HPC info =====\nnode: test_node\nenvironment: test_env\ncreation_date: .+\n/,
               'hostname' => 'test.hostname.my-domain.com',
               'memory' => 1024,
               'net0' => 'name=eth0,bridge=vmbr0,gw=172.16.16.16,ip=192.168.0.100/32',

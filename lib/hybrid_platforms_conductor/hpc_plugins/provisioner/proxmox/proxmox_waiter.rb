@@ -391,7 +391,7 @@ class ProxmoxWaiter
   def vm_metadata(pve_node, vm_id)
     lxc_config = api_get("nodes/#{pve_node}/lxc/#{vm_id}/config")
     vm_description_lines = (lxc_config['description'] || '').split("\n")
-    hpc_marker_idx = vm_description_lines.index('===== HPC Info =====')
+    hpc_marker_idx = vm_description_lines.index('===== HPC info =====')
     if hpc_marker_idx.nil?
       {}
     else

@@ -509,7 +509,7 @@ module HybridPlatformsConductorTest
                   {
                     'net0' => "ip=#{pve_nodes[pve_node_name][:lxc_containers][Integer(vmid)][:ip]}/32",
                     'description' => <<~EOS
-                      ===== HPC Info =====
+                      ===== HPC info =====
                       node: test_node
                       environment: test_env
                       debug: #{pve_nodes[pve_node_name][:lxc_containers][Integer(vmid)][:debug] ? 'true' : 'false'}
@@ -666,7 +666,7 @@ module HybridPlatformsConductorTest
           create: {
             ostemplate: 'test_template.iso',
             hostname: 'test.hostname.my-domain.com',
-            description: "===== HPC Info =====\nnode: test_node\nenvironment: test_env\n",
+            description: "===== HPC info =====\nnode: test_node\nenvironment: test_env\n",
             cores: cpus,
             cpulimit: cpus,
             memory: ram_mb,
