@@ -65,6 +65,7 @@ class ProxmoxWaiter
   #   * *no_available_vm_id*: There is no available VM ID to be reserved
   #   * *exceeded_number_of_vms*: There is already too many VMs running
   def create(vm_info)
+    log "Ask to create #{vm_info}"
     # Extract the required resources from the desired VM info
     nbr_cpus = vm_info['cpulimit']
     ram_mb = vm_info['memory']
@@ -181,6 +182,7 @@ class ProxmoxWaiter
   #   Possible error codes returned are:
   #   None
   def destroy(vm_id)
+    log "Ask to destroy #{vm_id}"
     found_pve_node = nil
     start do
       vm_id_str = vm_id.to_s
@@ -213,7 +215,7 @@ class ProxmoxWaiter
   # * *msg* (String): Message to log
   def log(msg)
     puts msg
-    File.open(@log_file, 'a') { |f| f.puts "[ #{Time.now.utc.strftime('%F %T')} ] - #{msg}" }
+    File.open(@log_file, 'a') { |f| f.puts "[ #{Time.now.utc.strftime('%F %T.%L')} ] - #{msg}" }
   end
 
   # Grab the lock to start a new atomic session.
@@ -249,6 +251,7 @@ class ProxmoxWaiter
         raise "Unable to connect to Proxmox API #{@config['proxmox_api_url']} with user #{@proxmox_user}: #{$!}"
       end
       @expiration_date = Time.now.utc - @config['expiration_period_secs']
+      log "Consider expiration date #{@expiration_date.strftime('%F %T')}"
       begin
         yield
       ensure
@@ -354,28 +357,39 @@ class ProxmoxWaiter
       # Get its reservation date from the notes
       metadata = vm_metadata(pve_node, vm_id)
       if metadata[:creation_date].nil? || Time.parse("#{metadata[:creation_date]} UTC") < @expiration_date
+        log "[ #{pve_node}/#{vm_id} ] - [ Expired ] - Creation date is #{metadata[:creation_date].strftime('%F %T')}"
         true
-      elsif vm_state(pve_node, vm_id) == 'running' || metadata[:debug] == 'true'
-        # Just in case it was previously remembered as a non-debug stopped container, clear it.
-        @non_debug_stopped_containers[pve_node].delete(vm_id) if @non_debug_stopped_containers.key?(pve_node)
-        false
       else
-        # Check if it is not a left-over from a crash.
-        # If it stays not running for long and is not meant for debug purposes, then it is also considered expired.
-        # For this, remember previously seen containers that were stopped
-        first_time_seen_as_stopped = @non_debug_stopped_containers.dig pve_node, vm_id
-        if first_time_seen_as_stopped.nil?
-          # It is the first time we see it stopped.
-          # Remember it and consider it as non-expired.
-          @non_debug_stopped_containers[pve_node] = {} unless @non_debug_stopped_containers.key?(pve_node)
-          @non_debug_stopped_containers[pve_node][vm_id] = Time.now
+        state = vm_state(pve_node, vm_id)
+        if state == 'running' || metadata[:debug] == 'true'
+          # Just in case it was previously remembered as a non-debug stopped container, clear it.
+          @non_debug_stopped_containers[pve_node].delete(vm_id) if @non_debug_stopped_containers.key?(pve_node)
+          log "[ #{pve_node}/#{vm_id} ] - State is #{state} and debug is #{metadata[:debug]}"
           false
         else
-          # If it is stopped from more than the timeout, then consider it expired
-          Time.now - first_time_seen_as_stopped >= @config['expire_stopped_vm_timeout_secs']
+          # Check if it is not a left-over from a crash.
+          # If it stays not running for long and is not meant for debug purposes, then it is also considered expired.
+          # For this, remember previously seen containers that were stopped
+          first_time_seen_as_stopped = @non_debug_stopped_containers.dig pve_node, vm_id
+          if first_time_seen_as_stopped.nil?
+            # It is the first time we see it stopped.
+            # Remember it and consider it as non-expired.
+            @non_debug_stopped_containers[pve_node] = {} unless @non_debug_stopped_containers.key?(pve_node)
+            @non_debug_stopped_containers[pve_node][vm_id] = Time.now
+            log "[ #{pve_node}/#{vm_id} ] - Discovered non-debug container as stopped"
+            false
+          elsif Time.now - first_time_seen_as_stopped >= @config['expire_stopped_vm_timeout_secs']
+            # If it is stopped from more than the timeout, then consider it expired
+            log "[ #{pve_node}/#{vm_id} ] - [ Expired ] - Non-debug container is stopped since #{first_time_seen_as_stopped.strftime('%F %T')} (more than #{@config['expire_stopped_vm_timeout_secs']} seconds ago)"
+            true
+          else
+            log "[ #{pve_node}/#{vm_id} ] - Non-debug container is stopped since #{first_time_seen_as_stopped.strftime('%F %T')} (less than #{@config['expire_stopped_vm_timeout_secs']} seconds ago)"
+            false
+          end
         end
       end
     else
+      log "[ #{pve_node}/#{vm_id} ] - Container is not part of our VM ID range."
       false
     end
   end
@@ -453,10 +467,7 @@ class ProxmoxWaiter
   def destroy_expired_vms_on(pve_node)
     api_get("nodes/#{pve_node}/lxc").each do |lxc_info|
       vm_id = Integer(lxc_info['vmid'])
-      if is_vm_expired?(pve_node, vm_id)
-        log "[ #{pve_node}/#{vm_id} ] - LXC container has been created on #{vm_metadata(pve_node, vm_id)[:creation_date]}. It is now expired."
-        destroy_vm_on(pve_node, vm_id)
-      end
+      destroy_vm_on(pve_node, vm_id) if is_vm_expired?(pve_node, vm_id)
     end
     # Invalidate the API cache for anything related to this PVE node
     pve_node_paths_regexp = /^nodes\/#{Regexp.escape(pve_node)}\/.+$/

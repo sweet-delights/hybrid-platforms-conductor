@@ -218,7 +218,9 @@ module HybridPlatformsConductor
               vm_id_str = @lxc_details[:vm_id].to_s
               status =
                 if proxmox.get("nodes/#{@lxc_details[:pve_node]}/lxc").any? { |data_info| data_info['vmid'] == vm_id_str }
-                  status = proxmox.get("nodes/#{@lxc_details[:pve_node]}/lxc/#{@lxc_details[:vm_id]}/status/current")['status'].to_sym
+                  status_info = proxmox.get("nodes/#{@lxc_details[:pve_node]}/lxc/#{@lxc_details[:vm_id]}/status/current")
+                  # Careful that it is possible that somebody destroyed the VM and so its status is missing
+                  status = status_info.key?('status') ? status_info['status'].to_sym : :missing
                   status = :exited if status == :stopped
                   status
                 else
