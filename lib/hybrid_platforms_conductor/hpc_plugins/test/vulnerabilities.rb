@@ -85,7 +85,7 @@ module HybridPlatformsConductor
                     validator: proc do |stdout|
                       idx_results = stdout.index('===== RESULTS =====')
                       if idx_results.nil?
-                        error 'No results given by the oscap run', stdout
+                        error 'No results given by the oscap run', stdout.join("\n")
                       else
                         results = Nokogiri::XML(stdout[idx_results + 1..-1].join("\n"))
                         results.remove_namespaces!
