@@ -2,32 +2,26 @@
 <table>
   <tbody>
     <tr>
-      <th>Node name</th>
+      <th>Node</th>
       <th>Platform</th>
-      <th>Private IPs</th>
-      <th>Public IPs</th>
-      <th>Physical node?</th>
+      <th>Host name</th>
+      <th>IP</th>
+      <th>Physical?</th>
       <th>OS</th>
-      <th>Cluster</th>
-      <th>IP range</th>
-      <th>Product</th>
       <th>Description</th>
-      <th>Missing industrialization?</th>
+      <th>Services</th>
     </tr>
-    <% @nodes_handler.prefetch_metadata_of @nodes, %i[private_ips public_ips physical_node os cluster private_ips product description missing_industrialization] %>
+    <% @nodes_handler.prefetch_metadata_of @nodes, %i[hostname host_ip physical image description services] %>
     <% @nodes.sort.each do |node| %>
       <tr style="vertical-align: middle;">
         <td><strong><%= node %></strong></td>
         <td><%= @nodes_handler.platform_for(node).info[:repo_name] %></td>
-        <td><%= (@nodes_handler.get_private_ips_of(node) || []).join(' ') %></td>
-        <td><%= (@nodes_handler.get_public_ips_of(node) || []).join(' ') %></td>
-        <td><%= @nodes_handler.get_physical_node_of(node) ? 'Yes' : 'No' %></td>
-        <td><%= @nodes_handler.get_os_of node %></td>
-        <td><%= @nodes_handler.get_cluster_of node %></td>
-        <td><%= @nodes_handler.get_private_ips_of(node) ? "#{@nodes_handler.get_private_ips_of(node).first.split('.')[0..2].join('.')}.*" : '' %></td>
-        <td><%= @nodes_handler.get_product_of node %></td>
+        <td><%= @nodes_handler.get_hostname_of(node) %></td>
+        <td><%= @nodes_handler.get_host_ip_of(node) %></td>
+        <td><%= @nodes_handler.get_physical_of(node) ? 'Yes' : 'No' %></td>
+        <td><%= @nodes_handler.get_image_of node %></td>
         <td><%= @nodes_handler.get_description_of node %></td>
-        <td><%= @nodes_handler.get_missing_industrialization_of(node) ? 'Yes' : 'No' %></td>
+        <td><%= (@nodes_handler.get_services_of(node) || []).sort.join(', ') %></td>
       </tr>
     <% end %>
   </tbody>

@@ -26,29 +26,27 @@ module HybridPlatformsConductor
         # * *nodes* (Array<String>): List of nodes
         # * *locale_code* (Symbol): The locale code
         def report_for(nodes, locale_code)
-          @nodes_handler.prefetch_metadata_of nodes, %i[private_ips public_ips physical_node image_of services description missing_industrialization]
+          @nodes_handler.prefetch_metadata_of nodes, %i[hostname host_ip physical image description services]
           out(Terminal::Table.new(headings: [
-            'Node name',
+            'Node',
             'Platform',
-            'Private IPs',
-            'Public IPs',
-            'Physical node?',
-            'Image ID',
-            'Services',
+            'Host name',
+            'IP',
+            'Physical?',
+            'OS',
             'Description',
-            'Missing industrialization?'
+            'Services'
           ]) do |table|
             nodes.sort.each do |node|
               table << [
                 node,
                 @nodes_handler.platform_for(node).info[:repo_name],
-                (@nodes_handler.get_private_ips_of(node) || []).join(' '),
-                (@nodes_handler.get_public_ips_of(node) || []).join(' '),
-                @nodes_handler.get_physical_node_of(node) ? 'Yes' : 'No',
+                @nodes_handler.get_hostname_of(node),
+                @nodes_handler.get_host_ip_of(node),
+                @nodes_handler.get_physical_of(node) ? 'Yes' : 'No',
                 @nodes_handler.get_image_of(node),
-                (@nodes_handler.get_services_of(node) || []).join(', '),
                 @nodes_handler.get_description_of(node),
-                @nodes_handler.get_missing_industrialization_of(node) ? 'Yes' : 'No'
+                (@nodes_handler.get_services_of(node) || []).sort.join(', ')
               ]
             end
           end)
