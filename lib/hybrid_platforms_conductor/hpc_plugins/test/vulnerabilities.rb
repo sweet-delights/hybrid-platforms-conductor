@@ -16,6 +16,7 @@ module HybridPlatformsConductor
       #     The last HTML link of each repo URL is followed until an OVAL file is found.
       #     Each final OVAL URL can be directly an XML file, either raw or compressed with .gz or .bz2.
       #     This is useful to follow repository links, such as jFrog or web servers serving common file systems structure storing several versions of the OVAL file.
+      # * *reported_severities* (Array<String> or nil): List of severities to report, if any (use Unknown when the severity is not known), or nil for all [default: nil]
       class Vulnerabilities < HybridPlatformsConductor::Test
 
         # Known compression methods, per file extension, and their corresponding uncompress bash script
@@ -40,7 +41,7 @@ module HybridPlatformsConductor
                   # Follow the last link recursively until we find a .xml or compressed file
                   current_url = artifactory_url
                   loop do
-                    current_url = "#{current_url.end_with?('/') ? '' : '/'}#{Nokogiri::HTML.parse(URI.open(current_url)).css('a').last['href']}"
+                    current_url = "#{current_url}#{current_url.end_with?('/') ? '' : '/'}#{Nokogiri::HTML.parse(URI.open(current_url)).css('a').last['href']}"
                     break if current_url.end_with?('.xml') || KNOWN_COMPRESSIONS.keys.any? { |file_ext| current_url.end_with?(".#{file_ext}") }
                     log_debug "Follow last link to #{current_url}"
                   end
@@ -94,7 +95,13 @@ module HybridPlatformsConductor
                             # Just found an OVAL item to be patched.
                             definition_id = definition_xml['definition_id']
                             oval_definition = oval_definitions.find { |el| el['id'] == definition_id }
-                            error "Non-patched vulnerability found: #{oval_definition.css('metadata title').text} - #{oval_definition.css('metadata description').text}"
+                            # We don't forcefully want to report all missing patches. Only the most important ones.
+                            severity = oval_definition.css('metadata advisory severity').text
+                            severity = 'Unknown' if severity.empty?
+                            if !oval_info.key?('reported_severities') || oval_info['reported_severities'].include?(severity)
+                              # Only consider the first line of the description, as sometimes it's very long
+                              error "Non-patched #{severity} vulnerability found: #{oval_definition.css('metadata title').text} - #{oval_definition.css('metadata description').text.split("\n").first}"
+                            end
                           end
                         end
                       end
