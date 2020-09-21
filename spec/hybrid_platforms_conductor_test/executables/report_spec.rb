@@ -5,12 +5,12 @@ describe 'report executable' do
       exit_code, stdout, stderr = run 'report'
       expect(exit_code).to eq 0
       expect(stdout).to eq <<~EOS
-        +-----------+----------+-------------+------------+----------------+----------+---------------+-------------+----------------------------+
-        | Node name | Platform | Private IPs | Public IPs | Physical node? | Image ID | Services      | Description | Missing industrialization? |
-        +-----------+----------+-------------+------------+----------------+----------+---------------+-------------+----------------------------+
-        | node1     | platform |             |            | No             |          | node1_service |             | No                         |
-        | node2     | platform |             |            | No             |          | node2_service |             | No                         |
-        +-----------+----------+-------------+------------+----------------+----------+---------------+-------------+----------------------------+
+        +-------+----------+-----------+----+-----------+----+-------------+---------------+
+        | Node  | Platform | Host name | IP | Physical? | OS | Description | Services      |
+        +-------+----------+-----------+----+-----------+----+-------------+---------------+
+        | node1 | platform |           |    | No        |    |             | node1_service |
+        | node2 | platform |           |    | No        |    |             | node2_service |
+        +-------+----------+-----------+----+-----------+----+-------------+---------------+
       EOS
       expect(stderr).to eq ''
     end
@@ -21,11 +21,11 @@ describe 'report executable' do
       exit_code, stdout, stderr = run 'report', '--node', 'node2'
       expect(exit_code).to eq 0
       expect(stdout).to eq <<~EOS
-        +-----------+----------+-------------+------------+----------------+----------+---------------+-------------+----------------------------+
-        | Node name | Platform | Private IPs | Public IPs | Physical node? | Image ID | Services      | Description | Missing industrialization? |
-        +-----------+----------+-------------+------------+----------------+----------+---------------+-------------+----------------------------+
-        | node2     | platform |             |            | No             |          | node2_service |             | No                         |
-        +-----------+----------+-------------+------------+----------------+----------+---------------+-------------+----------------------------+
+        +-------+----------+-----------+----+-----------+----+-------------+---------------+
+        | Node  | Platform | Host name | IP | Physical? | OS | Description | Services      |
+        +-------+----------+-----------+----+-----------+----+-------------+---------------+
+        | node2 | platform |           |    | No        |    |             | node2_service |
+        +-------+----------+-----------+----+-----------+----+-------------+---------------+
       EOS
       expect(stderr).to eq ''
     end
@@ -34,8 +34,8 @@ describe 'report executable' do
   it 'reports info from metadata' do
     with_test_platform(nodes: { 'node' => {
        meta: {
-        private_ips: ['192.168.0.1', '192.168.0.2'],
-        public_ips: ['1.2.3.4'],
+        host_ip: '192.168.0.1',
+        hostname: 'node.domain.com',
         image: 'debian_10',
         description: 'A great server'
       },
@@ -44,11 +44,11 @@ describe 'report executable' do
       exit_code, stdout, stderr = run 'report', '--node', 'node'
       expect(exit_code).to eq 0
       expect(stdout).to eq <<~EOS
-        +-----------+----------+-------------------------+------------+----------------+-----------+------------------------------+----------------+----------------------------+
-        | Node name | Platform | Private IPs             | Public IPs | Physical node? | Image ID  | Services                     | Description    | Missing industrialization? |
-        +-----------+----------+-------------------------+------------+----------------+-----------+------------------------------+----------------+----------------------------+
-        | node      | platform | 192.168.0.1 192.168.0.2 | 1.2.3.4    | No             | debian_10 | node_service1, node_service2 | A great server | No                         |
-        +-----------+----------+-------------------------+------------+----------------+-----------+------------------------------+----------------+----------------------------+
+        +------+----------+-----------------+-------------+-----------+-----------+----------------+------------------------------+
+        | Node | Platform | Host name       | IP          | Physical? | OS        | Description    | Services                     |
+        +------+----------+-----------------+-------------+-----------+-----------+----------------+------------------------------+
+        | node | platform | node.domain.com | 192.168.0.1 | No        | debian_10 | A great server | node_service1, node_service2 |
+        +------+----------+-----------------+-------------+-----------+-----------+----------------+------------------------------+
       EOS
       expect(stderr).to eq ''
     end
