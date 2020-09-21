@@ -1,3 +1,10 @@
+# [23.4.3](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv23.4.2&sourceBranch=refs%2Ftags%2Fv23.4.3) (2020-09-21)
+
+### Fixes
+
+* More useful stdout and Confluence reports now that Ansible fills in metadata ([74d03722](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/commits/74d03722438f69a0894e2faf1e42376c61336ee0))
+* Add vulnerabilities test plugin to check for non-patched vulnerabilities in our platforms ([95f1823f](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/commits/95f1823f0815b9808521900910667d3b38bfc3dc))
+
 # [23.4.2](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv23.4.1&sourceBranch=refs%2Ftags%2Fv23.4.2) (2020-09-14)
 
 ### Fixes
