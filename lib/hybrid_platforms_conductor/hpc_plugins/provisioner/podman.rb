@@ -35,7 +35,7 @@ module HybridPlatformsConductor
               @container = container_name
             end
           else
-            raise "[ #{@node}/#{@environment} ] - Unknown Docker image #{image} defined for node #{@node}"
+            raise "[ #{@node}/#{@environment} ] - Unknown OS image #{image} defined for node #{@node}"
           end
         end
 
