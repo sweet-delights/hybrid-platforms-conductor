@@ -12,6 +12,7 @@ module HybridPlatformsConductorTest
       #   * *connection* (String): Connection string (fqdn, IP...) used by SSH
       #   * *user* (String): User used by SSH
       #   * *times* (Integer): Number of times this connection should be used [default: 1]
+      #   * *control_master_create_error* (String or nil): Error to simulate during the SSH ControlMaster creation, or nil for none [default: nil]
       # * *with_control_master_create* (Boolean): Do we create the control master? [default: true]
       # * *with_control_master_check* (Boolean): Do we check the control master? [default: false]
       # * *with_control_master_destroy* (Boolean): Do we destroy the control master? [default: true]
@@ -47,10 +48,12 @@ module HybridPlatformsConductorTest
                 # Fail if the ControlMaster file already exists, as would SSH do if the file is stalled
                 if File.exist?(control_file)
                   [255, '', "Control file #{control_file} already exists"]
-                else
+                elsif node_connection_info[:control_master_create_error].nil?
                   # Really touch a fake control file, as ssh connector checks for its existence
                   File.write(control_file, '')
                   [0, '', '']
+                else
+                  [255, '', node_connection_info[:control_master_create_error]]
                 end
               end
             ]

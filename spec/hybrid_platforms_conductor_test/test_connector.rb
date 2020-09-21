@@ -9,6 +9,9 @@ module HybridPlatformsConductorTest
     # Array<String>: List of nodes accepted by this connector
     attr_accessor :accept_nodes
 
+    # Array<String> or nil: List of nodes that will be connected, or nil for all
+    attr_accessor :connected_nodes
+
     # Proc: Code executed when remote_bash is called
     # Parameters::
     # * *stdout* (IO): stdout to return
@@ -31,6 +34,7 @@ module HybridPlatformsConductorTest
     def init
       @calls = []
       @accept_nodes = []
+      @connected_nodes = nil
       @remote_bash_code = nil
     end
 
@@ -75,10 +79,13 @@ module HybridPlatformsConductorTest
     #
     # Parameters::
     # * *nodes* (Array<String>): Nodes to prepare the connection to
+    # * *no_exception* (Boolean): Should we still continue if some nodes have connection errors? [default: false]
     # * Proc: Code called with the connections prepared.
-    def with_connection_to(nodes)
-      @calls << [:with_connection_to, nodes]
-      yield
+    #   * Parameters::
+    #     * *connected_nodes* (Array<String>): The list of connected nodes (should be equal to nodes unless no_exception == true and some nodes failed to connect)
+    def with_connection_to(nodes, no_exception: false)
+      @calls << [:with_connection_to, nodes, { no_exception: no_exception }]
+      yield @connected_nodes.nil? ? nodes : @connected_nodes
     end
 
     # Run bash commands on a given node.
