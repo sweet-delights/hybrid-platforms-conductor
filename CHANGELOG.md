@@ -1,3 +1,9 @@
+# [23.4.4](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv23.4.3&sourceBranch=refs%2Ftags%2Fv23.4.4) (2020-09-23)
+
+### Fixes
+
+* Install missing dependencies for the vulnerabilities test to run correctly ([14609753](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/commits/1460975359ea9be970fdcd90c7cf15897bef69a5))
+
 # [23.4.3](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv23.4.2&sourceBranch=refs%2Ftags%2Fv23.4.3) (2020-09-21)
 
 ### Fixes
