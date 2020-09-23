@@ -21,8 +21,14 @@ module HybridPlatformsConductor
 
         # Known compression methods, per file extension, and their corresponding uncompress bash script
         KNOWN_COMPRESSIONS = {
-          bz2: proc { |file| "bunzip2 \"#{file}\"" },
-          gz: proc { |file| "gunzip \"#{file}\"" }
+          bz2: {
+            cmd: proc { |file| "bunzip2 \"#{file}\"" },
+            packages: ['bzip2']
+          },
+          gz: {
+            cmd: proc { |file| "gunzip \"#{file}\"" },
+            packages: ['gzip']
+          }
         }
 
         # Check my_test_plugin.rb.sample documentation for signature details.
@@ -55,20 +61,23 @@ module HybridPlatformsConductor
                 # 4. Get back the report here to analyze it
                 local_oval_file = File.basename(url)
                 uncompress_cmds = []
-                KNOWN_COMPRESSIONS.each do |file_ext, uncompress_bash|
+                packages_to_install = []
+                KNOWN_COMPRESSIONS.each do |file_ext, compress_info|
                   file_ending = ".#{file_ext}"
                   if local_oval_file.end_with?(file_ending)
-                    uncompress_cmds << uncompress_bash.call(local_oval_file)
+                    uncompress_cmds << compress_info[:cmd].call(local_oval_file)
+                    packages_to_install.concat(compress_info[:packages])
                     local_oval_file = File.basename(local_oval_file, file_ending)
                   end
                 end
                 cmds = <<~EOS
+                  set -e -x
                   #{
                     case image
                     when :centos_7
-                      'sudo yum install -y openscap-scanner'
-                    when :debian_9
-                      'sudo apt install -y libopenscap8'
+                      "sudo yum install -y wget openscap-scanner #{packages_to_install.join(' ')}"
+                    when :debian_9, :debian_10
+                      "sudo apt install -y wget libopenscap8 #{packages_to_install.join(' ')}"
                     else
                       raise "Non supported image: #{image}. Please adapt this test's code."
                     end
