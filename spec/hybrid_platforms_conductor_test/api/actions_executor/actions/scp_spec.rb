@@ -7,7 +7,7 @@ describe HybridPlatformsConductor::ActionsExecutor do
         test_actions_executor.execute_actions('node' => { scp: { 'from' => 'to' } })
         expect(test_actions_executor.connector(:test_connector).calls).to eq [
           [:connectable_nodes_from, ['node']],
-          [:with_connection_to, ['node']],
+          [:with_connection_to, ['node'], { no_exception: true }],
           [:remote_copy, 'from', 'to']
         ]
       end
@@ -24,7 +24,7 @@ describe HybridPlatformsConductor::ActionsExecutor do
         )
         expect(test_actions_executor.connector(:test_connector).calls).to eq [
           [:connectable_nodes_from, ['node']],
-          [:with_connection_to, ['node']],
+          [:with_connection_to, ['node'], { no_exception: true }],
           [:remote_copy, 'from', 'to']
         ]
       end
@@ -38,7 +38,7 @@ describe HybridPlatformsConductor::ActionsExecutor do
         } })
         expect(test_actions_executor.connector(:test_connector).calls).to eq [
           [:connectable_nodes_from, ['node']],
-          [:with_connection_to, ['node']],
+          [:with_connection_to, ['node'], { no_exception: true }],
           [:remote_copy, 'from1', 'to1'],
           [:remote_copy, 'from2', 'to2']
         ]
@@ -53,7 +53,7 @@ describe HybridPlatformsConductor::ActionsExecutor do
         } })
         expect(test_actions_executor.connector(:test_connector).calls).to eq [
           [:connectable_nodes_from, ['node']],
-          [:with_connection_to, ['node']],
+          [:with_connection_to, ['node'], { no_exception: true }],
           [:remote_copy, 'from', 'to', { sudo: true }]
         ]
       end
@@ -68,7 +68,7 @@ describe HybridPlatformsConductor::ActionsExecutor do
         } })
         expect(test_actions_executor.connector(:test_connector).calls).to eq [
           [:connectable_nodes_from, ['node']],
-          [:with_connection_to, ['node']],
+          [:with_connection_to, ['node'], { no_exception: true }],
           [:remote_copy, 'from', 'to', { owner: 'new_owner', group: 'new_group' }]
         ]
       end

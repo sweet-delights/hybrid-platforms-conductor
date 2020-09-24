@@ -7,7 +7,7 @@ describe HybridPlatformsConductor::ActionsExecutor do
         test_actions_executor.execute_actions('node' => { remote_bash: 'remote_bash_cmd.bash' })
         expect(test_actions_executor.connector(:test_connector).calls).to eq [
           [:connectable_nodes_from, ['node']],
-          [:with_connection_to, ['node']],
+          [:with_connection_to, ['node'], { no_exception: true }],
           [:remote_bash, 'remote_bash_cmd.bash']
         ]
       end
@@ -24,7 +24,7 @@ describe HybridPlatformsConductor::ActionsExecutor do
         )
         expect(test_actions_executor.connector(:test_connector).calls).to eq [
           [:connectable_nodes_from, ['node']],
-          [:with_connection_to, ['node']],
+          [:with_connection_to, ['node'], { no_exception: true }],
           [:remote_bash, 'remote_bash_cmd.bash']
         ]
       end
@@ -35,7 +35,7 @@ describe HybridPlatformsConductor::ActionsExecutor do
         test_actions_executor.execute_actions('node' => { remote_bash: ['bash_cmd1.bash', 'bash_cmd2.bash', 'bash_cmd3.bash'] })
         expect(test_actions_executor.connector(:test_connector).calls).to eq [
           [:connectable_nodes_from, ['node']],
-          [:with_connection_to, ['node']],
+          [:with_connection_to, ['node'], { no_exception: true }],
           [:remote_bash, "bash_cmd1.bash\nbash_cmd2.bash\nbash_cmd3.bash"]
         ]
       end
@@ -46,7 +46,7 @@ describe HybridPlatformsConductor::ActionsExecutor do
         test_actions_executor.execute_actions('node' => { remote_bash: { commands: 'bash_cmd.bash' } })
         expect(test_actions_executor.connector(:test_connector).calls).to eq [
           [:connectable_nodes_from, ['node']],
-          [:with_connection_to, ['node']],
+          [:with_connection_to, ['node'], { no_exception: true }],
           [:remote_bash, 'bash_cmd.bash']
         ]
       end
@@ -58,7 +58,7 @@ describe HybridPlatformsConductor::ActionsExecutor do
         test_actions_executor.execute_actions('node' => { remote_bash: { file: "#{repository}/commands.txt" } })
         expect(test_actions_executor.connector(:test_connector).calls).to eq [
           [:connectable_nodes_from, ['node']],
-          [:with_connection_to, ['node']],
+          [:with_connection_to, ['node'], { no_exception: true }],
           [:remote_bash, "bash_cmd1.bash\nbash_cmd2.bash"]
         ]
       end
@@ -73,7 +73,7 @@ describe HybridPlatformsConductor::ActionsExecutor do
         } })
         expect(test_actions_executor.connector(:test_connector).calls).to eq [
           [:connectable_nodes_from, ['node']],
-          [:with_connection_to, ['node']],
+          [:with_connection_to, ['node'], { no_exception: true }],
           [:remote_bash, "bash_cmd1.bash\nbash_cmd2.bash\nbash_cmd3.bash\nbash_cmd4.bash"]
         ]
       end
@@ -90,7 +90,7 @@ describe HybridPlatformsConductor::ActionsExecutor do
         } })
         expect(test_actions_executor.connector(:test_connector).calls).to eq [
           [:connectable_nodes_from, ['node']],
-          [:with_connection_to, ['node']],
+          [:with_connection_to, ['node'], { no_exception: true }],
           [:remote_bash, "export var1='value1'\nexport var2='value2'\nbash_cmd.bash"]
         ]
       end

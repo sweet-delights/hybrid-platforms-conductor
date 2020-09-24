@@ -26,7 +26,7 @@ describe HybridPlatformsConductor::ActionsExecutor do
         expect(action_executions).to eq [{ node: 'node1', message: 'Action executed' }]
         expect(test_actions_executor.connector(:test_connector).calls).to eq [
          [:connectable_nodes_from, ['node1']],
-         [:with_connection_to, ['node1']]
+         [:with_connection_to, ['node1'], { no_exception: true }]
         ]
       end
     end
@@ -51,7 +51,24 @@ describe HybridPlatformsConductor::ActionsExecutor do
         ]
         expect(test_actions_executor.connector(:test_connector).calls).to eq [
          [:connectable_nodes_from, %w[node1 node2 node3 node4]],
-         [:with_connection_to, %w[node1 node2 node3 node4]]
+         [:with_connection_to, %w[node1 node2 node3 node4], { no_exception: true }]
+        ]
+      end
+    end
+
+    it 'connects on several nodes before executing actions needing connection only on nodes that could be connected' do
+      with_test_platform_for_connections do
+        test_actions_executor.connector(:test_connector).accept_nodes = %w[node1 node2 node3 node4]
+        test_actions_executor.connector(:test_connector).connected_nodes = %w[node1 node2 node4]
+        test_actions_executor.execute_actions(%w[node1 node2 node3 node4] => { test_action: { need_connector: true } })
+        expect(action_executions).to eq [
+          { node: 'node1', message: 'Action executed' },
+          { node: 'node2', message: 'Action executed' },
+          { node: 'node4', message: 'Action executed' }
+        ]
+        expect(test_actions_executor.connector(:test_connector).calls).to eq [
+         [:connectable_nodes_from, %w[node1 node2 node3 node4]],
+         [:with_connection_to, %w[node1 node2 node3 node4], { no_exception: true }]
         ]
       end
     end
@@ -71,7 +88,7 @@ describe HybridPlatformsConductor::ActionsExecutor do
         ]
         expect(test_actions_executor.connector(:test_connector).calls).to eq [
          [:connectable_nodes_from, %w[node1 node3]],
-         [:with_connection_to, %w[node1 node3]]
+         [:with_connection_to, %w[node1 node3], { no_exception: true }]
         ]
       end
     end
@@ -103,11 +120,11 @@ describe HybridPlatformsConductor::ActionsExecutor do
         ]
         expect(test_actions_executor.connector(:test_connector).calls).to eq [
          [:connectable_nodes_from, %w[node1 node2 node3 node4]],
-         [:with_connection_to, %w[node1 node3]]
+         [:with_connection_to, %w[node1 node3], { no_exception: true }]
         ]
         expect(test_actions_executor.connector(:test_connector_2).calls).to eq [
          [:connectable_nodes_from, %w[node2 node4]],
-         [:with_connection_to, %w[node2 node4]]
+         [:with_connection_to, %w[node2 node4], { no_exception: true }]
         ]
       end
     end
@@ -125,11 +142,11 @@ describe HybridPlatformsConductor::ActionsExecutor do
         ]
         expect(test_actions_executor.connector(:test_connector).calls).to eq [
          [:connectable_nodes_from, %w[node1 node2 node3 node4]],
-         [:with_connection_to, %w[node1 node2 node3]]
+         [:with_connection_to, %w[node1 node2 node3], { no_exception: true }]
         ]
         expect(test_actions_executor.connector(:test_connector_2).calls).to eq [
          [:connectable_nodes_from, %w[node4]],
-         [:with_connection_to, %w[node4]]
+         [:with_connection_to, %w[node4], { no_exception: true }]
         ]
       end
     end
@@ -141,11 +158,11 @@ describe HybridPlatformsConductor::ActionsExecutor do
         test_actions_executor.with_connections_prepared_to(%w[node1 node2 node3 node4]) do |connected_nodes|
           expect(test_actions_executor.connector(:test_connector).calls).to eq [
            [:connectable_nodes_from, %w[node1 node2 node3 node4]],
-           [:with_connection_to, %w[node1 node3]]
+           [:with_connection_to, %w[node1 node3], { no_exception: false }]
           ]
           expect(test_actions_executor.connector(:test_connector_2).calls).to eq [
            [:connectable_nodes_from, %w[node2 node4]],
-           [:with_connection_to, %w[node2 node4]]
+           [:with_connection_to, %w[node2 node4], { no_exception: false }]
           ]
           expect(connected_nodes).to eq(
             'node1' => test_actions_executor.connector(:test_connector),
@@ -174,11 +191,11 @@ describe HybridPlatformsConductor::ActionsExecutor do
         test_actions_executor.with_connections_prepared_to(%w[node1 node2 node3 node4], no_exception: true) do |connected_nodes|
           expect(test_actions_executor.connector(:test_connector).calls).to eq [
            [:connectable_nodes_from, %w[node1 node2 node3 node4]],
-           [:with_connection_to, %w[node1 node3]]
+           [:with_connection_to, %w[node1 node3], { no_exception: true }]
           ]
           expect(test_actions_executor.connector(:test_connector_2).calls).to eq [
            [:connectable_nodes_from, %w[node2 node4]],
-           [:with_connection_to, %w[node2]]
+           [:with_connection_to, %w[node2], { no_exception: true }]
           ]
           expect(connected_nodes).to eq(
             'node1' => test_actions_executor.connector(:test_connector),
