@@ -1,5 +1,3 @@
-require 'hybrid_platforms_conductor-chef/test'
-
 module HybridPlatformsConductor
 
   module HpcPlugins
