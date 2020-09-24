@@ -1,3 +1,13 @@
+# [23.5.0](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv23.4.4&sourceBranch=refs%2Ftags%2Fv23.5.0) (2020-09-24)
+
+### New features
+
+* [Feature] Don't fail actions as a whole when a few nodes are down ([2b29d1c4](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/commits/2b29d1c43558cef68db4ee26bbf11efbd04498b2))
+
+### Fixes
+
+* Make versioning simpler: achieve automatic semantic releasing with a standard version definition and no more hpc_force_version env vars ([6c774daa](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/commits/6c774daadc4722ce665eddd51b55798615410903))
+
 # [23.4.4](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv23.4.3&sourceBranch=refs%2Ftags%2Fv23.4.4) (2020-09-23)
 
 ### Fixes
