@@ -1657,6 +1657,10 @@ Test that the hostname is correct.
 
 Test that the private IP address is correct.
 
+### obsolete_users_assets
+
+Test that the node has no users assets (home directories) belonging to obsolete users.
+
 ### orphan_files
 
 Test that the node has no orphan files.
@@ -1664,6 +1668,10 @@ Test that the node has no orphan files.
 ### spectre
 
 Test that the vulnerabilities Spectre and Meltdown are patched.
+
+### vulnerabilities
+
+Test that vendor-published vulnerabilities are patched.
 
 <a name="secrets"></a>
 # Using secrets
