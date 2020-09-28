@@ -299,8 +299,8 @@ class ProxmoxWaiter
         end
         # Update the queue if needed
         File.write(@config['futex_file'], access_queue.join("\n")) if modified
-        sleep(rand(RETRY_QUEUE_WAIT) + 1) if retry_futex_queue
       end
+      sleep(rand(RETRY_QUEUE_WAIT) + 1) if retry_futex_queue
     end
   end
 
