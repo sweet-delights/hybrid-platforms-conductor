@@ -13,8 +13,10 @@ class ProxmoxWaiter
   # Take into account that some processes can be lengthy while the futex is taken:
   # * POST/DELETE operations in the Proxmox API requires tasks to be performed which can take a few seconds, depending on the load.
   # * Proxmox API sometimes fails to respond when containers are being locked temporarily (we have a 30 secs timeout for each one).
-  # * As there is currently no queue mechanism to ensure futex clients are granted access in the order of access request, we might run into famine if too many clients ask for the Futex simultaneously.
   FUTEX_TIMEOUT = 600
+
+  # Integer: Maximum timeout in seconds before retrying getting the Futex when we are not first in the queue (a rand will be applied to it)
+  RETRY_QUEUE_WAIT = 30
 
   # Constructor
   #
@@ -217,7 +219,7 @@ class ProxmoxWaiter
   # * *msg* (String): Message to log
   def log(msg)
     puts msg
-    File.open(@log_file, 'a') { |f| f.puts "[ #{Time.now.utc.strftime('%F %T.%L')} ] - #{msg}" }
+    File.open(@log_file, 'a') { |f| f.puts "[ #{Time.now.utc.strftime('%F %T.%L')} ] - [ PID #{Process.pid} ] - #{msg}" }
   end
 
   # Grab the lock to start a new atomic session.
@@ -229,36 +231,75 @@ class ProxmoxWaiter
   #   * *@expiration_date* (Time): The expiration date to be considered when selecting expired VMs
   #   * *@proxmox* (Proxmox): The Proxmox instance
   def start
-    # Perform any operation in an atomic way
-    Futex.new(@config['futex_file'], timeout: FUTEX_TIMEOUT).open do
-      # Connect to Proxmox's API
-      @proxmox = Proxmox::Proxmox.new(
-        "#{@config['proxmox_api_url']}/api2/json/",
-        # Proxmox uses the hostname as the node name so make the default API node derived from the URL.
-        # cf https://pve.proxmox.com/wiki/Renaming_a_PVE_node
-        URI.parse(@config['proxmox_api_url']).host.downcase.split('.').first,
-        @proxmox_user,
-        @proxmox_password,
-        'pam',
-        { verify_ssl: false }
-      )
-      # Cache of get queries to the API
-      @gets_cache = {}
-      # Check connectivity before going further
-      begin
-        nodes_info = api_get('nodes')
-        # Get the list of PVE nodes by default
-        @config['pve_nodes'] = nodes_info.map { |node_info| node_info['node'] } unless @config['pve_nodes']
-      rescue
-        raise "Unable to connect to Proxmox API #{@config['proxmox_api_url']} with user #{@proxmox_user}: #{$!}"
-      end
-      @expiration_date = Time.now.utc - @config['expiration_period_secs']
-      log "Consider expiration date #{@expiration_date.strftime('%F %T')}"
-      begin
-        yield
-      ensure
-        @expiration_date = nil
-        @proxmox = nil
+    pid = Process.pid
+    retry_futex_queue = true
+    while retry_futex_queue
+      # Perform any operation in an atomic way
+      Futex.new(@config['futex_file'], timeout: FUTEX_TIMEOUT).open do
+        access_queue = File.exist?(@config['futex_file']) ? File.read(@config['futex_file']).split("\n").map { |line| Integer(line) } : []
+        # If we are asking for access for the first time, add ourselves in the queue
+        modified = false
+        unless access_queue.include?(pid)
+          log 'Ask for access by adding our PID to the queue'
+          access_queue << pid
+          modified = true
+        end
+        # If we are the first one in the queue, go for it
+        first_pid = access_queue.first
+        if first_pid == pid
+          access_queue.shift
+          modified = true
+          retry_futex_queue = false
+          log 'Futex and queue acquired'
+          # Connect to Proxmox's API
+          @proxmox = Proxmox::Proxmox.new(
+            "#{@config['proxmox_api_url']}/api2/json/",
+            # Proxmox uses the hostname as the node name so make the default API node derived from the URL.
+            # cf https://pve.proxmox.com/wiki/Renaming_a_PVE_node
+            URI.parse(@config['proxmox_api_url']).host.downcase.split('.').first,
+            @proxmox_user,
+            @proxmox_password,
+            'pam',
+            { verify_ssl: false }
+          )
+          # Cache of get queries to the API
+          @gets_cache = {}
+          # Check connectivity before going further
+          begin
+            nodes_info = api_get('nodes')
+            # Get the list of PVE nodes by default
+            @config['pve_nodes'] = nodes_info.map { |node_info| node_info['node'] } unless @config['pve_nodes']
+          rescue
+            raise "Unable to connect to Proxmox API #{@config['proxmox_api_url']} with user #{@proxmox_user}: #{$!}"
+          end
+          @expiration_date = Time.now.utc - @config['expiration_period_secs']
+          log "Consider expiration date #{@expiration_date.strftime('%F %T')}"
+          begin
+            yield
+          ensure
+            @expiration_date = nil
+            @proxmox = nil
+          end
+        else
+          log "Futex acquired but we are not first in the queue: #{access_queue.join(', ')}"
+          # We are not the first ones in the queue.
+          # Remove the pid if it does not exist anymore.
+          first_pid_exist =
+            begin
+              Process.getpgid(first_pid)
+              true
+            rescue Errno::ESRCH
+              false
+            end
+          unless first_pid_exist
+            log "First PID #{first_pid} does not exist - remove it from the queue"
+            access_queue.shift
+            modified = true
+          end
+        end
+        # Update the queue if needed
+        File.write(@config['futex_file'], access_queue.join("\n")) if modified
+        sleep(rand(RETRY_QUEUE_WAIT) + 1) if retry_futex_queue
       end
     end
   end
