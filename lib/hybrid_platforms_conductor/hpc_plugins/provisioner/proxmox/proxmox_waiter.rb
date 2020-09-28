@@ -13,7 +13,8 @@ class ProxmoxWaiter
   # Take into account that some processes can be lengthy while the futex is taken:
   # * POST/DELETE operations in the Proxmox API requires tasks to be performed which can take a few seconds, depending on the load.
   # * Proxmox API sometimes fails to respond when containers are being locked temporarily (we have a 30 secs timeout for each one).
-  FUTEX_TIMEOUT = 120
+  # * As there is currently no queue mechanism to ensure futex clients are granted access in the order of futex, we might run into famine if too many clients ask for the Futex simultaneously.
+  FUTEX_TIMEOUT = 600
 
   # Constructor
   #

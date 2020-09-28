@@ -357,8 +357,9 @@ module HybridPlatformsConductor
         # * Hash<Symbol,Object>: The result
         def run_cmd_on_sync_node(cmd, extra_files: [])
           # Create the ProxmoxWaiter config in a file to be uploaded
+          config_file = "config_#{@cmd_runner.whoami}_#{Process.pid}_#{Thread.current.object_id}_#{(Time.now - Process.clock_gettime(Process::CLOCK_BOOTTIME)).strftime('%Y%m%d%H%M%S')}.json"
           File.write(
-            'config.json',
+            config_file,
             (proxmox_test_info[:test_config].merge(
               proxmox_api_url: proxmox_test_info[:api_url],
               futex_file: '/tmp/hpc_proxmox_allocations.futex'
@@ -370,13 +371,13 @@ module HybridPlatformsConductor
               {
                 proxmox_test_info[:sync_node] => [
                   { scp: { "#{__dir__}/proxmox/" => '.' } },
-                  { scp: { 'config.json' => './proxmox' } }
+                  { scp: { config_file => './proxmox' } }
                 ] +
                   extra_files.map { |file| { scp: { file => './proxmox' } } } +
                   [
                     {
                       remote_bash: {
-                        commands: "./proxmox/#{cmd}",
+                        commands: "./proxmox/#{cmd} --config ./proxmox/#{config_file}",
                         env: {
                           'hpc_user_for_proxmox' => user,
                           'hpc_password_for_proxmox' => password

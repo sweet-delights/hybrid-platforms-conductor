@@ -305,7 +305,9 @@ module HybridPlatformsConductorTest
             expect(actions['node'][0][:scp].first[0]).to match /^.+\/hpc_plugins\/provisioner\/proxmox\/$/
             expect(actions['node'][0][:scp].first[1]).to eq '.'
             # Second action should be to copy the ProxmoxWaiter config
-            expect(actions['node'][1]).to eq({ scp: { 'config.json' => './proxmox' } })
+            expect(actions['node'][1].keys).to eq([:scp])
+            expect(actions['node'][1][:scp].first[0]).to match /^config.+\.json$/
+            expect(actions['node'][1][:scp].first[1]).to eq './proxmox'
             # Third action should be to copy the VM info JSON file
             expect(actions['node'][2].keys).to eq [:scp]
             expect(actions['node'][2][:scp].first[0]).to match /^.+\/create_vm_.+\.json$/
@@ -313,7 +315,7 @@ module HybridPlatformsConductorTest
             expect(actions['node'][2][:scp].first[1]).to eq './proxmox'
             # Forth action should be to execute reserve_proxmox_container
             expect(actions['node'][3].keys).to eq [:remote_bash]
-            expect(actions['node'][3][:remote_bash][:commands]).to match /^.\/proxmox\/reserve_proxmox_container --create .+\/create_vm_.+\.json$/
+            expect(actions['node'][3][:remote_bash][:commands]).to match /^.\/proxmox\/reserve_proxmox_container --create .+\/create_vm_.+\.json --config .\/proxmox\/#{Regexp.escape(actions['node'][1][:scp].first[0])}$/
             expect(actions['node'][3][:remote_bash][:env]).to eq({
               'hpc_user_for_proxmox' => proxmox_user,
               'hpc_password_for_proxmox' => proxmox_password
@@ -343,16 +345,15 @@ module HybridPlatformsConductorTest
             expect(actions['node'][0][:scp].first[0]).to match /^.+\/hpc_plugins\/provisioner\/proxmox\/$/
             expect(actions['node'][0][:scp].first[1]).to eq '.'
             # Second action should be to copy the ProxmoxWaiter config
-            expect(actions['node'][1]).to eq({ scp: { 'config.json' => './proxmox' } })
+            expect(actions['node'][1].keys).to eq([:scp])
+            expect(actions['node'][1][:scp].first[0]).to match /^config.+\.json$/
+            expect(actions['node'][1][:scp].first[1]).to eq './proxmox'
             # Third action should be to execute reserve_proxmox_container
-            expect(actions['node'][2]).to eq({
-              remote_bash: {
-                commands: "./proxmox/reserve_proxmox_container --destroy #{release_vm_id}",
-                env: {
-                  'hpc_user_for_proxmox' => proxmox_user,
-                  'hpc_password_for_proxmox' => proxmox_password
-                }
-              }
+            expect(actions['node'][2].keys).to eq [:remote_bash]
+            expect(actions['node'][2][:remote_bash][:commands]).to match /^.\/proxmox\/reserve_proxmox_container --destroy #{release_vm_id} --config .\/proxmox\/#{Regexp.escape(actions['node'][1][:scp].first[0])}$/
+            expect(actions['node'][2][:remote_bash][:env]).to eq({
+              'hpc_user_for_proxmox' => proxmox_user,
+              'hpc_password_for_proxmox' => proxmox_password
             })
             result =
               if error_on_destroy
