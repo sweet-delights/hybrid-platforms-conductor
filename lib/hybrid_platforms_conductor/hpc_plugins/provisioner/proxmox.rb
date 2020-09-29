@@ -362,9 +362,11 @@ module HybridPlatformsConductor
             config_file,
             (proxmox_test_info[:test_config].merge(
               proxmox_api_url: proxmox_test_info[:api_url],
-              futex_file: '/tmp/hpc_proxmox_allocations.futex'
+              futex_file: '/tmp/hpc_proxmox_allocations.futex',
+              logs_dir: '/tmp/hpc_proxmox_waiter_logs'
             )).to_json
           )
+          cmd = "#{cmd} --config ./proxmox/#{config_file}"
           stdout = nil
           Credentials.with_credentials_for(:proxmox, @logger, @logger_stderr, url: proxmox_test_info[:api_url]) do |user, password|
             _exit_code, stdout, _stderr = @actions_executor.execute_actions(
@@ -377,7 +379,7 @@ module HybridPlatformsConductor
                   [
                     {
                       remote_bash: {
-                        commands: "./proxmox/#{cmd} --config ./proxmox/#{config_file}",
+                        commands: "./proxmox/#{cmd}",
                         env: {
                           'hpc_user_for_proxmox' => user,
                           'hpc_password_for_proxmox' => password

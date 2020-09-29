@@ -29,7 +29,7 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
           error_on_destroy: 'Error while destroy'
         )
         instance.create
-        expect { instance.destroy }.to raise_error '[ node/test ] - Error returned by reserve_proxmox_container --destroy 1024: Error while destroy'
+        expect { instance.destroy }.to raise_error /\[ node\/test \] - Error returned by reserve_proxmox_container --destroy 1024 --config \.\/proxmox\/config_.+\.json: Error while destroy/
       end
     end
 
