@@ -60,10 +60,6 @@ module HybridPlatformsConductor
                   end
                   assert_equal ssh_ok, false, 'Root can still connect on the image after deployment'
                   # Even if we can connect using root, run the idempotence test
-
-                  puts "JUST BEFORE"
-                  raise "BIG EXCEPTION"
-
                   # ===== Idempotence
                   unless ssh_ok
                     # Now that the node has been deployed, use the a_testadmin user for the check-node (as root has no more access)
