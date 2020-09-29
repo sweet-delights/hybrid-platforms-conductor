@@ -11,7 +11,7 @@
 
 # Usage: ./reserve_proxmox_container [options]
 #     -c, --create FILE                Create a VM with the configuration stored in a given JSON file
-#     -d, --destroy VMID               Destroy a VM ID
+#     -d, --destroy FILE               Destroy a VM with the configuration stored in a given JSON file
 #     -h, --help                       Display help and exit
 #     -m, --max-retries NBR            Set the maximum number of retries to attempt (default: 240)
 #     -o, --config FILE                Set the path to the file storing configuration (default: ./config.json)
@@ -51,7 +51,7 @@ begin
 
   # Define here default values
   create_info = nil
-  destroy_vm_id = nil
+  destroy_info = nil
   wait_time_before_retry_secs = 60
   # Don't hesitate to retry for a few hours, as resources are taken by tests that can run for a few hours sometimes.
   max_retries = 240
@@ -62,8 +62,8 @@ begin
     opts.on('-c', '--create FILE', 'Create a VM with the configuration stored in a given JSON file') do |file|
       create_info = JSON.parse(File.read(file))
     end
-    opts.on('-d', '--destroy VMID', 'Destroy a VM ID.') do |vm_id_str|
-      destroy_vm_id = Integer(vm_id_str)
+    opts.on('-d', '--destroy FILE', 'Destroy a VM with the configuration stored in a given JSON file') do |file|
+      destroy_info = JSON.parse(File.read(file))
     end
     opts.on('-h', '--help', 'Display help and exit') do
       puts opts
@@ -80,7 +80,7 @@ begin
     end
   end.parse!
 
-  raise 'Either use --create or --destroy options. Not both.' if create_info && destroy_vm_id
+  raise 'Either use --create or --destroy options. Not both.' if create_info && destroy_info
 
   proxmox_waiter = ProxmoxWaiter.new(
     config_file,
@@ -91,12 +91,12 @@ begin
   idx_retry = 0
   while idx_retry < max_retries
     reserved_resource =
-      if destroy_vm_id.nil?
+      if destroy_info.nil?
         puts "[ #{Time.now.utc.strftime('%F %T')} ] - Create #{create_info} in a Proxmox container (attempt ##{idx_retry}/#{max_retries})"
         proxmox_waiter.create(create_info)
       else
-        puts "[ #{Time.now.utc.strftime('%F %T')} ] - Destroy VM ID #{destroy_vm_id} (attempt ##{idx_retry}/#{max_retries})"
-        proxmox_waiter.destroy(destroy_vm_id)
+        puts "[ #{Time.now.utc.strftime('%F %T')} ] - Destroy #{destroy_info} (attempt ##{idx_retry}/#{max_retries})"
+        proxmox_waiter.destroy(destroy_info)
       end
     if reserved_resource.is_a?(Symbol)
       # We got an error (missing resources, IPs...).

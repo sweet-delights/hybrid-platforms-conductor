@@ -9,9 +9,9 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
       it 'releases a previously reserved VM that has been reserved and is running' do
         with_sync_node do
           mock_proxmox(mocked_pve_nodes: {
-            'pve_node_name' => { lxc_containers: { 1042 => { status: 'running', creation_date: (Time.now - 60).utc } } }
+            'pve_node_name' => { lxc_containers: { 1042 => { status: 'running', creation_date: (Time.now - 60).utc, node: 'node', environment: 'test_env' } } }
           })
-          expect(call_release_proxmox_container(1042)).to eq({ pve_node: 'pve_node_name' })
+          expect(call_release_proxmox_container(1042, 'node', 'test_env')).to eq({ pve_node: 'pve_node_name' })
           expect_proxmox_actions_to_be [
             [:post, 'nodes/pve_node_name/lxc/1042/status/stop'],
             [:delete, 'nodes/pve_node_name/lxc/1042']
@@ -22,9 +22,9 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
       it 'releases a previously reserved VM that has been reserved and is stopped' do
         with_sync_node do
           mock_proxmox(mocked_pve_nodes: {
-            'pve_node_name' => { lxc_containers: { 1042 => { status: 'stopped', creation_date: (Time.now - 60).utc } } }
+            'pve_node_name' => { lxc_containers: { 1042 => { status: 'stopped', creation_date: (Time.now - 60).utc, node: 'node', environment: 'test_env' } } }
           })
-          expect(call_release_proxmox_container(1042)).to eq({ pve_node: 'pve_node_name' })
+          expect(call_release_proxmox_container(1042, 'node', 'test_env')).to eq({ pve_node: 'pve_node_name' })
           expect_proxmox_actions_to_be [
             [:delete, 'nodes/pve_node_name/lxc/1042']
           ]
@@ -34,7 +34,7 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
       it 'releases a previously reserved VM that has disappeared' do
         with_sync_node do
           mock_proxmox
-          expect(call_release_proxmox_container(1042)).to eq({})
+          expect(call_release_proxmox_container(1042, 'node', 'test_env')).to eq({})
           expect_proxmox_actions_to_be []
         end
       end
@@ -43,15 +43,35 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
         with_sync_node do
           mock_proxmox(mocked_pve_nodes: {
             'pve_node_name' => { lxc_containers: {
-              1042 => { status: 'running', creation_date: (Time.now - 60).utc },
-              1043 => { status: 'running', creation_date: (Time.now - 60).utc }
+              1042 => { status: 'running', creation_date: (Time.now - 60).utc, node: 'node', environment: 'test_env' },
+              1043 => { status: 'running', creation_date: (Time.now - 60).utc, node: 'node', environment: 'test_env' }
             }
           } })
-          expect(call_release_proxmox_container(1042)).to eq({ pve_node: 'pve_node_name' })
+          expect(call_release_proxmox_container(1042, 'node', 'test_env')).to eq({ pve_node: 'pve_node_name' })
           expect_proxmox_actions_to_be [
             [:post, 'nodes/pve_node_name/lxc/1042/status/stop'],
             [:delete, 'nodes/pve_node_name/lxc/1042']
           ]
+        end
+      end
+
+      it 'does not release a previously reserved VM that has now a different node' do
+        with_sync_node do
+          mock_proxmox(mocked_pve_nodes: {
+            'pve_node_name' => { lxc_containers: { 1042 => { status: 'stopped', creation_date: (Time.now - 60).utc, node: 'node', environment: 'test_env' } } }
+          })
+          expect(call_release_proxmox_container(1042, 'other_node', 'test_env')).to eq({})
+          expect_proxmox_actions_to_be []
+        end
+      end
+
+      it 'does not release a previously reserved VM that has now a different environment' do
+        with_sync_node do
+          mock_proxmox(mocked_pve_nodes: {
+            'pve_node_name' => { lxc_containers: { 1042 => { status: 'stopped', creation_date: (Time.now - 60).utc, node: 'node', environment: 'test_env' } } }
+          })
+          expect(call_release_proxmox_container(1042, 'node', 'other_test_env')).to eq({})
+          expect_proxmox_actions_to_be []
         end
       end
 

@@ -367,6 +367,8 @@ module HybridPlatformsConductor
             )).to_json
           )
           cmd = "#{cmd} --config ./proxmox/#{config_file}"
+          # TODO: Remove when debugging is finished
+          log_warn "===================== #{Process.pid} - [ #{@node}/#{@environment} ] - RUN #{cmd} - CALLSTACK:\n#{caller.join("\n")}"
           stdout = nil
           Credentials.with_credentials_for(:proxmox, @logger, @logger_stderr, url: proxmox_test_info[:api_url]) do |user, password|
             _exit_code, stdout, _stderr = @actions_executor.execute_actions(
@@ -430,7 +432,20 @@ module HybridPlatformsConductor
         #   * *pve_node* (String): Name of the node on which the container was reserved (if found)
         def release_lxc_container(vm_id)
           log_debug "[ #{@node}/#{@environment} ] - Release LXC VM #{vm_id}..."
-          run_cmd_on_sync_node "reserve_proxmox_container --destroy #{vm_id}"
+          # Create a unique file name
+          destroy_config_file = "#{Dir.tmpdir}/destroy_vm_#{@cmd_runner.whoami}_#{Process.pid}_#{Thread.current.object_id}_#{(Time.now - Process.clock_gettime(Process::CLOCK_BOOTTIME)).strftime('%Y%m%d%H%M%S')}.json"
+          File.write(destroy_config_file, {
+            vm_id: vm_id,
+            node: @node,
+            environment: @environment
+          }.to_json)
+          destroyed_vm_info = nil
+          begin
+            destroyed_vm_info = run_cmd_on_sync_node("reserve_proxmox_container --destroy ./proxmox/#{File.basename(destroy_config_file)}", extra_files: [destroy_config_file])
+          ensure
+            File.unlink(destroy_config_file)
+          end
+          destroyed_vm_info
         end
 
         # Get details about the proxmox instance to be used

@@ -288,13 +288,13 @@ module HybridPlatformsConductorTest
       # * *proxmox_password* (String or nil): Proxmox password used to connect to Proxmox API [default: nil]
       # * *error_on_create* (String or nil): Error to be mocked by reserve_proxmox_container create, or nil in case of success [default: nil]
       # * *error_on_destroy* (String or nil): Error to be mocked by reserve_proxmox_container destroy, or nil in case of success [default: nil]
-      # * *release_vm_id* (Integer or nil): VM ID expected to be released, or nil if none [default: nil]
+      # * *destroy_vm* (Boolean): Should we expect also a VM destruction? [default: false]
       def mock_call_to_reserve_proxmox_container(
         proxmox_user: nil,
         proxmox_password: nil,
         error_on_create: nil,
         error_on_destroy: nil,
-        release_vm_id: nil
+        destroy_vm: false
       )
         runs = [
           proc do |actions|
@@ -336,10 +336,10 @@ module HybridPlatformsConductorTest
             EOS
           end
         ]
-        if release_vm_id
+        if destroy_vm
           runs << proc do |actions|
             expect(actions.keys).to eq ['node']
-            expect(actions['node'].size).to eq 3
+            expect(actions['node'].size).to eq 4
             # First action should be to copy the reserve_proxmox_container code
             expect(actions['node'][0].keys).to eq [:scp]
             expect(actions['node'][0][:scp].first[0]).to match /^.+\/hpc_plugins\/provisioner\/proxmox\/$/
@@ -348,10 +348,15 @@ module HybridPlatformsConductorTest
             expect(actions['node'][1].keys).to eq([:scp])
             expect(actions['node'][1][:scp].first[0]).to match /^config.+\.json$/
             expect(actions['node'][1][:scp].first[1]).to eq './proxmox'
-            # Third action should be to execute reserve_proxmox_container
-            expect(actions['node'][2].keys).to eq [:remote_bash]
-            expect(actions['node'][2][:remote_bash][:commands]).to match /^.\/proxmox\/reserve_proxmox_container --destroy #{release_vm_id} --config .\/proxmox\/#{Regexp.escape(actions['node'][1][:scp].first[0])}$/
-            expect(actions['node'][2][:remote_bash][:env]).to eq({
+            # Third action should be to copy the VM info JSON file
+            expect(actions['node'][2].keys).to eq [:scp]
+            expect(actions['node'][2][:scp].first[0]).to match /^.+\/destroy_vm_.+\.json$/
+            @proxmox_destroy_options = JSON.parse(File.read(actions['node'][2][:scp].first[0]))
+            expect(actions['node'][2][:scp].first[1]).to eq './proxmox'
+            # Fourth action should be to execute reserve_proxmox_container
+            expect(actions['node'][3].keys).to eq [:remote_bash]
+            expect(actions['node'][3][:remote_bash][:commands]).to match /^.\/proxmox\/reserve_proxmox_container --destroy .+\/destroy_vm_.+\.json --config .\/proxmox\/#{Regexp.escape(actions['node'][1][:scp].first[0])}$/
+            expect(actions['node'][3][:remote_bash][:env]).to eq({
               'hpc_user_for_proxmox' => proxmox_user,
               'hpc_password_for_proxmox' => proxmox_password
             })
@@ -383,7 +388,7 @@ module HybridPlatformsConductorTest
       # * *error_on_create* (String or nil): Error to be mocked by reserve_proxmox_container create, or nil in case of success [default: nil]
       # * *error_on_destroy* (String or nil): Error to be mocked by reserve_proxmox_container destroy, or nil in case of success [default: nil]
       # * *reserve* (Boolean): Do we expect the resource reservation to occur? [default: true]
-      # * *release_vm_id* (Integer or nil): VM ID expected to be released, or nil if none [default: nil]
+      # * *destroy_vm* (Boolean): Should we expect also a VM destruction? [default: false]
       def mock_proxmox_calls_with(
         calls,
         proxmox_user: nil,
@@ -391,16 +396,16 @@ module HybridPlatformsConductorTest
         error_on_create: nil,
         error_on_destroy: nil,
         reserve: true,
-        release_vm_id: nil
+        destroy_vm: false
       )
-        if reserve || release_vm_id
+        if reserve || destroy_vm
           # Mock querying reserve_proxmox_container
           mock_call_to_reserve_proxmox_container(
             proxmox_user: proxmox_user,
             proxmox_password: proxmox_password,
             error_on_create: error_on_create,
             error_on_destroy: error_on_destroy,
-            release_vm_id: release_vm_id
+            destroy_vm: destroy_vm
           )
         end
         expect(::Proxmox::Proxmox).to receive(:new).exactly(calls.size).times do |url, pve_node, user, password, realm, options|
@@ -429,6 +434,8 @@ module HybridPlatformsConductorTest
       #     * *ip* (String): IP allocated to this node [default: 192.168.0.<vmid % 254 + 1>]
       #     * *status* (String): Status of this node [default: 'running']
       #     * *debug* (Boolean): Do we mark the VM as debug? [default: false]
+      #     * *node* (String): Node for which this given container has been created [default: 'test_node']
+      #     * *environment* (String): Environment for which this given container has been created [default: 'test_env']
       def mock_proxmox(
         proxmox_user: nil,
         proxmox_password: nil,
@@ -452,7 +459,9 @@ module HybridPlatformsConductorTest
                     ip: "192.168.0.#{(vm_id % 254) + 1}",
                     status: 'running',
                     creation_date: (Time.now - 60).utc,
-                    debug: false
+                    debug: false,
+                    node: 'test_node',
+                    environment: 'test_env'
                   }.merge(vm_info)
                 ]
               end]
@@ -511,8 +520,8 @@ module HybridPlatformsConductorTest
                     'net0' => "ip=#{pve_nodes[pve_node_name][:lxc_containers][Integer(vmid)][:ip]}/32",
                     'description' => <<~EOS
                       ===== HPC info =====
-                      node: test_node
-                      environment: test_env
+                      node: #{pve_nodes[pve_node_name][:lxc_containers][Integer(vmid)][:node]}
+                      environment: #{pve_nodes[pve_node_name][:lxc_containers][Integer(vmid)][:environment]}
                       debug: #{pve_nodes[pve_node_name][:lxc_containers][Integer(vmid)][:debug] ? 'true' : 'false'}
                       creation_date: #{pve_nodes[pve_node_name][:lxc_containers][Integer(vmid)][:creation_date].strftime('%FT%T')}
                     EOS
@@ -585,18 +594,19 @@ module HybridPlatformsConductorTest
       # Prerequisite: This is called within a with_sync_node session.
       #
       # Parameters::
-      # * *argv* (Array<String>): ARGV to give the command
       # * *config* (Hash): Configuration overriding defaults to store in the config file [default: {}]
       # * *max_retries* (Integer): Specify the max number of retries [default: 1]
       # * *wait_before_retry* (Integer): Specify the number of seconds to wait before retry [default: 0]
       # * *create* (Hash or nil): Create file content, or nil if none [default: nil]
+      # * *destroy* (Hash or nil): Destroy file content, or nil if none [default: nil]
       # Result::
       # * Hash: JSON result of the call
-      def call_reserve_proxmox_container_with(argv, config: {}, max_retries: 1, wait_before_retry: 0, create: nil)
+      def call_reserve_proxmox_container_with(config: {}, max_retries: 1, wait_before_retry: 0, create: nil, destroy: nil)
         # Make sure we set default values in the config
         config = {
           proxmox_api_url: 'https://my-proxmox.my-domain.com:8006',
           futex_file: "#{@repository}/proxmox/allocations.futex",
+          logs_dir: "#{Dir.tmpdir}/hpc_test_proxmox_waiter_logs",
           pve_nodes: ['pve_node_name'],
           vm_ips_list: %w[
             192.168.0.100
@@ -617,7 +627,7 @@ module HybridPlatformsConductorTest
         }.merge(config)
         FileUtils.cp_r "#{__dir__}/../../../lib/hybrid_platforms_conductor/hpc_plugins/provisioner/proxmox", @repository
         File.write("#{@repository}/proxmox/config.json", config.to_json)
-        script_args = argv + [
+        script_args = [
           '--max-retries', max_retries.to_s,
           '--wait-before-retry', wait_before_retry.to_s
         ]
@@ -625,6 +635,11 @@ module HybridPlatformsConductorTest
           create_file = "#{@repository}/proxmox/create_vm.json"
           File.write(create_file, create.to_json)
           script_args.concat(['--create', create_file])
+        end
+        unless destroy.nil?
+          destroy_file = "#{@repository}/proxmox/destroy_vm.json"
+          File.write(destroy_file, destroy.to_json)
+          script_args.concat(['--destroy', destroy_file])
         end
         # Call the script by loading the Ruby file mocking the ARGV and ENV variables
         old_argv = ARGV.dup
@@ -660,7 +675,6 @@ module HybridPlatformsConductorTest
       # * Hash: JSON result of the call
       def call_reserve_proxmox_container(cpus, ram_mb, disk_gb, config: {}, max_retries: 1, wait_before_retry: 0)
         call_reserve_proxmox_container_with(
-          [],
           config: config,
           max_retries: max_retries,
           wait_before_retry: wait_before_retry,
@@ -682,17 +696,21 @@ module HybridPlatformsConductorTest
       #
       # Parameters::
       # * *vm_id* (Integer): VM ID to release
+      # * *node* (String): Node for which the VM has been reserved
+      # * *environment* (String): Environment for which the VM has been reserved
       # * *config* (Hash): Configuration overriding defaults to store in the config file [default: {}]
       # * *max_retries* (Integer): Specify the max number of retries [default: 1]
       # Result::
       # * Hash: JSON result of the call
-      def call_release_proxmox_container(vm_id, config: {}, max_retries: 1)
+      def call_release_proxmox_container(vm_id, node, environment, config: {}, max_retries: 1)
         call_reserve_proxmox_container_with(
-          [
-            '--destroy', vm_id.to_s
-          ],
           config: config,
-          max_retries: max_retries
+          max_retries: max_retries,
+          destroy: {
+            vm_id: vm_id,
+            node: node,
+            environment: environment
+          }
         )
       end
 

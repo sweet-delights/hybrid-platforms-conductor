@@ -11,10 +11,15 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
             # 1 - The info on existing containers
             mock_proxmox_to_get_nodes_info
           ],
-          release_vm_id: 1024
+          destroy_vm: true
         )
         instance.create
         instance.destroy
+        expect(@proxmox_destroy_options).to eq({
+          'vm_id' => 1024,
+          'environment' => 'test',
+          'node' => 'node'
+        })
       end
     end
 
@@ -25,11 +30,11 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
             # 1 - The info on existing containers
             mock_proxmox_to_get_nodes_info
           ],
-          release_vm_id: 1024,
+          destroy_vm: true,
           error_on_destroy: 'Error while destroy'
         )
         instance.create
-        expect { instance.destroy }.to raise_error /\[ node\/test \] - Error returned by reserve_proxmox_container --destroy 1024 --config \.\/proxmox\/config_.+\.json: Error while destroy/
+        expect { instance.destroy }.to raise_error /\[ node\/test \] - Error returned by reserve_proxmox_container --destroy \.\/proxmox\/destroy_vm_.+\.json --config \.\/proxmox\/config_.+\.json: Error while destroy/
       end
     end
 

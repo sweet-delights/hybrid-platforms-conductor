@@ -177,35 +177,46 @@ class ProxmoxWaiter
     reserved_resource
   end
 
-  # Destroy a VM ID.
+  # Destroy a VM.
   #
   # Parameters::
-  # * *vm_id* (Integer): VM ID to be released
+  # * *vm_info* (Hash<String,Object>): The VM info to be destroyed:
+  #   * *vm_id* (Integer): The VM ID
+  #   * *node* (String): The node for which this VM has been created
+  #   * *environment* (String): The environment for which this VM has been created
   # Result::
   # * Hash<Symbol, Object> or Symbol: Released resource info, or Symbol in case of error.
   #   The following properties are set as resource info:
   #   * *pve_node* (String): Node on which the container has been released (if found).
   #   Possible error codes returned are:
   #   None
-  def destroy(vm_id)
-    log "Ask to destroy #{vm_id}"
+  def destroy(vm_info)
+    log "Ask to destroy #{vm_info}"
     found_pve_node = nil
     start do
-      vm_id_str = vm_id.to_s
+      vm_id_str = vm_info['vm_id'].to_s
       # Destroy the VM ID
       # Find which PVE node hosts this VM
       unless @config['pve_nodes'].any? do |pve_node|
           api_get("nodes/#{pve_node}/lxc").any? do |lxc_info|
             if lxc_info['vmid'] == vm_id_str
-              destroy_vm_on(pve_node, vm_id)
-              found_pve_node = pve_node
-              true
+              # Make sure this VM is still used for the node and environment we want.
+              # It could have been deleted manually and re-affected to another node/environment automatically, and in this case we should not remove it.
+              metadata = vm_metadata(pve_node, vm_info['vm_id'])
+              if metadata[:node] == vm_info['node'] && metadata[:environment] == vm_info['environment']
+                destroy_vm_on(pve_node, vm_info['vm_id'])
+                found_pve_node = pve_node
+                true
+              else
+                log "[ #{pve_node}/#{vm_info['vm_id']} ] - This container is not hosting the node/environment to be destroyed: #{metadata[:node]}/#{metadata[:environment]} != #{vm_info['node']}/#{vm_info['environment']}"
+                false
+              end
             else
               false
             end
           end
         end
-        log "Could not find any PVE node hosting VM #{vm_id}"
+        log "Could not find any PVE node hosting VM #{vm_info['vm_id']}"
       end
     end
     reserved_resource = {}
