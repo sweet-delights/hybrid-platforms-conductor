@@ -1,3 +1,9 @@
+# [23.5.1](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv23.5.0&sourceBranch=refs%2Ftags%2Fv23.5.1) (2020-09-30)
+
+### Fixes
+
+* Make Proxmox Waiter more robust by having queues for PIDs and avoid config files write conflicts ([18fa64c5](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/commits/18fa64c5fe3e9fd3aa5d93cc71360f94391b2de5))
+
 # [23.5.0](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv23.4.4&sourceBranch=refs%2Ftags%2Fv23.5.0) (2020-09-24)
 
 ### New features
