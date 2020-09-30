@@ -290,13 +290,15 @@ module HybridPlatformsConductorTest
       # * *error_on_destroy* (String or nil): Error to be mocked by reserve_proxmox_container destroy, or nil in case of success [default: nil]
       # * *destroy_vm* (Boolean): Should we expect also a VM destruction? [default: false]
       # * *expected_file_id* (String): The expected config file IDs used [default: 'node_test']
+      # * *expected_sudo* (Boolean): Is sudo to be expected? [default: true]
       def mock_call_to_reserve_proxmox_container(
         proxmox_user: nil,
         proxmox_password: nil,
         error_on_create: nil,
         error_on_destroy: nil,
         destroy_vm: false,
-        expected_file_id: 'node_test'
+        expected_file_id: 'node_test',
+        expected_sudo: true
       )
         runs = [
           proc do |actions|
@@ -324,7 +326,7 @@ module HybridPlatformsConductorTest
             expect(actions).to eq({
               'node' => {
                 remote_bash: {
-                  commands: "./proxmox/reserve_proxmox_container --create ./proxmox/create/create_#{expected_file_id}.json --config ./proxmox/config/config_#{expected_file_id}.json",
+                  commands: "#{expected_sudo ? 'sudo -E ' : ''}./proxmox/reserve_proxmox_container --create ./proxmox/create/create_#{expected_file_id}.json --config ./proxmox/config/config_#{expected_file_id}.json",
                   env: {
                     'hpc_user_for_proxmox' => proxmox_user,
                     'hpc_password_for_proxmox' => proxmox_password
@@ -375,7 +377,7 @@ module HybridPlatformsConductorTest
               expect(actions).to eq({
                 'node' => {
                   remote_bash: {
-                    commands: "./proxmox/reserve_proxmox_container --destroy ./proxmox/destroy/destroy_#{expected_file_id}.json --config ./proxmox/config/config_#{expected_file_id}.json",
+                    commands: "#{expected_sudo ? 'sudo -E ' : ''}./proxmox/reserve_proxmox_container --destroy ./proxmox/destroy/destroy_#{expected_file_id}.json --config ./proxmox/config/config_#{expected_file_id}.json",
                     env: {
                       'hpc_user_for_proxmox' => proxmox_user,
                       'hpc_password_for_proxmox' => proxmox_password
@@ -414,6 +416,7 @@ module HybridPlatformsConductorTest
       # * *reserve* (Boolean): Do we expect the resource reservation to occur? [default: true]
       # * *destroy_vm* (Boolean): Should we expect also a VM destruction? [default: false]
       # * *expected_file_id* (String): The expected config file IDs used [default: 'node_test']
+      # * *expected_sudo* (Boolean): Is sudo to be expected? [default: true]
       def mock_proxmox_calls_with(
         calls,
         proxmox_user: nil,
@@ -422,7 +425,8 @@ module HybridPlatformsConductorTest
         error_on_destroy: nil,
         reserve: true,
         destroy_vm: false,
-        expected_file_id: 'node_test'
+        expected_file_id: 'node_test',
+        expected_sudo: true
       )
         if reserve || destroy_vm
           # Mock querying reserve_proxmox_container
@@ -432,7 +436,8 @@ module HybridPlatformsConductorTest
             error_on_create: error_on_create,
             error_on_destroy: error_on_destroy,
             destroy_vm: destroy_vm,
-            expected_file_id: expected_file_id
+            expected_file_id: expected_file_id,
+            expected_sudo: expected_sudo
           )
         end
         expect(::Proxmox::Proxmox).to receive(:new).exactly(calls.size).times do |url, pve_node, user, password, realm, options|

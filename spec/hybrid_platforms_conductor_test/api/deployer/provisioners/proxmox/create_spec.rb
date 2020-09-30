@@ -43,6 +43,33 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
       end
     end
 
+    it 'creates an instance as root' do
+      with_test_proxmox_platform do |instance|
+        test_actions_executor.connector(:ssh).ssh_user = 'root'
+        mock_proxmox_calls_with(
+          [
+            # 1 - The info on existing containers
+            mock_proxmox_to_get_nodes_info
+          ],
+          expected_sudo: false
+        )
+        instance.create
+        expect(@proxmox_create_options).to eq({
+          'cores' => 2,
+          'cpulimit' => 2,
+          'description' => "===== HPC info =====\nnode: node\nenvironment: test\ndebug: false\n",
+          'hostname' => 'node.test.hpc-test.com',
+          'memory' => 1024,
+          'nameserver' => '8.8.8.8',
+          'net0' => 'name=eth0,bridge=vmbr0,gw=192.168.0.1',
+          'ostemplate' => 'template_storage/os_image.tar.gz',
+          'password' => 'root_pwd',
+          'rootfs' => 'local-lvm:10',
+          'searchdomain' => 'my-domain.com'
+        })
+      end
+    end
+
     it 'creates an instance using credentials from environment' do
       with_test_proxmox_platform do |instance|
         ENV['hpc_user_for_proxmox'] = 'test_proxmox_user'
