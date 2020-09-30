@@ -1,4 +1,5 @@
 require 'json'
+require 'securerandom'
 require 'tmpdir'
 require 'time'
 require 'thread'
@@ -296,8 +297,8 @@ module HybridPlatformsConductor
     def with_test_provisioned_instance(provisioner_id, node, environment:, reuse_instance: false)
       # Add the user to the environment to better track belongings on shared provisioners
       environment = "#{@cmd_runner.whoami}_#{environment}"
-      # Add PID and process start time to the ID to make sure other containers used by other runs are not being reused.
-      environment << "_#{Process.pid}_#{(Time.now - Process.clock_gettime(Process::CLOCK_BOOTTIME)).strftime('%Y%m%d%H%M%S')}" unless reuse_instance
+      # Add PID, TID and a random number to the ID to make sure other containers used by other runs are not being reused.
+      environment << "_#{Process.pid}_#{Thread.current.object_id}_#{SecureRandom.hex(8)}" unless reuse_instance
       # Create different NodesHandler and Deployer to handle this Docker container in place of the real node.
       sub_logger, sub_logger_stderr =
         if log_debug?

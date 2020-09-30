@@ -50,7 +50,7 @@ class ProxmoxWaiter
     # Hash< String,   Hash< Integer, Hash< String,        Time                 > > >
     # Hash< pve_node, Hash< vm_id,   Hash< creation_date, time_seen_as_stopped > > >
     @non_debug_stopped_containers = {}
-    @log_file = "#{@config['logs_dir'] || '.'}/proxmox_waiter_#{Time.now.utc.strftime('%Y%m%d%H%M%S')}_pid_#{Process.pid}.log"
+    @log_file = "#{@config['logs_dir'] || '.'}/proxmox_waiter_#{Time.now.utc.strftime('%Y%m%d%H%M%S')}_pid_#{Process.pid}_#{File.basename(config_file, '.json')}.log"
     FileUtils.mkdir_p File.dirname(@log_file)
   end
 

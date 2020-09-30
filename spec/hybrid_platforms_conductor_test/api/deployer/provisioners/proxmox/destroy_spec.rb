@@ -34,7 +34,7 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
           error_on_destroy: 'Error while destroy'
         )
         instance.create
-        expect { instance.destroy }.to raise_error /\[ node\/test \] - Error returned by reserve_proxmox_container --destroy \.\/proxmox\/destroy_vm_.+\.json --config \.\/proxmox\/config_.+\.json: Error while destroy/
+        expect { instance.destroy }.to raise_error '[ node/test ] - Error returned by reserve_proxmox_container --destroy ./proxmox/destroy/destroy_node_test.json --config ./proxmox/config/config_node_test.json: Error while destroy'
       end
     end
 
