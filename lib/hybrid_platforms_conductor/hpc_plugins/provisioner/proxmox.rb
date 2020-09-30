@@ -59,6 +59,11 @@ module HybridPlatformsConductor
 
         extend_platforms_dsl_with PlatformsDSLProxmox, :init_proxmox
 
+        class << self
+          attr_accessor :proxmox_waiter_files_mutex
+        end
+        @proxmox_waiter_files_mutex = Mutex.new
+
         # Maximum size in chars of hostnames set in Proxmox
         MAX_PROXMOX_HOSTNAME_SIZE = 64
 
@@ -352,45 +357,61 @@ module HybridPlatformsConductor
         #
         # Parameters::
         # * *cmd* (String): The command to execute
-        # * *extra_files* (Array<String>): Extra files to include on the sync node [default: []]
+        # * *extra_files* (Hash<String,String>): Extra files (source file, destination directory) to include on the sync node [default: {}]
         # Result::
         # * Hash<Symbol,Object>: The result
-        def run_cmd_on_sync_node(cmd, extra_files: [])
+        def run_cmd_on_sync_node(cmd, extra_files: {})
           # Create the ProxmoxWaiter config in a file to be uploaded
+          config_file = "#{Dir.tmpdir}/config_#{file_id}.json"
           File.write(
-            'config.json',
+            config_file,
             (proxmox_test_info[:test_config].merge(
               proxmox_api_url: proxmox_test_info[:api_url],
-              futex_file: '/tmp/hpc_proxmox_allocations.futex'
+              futex_file: '/tmp/hpc_proxmox_allocations.futex',
+              logs_dir: '/tmp/hpc_proxmox_waiter_logs'
             )).to_json
           )
-          stdout = nil
-          Credentials.with_credentials_for(:proxmox, @logger, @logger_stderr, url: proxmox_test_info[:api_url]) do |user, password|
-            _exit_code, stdout, _stderr = @actions_executor.execute_actions(
-              {
-                proxmox_test_info[:sync_node] => [
-                  { scp: { "#{__dir__}/proxmox/" => '.' } },
-                  { scp: { 'config.json' => './proxmox' } }
-                ] +
-                  extra_files.map { |file| { scp: { file => './proxmox' } } } +
-                  [
-                    {
-                      remote_bash: {
-                        commands: "./proxmox/#{cmd}",
-                        env: {
-                          'hpc_user_for_proxmox' => user,
-                          'hpc_password_for_proxmox' => password
-                        }
+          result = nil
+          begin
+            extra_files[config_file] = './proxmox/config'
+            cmd << " --config ./proxmox/config/#{File.basename(config_file)}"
+            stdout = nil
+            Credentials.with_credentials_for(:proxmox, @logger, @logger_stderr, url: proxmox_test_info[:api_url]) do |user, password|
+              # To avoid too fine concurrent accesses on the sync node file system, make sure all threads of our process wait for their turn to upload their files.
+              # Otherwise there is a small probability that a directory scp makes previously copied files inaccessible for a short period of time.
+              self.class.proxmox_waiter_files_mutex.synchronize do
+                @actions_executor.execute_actions(
+                  {
+                    proxmox_test_info[:sync_node] => [
+                      { scp: { "#{__dir__}/proxmox/" => '.' } },
+                      { remote_bash: extra_files.values.sort.uniq.map { |dir| "mkdir -p #{dir}" }.join("\n") }
+                    ] +
+                      extra_files.map { |src_file, dst_dir| { scp: { src_file => dst_dir } } }
+                  },
+                  log_to_stdout: log_debug?
+                )
+              end
+              _exit_code, stdout, _stderr = @actions_executor.execute_actions(
+                {
+                  proxmox_test_info[:sync_node] => {
+                    remote_bash: {
+                      commands: "#{@actions_executor.connector(:ssh).ssh_user == 'root' ? '' : 'sudo -E '}./proxmox/#{cmd}",
+                      env: {
+                        'hpc_user_for_proxmox' => user,
+                        'hpc_password_for_proxmox' => password
                       }
                     }
-                  ]
-              },
-              log_to_stdout: log_debug?
-            )[proxmox_test_info[:sync_node]]
+                  }
+                },
+                log_to_stdout: log_debug?
+              )[proxmox_test_info[:sync_node]]
+            end
+            stdout_lines = stdout.split("\n")
+            result = JSON.parse(stdout_lines[stdout_lines.index('===== JSON =====') + 1..-1].join("\n")).transform_keys(&:to_sym)
+            raise "[ #{@node}/#{@environment} ] - Error returned by #{cmd}: #{result[:error]}" if result.key?(:error)
+          ensure
+            File.unlink(config_file)
           end
-          stdout_lines = stdout.split("\n")
-          result = JSON.parse(stdout_lines[stdout_lines.index('===== JSON =====') + 1..-1].join("\n")).transform_keys(&:to_sym)
-          raise "[ #{@node}/#{@environment} ] - Error returned by #{cmd}: #{result[:error]}" if result.key?(:error)
           result
         end
 
@@ -407,11 +428,14 @@ module HybridPlatformsConductor
         def request_lxc_creation_for(vm_info)
           log_debug "[ #{@node}/#{@environment} ] - Request LXC creation for #{vm_info}..."
           # Create a unique file name
-          create_config_file = "#{Dir.tmpdir}/create_vm_#{@cmd_runner.whoami}_#{Process.pid}_#{Thread.current.object_id}_#{(Time.now - Process.clock_gettime(Process::CLOCK_BOOTTIME)).strftime('%Y%m%d%H%M%S')}.json"
+          create_config_file = "#{Dir.tmpdir}/create_#{file_id}.json"
           File.write(create_config_file, vm_info.to_json)
           created_vm_info = nil
           begin
-            created_vm_info = run_cmd_on_sync_node("reserve_proxmox_container --create ./proxmox/#{File.basename(create_config_file)}", extra_files: [create_config_file])
+            created_vm_info = run_cmd_on_sync_node(
+              "reserve_proxmox_container --create ./proxmox/create/#{File.basename(create_config_file)}",
+              extra_files: { create_config_file => './proxmox/create' }
+            )
           ensure
             File.unlink(create_config_file)
           end
@@ -427,7 +451,44 @@ module HybridPlatformsConductor
         #   * *pve_node* (String): Name of the node on which the container was reserved (if found)
         def release_lxc_container(vm_id)
           log_debug "[ #{@node}/#{@environment} ] - Release LXC VM #{vm_id}..."
-          run_cmd_on_sync_node "reserve_proxmox_container --destroy #{vm_id}"
+          # Create a unique file name
+          destroy_config_file = "#{Dir.tmpdir}/destroy_#{file_id}.json"
+          File.write(destroy_config_file, {
+            vm_id: vm_id,
+            node: @node,
+            environment: @environment
+          }.to_json)
+          destroyed_vm_info = nil
+          begin
+            destroyed_vm_info = run_cmd_on_sync_node(
+              "reserve_proxmox_container --destroy ./proxmox/destroy/#{File.basename(destroy_config_file)}",
+              extra_files: { destroy_config_file => './proxmox/destroy' }
+            )
+          ensure
+            File.unlink(destroy_config_file)
+          end
+          destroyed_vm_info
+        end
+
+        # Maximum size a file ID can have (file IDs are used differentiate create/destroy/config files for a givne node/environment).
+        # File names are 255 chars max.
+        # Consider that it is to be used on the following patterns: (config|create|destroy)_<ID>.json
+        # So remaining length is 255 - 13 = 242 characters.
+        MAX_FILE_ID_SIZE = 242
+
+        # Get an ID unique for theis node/environment and that can be used in file names.
+        #
+        # Result::
+        # * String: ID
+        def file_id
+          # If the file name exceeds the maximum length, then generate an MD5 to truncate the end of the file name.
+          result = "#{@node}_#{@environment}"
+          if result.size > MAX_FILE_ID_SIZE
+            # Truncate it, but add a unique ID in it.
+            result = "-#{Digest::MD5.hexdigest(result)[0..7]}"
+            result = "#{@node}_#{@environment}"[0..MAX_FILE_ID_SIZE - result.size - 1] + result
+          end
+          result
         end
 
         # Get details about the proxmox instance to be used

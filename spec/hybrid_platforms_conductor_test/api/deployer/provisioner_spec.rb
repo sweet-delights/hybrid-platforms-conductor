@@ -24,7 +24,7 @@ describe HybridPlatformsConductor::Deployer do
           expect(test_deployer.local_environment).to eq true
           provisioner = test_instance
           expect(test_instance.node).to eq 'node'
-          expect(test_instance.environment).to match /^#{Regexp.escape(`whoami`.strip)}_hpc_testing_provisioner_\d+_\d+$/
+          expect(test_instance.environment).to match /^#{Regexp.escape(`whoami`.strip)}_hpc_testing_provisioner_\d+_\d+_\w+$/
         end
         expect(provisioner.actions).to eq %i[create state state start state ip ip stop state destroy]
       end
@@ -92,7 +92,7 @@ describe HybridPlatformsConductor::Deployer do
           expect do
             test_deployer.with_test_provisioned_instance(:test_provisioner, 'node', environment: 'hpc_testing_provisioner') do |test_deployer, test_instance|
             end
-          end.to raise_error /\[ node\/#{Regexp.escape(`whoami`.strip)}_hpc_testing_provisioner_\d+_\d+ \] - Instance fails to be in a state among \(running\) with timeout 1\. Currently in state exited/
+          end.to raise_error /\[ node\/#{Regexp.escape(`whoami`.strip)}_hpc_testing_provisioner_\d+_\d+_\w+ \] - Instance fails to be in a state among \(running\) with timeout 1\. Currently in state exited/
         ensure
           HybridPlatformsConductor::Provisioner.send(:remove_const, :DEFAULT_TIMEOUT)
           HybridPlatformsConductor::Provisioner.const_set(:DEFAULT_TIMEOUT, original_timeout)
@@ -118,7 +118,7 @@ describe HybridPlatformsConductor::Deployer do
           expect do
             test_deployer.with_test_provisioned_instance(:test_provisioner, 'node', environment: 'hpc_testing_provisioner') do |test_deployer, test_instance|
             end
-          end.to raise_error /\[ node\/#{Regexp.escape(`whoami`.strip)}_hpc_testing_provisioner_\d+_\d+ \] - Instance fails to have port 22 opened with timeout 1\./
+          end.to raise_error /\[ node\/#{Regexp.escape(`whoami`.strip)}_hpc_testing_provisioner_\d+_\d+_\w+ \] - Instance fails to have port 22 opened with timeout 1\./
         ensure
           HybridPlatformsConductor::Provisioner.send(:remove_const, :DEFAULT_TIMEOUT)
           HybridPlatformsConductor::Provisioner.const_set(:DEFAULT_TIMEOUT, original_timeout)

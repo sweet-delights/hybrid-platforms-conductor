@@ -31,12 +31,42 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
       env_name = 'really_big_environment_name_that_will_exceed_for_sure_the_limit_of_hostnames_' * 10
       expected_hostname = 'node.really-big-environment-name-that-will-76ce77cc.hpc-test.com'
       with_test_proxmox_platform(environment: env_name) do |instance|
-        mock_proxmox_calls_with [
-          # 1 - The info on existing containers
-          mock_proxmox_to_get_nodes_info
-        ]
+        mock_proxmox_calls_with(
+          [
+            # 1 - The info on existing containers
+            mock_proxmox_to_get_nodes_info
+          ],
+          expected_file_id: 'node_really_big_environment_name_that_will_exceed_for_sure_the_limit_of_hostnames_really_big_environment_name_that_will_exceed_for_sure_the_limit_of_hostnames_really_big_environment_name_that_will_exceed_for_sure_the_limit_of_hostnam-258ca1fc'
+        )
         instance.create
         expect(@proxmox_create_options['hostname']).to eq expected_hostname
+      end
+    end
+
+    it 'creates an instance as root' do
+      with_test_proxmox_platform do |instance|
+        test_actions_executor.connector(:ssh).ssh_user = 'root'
+        mock_proxmox_calls_with(
+          [
+            # 1 - The info on existing containers
+            mock_proxmox_to_get_nodes_info
+          ],
+          expected_sudo: false
+        )
+        instance.create
+        expect(@proxmox_create_options).to eq({
+          'cores' => 2,
+          'cpulimit' => 2,
+          'description' => "===== HPC info =====\nnode: node\nenvironment: test\ndebug: false\n",
+          'hostname' => 'node.test.hpc-test.com',
+          'memory' => 1024,
+          'nameserver' => '8.8.8.8',
+          'net0' => 'name=eth0,bridge=vmbr0,gw=192.168.0.1',
+          'ostemplate' => 'template_storage/os_image.tar.gz',
+          'password' => 'root_pwd',
+          'rootfs' => 'local-lvm:10',
+          'searchdomain' => 'my-domain.com'
+        })
       end
     end
 
@@ -64,7 +94,7 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
           ],
           error_on_create: 'Error while getting resources'
         )
-        expect { instance.create }.to raise_error /^\[ node\/test \] - Error returned by reserve_proxmox_container --create .+\/create_vm_.+\.json: Error while getting resources$/
+        expect { instance.create }.to raise_error '[ node/test ] - Error returned by reserve_proxmox_container --create ./proxmox/create/create_node_test.json --config ./proxmox/config/config_node_test.json: Error while getting resources'
       end
     end
 

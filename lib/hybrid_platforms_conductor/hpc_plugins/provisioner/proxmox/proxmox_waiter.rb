@@ -13,7 +13,10 @@ class ProxmoxWaiter
   # Take into account that some processes can be lengthy while the futex is taken:
   # * POST/DELETE operations in the Proxmox API requires tasks to be performed which can take a few seconds, depending on the load.
   # * Proxmox API sometimes fails to respond when containers are being locked temporarily (we have a 30 secs timeout for each one).
-  FUTEX_TIMEOUT = 120
+  FUTEX_TIMEOUT = 600
+
+  # Integer: Maximum timeout in seconds before retrying getting the Futex when we are not first in the queue (a rand will be applied to it)
+  RETRY_QUEUE_WAIT = 30
 
   # Constructor
   #
@@ -22,6 +25,7 @@ class ProxmoxWaiter
   #   Here is the file structure:
   #   * *proxmox_api_url* (String): Proxmox API URL.
   #   * *futex_file* (String): Path to the file serving as a futex.
+  #   * *logs_dir* (String): Path to the directory containing logs [default: '.']
   #   * *pve_nodes* (Array<String>): List of PVE nodes allowed to spawn new containers [default: all]
   #   * *vm_ips_list* (Array<String>): The list of IPs that are available for the Proxomx containers.
   #   * *vm_ids_range* ([Integer, Integer]): Minimum and maximum reservable VM ID
@@ -46,7 +50,8 @@ class ProxmoxWaiter
     # Hash< String,   Hash< Integer, Hash< String,        Time                 > > >
     # Hash< pve_node, Hash< vm_id,   Hash< creation_date, time_seen_as_stopped > > >
     @non_debug_stopped_containers = {}
-    @log_file = "proxmox_waiter_#{Time.now.utc.strftime('%Y%m%d%H%M%S')}_pid_#{Process.pid}.log"
+    @log_file = "#{@config['logs_dir'] || '.'}/proxmox_waiter_#{Time.now.utc.strftime('%Y%m%d%H%M%S')}_pid_#{Process.pid}_#{File.basename(config_file, '.json')}.log"
+    FileUtils.mkdir_p File.dirname(@log_file)
   end
 
   # Reserve resources for a new container.
@@ -172,35 +177,46 @@ class ProxmoxWaiter
     reserved_resource
   end
 
-  # Destroy a VM ID.
+  # Destroy a VM.
   #
   # Parameters::
-  # * *vm_id* (Integer): VM ID to be released
+  # * *vm_info* (Hash<String,Object>): The VM info to be destroyed:
+  #   * *vm_id* (Integer): The VM ID
+  #   * *node* (String): The node for which this VM has been created
+  #   * *environment* (String): The environment for which this VM has been created
   # Result::
   # * Hash<Symbol, Object> or Symbol: Released resource info, or Symbol in case of error.
   #   The following properties are set as resource info:
   #   * *pve_node* (String): Node on which the container has been released (if found).
   #   Possible error codes returned are:
   #   None
-  def destroy(vm_id)
-    log "Ask to destroy #{vm_id}"
+  def destroy(vm_info)
+    log "Ask to destroy #{vm_info}"
     found_pve_node = nil
     start do
-      vm_id_str = vm_id.to_s
+      vm_id_str = vm_info['vm_id'].to_s
       # Destroy the VM ID
       # Find which PVE node hosts this VM
       unless @config['pve_nodes'].any? do |pve_node|
           api_get("nodes/#{pve_node}/lxc").any? do |lxc_info|
             if lxc_info['vmid'] == vm_id_str
-              destroy_vm_on(pve_node, vm_id)
-              found_pve_node = pve_node
-              true
+              # Make sure this VM is still used for the node and environment we want.
+              # It could have been deleted manually and re-affected to another node/environment automatically, and in this case we should not remove it.
+              metadata = vm_metadata(pve_node, vm_info['vm_id'])
+              if metadata[:node] == vm_info['node'] && metadata[:environment] == vm_info['environment']
+                destroy_vm_on(pve_node, vm_info['vm_id'])
+                found_pve_node = pve_node
+                true
+              else
+                log "[ #{pve_node}/#{vm_info['vm_id']} ] - This container is not hosting the node/environment to be destroyed: #{metadata[:node]}/#{metadata[:environment]} != #{vm_info['node']}/#{vm_info['environment']}"
+                false
+              end
             else
               false
             end
           end
         end
-        log "Could not find any PVE node hosting VM #{vm_id}"
+        log "Could not find any PVE node hosting VM #{vm_info['vm_id']}"
       end
     end
     reserved_resource = {}
@@ -216,7 +232,82 @@ class ProxmoxWaiter
   # * *msg* (String): Message to log
   def log(msg)
     puts msg
-    File.open(@log_file, 'a') { |f| f.puts "[ #{Time.now.utc.strftime('%F %T.%L')} ] - #{msg}" }
+    File.open(@log_file, 'a') { |f| f.puts "[ #{Time.now.utc.strftime('%F %T.%L')} ] - [ PID #{Process.pid} ] - #{msg}" }
+  end
+
+  # Get the access queue from a file.
+  # Handle the case of missing file.
+  #
+  # Parameters::
+  # * *queue_file* (String): The file holding the queue
+  # Result::
+  # * Array<Integer>: PIDs queue
+  def read_access_queue(queue_file)
+    (File.exist?(queue_file) ? File.read(queue_file).split("\n").map { |line| Integer(line) } : [])
+  end
+
+  # Write the access queue to a file.
+  #
+  # Parameters::
+  # * *queue_file* (String): The file holding the queue
+  # * *access_queue* (Array<Integer>): PIDs queue
+  def write_access_queue(queue_file, access_queue)
+    File.write(queue_file, access_queue.join("\n"))
+  end
+
+  # Get an exclusive (based on PID) access using a futex-protected queue
+  #
+  # Parameters::
+  # * *futex_file* (String): Name of the file to be used as a futex
+  # * Prox: Code called with access authorized
+  def with_futex_queue_access_on(futex_file)
+    pid = Process.pid
+    queue_futex_file = "#{futex_file}.queue"
+    # Register ourselves in the queue (at the end)
+    Futex.new(queue_futex_file, timeout: FUTEX_TIMEOUT).open do
+      access_queue = read_access_queue(queue_futex_file)
+      log "[ Futex queue ] - Register our PID in the queue: #{access_queue.join(', ')}"
+      write_access_queue(queue_futex_file, access_queue + [pid])
+    end
+    # Loop until we are first ones in the queue
+    retry_futex_queue = true
+    while retry_futex_queue
+      Futex.new(futex_file, timeout: FUTEX_TIMEOUT).open do
+        # Check if we are the first one in the queue
+        Futex.new(queue_futex_file, timeout: FUTEX_TIMEOUT).open do
+          access_queue = read_access_queue(queue_futex_file)
+          idx = access_queue.index(pid)
+          log "[ Futex queue ] - We are ##{idx} in the queue: #{access_queue.join(', ')}"
+          if idx.nil?
+            # We disappeared from the queue!
+            log '[ Futex queue ] - !!! Somebody removed use from the queue. Add our PID back.'
+            write_access_queue(queue_futex_file, access_queue + [pid])
+          elsif idx == 0
+            # Access granted
+            log '[ Futex queue ] - Exclusive access granted'
+            write_access_queue(queue_futex_file, access_queue[1..-1])
+            retry_futex_queue = false
+          else
+            # Just check that the first PID still exists, otherwise remove it from the queue.
+            # This way we avoid starvation in case of killed processes.
+            first_pid = access_queue.first
+            first_pid_exist =
+              begin
+                Process.getpgid(first_pid)
+                true
+              rescue Errno::ESRCH
+                false
+              end
+            unless first_pid_exist
+              log "[ Futex queue ] - !!! First PID #{first_pid} does not exist - remove it from the queue"
+              write_access_queue(queue_futex_file, access_queue[1..-1])
+            end
+          end
+        end
+        yield unless retry_futex_queue
+      end
+      sleep(rand(RETRY_QUEUE_WAIT) + 1) if retry_futex_queue
+    end
   end
 
   # Grab the lock to start a new atomic session.
@@ -228,8 +319,7 @@ class ProxmoxWaiter
   #   * *@expiration_date* (Time): The expiration date to be considered when selecting expired VMs
   #   * *@proxmox* (Proxmox): The Proxmox instance
   def start
-    # Perform any operation in an atomic way
-    Futex.new(@config['futex_file'], timeout: FUTEX_TIMEOUT).open do
+    with_futex_queue_access_on(@config['futex_file']) do
       # Connect to Proxmox's API
       @proxmox = Proxmox::Proxmox.new(
         "#{@config['proxmox_api_url']}/api2/json/",
