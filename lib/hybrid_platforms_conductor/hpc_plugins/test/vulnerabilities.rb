@@ -26,7 +26,7 @@ module HybridPlatformsConductor
             packages: ['bzip2']
           },
           gz: {
-            cmd: proc { |file| "if [ ! -f \"#{File.basename(file, '.gz')}\" ] ; gunzip \"#{file}\" ; fi" },
+            cmd: proc { |file| "if [ ! -f \"#{File.basename(file, '.gz')}\" ] ; then gunzip \"#{file}\" ; fi" },
             packages: ['gzip']
           }
         }
