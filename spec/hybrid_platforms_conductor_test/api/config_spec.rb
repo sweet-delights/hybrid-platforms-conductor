@@ -50,4 +50,17 @@ describe HybridPlatformsConductor::Config do
     end
   end
 
+  it 'accesses the platform handler repositories if needed from the config' do
+    with_repository do |repository|
+      with_platforms "
+        test_platform path: '#{repository}' do |repository_path|
+          os_image :image1, \"\#{repository_path}/image_path\"
+        end
+      " do
+        expect(test_config.known_os_images.sort).to eq %i[image1].sort
+        expect(test_config.os_image_dir(:image1)).to eq "#{repository}/image_path"
+      end
+    end
+  end
+
 end
