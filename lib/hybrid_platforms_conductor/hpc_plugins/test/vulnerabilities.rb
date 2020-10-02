@@ -22,11 +22,11 @@ module HybridPlatformsConductor
         # Known compression methods, per file extension, and their corresponding uncompress bash script
         KNOWN_COMPRESSIONS = {
           bz2: {
-            cmd: proc { |file| "bunzip2 \"#{file}\"" },
+            cmd: proc { |file| "if [ ! -f \"#{File.basename(file, '.bz2')}\" ] ; then bunzip2 \"#{file}\" ; fi" },
             packages: ['bzip2']
           },
           gz: {
-            cmd: proc { |file| "gunzip \"#{file}\"" },
+            cmd: proc { |file| "if [ ! -f \"#{File.basename(file, '.gz')}\" ] ; then gunzip \"#{file}\" ; fi" },
             packages: ['gzip']
           }
         }
@@ -76,8 +76,25 @@ module HybridPlatformsConductor
                     case image
                     when :centos_7
                       "sudo yum install -y wget openscap-scanner #{packages_to_install.join(' ')}"
-                    when :debian_9, :debian_10
+                    when :debian_9
                       "sudo apt install -y wget libopenscap8 #{packages_to_install.join(' ')}"
+                    when :debian_10
+                      # On Debian 10 we have to compile it from sources, as the packaged official version has core dumps.
+                      # cf https://www.mail-archive.com/debian-bugs-dist@lists.debian.org/msg1688223.html
+                      # TODO: Remove this Debian 10 specificity when the official libopenscap8 will be corrected
+                      <<~EOS2
+                        if [ ! -x "$(command -v oscap)" ] || [ "$(oscap --version | head -n 1 | awk '{print $6}')" != "1.3.4" ]; then
+                          rm -rf openscap
+                          git clone --recurse-submodules https://github.com/OpenSCAP/openscap.git
+                          cd openscap
+                          sudo apt install -y cmake libdbus-1-dev libdbus-glib-1-dev libcurl4-openssl-dev libgcrypt20-dev libselinux1-dev libxslt1-dev libgconf2-dev libacl1-dev libblkid-dev libcap-dev libxml2-dev libldap2-dev libpcre3-dev python-dev swig libxml-parser-perl libxml-xpath-perl libperl-dev libbz2-dev librpm-dev g++ libapt-pkg-dev libyaml-dev
+                          cd build
+                          cmake ../
+                          make
+                          sudo make install
+                        fi
+                        sudo apt install -y wget #{packages_to_install.join(' ')}
+                      EOS2
                     else
                       raise "Non supported image: #{image}. Please adapt this test's code."
                     end
@@ -115,7 +132,8 @@ module HybridPlatformsConductor
                         end
                       end
                     end,
-                    timeout: 60
+                    # Increase timeout in case we have to install a lot of dependencies (like for Debian 10)
+                    timeout: 240
                   }
                 ]
               end]
