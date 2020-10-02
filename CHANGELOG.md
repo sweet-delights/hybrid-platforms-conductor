@@ -1,3 +1,9 @@
+# [23.5.2](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv23.5.1&sourceBranch=refs%2Ftags%2Fv23.5.2) (2020-10-02)
+
+### Fixes
+
+* Fix vulnerabilities run on Debian 10 ([157fd381](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/commits/157fd381b7a851f8e1f473363fc1878370525327))
+
 # [23.5.1](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv23.5.0&sourceBranch=refs%2Ftags%2Fv23.5.1) (2020-09-30)
 
 ### Fixes
