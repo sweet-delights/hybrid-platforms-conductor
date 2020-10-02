@@ -30,7 +30,7 @@ module HybridPlatformsConductor
           end
 
         end
-        self.extend_platforms_dsl_with MyDSLExtension, :init_my_dsl_extension
+        self.extend_config_dsl_with MyDSLExtension, :init_my_dsl_extension
 
         # Initialize the connector.
         # This can be used to initialize global variables that are used for this connector

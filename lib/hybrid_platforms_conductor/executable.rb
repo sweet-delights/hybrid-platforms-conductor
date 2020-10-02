@@ -1,5 +1,6 @@
 require 'optparse'
 require 'logger'
+require 'hybrid_platforms_conductor/config'
 require 'hybrid_platforms_conductor/nodes_handler'
 require 'hybrid_platforms_conductor/actions_executor'
 require 'hybrid_platforms_conductor/cmd_runner'
@@ -68,6 +69,15 @@ module HybridPlatformsConductor
       self.log_level = :debug if ARGV.include?('--debug') || ARGV.include?('-d')
     end
 
+    # Get a singleton Config
+    #
+    # Result::
+    # * Config: The Config to be used by this executable
+    def config
+      @config = Config.new(logger: @logger, logger_stderr: @logger_stderr) if @config.nil?
+      @config
+    end
+
     # Get a singleton Command Runner
     #
     # Result::
@@ -82,7 +92,7 @@ module HybridPlatformsConductor
     # Result::
     # * NodesHandler: The Nodes Handler to be used by this executable
     def nodes_handler
-      @nodes_handler = NodesHandler.new(logger: @logger, logger_stderr: @logger_stderr, cmd_runner: cmd_runner) if @nodes_handler.nil?
+      @nodes_handler = NodesHandler.new(logger: @logger, logger_stderr: @logger_stderr, config: config, cmd_runner: cmd_runner) if @nodes_handler.nil?
       @nodes_handler
     end
 
@@ -91,7 +101,7 @@ module HybridPlatformsConductor
     # Result::
     # * ActionsExecutor: The Actions Executor to be used by this executable
     def actions_executor
-      @actions_executor = ActionsExecutor.new(logger: @logger, logger_stderr: @logger_stderr, cmd_runner: cmd_runner, nodes_handler: nodes_handler) if @actions_executor.nil?
+      @actions_executor = ActionsExecutor.new(logger: @logger, logger_stderr: @logger_stderr, config: config, cmd_runner: cmd_runner, nodes_handler: nodes_handler) if @actions_executor.nil?
       @actions_executor
     end
 
@@ -100,7 +110,7 @@ module HybridPlatformsConductor
     # Result::
     # * Deployer: The Deployer to be used by this executable
     def deployer
-      @deployer = Deployer.new(logger: @logger, logger_stderr: @logger_stderr, cmd_runner: cmd_runner, nodes_handler: nodes_handler, actions_executor: actions_executor) if @deployer.nil?
+      @deployer = Deployer.new(logger: @logger, logger_stderr: @logger_stderr, config: config, cmd_runner: cmd_runner, nodes_handler: nodes_handler, actions_executor: actions_executor) if @deployer.nil?
       @deployer
     end
 
@@ -109,7 +119,7 @@ module HybridPlatformsConductor
     # Result::
     # * JsonDumper: The JSON Dumper to be used by this executable
     def json_dumper
-      @json_dumper = JsonDumper.new(logger: @logger, logger_stderr: @logger_stderr, nodes_handler: nodes_handler, deployer: deployer) if @json_dumper.nil?
+      @json_dumper = JsonDumper.new(logger: @logger, logger_stderr: @logger_stderr, config: config, nodes_handler: nodes_handler, deployer: deployer) if @json_dumper.nil?
       @json_dumper
     end
 
@@ -118,7 +128,7 @@ module HybridPlatformsConductor
     # Result::
     # * ReportsHandler: The Reports Handler to be used by this executable
     def reports_handler
-      @reports_handler = ReportsHandler.new(logger: @logger, logger_stderr: @logger_stderr, nodes_handler: nodes_handler) if @reports_handler.nil?
+      @reports_handler = ReportsHandler.new(logger: @logger, logger_stderr: @logger_stderr, config: config, nodes_handler: nodes_handler) if @reports_handler.nil?
       @reports_handler
     end
 
@@ -127,7 +137,7 @@ module HybridPlatformsConductor
     # Result::
     # * TestsRunner: The Reports Handler to be used by this executable
     def tests_runner
-      @tests_runner = TestsRunner.new(logger: @logger, logger_stderr: @logger_stderr, cmd_runner: cmd_runner, nodes_handler: nodes_handler, actions_executor: actions_executor, deployer: deployer) if @tests_runner.nil?
+      @tests_runner = TestsRunner.new(logger: @logger, logger_stderr: @logger_stderr, config: config, cmd_runner: cmd_runner, nodes_handler: nodes_handler, actions_executor: actions_executor, deployer: deployer) if @tests_runner.nil?
       @tests_runner
     end
 

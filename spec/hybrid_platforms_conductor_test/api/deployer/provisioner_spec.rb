@@ -12,7 +12,7 @@ describe HybridPlatformsConductor::Deployer do
         prepare_deploy_for_local_testing: proc { prepared_for_local_testing = true }
       ) do |repository|
         register_plugins(:provisioner, { test_provisioner: HybridPlatformsConductorTest::TestProvisioner })
-        File.write("#{test_nodes_handler.hybrid_platforms_dir}/dummy_secrets.json", '{}')
+        File.write("#{test_config.hybrid_platforms_dir}/dummy_secrets.json", '{}')
         HybridPlatformsConductorTest::TestProvisioner.mocked_states = %i[created created running exited]
         HybridPlatformsConductorTest::TestProvisioner.mocked_ip = '172.17.0.1'
         expect(Socket).to receive(:tcp).with('172.17.0.1', 22, { connect_timeout: 30 }) do |&block|
@@ -37,7 +37,7 @@ describe HybridPlatformsConductor::Deployer do
         prepare_deploy_for_local_testing: proc { prepared_for_local_testing = true }
       ) do |repository|
         register_plugins(:provisioner, { test_provisioner: HybridPlatformsConductorTest::TestProvisioner })
-        File.write("#{test_nodes_handler.hybrid_platforms_dir}/dummy_secrets.json", '{}')
+        File.write("#{test_config.hybrid_platforms_dir}/dummy_secrets.json", '{}')
         HybridPlatformsConductorTest::TestProvisioner.mocked_states = %i[created created running exited]
         HybridPlatformsConductorTest::TestProvisioner.mocked_ip = '172.17.0.1'
         expect(Socket).to receive(:tcp).with('172.17.0.1', 22, { connect_timeout: 30 }) do |&block|
@@ -61,7 +61,7 @@ describe HybridPlatformsConductor::Deployer do
         prepare_deploy_for_local_testing: proc { prepared_for_local_testing = true }
       ) do |repository|
         register_plugins(:provisioner, { test_provisioner: HybridPlatformsConductorTest::TestProvisioner })
-        File.write("#{test_nodes_handler.hybrid_platforms_dir}/dummy_secrets.json", '{}')
+        File.write("#{test_config.hybrid_platforms_dir}/dummy_secrets.json", '{}')
         HybridPlatformsConductorTest::TestProvisioner.mocked_states = %i[running running running exited]
         HybridPlatformsConductorTest::TestProvisioner.mocked_ip = '172.17.0.1'
         expect(Socket).to receive(:tcp).with('172.17.0.1', 22, { connect_timeout: 30 }) do |&block|
@@ -83,7 +83,7 @@ describe HybridPlatformsConductor::Deployer do
         nodes: { 'node' => { meta: { host_ip: '192.168.42.42' } } }
       ) do |repository|
         register_plugins(:provisioner, { test_provisioner: HybridPlatformsConductorTest::TestProvisioner })
-        File.write("#{test_nodes_handler.hybrid_platforms_dir}/dummy_secrets.json", '{}')
+        File.write("#{test_config.hybrid_platforms_dir}/dummy_secrets.json", '{}')
         HybridPlatformsConductorTest::TestProvisioner.mocked_states = %i[created created created exited exited]
         original_timeout = HybridPlatformsConductor::Provisioner.const_get(:DEFAULT_TIMEOUT)
         HybridPlatformsConductor::Provisioner.send(:remove_const, :DEFAULT_TIMEOUT)
@@ -105,7 +105,7 @@ describe HybridPlatformsConductor::Deployer do
         nodes: { 'node' => { meta: { host_ip: '192.168.42.42' } } }
       ) do |repository|
         register_plugins(:provisioner, { test_provisioner: HybridPlatformsConductorTest::TestProvisioner })
-        File.write("#{test_nodes_handler.hybrid_platforms_dir}/dummy_secrets.json", '{}')
+        File.write("#{test_config.hybrid_platforms_dir}/dummy_secrets.json", '{}')
         HybridPlatformsConductorTest::TestProvisioner.mocked_states = %i[created created running exited]
         HybridPlatformsConductorTest::TestProvisioner.mocked_ip = '172.17.0.1'
         expect(Socket).to receive(:tcp).with('172.17.0.1', 22, { connect_timeout: 1 }) do |&block|

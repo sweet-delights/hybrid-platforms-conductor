@@ -27,7 +27,7 @@ module HybridPlatformsConductorTest
       # Result::
       # * Deployer: Tests Runner on which we can do testing
       def test_tests_runner
-        @tests_runner = HybridPlatformsConductor::TestsRunner.new logger: logger, logger_stderr: logger, cmd_runner: test_cmd_runner, nodes_handler: test_nodes_handler, actions_executor: test_actions_executor, deployer: test_deployer unless @tests_runner
+        @tests_runner = HybridPlatformsConductor::TestsRunner.new logger: logger, logger_stderr: logger, config: test_config, cmd_runner: test_cmd_runner, nodes_handler: test_nodes_handler, actions_executor: test_actions_executor, deployer: test_deployer unless @tests_runner
         @tests_runner
       end
 

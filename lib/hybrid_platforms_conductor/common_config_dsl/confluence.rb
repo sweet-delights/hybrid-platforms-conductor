@@ -1,6 +1,6 @@
 module HybridPlatformsConductor
 
-  module CommonPlatformsDsl
+  module CommonConfigDsl
 
     module Confluence
 

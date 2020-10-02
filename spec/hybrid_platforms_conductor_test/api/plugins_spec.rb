@@ -50,7 +50,7 @@ module HybridPlatformsConductorTest
 
     end
 
-    extend_platforms_dsl_with MyPlatformsDslExtension
+    extend_config_dsl_with MyPlatformsDslExtension
 
   end
 
@@ -75,7 +75,7 @@ module HybridPlatformsConductorTest
 
     end
 
-    extend_platforms_dsl_with MyPlatformsDslExtension, :init_my_dsl
+    extend_config_dsl_with MyPlatformsDslExtension, :init_my_dsl
 
   end
 
@@ -214,28 +214,28 @@ describe HybridPlatformsConductor::Plugins do
     end
   end
 
-  it 'extends the platforms DSL from a plugin' do
+  it 'extends the Config DSL from a plugin' do
     with_repository('platform') do |repository|
       with_platforms("
         test_platform path: '#{repository}'
         set_my_property 42
       ") do
-        register_platform_handlers test: HybridPlatformsConductorTest::TestPlatformHandler
+        register_platform_handlers test: HybridPlatformsConductorTest::PlatformHandlerPlugins::Test
         self.test_platforms_info = { 'platform' => {} }
-        expect(test_nodes_handler.my_property).to eq 84
+        expect(test_config.my_property).to eq 84
       end
     end
   end
 
-  it 'extends the platforms DSL with an initializer from a plugin' do
+  it 'extends the Config DSL with an initializer from a plugin' do
     with_repository('platform') do |repository|
       with_platforms("
         test_platform path: '#{repository}'
         set_my_other_property 66
       ") do
-        register_platform_handlers test: HybridPlatformsConductorTest::TestPlatformHandler
+        register_platform_handlers test: HybridPlatformsConductorTest::PlatformHandlerPlugins::Test
         self.test_platforms_info = { 'platform' => {} }
-        expect(test_nodes_handler.my_other_property).to eq 108
+        expect(test_config.my_other_property).to eq 108
       end
     end
   end

@@ -2,12 +2,12 @@ describe HybridPlatformsConductor::ActionsExecutor do
 
   context 'checking connector plugin ssh' do
 
-    context 'checking Platforms DSL extensions' do
+    context 'checking Config DSL extensions' do
 
       it 'returns 1 defined gateway' do
         with_repository do |repository|
           with_platforms 'gateway :gateway1, \'\'' do
-            expect(test_nodes_handler.known_gateways).to eq [:gateway1]
+            expect(test_config.known_gateways).to eq [:gateway1]
           end
         end
       end
@@ -19,7 +19,7 @@ describe HybridPlatformsConductor::ActionsExecutor do
         '
         with_repository do |repository|
           with_platforms "gateway :gateway1, '#{ssh_gateway}'" do
-            expect(test_nodes_handler.ssh_for_gateway(:gateway1)).to eq ssh_gateway
+            expect(test_config.ssh_for_gateway(:gateway1)).to eq ssh_gateway
           end
         end
       end
@@ -27,7 +27,7 @@ describe HybridPlatformsConductor::ActionsExecutor do
       it 'returns 1 defined gateway with its content and replacing ERB template correctly' do
         with_repository do |repository|
           with_platforms 'gateway :gateway1, \'Host gateway_<%= @user %>\'' do
-            expect(test_nodes_handler.ssh_for_gateway(:gateway1, user: 'test_user')).to eq 'Host gateway_test_user'
+            expect(test_config.ssh_for_gateway(:gateway1, user: 'test_user')).to eq 'Host gateway_test_user'
           end
         end
       end
@@ -38,7 +38,7 @@ describe HybridPlatformsConductor::ActionsExecutor do
             gateway :gateway1, \'\'
             gateway :gateway2, \'\'
           ' do
-            expect(test_nodes_handler.known_gateways.sort).to eq %i[gateway1 gateway2].sort
+            expect(test_config.known_gateways.sort).to eq %i[gateway1 gateway2].sort
           end
         end
       end

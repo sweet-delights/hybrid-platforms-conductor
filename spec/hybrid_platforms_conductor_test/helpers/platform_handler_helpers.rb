@@ -9,7 +9,7 @@ module HybridPlatformsConductorTest
       # Result::
       # * *Hash<String, Hash>: Platforms info, per platform name (see TestPlatformHandler#platforms_info for details)
       def test_platforms_info
-        HybridPlatformsConductorTest::TestPlatformHandler.platforms_info
+        HybridPlatformsConductorTest::PlatformHandlerPlugins::Test.platforms_info
       end
 
       # Set the test platforms info, used by the test PlatformHandler
@@ -17,7 +17,7 @@ module HybridPlatformsConductorTest
       # Parameters::
       # * *platforms_info* (Hash<String, Hash>): Platforms info, per platform name (see TestPlatformHandler#platforms_info for details)
       def test_platforms_info=(platforms_info)
-        HybridPlatformsConductorTest::TestPlatformHandler.platforms_info = platforms_info
+        HybridPlatformsConductorTest::PlatformHandlerPlugins::Test.platforms_info = platforms_info
       end
 
       # Register the given platform handler classes

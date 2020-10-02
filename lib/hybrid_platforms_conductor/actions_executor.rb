@@ -31,10 +31,12 @@ module HybridPlatformsConductor
     # Parameters::
     # * *logger* (Logger): Logger to be used [default = Logger.new(STDOUT)]
     # * *logger_stderr* (Logger): Logger to be used for stderr [default = Logger.new(STDERR)]
+    # * *config* (Config): Config to be used. [default = Config.new]
     # * *cmd_runner* (CmdRunner): Command runner to be used. [default = CmdRunner.new]
     # * *nodes_handler* (NodesHandler): Nodes handler to be used. [default = NodesHandler.new]
-    def initialize(logger: Logger.new(STDOUT), logger_stderr: Logger.new(STDERR), cmd_runner: CmdRunner.new, nodes_handler: NodesHandler.new)
+    def initialize(logger: Logger.new(STDOUT), logger_stderr: Logger.new(STDERR), config: Config.new, cmd_runner: CmdRunner.new, nodes_handler: NodesHandler.new)
       init_loggers(logger, logger_stderr)
+      @config = config
       @cmd_runner = cmd_runner
       @nodes_handler = nodes_handler
       # Default values
@@ -48,6 +50,7 @@ module HybridPlatformsConductor
           plugin_class.new(
             logger: @logger,
             logger_stderr: @logger_stderr,
+            config: @config,
             cmd_runner: @cmd_runner,
             nodes_handler: @nodes_handler
           )
@@ -93,11 +96,11 @@ module HybridPlatformsConductor
     #   See each action's setup in actions directory to know about the possible action types and data.
     # * *timeout* (Integer): Timeout in seconds, or nil if none. [default: nil]
     # * *concurrent* (Boolean): Do we run the commands in parallel? If yes, then stdout of commands is stored in log files. [default: false]
-    # * *log_to_dir* (String or nil): Directory name to store log files. Can be nil to not store log files. [default: "#{@nodes_handler.hybrid_platforms_dir}/run_logs"]
+    # * *log_to_dir* (String or nil): Directory name to store log files. Can be nil to not store log files. [default: "#{@config.hybrid_platforms_dir}/run_logs"]
     # * *log_to_stdout* (Boolean): Do we log the command result on stdout? [default: true]
     # Result::
     # * Hash<String, [Integer or Symbol, String, String]>: Exit status code (or Symbol in case of error or dry run), standard output and error for each node.
-    def execute_actions(actions_per_nodes, timeout: nil, concurrent: false, log_to_dir: "#{@nodes_handler.hybrid_platforms_dir}/run_logs", log_to_stdout: true)
+    def execute_actions(actions_per_nodes, timeout: nil, concurrent: false, log_to_dir: "#{@config.hybrid_platforms_dir}/run_logs", log_to_stdout: true)
       # Keep a list of nodes that will need remote access
       nodes_needing_connectors = []
       # Compute the ordered list of actions per selected node
@@ -115,6 +118,7 @@ module HybridPlatformsConductor
             action = @action_plugins[action_type].new(
               logger: @logger,
               logger_stderr: @logger_stderr,
+              config: @config,
               cmd_runner: @cmd_runner,
               actions_executor: self,
               action_info: action_info

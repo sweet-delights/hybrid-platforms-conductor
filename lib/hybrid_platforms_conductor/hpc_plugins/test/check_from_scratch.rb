@@ -11,7 +11,7 @@ module HybridPlatformsConductor
 
         # Check my_test_plugin.rb.sample documentation for signature details.
         def test_for_node
-          @deployer.with_test_provisioned_instance(@nodes_handler.tests_provisioner_id, @node, environment: 'check_from_scratch', reuse_instance: log_debug?) do |deployer|
+          @deployer.with_test_provisioned_instance(@config.tests_provisioner_id, @node, environment: 'check_from_scratch', reuse_instance: log_debug?) do |deployer|
             deployer.use_why_run = true
             result = deployer.deploy_on(@node)
             assert_equal result.size, 1, "Wrong number of nodes being tested: #{result.size}"

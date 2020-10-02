@@ -38,7 +38,7 @@ module HybridPlatformsConductor
           end
 
         end
-        self.extend_platforms_dsl_with MyDSLExtension, :init_my_dsl_extension
+        self.extend_config_dsl_with MyDSLExtension, :init_my_dsl_extension
 
         # Register test classes at the platform level.
         # This will be called for each platform of this type.

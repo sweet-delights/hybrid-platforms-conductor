@@ -18,6 +18,7 @@ module HybridPlatformsConductor
     # * *environment* (String): Environment for which this running instance is provisioned [default: 'production']
     # * *logger* (Logger): Logger to be used [default: Logger.new(STDOUT)]
     # * *logger_stderr* (Logger): Logger to be used for stderr [default: Logger.new(STDERR)]
+    # * *config* (Config): Config to be used. [default: Config.new]
     # * *cmd_runner* (CmdRunner): Command executor to be used. [default: CmdRunner.new]
     # * *nodes_handler* (NodesHandler): Nodes handler to be used. [default: NodesHandler.new]
     # * *actions_executor* (ActionsExecutor): Actions Executor to be used. [default: ActionsExecutor.new]
@@ -26,11 +27,12 @@ module HybridPlatformsConductor
       environment: 'production',
       logger: Logger.new(STDOUT),
       logger_stderr: Logger.new(STDERR),
+      config: Config.new,
       cmd_runner: CmdRunner.new,
       nodes_handler: NodesHandler.new,
       actions_executor: ActionsExecutor.new
     )
-      super(logger: logger, logger_stderr: logger_stderr)
+      super(logger: logger, logger_stderr: logger_stderr, config: config)
       @node = node
       @environment = environment
       @cmd_runner = cmd_runner

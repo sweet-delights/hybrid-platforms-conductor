@@ -1,5 +1,6 @@
 require 'fileutils'
 require 'tmpdir'
+require 'hybrid_platforms_conductor/config'
 require 'hybrid_platforms_conductor/actions_executor'
 require 'hybrid_platforms_conductor/cmd_runner'
 require 'hybrid_platforms_conductor/deployer'
@@ -21,6 +22,7 @@ require 'hybrid_platforms_conductor_test/cmdb_plugins/test_cmdb_others2'
 require 'hybrid_platforms_conductor_test/helpers/actions_executor_helpers'
 require 'hybrid_platforms_conductor_test/helpers/cmd_runner_helpers'
 require 'hybrid_platforms_conductor_test/helpers/cmdb_helpers'
+require 'hybrid_platforms_conductor_test/helpers/config_helpers'
 require 'hybrid_platforms_conductor_test/helpers/connector_ssh_helpers'
 require 'hybrid_platforms_conductor_test/helpers/deployer_helpers'
 require 'hybrid_platforms_conductor_test/helpers/deployer_test_helpers'
@@ -31,10 +33,11 @@ require 'hybrid_platforms_conductor_test/helpers/plugins_helpers'
 require 'hybrid_platforms_conductor_test/helpers/provisioner_proxmox_helpers'
 require 'hybrid_platforms_conductor_test/helpers/reports_handler_helpers'
 require 'hybrid_platforms_conductor_test/helpers/tests_runner_helpers'
+require 'hybrid_platforms_conductor_test/platform_handler_plugins/test'
+require 'hybrid_platforms_conductor_test/platform_handler_plugins/test2'
 require 'hybrid_platforms_conductor_test/report_plugin'
 require 'hybrid_platforms_conductor_test/test_action'
 require 'hybrid_platforms_conductor_test/test_connector'
-require 'hybrid_platforms_conductor_test/test_platform_handler'
 require 'hybrid_platforms_conductor_test/test_plugins/global'
 require 'hybrid_platforms_conductor_test/test_plugins/node'
 require 'hybrid_platforms_conductor_test/test_plugins/node_check'
@@ -49,18 +52,19 @@ module HybridPlatformsConductorTest
   # Helpers for the tests
   module Helpers
 
-    include PluginsHelpers
-    include PlatformHandlerHelpers
-    include CmdRunnerHelpers
-    include NodesHandlerHelpers
     include ActionsExecutorHelpers
-    include DeployerHelpers
-    include TestsRunnerHelpers
-    include ReportsHandlerHelpers
-    include ExecutablesHelpers
     include CmdbHelpers
+    include CmdRunnerHelpers
+    include ConfigHelpers
     include ConnectorSshHelpers
+    include DeployerHelpers
+    include ExecutablesHelpers
+    include NodesHandlerHelpers
+    include PlatformHandlerHelpers
+    include PluginsHelpers
     include ProvisionerProxmoxHelpers
+    include ReportsHandlerHelpers
+    include TestsRunnerHelpers
 
     # Make sure the tested components are being reset before each test case
     RSpec.configure do |config|
@@ -83,7 +87,8 @@ module HybridPlatformsConductorTest
         ENV['hpc_ssh_user'] = 'test_user'
         HybridPlatformsConductor::Deployer.packaged_platforms.clear
         HybridPlatformsConductorTest::TestAction.reset
-        HybridPlatformsConductorTest::TestPlatformHandler.reset
+        HybridPlatformsConductorTest::PlatformHandlerPlugins::Test.reset
+        HybridPlatformsConductorTest::PlatformHandlerPlugins::Test2.reset
         HybridPlatformsConductorTest::TestsReportPlugin.reports = []
         HybridPlatformsConductorTest::ReportPlugin.generated_reports = []
         HybridPlatformsConductorTest::TestProvisioner.mocked_states = []

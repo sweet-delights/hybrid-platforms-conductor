@@ -159,7 +159,7 @@ Host gw.data.ti
 os_image :centos, '/path/to/centos/os_image'
 ```
 
-`platforms.rb` file is a Ruby file that can use all public methods of [this file](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/browse/lib/hybrid_platforms_conductor/platforms_dsl.rb), as a DSL.
+`hpc_config.rb` file is a Ruby file that can use all exposed methods of [this file](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/browse/lib/hybrid_platforms_conductor/config.rb), as a DSL.
 In particular the following methods are important:
 * `<platform_type>_platform`: Used to declare a new platform, providing either a local path to it (using `path: '/path/to/files'`) or a git repository to it (using `git: 'git_url'`).
 * `gateway`: Used to declare a new gateway, with 2 parameters: its name (as a Symbol) and its SSH configuration (as a String).

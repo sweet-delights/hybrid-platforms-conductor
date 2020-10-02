@@ -30,7 +30,7 @@ module HybridPlatformsConductor
           end
 
         end
-        self.extend_platforms_dsl_with MyDSLExtension, :init_my_dsl_extension
+        self.extend_config_dsl_with MyDSLExtension, :init_my_dsl_extension
 
         # Setup the action.
         # This is called by the constructor itself, when an action is instantiated to be executed for a node.

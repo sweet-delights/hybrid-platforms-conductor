@@ -36,7 +36,7 @@ describe HybridPlatformsConductor::TestsRunner do
           EOS
           with_platforms platforms do
             repos = []
-            test_nodes_handler.for_each_bitbucket_repo do |bitbucket, repo_info|
+            test_config.for_each_bitbucket_repo do |bitbucket, repo_info|
               repos << {
                 bitbucket_url: bitbucket.bitbucket_url,
                 repo_info: repo_info

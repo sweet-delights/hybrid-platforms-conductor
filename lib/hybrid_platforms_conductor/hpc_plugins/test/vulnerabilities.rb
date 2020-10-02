@@ -36,8 +36,8 @@ module HybridPlatformsConductor
           # Get the image name for this node
           image = @nodes_handler.get_image_of(@node).to_sym
           # Find if we have such an image registered
-          if @nodes_handler.known_os_images.include?(image)
-            oval_file = "#{@nodes_handler.os_image_dir(image)}/oval.json"
+          if @config.known_os_images.include?(image)
+            oval_file = "#{@config.os_image_dir(image)}/oval.json"
             if File.exist?(oval_file)
               oval_info = JSON.parse(File.read(oval_file))
               # Get all URLs

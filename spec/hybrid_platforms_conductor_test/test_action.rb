@@ -17,7 +17,6 @@ module HybridPlatformsConductorTest
       end
 
     end
-    
 
     # Setup the action
     #

@@ -89,11 +89,13 @@ module HybridPlatformsConductor
     # Parameters::
     # * *logger* (Logger): Logger to be used [default = Logger.new(STDOUT)]
     # * *logger_stderr* (Logger): Logger to be used for stderr [default = Logger.new(STDERR)]
+    # * *config* (Config): Config to be used. [default = Config.new]
     # * *cmd_runner* (CmdRunner): Command executor to be used. [default = CmdRunner.new]
     # * *nodes_handler* (NodesHandler): Nodes handler to be used. [default = NodesHandler.new]
     # * *actions_executor* (ActionsExecutor): Actions Executor to be used. [default = ActionsExecutor.new]
-    def initialize(logger: Logger.new(STDOUT), logger_stderr: Logger.new(STDERR), cmd_runner: CmdRunner.new, nodes_handler: NodesHandler.new, actions_executor: ActionsExecutor.new)
+    def initialize(logger: Logger.new(STDOUT), logger_stderr: Logger.new(STDERR), config: Config.new, cmd_runner: CmdRunner.new, nodes_handler: NodesHandler.new, actions_executor: ActionsExecutor.new)
       init_loggers(logger, logger_stderr)
+      @config = config
       @cmd_runner = cmd_runner
       @nodes_handler = nodes_handler
       @actions_executor = actions_executor
@@ -313,6 +315,7 @@ module HybridPlatformsConductor
           environment: environment,
           logger: @logger,
           logger_stderr: @logger_stderr,
+          config: @config,
           cmd_runner: @cmd_runner,
           # Here we use the NodesHandler that will be bound to the sub-Deployer only, as the node's metadata might be modified by the Provisioner.
           nodes_handler: sub_executable.nodes_handler,
@@ -328,7 +331,7 @@ module HybridPlatformsConductor
           deployer.allow_deploy_non_master = true
           deployer.prepare_for_local_environment
           # Ignore secrets that might have been given: in Docker containers we always use dummy secrets
-          deployer.secrets = [JSON.parse(File.read("#{@nodes_handler.hybrid_platforms_dir}/dummy_secrets.json"))]
+          deployer.secrets = [JSON.parse(File.read("#{@config.hybrid_platforms_dir}/dummy_secrets.json"))]
           yield deployer, instance
         end
       rescue

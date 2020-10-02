@@ -52,18 +52,18 @@ module HybridPlatformsConductorTest
         end
       end
 
-      # Setup a platforms.rb with a given content and call code when it's ready.
+      # Setup a hpc_config.rb with a given content and call code when it's ready.
       # Automatically sets the hpc_platforms env variable so that processes can then use it.
       # Clean-up at the end.
       #
       # Parameters::
-      # * *content* (String): Platforms.rb's content
+      # * *content* (String): hpc_config.rb's content
       # * Proc: Code called with the platforms.rb file created.
       #   * Parameters::
       #     * *hybrid_platforms_dir* (String): The hybrid-platforms directory
       def with_platforms(content)
         with_repository('hybrid-platforms') do |hybrid_platforms_dir|
-          File.write("#{hybrid_platforms_dir}/platforms.rb", content)
+          File.write("#{hybrid_platforms_dir}/hpc_config.rb", content)
           ENV['hpc_platforms'] = hybrid_platforms_dir
           yield hybrid_platforms_dir
         end
@@ -87,7 +87,7 @@ module HybridPlatformsConductorTest
             platform_types << platform_type unless platform_types.include?(platform_type)
             "#{platform_type}_platform path: '#{dir}'"
           end.join("\n") + "\n#{additional_platforms_content}") do
-            register_platform_handlers(Hash[platform_types.map { |platform_type| [platform_type, HybridPlatformsConductorTest::TestPlatformHandler] }])
+            register_platform_handlers(Hash[platform_types.map { |platform_type| [platform_type, HybridPlatformsConductorTest::PlatformHandlerPlugins.const_get(platform_type.to_s.split('_').collect(&:capitalize).join.to_sym)] }])
             self.test_platforms_info = platforms_info
             yield repositories
           end
@@ -116,7 +116,7 @@ module HybridPlatformsConductorTest
       # Result::
       # * NodesHandler: NodesHandler on which we can do testing
       def test_nodes_handler
-        @nodes_handler = HybridPlatformsConductor::NodesHandler.new logger: logger, logger_stderr: logger, cmd_runner: test_cmd_runner unless @nodes_handler
+        @nodes_handler = HybridPlatformsConductor::NodesHandler.new logger: logger, logger_stderr: logger, config: test_config, cmd_runner: test_cmd_runner unless @nodes_handler
         @nodes_handler
       end
 

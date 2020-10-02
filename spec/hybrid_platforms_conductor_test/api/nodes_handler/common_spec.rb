@@ -6,12 +6,6 @@ describe HybridPlatformsConductor::NodesHandler do
     end
   end
 
-  it 'returns the hybrid-platforms dir correctly' do
-    with_platforms '' do |hybrid_platforms_dir|
-      expect(test_nodes_handler.hybrid_platforms_dir).to eq hybrid_platforms_dir
-    end
-  end
-
   it 'initializes with a platform having no node' do
     with_test_platform do
       expect(test_nodes_handler.known_nodes).to eq []
@@ -69,12 +63,6 @@ describe HybridPlatformsConductor::NodesHandler do
         end.to raise_error 'Error iterating on node3'
       end
       expect(nodes_iterated).to eq %w[node4 node2]
-    end
-  end
-
-  it 'returns the tests provisioner correctly' do
-    with_platforms 'tests_provisioner :test_provisioner' do
-      expect(test_nodes_handler.tests_provisioner_id).to eq :test_provisioner
     end
   end
 

@@ -57,7 +57,7 @@ module HybridPlatformsConductor
       # Provision Proxmox containers
       class Proxmox < HybridPlatformsConductor::Provisioner
 
-        extend_platforms_dsl_with PlatformsDSLProxmox, :init_proxmox
+        extend_config_dsl_with PlatformsDSLProxmox, :init_proxmox
 
         class << self
           attr_accessor :proxmox_waiter_files_mutex
@@ -122,8 +122,8 @@ module HybridPlatformsConductor
             # Get the image name for this node
             image = @nodes_handler.get_image_of(@node).to_sym
             # Find if we have such an image registered
-            if @nodes_handler.known_os_images.include?(image)
-              proxmox_conf = "#{@nodes_handler.os_image_dir(image)}/proxmox.json"
+            if @config.known_os_images.include?(image)
+              proxmox_conf = "#{@config.os_image_dir(image)}/proxmox.json"
               if File.exist?(proxmox_conf)
                 pve_template = JSON.parse(File.read(proxmox_conf)).dig 'template'
                 if pve_template
@@ -500,7 +500,7 @@ module HybridPlatformsConductor
         #   * *test_config* (Hash<Symbol,Object>): The test configuration. Check ProxmoxWaiter#initialize (config_file structure) method to get details.
         #   * *vm_config* (Hash<Symbol,Object>): Extra configuration of a created container. Check #request_lxc_creation_for results to get details.
         def proxmox_test_info
-          @nodes_handler.proxmox_servers.first
+          @config.proxmox_servers.first
         end
       end
 
