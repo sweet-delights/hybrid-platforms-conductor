@@ -24,6 +24,13 @@ module HybridPlatformsConductor
     #   Hash<Symbol, Array<String> >
     attr_reader :platform_dirs
 
+    # List of expected failures info. Each info has the following properties:
+    # * *nodes_selectors_stack* (Array<Object>): Stack of nodes selectors impacted by this expected failure
+    # * *tests* (Array<Symbol>): List of tests impacted by this expected failre
+    # * *reason* (String): Reason for this expected failure
+    # Array<Hash,Symbol,Object>
+    attr_reader :expected_failures
+
     # Constructor
     #
     # Parameters::
@@ -31,6 +38,9 @@ module HybridPlatformsConductor
     # * *logger_stderr* (Logger): Logger to be used for stderr [default = Logger.new(STDERR)]
     def initialize(logger: Logger.new(STDOUT), logger_stderr: Logger.new(STDERR))
       init_loggers(logger, logger_stderr)
+      # Stack of the nodes selectors scopes
+      # Array< Object >
+      @nodes_selectors_stack = []
       @hybrid_platforms_dir = File.expand_path(ENV['hpc_platforms'].nil? ? '.' : ENV['hpc_platforms'])
       # List of OS image directories, per image name
       # Hash<Symbol, String>
@@ -43,6 +53,12 @@ module HybridPlatformsConductor
       # Plugin ID of the tests provisioner
       # Symbol
       @tests_provisioner = :docker
+      # List of expected failures info. Each info has the following properties:
+      # * *nodes_selectors_stack* (Array<Object>): Stack of nodes selectors impacted by this expected failure
+      # * *tests* (Array<Symbol>): List of tests impacted by this expected failre
+      # * *reason* (String): Reason for this expected failure
+      # Array<Hash,Symbol,Object>
+      @expected_failures = []
       # Make sure plugins can decorate our DSL with their owns additions as well
       # Therefore we parse all possible plugin types
       Dir.glob("#{__dir__}/hpc_plugins/*").each do |plugin_dir|
@@ -84,6 +100,43 @@ module HybridPlatformsConductor
       @tests_provisioner = provisioner
     end
     expose :tests_provisioner
+
+    # Limit the scope of configuration to a given set of nodes
+    #
+    # Parameters::
+    # * *nodes_selectors* (Object): Nodes selectors, as defined by the NodesHandler#select_nodes method (check its signature for details)
+    # Proc: DSL code called in the context of those selected nodes
+    def for_nodes(nodes_selectors)
+      @nodes_selectors_stack << nodes_selectors
+      begin
+        yield
+      ensure
+        @nodes_selectors_stack.pop
+      end
+    end
+    expose :for_nodes
+
+    # Mark some tests as expected failures.
+    #
+    # Parameters::
+    # * *tests* (Symbol or Array<Symbol>): List of tests expected to fail.
+    # * *reason* (String): Descriptive reason for the failure
+    def expect_tests_to_fail(tests, reason)
+      @expected_failures << {
+        tests: tests.is_a?(Array) ? tests : [tests],
+        nodes_selectors_stack: current_nodes_selectors_stack,
+        reason: reason
+      }
+    end
+    expose :expect_tests_to_fail
+
+    # Get the current nodes selector stack.
+    #
+    # Result::
+    # * Array<Object>: Nodes selectors stack
+    def current_nodes_selectors_stack
+      @nodes_selectors_stack.clone
+    end
 
     # Get the list of known Docker images
     #

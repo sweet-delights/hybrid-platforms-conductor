@@ -570,6 +570,17 @@ module HybridPlatformsConductor
       ]
     end
 
+    # Get the list of nodes impacted by a nodes selector stack.
+    # The result is the intersection of every nodes set in the stack.
+    #
+    # Parameters::
+    # * *nodes_selector_stack* (Array): The nodes selector stack
+    # Result::
+    # * Array<String>: List of nodes
+    def select_from_nodes_selector_stack(nodes_selector_stack)
+      nodes_selector_stack.inject(known_nodes) { |selected_nodes, nodes_selector| selected_nodes & select_nodes(nodes_selector) }
+    end
+
   end
 
 end
