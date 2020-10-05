@@ -170,4 +170,38 @@ describe HybridPlatformsConductor::Config do
     end
   end
 
+  it 'returns the retriable errors correctly' do
+    with_platforms '
+      retry_deploy_for_errors_on_stdout \'Retry stdout global\'
+      retry_deploy_for_errors_on_stderr [
+        \'Retry stderr global\',
+        /.+Retry stderr regexp global/
+      ]
+      for_nodes(%w[node1 node2 node3]) do
+        retry_deploy_for_errors_on_stdout \'Retry stdout nodes\'
+        retry_deploy_for_errors_on_stderr \'Retry stderr nodes\'
+      end
+    ' do
+      sort_proc = proc { |retriable_error_info| ((retriable_error_info[:errors_on_stdout] || []) + (retriable_error_info[:errors_on_stderr] || [])).first.to_s }
+      expect(test_config.retriable_errors.sort_by(&sort_proc)).to eq [
+        {
+          nodes_selectors_stack: [],
+          errors_on_stdout: ['Retry stdout global']
+        },
+        {
+          nodes_selectors_stack: [],
+          errors_on_stderr: ['Retry stderr global', /.+Retry stderr regexp global/]
+        },
+        {
+          nodes_selectors_stack: [%w[node1 node2 node3]],
+          errors_on_stdout: ['Retry stdout nodes']
+        },
+        {
+          nodes_selectors_stack: [%w[node1 node2 node3]],
+          errors_on_stderr: ['Retry stderr nodes']
+        }
+      ].sort_by(&sort_proc)
+    end
+  end
+
 end
