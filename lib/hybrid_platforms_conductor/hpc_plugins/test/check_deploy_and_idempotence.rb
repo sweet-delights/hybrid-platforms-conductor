@@ -15,6 +15,8 @@ module HybridPlatformsConductor
       # Especially useful if your tests run in an environment having limited Docker resources.
       class CheckDeployAndIdempotence < TestByService
 
+        self.extend_config_dsl_with CommonConfigDsl::IdempotenceTests, :init_idempotence_tests
+
         # Check my_test_plugin.rb.sample documentation for signature details.
         def test_for_node
           @deployer.with_test_provisioned_instance(@config.tests_provisioner_id, @node, environment: 'check_deploy_and_idempotence', reuse_instance: log_debug?) do |deployer, instance|
