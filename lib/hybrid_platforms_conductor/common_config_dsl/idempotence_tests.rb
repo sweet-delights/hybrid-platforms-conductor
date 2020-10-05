@@ -1,5 +1,3 @@
-require 'hybrid_platforms_conductor/bitbucket'
-
 module HybridPlatformsConductor
 
   module CommonConfigDsl
