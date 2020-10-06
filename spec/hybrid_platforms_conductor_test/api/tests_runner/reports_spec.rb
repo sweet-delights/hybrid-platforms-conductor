@@ -318,7 +318,7 @@ describe HybridPlatformsConductor::TestsRunner do
           expect_tests_to_fail(:node_test, \'Expected failure\')
         end
         '
-      ) do |repository|
+      ) do
         register_tests_report_plugins(test_tests_runner, report: HybridPlatformsConductorTest::TestsReportPlugin)
         register_test_plugins(test_tests_runner, node_test: HybridPlatformsConductorTest::TestPlugins::Node)
         HybridPlatformsConductorTest::TestPlugins::Node.fail_for = { node_test: %w[node1 node5] }
