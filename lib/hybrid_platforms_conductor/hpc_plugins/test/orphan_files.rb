@@ -28,10 +28,10 @@ module HybridPlatformsConductor
           # Ignore a list of paths for orphan files testing
           #
           # Parameters::
-          # * *paths_to_ignore* (Array<String>): List of paths to ignore
+          # * *paths_to_ignore* (String or Array<String>): List of paths to ignore
           def ignore_orphan_files_from(paths_to_ignore)
             @ignored_orphan_files_paths << {
-              ignored_paths: paths_to_ignore,
+              ignored_paths: paths_to_ignore.is_a?(Array) ? paths_to_ignore : [paths_to_ignore],
               nodes_selectors_stack: current_nodes_selectors_stack,
             }
           end
