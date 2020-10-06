@@ -198,7 +198,7 @@ module HybridPlatformsConductor
         begin
           @reports_plugins[report].new(@logger, @logger_stderr, @nodes_handler, @nodes, @tested_platforms, @tests_run).report
         rescue
-          log_error "Uncaught exception while producing report #{report}: #{$!}"
+          log_error "Uncaught exception while producing report #{report}: #{$!}\n#{$!.backtrace.join("\n")}"
         end
       end
 
