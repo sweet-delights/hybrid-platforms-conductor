@@ -14,6 +14,8 @@ module HybridPlatformsConductor
       # * deploy_removes_root_access
       # * idempotence
       # Especially useful if your tests run in an environment having limited Docker resources.
+      # This tests uses the testadmin user access once deployed.
+      # Don't forget to add the testadmin private key in your SSH agent if you run this test locally.
       class CheckDeployAndIdempotence < TestByService
 
         self.extend_config_dsl_with CommonConfigDsl::IdempotenceTests, :init_idempotence_tests
@@ -77,7 +79,9 @@ module HybridPlatformsConductor
                   exit_status, stdout, stderr = deployer.deploy_on(@node)[@node]
                   assert_equal exit_status, 0, "Check-node after deployment returned error code #{exit_status}", log_debug? ? nil : deployer.stdouts_to_s
                   # Check that the output of the check-node returns no changes.
-                  ignored_tasks = @nodes_handler.platform_for(@node).metadata.dig('test', 'idempotence', 'ignored_tasks') || {}
+                  ignored_tasks = @nodes_handler.select_confs_for_node(@node, @config.ignored_idempotence_tasks).inject({}) do |merged_ignored_tasks, conf|
+                    merged_ignored_tasks.merge(conf[:ignored_tasks])
+                  end
                   @platform.parse_deploy_output(stdout, stderr).each do |task_info|
                     if task_info[:status] == :changed
                       if ignored_tasks.key?(task_info[:name])

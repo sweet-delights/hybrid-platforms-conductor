@@ -33,8 +33,9 @@ describe HybridPlatformsConductor::TestsRunner do
   end
 
   it 'returns 0 when tests are failing as expected' do
-    with_test_platform do |repository|
-      File.write("#{repository}/hpc.json", '{ "test": { "expected_failures": { "platform_test": { "": "Expected failure" } } } }')
+    with_test_platform({}, false, '
+      expect_tests_to_fail(:platform_test, \'Expected failure\')
+    ') do
       register_test_plugins(test_tests_runner, platform_test: HybridPlatformsConductorTest::TestPlugins::Platform)
       HybridPlatformsConductorTest::TestPlugins::Platform.fail_for = ['platform']
       expect(test_tests_runner.run_tests([])).to eq 0
@@ -43,8 +44,11 @@ describe HybridPlatformsConductor::TestsRunner do
   end
 
   it 'returns 0 when tests are failing as expected on a given node' do
-    with_test_platform(nodes: { 'node1' => {}, 'node2' => {}, 'node3' => {} }) do |repository|
-      File.write("#{repository}/hpc.json", '{ "test": { "expected_failures": { "node_test": { "node2": "Expected failure" } } } }')
+    with_test_platform({ nodes: { 'node1' => {}, 'node2' => {}, 'node3' => {} } }, false, '
+      for_nodes(\'node2\') do
+        expect_tests_to_fail(:node_test, \'Expected failure\')
+      end
+    ') do
       register_test_plugins(test_tests_runner, node_test: HybridPlatformsConductorTest::TestPlugins::Node)
       HybridPlatformsConductorTest::TestPlugins::Node.fail_for = { node_test: ['node2'] }
       expect(test_tests_runner.run_tests(%w[node1 node2 node3])).to eq 0
@@ -53,8 +57,9 @@ describe HybridPlatformsConductor::TestsRunner do
   end
 
   it 'returns 1 when tests are succeeding but were expected to fail' do
-    with_test_platform do |repository|
-      File.write("#{repository}/hpc.json", '{ "test": { "expected_failures": { "platform_test": { "": "Expected failure" } } } }')
+    with_test_platform({}, false, '
+      expect_tests_to_fail(:platform_test, \'Expected failure\')
+    ') do
       register_test_plugins(test_tests_runner, platform_test: HybridPlatformsConductorTest::TestPlugins::Platform)
       expect(test_tests_runner.run_tests([])).to eq 1
       expect(HybridPlatformsConductorTest::TestPlugins::Platform.runs).to eq [[:platform_test, 'platform']]
@@ -62,23 +67,26 @@ describe HybridPlatformsConductor::TestsRunner do
   end
 
   it 'returns 1 when extra expected failures have not been tested when running all tests' do
-    with_test_platform do |repository|
-      File.write("#{repository}/hpc.json", '{ "test": { "expected_failures": { "platform_test": { "another_node": "Expected failure" } } } }')
+    with_test_platform({ nodes: { 'another_node' => {} } }, false, '
+      for_nodes(\'another_node\') do
+        expect_tests_to_fail(:platform_test, \'Expected failure\')
+      end
+    ') do
       register_test_plugins(test_tests_runner, platform_test: HybridPlatformsConductorTest::TestPlugins::Platform)
       expect(test_tests_runner.run_tests([])).to eq 1
       expect(HybridPlatformsConductorTest::TestPlugins::Platform.runs).to eq [[:platform_test, 'platform']]
     end
   end
 
-  it 'returns 0 when other platforms report extra expected failures that were not part of the test runs' do
-    with_test_platforms(
-      'platform1' => { nodes: { 'node1' => {} } },
-      'platform2' => {}
-    ) do |repositories|
-      File.write("#{repositories['platform2']}/hpc.json", '{ "test": { "expected_failures": { "node_test": { "another_node": "Expected failure" } } } }')
+  it 'fails when expected failures reference missing nodes' do
+    with_test_platform({ nodes: { 'node' => {} } }, false, '
+        for_nodes(\'missing_node\') do
+          expect_tests_to_fail(:node_test, \'Expected failure\')
+        end
+      '
+    ) do
       register_test_plugins(test_tests_runner, node_test: HybridPlatformsConductorTest::TestPlugins::Node)
-      expect(test_tests_runner.run_tests([{ all: true }])).to eq 0
-      expect(HybridPlatformsConductorTest::TestPlugins::Node.runs).to eq [[:node_test, 'node1']]
+      expect { test_tests_runner.run_tests([{ all: true }]) }.to raise_error 'Unknown nodes: missing_node'
     end
   end
 

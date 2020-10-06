@@ -74,15 +74,4 @@ describe HybridPlatformsConductor::PlatformHandler do
     end
   end
 
-  it 'returns the platform metadata' do
-    with_repository('platform') do |repository|
-      with_platforms "test_platform path: '#{repository}'" do
-        register_platform_handlers test: HybridPlatformsConductorTest::PlatformHandlerPlugins::Test
-        self.test_platforms_info = { 'platform' => {} }
-        File.write("#{repository}/hpc.json", '{ "metadata": "content" }')
-        expect(test_nodes_handler.platform('platform').metadata).to eq('metadata' => 'content')
-      end
-    end
-  end
-
 end

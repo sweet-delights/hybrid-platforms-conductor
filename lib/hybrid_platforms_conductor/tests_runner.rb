@@ -78,8 +78,6 @@ module HybridPlatformsConductor
       @max_threads_connection_on_nodes = 64
       @max_threads_nodes = 8
       @max_threads_platforms = 8
-      # Cache of expected failures
-      @cache_expected_failures = {}
     end
 
     # Complete an option parser with options meant to control this tests runner
@@ -139,6 +137,39 @@ module HybridPlatformsConductor
       raise "Unknown test names: #{unknown_tests.join(', ')}" unless unknown_tests.empty?
       @nodes = @nodes_handler.select_nodes(nodes_selectors).uniq.sort
 
+      # Resolve the expected failures from the config.
+      # Expected failures at node level
+      # Hash< Symbol,    Hash< String, String > >
+      # Hash< test_name, Hash< node,   reason > >
+      @node_expected_failures = {}
+      @config.expected_failures.each do |expected_failure_info|
+        selected_nodes = @nodes_handler.select_from_nodes_selector_stack(expected_failure_info[:nodes_selectors_stack])
+        expected_failure_info[:tests].each do |test_name|
+          @node_expected_failures[test_name] = {} unless @node_expected_failures.key?(test_name)
+          selected_nodes.each do |node|
+            if @node_expected_failures[test_name].key?(node)
+              @node_expected_failures[test_name][node] += " + #{expected_failure_info[:reason]}"
+            else
+              @node_expected_failures[test_name][node] = expected_failure_info[:reason]
+            end
+          end
+        end
+      end
+      # Expected failures at platform level
+      # Hash< Symbol,    Hash< String,   String > >
+      # Hash< test_name, Hash< platform, reason > >
+      @platform_expected_failures = {}
+      @nodes_handler.known_platforms.each do |platform_name|
+        platform_nodes = @nodes_handler.platform(platform_name).known_nodes
+        @node_expected_failures.each do |test_name, expected_failures_for_test|
+          if (platform_nodes - expected_failures_for_test.keys).empty?
+            # We have an expected failure for this test
+            @platform_expected_failures[test_name] = {} unless @platform_expected_failures.key?(test_name)
+            @platform_expected_failures[test_name][platform_name] = expected_failures_for_test.values.uniq.join(' + ')
+          end
+        end
+      end
+
       # Keep a list of all tests that have run for the report
       # Array< Test >
       @tests_run = []
@@ -172,24 +203,17 @@ module HybridPlatformsConductor
       end
       # If all tests were executed, make sure that there are no expected failures that have not even been tested.
       if @tests_plugins.keys - @tests == []
-        @tests_run.map(&:platform).uniq.compact.each do |platform|
-          platform_name = platform.nil? ? '' : platform.info[:repo_name]
-          (expected_failures_for(platform) || {}).each do |test_name, test_expected_failures|
-            test_expected_failures.each do |node, expected_failure|
-              # Check that a test has been run for this expected failure
-              unless @tests_run.find do |test|
-                  test.name.to_s == test_name &&
-                    (
-                      (test.platform.nil? && platform_name == '') ||
-                      (!test.platform.nil? && platform_name == test.platform.info[:repo_name])
-                    ) &&
-                    (
-                      (test.node.nil? && node == '') ||
-                      (!test.node.nil? && node == test.node)
-                    )
-                end
-                error("A test named #{test_name} for platform #{platform_name} and node #{node} was expected to fail (#{expected_failure}), but no test has been run. Please remove it from the expected failures if this expected failure is obsolete.")
+        @node_expected_failures.each do |test_name, test_expected_failures|
+          test_expected_failures.each do |node, expected_failure|
+            # Check that a test has been run for this expected failure
+            unless @tests_run.find do |test|
+                test.name == test_name &&
+                  (
+                    (test.node.nil? && node == '') ||
+                    (!test.node.nil? && node == test.node)
+                  )
               end
+              error("A test named #{test_name} for node #{node} was expected to fail (#{expected_failure}), but no test has been run. Please remove it from the expected failures if this expected failure is obsolete.")
             end
           end
         end
@@ -215,18 +239,6 @@ module HybridPlatformsConductor
     end
 
     private
-
-    # Get the expected failures for a given platform.
-    # Keep them in cache for performance.
-    #
-    # Parameters::
-    # * *platform* (PlatformHandler): The platform
-    # Result::
-    # * Hash: The expected failures
-    def expected_failures_for(platform)
-      @cache_expected_failures[platform] = platform.metadata.dig 'test', 'expected_failures' unless @cache_expected_failures.key?(platform)
-      @cache_expected_failures[platform]
-    end
 
     # Report an error, linked eventually to a given platform or node
     #
@@ -264,11 +276,17 @@ module HybridPlatformsConductor
         name: test_name.nil? ? :global : test_name,
         platform: platform,
         node: node,
-        expected_failure: if platform.nil? || ignore_expected_failure
+        expected_failure: if ignore_expected_failure
                             nil
+                          elsif platform.nil?
+                            # Global test
+                            nil
+                          elsif node.nil?
+                            # Platform test
+                            @platform_expected_failures.dig(test_name.nil? ? 'global' : test_name, platform.info[:repo_name])
                           else
-                            expected_failures = expected_failures_for(platform)
-                            expected_failures.nil? ? nil : expected_failures.dig(test_name.nil? ? 'global' : test_name.to_s, node || '')
+                            # Node test
+                            @node_expected_failures.dig(test_name.nil? ? 'global' : test_name, node)
                           end
       )
     end

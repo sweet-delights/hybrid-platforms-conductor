@@ -1544,21 +1544,16 @@ Deployer options:
 * `--timeout SECS`: Specify the timeout (in seconds) to apply while deploying. This can be set only in why-run mode.
 * `--why-run`: Specify the why-run mode. The why-run mode is used to simulate a deployment on the nodes, and report what a real deployment would have changed on the node.
 * `--retries-on-error NBR`: Specify the number of retries deploys can do in case of non-deterministic errors.
-  Non-deterministic errors are matched using a set of strings or regular expressions that can be configured in the `hpc.json` file of any platform, using the `retriable_errors` property:
+  Non-deterministic errors are matched using a set of strings or regular expressions that can be configured in the `hpc_config.rb` file of any platform, using the `retry_deploy_for_errors_on_stdout` and `retry_deploy_for_errors_on_stderr` properties:
   For example:
-```json
-  "retriable_errors": [
-    {
-      "nodes": ["node12hst-nn9"],
-      "errors_on_stdout": [
-        "This is a raw string error that will be matched against stdout",
-        "/This is a regexp match ending with.* error/"
-      ],
-      "errors_on_stderr": [
-        "This is a raw string error that will be matched against stderr"
-      ]
-    }
-  ]
+```ruby
+retry_deploy_for_errors_on_stdout [
+  'This is a raw string error that will be matched against stdout',
+  /This is a regexp match ending with.* error/
+]
+retry_deploy_for_errors_on_stderr [
+  'This is a raw string error that will be matched against stderr'
+]
 ```
 
 ## JSON dump options

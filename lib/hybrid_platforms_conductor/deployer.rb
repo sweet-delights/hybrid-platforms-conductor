@@ -367,11 +367,9 @@ module HybridPlatformsConductor
       # Array<String or Regexp>
       retriable_errors_on_stdout = []
       retriable_errors_on_stderr = []
-      (@nodes_handler.platform_for(node).metadata.dig('retriable_errors') || []).each do |retriable_error_info|
-        if retriable_error_info['nodes'].include?(node)
-          retriable_errors_on_stdout.concat(retriable_error_info['errors_on_stdout'].map { |error| error =~ /^\/(.+)\/$/ ? Regexp.new($1) : error }) if retriable_error_info['errors_on_stdout']
-          retriable_errors_on_stderr.concat(retriable_error_info['errors_on_stderr'].map { |error| error =~ /^\/(.+)\/$/ ? Regexp.new($1) : error }) if retriable_error_info['errors_on_stderr']
-        end
+      @nodes_handler.select_confs_for_node(node, @config.retriable_errors).each do |retriable_error_info|
+        retriable_errors_on_stdout.concat(retriable_error_info[:errors_on_stdout]) if retriable_error_info.key?(:errors_on_stdout)
+        retriable_errors_on_stderr.concat(retriable_error_info[:errors_on_stderr]) if retriable_error_info.key?(:errors_on_stderr)
       end
       {
         stdout => retriable_errors_on_stdout,

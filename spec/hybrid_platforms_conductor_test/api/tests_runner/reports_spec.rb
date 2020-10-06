@@ -305,16 +305,23 @@ describe HybridPlatformsConductor::TestsRunner do
 
     it 'returns correctly nodes by nodes lists' do
       with_test_platform(
-        nodes: { 'node1' => {}, 'node2' => {}, 'node3' => {}, 'node4' => {}, 'node5' => {} },
-        nodes_lists: {
-          'nodes_list1' => %w[node1 node3],
-          'nodes_list2' => %w[node2 node3 node4]
-        }
+        {
+          nodes: { 'node1' => {}, 'node2' => {}, 'node3' => {}, 'node4' => {}, 'node5' => {} },
+          nodes_lists: {
+            'nodes_list1' => %w[node1 node3],
+            'nodes_list2' => %w[node2 node3 node4]
+          }
+        },
+        false,
+        '
+        for_nodes(\'node1\') do
+          expect_tests_to_fail(:node_test, \'Expected failure\')
+        end
+        '
       ) do |repository|
         register_tests_report_plugins(test_tests_runner, report: HybridPlatformsConductorTest::TestsReportPlugin)
         register_test_plugins(test_tests_runner, node_test: HybridPlatformsConductorTest::TestPlugins::Node)
         HybridPlatformsConductorTest::TestPlugins::Node.fail_for = { node_test: %w[node1 node5] }
-        File.write("#{repository}/hpc.json", '{ "test": { "expected_failures": { "node_test": { "node1": "Expected failure" } } } }')
         test_tests_runner.reports = [:report]
         test_tests_runner.tests = [:node_test]
         test_tests_runner.run_tests %w[node1 node2 node3 node5]
