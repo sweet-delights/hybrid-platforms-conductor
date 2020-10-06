@@ -1,3 +1,9 @@
+# [23.5.3](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv23.5.2&sourceBranch=refs%2Ftags%2Fv23.5.3) (2020-10-06)
+
+### Fixes
+
+* Bug correction on Confluence reports preventing publication of test reports ([2d44f76c](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/commits/2d44f76cd6a098c0510929b24a938b051d590656))
+
 # [23.5.2](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv23.5.1&sourceBranch=refs%2Ftags%2Fv23.5.2) (2020-10-02)
 
 ### Fixes
