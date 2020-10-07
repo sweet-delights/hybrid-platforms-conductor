@@ -1649,6 +1649,10 @@ Test that VEIDs are assigned correctly.
 
 Test that the connection works by simply outputing something.
 
+### file_system
+
+Test various checks on the file system of a node.
+
 ### hostname
 
 Test that the hostname is correct.
