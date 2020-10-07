@@ -1657,9 +1657,9 @@ Test that the hostname is correct.
 
 Test that the private IP address is correct.
 
-### obsolete_users_assets
+### local_users
 
-Test that the node has no users assets (home directories) belonging to obsolete users.
+Test local users of the node (missing ones and/or extra ones).
 
 ### orphan_files
 
