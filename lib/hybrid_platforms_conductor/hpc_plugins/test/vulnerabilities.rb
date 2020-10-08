@@ -107,6 +107,7 @@ module HybridPlatformsConductor
                   sudo oscap oval eval --skip-valid --results "#{local_oval_file}.results.xml" "#{local_oval_file}"
                   echo "===== RESULTS ====="
                   cat "#{local_oval_file}.results.xml"
+                  cd ..
                 EOS
                 [
                   cmds,
