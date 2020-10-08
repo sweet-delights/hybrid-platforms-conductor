@@ -71,7 +71,6 @@ module HybridPlatformsConductor
                   end
                 end
                 cmds = <<~EOS
-                  set -e -x
                   #{
                     case image
                     when :centos_7
