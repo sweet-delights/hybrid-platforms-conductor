@@ -30,11 +30,12 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
         end
       end
 
-      it 'reserves a resource on an empty PVE node having enough resources using Proxmox user and password from environment' do
+      it 'reserves a resource on an empty PVE node having enough resources using Proxmox user, password and realm from environment' do
         with_sync_node do
           ENV['hpc_user_for_proxmox'] = 'test_proxmox_user'
           ENV['hpc_password_for_proxmox'] = 'test_proxmox_password'
-          mock_proxmox(proxmox_user: 'test_proxmox_user', proxmox_password: 'test_proxmox_password')
+          ENV['hpc_realm_for_proxmox'] = 'test_proxmox_realm'
+          mock_proxmox(proxmox_user: 'test_proxmox_user', proxmox_password: 'test_proxmox_password', proxmox_realm: 'test_proxmox_realm')
           expect(call_reserve_proxmox_container(2, 1024, 4)).to eq(
             pve_node: 'pve_node_name',
             vm_id: 1000,

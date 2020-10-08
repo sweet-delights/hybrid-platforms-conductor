@@ -79,6 +79,7 @@ module HybridPlatformsConductorTest
         ENV.delete 'hpc_ssh_gateway_user'
         ENV.delete 'hpc_user_for_proxmox'
         ENV.delete 'hpc_password_for_proxmox'
+        ENV.delete 'hpc_realm_for_proxmox'
         ENV.delete 'hpc_user_for_thycotic'
         ENV.delete 'hpc_password_for_thycotic'
         ENV.delete 'hpc_domain_for_thycotic'

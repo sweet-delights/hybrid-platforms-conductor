@@ -73,19 +73,20 @@ module HybridPlatformsConductorTest
       # Parameters::
       # * *proxmox_user* (String or nil): Proxmox user used to connect to Proxmox API [default: nil]
       # * *proxmox_password* (String or nil): Proxmox password used to connect to Proxmox API [default: nil]
+      # * *proxmox_realm* (String or nil): Proxmox realm used to connect to Proxmox API [default: 'pam']
       # * *nodes_info* (Array<Hash>): Nodes info returned by the Proxmox API [default: []]
       # * *extra_expects* (Proc or nil): Code called for additional expectations on the proxmox instance, or nil if none [default: nil]
       #   * Parameters::
       #     * *proxmox* (Double): The mocked Proxmox instance
       # Result::
       # * Proc: Code called in place of Proxmox.new. Signature is the same as Proxmox.new.
-      def mock_proxmox_to_get_nodes_info(proxmox_user: nil, proxmox_password: nil, nodes_info: [], extra_expects: nil)
+      def mock_proxmox_to_get_nodes_info(proxmox_user: nil, proxmox_password: nil, proxmox_realm: 'pam', nodes_info: [], extra_expects: nil)
         proc do |url, pve_node, user, password, realm, options|
           expect(url).to eq 'https://my-proxmox.my-domain.com:8006/api2/json/'
           expect(pve_node).to eq 'my-proxmox'
           expect(user).to eq proxmox_user
           expect(password).to eq proxmox_password
-          expect(realm).to eq 'pam'
+          expect(realm).to eq proxmox_realm
           expect(options[:verify_ssl]).to eq false
           proxmox = double 'Proxmox info instance'
           # Mock initialization
@@ -287,6 +288,7 @@ module HybridPlatformsConductorTest
       # Parameters::
       # * *proxmox_user* (String or nil): Proxmox user used to connect to Proxmox API [default: nil]
       # * *proxmox_password* (String or nil): Proxmox password used to connect to Proxmox API [default: nil]
+      # * *proxmox_realm* (String): Proxmox realm used to connect to Proxmox API [default: 'pam']
       # * *error_on_create* (String or nil): Error to be mocked by reserve_proxmox_container create, or nil in case of success [default: nil]
       # * *error_on_destroy* (String or nil): Error to be mocked by reserve_proxmox_container destroy, or nil in case of success [default: nil]
       # * *destroy_vm* (Boolean): Should we expect also a VM destruction? [default: false]
@@ -295,6 +297,7 @@ module HybridPlatformsConductorTest
       def mock_call_to_reserve_proxmox_container(
         proxmox_user: nil,
         proxmox_password: nil,
+        proxmox_realm: 'pam',
         error_on_create: nil,
         error_on_destroy: nil,
         destroy_vm: false,
@@ -330,7 +333,8 @@ module HybridPlatformsConductorTest
                   commands: "#{expected_sudo ? 'sudo -E ' : ''}./proxmox/reserve_proxmox_container --create ./proxmox/create/create_#{expected_file_id}.json --config ./proxmox/config/config_#{expected_file_id}.json",
                   env: {
                     'hpc_user_for_proxmox' => proxmox_user,
-                    'hpc_password_for_proxmox' => proxmox_password
+                    'hpc_password_for_proxmox' => proxmox_password,
+                    'hpc_realm_for_proxmox' => proxmox_realm
                   }
                 }
               }
@@ -381,7 +385,8 @@ module HybridPlatformsConductorTest
                     commands: "#{expected_sudo ? 'sudo -E ' : ''}./proxmox/reserve_proxmox_container --destroy ./proxmox/destroy/destroy_#{expected_file_id}.json --config ./proxmox/config/config_#{expected_file_id}.json",
                     env: {
                       'hpc_user_for_proxmox' => proxmox_user,
-                      'hpc_password_for_proxmox' => proxmox_password
+                      'hpc_password_for_proxmox' => proxmox_password,
+                      'hpc_realm_for_proxmox' => proxmox_realm
                     }
                   }
                 }
@@ -412,6 +417,7 @@ module HybridPlatformsConductorTest
       # * *calls* (Array<Proc>): List of mocked calls
       # * *proxmox_user* (String or nil): Proxmox user used to connect to Proxmox API [default: nil]
       # * *proxmox_password* (String or nil): Proxmox password used to connect to Proxmox API [default: nil]
+      # * *proxmox_realm* (String): Proxmox realm used to connect to Proxmox API [default: 'pam']
       # * *error_on_create* (String or nil): Error to be mocked by reserve_proxmox_container create, or nil in case of success [default: nil]
       # * *error_on_destroy* (String or nil): Error to be mocked by reserve_proxmox_container destroy, or nil in case of success [default: nil]
       # * *reserve* (Boolean): Do we expect the resource reservation to occur? [default: true]
@@ -422,6 +428,7 @@ module HybridPlatformsConductorTest
         calls,
         proxmox_user: nil,
         proxmox_password: nil,
+        proxmox_realm: 'pam',
         error_on_create: nil,
         error_on_destroy: nil,
         reserve: true,
@@ -434,6 +441,7 @@ module HybridPlatformsConductorTest
           mock_call_to_reserve_proxmox_container(
             proxmox_user: proxmox_user,
             proxmox_password: proxmox_password,
+            proxmox_realm: proxmox_realm,
             error_on_create: error_on_create,
             error_on_destroy: error_on_destroy,
             destroy_vm: destroy_vm,
@@ -453,6 +461,7 @@ module HybridPlatformsConductorTest
       # Parameters::
       # * *proxmox_user* (String): Proxmox user to be used for the API, or nil if none [default: nil]
       # * *proxmox_password* (String): Proxmox password to be used for the API, or nil if none [default: nil]
+      # * *proxmox_realm* (String): Proxmox realm to be used for the API, or nil if none [default: 'pam']
       # * *mocked_pve_nodes* (Array< Hash< String, Hash<Symbol,Object> > > or Hash< String, Hash<Symbol,Object> >):
       #   List of (or single) PVE node information, per PVE node name. [default: { 'pve_node_name' => {} }]
       #   If used as a list, it is expected that the Proxmox API be used as many times as the number of items in the list, and the mocked info will follow the list order.
@@ -472,6 +481,7 @@ module HybridPlatformsConductorTest
       def mock_proxmox(
         proxmox_user: nil,
         proxmox_password: nil,
+        proxmox_realm: 'pam',
         mocked_pve_nodes: { 'pve_node_name' => {} }
       )
         # List of proxmox actions that have been mocked and their corresponding properties
@@ -512,7 +522,7 @@ module HybridPlatformsConductorTest
               expect(pve_node).to eq 'my-proxmox'
               expect(user).to eq proxmox_user
               expect(password).to eq proxmox_password
-              expect(realm).to eq 'pam'
+              expect(realm).to eq proxmox_realm
               expect(options[:verify_ssl]).to eq false
               proxmox = double 'Proxmox create instance'
               # Mock getting status of a container

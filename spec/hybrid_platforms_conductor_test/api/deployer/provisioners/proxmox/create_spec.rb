@@ -86,6 +86,28 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
       end
     end
 
+    it 'creates an instance using credentials from environment and a different realm' do
+      with_test_proxmox_platform do |instance|
+        ENV['hpc_user_for_proxmox'] = 'test_proxmox_user'
+        ENV['hpc_password_for_proxmox'] = 'test_proxmox_password'
+        ENV['hpc_realm_for_proxmox'] = 'test_proxmox_realm'
+        mock_proxmox_calls_with(
+          [
+            # 1 - The info on existing containers
+            mock_proxmox_to_get_nodes_info(
+              proxmox_user: 'test_proxmox_user',
+              proxmox_password: 'test_proxmox_password',
+              proxmox_realm: 'test_proxmox_realm'
+            )
+          ],
+          proxmox_user: 'test_proxmox_user',
+          proxmox_password: 'test_proxmox_password',
+          proxmox_realm: 'test_proxmox_realm'
+        )
+        instance.create
+      end
+    end
+
     it 'fails to create an instance when the reserve_proxmox_container sync node ends in error' do
       with_test_proxmox_platform do |instance|
         mock_proxmox_calls_with([

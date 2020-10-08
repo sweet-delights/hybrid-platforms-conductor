@@ -40,10 +40,12 @@ class ProxmoxWaiter
   #     * *disk_percent_used_max* (Float): Max percentage (between 0 and 1) of disk that can be reserved on a PVE node.
   # * *proxmox_user* (String): Proxmox user to be used to connect to the API.
   # * *proxmox_password* (String): Proxmox password to be used to connect to the API.
-  def initialize(config_file, proxmox_user, proxmox_password)
+  # * *proxmox_realm* (String): Proxmox realm to be used to connect to the API.
+  def initialize(config_file, proxmox_user, proxmox_password, proxmox_realm)
     @config = JSON.parse(File.read(config_file))
     @proxmox_user = proxmox_user
     @proxmox_password = proxmox_password
+    @proxmox_realm = proxmox_realm
     # Keep a memory of non-debug stopped containers, so that we can guess if they are expired or not after some time.
     # Time when we noticed a given container is stopped, per creation date, per VM ID, per PVE node
     # We add the creation date as a VM ID can be reused (with a different creation date) and we want to make sure we don't think a newly created VM is here for longer that it should.
@@ -328,7 +330,7 @@ class ProxmoxWaiter
         URI.parse(@config['proxmox_api_url']).host.downcase.split('.').first,
         @proxmox_user,
         @proxmox_password,
-        'pam',
+        @proxmox_realm,
         { verify_ssl: false }
       )
       # Cache of get queries to the API
