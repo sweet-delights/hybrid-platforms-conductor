@@ -1,3 +1,9 @@
+# [24.0.0](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv23.5.3&sourceBranch=refs%2Ftags%2Fv24.0.0) (2020-10-13)
+
+### Breaking changes
+
+* [Breaking] Decouple configuration from platform handlers notion, using hpc_config.rb ([047035af](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/commits/047035afae94e3f2c7cf1127fea337af5fafaf8d))
+
 # [23.5.3](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv23.5.2&sourceBranch=refs%2Ftags%2Fv23.5.3) (2020-10-06)
 
 ### Fixes
