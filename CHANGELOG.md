@@ -1,3 +1,9 @@
+# [24.1.0](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv24.0.0&sourceBranch=refs%2Ftags%2Fv24.1.0) (2020-10-13)
+
+### New features
+
+* [Feature] Ability to include external config files ([9b6105e2](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/commits/9b6105e25e312ee2c5234beff95a3598ff64f134))
+
 # [24.0.0](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv23.5.3&sourceBranch=refs%2Ftags%2Fv24.0.0) (2020-10-13)
 
 ### Breaking changes
