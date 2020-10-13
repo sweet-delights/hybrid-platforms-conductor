@@ -1,4 +1,5 @@
 require 'json'
+require 'hybrid_platforms_conductor/common_config_dsl/idempotence_tests'
 require 'hybrid_platforms_conductor/test_by_service'
 
 module HybridPlatformsConductor
@@ -14,6 +15,8 @@ module HybridPlatformsConductor
       # * idempotence
       # Especially useful if your tests run in an environment having limited Docker resources.
       class CheckDeployAndIdempotence < TestByService
+
+        self.extend_config_dsl_with CommonConfigDsl::IdempotenceTests, :init_idempotence_tests
 
         # Check my_test_plugin.rb.sample documentation for signature details.
         def test_for_node

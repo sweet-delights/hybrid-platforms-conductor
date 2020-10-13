@@ -1,4 +1,5 @@
 require 'json'
+require 'hybrid_platforms_conductor/common_config_dsl/idempotence_tests'
 require 'hybrid_platforms_conductor/test_by_service'
 
 module HybridPlatformsConductor
@@ -10,6 +11,8 @@ module HybridPlatformsConductor
       # Test that a check-node after a deploy returns no error.
       # This tests also the ciadm access. Don't forget to add the ciadm private key in your SSH agent if you run this test locally.
       class Idempotence < TestByService
+
+        self.extend_config_dsl_with CommonConfigDsl::IdempotenceTests, :init_idempotence_tests
 
         # Check my_test_plugin.rb.sample documentation for signature details.
         def test_for_node
