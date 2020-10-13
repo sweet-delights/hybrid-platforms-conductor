@@ -1,3 +1,9 @@
+# [25.0.0](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv24.4.0&sourceBranch=refs%2Ftags%2Fv25.0.0) (2020-10-13)
+
+### Breaking changes
+
+* [Breaking] Use hpc_config.rb instead of hpc.json to configure everything we need ([5b379d7b](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/commits/5b379d7b8294f7c5e3b848dac212e09ff553bd83))
+
 # [24.4.0](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv24.3.0&sourceBranch=refs%2Ftags%2Fv24.4.0) (2020-10-13)
 
 ### New features
