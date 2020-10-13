@@ -55,6 +55,7 @@ module HybridPlatformsConductorTest
           # * *expect_default_actions* (Boolean): Should we expect default actions? [default: true]
           # * *expect_sudo* (Boolean): Do we expect sudo to be used in commands? [default: true]
           # * *check_mode* (Boolean): Are we testing in check mode? [default: @check_mode]
+          # * *additional_config* (String): Additional configuration to set [default: '']
           # * Proc: Code called once the platform is ready for testing the deployer
           #   * Parameters::
           #     * *repository* (String): Path to the repository
@@ -64,10 +65,11 @@ module HybridPlatformsConductorTest
             expect_delivered_nodes: nodes_info[:nodes].keys,
             expect_default_actions: true,
             expect_sudo: true,
-            check_mode: @check_mode
+            check_mode: @check_mode,
+            additional_config: ''
           )
             platform_name = check_mode ? 'platform' : 'my_remote_platform'
-            with_test_platform(nodes_info, !check_mode) do |repository|
+            with_test_platform(nodes_info, !check_mode, additional_config) do |repository|
               with_connections_mocked_on(nodes_info[:nodes].keys) do
                 packaged_times = 0
                 delivered_nodes = []
@@ -387,34 +389,26 @@ module HybridPlatformsConductorTest
             #   * Parameters::
             #     * *repository* (String): Path to the repository
             def with_platform_to_retry_deploy(nodes_info: { nodes: { 'node' => {} } })
-              with_platform_to_deploy(nodes_info: nodes_info, expect_default_actions: false) do |repository|
-                # Generate the hpc.json with the non-deterministic errors
-                File.write("#{repository}/hpc.json", {
-                  "retriable_errors": [
-                    {
-                      "nodes": nodes_info[:nodes].keys,
-                      "errors_on_stdout": [
-                        "stdout non-deterministic error"
-                      ],
-                      "errors_on_stderr": [
-                        "stderr non-deterministic error",
-                        "/stderr regexp error \\d+/"
-                      ]
-                    },
-                    {
-                      "nodes": nodes_info[:nodes].keys,
-                      "errors_on_stdout": [
-                        "/stdout regexp error \\d+/"
-                      ]
-                    },
-                    {
-                      "nodes": ["other_node"],
-                      "errors_on_stdout": [
-                        "/.*/"
-                      ]
-                    }
+              with_platform_to_deploy(
+                nodes_info: nodes_info,
+                expect_default_actions: false,
+                additional_config: "
+                for_nodes([#{nodes_info[:nodes].keys.map { |node| "'#{node}'" }.join(', ')}]) do
+                  retry_deploy_for_errors_on_stdout [
+                    'stdout non-deterministic error'
                   ]
-                }.to_json)
+                  retry_deploy_for_errors_on_stderr [
+                    'stderr non-deterministic error',
+                    /stderr regexp error \\d+/
+                  ]
+                end
+                for_nodes([#{nodes_info[:nodes].keys.map { |node| "'#{node}'" }.join(', ')}]) do
+                  retry_deploy_for_errors_on_stdout [
+                    /stdout regexp error \\d+/
+                  ]
+                end
+                "
+              ) do |repository|
                 yield repository
               end
             end
