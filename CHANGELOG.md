@@ -1,3 +1,9 @@
+# [24.2.0](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv24.1.0&sourceBranch=refs%2Ftags%2Fv24.2.0) (2020-10-13)
+
+### New features
+
+* [Feature] Add ways to filter configuration parts for some nodes sets and apply it to the expected failures configuration ([ec4eb6aa](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/commits/ec4eb6aa6c8bb505325231e522807c20edfb91a0))
+
 # [24.1.0](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv24.0.0&sourceBranch=refs%2Ftags%2Fv24.1.0) (2020-10-13)
 
 ### New features
