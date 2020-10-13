@@ -1,3 +1,13 @@
+# [25.1.0](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv25.0.0&sourceBranch=refs%2Ftags%2Fv25.1.0) (2020-10-13)
+
+### New features
+
+* [Feature] Add test plugin to check for obsolete or extra users on nodes ([47fe47d1](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/commits/47fe47d12982fcc3ae3c8c8c19276d86da428345))
+
+### Fixes
+
+* Make sure previous vulnerabilities run don't leave files - they can be big and add up with timestamps in their names ([13ebf86c](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/commits/13ebf86c9b8d651c8f7a80058c4b1dc83f8fb9a0))
+
 # [25.0.0](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv24.4.0&sourceBranch=refs%2Ftags%2Fv25.0.0) (2020-10-13)
 
 ### Breaking changes
