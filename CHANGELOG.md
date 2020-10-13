@@ -1,3 +1,10 @@
+# [24.4.0](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv24.3.0&sourceBranch=refs%2Ftags%2Fv24.4.0) (2020-10-13)
+
+### New features
+
+* [Feature] Add Config DSL to specify exceptions on orphan files testing ([2bcbec5c](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/commits/2bcbec5cd21124c2c305fc2a69d57a5331354b4e))
+* [Feature] Add Config DSL for idempotence test exceptions ([4e2a3070](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/commits/4e2a30708cf612c14f5481c7717bd9c183e19c4a))
+
 # [24.3.0](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv24.2.0&sourceBranch=refs%2Ftags%2Fv24.3.0) (2020-10-13)
 
 ### New features
