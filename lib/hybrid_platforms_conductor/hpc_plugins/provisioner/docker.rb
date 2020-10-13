@@ -33,7 +33,7 @@ module HybridPlatformsConductor
           # Get the image name for this node
           image = @nodes_handler.get_image_of(@node).to_sym
           # Find if we have such an image registered
-          if @nodes_handler.known_os_images.include?(image)
+          if @config.known_os_images.include?(image)
             # Build the image if it does not exist
             image_tag = "hpc_image_#{image}"
             docker_image = nil
@@ -44,7 +44,7 @@ module HybridPlatformsConductor
               unless docker_image
                 log_debug "[ #{@node}/#{@environment} ] - Creating Docker image #{image_tag}..."
                 Excon.defaults[:read_timeout] = 600
-                docker_image = ::Docker::Image.build_from_dir(@nodes_handler.os_image_dir(image))
+                docker_image = ::Docker::Image.build_from_dir(@config.os_image_dir(image))
                 docker_image.tag repo: image_tag
               end
             end

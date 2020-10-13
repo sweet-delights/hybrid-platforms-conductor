@@ -2,7 +2,7 @@ require 'hybrid_platforms_conductor/bitbucket'
 
 module HybridPlatformsConductor
 
-  module CommonPlatformsDsl
+  module CommonConfigDsl
 
     module Bitbucket
 

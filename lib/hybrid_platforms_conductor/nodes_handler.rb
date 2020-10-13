@@ -3,44 +3,33 @@ require 'hybrid_platforms_conductor/cmdb'
 require 'hybrid_platforms_conductor/logger_helpers'
 require 'hybrid_platforms_conductor/parallel_threads'
 require 'hybrid_platforms_conductor/platform_handler'
-require 'hybrid_platforms_conductor/platforms_dsl'
 
 module HybridPlatformsConductor
 
   # Provide utilities to handle Nodes configuration
   class NodesHandler
 
-    include PlatformsDsl, LoggerHelpers, ParallelThreads
+    include LoggerHelpers, ParallelThreads
 
     # The list of registered platform handler classes, per platform type.
     #   Hash<Symbol,Class>
     attr_reader :platform_types
-
-    # Directory of the definition of the platforms
-    #   String
-    attr_reader :hybrid_platforms_dir
 
     # Constructor
     #
     # Parameters::
     # * *logger* (Logger): Logger to be used [default: Logger.new(STDOUT)]
     # * *logger_stderr* (Logger): Logger to be used for stderr [default: Logger.new(STDERR)]
+    # * *config* (Config): Config to be used. [default: Config.new]
     # * *cmd_runner* (CmdRunner): Command executor to be used. [default: CmdRunner.new]
-    def initialize(logger: Logger.new(STDOUT), logger_stderr: Logger.new(STDERR), cmd_runner: CmdRunner.new)
+    def initialize(logger: Logger.new(STDOUT), logger_stderr: Logger.new(STDERR), config: Config.new, cmd_runner: CmdRunner.new)
       init_loggers(logger, logger_stderr)
+      @config = config
       @cmd_runner = cmd_runner
-      # Directory in which we have platforms handled by HPCs definition
-      @hybrid_platforms_dir = File.expand_path(ENV['hpc_platforms'].nil? ? '.' : ENV['hpc_platforms'])
       @platform_types = Plugins.new(:platform_handler, logger: @logger, logger_stderr: @logger_stderr)
       # Keep a list of instantiated platform handlers per platform type
       # Hash<Symbol, Array<PlatformHandler> >
       @platform_handlers = {}
-      # List of OS image directories, per image name
-      # Hash<Symbol, String>
-      @os_images = {}
-      # Plugin ID of the tests provisioner
-      # Symbol
-      @tests_provisioner = :docker
       # List of platform handler per known node
       # Hash<String, PlatformHandler>
       @nodes_platform = {}
@@ -64,6 +53,7 @@ module HybridPlatformsConductor
           cmdb = plugin_class.new(
             logger: @logger,
             logger_stderr: @logger_stderr,
+            config: @config,
             nodes_handler: self,
             cmd_runner: @cmd_runner
           )
@@ -83,7 +73,26 @@ module HybridPlatformsConductor
       @metadata = {}
       # The metadata update is protected by a mutex to make it thread-safe
       @metadata_mutex = Mutex.new
-      initialize_platforms_dsl
+      # Read all platforms from the config
+      @config.platform_dirs.each do |platform_type, repositories|
+        repositories.each do |repository_path|
+          platform_handler = @platform_types[platform_type].new(@logger, @logger_stderr, @config, platform_type, repository_path, self)
+          @platform_handlers[platform_type] = [] unless @platform_handlers.key?(platform_type)
+          @platform_handlers[platform_type] << platform_handler
+          raise "Platform name #{platform_handler.info[:repo_name]} is declared several times." if @platforms.key?(platform_handler.info[:repo_name])
+          @platforms[platform_handler.info[:repo_name]] = platform_handler
+          # Register all known nodes for this platform
+          platform_handler.known_nodes.each do |node|
+            raise "Can't register #{node} to platform #{repository_path}, as it is already defined in platform #{@nodes_platform[node].repository_path}." if @nodes_platform.key?(node)
+            @nodes_platform[node] = platform_handler
+          end
+          # Register all known nodes lists
+          platform_handler.known_nodes_lists.each do |nodes_list|
+            raise "Can't register nodes list #{nodes_list} to platform #{repository_path}, as it is already defined in platform #{@nodes_list_platform[nodes_list].repository_path}." if @nodes_list_platform.key?(nodes_list)
+            @nodes_list_platform[nodes_list] = platform_handler
+          end if platform_handler.respond_to?(:known_nodes_lists)
+        end
+      end
     end
 
     # Complete an option parser with options meant to control this Nodes Handler
@@ -202,24 +211,6 @@ module HybridPlatformsConductor
     # * Array<String>: List of nodes
     def known_nodes
       @nodes_platform.keys
-    end
-
-    # Get the list of known Docker images
-    #
-    # Result::
-    # * Array<Symbol>: List of known Docker images
-    def known_os_images
-      @os_images.keys
-    end
-
-    # Get the directory containing a Docker image
-    #
-    # Parameters::
-    # * *image* (Symbol): Image name
-    # Result::
-    # * String: Directory containing the Dockerfile of the image
-    def os_image_dir(image)
-      @os_images[image]
     end
 
     # Get the list of known nodes lists
@@ -577,14 +568,6 @@ module HybridPlatformsConductor
         impacted_services,
         impact_global
       ]
-    end
-
-    # Name of the provisioner to be used for tests
-    #
-    # Result::
-    # * Symbol: Provisioner to be used for tests
-    def tests_provisioner_id
-      @tests_provisioner
     end
 
   end

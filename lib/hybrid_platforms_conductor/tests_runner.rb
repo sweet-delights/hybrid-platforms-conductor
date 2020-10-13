@@ -43,12 +43,14 @@ module HybridPlatformsConductor
     # Parameters::
     # * *logger* (Logger): Logger to be used [default = Logger.new(STDOUT)]
     # * *logger_stderr* (Logger): Logger to be used for stderr [default = Logger.new(STDERR)]
+    # * *config* (Config): Config to be used. [default = Config.new]
     # * *cmd_runner* (Cmdrunner): CmdRunner to be used [default = CmdRunner.new]
     # * *nodes_handler* (NodesHandler): Nodes handler to be used [default = NodesHandler.new]
     # * *actions_executor* (ActionsExecutor): Actions Executor to be used for the tests [default = ActionsExecutor.new]
     # * *deployer* (Deployer): Deployer to be used for the tests needed why-run deployments [default = Deployer.new]
-    def initialize(logger: Logger.new(STDOUT), logger_stderr: Logger.new(STDERR), cmd_runner: CmdRunner.new, nodes_handler: NodesHandler.new, actions_executor: ActionsExecutor.new, deployer: Deployer.new)
+    def initialize(logger: Logger.new(STDOUT), logger_stderr: Logger.new(STDERR), config: Config.new, cmd_runner: CmdRunner.new, nodes_handler: NodesHandler.new, actions_executor: ActionsExecutor.new, deployer: Deployer.new)
       init_loggers(logger, logger_stderr)
+      @config = config
       @cmd_runner = cmd_runner
       @nodes_handler = nodes_handler
       @actions_executor = actions_executor
@@ -196,7 +198,7 @@ module HybridPlatformsConductor
       # Produce reports
       @reports.each do |report|
         begin
-          @reports_plugins[report].new(@logger, @logger_stderr, @nodes_handler, @nodes, @tested_platforms, @tests_run).report
+          @reports_plugins[report].new(@logger, @logger_stderr, @config, @nodes_handler, @nodes, @tested_platforms, @tests_run).report
         rescue
           log_error "Uncaught exception while producing report #{report}: #{$!}\n#{$!.backtrace.join("\n")}"
         end
@@ -255,6 +257,7 @@ module HybridPlatformsConductor
       (test_name.nil? ? Test : @tests_plugins[test_name]).new(
         @logger,
         @logger_stderr,
+        @config,
         @cmd_runner,
         @nodes_handler,
         @deployer,
@@ -493,7 +496,7 @@ module HybridPlatformsConductor
           @outputs =
             if @skip_run
               Hash[nodes_to_test.map do |node|
-                run_log_file_name = "#{@nodes_handler.hybrid_platforms_dir}/run_logs/#{node}.stdout"
+                run_log_file_name = "#{@config.hybrid_platforms_dir}/run_logs/#{node}.stdout"
                 [
                   node,
                   # TODO: Find a way to also save stderr and the status code

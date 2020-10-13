@@ -55,7 +55,7 @@ module HybridPlatformsConductor
           end
 
         end
-        self.extend_platforms_dsl_with PlatformsDslSsh, :init_ssh
+        self.extend_config_dsl_with PlatformsDslSsh, :init_ssh
 
         # Name of the gateway user to be used. [default: ENV['hpc_ssh_gateway_user'] or ubradm]
         #   String
@@ -147,7 +147,7 @@ module HybridPlatformsConductor
         # [API] - @nodes_handler can be used
         def validate_params
           raise 'No SSH user name specified. Please use --ssh-user option or hpc_ssh_user environment variable to set it.' if @ssh_user.nil? || @ssh_user.empty?
-          known_gateways = @nodes_handler.known_gateways
+          known_gateways = @config.known_gateways
           raise "Unknown gateway configuration provided: #{@ssh_gateways_conf}. Possible values are: #{known_gateways.join(', ')}." if !@ssh_gateways_conf.nil? && !known_gateways.include?(@ssh_gateways_conf)
         end
 
@@ -287,7 +287,7 @@ module HybridPlatformsConductor
             # GATEWAYS #
             ############
 
-            #{@ssh_gateways_conf.nil? || !@nodes_handler.known_gateways.include?(@ssh_gateways_conf) ? '' : @nodes_handler.ssh_for_gateway(@ssh_gateways_conf, ssh_exec: ssh_exec, user: @ssh_user)}
+            #{@ssh_gateways_conf.nil? || !@config.known_gateways.include?(@ssh_gateways_conf) ? '' : @config.ssh_for_gateway(@ssh_gateways_conf, ssh_exec: ssh_exec, user: @ssh_user)}
 
             #############
             # ENDPOINTS #

@@ -38,7 +38,7 @@ module HybridPlatformsConductor
           end
 
         end
-        self.extend_platforms_dsl_with MyDSLExtension, :init_my_dsl_extension
+        self.extend_config_dsl_with MyDSLExtension, :init_my_dsl_extension
 
         # Give the list of supported locales by this report generator
         # [API] - This method is mandatory.

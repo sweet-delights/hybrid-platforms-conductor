@@ -21,7 +21,7 @@ describe HybridPlatformsConductor::PlatformHandler do
   it 'returns the correct info when platform is a Git repository' do
     with_repository('my_remote_platform', as_git: true) do |repository|
       with_platforms "test_platform path: '#{repository}'" do
-        register_platform_handlers test: HybridPlatformsConductorTest::TestPlatformHandler
+        register_platform_handlers test: HybridPlatformsConductorTest::PlatformHandlerPlugins::Test
         self.test_platforms_info = { 'my_remote_platform' => {} }
         commit = Git.open(repository).log.first
         expect(test_nodes_handler.platform('my_remote_platform').info).to eq(
@@ -50,7 +50,7 @@ describe HybridPlatformsConductor::PlatformHandler do
   it 'returns the differing files in the info when platform is a Git repository' do
     with_repository('my_remote_platform', as_git: true) do |repository|
       with_platforms "test_platform path: '#{repository}'" do
-        register_platform_handlers test: HybridPlatformsConductorTest::TestPlatformHandler
+        register_platform_handlers test: HybridPlatformsConductorTest::PlatformHandlerPlugins::Test
         self.test_platforms_info = { 'my_remote_platform' => {} }
         # Make the repository be a Git repository
         git = Git.open(repository)
@@ -77,7 +77,7 @@ describe HybridPlatformsConductor::PlatformHandler do
   it 'returns the platform metadata' do
     with_repository('platform') do |repository|
       with_platforms "test_platform path: '#{repository}'" do
-        register_platform_handlers test: HybridPlatformsConductorTest::TestPlatformHandler
+        register_platform_handlers test: HybridPlatformsConductorTest::PlatformHandlerPlugins::Test
         self.test_platforms_info = { 'platform' => {} }
         File.write("#{repository}/hpc.json", '{ "metadata": "content" }')
         expect(test_nodes_handler.platform('platform').metadata).to eq('metadata' => 'content')

@@ -261,7 +261,7 @@ describe 'executables\' Deployer options' do
   end
 
   it 'can add options that are specific to a platform handler' do
-    HybridPlatformsConductorTest::TestPlatformHandler.global_info[:options_parse_for_deploy] = proc do |options_parser|
+    HybridPlatformsConductorTest::PlatformHandlerPlugins::Test.global_info[:options_parse_for_deploy] = proc do |options_parser|
       options_parser.on('-r', '--new-awesome-option', 'A great option') {}
     end
     with_test_platform_for_deployer_options do
@@ -274,7 +274,7 @@ describe 'executables\' Deployer options' do
 
   it 'parses options that are specific to a platform handler' do
     option_parsed = false
-    HybridPlatformsConductorTest::TestPlatformHandler.global_info[:options_parse_for_deploy] = proc do |options_parser|
+    HybridPlatformsConductorTest::PlatformHandlerPlugins::Test.global_info[:options_parse_for_deploy] = proc do |options_parser|
       options_parser.on('-r', '--new-awesome-option', 'A great option') do
         option_parsed = true
       end
@@ -292,7 +292,7 @@ describe 'executables\' Deployer options' do
 
   it 'does not parse options that are specific to a platform handler if they are not used' do
     option_parsed = false
-    HybridPlatformsConductorTest::TestPlatformHandler.global_info[:options_parse_for_deploy] = proc do |options_parser|
+    HybridPlatformsConductorTest::PlatformHandlerPlugins::Test.global_info[:options_parse_for_deploy] = proc do |options_parser|
       options_parser.on('-r', '--new-awesome-option', 'A great option') do
         option_parsed = true
       end

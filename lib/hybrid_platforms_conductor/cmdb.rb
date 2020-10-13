@@ -11,15 +11,17 @@ module HybridPlatformsConductor
     # Parameters::
     # * *logger* (Logger): Logger to be used [default: Logger.new(STDOUT)]
     # * *logger_stderr* (Logger): Logger to be used for stderr [default: Logger.new(STDERR)]
+    # * *config* (Config): Config to be used. [default: Config.new]
     # * *nodes_handler* (NodesHandler): Nodes Handler to be used. [default: NodesHandler.new]
     # * *cmd_runner* (CmdRunner): Command Runner to be used. [default: CmdRunner.new]
     def initialize(
       logger: Logger.new(STDOUT),
       logger_stderr: Logger.new(STDERR),
+      config: Config.new,
       nodes_handler: NodesHandler.new,
       cmd_runner: CmdRunner.new
     )
-      super(logger: logger, logger_stderr: logger_stderr)
+      super(logger: logger, logger_stderr: logger_stderr, config: config)
       @nodes_handler = nodes_handler
       @cmd_runner = cmd_runner
     end

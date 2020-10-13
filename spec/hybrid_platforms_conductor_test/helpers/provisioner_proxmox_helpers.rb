@@ -48,7 +48,7 @@ module HybridPlatformsConductorTest
               }
             )
           ") do
-            register_platform_handlers test: HybridPlatformsConductorTest::TestPlatformHandler
+            register_platform_handlers test: HybridPlatformsConductorTest::PlatformHandlerPlugins::Test
             self.test_platforms_info = { 'platform' => {
               nodes: { 'node' => { meta: { host_ip: '192.168.42.42', image: 'test_image' }.merge(node_metadata) } }
             } }
@@ -57,6 +57,7 @@ module HybridPlatformsConductorTest
               environment: environment,
               logger: logger,
               logger_stderr: logger,
+              config: test_config,
               cmd_runner: test_cmd_runner,
               nodes_handler: test_nodes_handler,
               actions_executor: test_actions_executor

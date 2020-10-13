@@ -51,7 +51,7 @@ module HybridPlatformsConductor
           end
 
         end
-        self.extend_platforms_dsl_with MyDSLExtension, :init_my_dsl_extension
+        self.extend_config_dsl_with MyDSLExtension, :init_my_dsl_extension
 
         # Run test
         def test

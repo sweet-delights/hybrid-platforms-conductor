@@ -11,17 +11,19 @@ module HybridPlatformsConductor
     # Parameters::
     # * *logger* (Logger): Logger to be used [default: Logger.new(STDOUT)]
     # * *logger_stderr* (Logger): Logger to be used for stderr [default: Logger.new(STDERR)]
+    # * *config* (Config): Config to be used. [default: Config.new]
     # * *cmd_runner* (CmdRunner): Command executor to be used. [default: CmdRunner.new]
     # * *actions_executor* (ActionsExecutor): Actions Executor to be used. [default: ActionsExecutor.new]
     # * *action_info* (Object or nil): Action info needed to setup the action, or nil if none [default: nil]
     def initialize(
       logger: Logger.new(STDOUT),
       logger_stderr: Logger.new(STDERR),
+      config: Config.new,
       cmd_runner: CmdRunner.new,
       actions_executor: ActionsExecutor.new,
       action_info: nil
     )
-      super(logger: logger, logger_stderr: logger_stderr)
+      super(logger: logger, logger_stderr: logger_stderr, config: config)
       @cmd_runner = cmd_runner
       @actions_executor = actions_executor
       @action_info = action_info

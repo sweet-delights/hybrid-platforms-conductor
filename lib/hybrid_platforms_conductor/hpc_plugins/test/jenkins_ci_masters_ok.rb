@@ -1,6 +1,6 @@
 require 'json'
 require 'hybrid_platforms_conductor/credentials'
-require 'hybrid_platforms_conductor/common_platforms_dsl/bitbucket'
+require 'hybrid_platforms_conductor/common_config_dsl/bitbucket'
 
 module HybridPlatformsConductor
 
@@ -11,7 +11,7 @@ module HybridPlatformsConductor
       # Check that all repositories have a successful master branch on a Jenkins CI
       class JenkinsCiMastersOk < HybridPlatformsConductor::Test
 
-        self.extend_platforms_dsl_with CommonPlatformsDsl::Bitbucket, :init_bitbucket
+        self.extend_config_dsl_with CommonConfigDsl::Bitbucket, :init_bitbucket
 
         SUCCESS_STATUSES = [
           # Add nil as the status of a currently running job (which is always the case for hybrid-platforms) is null
@@ -23,7 +23,7 @@ module HybridPlatformsConductor
 
         # Check my_test_plugin.rb.sample documentation for signature details.
         def test
-          @nodes_handler.for_each_bitbucket_repo do |_bitbucket, repo_info|
+          @config.for_each_bitbucket_repo do |_bitbucket, repo_info|
             if repo_info[:jenkins_ci_url].nil?
               error "Repository #{repo_info[:name]} does not have any Jenkins CI URL configured."
             else

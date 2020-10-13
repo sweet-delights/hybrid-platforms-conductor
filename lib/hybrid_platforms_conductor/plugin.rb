@@ -21,17 +21,18 @@ module HybridPlatformsConductor
         true
       end
 
-      # Extend the platforms DSL used when parsing the latforms.rb file with a given Mixin.
-      # This can be used by any plugin to add plugin-specific configuration in the platforms.rb file.
+      # Extend the config DSL used when parsing the hpc_config.rb file with a given Mixin.
+      # This can be used by any plugin to add plugin-specific configuration in the hpc_config.rb file.
       #
       # Parameters::
       # * *mixin* (Module): Mixin to add to the Platforms DSL
       # * *init_method* (Symbol or nil): The initializer method of this Mixin, or nil if none [default = nil]
-      def extend_platforms_dsl_with(mixin, init_method = nil)
-        PlatformsDsl.include mixin
-        PlatformsDsl.mixin_initializers << init_method unless init_method.nil?
-        # Make sure NodesHandler includes again the Dsl so that it gets refreshed with new methods
-        NodesHandler.include PlatformsDsl
+      def extend_config_dsl_with(mixin, init_method = nil)
+        Config.include mixin
+        Config.mixin_initializers << init_method unless init_method.nil?
+        mixin.instance_methods.each do |method_name|
+          Config.expose method_name unless method_name == init_method
+        end
       end
 
     end
@@ -41,11 +42,14 @@ module HybridPlatformsConductor
     # Parameters::
     # * *logger* (Logger): Logger to be used [default: Logger.new(STDOUT)]
     # * *logger_stderr* (Logger): Logger to be used for stderr [default: Logger.new(STDERR)]
+    # * *config* (Config): Config to be used. [default: Config.new]
     def initialize(
       logger: Logger.new(STDOUT),
-      logger_stderr: Logger.new(STDERR)
+      logger_stderr: Logger.new(STDERR),
+      config: Config.new
     )
       init_loggers(logger, logger_stderr)
+      @config = config
     end
 
   end

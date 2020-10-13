@@ -17,13 +17,13 @@ module HybridPlatformsConductor
           # Get the image name for this node
           image = @nodes_handler.get_image_of(@node).to_sym
           # Find if we have such an image registered
-          if @nodes_handler.known_os_images.include?(image)
+          if @config.known_os_images.include?(image)
             # Build the image if it does not exist
             image_tag = "hpc_image_#{image}"
             image_futex_file = "#{Dir.tmpdir}/hpc_podman_image_futexes/#{image_tag}"
             FileUtils.mkdir_p File.dirname(image_futex_file)
             Futex.new(image_futex_file).open do
-              @cmd_runner.run_cmd "cd #{@nodes_handler.os_image_dir(image)} && #{podman_cmd} build --tag #{image_tag} --security-opt seccomp=/usr/share/containers/seccomp.json --cgroup-manager=cgroupfs ."
+              @cmd_runner.run_cmd "cd #{@config.os_image_dir(image)} && #{podman_cmd} build --tag #{image_tag} --security-opt seccomp=/usr/share/containers/seccomp.json --cgroup-manager=cgroupfs ."
             end
             container_name = "hpc_container_#{@node}_#{@environment}"
             container_futex_file = "#{Dir.tmpdir}/hpc_podman_container_futexes/#{image_tag}"

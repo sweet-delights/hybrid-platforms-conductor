@@ -1,7 +1,7 @@
 require 'cgi'
 require 'erubis'
 require 'hybrid_platforms_conductor/confluence'
-require 'hybrid_platforms_conductor/common_platforms_dsl/confluence'
+require 'hybrid_platforms_conductor/common_config_dsl/confluence'
 
 module HybridPlatformsConductor
 
@@ -12,7 +12,7 @@ module HybridPlatformsConductor
       # Report tests results on a generated Confluence page
       class Confluence < HybridPlatformsConductor::TestReport
 
-        self.extend_platforms_dsl_with CommonPlatformsDsl::Confluence, :init_confluence
+        self.extend_config_dsl_with CommonConfigDsl::Confluence, :init_confluence
 
         # Maximum errors to be reported by item
         MAX_ERROR_ITEMS_DISPLAYED = 10
@@ -25,7 +25,7 @@ module HybridPlatformsConductor
 
         # Handle tests reports
         def report
-          confluence_info = @nodes_handler.confluence_info
+          confluence_info = @config.confluence_info
           if confluence_info
             if confluence_info[:tests_report_page_id]
               HybridPlatformsConductor::Confluence.with_confluence(confluence_info[:url], @logger, @logger_stderr) do |confluence|

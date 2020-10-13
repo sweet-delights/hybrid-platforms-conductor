@@ -35,7 +35,7 @@ module HybridPlatformsConductor
           end
 
         end
-        self.extend_platforms_dsl_with MyDSLExtension, :init_my_dsl_extension
+        self.extend_config_dsl_with MyDSLExtension, :init_my_dsl_extension
 
         # get_* methods are automatically detected as possible metadata properties this plugin can fill.
         # The property name filled by such method is given by the method's name: get_my_property will fill the :my_property metadata.

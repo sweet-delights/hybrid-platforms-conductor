@@ -20,10 +20,12 @@ module HybridPlatformsConductor
     # Parameters::
     # * *logger* (Logger): Logger to be used [default = Logger.new(STDOUT)]
     # * *logger_stderr* (Logger): Logger to be used for stderr [default = Logger.new(STDERR)]
+    # * *config* (Config): Config to be used. [default = Config.new]
     # * *nodes_handler* (NodesHandler): Nodes handler to be used. [default = NodesHandler.new]
     # * *deployer* (Deployer): Deployer to be used. [default = Deployer.new]
-    def initialize(logger: Logger.new(STDOUT), logger_stderr: Logger.new(STDERR), nodes_handler: NodesHandler.new, deployer: Deployer.new)
+    def initialize(logger: Logger.new(STDOUT), logger_stderr: Logger.new(STDERR), config: Config.new, nodes_handler: NodesHandler.new, deployer: Deployer.new)
       init_loggers(logger, logger_stderr)
+      @config = config
       @nodes_handler = nodes_handler
       @deployer = deployer
       # Default values
@@ -63,7 +65,7 @@ module HybridPlatformsConductor
       # Parse the logs
       FileUtils.mkdir_p @dump_dir
       nodes.each do |node|
-        stdout_file_name = "#{@nodes_handler.hybrid_platforms_dir}/run_logs/#{node}.stdout"
+        stdout_file_name = "#{@config.hybrid_platforms_dir}/run_logs/#{node}.stdout"
         if File.exist?(stdout_file_name)
           stdout = File.read(stdout_file_name).split("\n")
           dump_begin_idx = stdout.index('===== Node JSON dump BEGIN =====')

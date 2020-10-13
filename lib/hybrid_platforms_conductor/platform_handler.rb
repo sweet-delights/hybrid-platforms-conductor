@@ -9,6 +9,43 @@ module HybridPlatformsConductor
     # Make it so that we can sort lists of platforms
     include Comparable
 
+    # Callback called when a subclass inherits this class.
+    #
+    # Parameters::
+    # * *subclass* (Class): The inheriting class
+    def self.inherited(subclass)
+      # Make sure we define automatically a helper for such a platform
+      mixin = Module.new
+      platform_type = subclass.name.split('::').last.gsub(/([a-z\d])([A-Z])/, '\1_\2').downcase.to_sym
+      mixin.define_method("#{platform_type}_platform".to_sym) do |path: nil, git: nil, branch: 'master', &platform_config_code|
+        repository_path =
+          if !path.nil?
+            path
+          elsif !git.nil?
+            # Clone in a local repository
+            local_repository_path = "#{@git_platforms_dir}/#{File.basename(git)[0..-File.extname(git).size - 1]}"
+            unless File.exist?(local_repository_path)
+              branch = "refs/heads/#{branch}" unless branch.include?('/')
+              local_ref = "refs/remotes/origin/#{branch.split('/').last}"
+              section "Cloning #{git} (#{branch} => #{local_ref}) into #{local_repository_path}" do
+                git_repo = Git.init(local_repository_path, )
+                git_repo.add_remote('origin', git).fetch(ref: "#{branch}:#{local_ref}")
+                git_repo.checkout local_ref
+              end
+            end
+            local_repository_path
+          else
+            raise 'The platform has to be defined with either a path or a git URL'
+          end
+        @platform_dirs[platform_type] = [] unless @platform_dirs.key?(platform_type)
+        @platform_dirs[platform_type] << repository_path
+        platform_config_code.call(repository_path) unless platform_config_code.nil?
+      end
+      # Register this new mixin in the Config DSL
+      extend_config_dsl_with(mixin)
+      super
+    end
+
     # Repository path
     #   String
     attr_reader :repository_path
@@ -25,11 +62,12 @@ module HybridPlatformsConductor
     # Parameters::
     # * *logger* (Logger): Logger to be used
     # * *logger_stderr* (Logger): Logger to be used for stderr
+    # * *config* (Config): Config to be used.
     # * *platform_type* (Symbol): Platform type
     # * *repository_path* (String): Repository path
     # * *nodes_handler* (NodesHandler): Nodes handler that can be used to get info about nodes.
-    def initialize(logger, logger_stderr, platform_type, repository_path, nodes_handler)
-      super(logger: logger, logger_stderr: logger_stderr)
+    def initialize(logger, logger_stderr, config, platform_type, repository_path, nodes_handler)
+      super(logger: logger, logger_stderr: logger_stderr, config: config)
       @platform_type = platform_type
       @repository_path = repository_path
       @nodes_handler = nodes_handler

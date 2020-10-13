@@ -1,7 +1,7 @@
 require 'erubis'
 require 'hybrid_platforms_conductor/report'
 require 'hybrid_platforms_conductor/confluence'
-require 'hybrid_platforms_conductor/common_platforms_dsl/confluence'
+require 'hybrid_platforms_conductor/common_config_dsl/confluence'
 
 module HybridPlatformsConductor
 
@@ -12,7 +12,7 @@ module HybridPlatformsConductor
       # Export in the Mediawiki format
       class Confluence < HybridPlatformsConductor::Report
 
-        self.extend_platforms_dsl_with CommonPlatformsDsl::Confluence, :init_confluence
+        self.extend_config_dsl_with CommonConfigDsl::Confluence, :init_confluence
 
         # Give the list of supported locales by this report generator
         # [API] - This method is mandatory.
@@ -30,7 +30,7 @@ module HybridPlatformsConductor
         # * *nodes* (Array<String>): List of nodes
         # * *locale_code* (Symbol): The locale code
         def report_for(nodes, locale_code)
-          confluence_info = @nodes_handler.confluence_info
+          confluence_info = @config.confluence_info
           if confluence_info
             if confluence_info[:inventory_report_page_id]
               @nodes = nodes

@@ -17,7 +17,7 @@ module HybridPlatformsConductor
 
         # Check my_test_plugin.rb.sample documentation for signature details.
         def test_for_node
-          @deployer.with_test_provisioned_instance(@nodes_handler.tests_provisioner_id, @node, environment: 'check_deploy_and_idempotence', reuse_instance: log_debug?) do |deployer, instance|
+          @deployer.with_test_provisioned_instance(@config.tests_provisioner_id, @node, environment: 'check_deploy_and_idempotence', reuse_instance: log_debug?) do |deployer, instance|
             # Check that we can connect with root
             ssh_ok = false
             begin
