@@ -63,4 +63,20 @@ describe HybridPlatformsConductor::Config do
     end
   end
 
+  it 'includes several configuration files' do
+    with_platforms '
+      os_image :image1, \'/path/to/image1\'
+      include_config_from "#{__dir__}/my_conf_1.rb"
+      include_config_from "#{__dir__}/my_conf_2.rb"
+    ' do |hybrid_platforms_dir|
+      File.write("#{hybrid_platforms_dir}/my_conf_1.rb", <<~EOS)
+        os_image :image4, '/path/to/image4'
+        include_config_from "\#{__dir__}/my_conf_3.rb"
+      EOS
+      File.write("#{hybrid_platforms_dir}/my_conf_2.rb", 'os_image :image2, \'/path/to/image2\'')
+      File.write("#{hybrid_platforms_dir}/my_conf_3.rb", 'os_image :image3, \'/path/to/image3\'')
+      expect(test_config.known_os_images.sort).to eq %i[image1 image2 image3 image4].sort
+    end
+  end
+
 end

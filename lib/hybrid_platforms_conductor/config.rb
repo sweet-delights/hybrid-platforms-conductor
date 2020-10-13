@@ -52,8 +52,18 @@ module HybridPlatformsConductor
       Config.mixin_initializers.each do |mixin_init_method|
         self.send(mixin_init_method)
       end
-      self.evaluate_file("#{@hybrid_platforms_dir}/hpc_config.rb")
+      include_config_from "#{@hybrid_platforms_dir}/hpc_config.rb"
     end
+
+    # Include configuration from a DSL config file
+    #
+    # Parameters::
+    # * *dsl_file* (String): Path to the DSL file
+    def include_config_from(dsl_file)
+      log_debug "Include config from #{dsl_file}"
+      self.evaluate_file(dsl_file)
+    end
+    expose :include_config_from
 
     # Register a new OS image
     #
