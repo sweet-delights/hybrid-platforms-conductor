@@ -71,7 +71,6 @@ module HybridPlatformsConductor
                   end
                 end
                 cmds = <<~EOS
-                  set -e -x
                   #{
                     case image
                     when :centos_7
@@ -99,11 +98,15 @@ module HybridPlatformsConductor
                       raise "Non supported image: #{image}. Please adapt this test's code."
                     end
                   }
+                  rm -rf hpc_vulnerabilities_test
+                  mkdir -p hpc_vulnerabilities_test
+                  cd hpc_vulnerabilities_test
                   wget -N #{url}
                   #{uncompress_cmds.join("\n")}
                   sudo oscap oval eval --skip-valid --results "#{local_oval_file}.results.xml" "#{local_oval_file}"
                   echo "===== RESULTS ====="
                   cat "#{local_oval_file}.results.xml"
+                  cd ..
                 EOS
                 [
                   cmds,
