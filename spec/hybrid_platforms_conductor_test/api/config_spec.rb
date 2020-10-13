@@ -79,4 +79,95 @@ describe HybridPlatformsConductor::Config do
     end
   end
 
+  it 'applies nodes specific configuration to all nodes by default' do
+    with_platforms '
+      expect_tests_to_fail :my_test, \'Failure reason\'
+    ' do
+      expect(test_config.expected_failures).to eq [
+        {
+          nodes_selectors_stack: [],
+          reason: 'Failure reason',
+          tests: [:my_test]
+        }
+      ]
+    end
+  end
+
+  it 'filters nodes specific configuration to nodes sets in a scope' do
+    with_platforms '
+      for_nodes(%w[node1 node2 node3]) do
+        expect_tests_to_fail :my_test_1, \'Failure reason 1\'
+      end
+      expect_tests_to_fail :my_test_2, \'Failure reason 2\'
+    ' do
+      sort_proc = proc { |expected_failure_info| expected_failure_info[:reason] }
+      expect(test_config.expected_failures.sort_by(&sort_proc)).to eq [
+        {
+          nodes_selectors_stack: [%w[node1 node2 node3]],
+          reason: 'Failure reason 1',
+          tests: [:my_test_1]
+        },
+        {
+          nodes_selectors_stack: [],
+          reason: 'Failure reason 2',
+          tests: [:my_test_2]
+        }
+      ].sort_by(&sort_proc)
+    end
+  end
+
+  it 'filters nodes specific configuration in a scoped stack' do
+    with_platforms '
+      for_nodes(%w[node1 node2 node3]) do
+        expect_tests_to_fail :my_test_1, \'Failure reason 1\'
+        for_nodes(%w[node2 node3 node4]) do
+          expect_tests_to_fail :my_test_2, \'Failure reason 2\'
+        end
+      end
+    ' do
+      sort_proc = proc { |expected_failure_info| expected_failure_info[:reason] }
+      expect(test_config.expected_failures.sort_by(&sort_proc)).to eq [
+        {
+          nodes_selectors_stack: [%w[node1 node2 node3]],
+          reason: 'Failure reason 1',
+          tests: [:my_test_1]
+        },
+        {
+          nodes_selectors_stack: [%w[node1 node2 node3], %w[node2 node3 node4]],
+          reason: 'Failure reason 2',
+          tests: [:my_test_2]
+        }
+      ].sort_by(&sort_proc)
+    end
+  end
+
+  it 'returns the expected failures correctly' do
+    with_platforms '
+      expect_tests_to_fail :my_test_1, \'Failure reason 1\'
+      expect_tests_to_fail %i[my_test_2 my_test_3], \'Failure reason 23\'
+      for_nodes(%w[node1 node2 node3]) do
+        expect_tests_to_fail :my_test_4, \'Failure reason 4\'
+      end
+    ' do
+      sort_proc = proc { |expected_failure_info| expected_failure_info[:reason] }
+      expect(test_config.expected_failures.sort_by(&sort_proc)).to eq [
+        {
+          nodes_selectors_stack: [],
+          reason: 'Failure reason 1',
+          tests: [:my_test_1]
+        },
+        {
+          nodes_selectors_stack: [],
+          reason: 'Failure reason 23',
+          tests: %i[my_test_2 my_test_3]
+        },
+        {
+          nodes_selectors_stack: [%w[node1 node2 node3]],
+          reason: 'Failure reason 4',
+          tests: [:my_test_4]
+        }
+      ].sort_by(&sort_proc)
+    end
+  end
+
 end

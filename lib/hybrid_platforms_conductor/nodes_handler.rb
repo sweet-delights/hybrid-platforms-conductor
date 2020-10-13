@@ -570,6 +570,40 @@ module HybridPlatformsConductor
       ]
     end
 
+    # Select the configs applicable to a given node.
+    #
+    # Parameters::
+    # * *node* (String): The node for which we select configurations
+    # * *configs* (Array< Hash<Symbol,Object> >): Configuration properties. Each configuration is selected based on the nodes_selectors_stack property.
+    # Result::
+    # * Array< Hash<Symbol,Object> >: The selected configurations
+    def select_confs_for_node(node, configs)
+      configs.select { |config_info| select_from_nodes_selector_stack(config_info[:nodes_selectors_stack]).include?(node) }
+    end
+
+    # Select the configs applicable to a given platform.
+    #
+    # Parameters::
+    # * *platform_name* (String): The platform for which we select configurations
+    # * *configs* (Array< Hash<Symbol,Object> >): Configuration properties. Each configuration is selected based on the nodes_selectors_stack property.
+    # Result::
+    # * Array< Hash<Symbol,Object> >: The selected configurations
+    def select_confs_for_platform(platform_name, configs)
+      platform_nodes = platform(platform_name).known_nodes
+      configs.select { |config_info| (platform_nodes - select_from_nodes_selector_stack(config_info[:nodes_selectors_stack])).empty? }
+    end
+
+    # Get the list of nodes impacted by a nodes selector stack.
+    # The result is the intersection of every nodes set in the stack.
+    #
+    # Parameters::
+    # * *nodes_selector_stack* (Array): The nodes selector stack
+    # Result::
+    # * Array<String>: List of nodes
+    def select_from_nodes_selector_stack(nodes_selector_stack)
+      nodes_selector_stack.inject(known_nodes) { |selected_nodes, nodes_selector| selected_nodes & select_nodes(nodes_selector) }
+    end
+
   end
 
 end
