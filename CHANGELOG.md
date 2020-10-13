@@ -1,3 +1,9 @@
+# [25.2.0](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv25.1.0&sourceBranch=refs%2Ftags%2Fv25.2.0) (2020-10-13)
+
+### New features
+
+* [Feature] Add file_system test plugin to test for presence or absence of files on nodes ([193bd1d5](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/commits/193bd1d5e04db9aa4224ee2d4c80fed79b2783ab))
+
 # [25.1.0](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv25.0.0&sourceBranch=refs%2Ftags%2Fv25.1.0) (2020-10-13)
 
 ### New features
