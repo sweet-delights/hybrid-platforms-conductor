@@ -7,6 +7,39 @@ module HybridPlatformsConductor
       # Test that the node has no orphan files
       class OrphanFiles < HybridPlatformsConductor::Test
 
+        # Config DSL extension for this test plugin
+        module ConfigDslExtension
+
+          # List of paths to ignore info. Each info has the following properties:
+          # * *nodes_selectors_stack* (Array<Object>): Stack of nodes selectors impacted by this rule
+          # * *ignored_paths* (Array<String>): List of paths to ignore.
+          # Array< Hash<Symbol, Object> >
+          attr_reader :ignored_orphan_files_paths
+
+          # Initialize the DSL 
+          def init_orphan_files_test
+            # List of paths to ignore info. Each info has the following properties:
+            # * *nodes_selectors_stack* (Array<Object>): Stack of nodes selectors impacted by this rule
+            # * *ignored_paths* (Array<String>): List of paths to ignore.
+            # Array< Hash<Symbol, Object> >
+            @ignored_orphan_files_paths = []
+          end
+
+          # Ignore a list of paths for orphan files testing
+          #
+          # Parameters::
+          # * *paths_to_ignore* (String or Array<String>): List of paths to ignore
+          def ignore_orphan_files_from(paths_to_ignore)
+            @ignored_orphan_files_paths << {
+              ignored_paths: paths_to_ignore.is_a?(Array) ? paths_to_ignore : [paths_to_ignore],
+              nodes_selectors_stack: current_nodes_selectors_stack,
+            }
+          end
+
+        end
+
+        self.extend_config_dsl_with ConfigDslExtension, :init_orphan_files_test
+
         # List of directories to always ignore
         DIRECTORIES_TO_ALWAYS_IGNORE = [
           '/proc',
