@@ -1,3 +1,9 @@
+# [24.3.0](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv24.2.0&sourceBranch=refs%2Ftags%2Fv24.3.0) (2020-10-13)
+
+### New features
+
+* [Feature] Add Config DSL to support deployment retriable errors ([e872ef68](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/commits/e872ef68edb5e00945fbdfdaeeefcc9a5ed01623))
+
 # [24.2.0](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv24.1.0&sourceBranch=refs%2Ftags%2Fv24.2.0) (2020-10-13)
 
 ### New features
