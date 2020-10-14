@@ -267,7 +267,7 @@ module HybridPlatformsConductor
               URI.parse(url).host.downcase.split('.').first,
               user,
               password,
-              'pam',
+              ENV['hpc_realm_for_proxmox'] || 'pam',
               {
                 verify_ssl: false,
                 log: Logger.new(proxmox_logs)
@@ -398,7 +398,8 @@ module HybridPlatformsConductor
                       commands: "#{@actions_executor.connector(:ssh).ssh_user == 'root' ? '' : 'sudo -E '}./proxmox/#{cmd}",
                       env: {
                         'hpc_user_for_proxmox' => user,
-                        'hpc_password_for_proxmox' => password
+                        'hpc_password_for_proxmox' => password,
+                        'hpc_realm_for_proxmox' => ENV['hpc_realm_for_proxmox'] || 'pam'
                       }
                     }
                   }

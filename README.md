@@ -190,12 +190,14 @@ export hpc_certificates=<path_to_dir_containing_crt_certificates>
 export hpc_domain_for_thycotic=<thycotic_authorization_domain>
 export hpc_user_for_thycotic=<thycotic_authorization_user>
 export hpc_password_for_thycotic=<thycotic_authorization_password>
+export hpc_realm_for_proxmox=<proxmox_authorization_realm>
 ```
 
 * `hpc_certificates` is an optional variable pointing to a directory containing `.crt` Base-64 encoded certificates. Those certificates will automatically be deployed on nodes handled by the Conductor. This can be useful when working from local environments that are subject to corporate certificates.
 * `hpc_domain_for_thycotic` should contain the domain used when authenticating on a Thycotic server. This is ignored unless you use the `--secrets` option pointing to a Thycotic server. For the My_company Thycotic server the value is `mucmspdom`.
 * `hpc_user_for_thycotic` can contain the user used when authenticating on a Thycotic server. This is ignored unless you use the `--secrets` option pointing to a Thycotic server. If absent then the value is retrieved from the `~/.netrc` file.
 * `hpc_password_for_thycotic` can contain the password used when authenticating on a Thycotic server. This is ignored unless you use the `--secrets` option pointing to a Thycotic server. If absent then the value is retrieved from the `~/.netrc` file.
+* `hpc_realm_for_proxmox` can contain the realm used when authenticating on a Proxmox API server.
 
 Unless you use the commands from directory containing the file `platforms.rb`, you'll have to set the `hpc_platforms` environment variable to the path containing the `platforms.rb` file.
 For example if the file `/path/to/hybrid-platforms/platforms.rb` exists:
