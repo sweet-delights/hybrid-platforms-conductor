@@ -28,9 +28,9 @@ module HybridPlatformsConductor
           #
           # Parameters::
           # * *ports* (Integer or Array<Integer>): List of ports
-          def check_opened_ports(ports)
+          def check_opened_ports(*ports)
             @ports_rules << {
-              ports: ports.is_a?(Array) ? ports : [ports],
+              ports: ports.flatten,
               state: :opened,
               nodes_selectors_stack: current_nodes_selectors_stack
             }
@@ -40,9 +40,9 @@ module HybridPlatformsConductor
           #
           # Parameters::
           # * *ports* (Integer or Array<Integer>): List of ports
-          def check_closed_ports(ports)
+          def check_closed_ports(*ports)
             @ports_rules << {
-              ports: ports.is_a?(Array) ? ports : [ports],
+              ports: ports.flatten,
               state: :closed,
               nodes_selectors_stack: current_nodes_selectors_stack
             }
