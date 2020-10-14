@@ -17,7 +17,7 @@ module HybridPlatformsConductor
 
         # Check my_test_plugin.rb.sample documentation for signature details.
         def test_for_node
-          @deployer.with_test_provisioned_instance(@nodes_handler.tests_provisioner_id, @node, environment: 'idempotence', reuse_instance: log_debug?) do |deployer, instance|
+          @deployer.with_test_provisioned_instance(@config.tests_provisioner_id, @node, environment: 'idempotence', reuse_instance: log_debug?) do |deployer, instance|
             # First deploy as root
             deployer.nbr_retries_on_error = 3
             exit_status, _stdout, _stderr = deployer.deploy_on(@node)[@node]
@@ -43,7 +43,9 @@ module HybridPlatformsConductor
                   assert_equal tested_node, @node, "Wrong node being tested: #{tested_node} should be #{@node}"
                   assert_equal exit_status, 0, "Check-node returned error code #{exit_status}"
                   # Check that the output of the check-node returns no changes.
-                  ignored_tasks = @nodes_handler.platform_for(@node).metadata.dig('test', 'idempotence', 'ignored_tasks') || {}
+                  ignored_tasks = @nodes_handler.select_confs_for_node(@node, @config.ignored_idempotence_tasks).inject({}) do |merged_ignored_tasks, conf|
+                    merged_ignored_tasks.merge(conf[:ignored_tasks])
+                  end
                   @nodes_handler.platform_for(@node).parse_deploy_output(stdout, stderr).each do |task_info|
                     if task_info[:status] == :changed
                       if ignored_tasks.key?(task_info[:name])
