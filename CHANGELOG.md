@@ -1,3 +1,9 @@
+# [25.3.0](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv25.2.0&sourceBranch=refs%2Ftags%2Fv25.3.0) (2020-10-14)
+
+### New features
+
+* [Feature] Add Proxmox realm authentication ([97a87b0b](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/commits/97a87b0b32b839d5565f7e133bff576c10cfd919))
+
 # [25.2.0](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv25.1.0&sourceBranch=refs%2Ftags%2Fv25.2.0) (2020-10-13)
 
 ### New features
