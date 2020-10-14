@@ -1,3 +1,9 @@
+# [25.4.0](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv25.3.0&sourceBranch=refs%2Ftags%2Fv25.4.0) (2020-10-14)
+
+### New features
+
+* [Feature] Add test plugin to check for mounts ([94ed011d](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/commits/94ed011d40f5160c90d411995c29e7ef15219e3c))
+
 # [25.3.0](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv25.2.0&sourceBranch=refs%2Ftags%2Fv25.3.0) (2020-10-14)
 
 ### New features
