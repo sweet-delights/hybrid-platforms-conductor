@@ -1,3 +1,9 @@
+# [25.5.0](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv25.4.0&sourceBranch=refs%2Ftags%2Fv25.5.0) (2020-10-15)
+
+### New features
+
+* [Feature] Add test plugin to check opened and closed TCP ports ([a373caa9](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/commits/a373caa92db9f256439ad5913e526fff2fc07cdf))
+
 # [25.4.0](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv25.3.0&sourceBranch=refs%2Ftags%2Fv25.4.0) (2020-10-14)
 
 ### New features
