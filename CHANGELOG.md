@@ -1,3 +1,9 @@
+# [25.5.1](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv25.5.0&sourceBranch=refs%2Ftags%2Fv25.5.1) (2020-10-16)
+
+### Fixes
+
+* Correct instance restart test. ([1b821b3c](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/commits/1b821b3cfe8f821fd0ff7fe4d72b3cc8b607ac6d))
+
 # [25.5.0](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv25.4.0&sourceBranch=refs%2Ftags%2Fv25.5.0) (2020-10-15)
 
 ### New features
