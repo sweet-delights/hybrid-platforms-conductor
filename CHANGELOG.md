@@ -1,3 +1,9 @@
+# [25.6.0](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv25.5.1&sourceBranch=refs%2Ftags%2Fv25.6.0) (2020-10-16)
+
+### New features
+
+* [Feature] Added HDFS file system test plugin, keeping the same DSL as local file system checks ([f03503ce](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/commits/f03503ce630ebe5097b55ae7f81a588e8c10ed99))
+
 # [25.5.1](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv25.5.0&sourceBranch=refs%2Ftags%2Fv25.5.1) (2020-10-16)
 
 ### Fixes
