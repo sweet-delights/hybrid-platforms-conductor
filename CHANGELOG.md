@@ -1,3 +1,9 @@
+# [25.6.1](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv25.6.0&sourceBranch=refs%2Ftags%2Fv25.6.1) (2020-10-21)
+
+### Fixes
+
+* Handle very big bash commands in remote connections ([a32456c2](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/commits/a32456c2dc7d465652158affe0b9075a12b0c5a1))
+
 # [25.6.0](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv25.5.1&sourceBranch=refs%2Ftags%2Fv25.6.0) (2020-10-16)
 
 ### New features

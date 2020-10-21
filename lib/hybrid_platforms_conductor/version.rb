@@ -1,5 +1,5 @@
 module HybridPlatformsConductor
 
-  VERSION = '25.6.0'
+  VERSION = '25.6.1'
 
 end
