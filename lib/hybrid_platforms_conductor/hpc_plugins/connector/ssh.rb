@@ -1,4 +1,5 @@
 require 'erb'
+require 'digest'
 
 module HybridPlatformsConductor
 
@@ -183,6 +184,9 @@ module HybridPlatformsConductor
           end
         end
 
+        # Integer: Max size for an argument that can be executed without getting through an intermediary file
+        MAX_CMD_ARG_LENGTH = 131_055
+
         # Run bash commands on a given node.
         # [API] - This method is mandatory
         # [API] - If defined, then with_connection_to has been called before this method.
@@ -196,7 +200,24 @@ module HybridPlatformsConductor
         # Parameters::
         # * *bash_cmds* (String): Bash commands to execute
         def remote_bash(bash_cmds)
-          run_cmd("#{ssh_exec} #{ssh_url} /bin/bash <<'EOF'\n#{bash_cmds}\nEOF")
+          ssh_cmd = "#{ssh_exec} #{ssh_url} /bin/bash <<'EOF'\n#{bash_cmds}\nEOF"
+          # Due to a limitation of Process.spawn, each individual argument is limited to 128KB of size.
+          # Therefore we need to make sure that if bash_cmds exceeds MAX_CMD_ARG_LENGTH bytes (considering EOF chars) then we use an intermediary shell script to store the commands.
+          if bash_cmds.size > MAX_CMD_ARG_LENGTH
+            # Write the commands in a file
+            temp_file = "#{Dir.tmpdir}/hpc_temp_cmds_#{Digest::MD5.hexdigest(bash_cmds)}.sh"
+            File.open(temp_file, 'w+') do |file|
+              file.write ssh_cmd
+              file.chmod 0700
+            end
+            begin
+              run_cmd(temp_file)
+            ensure
+              File.unlink(temp_file)
+            end
+          else
+            run_cmd ssh_cmd
+          end
         end
 
         # Execute an interactive shell on the remote node
