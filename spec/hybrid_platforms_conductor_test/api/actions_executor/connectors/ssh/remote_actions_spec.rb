@@ -69,6 +69,25 @@ describe HybridPlatformsConductor::ActionsExecutor do
         end
       end
 
+      it 'executes really big bash commands remotely' do
+        cmd = "echo #{'1' * 131_060}"
+        with_test_platform_for_remote_testing(
+          expected_cmds: [
+            [
+              /.+\/hpc_temp_cmds_.+\.sh$/,
+              proc do |received_cmd|
+                expect(File.read(received_cmd)).to match /.+\/ssh test_user@ti\.node \/bin\/bash <<'EOF'\n#{Regexp.escape(cmd)}\nEOF/
+                [0, 'Bash commands executed on node', '']
+              end
+            ]
+          ],
+          expected_stdout: 'Bash commands executed on node'
+        ) do
+          # Use an argument that exceeds the max arg length limit
+          test_connector.remote_bash(cmd)
+        end
+      end
+
       it 'copies files remotely with sudo' do
         with_test_platform_for_remote_testing(
           expected_cmds: [
