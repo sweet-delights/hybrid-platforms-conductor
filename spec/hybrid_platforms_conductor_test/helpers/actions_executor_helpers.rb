@@ -69,7 +69,7 @@ module HybridPlatformsConductorTest
       # * *expected_runs* (Array<Proc>): List of mocking codes that should be run. Each Proc has the same signature as ActionsExecutor#execute_actions
       def expect_actions_executor_runs(expected_runs)
         idx_actions_executor_run = 0
-        expect(test_actions_executor).to receive(:execute_actions).exactly(expected_runs.size).times do |actions_per_nodes, timeout: nil, concurrent: false, log_to_dir: 'run_logs', log_to_stdout: true|
+        expect(test_actions_executor).to receive(:execute_actions).exactly(expected_runs.size).times do |actions_per_nodes, timeout: nil, concurrent: false, log_to_dir: 'run_logs', log_to_stdout: true, progress_name: 'Executing actions'|
           logger.debug "[ Mocked ActionsExecutor ] - Run actions: #{actions_per_nodes}"
           result =
             if idx_actions_executor_run >= expected_runs.size
