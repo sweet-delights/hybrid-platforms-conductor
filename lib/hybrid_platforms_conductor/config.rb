@@ -1,5 +1,6 @@
 require 'cleanroom'
 require 'git'
+require 'ice_cube'
 require 'hybrid_platforms_conductor/plugins'
 
 module HybridPlatformsConductor
@@ -37,6 +38,11 @@ module HybridPlatformsConductor
     # * *errors_on_stderr* (Array<String or Regexp>): List of errors match (as exact string match or using a regexp) to check against stderr
     attr_reader :retriable_errors
 
+    # List of deployment schedules. Each info has the following properties:
+    # * *nodes_selectors_stack* (Array<Object>): Stack of nodes selectors impacted by this rule
+    # * *schedule* (IceCube::Schedule): The deployment schedule
+    attr_reader :deployment_schedules
+
     # Constructor
     #
     # Parameters::
@@ -70,6 +76,10 @@ module HybridPlatformsConductor
       # * *errors_on_stdout* (Array<String or Regexp>): List of errors match (as exact string match or using a regexp) to check against stdout
       # * *errors_on_stderr* (Array<String or Regexp>): List of errors match (as exact string match or using a regexp) to check against stderr
       @retriable_errors = []
+      # List of deployment schedules. Each info has the following properties:
+      # * *nodes_selectors_stack* (Array<Object>): Stack of nodes selectors impacted by this rule
+      # * *schedule* (IceCube::Schedule): The deployment schedule
+      @deployment_schedules = []
       # Make sure plugins can decorate our DSL with their owns additions as well
       # Therefore we parse all possible plugin types
       Dir.glob("#{__dir__}/hpc_plugins/*").each do |plugin_dir|
@@ -148,7 +158,7 @@ module HybridPlatformsConductor
     def retry_deploy_for_errors_on_stdout(errors)
       @retriable_errors << {
         errors_on_stdout: errors.is_a?(Array) ? errors : [errors],
-        nodes_selectors_stack: current_nodes_selectors_stack,
+        nodes_selectors_stack: current_nodes_selectors_stack
       }
     end
     expose :retry_deploy_for_errors_on_stdout
@@ -160,10 +170,52 @@ module HybridPlatformsConductor
     def retry_deploy_for_errors_on_stderr(errors)
       @retriable_errors << {
         errors_on_stderr: errors.is_a?(Array) ? errors : [errors],
-        nodes_selectors_stack: current_nodes_selectors_stack,
+        nodes_selectors_stack: current_nodes_selectors_stack
       }
     end
     expose :retry_deploy_for_errors_on_stderr
+
+    # Set a deployment schedule
+    #
+    # Parameters::
+    # * *schedule* (IceCube::Schedule): The deployment schedule
+    def deployment_schedule(schedule)
+      @deployment_schedules << {
+        schedule: schedule,
+        nodes_selectors_stack: current_nodes_selectors_stack
+      }
+    end
+    expose :deployment_schedule
+
+    # Helper to get a daily schedule at a given time
+    #
+    # Parameters::
+    # * *time* (String): Time (UTC) for the daily schedule
+    # * *duration* (Integer): Number of seconds of duration [default: 3000]
+    # Result::
+    # * IceCube::Schedule: Corresponding schedule
+    def daily_at(time, duration: 3000)
+      IceCube::Schedule.new(Time.parse("2020-01-01 #{time} UTC"), duration: duration) do |s|
+        s.add_recurrence_rule(IceCube::Rule.daily)
+      end
+    end
+    expose :daily_at
+
+    # Helper to get a weekly schedule at a given day and time
+    #
+    # Parameters::
+    # * *days* (Symbol or Array<Symbol>): Days for the weekly schedule (see IceCube::Rule documentation to know day names)
+    # * *time* (String): Time (UTC) for the weekly schedule
+    # * *duration* (Integer): Number of seconds of duration [default: 3000]
+    # Result::
+    # * IceCube::Schedule: Corresponding schedule
+    def weekly_at(days, time, duration: 3000)
+      days = [days] unless days.is_a?(Array)
+      IceCube::Schedule.new(Time.parse("2020-01-01 #{time} UTC"), duration: duration) do |s|
+        s.add_recurrence_rule(IceCube::Rule.weekly.day(*days))
+      end
+    end
+    expose :weekly_at
 
     # Get the current nodes selector stack.
     #

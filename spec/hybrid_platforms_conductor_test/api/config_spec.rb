@@ -204,4 +204,53 @@ describe HybridPlatformsConductor::Config do
     end
   end
 
+  it 'returns the deployment schedules correctly' do
+    with_platforms '
+      deployment_schedule(IceCube::Schedule.new(Time.parse(\'2020-05-01 11:22:33 UTC\')))
+      for_nodes(%w[node1 node2 node3]) do
+        deployment_schedule(IceCube::Schedule.new(Time.parse(\'2020-05-02 22:33:44 UTC\')))
+      end
+    ' do
+      sort_proc = proc { |deployment_schedule_info| deployment_schedule_info[:schedule].to_ical }
+      expect(test_config.deployment_schedules.sort_by(&sort_proc)).to eq [
+        {
+          nodes_selectors_stack: [],
+          schedule: IceCube::Schedule.new(Time.parse('2020-05-01 11:22:33 UTC'))
+        },
+        {
+          nodes_selectors_stack: [%w[node1 node2 node3]],
+          schedule: IceCube::Schedule.new(Time.parse('2020-05-02 22:33:44 UTC'))
+        }
+      ].sort_by(&sort_proc)
+    end
+  end
+
+  it 'returns the deployment schedules correctly using the daily helper' do
+    with_platforms 'deployment_schedule(daily_at(\'11:22:33\'))' do
+      schedule = test_config.deployment_schedules.first[:schedule]
+      expect(Time.parse("#{schedule.start_time.strftime('%F')} 00:00:00")).to be <= Time.now
+      expect(schedule.start_time.strftime('%T')).to eq '11:22:33'
+      expect(schedule.recurrence_rules.first.to_hash).to eq(
+        validations: {},
+        rule_type: 'IceCube::DailyRule',
+        interval: 1
+      )
+    end
+  end
+
+  it 'returns the deployment schedules correctly using the weekly helper' do
+    with_platforms 'deployment_schedule(weekly_at(:monday, \'11:22:33\'))' do
+      schedule = test_config.deployment_schedules.first[:schedule]
+      expect(Time.parse("#{schedule.start_time.strftime('%F')} 00:00:00")).to be <= Time.now
+      expect(schedule.start_time.strftime('%T')).to eq '11:22:33'
+      expect(schedule.recurrence_rules.first.to_hash).to eq(
+        validations: {},
+        validations: { day: [1] },
+        week_start: 0,
+        rule_type: 'IceCube::WeeklyRule',
+        interval: 1
+      )
+    end
+  end
+
 end
