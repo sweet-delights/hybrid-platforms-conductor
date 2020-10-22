@@ -98,9 +98,10 @@ module HybridPlatformsConductor
     # * *concurrent* (Boolean): Do we run the commands in parallel? If yes, then stdout of commands is stored in log files. [default: false]
     # * *log_to_dir* (String or nil): Directory name to store log files. Can be nil to not store log files. [default: "#{@config.hybrid_platforms_dir}/run_logs"]
     # * *log_to_stdout* (Boolean): Do we log the command result on stdout? [default: true]
+    # * *progress_name* (String): Name to display on the progress bar [default: 'Executing actions']
     # Result::
     # * Hash<String, [Integer or Symbol, String, String]>: Exit status code (or Symbol in case of error or dry run), standard output and error for each node.
-    def execute_actions(actions_per_nodes, timeout: nil, concurrent: false, log_to_dir: "#{@config.hybrid_platforms_dir}/run_logs", log_to_stdout: true)
+    def execute_actions(actions_per_nodes, timeout: nil, concurrent: false, log_to_dir: "#{@config.hybrid_platforms_dir}/run_logs", log_to_stdout: true, progress_name: 'Executing actions')
       # Keep a list of nodes that will need remote access
       nodes_needing_connectors = []
       # Compute the ordered list of actions per selected node
@@ -154,7 +155,7 @@ module HybridPlatformsConductor
             accessible_nodes,
             parallel: concurrent,
             nbr_threads_max: @max_threads,
-            progress: 'Executing actions'
+            progress: progress_name
           ) do |node|
             node_actions = actions_per_node[node]
             # If we run in parallel then clone the actions, so that each node has its own instance for thread-safe code.

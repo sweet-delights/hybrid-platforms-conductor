@@ -370,7 +370,8 @@ module HybridPlatformsConductor
           end],
           log_to_stdout: false,
           concurrent: true,
-          timeout: 10
+          timeout: 10,
+          progress_name: 'Getting deployment info'
         ).
         map do |node, (exit_status, stdout, stderr)|
           # Expected format for stdout:
