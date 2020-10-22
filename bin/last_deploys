@@ -3,24 +3,23 @@ require 'time'
 require 'terminal-table'
 require 'hybrid_platforms_conductor/executable'
 
-possible_string_sorts = [
-  :admin,
-  :repo_name,
-  :commit_comment
+possible_string_sorts = %i[
+  commit_comment
+  date
+  node
+  repo_name
+  user
 ]
-possible_sorts = {
-  datetime: proc { |node, deploy_info| [deploy_info.key?(:error) || !deploy_info.key?(:datetime) ? 0 : deploy_info[:datetime].strftime('%Y%m%d%H%M%S').to_i, node] },
-  node: proc { |node, _deploy_info| node },
-}.merge(Hash[possible_string_sorts.map do |property_name|
+possible_sorts = Hash[possible_string_sorts.map do |property_name|
   [
     property_name,
     proc { |node, deploy_info| [deploy_info.key?(:error) || !deploy_info.key?(property_name) ? '' : deploy_info[property_name], node] }
   ]
-end])
+end]
 
 sort_by = :node
 sort_desc = false
-executable = HybridPlatformsConductor::Executable.new do |opts|
+executable = HybridPlatformsConductor::Executable.new(deploy_options: false) do |opts|
   opts.on('-r', '--sort-by SORT', "Specify a sort. Possible values are: #{possible_sorts.keys.sort.join(', ')}. Each value can append _desc to specify a reverse sorting. Defaults to #{sort_by}.") do |sort_name|
     if sort_name =~ /^(.+)_desc$/
       sort_desc = true
@@ -30,86 +29,25 @@ executable = HybridPlatformsConductor::Executable.new do |opts|
   end
 end
 nodes_handler = executable.nodes_handler
-actions_executor = executable.actions_executor
-actions_executor.max_threads = 64
+deployer = executable.deployer
 
 executable.parse_options!
 raise "Unknown sort name: #{sort_by}. Should be one of #{possible_sorts.keys.join(', ')}." unless possible_sorts.key?(sort_by)
-nodes = executable.selected_nodes.empty? ? [{ all: true }] : executable.selected_nodes
 
-sorted_deploy_info = Hash[actions_executor.
-  execute_actions(
-    Hash[nodes_handler.select_nodes(nodes).map do |node|
-      [
-        node,
-        { remote_bash: "cd /var/log/deployments && ls -t | head -1 | xargs sed '/===== STDOUT =====/q'" }
-      ]
-    end],
-    log_to_stdout: false,
-    concurrent: true,
-    timeout: 10
-  ).
-  map do |node, (exit_status, stdout, stderr)|
-    # Expected format for stdout:
-    # Property1: Value1
-    # ...
-    # PropertyN: ValueN
-    # ===== STDOUT =====
-    # ...
-    deploy_info = { node: node }
-    if exit_status.is_a?(Symbol)
-      deploy_info[:error] = "Error: #{exit_status}\n#{stderr}"
-    else
-      stdout_lines = stdout.split("\n")
-      if stdout_lines.first =~ /No such file or directory/
-        deploy_info[:error] = '/var/log/deployments missing'
-      else
-        stdout_lines.each do |line|
-          if line =~ /^([^:]+): (.+)$/
-            key, value = $1, $2
-            case key
-            when 'date'
-              # Thu Nov 23 18:43:01 UTC 2017
-              deploy_info[:datetime] = Time.parse(value).strftime('%F %T')
-            when 'user'
-              # a_usernme
-              deploy_info[:admin] = value
-            when 'debug'
-              # Yes
-              deploy_info[:debug] = (value == 'Yes')
-            when 'repo_name'
-              # ansible_repo
-              deploy_info[:repo_name] = value
-            when 'commit_id'
-              # 73c2017a2a85a5a086cd2474ce02d2755c273f3c
-              deploy_info[:commit_id] = value
-            when 'commit_message'
-              # Added sorting capabilities
-              deploy_info[:commit_message] = value
-            when 'diff_files'
-              # my_file.txt, other_file.txt
-              deploy_info[:nbr_diff_files] = value.split(', ').size
-            else
-              deploy_info[key.to_sym] = value
-            end
-          else
-            deploy_info[:unknown_lines] = [] unless deploy_info.key?(:unknown_lines)
-            deploy_info[:unknown_lines] << line
-          end
-        end
-      end
-    end
-    [
-      node,
-      deploy_info
-    ]
+sorted_deploy_info = Hash[
+  deployer.deployment_info_from(nodes_handler.select_nodes(executable.selected_nodes.empty? ? [{ all: true }] : executable.selected_nodes)).
+  map do |node, deploy_info|
+    decorated_deploy_info = deploy_info.merge(node: node)
+    decorated_deploy_info[:date] = deploy_info[:date].strftime('%F %T') if deploy_info.key?(:date)
+    decorated_deploy_info[:nbr_diff_files] = deploy_info[:diff_files].size if deploy_info.key?(:diff_files)
+    [node, decorated_deploy_info]
   end
 ].sort_by(&possible_sorts[sort_by])
 sorted_deploy_info.reverse! if sort_desc
 info_displayed = {
   node: 'Node',
-  datetime: 'Date',
-  admin: 'Admin',
+  date: 'Date',
+  user: 'Admin',
   # debug: 'Debug',
   repo_name: 'Repository',
   # commit_id: 'Commit ID',

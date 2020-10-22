@@ -350,6 +350,74 @@ module HybridPlatformsConductor
       end
     end
 
+    # Get deployment info from a list of nodes selectors
+    #
+    # Parameters::
+    # * *nodes* (Array<String>): Nodes to get info from
+    # Result::
+    # * Hash<String, Hash<Symbol,Object>: The deployed info, per node name.
+    #   Properties are defined by the Deployer#save_logs method, and additionally to them the following properties can be set:
+    #   * *error* (String): Optional property set in case of error
+    def deployment_info_from(*nodes)
+      @actions_executor.max_threads = 64
+      Hash[@actions_executor.
+        execute_actions(
+          Hash[nodes.flatten.map do |node|
+            [
+              node,
+              { remote_bash: "cd /var/log/deployments && ls -t | head -1 | xargs sed '/===== STDOUT =====/q'" }
+            ]
+          end],
+          log_to_stdout: false,
+          concurrent: true,
+          timeout: 10
+        ).
+        map do |node, (exit_status, stdout, stderr)|
+          # Expected format for stdout:
+          # Property1: Value1
+          # ...
+          # PropertyN: ValueN
+          # ===== STDOUT =====
+          # ...
+          deploy_info = {}
+          if exit_status.is_a?(Symbol)
+            deploy_info[:error] = "Error: #{exit_status}\n#{stderr}"
+          else
+            stdout_lines = stdout.split("\n")
+            if stdout_lines.first =~ /No such file or directory/
+              deploy_info[:error] = '/var/log/deployments missing'
+            else
+              stdout_lines.each do |line|
+                if line =~ /^([^:]+): (.+)$/
+                  key, value = $1, $2
+                  case key
+                  when 'date'
+                    # Thu Nov 23 18:43:01 UTC 2017
+                    deploy_info[:date] = Time.parse(value)
+                  when 'debug'
+                    # Yes
+                    deploy_info[:debug] = (value == 'Yes')
+                  when 'diff_files'
+                    # my_file.txt, other_file.txt
+                    deploy_info[:diff_files] = value.split(', ')
+                  else
+                    deploy_info[key.to_sym] = value
+                  end
+                else
+                  deploy_info[:unknown_lines] = [] unless deploy_info.key?(:unknown_lines)
+                  deploy_info[:unknown_lines] << line
+                end
+              end
+            end
+          end
+          [
+            node,
+            deploy_info
+          ]
+        end
+      ]
+    end
+
     private
 
     # Get the list of retriable errors a node got from deployment logs.

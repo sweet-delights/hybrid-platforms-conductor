@@ -31,6 +31,7 @@ module HybridPlatformsConductor
     # * *parallel_options* (Boolean): Do we offer parallel options? [default: true]
     # * *plugins_options* (Boolean): Do we offer plugins options? [default: true]
     # * *timeout_options* (Boolean): Do we offer timeout options? [default: true]
+    # * *deploy_options* (Boolean): Do we offer deploy options? [default: true]
     # * *logger* (Logger): The stdout logger to be used [default: Logger.new(STDOUT, level: :info)]
     # * *logger_stderr* (Logger): The stderr logger to be used [default: Logger.new(STDERR, level: :info)]
     # * *opts_block* (Proc): Optional code called to register main options
@@ -42,6 +43,7 @@ module HybridPlatformsConductor
       parallel_options: true,
       plugins_options: true,
       timeout_options: true,
+      deploy_options: true,
       logger: Logger.new(STDOUT, level: :info),
       logger_stderr: Logger.new(STDERR, level: :info),
       &opts_block
@@ -52,6 +54,7 @@ module HybridPlatformsConductor
       @parallel_options = parallel_options
       @plugins_options = plugins_options
       @timeout_options = timeout_options
+      @deploy_options = deploy_options
       @opts_block = opts_block
       # List of nodes description selected
       @selected_nodes = []
@@ -170,7 +173,13 @@ module HybridPlatformsConductor
         @nodes_handler.options_parse_nodes_selectors(opts, @selected_nodes) if @nodes_selection_options
         @cmd_runner.options_parse(opts) if @cmd_runner
         @actions_executor.options_parse(opts, parallel: @parallel_options) if @actions_executor
-        @deployer.options_parse(opts, parallel_switch: @parallel_options, plugins_options: @plugins_options, timeout_options: @timeout_options, why_run_switch: @check_options) if @deployer
+        @deployer.options_parse(
+          opts,
+          parallel_switch: @parallel_options,
+          plugins_options: @plugins_options,
+          timeout_options: @timeout_options,
+          why_run_switch: @check_options
+        ) if @deployer && @deploy_options
         @json_dumper.options_parse(opts) if @json_dumper
         @reports_handler.options_parse(opts) if @reports_handler
         @tests_runner.options_parse(opts) if @tests_runner
