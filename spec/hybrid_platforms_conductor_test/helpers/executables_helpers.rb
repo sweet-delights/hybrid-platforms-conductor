@@ -27,8 +27,9 @@ module HybridPlatformsConductorTest
           parallel_options: true,
           plugins_options: true,
           timeout_options: true,
-          logger: Logger.new(STDOUT, level: :info),
-          logger_stderr: Logger.new(STDERR, level: :info),
+          deploy_options: true,
+          original_logger: Logger.new(STDOUT, level: :info),
+          original_logger_stderr: Logger.new(STDERR, level: :info),
           &opts_block|
           original_method.call(
             check_options: check_options,
@@ -36,6 +37,7 @@ module HybridPlatformsConductorTest
             parallel_options: parallel_options,
             plugins_options: plugins_options,
             timeout_options: timeout_options,
+            deploy_options: deploy_options,
             logger: logger_stdout,
             logger_stderr: logger_stderr,
             &opts_block
@@ -43,6 +45,7 @@ module HybridPlatformsConductorTest
         end
         # Get a simple list of all the components that should be mocked when being used by the executables, per class to be mocked.
         components_to_mock = {
+          HybridPlatformsConductor::Config => test_config,
           HybridPlatformsConductor::CmdRunner => test_cmd_runner,
           HybridPlatformsConductor::Deployer => test_deployer,
           HybridPlatformsConductor::NodesHandler => test_nodes_handler,
