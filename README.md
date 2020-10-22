@@ -922,7 +922,7 @@ Usage: ./bin/last_deploys [options]
 Main options:
     -d, --debug                      Activate debug mode
     -h, --help                       Display help and exit
-        --sort-by SORT               Specify a sort. Possible values are: admin, commit_comment, datetime, node, repo_name. Each value can append _desc to specify a reverse sorting. Defaults to node.
+        --sort-by SORT               Specify a sort. Possible values are: commit_comment, date, node, repo_name, user. Each value can append _desc to specify a reverse sorting. Defaults to node.
 
 Nodes handler options:
     -o, --show-nodes                 Display the list of possible nodes and exit
@@ -964,7 +964,7 @@ Usage examples:
 ./bin/last_deploys --all-nodes
 
 # Check deployments for all nodes, sorted by date descending
-./bin/last_deploys --all-nodes --sort-by datetime_desc
+./bin/last_deploys --all-nodes --sort-by date_desc
 ```
 
 Example of output:
