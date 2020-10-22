@@ -12,18 +12,21 @@ module HybridPlatformsConductor
         # Check my_test_plugin.rb.sample documentation for signature details.
         def test
           nodes_handler = NodesHandler.new
-          example_node = nodes_handler.platform(nodes_handler.known_platforms.first).known_nodes.first
+          example_platform = nodes_handler.known_platforms.first
+          example_node = nodes_handler.platform(example_platform).known_nodes.first
         	[
             "#{CmdRunner.executables_prefix}check-node --node #{example_node} --show-commands",
             "#{CmdRunner.executables_prefix}deploy --node #{example_node} --show-commands --why-run",
             "#{CmdRunner.executables_prefix}dump_nodes_json --help",
             "#{CmdRunner.executables_prefix}free_ips",
             "#{CmdRunner.executables_prefix}free_veids",
+            "#{CmdRunner.executables_prefix}get_impacted_nodes --platform #{example_platform} --show-commands",
             "#{CmdRunner.executables_prefix}last_deploys --node #{example_node} --show-commands",
+            "#{CmdRunner.executables_prefix}nodes_to_deploy --node #{example_node} --show-commands",
             "#{CmdRunner.executables_prefix}report --node #{example_node} --format stdout",
-            "#{CmdRunner.executables_prefix}ssh_config",
             "#{CmdRunner.executables_prefix}run --node #{example_node} --show-commands --interactive",
             "#{CmdRunner.executables_prefix}setup --help",
+            "#{CmdRunner.executables_prefix}ssh_config",
             "#{CmdRunner.executables_prefix}test --help",
             "#{CmdRunner.executables_prefix}topograph --from \"--node #{example_node}\" --to \"--node #{example_node}\" --skip-run --output graphviz:graph.gv"
           ].each do |cmd|
