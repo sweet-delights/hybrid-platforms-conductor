@@ -109,7 +109,7 @@ describe HybridPlatformsConductor::Deployer do
         ])
         expect(test_deployer.deployment_info_from('node')).to eq(
           'node' => {
-            datetime: Time.parse('2017-11-23 18:43:01 UTC'),
+            date: Time.parse('2017-11-23 18:43:01 UTC'),
             debug: true,
             diff_files: %w[file1 file2 file3]
           }
