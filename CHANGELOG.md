@@ -1,3 +1,9 @@
+# [25.8.0](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv25.7.0&sourceBranch=refs%2Ftags%2Fv25.8.0) (2020-10-26)
+
+### New features
+
+* [Feature] Add nodes_to_deploy executable to know which nodes need deployment considering schedules and git diff impacts ([6116ac15](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/commits/6116ac15c00bf6061a8bbe7d93aa11e6bbfbc613))
+
 # [25.7.0](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv25.6.1&sourceBranch=refs%2Ftags%2Fv25.7.0) (2020-10-26)
 
 ### New features
