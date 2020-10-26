@@ -1,0 +1,90 @@
+#!/usr/bin/env ruby
+require 'time'
+require 'hybrid_platforms_conductor/executable'
+
+ignore_schedule = false
+ignore_deploy_info = false
+deploy_time = Time.now.utc
+executable = HybridPlatformsConductor::Executable.new(deploy_options: false) do |opts|
+  opts.on('--deployment-time DATETIME', 'Set the deployment time to be considered while matching the schedules. Defaults to now.') do |date_time_str|
+    deploy_time = Time.parse("#{date_time_str} UTC")
+  end
+  opts.on('--ignore-deployed-info', 'Ignore the current deployed information.') do
+    ignore_deploy_info = true
+  end
+  opts.on('--ignore-schedule', 'Ignore the deployment schedules.') do
+    ignore_schedule = true
+  end
+end
+nodes_handler = executable.nodes_handler
+deployer = executable.deployer
+
+executable.parse_options!
+
+nodes = (nodes_handler.select_nodes(executable.selected_nodes.empty? ? [{ all: true }] : executable.selected_nodes))
+
+unless ignore_schedule
+  # Select nodes to be deployed, based first on deployment schedule
+  executable.log_debug "Consider deployment time for schedule: #{deploy_time.strftime('%F %T')}."
+  nodes.select! do |node|
+    # Select nodes whose schedule for deployment includes the deployment time
+    deployment_schedules = nodes_handler.select_confs_for_node(node, executable.config.deployment_schedules)
+    if deployment_schedules.empty?
+      # Consider we always deploy this node
+      executable.log_warn "[ #{node} ] - No deployment schedule defined."
+      true
+    else
+      executable.log_debug "[ #{node} ] - Deployment schedules: #{JSON.pretty_generate(deployment_schedules.map { |deployment_schedule_info| deployment_schedule_info[:schedule].to_h })}"
+      if deployment_schedules.any? { |deployment_schedule_info| deployment_schedule_info[:schedule].occurring_at?(deploy_time) }
+        executable.log_debug "[ #{node} ] - Node selected from the deployment schedule."
+        true
+      else
+        executable.log_debug "[ #{node} ] - Node NOT selected from the deployment schedule."
+        false
+      end
+    end
+  end
+end
+
+unless ignore_deploy_info
+  # Select nodes that have a git diff impact with master
+  # Get their current deployment info
+  deploy_info = deployer.deployment_info_from(nodes)
+  # Cache the impacted nodes, as very often the git diff can be lengthy and the same diff will be reused by several nodes
+  # Hash< String,    Hash< String,    Array< String > > >
+  # Hash< repo_name, Hash< commit_id, Array< node   > > >
+  cache_impacted_nodes = {}
+  nodes.select! do |node|
+    node_deploy_info = deploy_info[node]
+    if node_deploy_info.key?(:error)
+      executable.log_warn "[ #{node} ] - Deployment in error: #{node_deploy_info[:error]}"
+      true
+    elsif !node_deploy_info.key?(:exit_status) || node_deploy_info[:exit_status] != '0'
+      executable.log_warn "[ #{node} ] - Last deployment did not end successfully: #{node_deploy_info[:exit_status]}"
+      true
+    else
+      impacted_nodes = cache_impacted_nodes.dig(node_deploy_info[:repo_name], node_deploy_info[:commit_id])
+      if impacted_nodes.nil?
+        impacted_nodes, _single_impacted_nodes, _impacted_services, _impact_global = nodes_handler.impacted_nodes_from_git_diff(
+          node_deploy_info[:repo_name],
+          from_commit: node_deploy_info[:commit_id],
+          to_commit: 'master'
+        )
+        cache_impacted_nodes[node_deploy_info[:repo_name]] = {} unless cache_impacted_nodes.key?(node_deploy_info[:repo_name])
+        cache_impacted_nodes[node_deploy_info[:repo_name]][node_deploy_info[:commit_id]] = impacted_nodes
+      end
+      if impacted_nodes.include?(node)
+        executable.log_debug "[ #{node} ] - Diffs on #{node_deploy_info[:repo_name]} between #{node_deploy_info[:commit_id]} and master are impacting this node."
+        true
+      else
+        executable.log_debug "[ #{node} ] - No impacting diffs on #{node_deploy_info[:repo_name]} between #{node_deploy_info[:commit_id]} and master for this node."
+        false
+      end
+    end
+  end
+end
+
+executable.out '===== Nodes to deploy ====='
+nodes.sort.each do |node|
+  executable.out node
+end
