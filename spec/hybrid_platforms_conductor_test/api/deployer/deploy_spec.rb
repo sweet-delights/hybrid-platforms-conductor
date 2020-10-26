@@ -76,6 +76,75 @@ describe HybridPlatformsConductor::Deployer do
       end
     end
 
+    it 'gets deployment info from log files' do
+      with_test_platform({ nodes: { 'node' => {} } }) do |repository|
+        expect_actions_executor_runs([
+          # Expect the actions to get log files
+          proc do |actions_per_nodes|
+            expect(actions_per_nodes).to eq('node' => { remote_bash: 'cd /var/log/deployments && ls -t | head -1 | xargs sed \'/===== STDOUT =====/q\'' })
+            { 'node' => [0, "Property1: Value1\nProperty2: Value2", ''] }
+          end
+        ])
+        expect(test_deployer.deployment_info_from('node')).to eq(
+          'node' => {
+            Property1: 'Value1',
+            Property2: 'Value2'
+          }
+        )
+      end
+    end
+
+    it 'gets deployment info with some properties converted from log files' do
+      with_test_platform({ nodes: { 'node' => {} } }) do |repository|
+        expect_actions_executor_runs([
+          # Expect the actions to get log files
+          proc do |actions_per_nodes|
+            expect(actions_per_nodes).to eq('node' => { remote_bash: 'cd /var/log/deployments && ls -t | head -1 | xargs sed \'/===== STDOUT =====/q\'' })
+            { 'node' => [0, <<~EOS, ''] }
+              date: Thu Nov 23 18:43:01 UTC 2017
+              debug: Yes
+              diff_files: file1, file2, file3
+            EOS
+          end
+        ])
+        expect(test_deployer.deployment_info_from('node')).to eq(
+          'node' => {
+            date: Time.parse('2017-11-23 18:43:01 UTC'),
+            debug: true,
+            diff_files: %w[file1 file2 file3]
+          }
+        )
+      end
+    end
+
+    it 'gets deployment info from several log files' do
+      with_test_platform({ nodes: { 'node1' => {}, 'node2' => {} } }) do |repository|
+        expect_actions_executor_runs([
+          # Expect the actions to get log files
+          proc do |actions_per_nodes|
+            expect(actions_per_nodes).to eq(
+              'node1' => { remote_bash: 'cd /var/log/deployments && ls -t | head -1 | xargs sed \'/===== STDOUT =====/q\'' },
+              'node2' => { remote_bash: 'cd /var/log/deployments && ls -t | head -1 | xargs sed \'/===== STDOUT =====/q\'' }
+            )
+            {
+              'node1' => [0, "Property1: Value1\nProperty2: Value2", ''],
+              'node2' => [0, "Property3: Value3\nProperty4: Value4", '']
+            }
+          end
+        ])
+        expect(test_deployer.deployment_info_from(%w[node1 node2])).to eq(
+          'node1' => {
+            Property1: 'Value1',
+            Property2: 'Value2'
+          },
+          'node2' => {
+            Property3: 'Value3',
+            Property4: 'Value4'
+          }
+        )
+      end
+    end
+
   end
 
 end
