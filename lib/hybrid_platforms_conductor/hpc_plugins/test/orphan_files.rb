@@ -43,7 +43,8 @@ module HybridPlatformsConductor
         # List of directories to always ignore
         DIRECTORIES_TO_ALWAYS_IGNORE = [
           '/proc',
-          '/sys/kernel/debug'
+          '/sys/kernel/debug',
+          '/sys/kernel/slab'
         ]
 
         # Check my_test_plugin.rb.sample documentation for signature details.
