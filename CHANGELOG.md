@@ -1,3 +1,14 @@
+# [25.7.0](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv25.6.1&sourceBranch=refs%2Ftags%2Fv25.7.0) (2020-10-26)
+
+### New features
+
+* [Feature] Add an API to get deployment info ([b7f6f9ec](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/commits/b7f6f9ec263a2a10e0b715769a8b66ab34da5ed6))
+* [Feature] Add Config DSL to configure a deployment schedule for CD ([8b6440b1](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/commits/8b6440b115575b23b590f10356601b48f4dc8836))
+
+### Fixes
+
+* Ignore some system files that make find fail during the orphan files test ([dea6734b](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/commits/dea6734b8068e6b26d1d3a977c9d25d3467cfbac))
+
 # [25.6.1](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv25.6.0&sourceBranch=refs%2Ftags%2Fv25.6.1) (2020-10-21)
 
 ### Fixes
