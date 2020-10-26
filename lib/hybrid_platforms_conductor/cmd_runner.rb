@@ -148,12 +148,12 @@ module HybridPlatformsConductor
         end
         unless expected_code.include?(exit_status)
           error_title = "Command '#{cmd.split("\n").first}' returned error code #{exit_status} (expected #{expected_code.join(', ')})."
-          if no_exception || log_to_stdout
+          if no_exception
             # We consider the caller is responsible for logging what he wants about the details of the error (stdout and stderr)
             log_error error_title
           else
-            # The exception won't contain stdout and stderr details, and we didn't output to stdout, so dump them now
-            log_error "#{error_title}\n----- Command STDOUT:\n#{cmd_stdout}\n----- Command STDERR:\n#{cmd_stderr}"
+            # The exception won't contain stdout and stderr details (unless output to stdout was on), so dump them now
+            log_error "#{error_title}#{log_to_stdout ? '' : "\n----- Command STDOUT:\n#{cmd_stdout}\n----- Command STDERR:\n#{cmd_stderr}"}"
             raise exit_status == :timeout ? TimeoutError : UnexpectedExitCodeError, error_title
           end
         end
