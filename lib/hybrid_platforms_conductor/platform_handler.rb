@@ -128,7 +128,7 @@ module HybridPlatformsConductor
         begin
           git = Git.open(@repository_path)
         rescue
-          log_warn "Platform #{@repository_path} is not a git repository"
+          log_debug "Platform #{@repository_path} is not a git repository"
         end
         @info =
           if git

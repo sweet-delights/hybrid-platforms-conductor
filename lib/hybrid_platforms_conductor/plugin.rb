@@ -28,11 +28,7 @@ module HybridPlatformsConductor
       # * *mixin* (Module): Mixin to add to the Platforms DSL
       # * *init_method* (Symbol or nil): The initializer method of this Mixin, or nil if none [default = nil]
       def extend_config_dsl_with(mixin, init_method = nil)
-        Config.include mixin
-        Config.mixin_initializers << init_method unless init_method.nil?
-        mixin.instance_methods.each do |method_name|
-          Config.expose method_name unless method_name == init_method
-        end
+        Config.extend_config_dsl_with(mixin, init_method)
       end
 
     end

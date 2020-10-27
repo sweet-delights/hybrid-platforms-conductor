@@ -1,6 +1,7 @@
 require 'optparse'
 require 'logger'
 require 'hybrid_platforms_conductor/config'
+require 'hybrid_platforms_conductor/platforms_handler'
 require 'hybrid_platforms_conductor/nodes_handler'
 require 'hybrid_platforms_conductor/actions_executor'
 require 'hybrid_platforms_conductor/cmd_runner'
@@ -90,12 +91,21 @@ module HybridPlatformsConductor
       @cmd_runner
     end
 
+    # Get a singleton Platforms Handler
+    #
+    # Result::
+    # * PlatformsHandler: The Platforms Handler to be used by this executable
+    def platforms_handler
+      @platforms_handler = PlatformsHandler.new(logger: @logger, logger_stderr: @logger_stderr, config: config) if @platforms_handler.nil?
+      @platforms_handler
+    end
+
     # Get a singleton Nodes Handler
     #
     # Result::
     # * NodesHandler: The Nodes Handler to be used by this executable
     def nodes_handler
-      @nodes_handler = NodesHandler.new(logger: @logger, logger_stderr: @logger_stderr, config: config, cmd_runner: cmd_runner) if @nodes_handler.nil?
+      @nodes_handler = NodesHandler.new(logger: @logger, logger_stderr: @logger_stderr, config: config, cmd_runner: cmd_runner, platforms_handler: platforms_handler) if @nodes_handler.nil?
       @nodes_handler
     end
 
