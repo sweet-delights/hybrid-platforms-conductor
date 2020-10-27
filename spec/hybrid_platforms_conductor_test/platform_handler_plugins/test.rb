@@ -203,7 +203,7 @@ module HybridPlatformsConductorTest
         {
           nodes: {},
           nodes_lists: {},
-        }.merge(HybridPlatformsConductorTest::PlatformHandlerPlugins::Test.platforms_info[info[:repo_name]])
+        }.merge(HybridPlatformsConductorTest::PlatformHandlerPlugins::Test.platforms_info[name])
       end
 
       # Return the node info of a given node

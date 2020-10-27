@@ -55,8 +55,8 @@ module HybridPlatformsConductor
           # * Node-specific tests (using the test_for_node, test_on_node and test_on_check_node methods) are run only on nodes belonging to a platform of the matching kind.
           # * All instance methods have access to the variable @repository_path that can be used to reference the specific repository for which tests are being run.
           {
-            "#{info[:repo_name]}_my_test1": HybridPlatformsConductor::Tests::MyTestClass1,
-            "#{info[:repo_name]}_my_test2": HybridPlatformsConductor::Tests::MyTestClass2
+            "#{name}_my_test1": HybridPlatformsConductor::Tests::MyTestClass1,
+            "#{name}_my_test2": HybridPlatformsConductor::Tests::MyTestClass2
           }
         end
 

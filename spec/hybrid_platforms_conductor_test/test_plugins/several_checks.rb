@@ -21,26 +21,26 @@ module HybridPlatformsConductorTest
 
       # Check my_test_plugin.rb.sample documentation for signature details.
       def test_on_platform
-        SeveralChecks.runs << [@name, @platform.info[:repo_name], '', 'Platform test']
+        SeveralChecks.runs << [@name, @platform.name, '', 'Platform test']
       end
 
       # Check my_test_plugin.rb.sample documentation for signature details.
       def test_for_node
-        SeveralChecks.runs << [@name, @platform.info[:repo_name], @node, 'Node test']
+        SeveralChecks.runs << [@name, @platform.name, @node, 'Node test']
       end
 
       # Check my_test_plugin.rb.sample documentation for signature details.
       def test_on_node
         {
           "test_#{@node}.sh" => proc do |stdout, stderr, exit_code|
-            SeveralChecks.runs << [@name, @platform.info[:repo_name], @node, "Node SSH test: #{stdout.join("\n")} - #{stderr.join("\n")}"]
+            SeveralChecks.runs << [@name, @platform.name, @node, "Node SSH test: #{stdout.join("\n")} - #{stderr.join("\n")}"]
           end
         }
       end
 
       # Check my_test_plugin.rb.sample documentation for signature details.
       def test_on_check_node(stdout, stderr, exit_status)
-        SeveralChecks.runs << [@name, @platform.info[:repo_name], @node, "Node check-node test: #{stdout}"]
+        SeveralChecks.runs << [@name, @platform.name, @node, "Node check-node test: #{stdout}"]
       end
 
     end

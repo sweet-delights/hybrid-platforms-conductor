@@ -74,6 +74,14 @@ module HybridPlatformsConductor
       self.init if self.respond_to?(:init)
     end
 
+    # Return the name of the platform
+    #
+    # Result::
+    # * String: Name of the platform
+    def name
+      info[:repo_name]
+    end
+
     # Get the list of impacted nodes and services from a files diff.
     # [API] - This is the default implementation, and is meant to be overriden by Platform Handlers.
     #
@@ -162,7 +170,7 @@ module HybridPlatformsConductor
     # * Integer: -1, 0, or +1 depending on whether the receiver is less than, equal to, or greater than the other object
     def <=>(other)
       if other.is_a?(PlatformHandler)
-        info[:repo_name] <=> other.info[:repo_name]
+        name <=> other.name
       else
         super
       end

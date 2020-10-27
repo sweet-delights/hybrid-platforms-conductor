@@ -68,9 +68,9 @@ module HybridPlatformsConductor
         if platform.nil?
           'Global'
         elsif node.nil?
-          "Platform #{@platform.info[:repo_name]}"
+          "Platform #{@platform.name}"
         else
-          "Node #{@node} (#{@platform.info[:repo_name]})"
+          "Node #{@node} (#{@platform.name})"
         end
       "#< Test #{name} - #{test_desc} >"
     end

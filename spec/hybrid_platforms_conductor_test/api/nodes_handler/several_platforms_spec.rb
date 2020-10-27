@@ -10,7 +10,7 @@ describe HybridPlatformsConductor::NodesHandler do
 
     it 'returns platform handlers' do
       with_test_platforms('platform1' => {}, 'platform2' => {}) do
-        expect(test_nodes_handler.platform('platform2').info[:repo_name]).to eq 'platform2'
+        expect(test_nodes_handler.platform('platform2').name).to eq 'platform2'
       end
     end
 
@@ -84,7 +84,7 @@ describe HybridPlatformsConductor::NodesHandler do
         'platform1' => { nodes: { 'node1' => {} } },
         'platform2' => { nodes: { 'node2' => {} } }
       ) do
-        expect(test_nodes_handler.platform_for('node2').info[:repo_name]).to eq 'platform2'
+        expect(test_nodes_handler.platform_for('node2').name).to eq 'platform2'
       end
     end
 
@@ -93,7 +93,7 @@ describe HybridPlatformsConductor::NodesHandler do
         'platform1' => { nodes_lists: { 'nodeslist1' => [] } },
         'platform2' => { nodes_lists: { 'nodeslist2' => [] } }
       ) do
-        expect(test_nodes_handler.platform_for_list('nodeslist2').info[:repo_name]).to eq 'platform2'
+        expect(test_nodes_handler.platform_for_list('nodeslist2').name).to eq 'platform2'
       end
     end
 

@@ -28,7 +28,7 @@ module HybridPlatformsConductor
       def with_platform_to_package_semaphore(platform)
         # First, check if the semaphore exists, and create it if it does not.
         # This part should also be thread-safe.
-        platform_name = platform.info[:repo_name]
+        platform_name = platform.name
         @global_semaphore.synchronize do
           @platform_to_package_semaphores[platform_name] = Mutex.new unless @platform_to_package_semaphores.key?(platform_name)
         end
@@ -464,7 +464,7 @@ module HybridPlatformsConductor
         platforms.each do |platform|
           # Don't package it twice. Make sure the check is thread-safe.
           Deployer.with_platform_to_package_semaphore(platform) do
-            platform_name = platform.info[:repo_name]
+            platform_name = platform.name
             if Deployer.packaged_platforms.include?(platform_name)
               log_debug "Platform #{platform_name} has already been packaged. Won't package it another time."
             else
@@ -603,17 +603,17 @@ module HybridPlatformsConductor
               # Create a log file to be scp with all relevant info
               now = Time.now.utc
               log_file = "#{tmp_dir}/#{now.strftime('%F_%H%M%S')}_#{ssh_user}"
-              platform_info = @nodes_handler.platform_for(node).info
+              platform = @nodes_handler.platform_for(node).info
               File.write(
                 log_file,
                 {
                   date: now.strftime('%F %T'),
                   user: ssh_user,
                   debug: log_debug? ? 'Yes' : 'No',
-                  repo_name: platform_info[:repo_name],
-                  commit_id: platform_info[:commit][:id],
-                  commit_message: platform_info[:commit][:message].split("\n").first,
-                  diff_files: (platform_info[:status][:changed_files] + platform_info[:status][:added_files] + platform_info[:status][:deleted_files] + platform_info[:status][:untracked_files]).join(', '),
+                  repo_name: platform.name,
+                  commit_id: platform.info[:commit][:id],
+                  commit_message: platform.info[:commit][:message].split("\n").first,
+                  diff_files: (platform.info[:status][:changed_files] + platform.info[:status][:added_files] + platform.info[:status][:deleted_files] + platform.info[:status][:untracked_files]).join(', '),
                   exit_status: exit_status
                 }.map { |property, value| "#{property}: #{value}" }.join("\n") +
                   "\n===== STDOUT =====\n" +
