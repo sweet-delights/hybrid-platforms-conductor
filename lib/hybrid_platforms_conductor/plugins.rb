@@ -41,8 +41,8 @@ module HybridPlatformsConductor
       key?
       keys
       select
-      values
       to_hash
+      values
     ]
 
     # Register a new plugin
