@@ -104,8 +104,8 @@ module HybridPlatformsConductor
       options_parser.separator 'Nodes handler options:'
       options_parser.on('-o', '--show-nodes', 'Display the list of possible nodes and exit') do
         out "* Known platforms:\n#{
-          @platforms_handler.known_platforms.map do |platform|
-            platform_handler = @platforms_handler.platform(platform)
+          known_platforms.map do |platform|
+            platform_handler = platform(platform)
             "#{platform_handler.name} - Type: #{platform_handler.platform_type} - Location: #{platform_handler.repository_path}"
           end.sort.join("\n")
         }"

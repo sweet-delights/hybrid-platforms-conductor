@@ -603,7 +603,7 @@ module HybridPlatformsConductor
               # Create a log file to be scp with all relevant info
               now = Time.now.utc
               log_file = "#{tmp_dir}/#{now.strftime('%F_%H%M%S')}_#{ssh_user}"
-              platform = @nodes_handler.platform_for(node).info
+              platform = @nodes_handler.platform_for(node)
               File.write(
                 log_file,
                 {
