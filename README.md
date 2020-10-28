@@ -280,11 +280,6 @@ Deployer options:
     -t, --timeout SECS               Timeout in seconds to wait for each chef run. Only used in why-run mode. (defaults to no timeout)
     -W, --why-run                    Use the why-run mode to see what would be the result of the deploy instead of deploying it for real.
         --retries-on-error NBR       Number of retries in case of non-deterministic errors (defaults to 0)
-
-Deployer options specific to platforms of type chef:
-    -r, --run-list MODIFIER:PARAMS   Apply a modification to the run-list to be run on the nodes. Can be used several times. Possible modifiers are:
-                                       MODIFIER: append - Append a run_list after the node's run_list. - PARAMS: run_list to append after. Ex: site_debug::dump_node,git
-                                       MODIFIER: prepend - Prepend a run_list before the node's run_list. - PARAMS: run_list to prepend before. Ex: site_debug::dump_node,git
 ```
 
 <a name="tools_list"></a>
@@ -334,11 +329,6 @@ Deployer options:
     -i, --direct-deploy              Don't use artefacts servers while deploying.
     -t, --timeout SECS               Timeout in seconds to wait for each chef run. Only used in why-run mode. (defaults to no timeout)
         --retries-on-error NBR       Number of retries in case of non-deterministic errors (defaults to 0)
-
-Deployer options specific to platforms of type chef:
-    -r, --run-list MODIFIER:PARAMS   Apply a modification to the run-list to be run on the nodes. Can be used several times. Possible modifiers are:
-                                       MODIFIER: append - Append a run_list after the node's run_list. - PARAMS: run_list to append after. Ex: site_debug::dump_node,git
-                                       MODIFIER: prepend - Prepend a run_list before the node's run_list. - PARAMS: run_list to prepend before. Ex: site_debug::dump_node,git
 ```
 
 Usage examples:
@@ -462,11 +452,6 @@ Deployer options:
     -t, --timeout SECS               Timeout in seconds to wait for each chef run. Only used in why-run mode. (defaults to no timeout)
     -W, --why-run                    Use the why-run mode to see what would be the result of the deploy instead of deploying it for real.
         --retries-on-error NBR       Number of retries in case of non-deterministic errors (defaults to 0)
-
-Deployer options specific to platforms of type chef:
-    -r, --run-list MODIFIER:PARAMS   Apply a modification to the run-list to be run on the nodes. Can be used several times. Possible modifiers are:
-                                       MODIFIER: append - Append a run_list after the node's run_list. - PARAMS: run_list to append after. Ex: site_debug::dump_node,git
-                                       MODIFIER: prepend - Prepend a run_list before the node's run_list. - PARAMS: run_list to prepend before. Ex: site_debug::dump_node,git
 ```
 
 Usage examples:
@@ -1125,11 +1110,6 @@ Deployer options:
     -t, --timeout SECS               Timeout in seconds to wait for each chef run. Only used in why-run mode. (defaults to 30)
     -W, --why-run                    Use the why-run mode to see what would be the result of the deploy instead of deploying it for real.
         --retries-on-error NBR       Number of retries in case of non-deterministic errors (defaults to 0)
-
-Deployer options specific to platforms of type chef:
-    -r, --run-list MODIFIER:PARAMS   Apply a modification to the run-list to be run on the nodes. Can be used several times. Possible modifiers are:
-                                       MODIFIER: append - Append a run_list after the node's run_list. - PARAMS: run_list to append after. Ex: site_debug::dump_node,git
-                                       MODIFIER: prepend - Prepend a run_list before the node's run_list. - PARAMS: run_list to prepend before. Ex: site_debug::dump_node,git
 
 JSON dump options:
     -k, --skip-run                   Skip the actual gathering of dumps in run_logs. If set, the current run_logs content will be used.

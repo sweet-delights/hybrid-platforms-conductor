@@ -4,7 +4,6 @@ require 'hybrid_platforms_conductor/executable'
 executable = HybridPlatformsConductor::Executable.new(
   check_options: false,
   parallel_options: false,
-  plugins_options: false,
   timeout_options: false
 )
 tests_runner = executable.tests_runner

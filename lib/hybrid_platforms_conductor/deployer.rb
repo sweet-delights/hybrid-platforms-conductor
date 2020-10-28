@@ -117,9 +117,8 @@ module HybridPlatformsConductor
     # * *options_parser* (OptionParser): The option parser to complete
     # * *parallel_switch* (Boolean): Do we allow parallel execution to be switched? [default = true]
     # * *why_run_switch* (Boolean): Do we allow the why-run mode to be switched? [default = false]
-    # * *plugins_options* (Boolean): Do we allow plugins options? [default = true]
     # * *timeout_options* (Boolean): Do we allow timeout options? [default = true]
-    def options_parse(options_parser, parallel_switch: true, why_run_switch: false, plugins_options: true, timeout_options: true)
+    def options_parse(options_parser, parallel_switch: true, why_run_switch: false, timeout_options: true)
       options_parser.separator ''
       options_parser.separator 'Deployer options:'
       options_parser.on(
@@ -161,14 +160,6 @@ module HybridPlatformsConductor
       options_parser.on('--retries-on-error NBR', "Number of retries in case of non-deterministic errors (defaults to #{@nbr_retries_on_error})") do |nbr_retries|
         @nbr_retries_on_error = nbr_retries.to_i
       end
-      # Add options that are specific to some platform handlers
-      @nodes_handler.platform_types.sort_by { |platform_type, _platform_handler_class| platform_type }.each do |platform_type, platform_handler_class|
-        if platform_handler_class.respond_to?(:options_parse_for_deploy)
-          options_parser.separator ''
-          options_parser.separator "Deployer options specific to platforms of type #{platform_type}:"
-          platform_handler_class.options_parse_for_deploy(options_parser)
-        end
-      end if plugins_options
     end
 
     # Validate that parsed parameters are valid

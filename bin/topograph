@@ -4,8 +4,7 @@ require 'hybrid_platforms_conductor/executable'
 executable = HybridPlatformsConductor::Executable.new(
   check_options: false,
   nodes_selection_options: false,
-  parallel_options: false,
-  plugins_options: false
+  parallel_options: false
 )
 nodes_handler = executable.nodes_handler
 deployer = executable.deployer

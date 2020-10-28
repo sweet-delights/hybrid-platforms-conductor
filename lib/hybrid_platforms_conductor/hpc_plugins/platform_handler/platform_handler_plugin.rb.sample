@@ -176,25 +176,6 @@ module HybridPlatformsConductor
           @cmd_runner.run_cmd "cd #{@repository_path} && scp package.deb artefact_user@artefact.server.my_company.net:./artefacts/package.deb"
         end
 
-        # Complete an option parser with options meant to control the deployment of such a platform.
-        # [API] - This method is optional.
-        #
-        # Parameters::
-        # * *options_parser* (OptionParser): The option parser to complete
-        def self.options_parse_for_deploy(options_parser)
-          # This method can be used to add options to the deployer command line, that are specific for this kind of platform.
-          # Options have to be stored at the class level, and not instance level, because they will apply to all platform instances of this kind.
-          # Storing a class attribute is done by defining this in the class definition:
-          # class << self
-          #   attr_accessor :class_level_option
-          # end
-          # And accessing it is done this way from an instance of this class:
-          # self.class.class_level_option
-          options_parser.on('-m', '--my-option PARAMETER', 'A great option to deploy things differently') do |parameter|
-            self.class_level_option = parameter
-          end
-        end
-
         # Register secrets given in JSON format
         # [API] - This method is mandatory.
         # [API] - @cmd_runner is accessible.
