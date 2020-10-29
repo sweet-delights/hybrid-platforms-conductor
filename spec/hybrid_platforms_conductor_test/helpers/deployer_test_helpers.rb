@@ -72,16 +72,11 @@ module HybridPlatformsConductorTest
             with_test_platform(nodes_info, !check_mode, additional_config) do |repository|
               with_connections_mocked_on(nodes_info[:nodes].keys) do
                 packaged_times = 0
-                delivered_nodes = []
                 test_platforms_info[platform_name][:package] = proc { packaged_times += 1 }
-                nodes_info[:nodes].keys.each do |node|
-                  test_platforms_info[platform_name][:nodes][node][:deliver_on_artefact_for] = proc { delivered_nodes << node }
-                end
                 expect_actions_executor_runs(expected_actions_for_deploy_on(nodes: nodes_info[:nodes].keys, check_mode: check_mode, sudo: expect_sudo)) if expect_default_actions
                 test_deployer.use_why_run = true if check_mode
                 yield repository
                 expect(packaged_times).to eq expect_packaged_times
-                expect(delivered_nodes.sort).to eq expect_delivered_nodes.sort
               end
             end
           end
@@ -110,13 +105,6 @@ module HybridPlatformsConductorTest
           it 'deploys on 1 node using root' do
             with_platform_to_deploy(expect_sudo: false) do
               test_actions_executor.connector(:ssh).ssh_user = 'root'
-              expect(test_deployer.deploy_on('node')).to eq('node' => expected_deploy_result)
-            end
-          end
-
-          it 'deploys on 1 node without using artefact server' do
-            with_platform_to_deploy(expect_delivered_nodes: []) do
-              test_deployer.force_direct_deploy = true
               expect(test_deployer.deploy_on('node')).to eq('node' => expected_deploy_result)
             end
           end

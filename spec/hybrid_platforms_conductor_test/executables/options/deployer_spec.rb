@@ -194,18 +194,6 @@ describe 'executables\' Deployer options' do
     end
   end
 
-  it 'does not use artefacts server while deploying' do
-    with_test_platform_for_deployer_options do |repository|
-      expect(test_deployer).to receive(:deploy_on).with(['node']) do
-        expect(test_deployer.force_direct_deploy).to eq true
-        {}
-      end
-      exit_code, stdout, stderr = run 'deploy', '--node', 'node', '--direct-deploy'
-      expect(exit_code).to eq 0
-      expect(stderr).to eq ''
-    end
-  end
-
   it 'uses parallel mode' do
     with_test_platform_for_deployer_options do |repository|
       expect(test_deployer).to receive(:deploy_on).with(['node']) do
