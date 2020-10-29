@@ -6,10 +6,8 @@ describe HybridPlatformsConductor::Deployer do
   context 'checking provisioning' do
 
     it 'gives a new test instance ready to be used in place of the node' do
-      prepared_for_local_testing = false
       with_test_platform(
-        nodes: { 'node' => { meta: { host_ip: '192.168.42.42' } } },
-        prepare_deploy_for_local_testing: proc { prepared_for_local_testing = true }
+        nodes: { 'node' => { meta: { host_ip: '192.168.42.42' } } }
       ) do |repository|
         register_plugins(:provisioner, { test_provisioner: HybridPlatformsConductorTest::TestProvisioner })
         File.write("#{test_config.hybrid_platforms_dir}/dummy_secrets.json", '{}')
@@ -20,7 +18,6 @@ describe HybridPlatformsConductor::Deployer do
         end
         provisioner = nil
         test_deployer.with_test_provisioned_instance(:test_provisioner, 'node', environment: 'hpc_testing_provisioner') do |test_deployer, test_instance|
-          expect(prepared_for_local_testing).to eq true
           expect(test_deployer.local_environment).to eq true
           provisioner = test_instance
           expect(test_instance.node).to eq 'node'
@@ -31,10 +28,8 @@ describe HybridPlatformsConductor::Deployer do
     end
 
     it 'does not destroy instances when asked to reuse' do
-      prepared_for_local_testing = false
       with_test_platform(
-        nodes: { 'node' => { meta: { host_ip: '192.168.42.42' } } },
-        prepare_deploy_for_local_testing: proc { prepared_for_local_testing = true }
+        nodes: { 'node' => { meta: { host_ip: '192.168.42.42' } } }
       ) do |repository|
         register_plugins(:provisioner, { test_provisioner: HybridPlatformsConductorTest::TestProvisioner })
         File.write("#{test_config.hybrid_platforms_dir}/dummy_secrets.json", '{}')
@@ -45,7 +40,7 @@ describe HybridPlatformsConductor::Deployer do
         end
         provisioner = nil
         test_deployer.with_test_provisioned_instance(:test_provisioner, 'node', environment: 'hpc_testing_provisioner', reuse_instance: true) do |test_deployer, test_instance|
-          expect(prepared_for_local_testing).to eq true
+          expect(test_deployer.local_environment).to eq true
           provisioner = test_instance
           expect(test_instance.node).to eq 'node'
           expect(test_instance.environment).to eq "#{`whoami`.strip}_hpc_testing_provisioner"
@@ -55,10 +50,8 @@ describe HybridPlatformsConductor::Deployer do
     end
 
     it 'reuses running instances when asked to reuse' do
-      prepared_for_local_testing = false
       with_test_platform(
-        nodes: { 'node' => { meta: { host_ip: '192.168.42.42' } } },
-        prepare_deploy_for_local_testing: proc { prepared_for_local_testing = true }
+        nodes: { 'node' => { meta: { host_ip: '192.168.42.42' } } }
       ) do |repository|
         register_plugins(:provisioner, { test_provisioner: HybridPlatformsConductorTest::TestProvisioner })
         File.write("#{test_config.hybrid_platforms_dir}/dummy_secrets.json", '{}')
@@ -69,7 +62,7 @@ describe HybridPlatformsConductor::Deployer do
         end
         provisioner = nil
         test_deployer.with_test_provisioned_instance(:test_provisioner, 'node', environment: 'hpc_testing_provisioner', reuse_instance: true) do |test_deployer, test_instance|
-          expect(prepared_for_local_testing).to eq true
+          expect(test_deployer.local_environment).to eq true
           provisioner = test_instance
           expect(test_instance.node).to eq 'node'
           expect(test_instance.environment).to eq "#{`whoami`.strip}_hpc_testing_provisioner"

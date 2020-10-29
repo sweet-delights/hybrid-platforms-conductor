@@ -211,24 +211,6 @@ describe HybridPlatformsConductor::TestsRunner do
       end
     end
 
-    it 'executes SSH node tests only on valid platform types' do
-      with_test_platform_for_node_connection_tests do
-        HybridPlatformsConductorTest::TestPlugins::NodeSsh.only_on_platform_types = %i[test2]
-        expect_actions_executor_runs([proc { |actions| expect_actions_to_test_nodes(actions, %w[21 22]) }])
-        test_tests_runner.tests = [:node_ssh_test]
-        ssh_executions = []
-        HybridPlatformsConductorTest::TestPlugins::NodeSsh.node_tests = { node_ssh_test: {
-          'node21' => { 'test_node21.sh' => proc { |stdout, stderr, exit_code| ssh_executions << ['node21', stdout, stderr, exit_code] } },
-          'node22' => { 'test_node22.sh' => proc { |stdout, stderr, exit_code| ssh_executions << ['node22', stdout, stderr, exit_code] } }
-        }}
-        expect(test_tests_runner.run_tests([{ all: true }])).to eq 0
-        expect(ssh_executions.sort).to eq [
-          ['node21', ['stdout21'], ['stderr21'], 0],
-          ['node22', ['stdout22'], ['stderr22'], 0]
-        ].sort
-      end
-    end
-
     it 'executes SSH node tests only on valid nodes' do
       with_test_platform_for_node_connection_tests do
         HybridPlatformsConductorTest::TestPlugins::NodeSsh.only_on_nodes = %w[node12 node22]
@@ -242,23 +224,6 @@ describe HybridPlatformsConductor::TestsRunner do
         expect(test_tests_runner.run_tests([{ all: true }])).to eq 0
         expect(ssh_executions.sort).to eq [
           ['node12', ['stdout12'], ['stderr12'], 0],
-          ['node22', ['stdout22'], ['stderr22'], 0]
-        ].sort
-      end
-    end
-
-    it 'executes SSH node tests only on valid platform types and nodes' do
-      with_test_platform_for_node_connection_tests do
-        HybridPlatformsConductorTest::TestPlugins::NodeSsh.only_on_platform_types = %i[test2]
-        HybridPlatformsConductorTest::TestPlugins::NodeSsh.only_on_nodes = %w[node12 node22]
-        expect_actions_executor_runs([proc { |actions| expect_actions_to_test_nodes(actions, %w[22]) }])
-        test_tests_runner.tests = [:node_ssh_test]
-        ssh_executions = []
-        HybridPlatformsConductorTest::TestPlugins::NodeSsh.node_tests = { node_ssh_test: {
-          'node22' => { 'test_node22.sh' => proc { |stdout, stderr, exit_code| ssh_executions << ['node22', stdout, stderr, exit_code] } }
-        }}
-        expect(test_tests_runner.run_tests([{ all: true }])).to eq 0
-        expect(ssh_executions.sort).to eq [
           ['node22', ['stdout22'], ['stderr22'], 0]
         ].sort
       end

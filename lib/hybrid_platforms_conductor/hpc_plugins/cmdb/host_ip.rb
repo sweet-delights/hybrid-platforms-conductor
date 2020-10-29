@@ -29,6 +29,7 @@ module HybridPlatformsConductor
         end
 
         # Get a specific property for a given set of nodes.
+        # [API] - @platforms_handler can be used.
         # [API] - @nodes_handler can be used.
         # [API] - @cmd_runner can be used.
         #

@@ -43,12 +43,13 @@ module HybridPlatformsConductorTest
         end
         # Get a simple list of all the components that should be mocked when being used by the executables, per class to be mocked.
         components_to_mock = {
-          HybridPlatformsConductor::Config => test_config,
+          HybridPlatformsConductor::ActionsExecutor => test_actions_executor,
           HybridPlatformsConductor::CmdRunner => test_cmd_runner,
+          HybridPlatformsConductor::Config => test_config,
           HybridPlatformsConductor::Deployer => test_deployer,
           HybridPlatformsConductor::NodesHandler => test_nodes_handler,
+          HybridPlatformsConductor::PlatformsHandler => test_platforms_handler,
           HybridPlatformsConductor::ReportsHandler => test_reports_handler,
-          HybridPlatformsConductor::ActionsExecutor => test_actions_executor,
           HybridPlatformsConductor::TestsRunner => test_tests_runner
         }
         # Make sure the tested components use the same loggers as the executable.

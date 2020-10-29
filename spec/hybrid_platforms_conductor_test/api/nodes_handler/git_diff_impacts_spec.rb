@@ -79,7 +79,7 @@ describe HybridPlatformsConductor::NodesHandler do
           end]
         ]) do
           expect(test_nodes_handler.impacted_nodes_from_git_diff('my_remote_platform')).to eq [[], [], [], true]
-          expect(test_nodes_handler.platform('my_remote_platform').files_diffs).to eq(
+          expect(test_platforms_handler.platform('my_remote_platform').files_diffs).to eq(
             'Gemfile' => {
               diff: <<~EOS.strip
                 index d65e2a6..cb9a38e 100644

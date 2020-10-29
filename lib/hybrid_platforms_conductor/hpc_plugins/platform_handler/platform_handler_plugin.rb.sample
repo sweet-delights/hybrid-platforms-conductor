@@ -62,6 +62,7 @@ module HybridPlatformsConductor
 
         # Initialize a new instance of this platform handler.
         # [API] - This method is optional.
+        # [API] - @cmd_runner is accessible.
         def init
           # This method is called when initializing a new instance of this platform handler, for a given repository.
           @my_instance_variable = :initial_value
@@ -160,20 +161,6 @@ module HybridPlatformsConductor
           # This method should take all actions to prepare the repository to be deployed on nodes later.
           # Usually it is meant to package the deployment scripts.
           @cmd_runner.run_cmd "cd #{@repository_path} && ./scripts/package_in_debian_format.sh"
-        end
-
-        # Deliver what has been packaged to the artefacts server for a given node.
-        # package has been called prior to this method.
-        # This method won't be called in case of a direct deploy to the node.
-        # [API] - This method is mandatory.
-        # [API] - @cmd_runner is accessible.
-        # [API] - @actions_executor is accessible.
-        #
-        # Parameters::
-        # * *node* (String): Node to deliver for
-        def deliver_on_artefact_for(node)
-          # This method is used to deliver a packaged repository on the artefact server that is accessible then to a node.
-          @cmd_runner.run_cmd "cd #{@repository_path} && scp package.deb artefact_user@artefact.server.my_company.net:./artefacts/package.deb"
         end
 
         # Register secrets given in JSON format

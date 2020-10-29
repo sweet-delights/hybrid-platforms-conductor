@@ -12,6 +12,7 @@ module HybridPlatformsConductor
         # The method get_others is used specifically to return properties whose name is unknown before fetching them.
 
         # Get a specific property for a given set of nodes.
+        # [API] - @platforms_handler can be used.
         # [API] - @nodes_handler can be used.
         # [API] - @cmd_runner can be used.
         #
@@ -22,7 +23,7 @@ module HybridPlatformsConductor
         # * Hash<String, Object>: The corresponding property, per required node.
         #     Nodes for which the property can't be fetched can be ommitted.
         def get_services(nodes, metadata)
-          Hash[nodes.map { |node| [node, @nodes_handler.platform_for(node).services_for(node)] }]
+          Hash[nodes.map { |node| [node, platform_for(node).services_for(node)] }]
         end
 
         # Get other properties for a given set of nodes.
@@ -30,6 +31,7 @@ module HybridPlatformsConductor
         # As the nodes_handler can't know in advance which properties will be returned, it will call it every time there is a missing property.
         # If this method always returns the same values, it would be clever to cache it here.
         # [API] - This method is optional.
+        # [API] - @platforms_handler can be used.
         # [API] - @nodes_handler can be used.
         # [API] - @cmd_runner can be used.
         #
@@ -40,7 +42,19 @@ module HybridPlatformsConductor
         # * Hash<String, Hash<Symbol,Object> >: The corresponding properties, per required node.
         #     Nodes for which the property can't be fetched can be ommitted.
         def get_others(nodes, metadata)
-          Hash[nodes.map { |node| [node, @nodes_handler.platform_for(node).metadata_for(node)] }]
+          Hash[nodes.map { |node| [node, platform_for(node).metadata_for(node)] }]
+        end
+
+        private
+
+        # Get the platform that defines a node's inventory
+        #
+        # Parameters::
+        # * *node* (String): The node name
+        # Result::
+        # * PlatformHandler or nil: The platform defining the node's inventory, or nil if none
+        def platform_for(node)
+          @platforms_handler.known_platforms.find { |platform| platform.known_nodes.include?(node) }
         end
 
       end

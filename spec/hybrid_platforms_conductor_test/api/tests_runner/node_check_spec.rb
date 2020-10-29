@@ -170,25 +170,6 @@ describe HybridPlatformsConductor::TestsRunner do
       end
     end
 
-    it 'executes check node tests only on valid platform types' do
-      with_test_platform_for_node_check_tests do
-        HybridPlatformsConductorTest::TestPlugins::NodeCheck.only_on_platform_types = %i[test2]
-        test_tests_runner.tests = [:node_check_test]
-        expect(test_deployer).to receive(:deploy_on).with(%w[node21 node22]).once do
-          expect(test_deployer.use_why_run).to eq true
-          {
-            'node21' => [0, 'node21 check ok', 'node21 stderr'],
-            'node22' => [0, 'node22 check ok', 'node22 stderr']
-          }
-        end
-        expect(test_tests_runner.run_tests([{ all: true }])).to eq 0
-        expect(HybridPlatformsConductorTest::TestPlugins::NodeCheck.runs.sort).to eq [
-          [:node_check_test, 'node21', 'node21 check ok', 'node21 stderr', 0],
-          [:node_check_test, 'node22', 'node22 check ok', 'node22 stderr', 0]
-        ].sort
-      end
-    end
-
     it 'executes check node tests only on valid nodes' do
       with_test_platform_for_node_check_tests do
         HybridPlatformsConductorTest::TestPlugins::NodeCheck.only_on_nodes = %w[node12 node22]
@@ -203,24 +184,6 @@ describe HybridPlatformsConductor::TestsRunner do
         expect(test_tests_runner.run_tests([{ all: true }])).to eq 0
         expect(HybridPlatformsConductorTest::TestPlugins::NodeCheck.runs.sort).to eq [
           [:node_check_test, 'node12', 'node12 check ok', 'node12 stderr', 0],
-          [:node_check_test, 'node22', 'node22 check ok', 'node22 stderr', 0]
-        ].sort
-      end
-    end
-
-    it 'executes check node tests only on valid platform types and nodes' do
-      with_test_platform_for_node_check_tests do
-        HybridPlatformsConductorTest::TestPlugins::NodeCheck.only_on_platform_types = %i[test2]
-        HybridPlatformsConductorTest::TestPlugins::NodeCheck.only_on_nodes = %w[node12 node22]
-        test_tests_runner.tests = [:node_check_test]
-        expect(test_deployer).to receive(:deploy_on).with(%w[node22]).once do
-          expect(test_deployer.use_why_run).to eq true
-          {
-            'node22' => [0, 'node22 check ok', 'node22 stderr']
-          }
-        end
-        expect(test_tests_runner.run_tests([{ all: true }])).to eq 0
-        expect(HybridPlatformsConductorTest::TestPlugins::NodeCheck.runs.sort).to eq [
           [:node_check_test, 'node22', 'node22 check ok', 'node22 stderr', 0]
         ].sort
       end

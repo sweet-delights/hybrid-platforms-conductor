@@ -15,15 +15,10 @@ module HybridPlatformsConductorTest
         global_tests: report_from(global_tests),
         platform_tests: report_from(platform_tests),
         node_tests: report_from(node_tests),
-        errors_per_platform_and_test: Hash[group_errors(node_tests, :platform, :test_name).map do |platform, platform_errors|
+        errors_per_test: Hash[group_errors(node_tests, :test_name).map do |test_name, errors|
           [
-            platform.name,
-            Hash[platform_errors.map do |test_name, errors|
-              [
-                test_name,
-                errors.map { |error| error.split("\n").first }
-              ]
-            end]
+            test_name,
+            errors.map { |error| error.split("\n").first }
           ]
         end],
         nodes_by_nodes_list: nodes_by_nodes_list

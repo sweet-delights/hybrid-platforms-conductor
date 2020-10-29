@@ -57,107 +57,49 @@ module HybridPlatformsConductor
       # List of nodes description selected
       @selected_nodes = []
       # Possible Conductor components this executable can use
-      @cmd_runner = nil
-      @nodes_handler = nil
-      @actions_executor = nil
-      @deployer = nil
-      @json_dumper = nil
-      @reports_handler = nil
-      @tests_runner = nil
-      @topographer = nil
+      @instantiated_components = {}
       # Initialize the loggers
       # We set the debug format right now before calling the options parser, just in case some option parsing needs debugging (like plugins discovery)
       self.log_level = :debug if ARGV.include?('--debug') || ARGV.include?('-d')
     end
 
-    # Get a singleton Config
-    #
-    # Result::
-    # * Config: The Config to be used by this executable
-    def config
-      @config = Config.new(logger: @logger, logger_stderr: @logger_stderr) if @config.nil?
-      @config
-    end
+    # Define all the dependency injection rules between the various APIs.
+    # Singleton accessors for each one of those components will be generated automatically based on these definitions.
+    {
+      config: [],
+      cmd_runner: [],
+      platforms_handler: %i[config cmd_runner],
+      nodes_handler: %i[config cmd_runner platforms_handler],
+      actions_executor: %i[config cmd_runner nodes_handler],
+      services_handler: %i[config cmd_runner platforms_handler nodes_handler actions_executor],
+      deployer: %i[config cmd_runner nodes_handler actions_executor services_handler],
+      json_dumper: %i[config nodes_handler deployer],
+      reports_handler: %i[config platforms_handler nodes_handler],
+      tests_runner: %i[config cmd_runner platforms_handler nodes_handler actions_executor deployer],
+      topographer: %i[nodes_handler json_dumper]
+    }.each do |component, dependencies|
 
-    # Get a singleton Command Runner
-    #
-    # Result::
-    # * CmdRunner: The Command Runner to be used by this executable
-    def cmd_runner
-      @cmd_runner = CmdRunner.new(logger: @logger, logger_stderr: @logger_stderr) if @cmd_runner.nil?
-      @cmd_runner
-    end
+      # Has a singleton been instantiated for this component?
+      #
+      # Result::
+      # * Boolean: Has a singleton been instantiated for this component?
+      define_method("#{component}_instantiated?".to_sym) do
+        @instantiated_components.key?(component)
+      end
 
-    # Get a singleton Platforms Handler
-    #
-    # Result::
-    # * PlatformsHandler: The Platforms Handler to be used by this executable
-    def platforms_handler
-      @platforms_handler = PlatformsHandler.new(logger: @logger, logger_stderr: @logger_stderr, config: config) if @platforms_handler.nil?
-      @platforms_handler
-    end
+      # Get a singleton for this component
+      #
+      # Result::
+      # * Object: The corresponding component
+      define_method(component) do
+        @instantiated_components[component] = HybridPlatformsConductor.const_get(component.to_s.split('_').collect(&:capitalize).join.to_sym).new(
+          logger: @logger,
+          logger_stderr: @logger_stderr,
+          **Hash[dependencies.map { |dependency| [dependency, send(dependency)] }]
+        ) unless @instantiated_components.key?(component)
+        @instantiated_components[component]
+      end
 
-    # Get a singleton Nodes Handler
-    #
-    # Result::
-    # * NodesHandler: The Nodes Handler to be used by this executable
-    def nodes_handler
-      @nodes_handler = NodesHandler.new(logger: @logger, logger_stderr: @logger_stderr, config: config, cmd_runner: cmd_runner, platforms_handler: platforms_handler) if @nodes_handler.nil?
-      @nodes_handler
-    end
-
-    # Get a singleton Actions Executor
-    #
-    # Result::
-    # * ActionsExecutor: The Actions Executor to be used by this executable
-    def actions_executor
-      @actions_executor = ActionsExecutor.new(logger: @logger, logger_stderr: @logger_stderr, config: config, cmd_runner: cmd_runner, nodes_handler: nodes_handler) if @actions_executor.nil?
-      @actions_executor
-    end
-
-    # Get a singleton Deployer
-    #
-    # Result::
-    # * Deployer: The Deployer to be used by this executable
-    def deployer
-      @deployer = Deployer.new(logger: @logger, logger_stderr: @logger_stderr, config: config, cmd_runner: cmd_runner, nodes_handler: nodes_handler, actions_executor: actions_executor) if @deployer.nil?
-      @deployer
-    end
-
-    # Get a singleton JSON Dumper
-    #
-    # Result::
-    # * JsonDumper: The JSON Dumper to be used by this executable
-    def json_dumper
-      @json_dumper = JsonDumper.new(logger: @logger, logger_stderr: @logger_stderr, config: config, nodes_handler: nodes_handler, deployer: deployer) if @json_dumper.nil?
-      @json_dumper
-    end
-
-    # Get a singleton Reports Handler
-    #
-    # Result::
-    # * ReportsHandler: The Reports Handler to be used by this executable
-    def reports_handler
-      @reports_handler = ReportsHandler.new(logger: @logger, logger_stderr: @logger_stderr, config: config, nodes_handler: nodes_handler) if @reports_handler.nil?
-      @reports_handler
-    end
-
-    # Get a singleton Reports Handler
-    #
-    # Result::
-    # * TestsRunner: The Reports Handler to be used by this executable
-    def tests_runner
-      @tests_runner = TestsRunner.new(logger: @logger, logger_stderr: @logger_stderr, config: config, cmd_runner: cmd_runner, nodes_handler: nodes_handler, actions_executor: actions_executor, deployer: deployer) if @tests_runner.nil?
-      @tests_runner
-    end
-
-    # Get a singleton Topographer
-    #
-    # Result::
-    # * Topographer: The Topographer to be used by this executable
-    def topographer
-      @topographer = Topographer.new(logger: @logger, logger_stderr: @logger_stderr, nodes_handler: nodes_handler, json_dumper: json_dumper) if @topographer.nil?
-      @topographer
     end
 
     # Parse options for this executable.
@@ -176,25 +118,25 @@ module HybridPlatformsConductor
           exit 0
         end
         @opts_block.call(opts) if @opts_block
-        @nodes_handler.options_parse(opts) if @nodes_handler
-        @nodes_handler.options_parse_nodes_selectors(opts, @selected_nodes) if @nodes_selection_options
-        @cmd_runner.options_parse(opts) if @cmd_runner
-        @actions_executor.options_parse(opts, parallel: @parallel_options) if @actions_executor
-        @deployer.options_parse(
+        nodes_handler.options_parse(opts) if nodes_handler_instantiated?
+        nodes_handler.options_parse_nodes_selectors(opts, @selected_nodes) if @nodes_selection_options
+        cmd_runner.options_parse(opts) if cmd_runner_instantiated?
+        actions_executor.options_parse(opts, parallel: @parallel_options) if actions_executor_instantiated?
+        deployer.options_parse(
           opts,
           parallel_switch: @parallel_options,
           timeout_options: @timeout_options,
           why_run_switch: @check_options
-        ) if @deployer && @deploy_options
-        @json_dumper.options_parse(opts) if @json_dumper
-        @reports_handler.options_parse(opts) if @reports_handler
-        @tests_runner.options_parse(opts) if @tests_runner
-        @topographer.options_parse(opts) if @topographer
+        ) if deployer_instantiated? && @deploy_options
+        json_dumper.options_parse(opts) if json_dumper_instantiated?
+        reports_handler.options_parse(opts) if reports_handler_instantiated?
+        tests_runner.options_parse(opts) if tests_runner_instantiated?
+        topographer.options_parse(opts) if topographer_instantiated?
       end.parse!
-      @actions_executor.validate_params if @actions_executor
-      @deployer.validate_params if @deployer
-      @reports_handler.validate_params if @reports_handler
-      @topographer.validate_params if @topographer
+      actions_executor.validate_params if actions_executor_instantiated?
+      deployer.validate_params if deployer_instantiated?
+      reports_handler.validate_params if reports_handler_instantiated?
+      topographer.validate_params if topographer_instantiated?
       raise "Unknown options: #{ARGV.join(' ')}" unless ARGV.empty?
     end
 

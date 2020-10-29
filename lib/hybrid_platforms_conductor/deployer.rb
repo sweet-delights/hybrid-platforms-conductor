@@ -1,6 +1,7 @@
+require 'tmpdir'
+require 'futex'
 require 'json'
 require 'securerandom'
-require 'tmpdir'
 require 'time'
 require 'thread'
 require 'hybrid_platforms_conductor/actions_executor'
@@ -8,6 +9,7 @@ require 'hybrid_platforms_conductor/cmd_runner'
 require 'hybrid_platforms_conductor/executable'
 require 'hybrid_platforms_conductor/logger_helpers'
 require 'hybrid_platforms_conductor/nodes_handler'
+require 'hybrid_platforms_conductor/services_handler'
 require 'hybrid_platforms_conductor/plugins'
 require 'hybrid_platforms_conductor/thycotic'
 
@@ -17,39 +19,6 @@ module HybridPlatformsConductor
   class Deployer
 
     include LoggerHelpers
-
-    class << self
-
-      # Run a code block globally protected by a semaphore dedicated to a platform to be packaged
-      #
-      # Parameters::
-      # * *platform* (PlatformHandler): The platform
-      # * Proc: Code called with semaphore granted
-      def with_platform_to_package_semaphore(platform)
-        # First, check if the semaphore exists, and create it if it does not.
-        # This part should also be thread-safe.
-        platform_name = platform.name
-        @global_semaphore.synchronize do
-          @platform_to_package_semaphores[platform_name] = Mutex.new unless @platform_to_package_semaphores.key?(platform_name)
-        end
-        @platform_to_package_semaphores[platform_name].synchronize do
-          yield
-        end
-      end
-
-      # List of platform names that have been packaged.
-      # Make this at class level as several Deployer instances can be used in a multi-thread environmnent.
-      #   Array<String>
-      attr_reader :packaged_platforms
-
-    end
-
-    @packaged_platforms = []
-    # This is a global semaphore used to ensure all other semaphores are created correctly in multithread
-    @global_semaphore = Mutex.new
-    # The access to platforms to package should be protected as it runs in multithread
-    # Semaphore per platform name
-    @platform_to_package_semaphores = {}
 
     # Do we use why-run mode while deploying? [default = false]
     #   Boolean
@@ -74,7 +43,7 @@ module HybridPlatformsConductor
 
     # Are we deploying in a local environment?
     #   Boolean
-    attr_reader :local_environment
+    attr_accessor :local_environment
 
     # Number of retries to do in case of non-deterministic errors during deployment
     #   Integer
@@ -83,18 +52,28 @@ module HybridPlatformsConductor
     # Constructor
     #
     # Parameters::
-    # * *logger* (Logger): Logger to be used [default = Logger.new(STDOUT)]
-    # * *logger_stderr* (Logger): Logger to be used for stderr [default = Logger.new(STDERR)]
-    # * *config* (Config): Config to be used. [default = Config.new]
-    # * *cmd_runner* (CmdRunner): Command executor to be used. [default = CmdRunner.new]
-    # * *nodes_handler* (NodesHandler): Nodes handler to be used. [default = NodesHandler.new]
-    # * *actions_executor* (ActionsExecutor): Actions Executor to be used. [default = ActionsExecutor.new]
-    def initialize(logger: Logger.new(STDOUT), logger_stderr: Logger.new(STDERR), config: Config.new, cmd_runner: CmdRunner.new, nodes_handler: NodesHandler.new, actions_executor: ActionsExecutor.new)
+    # * *logger* (Logger): Logger to be used [default: Logger.new(STDOUT)]
+    # * *logger_stderr* (Logger): Logger to be used for stderr [default: Logger.new(STDERR)]
+    # * *config* (Config): Config to be used. [default: Config.new]
+    # * *cmd_runner* (CmdRunner): Command executor to be used. [default: CmdRunner.new]
+    # * *nodes_handler* (NodesHandler): Nodes handler to be used. [default: NodesHandler.new]
+    # * *actions_executor* (ActionsExecutor): Actions Executor to be used. [default: ActionsExecutor.new]
+    # * *services_handler* (ServicesHandler): Services Handler to be used. [default: ServicesHandler.new]
+    def initialize(
+      logger: Logger.new(STDOUT),
+      logger_stderr: Logger.new(STDERR),
+      config: Config.new,
+      cmd_runner: CmdRunner.new,
+      nodes_handler: NodesHandler.new,
+      actions_executor: ActionsExecutor.new,
+      services_handler: ServicesHandler.new
+    )
       init_loggers(logger, logger_stderr)
       @config = config
       @cmd_runner = cmd_runner
       @nodes_handler = nodes_handler
       @actions_executor = actions_executor
+      @services_handler = services_handler
       @secrets = []
       @allow_deploy_non_master = false
       @provisioners = Plugins.new(:provisioner, logger: @logger, logger_stderr: @logger_stderr)
@@ -159,47 +138,55 @@ module HybridPlatformsConductor
       raise 'Can\'t have a timeout unless why-run mode. Please don\'t use --timeout without --why-run.' if !@timeout.nil? && !@use_why_run
     end
 
+    # String: File used as a Futex for packaging
+    PACKAGING_FUTEX_FILE = "#{Dir.tmpdir}/hpc_packaging"
+
+    # Integer: Timeout in seconds to get the packaging Futex
+    PACKAGING_FUTEX_TIMEOUT = 60
+
     # Deploy on a given list of nodes selectors.
     # The workflow is the following:
-    # 1. Package the platform to be deployed (once per platform)
-    # 2. Deliver the packaged platform on artefacts server unless we perform direct deployments to the nodes (once per node to be deployed)
-    # 3. Register the secrets (once per platform)
-    # 4. Prepare the platform for deployment if the Platform Handler needs it (once per platform) 
-    # 5. Deploy on the nodes (once per node to be deployed)
+    # 1. Package the services to be deployed, considering the nodes, services and context (options, secrets, environment...)
+    # 2. Deploy on the nodes (once per node to be deployed)
+    # 3. Save deployment logs (in case of real deployment)
     #
     # Parameters::
     # * *nodes_selectors* (Array<Object>): The list of nodes selectors we will deploy to.
     # Result::
     # * Hash<String, [Integer or Symbol, String, String]>: Exit status code (or Symbol in case of error or dry run), standard output and error for each node that has been deployed.
     def deploy_on(*nodes_selectors)
+      # Get the list of nodes we deploy on
       nodes = @nodes_handler.select_nodes(nodes_selectors.flatten)
-      # Get the platforms that are impacted
-      platforms = nodes.map { |node| @nodes_handler.platform_for(node) }.uniq
-      # Setup command runner and Actions Executor in plugins
-      platforms.each do |platform_handler|
-        platform_handler.cmd_runner = @cmd_runner
-        platform_handler.actions_executor = @actions_executor
-      end
-      if !@use_why_run && !@allow_deploy_non_master
-        # Check that master is checked out correctly before deploying.
-        # Check it on every platform having at least 1 node to be deployed.
-        platforms.each do |platform_handler|
-          _exit_status, stdout, _stderr = @cmd_runner.run_cmd "cd #{platform_handler.repository_path} && git status | head -n 1"
-          raise "Please checkout master before deploying on #{platform_handler.repository_path}. !!! Only master should be deployed !!!" if stdout.strip != 'On branch master'
-        end
-      end
-      # Package
-      package(platforms)
-      # Register the secrets in all the platforms
+      # Get the secrets to be deployed
+      secrets = {}
       @secrets.each do |secret_json|
-        platforms.each do |platform_handler|
-          platform_handler.register_secrets(secret_json)
+        secrets.merge!(secret_json) do |key, value1, value2|
+          raise "Secret #{key} has conflicting values between different secret JSON files." if value1 != value2
+          value1
         end
       end
-      # Prepare for deployment
-      platforms.each do |platform_handler|
-        platform_handler.prepare_for_deploy(nodes, use_why_run: @use_why_run) if platform_handler.respond_to?(:prepare_for_deploy)
+      # Package the deployment
+      # Protect packaging by a Futex
+      Futex.new(PACKAGING_FUTEX_FILE, timeout: PACKAGING_FUTEX_TIMEOUT).open do
+        unless @services_handler.packaged?(
+          nodes: nodes,
+          secrets: secrets,
+          why_run: @use_why_run,
+          allow_deploy_non_master: @allow_deploy_non_master,
+          local_environment: @local_environment
+        )
+          section 'Packaging deployment' do
+            @services_handler.package(
+              nodes: nodes,
+              secrets: secrets,
+              why_run: @use_why_run,
+              allow_deploy_non_master: @allow_deploy_non_master,
+              local_environment: @local_environment
+            )
+          end
+        end
       end
+
       # Launch deployment processes
       results = {}
 
@@ -309,7 +296,7 @@ module HybridPlatformsConductor
           actions_executor.connector(:ssh).ssh_user = 'root'
           actions_executor.connector(:ssh).passwords[node] = 'root_pwd'
           deployer.allow_deploy_non_master = true
-          deployer.prepare_for_local_environment
+          deployer.local_environment = true
           # Ignore secrets that might have been given: in Docker containers we always use dummy secrets
           deployer.secrets = [JSON.parse(File.read("#{@config.hybrid_platforms_dir}/dummy_secrets.json"))]
           yield deployer, instance
@@ -319,14 +306,6 @@ module HybridPlatformsConductor
         stdouts = sub_executable.stdouts_to_s
         log_error "[ #{node}/#{environment} ] - Encountered unhandled exception #{$!}\n#{$!.backtrace.join("\n")}\n-----\n#{stdouts}" unless stdouts.nil?
         raise
-      end
-    end
-
-    # Prepare deployment to be run in a local environment
-    def prepare_for_local_environment
-      @local_environment = true
-      @nodes_handler.known_platforms.each do |platform_name|
-        @nodes_handler.platform(platform_name).prepare_deploy_for_local_testing
       end
     end
 
@@ -435,27 +414,6 @@ module HybridPlatformsConductor
       end.flatten.uniq
     end
 
-    # Package the repository, ready to be sent to artefact repositories.
-    #
-    # Parameters::
-    # * *platforms* (Array<PlatformHandler>): List of platforms to be packaged before deployment
-    def package(platforms)
-      section 'Packaging current repositories' do
-        platforms.each do |platform|
-          # Don't package it twice. Make sure the check is thread-safe.
-          Deployer.with_platform_to_package_semaphore(platform) do
-            platform_name = platform.name
-            if Deployer.packaged_platforms.include?(platform_name)
-              log_debug "Platform #{platform_name} has already been packaged. Won't package it another time."
-            else
-              platform.package
-              Deployer.packaged_platforms << platform_name
-            end
-          end
-        end
-      end
-    end
-
     # Deploy on all the nodes.
     #
     # Parameters::
@@ -529,7 +487,7 @@ module HybridPlatformsConductor
               }
             ] +
               certificate_actions +
-              @nodes_handler.platform_for(node).actions_to_deploy_on(node, use_why_run: @use_why_run)
+              @services_handler.actions_to_deploy_on(node, @use_why_run)
           ]
         end],
         timeout: @timeout,
@@ -569,19 +527,15 @@ module HybridPlatformsConductor
               # Create a log file to be scp with all relevant info
               now = Time.now.utc
               log_file = "#{tmp_dir}/#{now.strftime('%F_%H%M%S')}_#{ssh_user}"
-              platform = @nodes_handler.platform_for(node)
+              services_info = @services_handler.log_info_for(node)
               File.write(
                 log_file,
-                {
+                services_info.merge(
                   date: now.strftime('%F %T'),
                   user: ssh_user,
                   debug: log_debug? ? 'Yes' : 'No',
-                  repo_name: platform.name,
-                  commit_id: platform.info[:commit][:id],
-                  commit_message: platform.info[:commit][:message].split("\n").first,
-                  diff_files: (platform.info[:status][:changed_files] + platform.info[:status][:added_files] + platform.info[:status][:deleted_files] + platform.info[:status][:untracked_files]).join(', '),
                   exit_status: exit_status
-                }.map { |property, value| "#{property}: #{value}" }.join("\n") +
+                ).map { |property, value| "#{property}: #{value}" }.join("\n") +
                   "\n===== STDOUT =====\n" +
                   (stdout || '') +
                   "\n===== STDERR =====\n" +

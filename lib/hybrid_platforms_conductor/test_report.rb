@@ -42,7 +42,7 @@ module HybridPlatformsConductor
     # Result::
     # * Array<Test>: Global tests
     def global_tests
-      @tests.select { |test| test.platform.nil? }
+      @tests.select { |test| test.platform.nil? && test.node.nil? }
     end
 
     # Return platform tests
@@ -50,7 +50,7 @@ module HybridPlatformsConductor
     # Result::
     # * Array<Test>: List of platform tests
     def platform_tests
-      @tests.select { |test| test.node.nil? && !test.platform.nil? }
+      @tests.select { |test| !test.platform.nil? }
     end
 
     # Return node tests
@@ -66,17 +66,14 @@ module HybridPlatformsConductor
     # Parameters::
     # * *name* (String): Test name
     # * *node* (String or nil): Node name, or nil for global/platform tests [default = nil]
-    # * *platform* (String or nil): Platform repository name, or nil for global tests. Ignored if node is set. [default = nil]
+    # * *platform* (String or nil): Platform repository name, or nil for global/node tests. Ignored if node is set. [default = nil]
     # Result::
     # * Array<Test>: List of selected tests
     def select_tests(name, node: nil, platform: nil)
       @tests.select do |search_test|
         search_test.name == name &&
           search_test.node == node &&
-          (
-            !node.nil? ||
-            (node.nil? && search_test.platform == platform)
-          )
+          search_test.platform == platform
       end
     end
 
@@ -85,7 +82,7 @@ module HybridPlatformsConductor
     # Parameters::
     # * *name* (String): Test name
     # * *node* (String or nil): Node name, or nil for global/platform tests [default = nil]
-    # * *platform* (String or nil): Platform repository name, or nil for global tests. Ignored if node is set. [default = nil]
+    # * *platform* (String or nil): Platform repository name, or nil for global/node tests. Ignored if node is set. [default = nil]
     # Result::
     # * Boolean: Is a given test supposed to have run?
     def should_have_been_tested?(name, node: nil, platform: nil)
@@ -97,7 +94,7 @@ module HybridPlatformsConductor
     # Parameters::
     # * *name* (String): Test name
     # * *node* (String or nil): Node name, or nil for global/platform tests [default = nil]
-    # * *platform* (String or nil): Platform repository name, or nil for global tests. Ignored if node is set. [default = nil]
+    # * *platform* (String or nil): Platform repository name, or nil for global/node tests. Ignored if node is set. [default = nil]
     # Result::
     # * Boolean: Does a given test on a given node have tests that have not been executed?
     def missing_tests_for(name, node: nil, platform: nil)
@@ -109,7 +106,7 @@ module HybridPlatformsConductor
     # Parameters::
     # * *name* (String): Test name
     # * *node* (String or nil): Node name, or nil for global/platform tests [default = nil]
-    # * *platform* (String or nil): Platform repository name, or nil for global tests. Ignored if node is set. [default = nil]
+    # * *platform* (String or nil): Platform repository name, or nil for global/node tests. Ignored if node is set. [default = nil]
     # Result::
     # * Array<String>: List of errors
     def errors_for(name, node: nil, platform: nil)

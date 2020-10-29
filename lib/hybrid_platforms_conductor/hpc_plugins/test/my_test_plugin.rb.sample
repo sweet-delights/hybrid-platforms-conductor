@@ -69,7 +69,6 @@ module HybridPlatformsConductor
 
         # Run test for each node
         # [API] - @node can be used to adapt the code with the node.
-        # [API] - @platform can be used to adapt the code with the platform handling this node.
         def test_for_node
           # If this method is defined, it will be used to execute once per node to be tested.
           assert_match @node, /my_node_.+/, 'Node name does not follow naming convention'
@@ -78,7 +77,6 @@ module HybridPlatformsConductor
         # Run test using SSH commands on the node.
         # Instead of executing the SSH commands directly on each node for each test, this method returns the list of commands to run and the test framework then groups them in 1 SSH connection.
         # [API] - @node can be used to adapt the command with the node.
-        # [API] - @platform can be used to adapt the code with the platform handling this node.
         #
         # Result::
         # * Hash<String,Object>: For each command to execute, information regarding the assertion.
@@ -110,7 +108,6 @@ module HybridPlatformsConductor
 
         # Perform some testing on the check-node output.
         # [API] - @node can be used to know for which node the test is being run.
-        # [API] - @platform can be used to adapt the code with the platform handling this node.
         #
         # Parameters::
         # * *stdout* (String): The check-node output

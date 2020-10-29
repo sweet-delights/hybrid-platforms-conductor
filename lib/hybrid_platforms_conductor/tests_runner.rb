@@ -41,28 +41,39 @@ module HybridPlatformsConductor
     # Constructor
     #
     # Parameters::
-    # * *logger* (Logger): Logger to be used [default = Logger.new(STDOUT)]
-    # * *logger_stderr* (Logger): Logger to be used for stderr [default = Logger.new(STDERR)]
-    # * *config* (Config): Config to be used. [default = Config.new]
-    # * *cmd_runner* (Cmdrunner): CmdRunner to be used [default = CmdRunner.new]
-    # * *nodes_handler* (NodesHandler): Nodes handler to be used [default = NodesHandler.new]
-    # * *actions_executor* (ActionsExecutor): Actions Executor to be used for the tests [default = ActionsExecutor.new]
-    # * *deployer* (Deployer): Deployer to be used for the tests needed why-run deployments [default = Deployer.new]
-    def initialize(logger: Logger.new(STDOUT), logger_stderr: Logger.new(STDERR), config: Config.new, cmd_runner: CmdRunner.new, nodes_handler: NodesHandler.new, actions_executor: ActionsExecutor.new, deployer: Deployer.new)
+    # * *logger* (Logger): Logger to be used [default: Logger.new(STDOUT)]
+    # * *logger_stderr* (Logger): Logger to be used for stderr [default: Logger.new(STDERR)]
+    # * *config* (Config): Config to be used. [default: Config.new]
+    # * *cmd_runner* (Cmdrunner): CmdRunner to be used [default: CmdRunner.new]
+    # * *platforms_handler* (PlatformsHandler): Platforms handler to be used [default: PlatformsHandler.new]
+    # * *nodes_handler* (NodesHandler): Nodes handler to be used [default: NodesHandler.new]
+    # * *actions_executor* (ActionsExecutor): Actions Executor to be used for the tests [default: ActionsExecutor.new]
+    # * *deployer* (Deployer): Deployer to be used for the tests needed why-run deployments [default: Deployer.new]
+    def initialize(
+      logger: Logger.new(STDOUT),
+      logger_stderr: Logger.new(STDERR),
+      config: Config.new,
+      cmd_runner: CmdRunner.new,
+      platforms_handler: PlatformsHandler.new,
+      nodes_handler: NodesHandler.new,
+      actions_executor: ActionsExecutor.new,
+      deployer: Deployer.new
+    )
       init_loggers(logger, logger_stderr)
       @config = config
       @cmd_runner = cmd_runner
+      @platforms_handler = platforms_handler
       @nodes_handler = nodes_handler
       @actions_executor = actions_executor
       @deployer = deployer
+      @platforms_handler.inject_dependencies(nodes_handler: @nodes_handler, actions_executor: @actions_executor)
       Test.nodes_handler = nodes_handler
       @tests_plugins = Plugins.new(:test, logger: @logger, logger_stderr: @logger_stderr)
       # The list of tests reports plugins, with their associated class
       # Hash< Symbol, Class >
       @reports_plugins = Plugins.new(:test_report, logger: @logger, logger_stderr: @logger_stderr)
       # Register test classes from platforms
-      @nodes_handler.known_platforms.each do |platform_name|
-        platform = @nodes_handler.platform(platform_name)
+      @platforms_handler.known_platforms.each do |platform|
         if platform.respond_to?(:tests)
           platform.tests.each do |test_name, test_class|
             @tests_plugins[test_name] = test_class
@@ -159,13 +170,13 @@ module HybridPlatformsConductor
       # Hash< Symbol,    Hash< String,   String > >
       # Hash< test_name, Hash< platform, reason > >
       @platform_expected_failures = {}
-      @nodes_handler.known_platforms.each do |platform_name|
-        platform_nodes = @nodes_handler.platform(platform_name).known_nodes
+      @platforms_handler.known_platforms.each do |platform|
+        platform_nodes = platform.known_nodes
         @node_expected_failures.each do |test_name, expected_failures_for_test|
           if (platform_nodes - expected_failures_for_test.keys).empty?
             # We have an expected failure for this test
             @platform_expected_failures[test_name] = {} unless @platform_expected_failures.key?(test_name)
-            @platform_expected_failures[test_name][platform_name] = expected_failures_for_test.values.uniq.join(' + ')
+            @platform_expected_failures[test_name][platform.name] = expected_failures_for_test.values.uniq.join(' + ')
           end
         end
       end
@@ -248,7 +259,6 @@ module HybridPlatformsConductor
     # * *node* (String): Node for which the test is instantiated, or nil if global or platform [default: nil]
     # * *force_failure* (Boolean): If true, then ignore expected failures for this error [default: false]
     def error(message, platform: nil, node: nil, force_failure: false)
-      platform = @nodes_handler.platform_for(node) unless node.nil?
       global_test = new_test(nil, platform: platform, node: node, ignore_expected_failure: force_failure)
       global_test.errors << message
       global_test.executed
@@ -265,7 +275,6 @@ module HybridPlatformsConductor
     # Result::
     # * Test: Corresponding test
     def new_test(test_name, platform: nil, node: nil, ignore_expected_failure: false)
-      platform = @nodes_handler.platform_for(node) unless node.nil?
       (test_name.nil? ? Test : @tests_plugins[test_name]).new(
         @logger,
         @logger_stderr,
@@ -278,15 +287,15 @@ module HybridPlatformsConductor
         node: node,
         expected_failure: if ignore_expected_failure
                             nil
-                          elsif platform.nil?
-                            # Global test
-                            nil
-                          elsif node.nil?
+                          elsif !node.nil?
+                            # Node test
+                            @node_expected_failures.dig(test_name.nil? ? 'global' : test_name, node)
+                          elsif !platform.nil?
                             # Platform test
                             @platform_expected_failures.dig(test_name.nil? ? 'global' : test_name, platform.name)
                           else
-                            # Node test
-                            @node_expected_failures.dig(test_name.nil? ? 'global' : test_name, node)
+                            # Global test
+                            nil
                           end
       )
     end
@@ -373,7 +382,7 @@ module HybridPlatformsConductor
       run_tests_on_subjects(
         'platform tests',
         :test_on_platform,
-        @nodes_handler.known_platforms.map { |platform| { platform: @nodes_handler.platform(platform) } },
+        @platforms_handler.known_platforms.map { |platform| { platform: platform } },
         nbr_threads_max: @max_threads_platforms
       )
     end
@@ -559,27 +568,20 @@ module HybridPlatformsConductor
     #
     # Parameters::
     # * *test_name* (String): The test name.
-    # * *node* (String or nil): Node name, or nil for a platform test. [default: nil]
-    # * *platform* (PlatformHandler or nil): Platform or nil for a node test. [default: nil]
+    # * *node* (String or nil): Node name, or nil for a platform or global test. [default: nil]
+    # * *platform* (PlatformHandler or nil): Platform or nil for a node or global test. [default: nil]
     # Result::
     # * Boolean: Should the given test name be run on a given node or platform?
     def should_test_be_run_on(test_name, node: nil, platform: nil)
-      if node.nil? && platform.nil?
+      if !node.nil?
+        (@tests_plugins[test_name].only_on_nodes || [node]).any? do |allowed_node|
+          allowed_node.is_a?(String) ? allowed_node == node : node.match(allowed_node)
+        end
+      elsif !platform.nil?
+        (@tests_plugins[test_name].only_on_platforms || [platform.platform_type]).include?(platform.platform_type)
+      else
         # Global tests should always be run
         true
-      else
-        allowed_platform_types = @tests_plugins[test_name].only_on_platforms || @nodes_handler.platform_types.keys
-        node_platform = platform || @nodes_handler.platform_for(node)
-        if allowed_platform_types.include?(node_platform.platform_type)
-          if node.nil?
-            true
-          else
-            allowed_nodes = @tests_plugins[test_name].only_on_nodes || [node]
-            allowed_nodes.any? { |allowed_node| allowed_node.is_a?(String) ? allowed_node == node : node.match(allowed_node) }
-          end
-        else
-          false
-        end
       end
     end
 

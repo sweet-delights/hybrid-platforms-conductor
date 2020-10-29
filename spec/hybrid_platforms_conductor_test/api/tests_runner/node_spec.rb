@@ -66,19 +66,6 @@ describe HybridPlatformsConductor::TestsRunner do
       end
     end
 
-    it 'executes node tests only on valid platform types' do
-      with_test_platform_for_node_tests do
-        test_tests_runner.tests = [:node_test]
-        HybridPlatformsConductorTest::TestPlugins::Node.only_on_platform_types = %i[test2]
-        expect(test_tests_runner.run_tests([{ all: true }])).to eq 0
-        expect(HybridPlatformsConductorTest::TestPlugins::Node.runs.sort).to eq [
-          [:node_test, 'node21'],
-          [:node_test, 'node22'],
-          [:node_test, 'node23']
-        ].sort
-      end
-    end
-
     it 'executes node tests only on valid nodes' do
       with_test_platform_for_node_tests do
         test_tests_runner.tests = [:node_test]
@@ -86,18 +73,6 @@ describe HybridPlatformsConductor::TestsRunner do
         expect(test_tests_runner.run_tests([{ all: true }])).to eq 0
         expect(HybridPlatformsConductorTest::TestPlugins::Node.runs.sort).to eq [
           [:node_test, 'node12'],
-          [:node_test, 'node22']
-        ].sort
-      end
-    end
-
-    it 'executes node tests only on valid platform types and nodes' do
-      with_test_platform_for_node_tests do
-        test_tests_runner.tests = [:node_test]
-        HybridPlatformsConductorTest::TestPlugins::Node.only_on_platform_types = %i[test2]
-        HybridPlatformsConductorTest::TestPlugins::Node.only_on_nodes = %w[node12 node22]
-        expect(test_tests_runner.run_tests([{ all: true }])).to eq 0
-        expect(HybridPlatformsConductorTest::TestPlugins::Node.runs.sort).to eq [
           [:node_test, 'node22']
         ].sort
       end

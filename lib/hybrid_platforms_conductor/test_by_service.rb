@@ -13,7 +13,7 @@ module HybridPlatformsConductor
       Test.nodes_handler.
         known_nodes.
         sort.
-        group_by { |node| [Test.nodes_handler.get_services_of(node).sort, Test.nodes_handler.platform_for(node).name] }.
+        group_by { |node| Test.nodes_handler.get_services_of(node).sort }.
         map { |(_service, _platform), nodes| nodes.first }
     end
 
