@@ -56,7 +56,7 @@ module HybridPlatformsConductor
     # Parameters::
     # * *nodes* (Array<String>): Nodes for which we deploy
     # * *secrets* (Hash): Secrets to be used for deployment
-    # * *local_environment* (Boolean): Are we deployment to a local environment?
+    # * *local_environment* (Boolean): Are we deploying to a local environment?
     # Result::
     # * String or nil: Reason for which we are not allowed to deploy, or nil if deployment is authorized
     def deploy_allowed?(
@@ -69,13 +69,10 @@ module HybridPlatformsConductor
       else
         # Check that master is checked out correctly before deploying.
         # Check it on every platform having at least 1 node to be deployed.
-        wrong_platforms = nodes.
-          map { |node| @platforms_handler.known_platforms.find { |platform| platform.known_nodes.include?(node) } }.
-          uniq.
-          select do |platform|
-            _exit_status, stdout, _stderr = @cmd_runner.run_cmd "cd #{platform.repository_path} && git status | head -n 1"
-            stdout.strip != 'On branch master'
-          end
+        wrong_platforms = platforms_for(nodes).select do |platform|
+          _exit_status, stdout, _stderr = @cmd_runner.run_cmd "cd #{platform.repository_path} && git status | head -n 1"
+          stdout.strip != 'On branch master'
+        end
         if wrong_platforms.empty?
           nil
         else
@@ -89,19 +86,17 @@ module HybridPlatformsConductor
     # Parameters::
     # * *nodes* (Array<String>): Nodes for which we deploy
     # * *secrets* (Hash): Secrets to be used for deployment
-    # * *why_run* (Boolean): Are we in why-run mode?
-    # * *local_environment* (Boolean): Are we deployment to a local environment?
+    # * *local_environment* (Boolean): Are we deploying to a local environment?
     # Result::
     # * Boolean: Is the configuration already packaged for a given deployment?
     def packaged?(
       nodes:,
       secrets:,
-      why_run:,
       local_environment:
     )
       # So far we only mimick the same deployment behaviour as before, with the same checks of package reusability done in the package method.
       # TODO: Implement this function correctly when service-oriented deployment will be implemented.
-      false
+      platforms_for(nodes).all? { |platform| ServicesHandler.packaged_platforms.include?(platform.name) }
     end
 
     # Package a configuration for a given deployment
@@ -109,39 +104,47 @@ module HybridPlatformsConductor
     # Parameters::
     # * *nodes* (Array<String>): Nodes for which we deploy
     # * *secrets* (Hash): Secrets to be used for deployment
-    # * *why_run* (Boolean): Are we in why-run mode?
-    # * *local_environment* (Boolean): Are we deployment to a local environment?
+    # * *local_environment* (Boolean): Are we deploying to a local environment?
     def package(
       nodes:,
       secrets:,
-      why_run:,
       local_environment:
     )
-      # Get the platforms that are impacted
-      platforms = nodes.map { |node| @platforms_handler.known_platforms.find { |platform| platform.known_nodes.include?(node) } }.uniq
-      # In case we are in local environment, prepare the deployment for that
-      if local_environment
-        platforms.each do |platform|
-          platform.prepare_deploy_for_local_testing
-        end
-      end
-      # Package
-      platforms.each do |platform|
+      platforms_for(nodes).each do |platform|
         platform_name = platform.name
         if ServicesHandler.packaged_platforms.include?(platform_name)
           log_debug "Platform #{platform_name} has already been packaged. Won't package it another time."
         else
-          platform.package
+          platform.package(
+            nodes: nodes,
+            secrets: secrets,
+            local_environment: local_environment
+          )
           ServicesHandler.packaged_platforms << platform_name
         end
       end
-      # Register the secrets in all the platforms
-      platforms.each do |platform|
-        platform.register_secrets(secrets)
-      end
-      # Prepare for deployment
-      platforms.each do |platform|
-        platform.prepare_for_deploy(nodes, use_why_run: why_run) if platform.respond_to?(:prepare_for_deploy)
+    end
+
+    # Prepare the deployment to be performed
+    #
+    # Parameters::
+    # * *nodes* (Array<String>): Nodes for which we deploy
+    # * *secrets* (Hash): Secrets to be used for deployment
+    # * *local_environment* (Boolean): Are we deploying to a local environment?
+    # * *why_run* (Boolean): Are we deploying in why-run mode?
+    def prepare_for_deploy(
+      nodes:,
+      secrets:,
+      local_environment:,
+      why_run:
+    )
+      platforms_for(nodes).each do |platform|
+        platform.prepare_for_deploy(
+          nodes: nodes,
+          secrets: secrets,
+          local_environment: local_environment,
+          why_run: why_run
+        ) if platform.respond_to?(:prepare_for_deploy)
       end
     end
 
@@ -187,6 +190,18 @@ module HybridPlatformsConductor
     #   * *diffs* (String): Differences, if any
     def parse_deploy_output(node, stdout, stderr)
       @platforms_handler.known_platforms.find { |platform| platform.known_nodes.include?(node) }.parse_deploy_output(stdout, stderr)
+    end
+
+    private
+
+    # Get platforms concerned by a list of nodes
+    #
+    # Parameters::
+    # * *nodes* (Array<String>): List of nodes
+    # Result::
+    # * Array<PlatformHandler>: List of corresponding platforms
+    def platforms_for(nodes)
+      nodes.map { |node| @platforms_handler.known_platforms.find { |platform| platform.known_nodes.include?(node) } }.uniq
     end
 
   end

@@ -157,22 +157,16 @@ module HybridPlatformsConductor
         # [API] - This method is mandatory.
         # [API] - @cmd_runner is accessible.
         # [API] - @actions_executor is accessible.
-        def package
-          # This method should take all actions to prepare the repository to be deployed on nodes later.
-          # Usually it is meant to package the deployment scripts.
-          @cmd_runner.run_cmd "cd #{@repository_path} && ./scripts/package_in_debian_format.sh"
-        end
-
-        # Register secrets given in JSON format
-        # [API] - This method is mandatory.
-        # [API] - @cmd_runner is accessible.
-        # [API] - @actions_executor is accessible.
         #
         # Parameters::
-        # * *json* (Hash<String,Object>): JSON secrets
-        def register_secrets(json)
-          # This method is meant to take the secrets (in json format) and prepare the deployment to use them.
-          File.write('temporary_secrets_to_be_deployed.json', json)
+        # * *nodes* (Array<String>): Nodes for which we deploy
+        # * *secrets* (Hash): Secrets to be used for deployment
+        # * *local_environment* (Boolean): Are we deploying to a local environment?
+        def package(nodes:, secrets:, local_environment:)
+          # This method should take all actions to prepare the repository to be deployed on nodes later.
+          File.write('temporary_secrets_to_be_deployed.json', secrets)
+          # Usually it is meant to package the deployment scripts.
+          @cmd_runner.run_cmd "cd #{@repository_path} && ./scripts/package_in_debian_format.sh"
         end
 
         # Prepare deployments.
@@ -183,11 +177,13 @@ module HybridPlatformsConductor
         # [API] - @actions_executor is accessible.
         #
         # Parameters::
-        # * *nodes* (Array<String>): Nodes on which we prepare the deployment.
-        # * *use_why_run* (Boolean): Do we use a why-run mode? [default = true]
-        def prepare_for_deploy(nodes, use_why_run: true)
+        # * *nodes* (Array<String>): Nodes for which we deploy
+        # * *secrets* (Hash): Secrets to be used for deployment
+        # * *local_environment* (Boolean): Are we deploying to a local environment?
+        # * *why_run* (Boolean): Are we deploying in why-run mode?
+        def prepare_for_deploy(nodes:, secrets:, local_environment:, why_run:)
           # This method is used if some actions are needed before deploying for real.
-          # The use_why_run switch is on if the deployment should just be simulated.
+          # The why_run switch is on if the deployment should just be simulated.
           ENV['deploy_time'] = Time.now.to_s
         end
 
@@ -230,13 +226,6 @@ module HybridPlatformsConductor
         def prepare_why_run_deploy_for_json_dump
           # This method is used to prepare a deployment action that should dump JSON info from the node itself.
           @dump_json_mode = true
-        end
-
-        # Prepare a deployment so that it can run on a local test environment.
-        # Typically useful to prepare recipes/playbooks to not fail if some connectivity to the real environment is not present locally.
-        # [API] - This method is mandatory.
-        def prepare_deploy_for_local_testing
-          @local_testing = true
         end
 
         # Parse stdout and stderr of a given deploy run and get the list of tasks with their status

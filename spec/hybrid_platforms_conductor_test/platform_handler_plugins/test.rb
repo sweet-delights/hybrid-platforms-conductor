@@ -16,10 +16,6 @@ module HybridPlatformsConductorTest
         #   * *deploy_data* (String or nil): Data to be deployed, or nil to not deploy for real [default: nil]
         # * *nodes_lists* (Hash< String, Array< String > >): Nodes lists, per list name [default: {}]
         # * *package* (Proc): Code called when the plugin has to package a repository
-        # * *register_secrets* (Proc): Code called when the plugin has to register some secrets:
-        #   * Parameters::
-        #     * *secrets* (Object): JSON object containing the secrets
-        # * *prepare_deploy_for_local_testing* (Proc): Code called when the plugin has to prepare for a local deployment
         # * *impacted_nodes* (Array<String>): Impacted nodes returned by impacts_from
         # * *impacted_services* (Array<String>): Impacted services returned by impacts_from
         # * *impacted_global* (Boolean): Impacted global returned by impacts_from
@@ -99,8 +95,13 @@ module HybridPlatformsConductorTest
       # [API] - This method is mandatory.
       # [API] - @cmd_runner is accessible.
       # [API] - @actions_executor is accessible.
-      def package
-        platform_info[:package].call if platform_info.key?(:package)
+      #
+      # Parameters::
+      # * *nodes* (Array<String>): Nodes for which we deploy
+      # * *secrets* (Hash): Secrets to be used for deployment
+      # * *local_environment* (Boolean): Are we deploying to a local environment?
+      def package(nodes:, secrets:, local_environment:)
+        platform_info[:package].call(nodes: nodes, secrets: secrets, local_environment: local_environment) if platform_info.key?(:package)
       end
 
       # Get the list of actions to perform to deploy on a given node.
@@ -120,24 +121,6 @@ module HybridPlatformsConductorTest
         else
           [{ bash: "echo \"#{use_why_run ? 'Checking' : 'Deploying'} on #{node}\"" }]
         end
-      end
-
-      # Register secrets given in JSON format
-      # [API] - This method is mandatory.
-      # [API] - @cmd_runner is accessible.
-      # [API] - @actions_executor is accessible.
-      #
-      # Parameters::
-      # * *json* (Hash<String,Object>): JSON secrets
-      def register_secrets(json)
-        platform_info[:register_secrets].call(json) if platform_info.key?(:register_secrets)
-      end
-
-      # Prepare a deployment so that it can run on a local test environment.
-      # Typically useful to prepare recipes/playbooks to not fail if some connectivity to the real environment is not present locally.
-      # [API] - This method is mandatory.
-      def prepare_deploy_for_local_testing
-        platform_info[:prepare_deploy_for_local_testing].call if platform_info.key?(:prepare_deploy_for_local_testing)
       end
 
       # Get the list of impacted nodes and services from a files diff.
