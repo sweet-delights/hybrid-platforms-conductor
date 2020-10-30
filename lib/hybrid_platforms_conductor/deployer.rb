@@ -151,6 +151,7 @@ module HybridPlatformsConductor
     def deploy_on(*nodes_selectors)
       # Get the list of nodes we deploy on
       nodes = @nodes_handler.select_nodes(nodes_selectors.flatten)
+
       # Get the secrets to be deployed
       secrets = {}
       @secrets.each do |secret_json|
@@ -159,6 +160,17 @@ module HybridPlatformsConductor
           value1
         end
       end
+
+      # Check that we are allowed to deploy
+      unless @use_why_run
+        reason_for_interdiction = @services_handler.deploy_allowed?(
+          nodes: nodes,
+          secrets: secrets,
+          local_environment: @local_environment
+        )
+        raise "Deployment not allowed: #{reason_for_interdiction}" unless reason_for_interdiction.nil?
+      end
+
       # Package the deployment
       # Protect packaging by a Futex
       Futex.new(PACKAGING_FUTEX_FILE, timeout: PACKAGING_FUTEX_TIMEOUT).open do
