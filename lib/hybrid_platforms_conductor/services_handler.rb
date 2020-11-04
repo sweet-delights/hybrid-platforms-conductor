@@ -150,6 +150,23 @@ module HybridPlatformsConductor
       }
     end
 
+    # Parse stdout and stderr of a given deploy run and get the list of tasks with their status
+    #
+    # Parameters::
+    # * *node* (String): Node for which this deploy run has been done.
+    # * *stdout* (String): stdout to be parsed.
+    # * *stderr* (String): stderr to be parsed.
+    # Result::
+    # * Array< Hash<Symbol,Object> >: List of task properties. The following properties should be returned, among free ones:
+    #   * *name* (String): Task name
+    #   * *status* (Symbol): Task status. Should be on of:
+    #     * *:changed*: The task has been changed
+    #     * *:identical*: The task has not been changed
+    #   * *diffs* (String): Differences, if any
+    def parse_deploy_output(node, stdout, stderr)
+      @platforms_handler.known_platforms.find { |platform| platform.known_nodes.include?(node) }.parse_deploy_output(stdout, stderr)
+    end
+
   end
 
 end
