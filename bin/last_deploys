@@ -4,10 +4,8 @@ require 'terminal-table'
 require 'hybrid_platforms_conductor/executable'
 
 possible_string_sorts = %i[
-  commit_comment
   date
   node
-  repo_name
   user
 ]
 possible_sorts = Hash[possible_string_sorts.map do |property_name|
@@ -39,7 +37,7 @@ sorted_deploy_info = Hash[
   map do |node, deploy_info|
     decorated_deploy_info = deploy_info.merge(node: node)
     decorated_deploy_info[:date] = deploy_info[:date].strftime('%F %T') if deploy_info.key?(:date)
-    decorated_deploy_info[:nbr_diff_files] = deploy_info[:diff_files].size if deploy_info.key?(:diff_files)
+    decorated_deploy_info[:services] = deploy_info[:services].join(', ') if deploy_info.key?(:services)
     [node, decorated_deploy_info]
   end
 ].sort_by(&possible_sorts[sort_by])
@@ -48,11 +46,7 @@ info_displayed = {
   node: 'Node',
   date: 'Date',
   user: 'Admin',
-  # debug: 'Debug',
-  repo_name: 'Repository',
-  # commit_id: 'Commit ID',
-  commit_message: 'Commit message',
-  nbr_diff_files: 'Differing files',
+  services: 'Services',
   error: 'Error'
 }
 executable.out(Terminal::Table.new(headings: info_displayed.values) do |table|
