@@ -15,7 +15,10 @@ module HybridPlatformsConductorTest
         #   * *services* (Array<String>): Services bound to this node
         #   * *deploy_data* (String or nil): Data to be deployed, or nil to not deploy for real [default: nil]
         # * *nodes_lists* (Hash< String, Array< String > >): Nodes lists, per list name [default: {}]
+        # * *deployable_services* (Array<String>): List of deployable services [default: []]
         # * *package* (Proc): Code called when the plugin has to package a repository
+        # * *prepare_for_deploy* (Proc): Code called when the plugin has to prepare a deployment
+        # * *parse_deploy_output* (Proc): Code called when the plugin needs to parse some deploy output
         # * *impacted_nodes* (Array<String>): Impacted nodes returned by impacts_from
         # * *impacted_services* (Array<String>): Impacted services returned by impacts_from
         # * *impacted_global* (Boolean): Impacted global returned by impacts_from
@@ -91,17 +94,42 @@ module HybridPlatformsConductorTest
         node_info(node)[:services]
       end
 
+      # Get the list of services we can deploy
+      # [API] - This method is mandatory.
+      #
+      # Result::
+      # * Array<String>: The corresponding services
+      def deployable_services
+        platform_info.key?(:deployable_services) ? platform_info[:deployable_services] : []
+      end
+
       # Package the repository, ready to be deployed on artefacts or directly to a node.
       # [API] - This method is mandatory.
       # [API] - @cmd_runner is accessible.
       # [API] - @actions_executor is accessible.
       #
       # Parameters::
-      # * *nodes* (Array<String>): Nodes for which we deploy
+      # * *services* (Hash< String, Array<String> >): Services to be deployed, per node
       # * *secrets* (Hash): Secrets to be used for deployment
       # * *local_environment* (Boolean): Are we deploying to a local environment?
-      def package(nodes:, secrets:, local_environment:)
-        platform_info[:package].call(nodes: nodes, secrets: secrets, local_environment: local_environment) if platform_info.key?(:package)
+      def package(services:, secrets:, local_environment:)
+        platform_info[:package].call(services: services, secrets: secrets, local_environment: local_environment) if platform_info.key?(:package)
+      end
+
+      # Prepare deployments.
+      # This method is called just before getting and executing the actions to be deployed.
+      # It is called once per platform.
+      # [API] - This method is optional.
+      # [API] - @cmd_runner is accessible.
+      # [API] - @actions_executor is accessible.
+      #
+      # Parameters::
+      # * *services* (Hash< String, Array<String> >): Services to be deployed, per node
+      # * *secrets* (Hash): Secrets to be used for deployment
+      # * *local_environment* (Boolean): Are we deploying to a local environment?
+      # * *why_run* (Boolean): Are we deploying in why-run mode?
+      def prepare_for_deploy(services:, secrets:, local_environment:, why_run:)
+        platform_info[:prepare_for_deploy].call(services: services, secrets: secrets, local_environment: local_environment, why_run: why_run) if platform_info.key?(:prepare_for_deploy)
       end
 
       # Get the list of actions to perform to deploy on a given node.
@@ -112,15 +140,33 @@ module HybridPlatformsConductorTest
       #
       # Parameters::
       # * *node* (String): Node to deploy on
+      # * *service* (String): Service to be deployed
       # * *use_why_run* (Boolean): Do we use a why-run mode? [default = true]
       # Result::
       # * Array< Hash<Symbol,Object> >: List of actions to be done
-      def actions_to_deploy_on(node, use_why_run: true)
+      def actions_to_deploy_on(node, service, use_why_run: true)
         if !use_why_run && node_info(node)[:deploy_data]
           [{ remote_bash: "echo \"#{node_info(node)[:deploy_data]}\" >deployed_file ; echo \"Real deployment done on #{node}\"" }]
         else
-          [{ bash: "echo \"#{use_why_run ? 'Checking' : 'Deploying'} on #{node}\"" }]
+          [{ bash: "echo \"#{use_why_run ? 'Checking' : 'Deploying'} #{service} (#{name}) on #{node}\"" }]
         end
+      end
+
+      # Parse stdout and stderr of a given deploy run and get the list of tasks with their status
+      # [API] - This method is mandatory.
+      #
+      # Parameters::
+      # * *stdout* (String): stdout to be parsed
+      # * *stderr* (String): stderr to be parsed
+      # Result::
+      # * Array< Hash<Symbol,Object> >: List of task properties. The following properties should be returned, among free ones:
+      #   * *name* (String): Task name
+      #   * *status* (Symbol): Task status. Should be on of:
+      #     * *:changed*: The task has been changed
+      #     * *:identical*: The task has not been changed
+      #   * *diffs* (String): Differences, if any
+      def parse_deploy_output(stdout, stderr)
+        platform_info[:parse_deploy_output].call(stdout, stderr) if platform_info.key?(:parse_deploy_output)
       end
 
       # Get the list of impacted nodes and services from a files diff.
@@ -163,13 +209,13 @@ module HybridPlatformsConductorTest
       # Return the node info of a given node
       #
       # Parameters::
-      # * *node* (String): Node to get infor for
+      # * *node* (String): Node to get info for
       # Result::
       # * Hash<Symbol, Object>: Platform info (check TestPlatformHandler#platforms_info to know about properties)
       def node_info(node)
         {
           deploy_data: nil
-        }.merge(platform_info[:nodes][node])
+        }.merge(platform_info[:nodes][node] || {})
       end
 
     end

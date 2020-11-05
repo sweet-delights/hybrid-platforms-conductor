@@ -8,7 +8,10 @@ describe 'executables\' common options' do
   #     * *repository* (String): Platform's repository
   def with_test_platform_for_common_options
     with_test_platform(
-      { nodes: { 'node1' => { meta: { host_ip: '192.168.42.42' }, services: ['node1_service'] } } },
+      {
+        nodes: { 'node1' => { meta: { host_ip: '192.168.42.42' }, services: ['node1_service'] } },
+        deployable_services: %w[node1_service]
+      },
       true
     ) do |repository|
       yield repository

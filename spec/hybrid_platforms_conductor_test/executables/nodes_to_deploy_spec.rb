@@ -21,8 +21,8 @@ describe 'nodes_to_deploy executable' do
           'node2' => { remote_bash: "cd /var/log/deployments && ls -t | head -1 | xargs sed '/===== STDOUT =====/q'" }
         )
         {
-          'node1' => [0, "repo_name: platform\nexit_status: 0\ncommit_id: abcdef1", ''],
-          'node2' => [0, "repo_name: platform\nexit_status: 0\ncommit_id: abcdef2", '']
+          'node1' => [0, "repo_name_0: platform\nexit_status: 0\ncommit_id_0: abcdef1", ''],
+          'node2' => [0, "repo_name_0: platform\nexit_status: 0\ncommit_id_0: abcdef2", '']
         }
       end])
       expect(test_nodes_handler).to receive(:impacted_nodes_from_git_diff).with('platform', from_commit: 'abcdef1', to_commit: 'master') { [%w[node1 node2], [], [], false] }
@@ -46,7 +46,7 @@ describe 'nodes_to_deploy executable' do
           'node2' => { remote_bash: "cd /var/log/deployments && ls -t | head -1 | xargs sed '/===== STDOUT =====/q'" }
         )
         {
-          'node2' => [0, "repo_name: platform\nexit_status: 0\ncommit_id: abcdef2", '']
+          'node2' => [0, "repo_name_0: platform\nexit_status: 0\ncommit_id_0: abcdef2", '']
         }
       end])
       expect(test_nodes_handler).to receive(:impacted_nodes_from_git_diff).with('platform', from_commit: 'abcdef2', to_commit: 'master') { [%w[node1 node2], [], [], false] }
@@ -69,8 +69,8 @@ describe 'nodes_to_deploy executable' do
           'node2' => { remote_bash: "cd /var/log/deployments && ls -t | head -1 | xargs sed '/===== STDOUT =====/q'" }
         )
         {
-          'node1' => [0, "repo_name: platform\nexit_status: 0\ncommit_id: abcdef1", ''],
-          'node2' => [0, "repo_name: platform\nexit_status: 0\ncommit_id: abcdef2", '']
+          'node1' => [0, "repo_name_0: platform\nexit_status: 0\ncommit_id_0: abcdef1", ''],
+          'node2' => [0, "repo_name_0: platform\nexit_status: 0\ncommit_id_0: abcdef2", '']
         }
       end])
       expect(test_nodes_handler).to receive(:impacted_nodes_from_git_diff).with('platform', from_commit: 'abcdef1', to_commit: 'master') { [%w[node1], [], [], false] }
@@ -106,7 +106,7 @@ describe 'nodes_to_deploy executable' do
           'node2' => { remote_bash: "cd /var/log/deployments && ls -t | head -1 | xargs sed '/===== STDOUT =====/q'" }
         )
         {
-          'node2' => [0, "repo_name: platform\nexit_status: 0\ncommit_id: abcdef2", '']
+          'node2' => [0, "repo_name_0: platform\nexit_status: 0\ncommit_id_0: abcdef2", '']
         }
       end])
       expect(test_nodes_handler).to receive(:impacted_nodes_from_git_diff).with('platform', from_commit: 'abcdef2', to_commit: 'master') { [%w[node1 node2], [], [], false] }
@@ -130,7 +130,7 @@ describe 'nodes_to_deploy executable' do
           'node1' => { remote_bash: "cd /var/log/deployments && ls -t | head -1 | xargs sed '/===== STDOUT =====/q'" }
         )
         {
-          'node1' => [0, "repo_name: platform\nexit_status: 0\ncommit_id: abcdef1", '']
+          'node1' => [0, "repo_name_0: platform\nexit_status: 0\ncommit_id_0: abcdef1", '']
         }
       end])
       expect(test_nodes_handler).to receive(:impacted_nodes_from_git_diff).with('platform', from_commit: 'abcdef1', to_commit: 'master') { [%w[node1 node2], [], [], false] }
@@ -156,8 +156,8 @@ describe 'nodes_to_deploy executable' do
           'node2' => { remote_bash: "cd /var/log/deployments && ls -t | head -1 | xargs sed '/===== STDOUT =====/q'" }
         )
         {
-          'node1' => [0, "repo_name: platform\nexit_status: 0\ncommit_id: abcdef1", ''],
-          'node2' => [0, "repo_name: platform\nexit_status: 0\ncommit_id: abcdef2", '']
+          'node1' => [0, "repo_name_0: platform\nexit_status: 0\ncommit_id_0: abcdef1", ''],
+          'node2' => [0, "repo_name_0: platform\nexit_status: 0\ncommit_id_0: abcdef2", '']
         }
       end])
       expect(test_nodes_handler).to receive(:impacted_nodes_from_git_diff).with('platform', from_commit: 'abcdef1', to_commit: 'master') { [%w[node1 node2], [], [], false] }
@@ -170,6 +170,91 @@ describe 'nodes_to_deploy executable' do
         node2
       EOS
       expect(stderr).to eq ''
+    end
+  end
+
+  it 'considers impacts from several repositories' do
+    with_test_platforms(
+      'platform1' => { nodes: { 'node1' => {}, 'node2' => {} } },
+      'platform2' => { nodes: {} }
+    ) do
+      expect_actions_executor_runs([proc do |actions|
+        expect(actions).to eq(
+          'node1' => { remote_bash: "cd /var/log/deployments && ls -t | head -1 | xargs sed '/===== STDOUT =====/q'" },
+          'node2' => { remote_bash: "cd /var/log/deployments && ls -t | head -1 | xargs sed '/===== STDOUT =====/q'" }
+        )
+        {
+          'node1' => [0, "repo_name_0: platform1\nexit_status: 0\ncommit_id_0: abcdef1", ''],
+          'node2' => [0, "repo_name_0: platform2\nexit_status: 0\ncommit_id_0: abcdef2", '']
+        }
+      end])
+      expect(test_nodes_handler).to receive(:impacted_nodes_from_git_diff).with('platform1', from_commit: 'abcdef1', to_commit: 'master') { [%w[node1], [], [], false] }
+      expect(test_nodes_handler).to receive(:impacted_nodes_from_git_diff).with('platform2', from_commit: 'abcdef2', to_commit: 'master') { [%w[node2], [], [], false] }
+      exit_code, stdout, stderr = run 'nodes_to_deploy'
+      expect(exit_code).to eq 0
+      expect(stdout).to eq <<~EOS
+        ===== Nodes to deploy =====
+        node1
+        node2
+      EOS
+    end
+  end
+
+  it 'considers impacts from several repositories for the same node as different services for different platforms might be deployed' do
+    with_test_platforms(
+      'platform1' => { nodes: { 'node1' => {}, 'node2' => {} } },
+      'platform2' => { nodes: {} },
+      'platform3' => { nodes: {} }
+    ) do
+      expect_actions_executor_runs([proc do |actions|
+        expect(actions).to eq(
+          'node1' => { remote_bash: "cd /var/log/deployments && ls -t | head -1 | xargs sed '/===== STDOUT =====/q'" },
+          'node2' => { remote_bash: "cd /var/log/deployments && ls -t | head -1 | xargs sed '/===== STDOUT =====/q'" }
+        )
+        {
+          'node1' => [0, "exit_status: 0\nrepo_name_0: platform1\ncommit_id_0: abcdef1\nrepo_name_1: platform2\ncommit_id_1: 1234567", ''],
+          'node2' => [0, "exit_status: 0\nrepo_name_0: platform2\ncommit_id_0: abcdef2\nrepo_name_1: platform3\ncommit_id_1: 2345678", '']
+        }
+      end])
+      expect(test_nodes_handler).to receive(:impacted_nodes_from_git_diff).with('platform1', from_commit: 'abcdef1', to_commit: 'master') { [%w[], [], [], false] }
+      expect(test_nodes_handler).to receive(:impacted_nodes_from_git_diff).with('platform2', from_commit: '1234567', to_commit: 'master') { [%w[node1], [], [], false] }
+      expect(test_nodes_handler).to receive(:impacted_nodes_from_git_diff).with('platform2', from_commit: 'abcdef2', to_commit: 'master') { [%w[], [], [], false] }
+      expect(test_nodes_handler).to receive(:impacted_nodes_from_git_diff).with('platform3', from_commit: '2345678', to_commit: 'master') { [%w[node2], [], [], false] }
+      exit_code, stdout, stderr = run 'nodes_to_deploy'
+      expect(exit_code).to eq 0
+      expect(stdout).to eq <<~EOS
+        ===== Nodes to deploy =====
+        node1
+        node2
+      EOS
+    end
+  end
+
+  it 'considers impacts from several repositories for the same node but does not query diffs for the nodes we already know need deployment' do
+    with_test_platforms(
+      'platform1' => { nodes: { 'node1' => {}, 'node2' => {} } },
+      'platform2' => { nodes: {} },
+      'platform3' => { nodes: {} }
+    ) do
+      expect_actions_executor_runs([proc do |actions|
+        expect(actions).to eq(
+          'node1' => { remote_bash: "cd /var/log/deployments && ls -t | head -1 | xargs sed '/===== STDOUT =====/q'" },
+          'node2' => { remote_bash: "cd /var/log/deployments && ls -t | head -1 | xargs sed '/===== STDOUT =====/q'" }
+        )
+        {
+          'node1' => [0, "exit_status: 0\nrepo_name_0: platform1\ncommit_id_0: abcdef1\nrepo_name_1: platform2\ncommit_id_1: 1234567", ''],
+          'node2' => [0, "exit_status: 0\nrepo_name_0: platform2\ncommit_id_0: abcdef2\nrepo_name_1: platform3\ncommit_id_1: 2345678", '']
+        }
+      end])
+      expect(test_nodes_handler).to receive(:impacted_nodes_from_git_diff).with('platform1', from_commit: 'abcdef1', to_commit: 'master') { [%w[node1], [], [], false] }
+      expect(test_nodes_handler).to receive(:impacted_nodes_from_git_diff).with('platform2', from_commit: 'abcdef2', to_commit: 'master') { [%w[node2], [], [], false] }
+      exit_code, stdout, stderr = run 'nodes_to_deploy'
+      expect(exit_code).to eq 0
+      expect(stdout).to eq <<~EOS
+        ===== Nodes to deploy =====
+        node1
+        node2
+      EOS
     end
   end
 

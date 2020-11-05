@@ -150,7 +150,16 @@ module HybridPlatformsConductor
         # Result::
         # * Array<String>: The corresponding services
         def services_for(node)
-          'hadoop_worker'
+          ['hadoop_worker']
+        end
+
+        # Get the list of services we can deploy
+        # [API] - This method is mandatory.
+        #
+        # Result::
+        # * Array<String>: The corresponding services
+        def deployable_services
+          ['hadoop_worker']
         end
 
         # Package the repository, ready to be deployed on artefacts or directly to a node.
@@ -159,10 +168,10 @@ module HybridPlatformsConductor
         # [API] - @actions_executor is accessible.
         #
         # Parameters::
-        # * *nodes* (Array<String>): Nodes for which we deploy
+        # * *services* (Hash< String, Array<String> >): Services to be deployed, per node
         # * *secrets* (Hash): Secrets to be used for deployment
         # * *local_environment* (Boolean): Are we deploying to a local environment?
-        def package(nodes:, secrets:, local_environment:)
+        def package(services:, secrets:, local_environment:)
           # This method should take all actions to prepare the repository to be deployed on nodes later.
           File.write('temporary_secrets_to_be_deployed.json', secrets)
           # Usually it is meant to package the deployment scripts.
@@ -177,11 +186,11 @@ module HybridPlatformsConductor
         # [API] - @actions_executor is accessible.
         #
         # Parameters::
-        # * *nodes* (Array<String>): Nodes for which we deploy
+        # * *services* (Hash< String, Array<String> >): Services to be deployed, per node
         # * *secrets* (Hash): Secrets to be used for deployment
         # * *local_environment* (Boolean): Are we deploying to a local environment?
         # * *why_run* (Boolean): Are we deploying in why-run mode?
-        def prepare_for_deploy(nodes:, secrets:, local_environment:, why_run:)
+        def prepare_for_deploy(services:, secrets:, local_environment:, why_run:)
           # This method is used if some actions are needed before deploying for real.
           # The why_run switch is on if the deployment should just be simulated.
           ENV['deploy_time'] = Time.now.to_s
@@ -195,10 +204,11 @@ module HybridPlatformsConductor
         #
         # Parameters::
         # * *node* (String): Node to deploy on
+        # * *service* (String): Service to be deployed
         # * *use_why_run* (Boolean): Do we use a why-run mode? [default = true]
         # Result::
         # * Array< Hash<Symbol,Object> >: List of actions to be done
-        def actions_to_deploy_on(node, use_why_run: true)
+        def actions_to_deploy_on(node, service, use_why_run: true)
           # This method returns all the actions to execute to deploy on a node.
           # The use_why_run switch is on if the deployment should just be simulated.
           # Those actions (bash commands, scp of files, ruby code...) should be thread safe as they can be executed in parallel with other deployment actions for other nodes in case of a concurrent deployment on several nodes.
@@ -211,7 +221,7 @@ module HybridPlatformsConductor
               },
               remote_bash: [
                 'cd ./deploy_scripts',
-                './deploy_everything',
+                "./deploy_service #{service}",
                 'rm temporary_secrets_to_be_deployed.json'
               ]
             }

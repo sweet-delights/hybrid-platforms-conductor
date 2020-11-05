@@ -95,7 +95,7 @@ module HybridPlatformsConductorTest
         ENV.delete 'hpc_certificates'
         # Set the necessary Hybrid Platforms Conductor environment variables
         ENV['hpc_ssh_user'] = 'test_user'
-        HybridPlatformsConductor::ServicesHandler.packaged_platforms.clear
+        HybridPlatformsConductor::ServicesHandler.packaged_deployments.clear
         HybridPlatformsConductorTest::TestAction.reset
         HybridPlatformsConductorTest::PlatformHandlerPlugins::Test.reset
         HybridPlatformsConductorTest::PlatformHandlerPlugins::Test2.reset

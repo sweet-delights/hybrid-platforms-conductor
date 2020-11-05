@@ -27,7 +27,7 @@ module HybridPlatformsConductorTest
         expect(action).to eq(remote_bash: "#{sudo ? 'sudo ' : ''}./mutex_dir unlock /tmp/hybrid_platforms_conductor_deploy_lock")
       end
 
-      # Expect a given set of actions to be a check node
+      # Expect a given set of actions to be a deployment
       #
       # Parameters::
       # * *actions* (Object): Actions

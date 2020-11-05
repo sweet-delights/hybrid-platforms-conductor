@@ -227,7 +227,6 @@ describe HybridPlatformsConductor::Config do
       expect(Time.parse("#{schedule.start_time.strftime('%F')} 00:00:00")).to be <= Time.now
       expect(schedule.start_time.strftime('%T')).to eq '11:22:33'
       expect(schedule.recurrence_rules.first.to_hash).to eq(
-        validations: {},
         validations: { day: [1] },
         week_start: 0,
         rule_type: 'IceCube::WeeklyRule',

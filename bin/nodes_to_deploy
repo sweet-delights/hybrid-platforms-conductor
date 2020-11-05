@@ -56,6 +56,7 @@ unless ignore_deploy_info
   cache_impacted_nodes = {}
   nodes.select! do |node|
     node_deploy_info = deploy_info[node]
+    executable.log_debug "[ #{node} ] - Deployment info: #{JSON.pretty_generate(node_deploy_info)}"
     if node_deploy_info.key?(:error)
       executable.log_warn "[ #{node} ] - Deployment in error: #{node_deploy_info[:error]}"
       true
@@ -63,23 +64,32 @@ unless ignore_deploy_info
       executable.log_warn "[ #{node} ] - Last deployment did not end successfully: #{node_deploy_info[:exit_status]}"
       true
     else
-      impacted_nodes = cache_impacted_nodes.dig(node_deploy_info[:repo_name], node_deploy_info[:commit_id])
-      if impacted_nodes.nil?
-        impacted_nodes, _single_impacted_nodes, _impacted_services, _impact_global = nodes_handler.impacted_nodes_from_git_diff(
-          node_deploy_info[:repo_name],
-          from_commit: node_deploy_info[:commit_id],
-          to_commit: 'master'
-        )
-        cache_impacted_nodes[node_deploy_info[:repo_name]] = {} unless cache_impacted_nodes.key?(node_deploy_info[:repo_name])
-        cache_impacted_nodes[node_deploy_info[:repo_name]][node_deploy_info[:commit_id]] = impacted_nodes
+      node_impacted = false
+      # Loop over all possible repositories concerned by this deployment
+      repo_idx = 0
+      while node_deploy_info.key?("repo_name_#{repo_idx}".to_sym) do
+        repo_name = node_deploy_info["repo_name_#{repo_idx}".to_sym]
+        commit_id = node_deploy_info["commit_id_#{repo_idx}".to_sym]
+        impacted_nodes = cache_impacted_nodes.dig(repo_name, commit_id)
+        if impacted_nodes.nil?
+          impacted_nodes, _single_impacted_nodes, _impacted_services, _impact_global = nodes_handler.impacted_nodes_from_git_diff(
+            repo_name,
+            from_commit: commit_id,
+            to_commit: 'master'
+          )
+          cache_impacted_nodes[repo_name] = {} unless cache_impacted_nodes.key?(repo_name)
+          cache_impacted_nodes[repo_name][commit_id] = impacted_nodes
+        end
+        if impacted_nodes.include?(node)
+          executable.log_debug "[ #{node} ] - Diffs on #{repo_name} between #{commit_id} and master are impacting this node."
+          node_impacted = true
+          break
+        else
+          executable.log_debug "[ #{node} ] - No impacting diffs on #{repo_name} between #{commit_id} and master for this node."
+        end
+        repo_idx += 1
       end
-      if impacted_nodes.include?(node)
-        executable.log_debug "[ #{node} ] - Diffs on #{node_deploy_info[:repo_name]} between #{node_deploy_info[:commit_id]} and master are impacting this node."
-        true
-      else
-        executable.log_debug "[ #{node} ] - No impacting diffs on #{node_deploy_info[:repo_name]} between #{node_deploy_info[:commit_id]} and master for this node."
-        false
-      end
+      node_impacted
     end
   end
 end
