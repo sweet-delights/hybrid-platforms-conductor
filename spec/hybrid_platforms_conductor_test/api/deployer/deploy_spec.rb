@@ -45,7 +45,7 @@ describe HybridPlatformsConductor::Deployer do
       with_test_platform({ nodes: { 'node' => { services: %w[service1 service2] } } }, true) do
         with_connections_mocked_on ['node'] do
           test_actions_executor.connector(:ssh).ssh_user = 'test_user'
-          expect_services_handler_to_deploy('node' => %w[service])
+          expect_services_handler_to_deploy('node' => %w[service1 service2])
           expect_actions_executor_runs([
             # First run, we expect the mutex to be setup, and the deployment actions to be run
             proc { |actions_per_nodes| expect_actions_to_deploy_on(actions_per_nodes, 'node') },
@@ -62,7 +62,7 @@ describe HybridPlatformsConductor::Deployer do
                 debug: 'No',
                 repo_name_0: 'platform',
                 commit_id_0: '123456',
-                commit_message_0: 'Test commit for node: service',
+                commit_message_0: 'Test commit for node: service1, service2',
                 services: 'service1, service2',
                 exit_status: '0'
               )
@@ -78,7 +78,7 @@ describe HybridPlatformsConductor::Deployer do
       with_test_platform({ nodes: { 'node' => { services: %w[service1 service2] } } }, true) do
         with_connections_mocked_on ['node'] do
           test_actions_executor.connector(:ssh).ssh_user = 'test_user'
-          expect_services_handler_to_deploy('node' => %w[service])
+          expect_services_handler_to_deploy('node' => %w[service1 service2])
           expect_actions_executor_runs([
             # First run, we expect the mutex to be setup, and the deployment actions to be run
             proc do |actions_per_nodes|
@@ -101,7 +101,7 @@ describe HybridPlatformsConductor::Deployer do
                 debug: 'No',
                 repo_name_0: 'platform',
                 commit_id_0: '123456',
-                commit_message_0: 'Test commit for node: service',
+                commit_message_0: 'Test commit for node: service1, service2',
                 services: 'service1, service2',
                 exit_status: 'failed_action'
               )
