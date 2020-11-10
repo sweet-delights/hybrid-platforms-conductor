@@ -13,6 +13,7 @@ require 'hybrid_platforms_conductor/reports_handler'
 require 'hybrid_platforms_conductor/test'
 require 'hybrid_platforms_conductor/test_report'
 require 'hybrid_platforms_conductor/tests_runner'
+require 'hybrid_platforms_conductor/hpc_plugins/cmdb/config'
 require 'hybrid_platforms_conductor/hpc_plugins/cmdb/host_ip'
 require 'hybrid_platforms_conductor/hpc_plugins/cmdb/host_keys'
 require 'hybrid_platforms_conductor/hpc_plugins/cmdb/platform_handlers'
@@ -127,6 +128,7 @@ module HybridPlatformsConductorTest
         FileUtils.rm_rf '/tmp/hpc_ssh'
         # Make sure CMDB plugin classes loaded by test framework are not added automatically
         register_plugins(:cmdb, {
+          config: HybridPlatformsConductor::HpcPlugins::Cmdb::Config,
           host_ip: HybridPlatformsConductor::HpcPlugins::Cmdb::HostIp,
           host_keys: HybridPlatformsConductor::HpcPlugins::Cmdb::HostKeys,
           platform_handlers: HybridPlatformsConductor::HpcPlugins::Cmdb::PlatformHandlers
