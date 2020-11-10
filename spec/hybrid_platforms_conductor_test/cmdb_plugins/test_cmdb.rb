@@ -133,6 +133,21 @@ module HybridPlatformsConductorTest
         Hash[nodes.map { |node| [node, 'Comment from test_cmdb'] }]
       end
 
+      # Get a specific property for a given set of nodes.
+      # [API] - @nodes_handler can be used.
+      # [API] - @cmd_runner can be used.
+      #
+      # Parameters::
+      # * *nodes* (Array<String>): The nodes to lookup the property for.
+      # * *metadata* (Hash<String, Hash<Symbol,Object> >): Existing metadata for each node. Dependent properties should be present here.
+      # Result::
+      # * Hash<String, Object>: The corresponding property, per required node.
+      #     Nodes for which the property can't be fetched can be ommitted.
+      def get_different_comment2(nodes, metadata)
+        record_call(:get_different_comment2, nodes, metadata)
+        Hash[nodes.map { |node| [node, 'Comment2 from test_cmdb'] }]
+      end
+
       # Register a call to be checked by the tests later
       #
       # Parameters::
