@@ -57,7 +57,7 @@ module HybridPlatformsConductorTest
       #     Nodes for which the property can't be fetched can be ommitted.
       def get_different_comment(nodes, metadata)
         record_call(:get_different_comment, nodes, metadata)
-        Hash[nodes.map { |node| [node, 'Comment from test_cmdb'] }]
+        Hash[nodes.map { |node| [node, 'Comment from test_cmdb2'] }]
       end
 
       # Register a call to be checked by the tests later

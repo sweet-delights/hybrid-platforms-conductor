@@ -200,7 +200,7 @@ describe HybridPlatformsConductor::NodesHandler do
 
     it 'fails when different CMDBs get a property having conflicting values' do
       with_cmdb_test_platform(cmdbs: %i[test_cmdb test_cmdb2]) do
-        expect { test_nodes_handler.get_different_comment_of('node1') }.to raise_error '[CMDB TestCmdb2.different_comment] - Returned a conflicting value for metadata different_comment of node node1: Comment from test_cmdb whereas the value was already set to Comment from test_cmdb2'
+        expect { test_nodes_handler.get_different_comment_of('node1') }.to raise_error '[CMDB TestCmdb2.different_comment] - Returned a conflicting value for metadata different_comment of node node1: Comment from test_cmdb2 whereas the value was already set to Comment from test_cmdb'
         expect(cmdb(:test_cmdb).calls).to eq [
           [:get_different_comment, ['node1'], {}]
         ]
