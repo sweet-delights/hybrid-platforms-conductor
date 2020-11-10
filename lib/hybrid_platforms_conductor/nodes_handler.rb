@@ -320,9 +320,6 @@ module HybridPlatformsConductor
               new_value
             end
           end
-          missing_nodes.each do |node|
-            updated_metadata[node] = nil unless updated_metadata.key?(node)
-          end
           # Avoid conflicts in metadata while merging and make sure this update is thread-safe
           # As @metadata is only appending data and never deleting it, protecting the update only is enough.
           # At worst several threads will query several times the same CMDBs to update the same data several times.
