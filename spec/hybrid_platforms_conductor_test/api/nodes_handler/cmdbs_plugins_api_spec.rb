@@ -108,7 +108,6 @@ describe HybridPlatformsConductor::NodesHandler do
       end
     end
 
-
     it 'can prefetch the value of several properties for several nodes' do
       with_cmdb_test_platform do
         test_nodes_handler.prefetch_metadata_of(%w[node1 node3], %i[upcase double])
@@ -187,7 +186,7 @@ describe HybridPlatformsConductor::NodesHandler do
       end
     end
 
-    it 'tries different CMDBs to get a property until ones give it' do
+    it 'tries different CMDBs to get a property until one gives it' do
       with_cmdb_test_platform(cmdbs: %i[test_cmdb test_cmdb2]) do
         expect(test_nodes_handler.get_nothing_of('node1')).to eq 'node1 has nothing'
         expect(cmdb(:test_cmdb).calls).to eq [
@@ -199,11 +198,37 @@ describe HybridPlatformsConductor::NodesHandler do
       end
     end
 
-    it 'stops trying different CMDBs to get a property until ones give it' do
+    it 'fails when different CMDBs get a property having conflicting values' do
+      with_cmdb_test_platform(cmdbs: %i[test_cmdb test_cmdb2]) do
+        expect { test_nodes_handler.get_different_comment_of('node1') }.to raise_error '[CMDB TestCmdb2.different_comment] - Returned a conflicting value for metadata different_comment of node node1: Comment from test_cmdb whereas the value was already set to Comment from test_cmdb2'
+        expect(cmdb(:test_cmdb).calls).to eq [
+          [:get_different_comment, ['node1'], {}]
+        ]
+        expect(cmdb(:test_cmdb2).calls).to eq [
+          [:get_different_comment, ['node1'], {}]
+        ]
+      end
+    end
+
+    it 'does not fail when different CMDBs get a property having same values' do
+      with_cmdb_test_platform(cmdbs: %i[test_cmdb test_cmdb2]) do
+        expect(test_nodes_handler.get_same_comment_of('node1')).to eq 'Comment for node1'
+        expect(cmdb(:test_cmdb).calls).to eq [
+          [:get_same_comment, ['node1'], {}]
+        ]
+        expect(cmdb(:test_cmdb2).calls).to eq [
+          [:get_same_comment, ['node1'], {}]
+        ]
+      end
+    end
+
+    it 'continues trying different CMDBs to get a property even if ones already gives it' do
       with_cmdb_test_platform(cmdbs: %i[test_cmdb2 test_cmdb]) do
         expect(test_nodes_handler.get_nothing_of('node1')).to eq 'node1 has nothing'
         # test_cmdb was not even called, as it was registered second
-        expect(cmdb(:test_cmdb).calls).to eq nil
+        expect(cmdb(:test_cmdb).calls).to eq [
+          [:get_nothing, ['node1'], {}]
+        ]
         expect(cmdb(:test_cmdb2).calls).to eq [
           [:get_nothing, ['node1'], {}]
         ]
@@ -244,7 +269,7 @@ describe HybridPlatformsConductor::NodesHandler do
       end
     end
 
-    it 'caches metadata from others method even if they are not the required property' do
+    it 'does not cache metadata from others method when they are not the required property' do
       with_cmdb_test_platform(cmdbs: %i[test_cmdb test_cmdb_others]) do
         expect(test_nodes_handler.get_unknown_of('node1')).to eq nil
         expect(cmdb(:test_cmdb_others).calls).to eq [
@@ -252,13 +277,9 @@ describe HybridPlatformsConductor::NodesHandler do
         ]
         cmdb(:test_cmdb_others).calls = []
         expect(test_nodes_handler.get_last_3_of('node1')).to eq 'de1'
-        expect(cmdb(:test_cmdb_others).calls).to eq []
-      end
-    end
-
-    it 'refuses conflicts between different CMDBs' do
-      with_cmdb_test_platform(cmdbs: %i[test_cmdb_others test_cmdb_others2]) do
-        expect { test_nodes_handler.get_unknown_of('node1') }.to raise_error(/Returned a conflicting value for metadata downcase of node node1: __node1__ whereas the value was already set to _node1_/)
+        expect(cmdb(:test_cmdb_others).calls).to eq [
+          [:get_others, ['node1'], { 'node1' => { unknown: nil } }]
+        ]
       end
     end
 
@@ -288,7 +309,7 @@ describe HybridPlatformsConductor::NodesHandler do
       end
     end
 
-    it 'overriden metadata is accessible to other CMDBs' do
+    it 'makes sure overriden metadata is accessible to other CMDBs' do
       with_cmdb_test_platform do
         test_nodes_handler.override_metadata_of 'node1', :other_property, 'Other value'
         cmdb(:test_cmdb).calls = []

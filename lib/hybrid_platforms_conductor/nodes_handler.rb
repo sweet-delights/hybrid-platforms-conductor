@@ -294,70 +294,45 @@ module HybridPlatformsConductor
         unless missing_nodes.empty?
           # Query the CMDBs having first the get_<property> method, then the ones having the get_others method till we have our property set for all missing nodes
           # Metadata being retrieved by the different CMDBs, per node
+          # Hash< String, Object >
           updated_metadata = {}
           (
             (@cmdbs_per_property.key?(property) ? @cmdbs_per_property[property] : []).map { |cmdb| [cmdb, property] } +
             @cmdbs_others.map { |cmdb| [cmdb, :others] }
           ).each do |(cmdb, cmdb_property)|
-            remaining_nodes = missing_nodes.select { |node| !updated_metadata.key?(node) || !updated_metadata[node][property] }
-            # Stop browsing the CMDBs when all nodes have a value for this property
-            break if remaining_nodes.empty?
             # Check first if this property depends on other ones for this cmdb
             if cmdb.respond_to?(:property_dependencies)
               property_deps = cmdb.property_dependencies
-              if property_deps.key?(property)
-                prefetch_metadata_of remaining_nodes, property_deps[property]
-                # Recompute mising nodes, as @metadata might have changed
-                missing_nodes = nodes.select { |node| !@metadata.key?(node) || !@metadata[node].key?(property) }
-                remaining_nodes = missing_nodes.select { |node| !updated_metadata.key?(node) || !updated_metadata[node][property] }
-                break if remaining_nodes.empty?
-              end
+              prefetch_metadata_of missing_nodes, property_deps[property] if property_deps.key?(property)
             end
             cmdb_log_header = "[CMDB #{cmdb.class.name.split('::').last}.#{cmdb_property}] -"
-            log_debug "#{cmdb_log_header} Query #{remaining_nodes.size} nodes to find property #{property}..."
+            log_debug "#{cmdb_log_header} Query #{missing_nodes.size} nodes to find property #{property}..."
+            # Property values, per node name
+            # Hash< String, Object >
             metadata_from_cmdb = Hash[
-              cmdb.send("get_#{cmdb_property}".to_sym, remaining_nodes, @metadata.slice(*remaining_nodes)).map do |node, cmdb_result|
-                if cmdb_property == :others
-                  # Here cmdb_result is a real Hash of metadata.
-                  # Remove nil values if any, as the call could have returned data for other properties as well.
-                  # We don't want to keep those nil properties, as maybe a query to those properties would have tried other CMDBs and the value would have be filled.
-                  # If we keep them as nil, then the cache will understand that we tried to fetch them but they really have no value.
-                  compacted_metadata = cmdb_result.compact
-                  [node, compacted_metadata.empty? ? nil : compacted_metadata]
-                else
-                  # Here cmdb_result is the metadata property value.
-                  # We need to convert it to real metadata Hash.
-                  [node, { property => cmdb_result }]
-                end
+              cmdb.send("get_#{cmdb_property}".to_sym, missing_nodes, @metadata.slice(*missing_nodes)).map do |node, cmdb_result|
+                [node, cmdb_property == :others ? cmdb_result[property] : cmdb_result]
               end
             ].compact
-            log_debug "#{cmdb_log_header} Found metadata for #{metadata_from_cmdb.select { |node, cmdb_result| cmdb_result.key?(property) }.size} nodes."
-            updated_metadata.merge!(metadata_from_cmdb) do |node, existing_metadata, new_metadata|
-              existing_metadata.merge(new_metadata) do |prop_name, existing_value, new_value|
-                raise "#{cmdb_log_header} Returned a conflicting value for metadata #{prop_name} of node #{node}: #{new_value} whereas the value was already set to #{existing_value}" if !existing_value.nil? && new_value != existing_value
-                new_value
-              end
+            log_debug "#{cmdb_log_header} Found metadata for #{metadata_from_cmdb.size} nodes."
+            updated_metadata.merge!(metadata_from_cmdb) do |node, existing_value, new_value|
+              raise "#{cmdb_log_header} Returned a conflicting value for metadata #{property} of node #{node}: #{new_value} whereas the value was already set to #{existing_value}" if !existing_value.nil? && new_value != existing_value
+              new_value
             end
           end
-          # Here, explicitely store nil if nothing has been found for a node because we know there is no value to be fetched.
-          # This way we won't query again all CMDBs thanks to the cache.
           missing_nodes.each do |node|
-            if updated_metadata.key?(node)
-              updated_metadata[node][property] = nil unless updated_metadata[node].key?(property)
-            else
-              updated_metadata[node] = { property => nil }
-            end
+            updated_metadata[node] = nil unless updated_metadata.key?(node)
           end
           # Avoid conflicts in metadata while merging and make sure this update is thread-safe
           # As @metadata is only appending data and never deleting it, protecting the update only is enough.
           # At worst several threads will query several times the same CMDBs to update the same data several times.
           # If we also want to be thread-safe in this regard, we should protect the whole CMDB call with mutexes, at the granularity of the node + property bein read.
           @metadata_mutex.synchronize do
-            @metadata.merge!(updated_metadata) do |node, existing_metadata, new_metadata|
-              existing_metadata.merge(new_metadata) do |prop_name, existing_value, new_value|
-                log_warn "A CMDB returned a conflicting value for metadata #{prop_name} of node #{node}: #{new_value} whereas the value was already set to #{existing_value}. Keep old value." unless new_value == existing_value
-                existing_value
-              end
+            missing_nodes.each do |node|
+              @metadata[node] = {} unless @metadata.key?(node)
+              # Here, explicitely store nil if nothing has been found for a node because we know there is no value to be fetched.
+              # This way we won't query again all CMDBs thanks to the cache.
+              @metadata[node][property] = updated_metadata[node]
             end
           end
         end
