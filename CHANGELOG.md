@@ -1,3 +1,9 @@
+# [28.1.0](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv28.0.0&sourceBranch=refs%2Ftags%2Fv28.1.0) (2020-11-11)
+
+### New features
+
+* [Feature] Add a new authorization method in ServicesHandler to know if we are allowed to deploy services ([9ab92036](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/commits/9ab92036857a41a224793f0d826fc785d4ae6f74))
+
 # [28.0.0](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv27.0.0&sourceBranch=refs%2Ftags%2Fv28.0.0) (2020-11-11)
 
 ### Breaking changes
