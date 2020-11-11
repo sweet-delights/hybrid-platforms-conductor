@@ -1,3 +1,9 @@
+# [27.0.0](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv26.0.0&sourceBranch=refs%2Ftags%2Fv27.0.0) (2020-11-11)
+
+### Breaking changes
+
+* [Breaking] Remove the --direct-deploy option from deployer as it is obsolete ([0f6c20c1](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/commits/0f6c20c19f2bca4e645ae038feaec14b5dcebd29))
+
 # [26.0.0](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv25.10.0&sourceBranch=refs%2Ftags%2Fv26.0.0) (2020-11-11)
 
 ### Breaking changes
