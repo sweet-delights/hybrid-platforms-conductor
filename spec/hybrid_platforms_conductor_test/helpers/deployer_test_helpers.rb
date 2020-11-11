@@ -54,6 +54,8 @@ module HybridPlatformsConductorTest
           # * *expect_delivered_nodes* (Array<String>): Expected nodes being delivered to the artefacts? [default: nodes_info[:nodes].keys]
           # * *expect_default_actions* (Boolean): Should we expect default actions? [default: true]
           # * *expect_sudo* (Boolean): Do we expect sudo to be used in commands? [default: true]
+          # * *expect_secrets* (Hash): Secrets to be expected during deployment [default: {}]
+          # * *expect_local_environment* (Boolean): Expected local environment flag [default: false]
           # * *check_mode* (Boolean): Are we testing in check mode? [default: @check_mode]
           # * *additional_config* (String): Additional configuration to set [default: '']
           # * Proc: Code called once the platform is ready for testing the deployer
@@ -65,6 +67,8 @@ module HybridPlatformsConductorTest
             expect_delivered_nodes: nodes_info[:nodes].keys,
             expect_default_actions: true,
             expect_sudo: true,
+            expect_secrets: {},
+            expect_local_environment: false,
             check_mode: @check_mode,
             additional_config: ''
           )
@@ -72,7 +76,12 @@ module HybridPlatformsConductorTest
             with_test_platform(nodes_info, !check_mode, additional_config) do |repository|
               with_connections_mocked_on(nodes_info[:nodes].keys) do
                 packaged_times = 0
-                test_platforms_info[platform_name][:package] = proc { packaged_times += 1 }
+                test_platforms_info[platform_name][:package] = proc do |nodes:, secrets:, local_environment:|
+                  expect(nodes.sort).to eq nodes_info[:nodes].keys.sort
+                  expect(secrets).to eq expect_secrets
+                  expect(local_environment).to eq expect_local_environment
+                  packaged_times += 1
+                end
                 expect_actions_executor_runs(expected_actions_for_deploy_on(nodes: nodes_info[:nodes].keys, check_mode: check_mode, sudo: expect_sudo)) if expect_default_actions
                 test_deployer.use_why_run = true if check_mode
                 yield repository
@@ -92,13 +101,10 @@ module HybridPlatformsConductorTest
           end
 
           it 'deploys on 1 node in a local environment' do
-            with_platform_to_deploy do
-              local_testing = false
-              test_platforms_info[platform_name][:prepare_deploy_for_local_testing] = proc { local_testing = true }
+            with_platform_to_deploy(expect_local_environment: true) do
               test_deployer.local_environment = true
               expect(test_deployer.deploy_on('node')).to eq('node' => expected_deploy_result)
               expect(test_deployer.local_environment).to eq true
-              expect(local_testing).to eq true
             end
           end
 
@@ -110,32 +116,24 @@ module HybridPlatformsConductorTest
           end
 
           it 'deploys on 1 node using 1 secret' do
-            with_platform_to_deploy do
-              registered_secrets = nil
-              test_platforms_info[platform_name][:register_secrets] = proc { |secrets| registered_secrets = secrets }
+            with_platform_to_deploy(expect_secrets: { 'secret1' => 'password1' }) do
               test_deployer.secrets = [{ 'secret1' => 'password1' }]
               expect(test_deployer.deploy_on('node')).to eq('node' => expected_deploy_result)
-              expect(registered_secrets).to eq('secret1' => 'password1')
             end
           end
 
           it 'deploys on 1 node using several secrets' do
-            with_platform_to_deploy do
-              registered_secrets = []
-              test_platforms_info[platform_name][:register_secrets] = proc { |secrets| registered_secrets << secrets }
+            with_platform_to_deploy(expect_secrets: { 'secret1' => 'password1', 'secret2' => 'password2' }) do
               test_deployer.secrets = [{ 'secret1' => 'password1' }, { 'secret2' => 'password2' }]
               expect(test_deployer.deploy_on('node')).to eq('node' => expected_deploy_result)
-              expect(registered_secrets).to eq([{
-                'secret1' => 'password1',
-                'secret2' => 'password2'
-              }])
             end
           end
 
           it 'deploys on 1 node in local environment with certificates to install using hpc_certificates on Debian' do
             with_platform_to_deploy(
               nodes_info: { nodes: { 'node' => { meta: { image: 'debian_9' } } } },
-              expect_default_actions: false
+              expect_default_actions: false,
+              expect_local_environment: true
             ) do |repository|
               certs_dir = "#{repository}/certificates"
               FileUtils.mkdir_p certs_dir
@@ -185,7 +183,8 @@ module HybridPlatformsConductorTest
             with_platform_to_deploy(
               nodes_info: { nodes: { 'node' => { meta: { image: 'debian_9' } } } },
               expect_sudo: false,
-              expect_default_actions: false
+              expect_default_actions: false,
+              expect_local_environment: true
             ) do |repository|
               certs_dir = "#{repository}/certificates"
               FileUtils.mkdir_p certs_dir
@@ -226,7 +225,8 @@ module HybridPlatformsConductorTest
           it 'deploys on 1 node with certificates to install using hpc_certificates on CentOS' do
             with_platform_to_deploy(
               nodes_info: { nodes: { 'node' => { meta: { image: 'centos_7' } } } },
-              expect_default_actions: false
+              expect_default_actions: false,
+              expect_local_environment: true
             ) do |repository|
               certs_dir = "#{repository}/certificates"
               FileUtils.mkdir_p certs_dir
@@ -266,7 +266,8 @@ module HybridPlatformsConductorTest
             with_platform_to_deploy(
               nodes_info: { nodes: { 'node' => { meta: { image: 'centos_7' } } } },
               expect_sudo: false,
-              expect_default_actions: false
+              expect_default_actions: false,
+              expect_local_environment: true
             ) do |repository|
               certs_dir = "#{repository}/certificates"
               FileUtils.mkdir_p certs_dir

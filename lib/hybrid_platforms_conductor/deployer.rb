@@ -177,19 +177,26 @@ module HybridPlatformsConductor
         unless @services_handler.packaged?(
           nodes: nodes,
           secrets: secrets,
-          why_run: @use_why_run,
           local_environment: @local_environment
         )
           section 'Packaging deployment' do
             @services_handler.package(
               nodes: nodes,
               secrets: secrets,
-              why_run: @use_why_run,
               local_environment: @local_environment
             )
           end
         end
       end
+
+      # Prepare the deployment as a whole, before getting individual deployment actions.
+      # Do this after packaging, this way we ensure that services packaging cannot depend on the way deployment will be performed.
+      @services_handler.prepare_for_deploy(
+        nodes: nodes,
+        secrets: secrets,
+        local_environment: @local_environment,
+        why_run: @use_why_run
+      )
 
       # Launch deployment processes
       results = {}
