@@ -79,8 +79,8 @@ module HybridPlatformsConductor
           platform_handler = @platform_types[platform_type].new(@logger, @logger_stderr, @config, platform_type, repository_path, self)
           @platform_handlers[platform_type] = [] unless @platform_handlers.key?(platform_type)
           @platform_handlers[platform_type] << platform_handler
-          raise "Platform name #{platform_handler.info[:repo_name]} is declared several times." if @platforms.key?(platform_handler.info[:repo_name])
-          @platforms[platform_handler.info[:repo_name]] = platform_handler
+          raise "Platform name #{platform_handler.name} is declared several times." if @platforms.key?(platform_handler.name)
+          @platforms[platform_handler.name] = platform_handler
           # Register all known nodes for this platform
           platform_handler.known_nodes.each do |node|
             raise "Can't register #{node} to platform #{repository_path}, as it is already defined in platform #{@nodes_platform[node].repository_path}." if @nodes_platform.key?(node)
@@ -106,7 +106,7 @@ module HybridPlatformsConductor
         out "* Known platforms:\n#{
           known_platforms.map do |platform|
             platform_handler = platform(platform)
-            "#{platform_handler.info[:repo_name]} - Type: #{platform_handler.platform_type} - Location: #{platform_handler.repository_path}"
+            "#{platform_handler.name} - Type: #{platform_handler.platform_type} - Location: #{platform_handler.repository_path}"
           end.sort.join("\n")
         }"
         out
@@ -119,7 +119,7 @@ module HybridPlatformsConductor
         out "* Known nodes with description:\n#{
           prefetch_metadata_of known_nodes, %i[hostname host_ip private_ips services description]
           known_nodes.map do |node|
-            "#{platform_for(node).info[:repo_name]} - #{node} (#{
+            "#{platform_for(node).name} - #{node} (#{
               if get_hostname_of node
                 get_hostname_of node
               elsif get_host_ip_of node

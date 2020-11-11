@@ -18,6 +18,26 @@ describe HybridPlatformsConductor::PlatformHandler do
     end
   end
 
+  it 'returns the correct name when platform is not a Git repository' do
+    with_repository('my_remote_platform', as_git: false) do |repository|
+      with_platforms "test_platform path: '#{repository}'" do
+        register_platform_handlers test: HybridPlatformsConductorTest::PlatformHandlerPlugins::Test
+        self.test_platforms_info = { 'my_remote_platform' => {} }
+        expect(test_nodes_handler.platform('my_remote_platform').name).to eq 'my_remote_platform'
+      end
+    end
+  end
+
+  it 'returns the correct name when platform is a Git repository' do
+    with_repository('my_remote_platform', as_git: true) do |repository|
+      with_platforms "test_platform path: '#{repository}'" do
+        register_platform_handlers test: HybridPlatformsConductorTest::PlatformHandlerPlugins::Test
+        self.test_platforms_info = { 'my_remote_platform' => {} }
+        expect(test_nodes_handler.platform('my_remote_platform').name).to eq 'my_remote_platform'
+      end
+    end
+  end
+
   it 'returns the correct info when platform is a Git repository' do
     with_repository('my_remote_platform', as_git: true) do |repository|
       with_platforms "test_platform path: '#{repository}'" do

@@ -79,7 +79,7 @@
     <% @tests.map { |test| test.platform }.uniq.compact.sort.each do |platform| %>
       <% platform_info = platform.info %>
       <tr>
-        <td><strong><%= platform_info[:repo_name] %></strong></td>
+        <td><strong><%= platform.name %></strong></td>
         <td><%= CGI.escapeHTML(platform_info[:commit][:message]) %></td>
         <td><%= platform_info[:commit][:date].strftime('%F %T') %></td>
         <td><%= platform_info[:commit][:id] %></td>
@@ -198,7 +198,7 @@
           <ac:structured-macro ac:name="status" ac:schema-version="1">
             <ac:parameter ac:name="colour"><%= group_errors(platform_tests.select { |test| test.platform == platform }, :test_name).empty? ? 'Green' : 'Red' %></ac:parameter>
           </ac:structured-macro>
-          <strong><%= platform.info[:repo_name] %></strong>
+          <strong><%= platform.name %></strong>
         </td>
         <% @platform_test_names.each do |test_name| %>
           <td style="text-align: center; vertical-align: middle;">

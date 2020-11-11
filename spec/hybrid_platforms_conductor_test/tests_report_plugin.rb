@@ -17,7 +17,7 @@ module HybridPlatformsConductorTest
         node_tests: report_from(node_tests),
         errors_per_platform_and_test: Hash[group_errors(node_tests, :platform, :test_name).map do |platform, platform_errors|
           [
-            platform.info[:repo_name],
+            platform.name,
             Hash[platform_errors.map do |test_name, errors|
               [
                 test_name,
@@ -41,7 +41,7 @@ module HybridPlatformsConductorTest
     def report_from(tests)
       tests.map do |test|
         report = [test.name, test.executed?]
-        report << test.platform.info[:repo_name] unless test.platform.nil?
+        report << test.platform.name unless test.platform.nil?
         report << test.node unless test.node.nil?
         # Only report the first line of the error messages, as some contain callstacks
         report << test.errors.map { |error| error.split("\n").first } unless test.errors.empty?

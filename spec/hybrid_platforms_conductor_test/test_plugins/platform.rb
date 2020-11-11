@@ -28,7 +28,7 @@ module HybridPlatformsConductorTest
 
       # Check my_test_plugin.rb.sample documentation for signature details.
       def test_on_platform
-        platform_name = @platform.info[:repo_name]
+        platform_name = @platform.name
         raise 'Failing test' if Platform.fail_for.include? platform_name
         sleep_time = Platform.sleeps.dig(@name, platform_name)
         sleep sleep_time unless sleep_time.nil?

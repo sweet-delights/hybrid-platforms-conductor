@@ -283,7 +283,7 @@ module HybridPlatformsConductor
                             nil
                           elsif node.nil?
                             # Platform test
-                            @platform_expected_failures.dig(test_name.nil? ? 'global' : test_name, platform.info[:repo_name])
+                            @platform_expected_failures.dig(test_name.nil? ? 'global' : test_name, platform.name)
                           else
                             # Node test
                             @node_expected_failures.dig(test_name.nil? ? 'global' : test_name, node)
@@ -337,11 +337,11 @@ module HybridPlatformsConductor
               if test.platform.nil? && test.node.nil?
                 'Global'
               elsif test.node.nil?
-                "Platform #{test.platform.info[:repo_name]}"
+                "Platform #{test.platform.name}"
               elsif test.platform.nil?
                 "Node #{test.node}"
               else
-                "Platform #{test.platform.info[:repo_name]} / Node #{test.node}"
+                "Platform #{test.platform.name} / Node #{test.node}"
               end
             out "[ #{Time.now.utc.strftime('%F %T')} ] - [ #{test_category} ] - [ #{test.name} ] - Start test..."
             begin_time = Time.now
