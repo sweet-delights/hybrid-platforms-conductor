@@ -50,6 +50,40 @@ module HybridPlatformsConductor
       @platforms_handler.inject_dependencies(nodes_handler: @nodes_handler, actions_executor: @actions_executor)
     end
 
+    # Are we allowed to deploy?
+    # This checks eventual restrictions on deployments, considering environments, options, secrets...
+    #
+    # Parameters::
+    # * *nodes* (Array<String>): Nodes for which we deploy
+    # * *secrets* (Hash): Secrets to be used for deployment
+    # * *local_environment* (Boolean): Are we deployment to a local environment?
+    # Result::
+    # * String or nil: Reason for which we are not allowed to deploy, or nil if deployment is authorized
+    def deploy_allowed?(
+      nodes:,
+      secrets:,
+      local_environment:
+    )
+      if local_environment
+        nil
+      else
+        # Check that master is checked out correctly before deploying.
+        # Check it on every platform having at least 1 node to be deployed.
+        wrong_platforms = nodes.
+          map { |node| @platforms_handler.known_platforms.find { |platform| platform.known_nodes.include?(node) } }.
+          uniq.
+          select do |platform|
+            _exit_status, stdout, _stderr = @cmd_runner.run_cmd "cd #{platform.repository_path} && git status | head -n 1"
+            stdout.strip != 'On branch master'
+          end
+        if wrong_platforms.empty?
+          nil
+        else
+          "The following platforms have not checked out master: #{wrong_platforms.map(&:repository_path).join(', ')}. Only master should be deployed in production."
+        end
+      end
+    end
+
     # Is the configuration already packaged for a given deployment?
     #
     # Parameters::
@@ -89,14 +123,6 @@ module HybridPlatformsConductor
       if local_environment
         platforms.each do |platform|
           platform.prepare_deploy_for_local_testing
-        end
-      end
-      if !why_run && !local_environment
-        # Check that master is checked out correctly before deploying.
-        # Check it on every platform having at least 1 node to be deployed.
-        platforms.each do |platform|
-          _exit_status, stdout, _stderr = @cmd_runner.run_cmd "cd #{platform.repository_path} && git status | head -n 1"
-          raise "Please checkout master before deploying on #{platform.repository_path}. !!! Only master should be deployed !!!" if stdout.strip != 'On branch master'
         end
       end
       # Package
