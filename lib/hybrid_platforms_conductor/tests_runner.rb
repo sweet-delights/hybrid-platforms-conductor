@@ -525,7 +525,6 @@ module HybridPlatformsConductor
               # Why-run deploy on all nodes
               @deployer.concurrent_execution = !log_debug?
               @deployer.use_why_run = true
-              @deployer.force_direct_deploy = true
               @deployer.timeout = CHECK_NODE_TIMEOUT
               begin
                 @deployer.deploy_on(nodes_to_test)

@@ -275,7 +275,6 @@ Deployer options:
     -e, --secrets SECRETS_LOCATION   Specify a secrets location. Can be specified several times. Location can be:
                                      * Local path to a JSON file
                                      * URL of the form http[s]://<url>:<secret_id> to get a secret JSON file from a Thycotic Secret Server at the given URL.
-    -i, --direct-deploy              Don't use artefacts servers while deploying.
     -p, --parallel                   Execute the commands in parallel (put the standard output in files <hybrid-platforms-dir>/run_logs/*.stdout)
     -t, --timeout SECS               Timeout in seconds to wait for each chef run. Only used in why-run mode. (defaults to no timeout)
     -W, --why-run                    Use the why-run mode to see what would be the result of the deploy instead of deploying it for real.
@@ -326,7 +325,6 @@ Deployer options:
     -e, --secrets SECRETS_LOCATION   Specify a secrets location. Can be specified several times. Location can be:
                                      * Local path to a JSON file
                                      * URL of the form http[s]://<url>:<secret_id> to get a secret JSON file from a Thycotic Secret Server at the given URL.
-    -i, --direct-deploy              Don't use artefacts servers while deploying.
     -t, --timeout SECS               Timeout in seconds to wait for each chef run. Only used in why-run mode. (defaults to no timeout)
         --retries-on-error NBR       Number of retries in case of non-deterministic errors (defaults to 0)
 ```
@@ -447,7 +445,6 @@ Deployer options:
     -e, --secrets SECRETS_LOCATION   Specify a secrets location. Can be specified several times. Location can be:
                                      * Local path to a JSON file
                                      * URL of the form http[s]://<url>:<secret_id> to get a secret JSON file from a Thycotic Secret Server at the given URL.
-    -i, --direct-deploy              Don't use artefacts servers while deploying.
     -p, --parallel                   Execute the commands in parallel (put the standard output in files <hybrid-platforms-dir>/run_logs/*.stdout)
     -t, --timeout SECS               Timeout in seconds to wait for each chef run. Only used in why-run mode. (defaults to no timeout)
     -W, --why-run                    Use the why-run mode to see what would be the result of the deploy instead of deploying it for real.
@@ -1106,7 +1103,6 @@ Deployer options:
     -e, --secrets SECRETS_LOCATION   Specify a secrets location. Can be specified several times. Location can be:
                                      * Local path to a JSON file
                                      * URL of the form http[s]://<url>:<secret_id> to get a secret JSON file from a Thycotic Secret Server at the given URL.
-    -i, --direct-deploy              Don't use artefacts servers while deploying.
     -t, --timeout SECS               Timeout in seconds to wait for each chef run. Only used in why-run mode. (defaults to 30)
     -W, --why-run                    Use the why-run mode to see what would be the result of the deploy instead of deploying it for real.
         --retries-on-error NBR       Number of retries in case of non-deterministic errors (defaults to 0)
@@ -1175,7 +1171,6 @@ Deployer options:
     -e, --secrets SECRETS_LOCATION   Specify a secrets location. Can be specified several times. Location can be:
                                      * Local path to a JSON file
                                      * URL of the form http[s]://<url>:<secret_id> to get a secret JSON file from a Thycotic Secret Server at the given URL.
-    -i, --direct-deploy              Don't use artefacts servers while deploying.
     -t, --timeout SECS               Timeout in seconds to wait for each chef run. Only used in why-run mode. (defaults to 30)
         --retries-on-error NBR       Number of retries in case of non-deterministic errors (defaults to 0)
 
@@ -1354,7 +1349,6 @@ Deployer options:
     -e, --secrets SECRETS_LOCATION   Specify a secrets location. Can be specified several times. Location can be:
                                      * Local path to a JSON file
                                      * URL of the form http[s]://<url>:<secret_id> to get a secret JSON file from a Thycotic Secret Server at the given URL.
-        --direct-deploy              Don't use artefacts servers while deploying.
         --retries-on-error NBR       Number of retries in case of non-deterministic errors (defaults to 0)
 
 Tests runner options:
@@ -1597,7 +1591,6 @@ Deployer options:
     -e, --secrets SECRETS_LOCATION   Specify a secrets location. Can be specified several times. Location can be:
                                      * Local path to a JSON file
                                      * URL of the form http[s]://<url>:<secret_id> to get a secret JSON file from a Thycotic Secret Server at the given URL.
-    -i, --direct-deploy              Don't use artefacts servers while deploying.
     -p, --parallel                   Execute the commands in parallel (put the standard output in files <hybrid-platforms-dir>/run_logs/*.stdout)
     -t, --timeout SECS               Timeout in seconds to wait for each chef run. Only used in why-run mode. (defaults to no timeout)
     -W, --why-run                    Use the why-run mode to see what would be the result of the deploy instead of deploying it for real.
@@ -1608,7 +1601,6 @@ Deployer options:
   The location can be:
   * A local file path (for example /path/to/file.json).
   * A Thycotic Secret Server URL followed by a secret id (for example https://portal.muc.msp.my_company.net/SecretServer:8845).
-* `--direct-deploy`: When specified, don't use artefacts servers to ship the deployment deliverable. Ship directly to the target node instead.
 * `--parallel`: Specify that the deployment process should perform concurrently on the different nodes it has to deploy to.
 * `--timeout SECS`: Specify the timeout (in seconds) to apply while deploying. This can be set only in why-run mode.
 * `--why-run`: Specify the why-run mode. The why-run mode is used to simulate a deployment on the nodes, and report what a real deployment would have changed on the node.

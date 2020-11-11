@@ -63,10 +63,6 @@ module HybridPlatformsConductor
     #   Boolean
     attr_accessor :concurrent_execution
 
-    # Do we force direct deployment without artefacts servers? [default = false]
-    #   Boolean
-    attr_accessor :force_direct_deploy
-
     # The list of JSON secrets
     #   Array<Hash>
     attr_accessor :secrets
@@ -106,7 +102,6 @@ module HybridPlatformsConductor
       @use_why_run = false
       @timeout = nil
       @concurrent_execution = false
-      @force_direct_deploy = false
       @local_environment = false
       @nbr_retries_on_error = 0
     end
@@ -144,9 +139,6 @@ module HybridPlatformsConductor
             File.read(secrets_location)
           end
         )
-      end
-      options_parser.on('-i', '--direct-deploy', 'Don\'t use artefacts servers while deploying.') do
-        @force_direct_deploy = true
       end
       options_parser.on('-p', '--parallel', 'Execute the commands in parallel (put the standard output in files <hybrid-platforms-dir>/run_logs/*.stdout)') do
         @concurrent_execution = true
@@ -198,8 +190,6 @@ module HybridPlatformsConductor
       end
       # Package
       package(platforms)
-      # Deliver package on artefacts
-      deliver_on_artefacts(nodes) unless @force_direct_deploy
       # Register the secrets in all the platforms
       @secrets.each do |secret_json|
         platforms.each do |platform_handler|
@@ -318,7 +308,6 @@ module HybridPlatformsConductor
           # Setup test environment for this container
           actions_executor.connector(:ssh).ssh_user = 'root'
           actions_executor.connector(:ssh).passwords[node] = 'root_pwd'
-          deployer.force_direct_deploy = true
           deployer.allow_deploy_non_master = true
           deployer.prepare_for_local_environment
           # Ignore secrets that might have been given: in Docker containers we always use dummy secrets
@@ -467,21 +456,7 @@ module HybridPlatformsConductor
       end
     end
 
-    # Deliver the packaged repository on all needed artefacts.
-    # Prerequisite: package has been called before.
-    #
-    # Parameters::
-    # * *nodes* (Array<String>): List of nodes
-    def deliver_on_artefacts(nodes)
-      section 'Delivering on artefacts repositories' do
-        nodes.each do |node|
-          @nodes_handler.platform_for(node).deliver_on_artefact_for(node)
-        end
-      end
-    end
-
     # Deploy on all the nodes.
-    # Prerequisite: deliver_on_artefacts has been called before in case of non-direct deployment.
     #
     # Parameters::
     # * *nodes* (Array<String>): List of nodes

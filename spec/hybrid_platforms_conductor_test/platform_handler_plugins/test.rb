@@ -13,7 +13,6 @@ module HybridPlatformsConductorTest
         # * *nodes* (Hash< String, Hash<Symbol,Object> >): List of nodes, and their associated info (per node name) [default: {}]:
         #   * *meta* (Hash<String,Object>): JSON object storing metadata about this node
         #   * *services* (Array<String>): Services bound to this node
-        #   * *deliver_on_artefact_for* (Proc): Code called when a packages repository has to be delivered for a given node
         #   * *deploy_data* (String or nil): Data to be deployed, or nil to not deploy for real [default: nil]
         # * *nodes_lists* (Hash< String, Array< String > >): Nodes lists, per list name [default: {}]
         # * *package* (Proc): Code called when the plugin has to package a repository
@@ -102,19 +101,6 @@ module HybridPlatformsConductorTest
       # [API] - @actions_executor is accessible.
       def package
         platform_info[:package].call if platform_info.key?(:package)
-      end
-
-      # Deliver what has been packaged to the artefacts server for a given node.
-      # package has been called prior to this method.
-      # This method won't be called in case of a direct deploy to the node.
-      # [API] - This method is mandatory.
-      # [API] - @cmd_runner is accessible.
-      # [API] - @actions_executor is accessible.
-      #
-      # Parameters::
-      # * *node* (String): Node to deliver for
-      def deliver_on_artefact_for(node)
-        node_info(node)[:deliver_on_artefact_for].call if node_info(node).key?(:deliver_on_artefact_for)
       end
 
       # Get the list of actions to perform to deploy on a given node.
