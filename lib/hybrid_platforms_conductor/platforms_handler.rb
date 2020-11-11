@@ -30,9 +30,16 @@ module HybridPlatformsConductor
     # * *logger* (Logger): Logger to be used [default: Logger.new(STDOUT)]
     # * *logger_stderr* (Logger): Logger to be used for stderr [default: Logger.new(STDERR)]
     # * *config* (Config): Config to be used. [default: Config.new]
-    def initialize(logger: Logger.new(STDOUT), logger_stderr: Logger.new(STDERR), config: Config.new)
+    # * *cmd_runner* (CmdRunner): Command executor to be used. [default: CmdRunner.new]
+    def initialize(
+      logger: Logger.new(STDOUT),
+      logger_stderr: Logger.new(STDERR),
+      config: Config.new,
+      cmd_runner: CmdRunner.new
+    )
       init_loggers(logger, logger_stderr)
       @config = config
+      @cmd_runner = cmd_runner
       @platform_types = Plugins.new(:platform_handler, logger: @logger, logger_stderr: @logger_stderr)
       # Keep a list of instantiated platform handlers per platform type
       # Hash<Symbol, Array<PlatformHandler> >
@@ -40,7 +47,14 @@ module HybridPlatformsConductor
       # Read all platforms from the config
       @config.platform_dirs.each do |platform_type, repositories|
         repositories.each do |repository_path|
-          platform_handler = @platform_types[platform_type].new(@logger, @logger_stderr, @config, platform_type, repository_path, self)
+          platform_handler = @platform_types[platform_type].new(
+            platform_type,
+            repository_path,
+            logger: @logger,
+            logger_stderr: @logger_stderr,
+            config: @config,
+            cmd_runner: @cmd_runner
+          )
           # Check that this platform has unique name
           raise "Platform name #{platform_handler.name} is declared several times." if @platform_handlers.values.flatten.any? { |known_platform| known_platform.name == platform_handler.name }
           @platform_handlers[platform_type] = [] unless @platform_handlers.key?(platform_type)
@@ -75,6 +89,28 @@ module HybridPlatformsConductor
     # * PlatformHandler or nil: Corresponding platform handler, or nil if none
     def platform(platform_name)
       @platform_handlers.values.flatten.find { |known_platform| known_platform.name == platform_name }
+    end
+
+    # Inject dependencies that can't be set at initialization time.
+    # This is due to the fact that a PlatformHandler is a single plugin handling both inventory and services from a single repository.
+    # If we split those plugins into an inventory-type plugin and service-type plugin, each part could be initialized without having cyclic dependencies.
+    # The inventory-type part does not need NodesHandler nor ActionsExecutor (as it would be used by NodesHandler).
+    # The service-type part would use NodesHandler and ActionsExecutor given to its initializer.
+    # TODO: Split this plugin type in 2 to avoid this late dependency injection.
+    #
+    # Parameters::
+    # * *nodes_handler* (NodesHandler): Nodes handler to be used. [default: NodesHandler.new]
+    # * *actions_executor* (ActionsExecutor): Actions Executor to be used. [default: ActionsExecutor.new]
+    def inject_dependencies(
+      nodes_handler: NodesHandler.new,
+      actions_executor: ActionsExecutor.new
+    )
+      @nodes_handler = nodes_handler
+      @actions_executor = actions_executor
+      @platform_handlers.values.flatten.each do |platform|
+        platform.nodes_handler = @nodes_handler
+        platform.actions_executor = @actions_executor
+      end
     end
 
   end

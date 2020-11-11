@@ -6,7 +6,7 @@ require 'hybrid_platforms_conductor/platform_handler'
 
 module HybridPlatformsConductor
 
-  # Provide utilities to handle Nodes configuration
+  # API to get information on our inventory: nodes and their metadata
   class NodesHandler
 
     include LoggerHelpers, ParallelThreads
@@ -51,8 +51,9 @@ module HybridPlatformsConductor
             logger: @logger,
             logger_stderr: @logger_stderr,
             config: @config,
-            nodes_handler: self,
-            cmd_runner: @cmd_runner
+            cmd_runner: @cmd_runner,
+            platforms_handler: @platforms_handler,
+            nodes_handler: self
           )
           @cmdbs_others << cmdb if cmdb.respond_to?(:get_others)
           cmdb.methods.each do |method|
@@ -108,7 +109,7 @@ module HybridPlatformsConductor
         out "* Known nodes with description:\n#{
           prefetch_metadata_of known_nodes, %i[hostname host_ip private_ips services description]
           known_nodes.map do |node|
-            "#{platform_for(node).name} - #{node} (#{
+            "#{node} (#{
               if get_hostname_of node
                 get_hostname_of node
               elsif get_host_ip_of node
@@ -132,12 +133,13 @@ module HybridPlatformsConductor
     # * *options_parser* (OptionParser): The option parser to complete
     # * *nodes_selectors* (Array): The list of nodes selectors that will be populated by parsing the options
     def options_parse_nodes_selectors(options_parser, nodes_selectors)
+      platform_names = @platforms_handler.known_platforms.map(&:name).sort
       options_parser.separator ''
       options_parser.separator 'Nodes selection options:'
       options_parser.on('-a', '--all-nodes', 'Select all nodes') do
         nodes_selectors << { all: true }
       end
-      options_parser.on('-b', '--nodes-platform PLATFORM', "Select nodes belonging to a given platform name. Available platforms are: #{known_platforms.sort.join(', ')} (can be used several times)") do |platform|
+      options_parser.on('-b', '--nodes-platform PLATFORM', "Select nodes belonging to a given platform name. Available platforms are: #{platform_names.join(', ')} (can be used several times)") do |platform|
         nodes_selectors << { platform: platform }
       end
       options_parser.on('-l', '--nodes-list LIST', 'Select nodes defined in a nodes list (can be used several times)') do |nodes_list|
@@ -153,7 +155,7 @@ module HybridPlatformsConductor
         '--nodes-git-impact GIT_IMPACT',
         'Select nodes impacted by a git diff from a platform (can be used several times).',
         'GIT_IMPACT has the format PLATFORM:FROM_COMMIT:TO_COMMIT:FLAGS',
-        "* PLATFORM: Name of the platform to check git diff from. Available platforms are: #{known_platforms.sort.join(', ')}",
+        "* PLATFORM: Name of the platform to check git diff from. Available platforms are: #{platform_names.join(', ')}",
         '* FROM_COMMIT: Commit ID or refspec from which we perform the diff. If ommitted, defaults to master',
         '* TO_COMMIT: Commit ID ot refspec to which we perform the diff. If ommitted, defaults to the currently checked-out files',
         '* FLAGS: Extra comma-separated flags. The following flags are supported:',
@@ -161,41 +163,13 @@ module HybridPlatformsConductor
       ) do |nodes_git_impact|
         platform_name, from_commit, to_commit, flags = nodes_git_impact.split(':')
         flags = (flags || '').split(',')
-        raise "Invalid platform in --nodes-git-impact: #{platform_name}. Possible values are: #{known_platforms.sort.join(', ')}." unless known_platforms.include?(platform_name)
+        raise "Invalid platform in --nodes-git-impact: #{platform_name}. Possible values are: #{platform_names.join(', ')}." unless platform_names.include?(platform_name)
         nodes_selector = { platform: platform_name }
         nodes_selector[:from_commit] = from_commit if from_commit && !from_commit.empty?
         nodes_selector[:to_commit] = to_commit if to_commit && !to_commit.empty?
         nodes_selector[:smallest_set] = true if flags.include?('min')
         nodes_selectors << { git_diff: nodes_selector }
       end
-    end
-
-    # Get the list of platform types
-    #
-    # Result::
-    # * Hash<Symbol,PlatformHandler>: List of platform types, with their correspoding PlatformHandler class
-    def platform_types
-      @platforms_handler.platform_types
-    end
-
-    # Get the list of known platform names
-    #
-    # Parameters::
-    # * *platform_type* (Symbol or nil): Required platform type, or nil fo all platforms [default: nil]
-    # Result::
-    # * Array<String>: List of platform names
-    def known_platforms(platform_type: nil)
-      @platforms_handler.known_platforms(platform_type: platform_type).map(&:name)
-    end
-
-    # Return the platform handler for a given platform name
-    #
-    # Parameters::
-    # * *platform_name* (String): The platform name
-    # Result::
-    # * PlatformHandler or nil: Corresponding platform handler, or nil if none
-    def platform(platform_name)
-      @platforms_handler.platform(platform_name)
     end
 
     # Get the list of known nodes
@@ -222,7 +196,7 @@ module HybridPlatformsConductor
     # Result::
     # * Array<String>: List of nodes
     def nodes_from_list(nodes_list, ignore_unknowns: false)
-      select_nodes(platform_for_list(nodes_list).nodes_selectors_from_nodes_list(nodes_list), ignore_unknowns: ignore_unknowns)
+      select_nodes(@nodes_list_platform[nodes_list].nodes_selectors_from_nodes_list(nodes_list), ignore_unknowns: ignore_unknowns)
     end
 
     # Get the list of known service names
@@ -232,26 +206,6 @@ module HybridPlatformsConductor
     def known_services
       prefetch_metadata_of known_nodes, :services
       known_nodes.map { |node| get_services_of node }.flatten.compact.uniq.sort
-    end
-
-    # Get the platform handler of a given node
-    #
-    # Parameters::
-    # * *node* (String): Node to get the platform for
-    # Result::
-    # * PlatformHandler: The corresponding platform handler
-    def platform_for(node)
-      @nodes_platform[node]
-    end
-
-    # Get the platform handler of a given nodes list
-    #
-    # Parameters::
-    # * *nodes_list* (String): Nodes list name
-    # Result::
-    # * PlatformHandler or nil: The corresponding platform handler, or nil if none
-    def platform_for_list(nodes_list)
-      @nodes_list_platform[nodes_list]
     end
 
     # Get a metadata property for a given node
@@ -440,7 +394,7 @@ module HybridPlatformsConductor
           string_nodes << nodes_selector
         else
           if nodes_selector.key?(:list)
-            platform = platform_for_list(nodes_selector[:list])
+            platform = @nodes_list_platform[nodes_selector[:list]]
             raise "Unknown nodes list: #{nodes_selector[:list]}" if platform.nil?
             string_nodes.concat(platform.nodes_selectors_from_nodes_list(nodes_selector[:list]))
           end
@@ -518,8 +472,8 @@ module HybridPlatformsConductor
     # * Array<String>: The list of services impacted by this diff
     # * Boolean: Are there some files that have a global impact (meaning all nodes are potentially impacted by this diff)?
     def impacted_nodes_from_git_diff(platform_name, from_commit: 'master', to_commit: nil, smallest_set: false)
-      platform = platform(platform_name)
-      raise "Unkown platform #{platform_name}. Possible platforms are #{known_platforms.sort.join(', ')}" if platform.nil?
+      platform = @platforms_handler.platform(platform_name)
+      raise "Unkown platform #{platform_name}. Possible platforms are #{@platforms_handler.known_platforms.map(&:name).sort.join(', ')}" if platform.nil?
       _exit_status, stdout, _stderr = @cmd_runner.run_cmd "cd #{platform.repository_path} && git --no-pager diff --no-color #{from_commit} #{to_commit.nil? ? '' : to_commit}", log_to_stdout: log_debug?
       # Parse the git diff output to create a structured diff
       # Hash< String, Hash< Symbol, Object > >: List of diffs info, per file name having a diff. Diffs info have the following properties:
@@ -582,7 +536,7 @@ module HybridPlatformsConductor
     # Result::
     # * Array< Hash<Symbol,Object> >: The selected configurations
     def select_confs_for_platform(platform_name, configs)
-      platform_nodes = platform(platform_name).known_nodes
+      platform_nodes = @platforms_handler.platform(platform_name).known_nodes
       configs.select { |config_info| (platform_nodes - select_from_nodes_selector_stack(config_info[:nodes_selectors_stack])).empty? }
     end
 

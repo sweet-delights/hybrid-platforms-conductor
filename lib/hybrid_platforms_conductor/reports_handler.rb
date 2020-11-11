@@ -20,14 +20,23 @@ module HybridPlatformsConductor
     # Constructor
     #
     # Parameters::
-    # * *logger* (Logger): Logger to be used [default = Logger.new(STDOUT)]
-    # * *logger_stderr* (Logger): Logger to be used for stderr [default = Logger.new(STDERR)]
+    # * *logger* (Logger): Logger to be used [default: Logger.new(STDOUT)]
+    # * *logger_stderr* (Logger): Logger to be used for stderr [default: Logger.new(STDERR)]
     # * *config* (Config): Config to be used. [default: Config.new]
+    # * *platforms_handler* (PlatformsHandler): Platforms handler to be used. [default = PlatformsHandler.new]
     # * *nodes_handler* (NodesHandler): Nodes handler to be used. [default = NodesHandler.new]
-    def initialize(logger: Logger.new(STDOUT), logger_stderr: Logger.new(STDERR), config: Config.new, nodes_handler: NodesHandler.new)
+    def initialize(
+      logger: Logger.new(STDOUT),
+      logger_stderr: Logger.new(STDERR),
+      config: Config.new,
+      platforms_handler: PlatformsHandler.new,
+      nodes_handler: NodesHandler.new
+    )
       init_loggers(logger, logger_stderr)
       @config = config
+      @platforms_handler = platforms_handler
       @nodes_handler = nodes_handler
+      @platforms_handler.inject_dependencies(nodes_handler: @nodes_handler, actions_executor: nil)
       # The list of reports plugins, with their associated class
       # Hash< Symbol, Class >
       @reports_plugins = Plugins.new(:report, logger: @logger, logger_stderr: @logger_stderr)
@@ -61,7 +70,13 @@ module HybridPlatformsConductor
     # * *nodes_selectors* (Array<Object>): List of nodes selectors to produce report for
     def produce_report_for(nodes_selectors)
       raise "Unknown locale for format #{@format}: #{@locale}" unless @reports_plugins[@format].supported_locales.include? @locale
-      @reports_plugins[@format].new(@logger, @logger_stderr, config: @config, nodes_handler: @nodes_handler).report_for(@nodes_handler.select_nodes(nodes_selectors), @locale)
+      @reports_plugins[@format].new(
+        logger: @logger,
+        logger_stderr: @logger_stderr,
+        config: @config,
+        platforms_handler: @platforms_handler,
+        nodes_handler: @nodes_handler
+      ).report_for(@nodes_handler.select_nodes(nodes_selectors), @locale)
     end
 
   end

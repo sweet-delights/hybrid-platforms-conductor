@@ -5,12 +5,12 @@ git_from = 'master'
 git_to = nil
 smallest_set = false
 platform = nil
-nodes_handler = nil
+platforms_handler = nil
 executable = HybridPlatformsConductor::Executable.new(nodes_selection_options: false) do |opts|
   opts.on('-f', '--from-commit COMMIT_ID', "Specify the GIT commit from which we look for diffs. Defaults to #{git_from}.") do |commit_id|
     git_from = commit_id
   end
-  opts.on('-p', '--platform PLATFORM_NAME', "Specify the repository on which to perform the diff. Possible values are #{nodes_handler.known_platforms.join(', ')}") do |platform_name|
+  opts.on('-p', '--platform PLATFORM_NAME', "Specify the repository on which to perform the diff. Possible values are #{platforms_handler.known_platforms.join(', ')}") do |platform_name|
     platform = platform_name
   end
   opts.on('-s', '--smallest-test-sample', 'Display the minimal set of nodes to check that would validate all modifications.') do
@@ -21,6 +21,7 @@ executable = HybridPlatformsConductor::Executable.new(nodes_selection_options: f
   end
 end
 nodes_handler = executable.nodes_handler
+platforms_handler = executable.platforms_handler
 cmd_runner = executable.cmd_runner
 executable.parse_options!
 raise 'No platform specified. Please use --platform option' if platform.nil?

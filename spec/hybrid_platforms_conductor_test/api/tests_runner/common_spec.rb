@@ -153,18 +153,18 @@ describe HybridPlatformsConductor::TestsRunner do
         [:several_tests, '', '', 'Global test'],
         [:several_tests, 'platform1', '', 'Platform test'],
         [:several_tests, 'platform2', '', 'Platform test'],
-        [:several_tests, 'platform1', 'node11', 'Node test'],
-        [:several_tests, 'platform1', 'node12', 'Node test'],
-        [:several_tests, 'platform2', 'node21', 'Node test'],
-        [:several_tests, 'platform2', 'node22', 'Node test'],
-        [:several_tests, 'platform1', 'node11', 'Node SSH test: stdout11 - stderr11'],
-        [:several_tests, 'platform1', 'node12', 'Node SSH test: stdout12 - stderr12'],
-        [:several_tests, 'platform2', 'node21', 'Node SSH test: stdout21 - stderr21'],
-        [:several_tests, 'platform2', 'node22', 'Node SSH test: stdout22 - stderr22'],
-        [:several_tests, 'platform1', 'node11', 'Node check-node test: node11 check ok'],
-        [:several_tests, 'platform1', 'node12', 'Node check-node test: node12 check ok'],
-        [:several_tests, 'platform2', 'node21', 'Node check-node test: node21 check ok'],
-        [:several_tests, 'platform2', 'node22', 'Node check-node test: node22 check ok']
+        [:several_tests, 'node11', 'Node test'],
+        [:several_tests, 'node12', 'Node test'],
+        [:several_tests, 'node21', 'Node test'],
+        [:several_tests, 'node22', 'Node test'],
+        [:several_tests, 'node11', 'Node SSH test: stdout11 - stderr11'],
+        [:several_tests, 'node12', 'Node SSH test: stdout12 - stderr12'],
+        [:several_tests, 'node21', 'Node SSH test: stdout21 - stderr21'],
+        [:several_tests, 'node22', 'Node SSH test: stdout22 - stderr22'],
+        [:several_tests, 'node11', 'Node check-node test: node11 check ok'],
+        [:several_tests, 'node12', 'Node check-node test: node12 check ok'],
+        [:several_tests, 'node21', 'Node check-node test: node21 check ok'],
+        [:several_tests, 'node22', 'Node check-node test: node22 check ok']
       ].sort
     end
   end

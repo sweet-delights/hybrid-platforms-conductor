@@ -2,19 +2,19 @@ describe HybridPlatformsConductor::PlatformHandler do
 
   it 'returns the correct platform type' do
     with_test_platform do
-      expect(test_nodes_handler.platform('platform').platform_type).to eq :test
+      expect(test_platforms_handler.platform('platform').platform_type).to eq :test
     end
   end
 
   it 'returns the correct path' do
     with_test_platform do
-      expect(test_nodes_handler.platform('platform').repository_path).to eq "#{Dir.tmpdir}/hpc_test/platform"
+      expect(test_platforms_handler.platform('platform').repository_path).to eq "#{Dir.tmpdir}/hpc_test/platform"
     end
   end
 
   it 'returns the correct info' do
     with_test_platform do
-      expect(test_nodes_handler.platform('platform').info).to eq(repo_name: 'platform')
+      expect(test_platforms_handler.platform('platform').info).to eq(repo_name: 'platform')
     end
   end
 
@@ -23,7 +23,7 @@ describe HybridPlatformsConductor::PlatformHandler do
       with_platforms "test_platform path: '#{repository}'" do
         register_platform_handlers test: HybridPlatformsConductorTest::PlatformHandlerPlugins::Test
         self.test_platforms_info = { 'my_remote_platform' => {} }
-        expect(test_nodes_handler.platform('my_remote_platform').name).to eq 'my_remote_platform'
+        expect(test_platforms_handler.platform('my_remote_platform').name).to eq 'my_remote_platform'
       end
     end
   end
@@ -33,7 +33,7 @@ describe HybridPlatformsConductor::PlatformHandler do
       with_platforms "test_platform path: '#{repository}'" do
         register_platform_handlers test: HybridPlatformsConductorTest::PlatformHandlerPlugins::Test
         self.test_platforms_info = { 'my_remote_platform' => {} }
-        expect(test_nodes_handler.platform('my_remote_platform').name).to eq 'my_remote_platform'
+        expect(test_platforms_handler.platform('my_remote_platform').name).to eq 'my_remote_platform'
       end
     end
   end
@@ -44,7 +44,7 @@ describe HybridPlatformsConductor::PlatformHandler do
         register_platform_handlers test: HybridPlatformsConductorTest::PlatformHandlerPlugins::Test
         self.test_platforms_info = { 'my_remote_platform' => {} }
         commit = Git.open(repository).log.first
-        expect(test_nodes_handler.platform('my_remote_platform').info).to eq(
+        expect(test_platforms_handler.platform('my_remote_platform').info).to eq(
           repo_name: 'my_remote_platform',
           status: {
             added_files: [],
@@ -84,7 +84,7 @@ describe HybridPlatformsConductor::PlatformHandler do
         git.add('added_file')
         git.remove('test_file_1')
         File.write("#{repository}/test_file_2", 'New content')
-        expect(test_nodes_handler.platform('my_remote_platform').info[:status]).to eq(
+        expect(test_platforms_handler.platform('my_remote_platform').info[:status]).to eq(
           added_files: ['added_file'],
           changed_files: ['test_file_2'],
           deleted_files: ['test_file_1'],

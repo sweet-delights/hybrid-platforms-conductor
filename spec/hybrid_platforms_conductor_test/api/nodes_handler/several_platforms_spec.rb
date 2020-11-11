@@ -2,32 +2,6 @@ describe HybridPlatformsConductor::NodesHandler do
 
   context 'checking aggregations across several platforms' do
 
-    it 'returns platforms' do
-      with_test_platforms('platform1' => {}, 'platform2' => {}) do
-        expect(test_nodes_handler.known_platforms.sort).to eq %w[platform1 platform2].sort
-      end
-    end
-
-    it 'returns platform handlers' do
-      with_test_platforms('platform1' => {}, 'platform2' => {}) do
-        expect(test_nodes_handler.platform('platform2').name).to eq 'platform2'
-      end
-    end
-
-    it 'returns different platform types with their corresponding PlatformHandler classes' do
-      with_test_platforms('platform1' => {}, 'platform2' => { platform_type: :test2 }) do
-        expect(test_nodes_handler.platform_types.keys.sort).to eq %i[test test2].sort
-        expect(test_nodes_handler.platform_types[:test]).to eq HybridPlatformsConductorTest::PlatformHandlerPlugins::Test
-        expect(test_nodes_handler.platform_types[:test2]).to eq HybridPlatformsConductorTest::PlatformHandlerPlugins::Test2
-      end
-    end
-
-    it 'returns platforms of a given platform type' do
-      with_test_platforms('platform1' => {}, 'platform2' => { platform_type: :test2 }, 'platform3' => {}) do
-        expect(test_nodes_handler.known_platforms(platform_type: :test2).sort).to eq ['platform2']
-      end
-    end
-
     it 'returns nodes' do
       with_test_platforms(
         'platform1' => { nodes: { 'node1' => {}, 'node2' => {} } },
@@ -76,24 +50,6 @@ describe HybridPlatformsConductor::NodesHandler do
         } }
       ) do
         expect(test_nodes_handler.known_services.sort).to eq %w[service1 service2 service3 service4].sort
-      end
-    end
-
-    it 'returns the correct platform for a given node' do
-      with_test_platforms(
-        'platform1' => { nodes: { 'node1' => {} } },
-        'platform2' => { nodes: { 'node2' => {} } }
-      ) do
-        expect(test_nodes_handler.platform_for('node2').name).to eq 'platform2'
-      end
-    end
-
-    it 'returns the correct platform for a given nodes list' do
-      with_test_platforms(
-        'platform1' => { nodes_lists: { 'nodeslist1' => [] } },
-        'platform2' => { nodes_lists: { 'nodeslist2' => [] } }
-      ) do
-        expect(test_nodes_handler.platform_for_list('nodeslist2').name).to eq 'platform2'
       end
     end
 

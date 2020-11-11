@@ -330,7 +330,7 @@ module HybridPlatformsConductor
           nodes.sort.each do |node|
             # Generate the conf for the node
             connection, gateway, gateway_user = connection_info_for(node)
-            config_content << "# #{node} - #{connection} - #{@nodes_handler.platform_for(node).repository_path} - #{@nodes_handler.get_description_of(node) || ''}\n"
+            config_content << "# #{node} - #{connection} - #{@nodes_handler.get_description_of(node) || ''}\n"
             config_content << "Host #{ssh_aliases_for(node).join(' ')}\n"
             config_content << "  Hostname #{connection}\n"
             config_content << "  ProxyCommand #{ssh_exec} -q -W %h:%p #{gateway_user}@#{gateway}\n" unless gateway.nil?

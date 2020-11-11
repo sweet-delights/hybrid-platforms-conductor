@@ -95,7 +95,7 @@ module HybridPlatformsConductorTest
             with_platform_to_deploy do
               local_testing = false
               test_platforms_info[platform_name][:prepare_deploy_for_local_testing] = proc { local_testing = true }
-              test_deployer.prepare_for_local_environment
+              test_deployer.local_environment = true
               expect(test_deployer.deploy_on('node')).to eq('node' => expected_deploy_result)
               expect(test_deployer.local_environment).to eq true
               expect(local_testing).to eq true
@@ -125,10 +125,10 @@ module HybridPlatformsConductorTest
               test_platforms_info[platform_name][:register_secrets] = proc { |secrets| registered_secrets << secrets }
               test_deployer.secrets = [{ 'secret1' => 'password1' }, { 'secret2' => 'password2' }]
               expect(test_deployer.deploy_on('node')).to eq('node' => expected_deploy_result)
-              expect(registered_secrets).to eq([
-                { 'secret1' => 'password1' },
-                { 'secret2' => 'password2' }
-              ])
+              expect(registered_secrets).to eq([{
+                'secret1' => 'password1',
+                'secret2' => 'password2'
+              }])
             end
           end
 
@@ -141,7 +141,7 @@ module HybridPlatformsConductorTest
               FileUtils.mkdir_p certs_dir
               File.write("#{certs_dir}/test_cert.crt", 'Hello')
               ENV['hpc_certificates'] = certs_dir
-              test_deployer.prepare_for_local_environment
+              test_deployer.local_environment = true
               expected_actions = [
                 # First run, we expect the mutex to be setup, and the deployment actions to be run
                 proc do |actions_per_nodes|
@@ -192,7 +192,7 @@ module HybridPlatformsConductorTest
               File.write("#{certs_dir}/test_cert.crt", 'Hello')
               ENV['hpc_certificates'] = certs_dir
               test_actions_executor.connector(:ssh).ssh_user = 'root'
-              test_deployer.prepare_for_local_environment
+              test_deployer.local_environment = true
               expected_actions = [
                 # First run, we expect the mutex to be setup, and the deployment actions to be run
                 proc do |actions_per_nodes|
@@ -232,7 +232,7 @@ module HybridPlatformsConductorTest
               FileUtils.mkdir_p certs_dir
               File.write("#{certs_dir}/test_cert.crt", 'Hello')
               ENV['hpc_certificates'] = certs_dir
-              test_deployer.prepare_for_local_environment
+              test_deployer.local_environment = true
               expected_actions = [
                 # First run, we expect the mutex to be setup, and the deployment actions to be run
                 proc do |actions_per_nodes|
@@ -273,7 +273,7 @@ module HybridPlatformsConductorTest
               File.write("#{certs_dir}/test_cert.crt", 'Hello')
               ENV['hpc_certificates'] = certs_dir
               test_actions_executor.connector(:ssh).ssh_user = 'root'
-              test_deployer.prepare_for_local_environment
+              test_deployer.local_environment = true
               expected_actions = [
                 # First run, we expect the mutex to be setup, and the deployment actions to be run
                 proc do |actions_per_nodes|

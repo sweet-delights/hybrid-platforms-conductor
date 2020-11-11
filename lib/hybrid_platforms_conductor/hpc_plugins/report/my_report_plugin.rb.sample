@@ -69,10 +69,9 @@ module HybridPlatformsConductor
           when :en
             output << 'A nice report'
           end
-          @nodes_handler.known_platforms.each do |platform|
-            platform_handler = nodes_handler.platform(platform)
-            output << "= Report for platform #{platform_handler.repository_path} of type #{platform_handler.platform_type}:"
-            platform_handler.known_nodes.each do |node|
+          @platforms_handler.known_platforms.each do |platform|
+            output << "= Report for platform #{platform.repository_path} of type #{platform.platform_type}:"
+            platform.known_nodes.each do |node|
               output << "== Report for node #{node}:"
               output << @nodes_handler.get_description_of node
             end

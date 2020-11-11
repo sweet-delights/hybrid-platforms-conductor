@@ -46,7 +46,7 @@ module HybridPlatformsConductor
                   ignored_tasks = @nodes_handler.select_confs_for_node(@node, @config.ignored_idempotence_tasks).inject({}) do |merged_ignored_tasks, conf|
                     merged_ignored_tasks.merge(conf[:ignored_tasks])
                   end
-                  @nodes_handler.platform_for(@node).parse_deploy_output(stdout, stderr).each do |task_info|
+                  @deployer.parse_deploy_output(@node, stdout, stderr).each do |task_info|
                     if task_info[:status] == :changed
                       if ignored_tasks.key?(task_info[:name])
                         # It was expected that this task is not idempotent

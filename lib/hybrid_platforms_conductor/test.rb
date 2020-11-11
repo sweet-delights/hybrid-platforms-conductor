@@ -43,7 +43,7 @@ module HybridPlatformsConductor
     # * *nodes_handler* (NodesHandler): Nodes handler that can be used by tests
     # * *deployer* (Deployer): Deployer that can be used by tests
     # * *name* (String): Name of the test being instantiated [default: 'unknown_test']
-    # * *platform* (PlatformHandler): Platform handler for which the test is instantiated, or nil if global [default: nil]
+    # * *platform* (PlatformHandler): Platform handler for which the test is instantiated, or nil if global or node specific [default: nil]
     # * *node* (String): Node name for which the test is instantiated, or nil if global or platform specific [default: nil]
     # * *expected_failure* (String or nil): Expected failure, or nil if not expected to fail [default: nil]
     def initialize(logger, logger_stderr, config, cmd_runner, nodes_handler, deployer, name: 'unknown_test', platform: nil, node: nil, expected_failure: nil)
@@ -65,12 +65,12 @@ module HybridPlatformsConductor
     # * String: Identifier of this test
     def to_s
       test_desc =
-        if platform.nil?
-          'Global'
-        elsif node.nil?
+        if !node.nil?
+          "Node #{@node}"
+        elsif !platform.nil?
           "Platform #{@platform.name}"
         else
-          "Node #{@node} (#{@platform.name})"
+          'Global'
         end
       "#< Test #{name} - #{test_desc} >"
     end

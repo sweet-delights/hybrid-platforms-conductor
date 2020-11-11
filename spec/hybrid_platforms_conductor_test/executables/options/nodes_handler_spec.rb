@@ -90,14 +90,14 @@ node21
 node22
 
 * Known nodes with description:
-platform_1 - node11 (192.168.42.11) - service1 - 
-platform_1 - node12 (192.168.42.12) - service1 - Node12 description
-platform_1 - node13 (192.168.42.13) - service2 - 
-platform_1 - node14 (192.168.42.14) -  - 
-platform_1 - node15 (my_host15.my_domain) -  - 
-platform_1 - node16 (my_host16.my_domain) -  - 
-platform_2 - node21 (192.168.42.21) - service2, service3 - 
-platform_2 - node22 (192.168.42.22) - service1 - 
+node11 (192.168.42.11) - service1 - 
+node12 (192.168.42.12) - service1 - Node12 description
+node13 (192.168.42.13) - service2 - 
+node14 (192.168.42.14) -  - 
+node15 (my_host15.my_domain) -  - 
+node16 (my_host16.my_domain) -  - 
+node21 (192.168.42.21) - service2, service3 - 
+node22 (192.168.42.22) - service1 - 
 
 '
       )

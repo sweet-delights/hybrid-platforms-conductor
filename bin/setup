@@ -2,13 +2,10 @@
 require 'hybrid_platforms_conductor/executable'
 
 executable = HybridPlatformsConductor::Executable.new(nodes_selection_options: false)
-cmd_runner = executable.cmd_runner
-nodes_handler = executable.nodes_handler
+platforms_handler = executable.platforms_handler
 
 executable.parse_options!
 
-nodes_handler.known_platforms.each do |platform|
-  platform_handler = nodes_handler.platform(platform)
-  platform_handler.cmd_runner = cmd_runner
-  platform_handler.setup
+platforms_handler.known_platforms.each do |platform|
+  platform.setup
 end

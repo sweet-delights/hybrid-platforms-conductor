@@ -11,9 +11,8 @@ module HybridPlatformsConductor
 
         # Check my_test_plugin.rb.sample documentation for signature details.
         def test
-          nodes_handler = NodesHandler.new
-          example_platform = nodes_handler.known_platforms.first
-          example_node = nodes_handler.platform(example_platform).known_nodes.first
+          example_platform = PlatformsHandler.new.known_platforms.first
+          example_node = example_platform.known_nodes.first
         	[
             "#{CmdRunner.executables_prefix}check-node --node #{example_node} --show-commands",
             "#{CmdRunner.executables_prefix}deploy --node #{example_node} --show-commands --why-run",

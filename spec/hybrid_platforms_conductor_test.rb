@@ -34,6 +34,7 @@ require 'hybrid_platforms_conductor_test/helpers/platforms_handler_helpers'
 require 'hybrid_platforms_conductor_test/helpers/plugins_helpers'
 require 'hybrid_platforms_conductor_test/helpers/provisioner_proxmox_helpers'
 require 'hybrid_platforms_conductor_test/helpers/reports_handler_helpers'
+require 'hybrid_platforms_conductor_test/helpers/services_handler_helpers'
 require 'hybrid_platforms_conductor_test/helpers/tests_runner_helpers'
 require 'hybrid_platforms_conductor_test/platform_handler_plugins/test'
 require 'hybrid_platforms_conductor_test/platform_handler_plugins/test2'
@@ -67,15 +68,20 @@ module HybridPlatformsConductorTest
     include PluginsHelpers
     include ProvisionerProxmoxHelpers
     include ReportsHandlerHelpers
+    include ServicesHandlerHelpers
     include TestsRunnerHelpers
 
     # Make sure the tested components are being reset before each test case
     RSpec.configure do |config|
       config.before(:each) do
-        @nodes_handler = nil
-        @cmd_runner = nil
         @actions_executor = nil
+        @cmd_runner = nil
+        @config = nil
         @deployer = nil
+        @nodes_handler = nil
+        @platforms_handler = nil
+        @reports_handler = nil
+        @services_handler = nil
         @tests_runner = nil
         ENV.delete 'hpc_platforms'
         ENV.delete 'hpc_ssh_gateways_conf'
@@ -89,7 +95,7 @@ module HybridPlatformsConductorTest
         ENV.delete 'hpc_certificates'
         # Set the necessary Hybrid Platforms Conductor environment variables
         ENV['hpc_ssh_user'] = 'test_user'
-        HybridPlatformsConductor::Deployer.packaged_platforms.clear
+        HybridPlatformsConductor::ServicesHandler.packaged_platforms.clear
         HybridPlatformsConductorTest::TestAction.reset
         HybridPlatformsConductorTest::PlatformHandlerPlugins::Test.reset
         HybridPlatformsConductorTest::PlatformHandlerPlugins::Test2.reset

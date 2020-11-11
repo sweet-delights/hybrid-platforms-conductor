@@ -40,7 +40,7 @@ module HybridPlatformsConductor
             nodes.sort.each do |node|
               table << [
                 node,
-                @nodes_handler.platform_for(node).name,
+                @platforms_handler.known_platforms.find { |platform| platform.known_nodes.include?(node) }&.name,
                 @nodes_handler.get_hostname_of(node),
                 @nodes_handler.get_host_ip_of(node),
                 @nodes_handler.get_physical_of(node) ? 'Yes' : 'No',

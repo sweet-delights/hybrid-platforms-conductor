@@ -55,6 +55,7 @@ module HybridPlatformsConductor
         end
 
         # Get a specific property for a given set of nodes.
+        # [API] - @platforms_handler can be used.
         # [API] - @nodes_handler can be used.
         # [API] - @cmd_runner can be used.
         #
@@ -72,6 +73,7 @@ module HybridPlatformsConductor
         end
 
         # Get a specific property for a given set of nodes.
+        # [API] - @platforms_handler can be used.
         # [API] - @nodes_handler can be used.
         # [API] - @cmd_runner can be used.
         #
@@ -96,6 +98,7 @@ module HybridPlatformsConductor
         # As the nodes_handler can't know in advance which properties will be returned, it will call it every time there is a missing property.
         # If this method always returns the same values, it would be clever to cache it here.
         # [API] - This method is optional.
+        # [API] - @platforms_handler can be used.
         # [API] - @nodes_handler can be used.
         # [API] - @cmd_runner can be used.
         #

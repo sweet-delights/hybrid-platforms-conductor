@@ -80,10 +80,10 @@ describe HybridPlatformsConductor::TestsRunner do
         test_tests_runner.run_tests [{ all: true }]
         expect(HybridPlatformsConductorTest::TestsReportPlugin.reports.size).to eq 1
         expect(HybridPlatformsConductorTest::TestsReportPlugin.reports.first[:node_tests].sort).to eq [
-          [:node_test, true, 'platform1', 'node11'],
-          [:node_test, true, 'platform1', 'node12'],
-          [:node_test, true, 'platform2', 'node21'],
-          [:node_test, true, 'platform2', 'node22']
+          [:node_test, true, 'node11'],
+          [:node_test, true, 'node12'],
+          [:node_test, true, 'node21'],
+          [:node_test, true, 'node22']
         ].sort
       end
     end
@@ -95,10 +95,10 @@ describe HybridPlatformsConductor::TestsRunner do
         test_tests_runner.run_tests [{ all: true }]
         expect(HybridPlatformsConductorTest::TestsReportPlugin.reports.size).to eq 1
         expect(HybridPlatformsConductorTest::TestsReportPlugin.reports.first[:node_tests].sort).to eq [
-          [:node_test, true, 'platform1', 'node11'],
-          [:node_test, true, 'platform1', 'node12', ['Uncaught exception during test: Failing test node_test for node12']],
-          [:node_test, true, 'platform2', 'node21'],
-          [:node_test, true, 'platform2', 'node22', ['Uncaught exception during test: Failing test node_test for node22']]
+          [:node_test, true, 'node11'],
+          [:node_test, true, 'node12', ['Uncaught exception during test: Failing test node_test for node12']],
+          [:node_test, true, 'node21'],
+          [:node_test, true, 'node22', ['Uncaught exception during test: Failing test node_test for node22']]
         ].sort
       end
     end
@@ -123,10 +123,10 @@ describe HybridPlatformsConductor::TestsRunner do
         test_tests_runner.run_tests [{ all: true }]
         expect(HybridPlatformsConductorTest::TestsReportPlugin.reports.size).to eq 1
         expect(HybridPlatformsConductorTest::TestsReportPlugin.reports.first[:node_tests].sort).to eq [
-          [:node_ssh_test, true, 'platform1', 'node11'],
-          [:node_ssh_test, true, 'platform1', 'node12'],
-          [:node_ssh_test, true, 'platform2', 'node21'],
-          [:node_ssh_test, true, 'platform2', 'node22']
+          [:node_ssh_test, true, 'node11'],
+          [:node_ssh_test, true, 'node12'],
+          [:node_ssh_test, true, 'node21'],
+          [:node_ssh_test, true, 'node22']
         ].sort
       end
     end
@@ -151,10 +151,10 @@ describe HybridPlatformsConductor::TestsRunner do
         test_tests_runner.run_tests [{ all: true }]
         expect(HybridPlatformsConductorTest::TestsReportPlugin.reports.size).to eq 1
         expect(HybridPlatformsConductorTest::TestsReportPlugin.reports.first[:node_tests].sort).to eq [
-          [:node_ssh_test, true, 'platform1', 'node11'],
-          [:node_ssh_test, true, 'platform1', 'node12', ['Command \'test_node12.sh\' returned error code 1']],
-          [:node_ssh_test, true, 'platform2', 'node21'],
-          [:node_ssh_test, true, 'platform2', 'node22', ['Command \'test_node22.sh\' returned error code 2']]
+          [:node_ssh_test, true, 'node11'],
+          [:node_ssh_test, true, 'node12', ['Command \'test_node12.sh\' returned error code 1']],
+          [:node_ssh_test, true, 'node21'],
+          [:node_ssh_test, true, 'node22', ['Command \'test_node22.sh\' returned error code 2']]
         ].sort
       end
     end
@@ -173,10 +173,10 @@ describe HybridPlatformsConductor::TestsRunner do
         test_tests_runner.run_tests [{ all: true }]
         expect(HybridPlatformsConductorTest::TestsReportPlugin.reports.size).to eq 1
         expect(HybridPlatformsConductorTest::TestsReportPlugin.reports.first[:node_tests].sort).to eq [
-          [:node_check_test, true, 'platform1', 'node11'],
-          [:node_check_test, true, 'platform1', 'node12'],
-          [:node_check_test, true, 'platform2', 'node21'],
-          [:node_check_test, true, 'platform2', 'node22']
+          [:node_check_test, true, 'node11'],
+          [:node_check_test, true, 'node12'],
+          [:node_check_test, true, 'node21'],
+          [:node_check_test, true, 'node22']
         ].sort
       end
     end
@@ -195,10 +195,10 @@ describe HybridPlatformsConductor::TestsRunner do
         test_tests_runner.run_tests [{ all: true }]
         expect(HybridPlatformsConductorTest::TestsReportPlugin.reports.size).to eq 1
         expect(HybridPlatformsConductorTest::TestsReportPlugin.reports.first[:node_tests].sort).to eq [
-          [:node_check_test, true, 'platform1', 'node11'],
-          [:node_check_test, true, 'platform1', 'node12', ['Check-node returned error code 1']],
-          [:node_check_test, true, 'platform2', 'node21', ['Check-node returned error code 2']],
-          [:node_check_test, true, 'platform2', 'node22']
+          [:node_check_test, true, 'node11'],
+          [:node_check_test, true, 'node12', ['Check-node returned error code 1']],
+          [:node_check_test, true, 'node21', ['Check-node returned error code 2']],
+          [:node_check_test, true, 'node22']
         ].sort
       end
     end
@@ -261,18 +261,18 @@ describe HybridPlatformsConductor::TestsRunner do
         ].sort
         # There are 3 node tests for each node: 1 for SSH, 1 for check-node and 1 normal
         expect(first_report[:node_tests].sort).to eq [
-          [:several_tests, true, 'platform1', 'node11'],
-          [:several_tests, true, 'platform1', 'node12'],
-          [:several_tests, true, 'platform2', 'node21'],
-          [:several_tests, true, 'platform2', 'node22'],
-          [:several_tests, true, 'platform1', 'node11'],
-          [:several_tests, true, 'platform1', 'node12'],
-          [:several_tests, true, 'platform2', 'node21'],
-          [:several_tests, true, 'platform2', 'node22'],
-          [:several_tests, true, 'platform1', 'node11'],
-          [:several_tests, true, 'platform1', 'node12'],
-          [:several_tests, true, 'platform2', 'node21'],
-          [:several_tests, true, 'platform2', 'node22']
+          [:several_tests, true, 'node11'],
+          [:several_tests, true, 'node12'],
+          [:several_tests, true, 'node21'],
+          [:several_tests, true, 'node22'],
+          [:several_tests, true, 'node11'],
+          [:several_tests, true, 'node12'],
+          [:several_tests, true, 'node21'],
+          [:several_tests, true, 'node22'],
+          [:several_tests, true, 'node11'],
+          [:several_tests, true, 'node12'],
+          [:several_tests, true, 'node21'],
+          [:several_tests, true, 'node22']
         ].sort
       end
     end
@@ -286,17 +286,13 @@ describe HybridPlatformsConductor::TestsRunner do
         }
         test_tests_runner.run_tests [{ all: true }]
         expect(HybridPlatformsConductorTest::TestsReportPlugin.reports.size).to eq 1
-        errors_per_platform_and_test = HybridPlatformsConductorTest::TestsReportPlugin.reports.first[:errors_per_platform_and_test]
-        expect(errors_per_platform_and_test.size).to eq 2
-        expect(errors_per_platform_and_test['platform1'].size).to eq 1
-        expect(errors_per_platform_and_test['platform1'][:node_test].sort).to eq [
-          'Uncaught exception during test: Failing test node_test for node12'
-        ].sort
-        expect(errors_per_platform_and_test['platform2'].size).to eq 2
-        expect(errors_per_platform_and_test['platform2'][:node_test].sort).to eq [
+        errors_per_test = HybridPlatformsConductorTest::TestsReportPlugin.reports.first[:errors_per_test]
+        expect(errors_per_test.size).to eq 2
+        expect(errors_per_test[:node_test].sort).to eq [
+          'Uncaught exception during test: Failing test node_test for node12',
           'Uncaught exception during test: Failing test node_test for node22'
         ].sort
-        expect(errors_per_platform_and_test['platform2'][:node_test_2].sort).to eq [
+        expect(errors_per_test[:node_test_2].sort).to eq [
           'Uncaught exception during test: Failing test node_test_2 for node21',
           'Uncaught exception during test: Failing test node_test_2 for node22'
         ].sort

@@ -54,23 +54,30 @@ module HybridPlatformsConductor
     #   Symbol
     attr_reader :platform_type
 
-    # Before deploying, need to set the command runner and Actions Executor in case the plugins need them
-    attr_accessor :cmd_runner, :actions_executor
+    # Before deploying, need to set some components in case the plugins need them
+    attr_accessor :nodes_handler, :actions_executor
 
     # Constructor
     #
     # Parameters::
-    # * *logger* (Logger): Logger to be used
-    # * *logger_stderr* (Logger): Logger to be used for stderr
-    # * *config* (Config): Config to be used.
     # * *platform_type* (Symbol): Platform type
     # * *repository_path* (String): Repository path
-    # * *nodes_handler* (NodesHandler): Nodes handler that can be used to get info about nodes.
-    def initialize(logger, logger_stderr, config, platform_type, repository_path, nodes_handler)
+    # * *logger* (Logger): Logger to be used [default: Logger.new(STDOUT)]
+    # * *logger_stderr* (Logger): Logger to be used for stderr [default: Logger.new(STDERR)]
+    # * *config* (Config): Config to be used. [default: Config.new]
+    # * *cmd_runner* (CmdRunner): Command executor to be used. [default: CmdRunner.new]
+    def initialize(
+      platform_type,
+      repository_path,
+      logger: Logger.new(STDOUT),
+      logger_stderr: Logger.new(STDERR),
+      config: Config.new,
+      cmd_runner: CmdRunner.new
+    )
       super(logger: logger, logger_stderr: logger_stderr, config: config)
       @platform_type = platform_type
       @repository_path = repository_path
-      @nodes_handler = nodes_handler
+      @cmd_runner = cmd_runner
       self.init if self.respond_to?(:init)
     end
 
