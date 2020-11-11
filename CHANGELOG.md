@@ -1,3 +1,9 @@
+# [25.10.0](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv25.9.0&sourceBranch=refs%2Ftags%2Fv25.10.0) (2020-11-11)
+
+### New features
+
+* [Feature] Separated the platforms handling part from the NodesHandler to create the new PlatformsHandler API ([92b64d9c](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/commits/92b64d9cce343b54c84b970dd5bcb2eceba74598))
+
 # [25.9.0](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv25.8.0&sourceBranch=refs%2Ftags%2Fv25.9.0) (2020-11-11)
 
 ### New features
