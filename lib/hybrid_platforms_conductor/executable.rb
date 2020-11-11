@@ -30,7 +30,6 @@ module HybridPlatformsConductor
     # * *check_options* (Boolean): Do we offer check/why-run options? [default: true]
     # * *nodes_selection_options* (Boolean): Do we offer nodes selection options? [default: true]
     # * *parallel_options* (Boolean): Do we offer parallel options? [default: true]
-    # * *plugins_options* (Boolean): Do we offer plugins options? [default: true]
     # * *timeout_options* (Boolean): Do we offer timeout options? [default: true]
     # * *deploy_options* (Boolean): Do we offer deploy options? [default: true]
     # * *logger* (Logger): The stdout logger to be used [default: Logger.new(STDOUT, level: :info)]
@@ -42,7 +41,6 @@ module HybridPlatformsConductor
       check_options: true,
       nodes_selection_options: true,
       parallel_options: true,
-      plugins_options: true,
       timeout_options: true,
       deploy_options: true,
       logger: Logger.new(STDOUT, level: :info),
@@ -53,7 +51,6 @@ module HybridPlatformsConductor
       @check_options = check_options
       @nodes_selection_options = nodes_selection_options
       @parallel_options = parallel_options
-      @plugins_options = plugins_options
       @timeout_options = timeout_options
       @deploy_options = deploy_options
       @opts_block = opts_block
@@ -186,7 +183,6 @@ module HybridPlatformsConductor
         @deployer.options_parse(
           opts,
           parallel_switch: @parallel_options,
-          plugins_options: @plugins_options,
           timeout_options: @timeout_options,
           why_run_switch: @check_options
         ) if @deployer && @deploy_options
