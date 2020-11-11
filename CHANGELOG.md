@@ -1,3 +1,9 @@
+# [25.9.0](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv25.8.0&sourceBranch=refs%2Ftags%2Fv25.9.0) (2020-11-11)
+
+### New features
+
+* [Feature] Add name helper in Platform Handler ([7ceef3e7](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/commits/7ceef3e7d2ae5472847f5425b32acb848a42eb9d))
+
 # [25.8.0](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv25.7.0&sourceBranch=refs%2Ftags%2Fv25.8.0) (2020-10-26)
 
 ### New features
