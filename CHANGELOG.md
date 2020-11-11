@@ -1,3 +1,10 @@
+# [28.0.0](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv27.0.0&sourceBranch=refs%2Ftags%2Fv28.0.0) (2020-11-11)
+
+### Breaking changes
+
+* [Breaking] Removed allow_deploy_non_master from Deployer's API ([02ec3c23](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/commits/02ec3c238781b38fae00cd6256b8e5cc12ea39ee))
+* [Breaking] Removed platforms concepts from NodesHandler API and make sure components use a new ServicesHandler to handle services that can be deployed on our platforms ([ec0b14b0](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/commits/ec0b14b0af25af141dbae1d8bfacd44a31c00d02))
+
 # [27.0.0](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv26.0.0&sourceBranch=refs%2Ftags%2Fv27.0.0) (2020-11-11)
 
 ### Breaking changes
