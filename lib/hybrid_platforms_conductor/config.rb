@@ -11,8 +11,24 @@ module HybridPlatformsConductor
     include LoggerHelpers, Cleanroom
 
     class << self
+
       # Array<Symbol>: List of mixin initializers to call
       attr_accessor :mixin_initializers
+
+      # Extend the config DSL used when parsing the hpc_config.rb file with a given Mixin.
+      # This can be used by any plugin to add plugin-specific configuration in the hpc_config.rb file.
+      #
+      # Parameters::
+      # * *mixin* (Module): Mixin to add to the Platforms DSL
+      # * *init_method* (Symbol or nil): The initializer method of this Mixin, or nil if none [default = nil]
+      def extend_config_dsl_with(mixin, init_method = nil)
+        include mixin
+        @mixin_initializers << init_method unless init_method.nil?
+        mixin.instance_methods.each do |method_name|
+          expose method_name unless method_name == init_method
+        end
+      end
+
     end
     @mixin_initializers = []
 
@@ -20,10 +36,6 @@ module HybridPlatformsConductor
     #   String
     attr_reader :hybrid_platforms_dir
     expose :hybrid_platforms_dir
-
-    # List of platforms repository directories, per platform type
-    #   Hash<Symbol, Array<String> >
-    attr_reader :platform_dirs
 
     # List of expected failures info. Each info has the following properties:
     # * *nodes_selectors_stack* (Array<Object>): Stack of nodes selectors impacted by this expected failure
@@ -50,18 +62,13 @@ module HybridPlatformsConductor
     # * *logger_stderr* (Logger): Logger to be used for stderr [default = Logger.new(STDERR)]
     def initialize(logger: Logger.new(STDOUT), logger_stderr: Logger.new(STDERR))
       init_loggers(logger, logger_stderr)
+      @hybrid_platforms_dir = File.expand_path(ENV['hpc_platforms'].nil? ? '.' : ENV['hpc_platforms'])
       # Stack of the nodes selectors scopes
       # Array< Object >
       @nodes_selectors_stack = []
-      @hybrid_platforms_dir = File.expand_path(ENV['hpc_platforms'].nil? ? '.' : ENV['hpc_platforms'])
       # List of OS image directories, per image name
       # Hash<Symbol, String>
       @os_images = {}
-      # Directory in which platforms are cloned
-      @git_platforms_dir = "#{@hybrid_platforms_dir}/cloned_platforms"
-      # List of platforms repository directories, per platform type
-      # Hash<Symbol, Array<String> >
-      @platform_dirs = {}
       # Plugin ID of the tests provisioner
       # Symbol
       @tests_provisioner = :docker

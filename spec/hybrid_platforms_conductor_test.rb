@@ -1,6 +1,7 @@
 require 'fileutils'
 require 'tmpdir'
 require 'hybrid_platforms_conductor/config'
+require 'hybrid_platforms_conductor/platforms_handler'
 require 'hybrid_platforms_conductor/actions_executor'
 require 'hybrid_platforms_conductor/cmd_runner'
 require 'hybrid_platforms_conductor/deployer'
@@ -29,6 +30,7 @@ require 'hybrid_platforms_conductor_test/helpers/deployer_test_helpers'
 require 'hybrid_platforms_conductor_test/helpers/executables_helpers'
 require 'hybrid_platforms_conductor_test/helpers/nodes_handler_helpers'
 require 'hybrid_platforms_conductor_test/helpers/platform_handler_helpers'
+require 'hybrid_platforms_conductor_test/helpers/platforms_handler_helpers'
 require 'hybrid_platforms_conductor_test/helpers/plugins_helpers'
 require 'hybrid_platforms_conductor_test/helpers/provisioner_proxmox_helpers'
 require 'hybrid_platforms_conductor_test/helpers/reports_handler_helpers'
@@ -61,6 +63,7 @@ module HybridPlatformsConductorTest
     include ExecutablesHelpers
     include NodesHandlerHelpers
     include PlatformHandlerHelpers
+    include PlatformsHandlerHelpers
     include PluginsHelpers
     include ProvisionerProxmoxHelpers
     include ReportsHandlerHelpers

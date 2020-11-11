@@ -6,23 +6,6 @@ describe HybridPlatformsConductor::Config do
     end
   end
 
-  it 'returns platform directories along with platform types' do
-    with_test_platforms(
-      'platform1' => { platform_type: :test },
-      'platform2' => { platform_type: :test2 },
-      'platform3' => { platform_type: :test }
-    ) do |repositories|
-      expect(test_config.platform_dirs.keys.sort).to eq %i[test test2].sort
-      expect(test_config.platform_dirs[:test].sort).to eq [
-        repositories['platform1'],
-        repositories['platform3']
-      ].sort
-      expect(test_config.platform_dirs[:test2].sort).to eq [
-        repositories['platform2']
-      ].sort
-    end
-  end
-
   it 'returns 1 defined OS image' do
     with_platforms 'os_image :image1, \'/path/to/image1\'' do
       expect(test_config.known_os_images).to eq [:image1]

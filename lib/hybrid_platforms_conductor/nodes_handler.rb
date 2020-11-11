@@ -11,10 +11,6 @@ module HybridPlatformsConductor
 
     include LoggerHelpers, ParallelThreads
 
-    # The list of registered platform handler classes, per platform type.
-    #   Hash<Symbol,Class>
-    attr_reader :platform_types
-
     # Constructor
     #
     # Parameters::
@@ -22,23 +18,24 @@ module HybridPlatformsConductor
     # * *logger_stderr* (Logger): Logger to be used for stderr [default: Logger.new(STDERR)]
     # * *config* (Config): Config to be used. [default: Config.new]
     # * *cmd_runner* (CmdRunner): Command executor to be used. [default: CmdRunner.new]
-    def initialize(logger: Logger.new(STDOUT), logger_stderr: Logger.new(STDERR), config: Config.new, cmd_runner: CmdRunner.new)
+    # * *platforms_handler* (PlatformsHandler): Platforms Handler to be used. [default: PlatformsHandler.new]
+    def initialize(
+      logger: Logger.new(STDOUT),
+      logger_stderr: Logger.new(STDERR),
+      config: Config.new,
+      cmd_runner: CmdRunner.new,
+      platforms_handler: PlatformsHandler.new
+    )
       init_loggers(logger, logger_stderr)
       @config = config
       @cmd_runner = cmd_runner
-      @platform_types = Plugins.new(:platform_handler, logger: @logger, logger_stderr: @logger_stderr)
-      # Keep a list of instantiated platform handlers per platform type
-      # Hash<Symbol, Array<PlatformHandler> >
-      @platform_handlers = {}
+      @platforms_handler = platforms_handler
       # List of platform handler per known node
       # Hash<String, PlatformHandler>
       @nodes_platform = {}
       # List of platform handler per known nodes list
       # Hash<String, PlatformHandler>
       @nodes_list_platform = {}
-      # List of platform handler per platform name
-      # Hash<String, PlatformHandler>
-      @platforms = {}
       # List of CMDBs getting a property, per property name
       # Hash<Symbol, Array<Cmdb> >
       @cmdbs_per_property = {}
@@ -74,24 +71,17 @@ module HybridPlatformsConductor
       # The metadata update is protected by a mutex to make it thread-safe
       @metadata_mutex = Mutex.new
       # Read all platforms from the config
-      @config.platform_dirs.each do |platform_type, repositories|
-        repositories.each do |repository_path|
-          platform_handler = @platform_types[platform_type].new(@logger, @logger_stderr, @config, platform_type, repository_path, self)
-          @platform_handlers[platform_type] = [] unless @platform_handlers.key?(platform_type)
-          @platform_handlers[platform_type] << platform_handler
-          raise "Platform name #{platform_handler.name} is declared several times." if @platforms.key?(platform_handler.name)
-          @platforms[platform_handler.name] = platform_handler
-          # Register all known nodes for this platform
-          platform_handler.known_nodes.each do |node|
-            raise "Can't register #{node} to platform #{repository_path}, as it is already defined in platform #{@nodes_platform[node].repository_path}." if @nodes_platform.key?(node)
-            @nodes_platform[node] = platform_handler
-          end
-          # Register all known nodes lists
-          platform_handler.known_nodes_lists.each do |nodes_list|
-            raise "Can't register nodes list #{nodes_list} to platform #{repository_path}, as it is already defined in platform #{@nodes_list_platform[nodes_list].repository_path}." if @nodes_list_platform.key?(nodes_list)
-            @nodes_list_platform[nodes_list] = platform_handler
-          end if platform_handler.respond_to?(:known_nodes_lists)
+      @platforms_handler.known_platforms.each do |platform|
+        # Register all known nodes for this platform
+        platform.known_nodes.each do |node|
+          raise "Can't register #{node} to platform #{platform.repository_path}, as it is already defined in platform #{@nodes_platform[node].repository_path}." if @nodes_platform.key?(node)
+          @nodes_platform[node] = platform
         end
+        # Register all known nodes lists
+        platform.known_nodes_lists.each do |nodes_list|
+          raise "Can't register nodes list #{nodes_list} to platform #{platform.repository_path}, as it is already defined in platform #{@nodes_list_platform[nodes_list].repository_path}." if @nodes_list_platform.key?(nodes_list)
+          @nodes_list_platform[nodes_list] = platform
+        end if platform.respond_to?(:known_nodes_lists)
       end
     end
 
@@ -104,9 +94,8 @@ module HybridPlatformsConductor
       options_parser.separator 'Nodes handler options:'
       options_parser.on('-o', '--show-nodes', 'Display the list of possible nodes and exit') do
         out "* Known platforms:\n#{
-          known_platforms.map do |platform|
-            platform_handler = platform(platform)
-            "#{platform_handler.name} - Type: #{platform_handler.platform_type} - Location: #{platform_handler.repository_path}"
+          @platforms_handler.known_platforms.map do |platform|
+            "#{platform.name} - Type: #{platform.platform_type} - Location: #{platform.repository_path}"
           end.sort.join("\n")
         }"
         out
@@ -148,7 +137,7 @@ module HybridPlatformsConductor
       options_parser.on('-a', '--all-nodes', 'Select all nodes') do
         nodes_selectors << { all: true }
       end
-      options_parser.on('-b', '--nodes-platform PLATFORM', "Select nodes belonging to a given platform name. Available platforms are: #{@platforms.keys.sort.join(', ')} (can be used several times)") do |platform|
+      options_parser.on('-b', '--nodes-platform PLATFORM', "Select nodes belonging to a given platform name. Available platforms are: #{known_platforms.sort.join(', ')} (can be used several times)") do |platform|
         nodes_selectors << { platform: platform }
       end
       options_parser.on('-l', '--nodes-list LIST', 'Select nodes defined in a nodes list (can be used several times)') do |nodes_list|
@@ -164,7 +153,7 @@ module HybridPlatformsConductor
         '--nodes-git-impact GIT_IMPACT',
         'Select nodes impacted by a git diff from a platform (can be used several times).',
         'GIT_IMPACT has the format PLATFORM:FROM_COMMIT:TO_COMMIT:FLAGS',
-        "* PLATFORM: Name of the platform to check git diff from. Available platforms are: #{@platforms.keys.sort.join(', ')}",
+        "* PLATFORM: Name of the platform to check git diff from. Available platforms are: #{known_platforms.sort.join(', ')}",
         '* FROM_COMMIT: Commit ID or refspec from which we perform the diff. If ommitted, defaults to master',
         '* TO_COMMIT: Commit ID ot refspec to which we perform the diff. If ommitted, defaults to the currently checked-out files',
         '* FLAGS: Extra comma-separated flags. The following flags are supported:',
@@ -172,13 +161,21 @@ module HybridPlatformsConductor
       ) do |nodes_git_impact|
         platform_name, from_commit, to_commit, flags = nodes_git_impact.split(':')
         flags = (flags || '').split(',')
-        raise "Invalid platform in --nodes-git-impact: #{platform_name}. Possible values are: #{@platforms.keys.sort.join(', ')}." unless @platforms.key?(platform_name)
+        raise "Invalid platform in --nodes-git-impact: #{platform_name}. Possible values are: #{known_platforms.sort.join(', ')}." unless known_platforms.include?(platform_name)
         nodes_selector = { platform: platform_name }
         nodes_selector[:from_commit] = from_commit if from_commit && !from_commit.empty?
         nodes_selector[:to_commit] = to_commit if to_commit && !to_commit.empty?
         nodes_selector[:smallest_set] = true if flags.include?('min')
         nodes_selectors << { git_diff: nodes_selector }
       end
+    end
+
+    # Get the list of platform types
+    #
+    # Result::
+    # * Hash<Symbol,PlatformHandler>: List of platform types, with their correspoding PlatformHandler class
+    def platform_types
+      @platforms_handler.platform_types
     end
 
     # Get the list of known platform names
@@ -188,11 +185,7 @@ module HybridPlatformsConductor
     # Result::
     # * Array<String>: List of platform names
     def known_platforms(platform_type: nil)
-      if platform_type.nil?
-        @platforms.keys
-      else
-        (@platform_handlers[platform_type] || []).map { |platform_handler| platform_handler.info[:repo_name] }
-      end
+      @platforms_handler.known_platforms(platform_type: platform_type).map(&:name)
     end
 
     # Return the platform handler for a given platform name
@@ -202,7 +195,7 @@ module HybridPlatformsConductor
     # Result::
     # * PlatformHandler or nil: Corresponding platform handler, or nil if none
     def platform(platform_name)
-      @platforms[platform_name]
+      @platforms_handler.platform(platform_name)
     end
 
     # Get the list of known nodes
@@ -451,7 +444,7 @@ module HybridPlatformsConductor
             raise "Unknown nodes list: #{nodes_selector[:list]}" if platform.nil?
             string_nodes.concat(platform.nodes_selectors_from_nodes_list(nodes_selector[:list]))
           end
-          string_nodes.concat(@platforms[nodes_selector[:platform]].known_nodes) if nodes_selector.key?(:platform)
+          string_nodes.concat(@platforms_handler.platform(nodes_selector[:platform]).known_nodes) if nodes_selector.key?(:platform)
           if nodes_selector.key?(:service)
             prefetch_metadata_of known_nodes, :services
             string_nodes.concat(known_nodes.select { |node| (get_services_of(node) || []).include?(nodes_selector[:service]) })
@@ -526,7 +519,7 @@ module HybridPlatformsConductor
     # * Boolean: Are there some files that have a global impact (meaning all nodes are potentially impacted by this diff)?
     def impacted_nodes_from_git_diff(platform_name, from_commit: 'master', to_commit: nil, smallest_set: false)
       platform = platform(platform_name)
-      raise "Unkown platform #{platform_name}. Possible platforms are #{@platforms.keys.sort.join(', ')}" if platform.nil?
+      raise "Unkown platform #{platform_name}. Possible platforms are #{known_platforms.sort.join(', ')}" if platform.nil?
       _exit_status, stdout, _stderr = @cmd_runner.run_cmd "cd #{platform.repository_path} && git --no-pager diff --no-color #{from_commit} #{to_commit.nil? ? '' : to_commit}", log_to_stdout: log_debug?
       # Parse the git diff output to create a structured diff
       # Hash< String, Hash< Symbol, Object > >: List of diffs info, per file name having a diff. Diffs info have the following properties:

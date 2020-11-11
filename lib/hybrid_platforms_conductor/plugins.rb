@@ -41,6 +41,7 @@ module HybridPlatformsConductor
       key?
       keys
       select
+      to_hash
       values
     ]
 
