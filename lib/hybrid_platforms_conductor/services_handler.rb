@@ -56,7 +56,6 @@ module HybridPlatformsConductor
     # * *nodes* (Array<String>): Nodes for which we deploy
     # * *secrets* (Hash): Secrets to be used for deployment
     # * *why_run* (Boolean): Are we in why-run mode?
-    # * *allow_deploy_non_master* (Boolean): Do we allow deployment of non-master branches?
     # * *local_environment* (Boolean): Are we deployment to a local environment?
     # Result::
     # * Boolean: Is the configuration already packaged for a given deployment?
@@ -64,7 +63,6 @@ module HybridPlatformsConductor
       nodes:,
       secrets:,
       why_run:,
-      allow_deploy_non_master:,
       local_environment:
     )
       # So far we only mimick the same deployment behaviour as before, with the same checks of package reusability done in the package method.
@@ -78,13 +76,11 @@ module HybridPlatformsConductor
     # * *nodes* (Array<String>): Nodes for which we deploy
     # * *secrets* (Hash): Secrets to be used for deployment
     # * *why_run* (Boolean): Are we in why-run mode?
-    # * *allow_deploy_non_master* (Boolean): Do we allow deployment of non-master branches?
     # * *local_environment* (Boolean): Are we deployment to a local environment?
     def package(
       nodes:,
       secrets:,
       why_run:,
-      allow_deploy_non_master:,
       local_environment:
     )
       # Get the platforms that are impacted
@@ -95,7 +91,7 @@ module HybridPlatformsConductor
           platform.prepare_deploy_for_local_testing
         end
       end
-      if !why_run && !allow_deploy_non_master
+      if !why_run && !local_environment
         # Check that master is checked out correctly before deploying.
         # Check it on every platform having at least 1 node to be deployed.
         platforms.each do |platform|

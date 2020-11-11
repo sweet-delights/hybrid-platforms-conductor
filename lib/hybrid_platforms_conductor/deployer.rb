@@ -36,11 +36,6 @@ module HybridPlatformsConductor
     #   Array<Hash>
     attr_accessor :secrets
 
-    # Do we allow deploying branches that are not master? [default = false]
-    # !!! This switch should only be used for testing.
-    #   Boolean
-    attr_accessor :allow_deploy_non_master
-
     # Are we deploying in a local environment?
     #   Boolean
     attr_accessor :local_environment
@@ -75,7 +70,6 @@ module HybridPlatformsConductor
       @actions_executor = actions_executor
       @services_handler = services_handler
       @secrets = []
-      @allow_deploy_non_master = false
       @provisioners = Plugins.new(:provisioner, logger: @logger, logger_stderr: @logger_stderr)
       # Default values
       @use_why_run = false
@@ -172,7 +166,6 @@ module HybridPlatformsConductor
           nodes: nodes,
           secrets: secrets,
           why_run: @use_why_run,
-          allow_deploy_non_master: @allow_deploy_non_master,
           local_environment: @local_environment
         )
           section 'Packaging deployment' do
@@ -180,7 +173,6 @@ module HybridPlatformsConductor
               nodes: nodes,
               secrets: secrets,
               why_run: @use_why_run,
-              allow_deploy_non_master: @allow_deploy_non_master,
               local_environment: @local_environment
             )
           end
@@ -295,7 +287,6 @@ module HybridPlatformsConductor
           # Setup test environment for this container
           actions_executor.connector(:ssh).ssh_user = 'root'
           actions_executor.connector(:ssh).passwords[node] = 'root_pwd'
-          deployer.allow_deploy_non_master = true
           deployer.local_environment = true
           # Ignore secrets that might have been given: in Docker containers we always use dummy secrets
           deployer.secrets = [JSON.parse(File.read("#{@config.hybrid_platforms_dir}/dummy_secrets.json"))]
