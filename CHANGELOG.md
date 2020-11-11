@@ -1,3 +1,9 @@
+# [26.0.0](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv25.10.0&sourceBranch=refs%2Ftags%2Fv26.0.0) (2020-11-11)
+
+### Breaking changes
+
+* [Breaking] Remove feature about PlatformHandler-specific command-line options for deployers ([f4006fb7](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/commits/f4006fb7e7b02b1191131291018eeb4b39ff3dd0))
+
 # [25.10.0](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv25.9.0&sourceBranch=refs%2Ftags%2Fv25.10.0) (2020-11-11)
 
 ### New features
