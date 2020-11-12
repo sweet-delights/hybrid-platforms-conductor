@@ -1,3 +1,9 @@
+# [29.0.0](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv28.1.0&sourceBranch=refs%2Ftags%2Fv29.0.0) (2020-11-11)
+
+### Breaking changes
+
+* [Breaking] Better and simpler packaging process ([3f8a755e](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/commits/3f8a755e16d374c23e512bbe87f5bc91a41b01d7))
+
 # [28.1.0](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv28.0.0&sourceBranch=refs%2Ftags%2Fv28.1.0) (2020-11-11)
 
 ### New features
