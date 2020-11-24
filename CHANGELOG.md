@@ -1,3 +1,9 @@
+# [30.0.0](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv29.0.0&sourceBranch=refs%2Ftags%2Fv30.0.0) (2020-11-24)
+
+### Breaking changes
+
+* [Breaking] Display deployed services in place of repositories' commits in last_deploys ([ba9b793f](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/commits/ba9b793f28dc12739485c2e45ad6b9bdb7a2ed51))
+
 # [29.0.0](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv28.1.0&sourceBranch=refs%2Ftags%2Fv29.0.0) (2020-11-11)
 
 ### Breaking changes
