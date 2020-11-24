@@ -1,3 +1,9 @@
+# [31.0.0](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv30.0.0&sourceBranch=refs%2Ftags%2Fv31.0.0) (2020-11-24)
+
+### Breaking changes
+
+* [Breaking] ServicesHandler can now deploy any service on any node ([a11d02ce](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/commits/a11d02ce284fd6ab4aa7e5a5a66b0f44e988e08b))
+
 # [30.0.0](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv29.0.0&sourceBranch=refs%2Ftags%2Fv30.0.0) (2020-11-24)
 
 ### Breaking changes
