@@ -5,7 +5,7 @@ describe HybridPlatformsConductor::Deployer do
     deploy_specs_for(check_mode: false)
 
     it 'deploys correct logs information on 1 node' do
-      with_test_platform({ nodes: { 'node' => {} } }, true) do |repository|
+      with_test_platform({ nodes: { 'node' => { services: %w[service1 service2] } } }, true) do |repository|
         FileUtils.touch "#{repository}/new_file"
         with_connections_mocked_on ['node'] do
           test_actions_executor.connector(:ssh).ssh_user = 'test_user'
@@ -27,6 +27,7 @@ describe HybridPlatformsConductor::Deployer do
                 commit_id: Git.open(repository).log.first.sha,
                 commit_message: 'Test commit',
                 diff_files: 'new_file',
+                services: 'service1, service2',
                 exit_status: '0'
               )
               expect_actions_to_upload_logs(actions_per_nodes, 'node')
@@ -38,7 +39,7 @@ describe HybridPlatformsConductor::Deployer do
     end
 
     it 'deploys correct logs information on 1 node even when there is a failing deploy' do
-      with_test_platform({ nodes: { 'node' => {} } }, true) do |repository|
+      with_test_platform({ nodes: { 'node' => { services: %w[service1 service2] } } }, true) do |repository|
         FileUtils.touch "#{repository}/new_file"
         with_connections_mocked_on ['node'] do
           test_actions_executor.connector(:ssh).ssh_user = 'test_user'
@@ -66,6 +67,7 @@ describe HybridPlatformsConductor::Deployer do
                 commit_id: Git.open(repository).log.first.sha,
                 commit_message: 'Test commit',
                 diff_files: 'new_file',
+                services: 'service1, service2',
                 exit_status: 'failed_action'
               )
               expect_actions_to_upload_logs(actions_per_nodes, 'node')

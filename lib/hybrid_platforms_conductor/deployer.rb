@@ -359,19 +359,23 @@ module HybridPlatformsConductor
             else
               stdout_lines.each do |line|
                 if line =~ /^([^:]+): (.+)$/
-                  key, value = $1, $2
+                  key, value = $1.to_sym, $2
+                  # Type-cast some values
                   case key
-                  when 'date'
+                  when :date
+                    # Date and time values
                     # Thu Nov 23 18:43:01 UTC 2017
-                    deploy_info[:date] = Time.parse(value)
-                  when 'debug'
+                    deploy_info[key] = Time.parse(value)
+                  when :debug
+                    # Boolean values
                     # Yes
-                    deploy_info[:debug] = (value == 'Yes')
-                  when 'diff_files'
+                    deploy_info[key] = (value == 'Yes')
+                  when :diff_files, :services
+                    # Array of strings
                     # my_file.txt, other_file.txt
-                    deploy_info[:diff_files] = value.split(', ')
+                    deploy_info[key] = value.split(', ')
                   else
-                    deploy_info[key.to_sym] = value
+                    deploy_info[key] = value
                   end
                 else
                   deploy_info[:unknown_lines] = [] unless deploy_info.key?(:unknown_lines)
@@ -561,6 +565,7 @@ module HybridPlatformsConductor
                   date: now.strftime('%F %T'),
                   user: ssh_user,
                   debug: log_debug? ? 'Yes' : 'No',
+                  services: (@nodes_handler.get_services_of(node) || []).join(', '),
                   exit_status: exit_status
                 ).map { |property, value| "#{property}: #{value}" }.join("\n") +
                   "\n===== STDOUT =====\n" +

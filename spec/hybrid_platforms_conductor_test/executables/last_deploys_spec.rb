@@ -20,41 +20,33 @@ describe 'last_deploys executable' do
           'node2' => { remote_bash: "cd /var/log/deployments && ls -t | head -1 | xargs sed '/===== STDOUT =====/q'" }
         )
         {
-          'node1' => [0, "
-date: 2019-08-21 10:12:15
-user: admin_user1
-debug: Yes
-repo_name: node1_repo
-commit_id: abcde1
-commit_message: Commit message 1
-diff_files:
-", ''],
-          'node2' => [0, "
-date: 2019-08-22 10:12:15
-user: admin_user2
-debug: Yes
-repo_name: node2_repo
-commit_id: abcde2
-commit_message: Commit message 2
-diff_files: some_file
-", '']
+          'node1' => [0, <<~EOS, ''],
+            date: 2019-08-21 10:12:15
+            user: admin_user1
+            services: service1
+          EOS
+          'node2' => [0, <<~EOS, '']
+            date: 2019-08-22 10:12:15
+            user: admin_user2
+            services: service1, service2
+          EOS
         }
       end])
       exit_code, stdout, stderr = run 'last_deploys'
       expect(exit_code).to eq 0
-      expect(stdout).to eq(
-        "+-------+---------------------+-------------+------------+------------------+-----------------+-------+\n" +
-        "| Node  | Date                | Admin       | Repository | Commit message   | Differing files | Error |\n" +
-        "+-------+---------------------+-------------+------------+------------------+-----------------+-------+\n" +
-        "| node1 | 2019-08-21 10:12:15 | admin_user1 | node1_repo | Commit message 1 |                 |       |\n" +
-        "| node2 | 2019-08-22 10:12:15 | admin_user2 | node2_repo | Commit message 2 | 1               |       |\n" +
-        "+-------+---------------------+-------------+------------+------------------+-----------------+-------+\n"
-      )
+      expect(stdout).to eq(<<~EOS)
+        +-------+---------------------+-------------+--------------------+-------+
+        | Node  | Date                | Admin       | Services           | Error |
+        +-------+---------------------+-------------+--------------------+-------+
+        | node1 | 2019-08-21 10:12:15 | admin_user1 | service1           |       |
+        | node2 | 2019-08-22 10:12:15 | admin_user2 | service1, service2 |       |
+        +-------+---------------------+-------------+--------------------+-------+
+      EOS
       expect(stderr).to eq ''
     end
   end
 
-  it 'sorts results by repo_name' do
+  it 'sorts results by user' do
     with_test_platform_for_last_deploys do
       expect_actions_executor_runs([proc do |actions, timeout: nil, concurrent: false, log_to_dir: 'run_logs', log_to_stdout: true|
         expect(actions).to eq(
@@ -62,41 +54,33 @@ diff_files: some_file
           'node2' => { remote_bash: "cd /var/log/deployments && ls -t | head -1 | xargs sed '/===== STDOUT =====/q'" }
         )
         {
-          'node1' => [0, "
-date: 2019-08-21 10:12:15
-user: admin_user1
-debug: Yes
-repo_name: node1_repo
-commit_id: abcde1
-commit_message: Commit message 1
-diff_files:
-", ''],
-          'node2' => [0, "
-date: 2019-08-22 10:12:15
-user: admin_user2
-debug: Yes
-repo_name: node2_repo
-commit_id: abcde2
-commit_message: Commit message 2
-diff_files: some_file
-", '']
+          'node1' => [0, <<~EOS, ''],
+            date: 2019-08-21 10:12:15
+            user: admin_user2
+            services: service1
+          EOS
+          'node2' => [0, <<~EOS, '']
+            date: 2019-08-22 10:12:15
+            user: admin_user1
+            services: service1, service2
+          EOS
         }
       end])
-      exit_code, stdout, stderr = run 'last_deploys', '--sort-by', 'repo_name'
+      exit_code, stdout, stderr = run 'last_deploys', '--sort-by', 'user'
       expect(exit_code).to eq 0
-      expect(stdout).to eq(
-        "+-------+---------------------+-------------+------------+------------------+-----------------+-------+\n" +
-        "| Node  | Date                | Admin       | Repository | Commit message   | Differing files | Error |\n" +
-        "+-------+---------------------+-------------+------------+------------------+-----------------+-------+\n" +
-        "| node1 | 2019-08-21 10:12:15 | admin_user1 | node1_repo | Commit message 1 |                 |       |\n" +
-        "| node2 | 2019-08-22 10:12:15 | admin_user2 | node2_repo | Commit message 2 | 1               |       |\n" +
-        "+-------+---------------------+-------------+------------+------------------+-----------------+-------+\n"
-      )
+      expect(stdout).to eq(<<~EOS)
+        +-------+---------------------+-------------+--------------------+-------+
+        | Node  | Date                | Admin       | Services           | Error |
+        +-------+---------------------+-------------+--------------------+-------+
+        | node2 | 2019-08-22 10:12:15 | admin_user1 | service1, service2 |       |
+        | node1 | 2019-08-21 10:12:15 | admin_user2 | service1           |       |
+        +-------+---------------------+-------------+--------------------+-------+
+      EOS
       expect(stderr).to eq ''
     end
   end
 
-  it 'sorts results by repo_name descending' do
+  it 'sorts results by user descending' do
     with_test_platform_for_last_deploys do
       expect_actions_executor_runs([proc do |actions, timeout: nil, concurrent: false, log_to_dir: 'run_logs', log_to_stdout: true|
         expect(actions).to eq(
@@ -104,65 +88,84 @@ diff_files: some_file
           'node2' => { remote_bash: "cd /var/log/deployments && ls -t | head -1 | xargs sed '/===== STDOUT =====/q'" }
         )
         {
-          'node1' => [0, "
-date: 2019-08-21 10:12:15
-user: admin_user1
-debug: Yes
-repo_name: node1_repo
-commit_id: abcde1
-commit_message: Commit message 1
-diff_files:
-", ''],
-          'node2' => [0, "
-date: 2019-08-22 10:12:15
-user: admin_user2
-debug: Yes
-repo_name: node2_repo
-commit_id: abcde2
-commit_message: Commit message 2
-diff_files: some_file
-", '']
+          'node1' => [0, <<~EOS, ''],
+            date: 2019-08-21 10:12:15
+            user: admin_user2
+            services: service1
+          EOS
+          'node2' => [0, <<~EOS, '']
+            date: 2019-08-22 10:12:15
+            user: admin_user1
+            services: service1, service2
+          EOS
         }
       end])
-      exit_code, stdout, stderr = run 'last_deploys', '--sort-by', 'repo_name_desc'
+      exit_code, stdout, stderr = run 'last_deploys', '--sort-by', 'user_desc'
       expect(exit_code).to eq 0
-      expect(stdout).to eq(
-        "+-------+---------------------+-------------+------------+------------------+-----------------+-------+\n" +
-        "| Node  | Date                | Admin       | Repository | Commit message   | Differing files | Error |\n" +
-        "+-------+---------------------+-------------+------------+------------------+-----------------+-------+\n" +
-        "| node2 | 2019-08-22 10:12:15 | admin_user2 | node2_repo | Commit message 2 | 1               |       |\n" +
-        "| node1 | 2019-08-21 10:12:15 | admin_user1 | node1_repo | Commit message 1 |                 |       |\n" +
-        "+-------+---------------------+-------------+------------+------------------+-----------------+-------+\n"
-      )
+      expect(stdout).to eq(<<~EOS)
+        +-------+---------------------+-------------+--------------------+-------+
+        | Node  | Date                | Admin       | Services           | Error |
+        +-------+---------------------+-------------+--------------------+-------+
+        | node1 | 2019-08-21 10:12:15 | admin_user2 | service1           |       |
+        | node2 | 2019-08-22 10:12:15 | admin_user1 | service1, service2 |       |
+        +-------+---------------------+-------------+--------------------+-------+
+      EOS
       expect(stderr).to eq ''
     end
   end
 
-  it 'checks the selected nodes' do
+  it 'displays only the selected nodes' do
     with_test_platform_for_last_deploys do
       expect_actions_executor_runs([proc do |actions, timeout: nil, concurrent: false, log_to_dir: 'run_logs', log_to_stdout: true|
         expect(actions).to eq('node1' => { remote_bash: "cd /var/log/deployments && ls -t | head -1 | xargs sed '/===== STDOUT =====/q'" })
         {
-          'node1' => [0, "
-date: 2019-08-21 10:12:15
-user: admin_user1
-debug: Yes
-repo_name: node1_repo
-commit_id: abcde1
-commit_message: Commit message 1
-diff_files:
-", '']
+          'node1' => [0, <<~EOS, ''],
+            date: 2019-08-21 10:12:15
+            user: admin_user1
+            services: service1
+          EOS
         }
       end])
       exit_code, stdout, stderr = run 'last_deploys', '--node', 'node1'
       expect(exit_code).to eq 0
-      expect(stdout).to eq(
-        "+-------+---------------------+-------------+------------+------------------+-----------------+-------+\n" +
-        "| Node  | Date                | Admin       | Repository | Commit message   | Differing files | Error |\n" +
-        "+-------+---------------------+-------------+------------+------------------+-----------------+-------+\n" +
-        "| node1 | 2019-08-21 10:12:15 | admin_user1 | node1_repo | Commit message 1 |                 |       |\n" +
-        "+-------+---------------------+-------------+------------+------------------+-----------------+-------+\n"
-      )
+      expect(stdout).to eq(<<~EOS)
+        +-------+---------------------+-------------+----------+-------+
+        | Node  | Date                | Admin       | Services | Error |
+        +-------+---------------------+-------------+----------+-------+
+        | node1 | 2019-08-21 10:12:15 | admin_user1 | service1 |       |
+        +-------+---------------------+-------------+----------+-------+
+      EOS
+      expect(stderr).to eq ''
+    end
+  end
+
+  it 'displays errors when we can\'t get info from some nodes' do
+    with_test_platform_for_last_deploys do
+      expect_actions_executor_runs([proc do |actions, timeout: nil, concurrent: false, log_to_dir: 'run_logs', log_to_stdout: true|
+        expect(actions).to eq(
+          'node1' => { remote_bash: "cd /var/log/deployments && ls -t | head -1 | xargs sed '/===== STDOUT =====/q'" },
+          'node2' => { remote_bash: "cd /var/log/deployments && ls -t | head -1 | xargs sed '/===== STDOUT =====/q'" }
+        )
+        {
+          'node1' => [:connection_error, 'Error on stdout', 'Error on stderr'],
+          'node2' => [0, <<~EOS, '']
+            date: 2019-08-22 10:12:15
+            user: admin_user1
+            services: service1, service2
+          EOS
+        }
+      end])
+      exit_code, stdout, stderr = run 'last_deploys', '--sort-by', 'user_desc'
+      expect(exit_code).to eq 0
+      expect(stdout).to eq(<<~EOS)
+        +-------+---------------------+-------------+--------------------+-------------------------+
+        | Node  | Date                | Admin       | Services           | Error                   |
+        +-------+---------------------+-------------+--------------------+-------------------------+
+        | node2 | 2019-08-22 10:12:15 | admin_user1 | service1, service2 |                         |
+        | node1 |                     |             |                    | Error: connection_error |
+        |       |                     |             |                    | Error on stderr         |
+        +-------+---------------------+-------------+--------------------+-------------------------+
+      EOS
       expect(stderr).to eq ''
     end
   end
