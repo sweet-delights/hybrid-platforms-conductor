@@ -9,6 +9,35 @@ module HybridPlatformsConductor
   # API to get information on our inventory: nodes and their metadata
   class NodesHandler
 
+    # Extend the Config DSL
+    module ConfigDSLExtension
+
+      # List of CMDB masters. Each info has the following properties:
+      # * *nodes_selectors_stack* (Array<Object>): Stack of nodes selectors impacted by this rule.
+      # * *cmdb_masters* (Hash< Symbol, Array<Symbol> >): List of metadata properties per CMDB name considered as master for those properties.
+      # Array< Hash<Symbol, Object> >
+      attr_reader :cmdb_masters
+
+      # Mixin initializer
+      def init_nodes_handler_config
+        @cmdb_masters = []
+      end
+
+      # Set CMDB masters
+      #
+      # Parameters::
+      # * *master_cmdbs_info* (Hash< Symbol, Symbol or Array<Symbol> >): List of metadata properties (or single one) per CMDB name considered as master for those properties.
+      def master_cmdbs(master_cmdbs_info)
+        @cmdb_masters << {
+          cmdb_masters: Hash[master_cmdbs_info.map { |cmdb, properties| [cmdb, properties.is_a?(Array) ? properties : [properties]] }],
+          nodes_selectors_stack: current_nodes_selectors_stack
+        }
+      end
+
+    end
+
+    Config.extend_config_dsl_with ConfigDSLExtension, :init_nodes_handler_config
+
     include LoggerHelpers, ParallelThreads
 
     # Constructor
@@ -71,6 +100,9 @@ module HybridPlatformsConductor
       @metadata = {}
       # The metadata update is protected by a mutex to make it thread-safe
       @metadata_mutex = Mutex.new
+      # Cache of CMDB masters, per property, per node
+      # Hash< String, Hash< Symbol, Cmdb > >
+      @cmdb_masters_cache = {}
       # Read all platforms from the config
       @platforms_handler.known_platforms.each do |platform|
         # Register all known nodes for this platform
@@ -298,26 +330,32 @@ module HybridPlatformsConductor
           updated_metadata = {}
           (
             (@cmdbs_per_property.key?(property) ? @cmdbs_per_property[property] : []).map { |cmdb| [cmdb, property] } +
-            @cmdbs_others.map { |cmdb| [cmdb, :others] }
+              @cmdbs_others.map { |cmdb| [cmdb, :others] }
           ).each do |(cmdb, cmdb_property)|
-            # Check first if this property depends on other ones for this cmdb
-            if cmdb.respond_to?(:property_dependencies)
-              property_deps = cmdb.property_dependencies
-              prefetch_metadata_of missing_nodes, property_deps[property] if property_deps.key?(property)
+            # If among the missing nodes some of them have some master CMDB declared for this property, filter them out unless we are dealing with their master CMDB.
+            nodes_to_query = missing_nodes.select do |node|
+              master_cmdb = cmdb_master_for(node, property)
+              master_cmdb.nil? || master_cmdb == cmdb
             end
-            cmdb_log_header = "[CMDB #{cmdb.class.name.split('::').last}.#{cmdb_property}] -"
-            log_debug "#{cmdb_log_header} Query #{missing_nodes.size} nodes to find property #{property}..."
-            # Property values, per node name
-            # Hash< String, Object >
-            metadata_from_cmdb = Hash[
-              cmdb.send("get_#{cmdb_property}".to_sym, missing_nodes, @metadata.slice(*missing_nodes)).map do |node, cmdb_result|
-                [node, cmdb_property == :others ? cmdb_result[property] : cmdb_result]
+            unless nodes_to_query.empty?
+              # Check first if this property depends on other ones for this cmdb
+              if cmdb.respond_to?(:property_dependencies)
+                property_deps = cmdb.property_dependencies
+                prefetch_metadata_of nodes_to_query, property_deps[property] if property_deps.key?(property)
               end
-            ].compact
-            log_debug "#{cmdb_log_header} Found metadata for #{metadata_from_cmdb.size} nodes."
-            updated_metadata.merge!(metadata_from_cmdb) do |node, existing_value, new_value|
-              raise "#{cmdb_log_header} Returned a conflicting value for metadata #{property} of node #{node}: #{new_value} whereas the value was already set to #{existing_value}" if !existing_value.nil? && new_value != existing_value
-              new_value
+              # Property values, per node name
+              # Hash< String, Object >
+              metadata_from_cmdb = Hash[
+                cmdb.send("get_#{cmdb_property}".to_sym, nodes_to_query, @metadata.slice(*nodes_to_query)).map do |node, cmdb_result|
+                  [node, cmdb_property == :others ? cmdb_result[property] : cmdb_result]
+                end
+              ].compact
+              cmdb_log_header = "[CMDB #{cmdb.class.name.split('::').last}.#{cmdb_property}] -"
+              log_debug "#{cmdb_log_header} Query property #{property} for #{nodes_to_query.size} nodes (#{nodes_to_query[0..7].join(', ')}...) => Found metadata for #{metadata_from_cmdb.size} nodes."
+              updated_metadata.merge!(metadata_from_cmdb) do |node, existing_value, new_value|
+                raise "#{cmdb_log_header} Returned a conflicting value for metadata #{property} of node #{node}: #{new_value} whereas the value was already set to #{existing_value}" if !existing_value.nil? && new_value != existing_value
+                new_value
+              end
             end
           end
           # Avoid conflicts in metadata while merging and make sure this update is thread-safe
@@ -521,6 +559,37 @@ module HybridPlatformsConductor
     # * Array<String>: List of nodes
     def select_from_nodes_selector_stack(nodes_selector_stack)
       nodes_selector_stack.inject(known_nodes) { |selected_nodes, nodes_selector| selected_nodes & select_nodes(nodes_selector) }
+    end
+
+    private
+
+    # Get the CMDB master for a given property.
+    # Keep a cache of the masters for performance, as this can be called very often and multi-threaded.
+    #
+    # Parameters::
+    # * *node* (String): Node for which we want the CMDB master
+    # * *property* (Symbol): The property for which we search a CMDB master
+    # Result::
+    # * Cmdb or nil: CMDB, or nil if none
+    def cmdb_master_for(node, property)
+      unless @cmdb_masters_cache.key?(node)
+        # CMDB master per property name
+        # Hash< Symbol, Cmdb >
+        cmdb_masters_cache = {}
+        select_confs_for_node(node, @config.cmdb_masters).each do |cmdb_masters_info|
+          cmdb_masters_info[:cmdb_masters].each do |cmdb, properties|
+            properties.each do |property|
+              raise "Property #{property} have conflicting CMDB masters for #{node} declared in the configuration: #{cmdb_masters_cache[property].class.name} and #{@cmdbs[cmdb].class.name}" if cmdb_masters_cache.key?(property) && cmdb_masters_cache[property] != @cmdbs[cmdb]
+              log_debug "CMDB master for #{node} / #{property}: #{cmdb}"
+              raise "CMDB #{cmdb} is configured as a master for property #{property} on node #{node} but it does not implement the needed API to retrieve it" unless (@cmdbs_per_property[property] || []).include?(@cmdbs[cmdb]) || @cmdbs_others.include?(@cmdbs[cmdb])
+              cmdb_masters_cache[property] = @cmdbs[cmdb]
+            end
+          end
+        end
+        # Set the instance variable as an atomic operation to ensure multi-threading here.
+        @cmdb_masters_cache[node] = cmdb_masters_cache
+      end
+      @cmdb_masters_cache[node][property]
     end
 
   end

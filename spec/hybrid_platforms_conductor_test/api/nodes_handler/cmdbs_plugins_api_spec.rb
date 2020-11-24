@@ -6,14 +6,21 @@ describe HybridPlatformsConductor::NodesHandler do
     #
     # Parameters::
     # * *cmdbs* (Array<Symbol>): The test CMDBs to register [default: [:test_cmdb]]
+    # * *additional_platforms_content* (String): Additional configuration [default: '']
     # * Proc: The code to be caklled for tests
-    def with_cmdb_test_platform(cmdbs: [:test_cmdb])
-      with_test_platform(nodes: {
-        'node1' => {},
-        'node2' => {},
-        'node3' => {},
-        'node4' => {}
-      }) do
+    def with_cmdb_test_platform(cmdbs: [:test_cmdb], additional_platforms_content: '')
+      with_test_platform(
+        {
+          nodes: {
+            'node1' => {},
+            'node2' => {},
+            'node3' => {},
+            'node4' => {}
+          }
+        },
+        false,
+        additional_platforms_content
+      ) do
         register_test_cmdb(cmdbs)
         yield
       end
@@ -219,6 +226,103 @@ describe HybridPlatformsConductor::NodesHandler do
         expect(cmdb(:test_cmdb2).calls).to eq [
           [:get_same_comment, ['node1'], {}]
         ]
+      end
+    end
+
+    it 'does not fail when different CMDBs get a property having conflicting values but one is defined as priority' do
+      with_cmdb_test_platform(
+        cmdbs: %i[test_cmdb test_cmdb2],
+        additional_platforms_content: 'master_cmdbs(test_cmdb2: :different_comment)'
+      ) do
+        expect(test_nodes_handler.get_different_comment_of('node1')).to eq 'Comment from test_cmdb2'
+        expect(cmdb(:test_cmdb).calls).to eq nil
+        expect(cmdb(:test_cmdb2).calls).to eq [
+          [:get_different_comment, ['node1'], {}]
+        ]
+      end
+    end
+
+    it 'can configure different priority rules for different properties' do
+      with_cmdb_test_platform(
+        cmdbs: %i[test_cmdb test_cmdb2],
+        additional_platforms_content: '
+          master_cmdbs(
+            test_cmdb: :different_comment2,
+            test_cmdb2: :different_comment
+          )
+        '
+      ) do
+        expect(test_nodes_handler.get_different_comment_of('node1')).to eq 'Comment from test_cmdb2'
+        expect(test_nodes_handler.get_different_comment2_of('node1')).to eq 'Comment2 from test_cmdb'
+        expect(cmdb(:test_cmdb).calls).to eq [
+          [:get_different_comment2, ['node1'], { 'node1' => { different_comment: 'Comment from test_cmdb2' } }]
+        ]
+        expect(cmdb(:test_cmdb2).calls).to eq [
+          [:get_different_comment, ['node1'], {}]
+        ]
+      end
+    end
+
+    it 'can configure different priority rules for different properties on different nodes' do
+      with_cmdb_test_platform(
+        cmdbs: %i[test_cmdb test_cmdb2],
+        additional_platforms_content: '
+          for_nodes(\'node1\') do
+            master_cmdbs(
+              test_cmdb: :different_comment2,
+              test_cmdb2: :different_comment
+            )
+          end
+          for_nodes(\'node2\') do
+            master_cmdbs(
+              test_cmdb: :different_comment,
+              test_cmdb2: :different_comment2
+            )
+          end
+        '
+      ) do
+        expect(test_nodes_handler.get_different_comment_of('node1')).to eq 'Comment from test_cmdb2'
+        expect(test_nodes_handler.get_different_comment_of('node2')).to eq 'Comment from test_cmdb'
+        expect(test_nodes_handler.get_different_comment2_of('node1')).to eq 'Comment2 from test_cmdb'
+        expect(test_nodes_handler.get_different_comment2_of('node2')).to eq 'Comment2 from test_cmdb2'
+        expect(cmdb(:test_cmdb).calls).to eq [
+          [:get_different_comment, %w[node2], {}],
+          [:get_different_comment2, %w[node1], { 'node1' => { different_comment: 'Comment from test_cmdb2' } }]
+        ]
+        expect(cmdb(:test_cmdb2).calls).to eq [
+          [:get_different_comment, %w[node1], {}],
+          [:get_different_comment2, %w[node2], { 'node2' => { different_comment: 'Comment from test_cmdb' } }]
+        ]
+      end
+    end
+
+    it 'fails when there are conflicts in the definition of master CMDBs' do
+      with_cmdb_test_platform(
+        cmdbs: %i[test_cmdb test_cmdb2],
+        additional_platforms_content: '
+          master_cmdbs(
+            test_cmdb: %i[different_comment different_comment2]
+          )
+          master_cmdbs(
+            test_cmdb: :different_comment,
+            test_cmdb2: :different_comment2
+          )
+        '
+      ) do
+        expect { test_nodes_handler.get_different_comment_of('node1') }.to raise_error 'Property different_comment2 have conflicting CMDB masters for node1 declared in the configuration: HybridPlatformsConductorTest::CmdbPlugins::TestCmdb and HybridPlatformsConductorTest::CmdbPlugins::TestCmdb2'
+      end
+    end
+
+    it 'fails when the CMDB marked as master does not implement the property' do
+      with_cmdb_test_platform(
+        cmdbs: %i[test_cmdb test_cmdb2],
+        additional_platforms_content: '
+          master_cmdbs(
+            test_cmdb2: :upcase
+          )
+        '
+      ) do
+        expect { test_nodes_handler.get_upcase_of('node1') }.to raise_error 'CMDB test_cmdb2 is configured as a master for property upcase on node node1 but it does not implement the needed API to retrieve it'
       end
     end
 
