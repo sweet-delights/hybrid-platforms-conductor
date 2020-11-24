@@ -1,3 +1,9 @@
+# [32.0.0](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv31.0.0&sourceBranch=refs%2Ftags%2Fv32.0.0) (2020-11-24)
+
+### Breaking changes
+
+* [Breaking] Make sure NodesHandler detects conflicts between different CMDBs and report them instead of using the first CMDB result for performance ([e4bad885](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/commits/e4bad8858ed02cb8f5a598af97a24abfca9d8b2c))
+
 # [31.0.0](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv30.0.0&sourceBranch=refs%2Ftags%2Fv31.0.0) (2020-11-24)
 
 ### Breaking changes
