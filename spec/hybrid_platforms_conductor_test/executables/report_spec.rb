@@ -34,23 +34,26 @@ describe 'report executable' do
   it 'reports info from metadata' do
     with_test_platform(nodes: { 'node' => {
        meta: {
-        host_ip: '192.168.0.1',
         hostname: 'node.domain.com',
         image: 'debian_10',
         description: 'A great server'
       },
       services: ['node_service1', 'node_service2']
     } }) do
-      exit_code, stdout, stderr = run 'report', '--node', 'node'
-      expect(exit_code).to eq 0
-      expect(stdout).to eq <<~EOS
-        +------+----------+-----------------+-------------+-----------+-----------+----------------+------------------------------+
-        | Node | Platform | Host name       | IP          | Physical? | OS        | Description    | Services                     |
-        +------+----------+-----------------+-------------+-----------+-----------+----------------+------------------------------+
-        | node | platform | node.domain.com | 192.168.0.1 | No        | debian_10 | A great server | node_service1, node_service2 |
-        +------+----------+-----------------+-------------+-----------+-----------+----------------+------------------------------+
-      EOS
-      expect(stderr).to eq ''
+      with_cmd_runner_mocked [
+        ['getent hosts node.domain.com', proc { [0, '192.168.0.1 node.domain.com', ''] }]
+      ] do
+        exit_code, stdout, stderr = run 'report', '--node', 'node'
+        expect(exit_code).to eq 0
+        expect(stdout).to eq <<~EOS
+          +------+----------+-----------------+-------------+-----------+-----------+----------------+------------------------------+
+          | Node | Platform | Host name       | IP          | Physical? | OS        | Description    | Services                     |
+          +------+----------+-----------------+-------------+-----------+-----------+----------------+------------------------------+
+          | node | platform | node.domain.com | 192.168.0.1 | No        | debian_10 | A great server | node_service1, node_service2 |
+          +------+----------+-----------------+-------------+-----------+-----------+----------------+------------------------------+
+        EOS
+        expect(stderr).to eq ''
+      end
     end
   end
 

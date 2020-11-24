@@ -30,6 +30,36 @@ module HybridPlatformsConductorTest
         Hash[nodes.map { |node| [node, "#{node} has nothing"] }]
       end
 
+      # Get a specific property for a given set of nodes.
+      # [API] - @nodes_handler can be used.
+      # [API] - @cmd_runner can be used.
+      #
+      # Parameters::
+      # * *nodes* (Array<String>): The nodes to lookup the property for.
+      # * *metadata* (Hash<String, Hash<Symbol,Object> >): Existing metadata for each node. Dependent properties should be present here.
+      # Result::
+      # * Hash<String, Object>: The corresponding property, per required node.
+      #     Nodes for which the property can't be fetched can be ommitted.
+      def get_same_comment(nodes, metadata)
+        record_call(:get_same_comment, nodes, metadata)
+        Hash[nodes.map { |node| [node, "Comment for #{node}"] }]
+      end
+
+      # Get a specific property for a given set of nodes.
+      # [API] - @nodes_handler can be used.
+      # [API] - @cmd_runner can be used.
+      #
+      # Parameters::
+      # * *nodes* (Array<String>): The nodes to lookup the property for.
+      # * *metadata* (Hash<String, Hash<Symbol,Object> >): Existing metadata for each node. Dependent properties should be present here.
+      # Result::
+      # * Hash<String, Object>: The corresponding property, per required node.
+      #     Nodes for which the property can't be fetched can be ommitted.
+      def get_different_comment(nodes, metadata)
+        record_call(:get_different_comment, nodes, metadata)
+        Hash[nodes.map { |node| [node, 'Comment from test_cmdb2'] }]
+      end
+
       # Register a call to be checked by the tests later
       #
       # Parameters::
@@ -37,7 +67,8 @@ module HybridPlatformsConductorTest
       # * *args* (Array<Object>): Arguments given to the call
       def record_call(method, *args)
         @calls = [] unless defined?(@calls)
-        @calls << [method] + args
+        # Create a shallow copy of the args, just to make sure they won't get changed by later code
+        @calls << [method] + Marshal.load(Marshal.dump(args))
       end
 
     end

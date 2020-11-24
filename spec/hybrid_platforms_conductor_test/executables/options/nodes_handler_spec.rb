@@ -31,8 +31,7 @@ describe 'executables\' Nodes Handler options' do
             },
             'node15' => {
               meta: {
-                hostname: 'my_host15.my_domain',
-                host_ip: '192.168.42.15'
+                hostname: 'my_host15.my_domain'
               }
             },
             'node16' => {
@@ -64,44 +63,48 @@ describe 'executables\' Nodes Handler options' do
 
   it 'displays info about nodes' do
     with_test_platform_for_nodes_handler_options do
-      exit_code, stdout, stderr = run 'run', '--show-nodes'
-      expect(exit_code).to eq 0
-      expect(stdout).to eq(
-'* Known platforms:
-platform_1 - Type: test - Location: /tmp/hpc_test/platform_1
-platform_2 - Type: test - Location: /tmp/hpc_test/platform_2
+      with_cmd_runner_mocked [
+        ['getent hosts my_host15.my_domain', proc { [0, '192.168.42.15 my_host16.my_domain', ''] }],
+        ['getent hosts my_host16.my_domain', proc { [0, '192.168.42.16 my_host16.my_domain', ''] }]
+      ] do
+        exit_code, stdout, stderr = run 'run', '--show-nodes'
+        expect(exit_code).to eq 0
+        expect(stdout).to eq <<~EOS
+          * Known platforms:
+          platform_1 - Type: test - Location: /tmp/hpc_test/platform_1
+          platform_2 - Type: test - Location: /tmp/hpc_test/platform_2
 
-* Known nodes lists:
-my_list
+          * Known nodes lists:
+          my_list
 
-* Known services:
-service1
-service2
-service3
+          * Known services:
+          service1
+          service2
+          service3
 
-* Known nodes:
-node11
-node12
-node13
-node14
-node15
-node16
-node21
-node22
+          * Known nodes:
+          node11
+          node12
+          node13
+          node14
+          node15
+          node16
+          node21
+          node22
 
-* Known nodes with description:
-node11 (192.168.42.11) - service1 - 
-node12 (192.168.42.12) - service1 - Node12 description
-node13 (192.168.42.13) - service2 - 
-node14 (192.168.42.14) -  - 
-node15 (my_host15.my_domain) -  - 
-node16 (my_host16.my_domain) -  - 
-node21 (192.168.42.21) - service2, service3 - 
-node22 (192.168.42.22) - service1 - 
+          * Known nodes with description:
+          node11 (192.168.42.11) - service1 - 
+          node12 (192.168.42.12) - service1 - Node12 description
+          node13 (192.168.42.13) - service2 - 
+          node14 (192.168.42.14) -  - 
+          node15 (my_host15.my_domain) -  - 
+          node16 (my_host16.my_domain) -  - 
+          node21 (192.168.42.21) - service2, service3 - 
+          node22 (192.168.42.22) - service1 - 
 
-'
-      )
-      expect(stderr).to eq ''
+        EOS
+        expect(stderr).to eq ''
+      end
     end
   end
 
