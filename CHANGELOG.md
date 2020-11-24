@@ -1,3 +1,9 @@
+# [32.2.1](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv32.2.0&sourceBranch=refs%2Ftags%2Fv32.2.1) (2020-11-24)
+
+### Fixes
+
+* [Hotfix] Fix test ([2ccc0a3a](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/commits/2ccc0a3a47e51f20da24055db554c55729438276))
+
 # [32.2.0](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv32.1.0&sourceBranch=refs%2Ftags%2Fv32.2.0) (2020-11-24)
 
 ### New features
