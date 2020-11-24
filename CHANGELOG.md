@@ -1,3 +1,9 @@
+# [32.2.0](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv32.1.0&sourceBranch=refs%2Ftags%2Fv32.2.0) (2020-11-24)
+
+### New features
+
+* [Feature] New CMDB plugin to define nodes' metadata from config ([09a5bde6](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/commits/09a5bde67844df8b1a637dc13e0123732e2e286a))
+
 # [32.1.0](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv32.0.0&sourceBranch=refs%2Ftags%2Fv32.1.0) (2020-11-24)
 
 ### New features
