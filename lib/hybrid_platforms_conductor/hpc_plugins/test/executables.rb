@@ -19,7 +19,7 @@ module HybridPlatformsConductor
             "#{CmdRunner.executables_prefix}dump_nodes_json --help",
             "#{CmdRunner.executables_prefix}free_ips",
             "#{CmdRunner.executables_prefix}free_veids",
-            "#{CmdRunner.executables_prefix}get_impacted_nodes --platform #{example_platform} --show-commands",
+            "#{CmdRunner.executables_prefix}get_impacted_nodes --platform #{example_platform.name} --show-commands",
             "#{CmdRunner.executables_prefix}last_deploys --node #{example_node} --show-commands",
             "#{CmdRunner.executables_prefix}nodes_to_deploy --node #{example_node} --show-commands",
             "#{CmdRunner.executables_prefix}report --node #{example_node} --format stdout",
