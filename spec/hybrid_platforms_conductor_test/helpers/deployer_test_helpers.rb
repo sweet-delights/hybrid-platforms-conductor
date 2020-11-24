@@ -17,76 +17,142 @@ module HybridPlatformsConductorTest
           # Get expected actions for a deployment
           #
           # Parameters::
-          # * *nodes* (Array<String>): Expected nodes that should be deployed [default: ['node']]
+          # * *services* (Hash<String, Array<String> >): Expected nodes that should be deployed, with their corresponding services [default: { 'node' => %w[service] }]
           # * *sudo* (Boolean): Do we expect sudo to be used in commands? [default: true]
           # * *check_mode* (Boolean): Are we testing in check mode? [default: @check_mode]
           # * *mocked_deploy_result* (Hash or nil): Mocked result of the deployment actions, or nil to use the helper's default [default: nil]
+          # * *additional_expected_actions* (Array): Additional expected actions [default: []]
+          # * *expect_concurrent_actions* (Boolean): Are actions expected to be run in parallel? [default: false]
+          # * *expect_actions_timeout* (Integer or nil): Expected timeout in actions, or nil for none [default: nil]
           def expected_actions_for_deploy_on(
-            nodes: ['node'],
+            services: { 'node' => %w[service] },
             sudo: true,
             check_mode: @check_mode,
-            mocked_deploy_result: nil
+            mocked_deploy_result: nil,
+            additional_expected_actions: [],
+            expect_concurrent_actions: false,
+            expect_actions_timeout: nil
           )
             actions = [
               # First run, we expect the mutex to be setup, and the deployment actions to be run
-              proc do |actions_per_nodes|
+              proc do |actions_per_nodes, timeout: nil, concurrent: false, log_to_dir: 'run_logs', log_to_stdout: true|
+                expect(timeout).to eq expect_actions_timeout
+                expect(concurrent).to eq expect_concurrent_actions
+                expect(log_to_dir).to eq 'run_logs'
                 expect_actions_to_deploy_on(
                   actions_per_nodes,
-                  nodes,
+                  services.keys,
                   check: check_mode,
                   sudo: sudo,
-                  mocked_result: mocked_deploy_result
+                  mocked_result: mocked_deploy_result,
+                  expected_actions: additional_expected_actions
                 )
               end,
               # Second run, we expect the mutex to be released
-              proc { |actions_per_nodes| expect_actions_to_unlock(actions_per_nodes, nodes, sudo: sudo) }
+              proc { |actions_per_nodes| expect_actions_to_unlock(actions_per_nodes, services.keys, sudo: sudo) }
             ]
+            services.each do |node, node_services|
+              expect(test_services_handler).to receive(:actions_to_deploy_on).with(node, node_services, check_mode) do
+                [{ bash: "echo \"#{check_mode ? 'Checking' : 'Deploying'} on #{node}\"" }]
+              end
+            end
             # Third run, we expect logs to be uploaded on the node (only if not check mode)
-            actions << proc { |actions_per_nodes| expect_actions_to_upload_logs(actions_per_nodes, nodes, sudo: sudo) } unless check_mode
+            unless check_mode
+              services.each do |node, node_services|
+                expect(test_services_handler).to receive(:log_info_for).with(node, node_services) do
+                  {
+                    repo_name_0: 'platform',
+                    commit_id_0: '123456',
+                    commit_message_0: 'Test commit'
+                  }
+                end
+              end
+              actions << proc { |actions_per_nodes| expect_actions_to_upload_logs(actions_per_nodes, services.keys, sudo: sudo) }
+            end
             actions
           end
 
           # Prepare a platform ready to test deployments on.
           #
           # Parameters::
-          # * *nodes_info* (Hash): Node info to give the platform [default: { nodes: { 'node' => {} } }]
-          # * *expect_packaged_times* (Integer): Expected number of times the deployer has packaged the repository [default: 1]
-          # * *expect_delivered_nodes* (Array<String>): Expected nodes being delivered to the artefacts? [default: nodes_info[:nodes].keys]
+          # * *nodes_info* (Hash): Node info to give the platform [default: 1 node having 1 service]
           # * *expect_default_actions* (Boolean): Should we expect default actions? [default: true]
           # * *expect_sudo* (Boolean): Do we expect sudo to be used in commands? [default: true]
           # * *expect_secrets* (Hash): Secrets to be expected during deployment [default: {}]
           # * *expect_local_environment* (Boolean): Expected local environment flag [default: false]
+          # * *expect_additional_actions* (Array): Additional expected actions [default: []]
+          # * *expect_concurrent_actions* (Boolean): Are actions expected to be run in parallel? [default: false]
+          # * *expect_actions_timeout* (Integer or nil): Expected timeout in actions, or nil for none [default: nil]
           # * *check_mode* (Boolean): Are we testing in check mode? [default: @check_mode]
           # * *additional_config* (String): Additional configuration to set [default: '']
           # * Proc: Code called once the platform is ready for testing the deployer
           #   * Parameters::
           #     * *repository* (String): Path to the repository
           def with_platform_to_deploy(
-            nodes_info: { nodes: { 'node' => {} } },
-            expect_packaged_times: 1,
-            expect_delivered_nodes: nodes_info[:nodes].keys,
+            nodes_info: { nodes: { 'node' => { services: %w[service] } } },
             expect_default_actions: true,
             expect_sudo: true,
             expect_secrets: {},
             expect_local_environment: false,
+            expect_additional_actions: [],
+            expect_concurrent_actions: false,
+            expect_actions_timeout: nil,
             check_mode: @check_mode,
             additional_config: ''
           )
             platform_name = check_mode ? 'platform' : 'my_remote_platform'
             with_test_platform(nodes_info, !check_mode, additional_config) do |repository|
               with_connections_mocked_on(nodes_info[:nodes].keys) do
-                packaged_times = 0
-                test_platforms_info[platform_name][:package] = proc do |nodes:, secrets:, local_environment:|
-                  expect(nodes.sort).to eq nodes_info[:nodes].keys.sort
-                  expect(secrets).to eq expect_secrets
-                  expect(local_environment).to eq expect_local_environment
-                  packaged_times += 1
+                # Mock the ServicesHandler accesses
+                expect_services_to_deploy = Hash[nodes_info[:nodes].map do |node, node_info|
+                  [node, node_info[:services]]
+                end]
+                unless check_mode
+                  expect(test_services_handler).to receive(:deploy_allowed?).with(
+                    services: expect_services_to_deploy,
+                    secrets: expect_secrets,
+                    local_environment: expect_local_environment
+                  ) do
+                    nil
+                  end
                 end
-                expect_actions_executor_runs(expected_actions_for_deploy_on(nodes: nodes_info[:nodes].keys, check_mode: check_mode, sudo: expect_sudo)) if expect_default_actions
+                expect(test_services_handler).to receive(:package).with(
+                  services: expect_services_to_deploy,
+                  secrets: expect_secrets,
+                  local_environment: expect_local_environment
+                )
+                expect(test_services_handler).to receive(:prepare_for_deploy).with(
+                  services: expect_services_to_deploy,
+                  secrets: expect_secrets,
+                  local_environment: expect_local_environment,
+                  why_run: check_mode
+                )
+                expect_actions_executor_runs(expected_actions_for_deploy_on(
+                  services: expect_services_to_deploy,
+                  check_mode: check_mode,
+                  sudo: expect_sudo,
+                  additional_expected_actions: expect_additional_actions,
+                  expect_concurrent_actions: expect_concurrent_actions,
+                  expect_actions_timeout: expect_actions_timeout
+                )) if expect_default_actions
                 test_deployer.use_why_run = true if check_mode
                 yield repository
-                expect(packaged_times).to eq expect_packaged_times
               end
+            end
+          end
+
+          # Prepare a directory with certificates
+          #
+          # Parameters::
+          # * Proc: Code called with the directory created with a mocked certificate
+          #   * Parameters::
+          #     * *certs_dir* (String): Directory containing certificates
+          def with_certs_dir
+            with_repository do |repository|
+              certs_dir = "#{repository}/certificates"
+              FileUtils.mkdir_p certs_dir
+              File.write("#{certs_dir}/test_cert.crt", 'Hello')
+              yield certs_dir
             end
           end
 
@@ -96,6 +162,12 @@ module HybridPlatformsConductorTest
 
           it 'deploys on 1 node' do
             with_platform_to_deploy do
+              expect(test_deployer.deploy_on('node')).to eq('node' => expected_deploy_result)
+            end
+          end
+
+          it 'deploys on 1 node having several services' do
+            with_platform_to_deploy(nodes_info: { nodes: { 'node' => { services: %w[service1 service2 service3] } } }) do
               expect(test_deployer.deploy_on('node')).to eq('node' => expected_deploy_result)
             end
           end
@@ -130,183 +202,116 @@ module HybridPlatformsConductorTest
           end
 
           it 'deploys on 1 node in local environment with certificates to install using hpc_certificates on Debian' do
-            with_platform_to_deploy(
-              nodes_info: { nodes: { 'node' => { meta: { image: 'debian_9' } } } },
-              expect_default_actions: false,
-              expect_local_environment: true
-            ) do |repository|
-              certs_dir = "#{repository}/certificates"
-              FileUtils.mkdir_p certs_dir
-              File.write("#{certs_dir}/test_cert.crt", 'Hello')
-              ENV['hpc_certificates'] = certs_dir
-              test_deployer.local_environment = true
-              expected_actions = [
-                # First run, we expect the mutex to be setup, and the deployment actions to be run
-                proc do |actions_per_nodes|
-                  expect_actions_to_deploy_on(
-                    actions_per_nodes,
-                    'node',
-                    check: check_mode,
-                    expected_actions: [
-                      { remote_bash: 'sudo apt update && sudo apt install -y ca-certificates' },
-                      {
-                        remote_bash: 'sudo update-ca-certificates',
-                        scp:  {
-                          certs_dir => '/usr/local/share/ca-certificates',
-                          :sudo => true
-                        }
-                      }
-                    ]
-                  )
-                end,
-                # Second run, we expect the mutex to be released
-                proc { |actions_per_nodes| expect_actions_to_unlock(actions_per_nodes, 'node') }
-              ]
-              # Third run, we expect logs to be uploaded on the node (only if not check mode)
-              expected_actions << proc { |actions_per_nodes| expect_actions_to_upload_logs(actions_per_nodes, 'node') } unless check_mode
-              expect_actions_executor_runs(expected_actions)
-              expect(test_deployer.deploy_on('node')).to eq('node' => expected_deploy_result)
+            with_certs_dir do |certs_dir|
+              with_platform_to_deploy(
+                nodes_info: { nodes: { 'node' => { meta: { image: 'debian_9' }, services: %w[service] } } },
+                expect_local_environment: true,
+                expect_additional_actions: [
+                  { remote_bash: 'sudo apt update && sudo apt install -y ca-certificates' },
+                  {
+                    remote_bash: 'sudo update-ca-certificates',
+                    scp:  {
+                      certs_dir => '/usr/local/share/ca-certificates',
+                      :sudo => true
+                    }
+                  }
+                ]
+              ) do
+                ENV['hpc_certificates'] = certs_dir
+                test_deployer.local_environment = true
+                expect(test_deployer.deploy_on('node')).to eq('node' => expected_deploy_result)
+              end
             end
           end
 
           it 'deploys on 1 node with certificates to install using hpc_certificates on Debian but ignores them in non-local environment' do
-            with_platform_to_deploy(nodes_info: { nodes: { 'node' => { meta: { image: 'debian_9' } } } }) do |repository|
-              certs_dir = "#{repository}/certificates"
-              FileUtils.mkdir_p certs_dir
-              File.write("#{certs_dir}/test_cert.crt", 'Hello')
-              ENV['hpc_certificates'] = certs_dir
-              expect(test_deployer.deploy_on('node')).to eq('node' => expected_deploy_result)
+            with_certs_dir do |certs_dir|
+              with_platform_to_deploy(nodes_info: { nodes: { 'node' => { meta: { image: 'debian_9' }, services: %w[service] } } }) do
+                ENV['hpc_certificates'] = certs_dir
+                expect(test_deployer.deploy_on('node')).to eq('node' => expected_deploy_result)
+              end
             end
           end
 
           it 'deploys on 1 node with certificates to install using hpc_certificates on Debian using root' do
-            with_platform_to_deploy(
-              nodes_info: { nodes: { 'node' => { meta: { image: 'debian_9' } } } },
-              expect_sudo: false,
-              expect_default_actions: false,
-              expect_local_environment: true
-            ) do |repository|
-              certs_dir = "#{repository}/certificates"
-              FileUtils.mkdir_p certs_dir
-              File.write("#{certs_dir}/test_cert.crt", 'Hello')
-              ENV['hpc_certificates'] = certs_dir
-              test_actions_executor.connector(:ssh).ssh_user = 'root'
-              test_deployer.local_environment = true
-              expected_actions = [
-                # First run, we expect the mutex to be setup, and the deployment actions to be run
-                proc do |actions_per_nodes|
-                  expect_actions_to_deploy_on(
-                    actions_per_nodes,
-                    'node',
-                    check: check_mode,
-                    sudo: false,
-                    expected_actions: [
-                      { remote_bash: 'apt update && apt install -y ca-certificates' },
-                      {
-                        remote_bash: 'update-ca-certificates',
-                        scp:  {
-                          certs_dir => '/usr/local/share/ca-certificates',
-                          :sudo => false
-                        }
-                      }
-                    ]
-                  )
-                end,
-                # Second run, we expect the mutex to be released
-                proc { |actions_per_nodes| expect_actions_to_unlock(actions_per_nodes, 'node', sudo: false) }
-              ]
-              # Third run, we expect logs to be uploaded on the node (only if not check mode)
-              expected_actions << proc { |actions_per_nodes| expect_actions_to_upload_logs(actions_per_nodes, 'node', sudo: false) } unless check_mode
-              expect_actions_executor_runs(expected_actions)
-              expect(test_deployer.deploy_on('node')).to eq('node' => expected_deploy_result)
+            with_certs_dir do |certs_dir|
+              with_platform_to_deploy(
+                nodes_info: { nodes: { 'node' => { meta: { image: 'debian_9' }, services: %w[service] } } },
+                expect_sudo: false,
+                expect_local_environment: true,
+                expect_additional_actions: [
+                  { remote_bash: 'apt update && apt install -y ca-certificates' },
+                  {
+                    remote_bash: 'update-ca-certificates',
+                    scp:  {
+                      certs_dir => '/usr/local/share/ca-certificates',
+                      :sudo => false
+                    }
+                  }
+                ]
+              ) do
+                ENV['hpc_certificates'] = certs_dir
+                test_actions_executor.connector(:ssh).ssh_user = 'root'
+                test_deployer.local_environment = true
+                expect(test_deployer.deploy_on('node')).to eq('node' => expected_deploy_result)
+              end
             end
           end
 
           it 'deploys on 1 node with certificates to install using hpc_certificates on CentOS' do
-            with_platform_to_deploy(
-              nodes_info: { nodes: { 'node' => { meta: { image: 'centos_7' } } } },
-              expect_default_actions: false,
-              expect_local_environment: true
-            ) do |repository|
-              certs_dir = "#{repository}/certificates"
-              FileUtils.mkdir_p certs_dir
-              File.write("#{certs_dir}/test_cert.crt", 'Hello')
-              ENV['hpc_certificates'] = certs_dir
-              test_deployer.local_environment = true
-              expected_actions = [
-                # First run, we expect the mutex to be setup, and the deployment actions to be run
-                proc do |actions_per_nodes|
-                  expect_actions_to_deploy_on(
-                    actions_per_nodes,
-                    'node',
-                    check: check_mode,
-                    expected_actions: [
-                      { remote_bash: 'sudo yum install -y ca-certificates' },
-                      {
-                        remote_bash: ['sudo update-ca-trust enable', 'sudo update-ca-trust extract'],
-                        scp: {
-                          "#{certs_dir}/test_cert.crt" => '/etc/pki/ca-trust/source/anchors',
-                          :sudo => true
-                        }
-                      }
-                    ]
-                  )
-                end,
-                # Second run, we expect the mutex to be released
-                proc { |actions_per_nodes| expect_actions_to_unlock(actions_per_nodes, 'node') }
-              ]
-              # Third run, we expect logs to be uploaded on the node (only if not check mode)
-              expected_actions << proc { |actions_per_nodes| expect_actions_to_upload_logs(actions_per_nodes, 'node') } unless check_mode
-              expect_actions_executor_runs(expected_actions)
-              expect(test_deployer.deploy_on('node')).to eq('node' => expected_deploy_result)
+            with_certs_dir do |certs_dir|
+              with_platform_to_deploy(
+                nodes_info: { nodes: { 'node' => { meta: { image: 'centos_7' }, services: %w[service] } } },
+                expect_local_environment: true,
+                expect_additional_actions: [
+                  { remote_bash: 'sudo yum install -y ca-certificates' },
+                  {
+                    remote_bash: ['sudo update-ca-trust enable', 'sudo update-ca-trust extract'],
+                    scp: {
+                      "#{certs_dir}/test_cert.crt" => '/etc/pki/ca-trust/source/anchors',
+                      :sudo => true
+                    }
+                  }
+                ]
+              ) do
+                ENV['hpc_certificates'] = certs_dir
+                test_deployer.local_environment = true
+                expect(test_deployer.deploy_on('node')).to eq('node' => expected_deploy_result)
+              end
             end
           end
 
           it 'deploys on 1 node with certificates to install using hpc_certificates on CentOS using root' do
-            with_platform_to_deploy(
-              nodes_info: { nodes: { 'node' => { meta: { image: 'centos_7' } } } },
-              expect_sudo: false,
-              expect_default_actions: false,
-              expect_local_environment: true
-            ) do |repository|
-              certs_dir = "#{repository}/certificates"
-              FileUtils.mkdir_p certs_dir
-              File.write("#{certs_dir}/test_cert.crt", 'Hello')
-              ENV['hpc_certificates'] = certs_dir
-              test_actions_executor.connector(:ssh).ssh_user = 'root'
-              test_deployer.local_environment = true
-              expected_actions = [
-                # First run, we expect the mutex to be setup, and the deployment actions to be run
-                proc do |actions_per_nodes|
-                  expect_actions_to_deploy_on(
-                    actions_per_nodes,
-                    'node',
-                    check: check_mode,
-                    sudo: false,
-                    expected_actions: [
-                      { remote_bash: 'yum install -y ca-certificates' },
-                      {
-                        remote_bash: ['update-ca-trust enable', 'update-ca-trust extract'],
-                        scp: {
-                          "#{certs_dir}/test_cert.crt" => '/etc/pki/ca-trust/source/anchors',
-                          :sudo => false
-                        }
-                      }
-                    ]
-                  )
-                end,
-                # Second run, we expect the mutex to be released
-                proc { |actions_per_nodes| expect_actions_to_unlock(actions_per_nodes, 'node', sudo: false) }
-              ]
-              # Third run, we expect logs to be uploaded on the node (only if not check mode)
-              expected_actions << proc { |actions_per_nodes| expect_actions_to_upload_logs(actions_per_nodes, 'node', sudo: false) } unless check_mode
-              expect_actions_executor_runs(expected_actions)
-              expect(test_deployer.deploy_on('node')).to eq('node' => expected_deploy_result)
+            with_certs_dir do |certs_dir|
+              with_platform_to_deploy(
+                nodes_info: { nodes: { 'node' => { meta: { image: 'centos_7' }, services: %w[service] } } },
+                expect_sudo: false,
+                expect_local_environment: true,
+                expect_additional_actions: [
+                  { remote_bash: 'yum install -y ca-certificates' },
+                  {
+                    remote_bash: ['update-ca-trust enable', 'update-ca-trust extract'],
+                    scp: {
+                      "#{certs_dir}/test_cert.crt" => '/etc/pki/ca-trust/source/anchors',
+                      :sudo => false
+                    }
+                  }
+                ]
+              ) do
+                ENV['hpc_certificates'] = certs_dir
+                test_actions_executor.connector(:ssh).ssh_user = 'root'
+                test_deployer.local_environment = true
+                expect(test_deployer.deploy_on('node')).to eq('node' => expected_deploy_result)
+              end
             end
           end
 
           it 'deploys on several nodes' do
-            with_platform_to_deploy(nodes_info: { nodes: { 'node1' => {}, 'node2' => {}, 'node3' => {} } }) do
+            with_platform_to_deploy(nodes_info: { nodes: {
+              'node1' => { services: %w[service1] },
+              'node2' => { services: %w[service2] },
+              'node3' => { services: %w[service3] }
+            } }) do
               expect(test_deployer.deploy_on(%w[node1 node2 node3])).to eq(
                 'node1' => expected_deploy_result,
                 'node2' => expected_deploy_result,
@@ -317,22 +322,15 @@ module HybridPlatformsConductorTest
 
           it 'deploys on several nodes in parallel' do
             with_platform_to_deploy(
-              nodes_info: { nodes: { 'node1' => {}, 'node2' => {}, 'node3' => {} } },
-              expect_default_actions: false
+              nodes_info: {
+                nodes: {
+                  'node1' => { services: %w[service1] },
+                  'node2' => { services: %w[service2] },
+                  'node3' => { services: %w[service3] }
+                }
+              },
+              expect_concurrent_actions: true
             ) do
-              expected_actions = [
-                # First run, we expect the mutex to be setup, and the deployment actions to be run
-                proc do |actions_per_nodes, timeout: nil, concurrent: false, log_to_dir: 'run_logs', log_to_stdout: true|
-                  expect(concurrent).to eq true
-                  expect(log_to_dir).to eq 'run_logs'
-                  expect_actions_to_deploy_on(actions_per_nodes, %w[node1 node2 node3], check: check_mode)
-                end,
-                # Second run, we expect the mutex to be released
-                proc { |actions_per_nodes| expect_actions_to_unlock(actions_per_nodes, %w[node1 node2 node3]) }
-              ]
-              # Third run, we expect logs to be uploaded on the node (only if not check mode)
-              expected_actions << proc { |actions_per_nodes| expect_actions_to_upload_logs(actions_per_nodes, %w[node1 node2 node3]) } unless check_mode
-              expect_actions_executor_runs(expected_actions)
               test_deployer.concurrent_execution = true
               expect(test_deployer.deploy_on(%w[node1 node2 node3])).to eq(
                 'node1' => expected_deploy_result,
@@ -344,21 +342,15 @@ module HybridPlatformsConductorTest
 
           it 'deploys on several nodes with timeout' do
             with_platform_to_deploy(
-              nodes_info: { nodes: { 'node1' => {}, 'node2' => {}, 'node3' => {} } },
-              expect_default_actions: false
+              nodes_info: {
+                nodes: {
+                  'node1' => { services: %w[service1] },
+                  'node2' => { services: %w[service2] },
+                  'node3' => { services: %w[service3] }
+                }
+              },
+              expect_actions_timeout: 5
             ) do
-              expected_actions = [
-                # First run, we expect the mutex to be setup, and the deployment actions to be run
-                proc do |actions_per_nodes, timeout: nil, concurrent: false, log_to_dir: 'run_logs', log_to_stdout: true|
-                  expect(timeout).to eq 5
-                  expect_actions_to_deploy_on(actions_per_nodes, %w[node1 node2 node3], check: check_mode)
-                end,
-                # Second run, we expect the mutex to be released
-                proc { |actions_per_nodes| expect_actions_to_unlock(actions_per_nodes, %w[node1 node2 node3]) }
-              ]
-              # Third run, we expect logs to be uploaded on the node (only if not check mode)
-              expected_actions << proc { |actions_per_nodes| expect_actions_to_upload_logs(actions_per_nodes, %w[node1 node2 node3]) } unless check_mode
-              expect_actions_executor_runs(expected_actions)
               test_deployer.timeout = 5
               expect(test_deployer.deploy_on(%w[node1 node2 node3])).to eq(
                 'node1' => expected_deploy_result,
@@ -377,7 +369,7 @@ module HybridPlatformsConductorTest
             # * Proc: Code called once the platform is ready for testing the deployer
             #   * Parameters::
             #     * *repository* (String): Path to the repository
-            def with_platform_to_retry_deploy(nodes_info: { nodes: { 'node' => {} } })
+            def with_platform_to_retry_deploy(nodes_info: { nodes: { 'node' => { services: %w[service] } } })
               with_platform_to_deploy(
                 nodes_info: nodes_info,
                 expect_default_actions: false,
@@ -411,7 +403,7 @@ module HybridPlatformsConductorTest
               expect_actions_executor_runs(statuses.map do |status|
                 status = { 'node' => status } if status.is_a?(Array)
                 expected_actions_for_deploy_on(
-                  nodes: status.keys,
+                  services: Hash[status.keys.map { |node| [node, %w[service]] }],
                   mocked_deploy_result: status
                 )
               end.flatten)
@@ -698,10 +690,10 @@ module HybridPlatformsConductorTest
 
             it 'restarts deployment for non-deterministic errors only on nodes needing it' do
               with_platform_to_retry_deploy(nodes_info: { nodes: {
-                'node1' => {},
-                'node2' => {},
-                'node3' => {},
-                'node4' => {}
+                'node1' => { services: %w[service] },
+                'node2' => { services: %w[service] },
+                'node3' => { services: %w[service] },
+                'node4' => { services: %w[service] }
               } }) do
                 test_deployer.nbr_retries_on_error = 2
                 # Some nodes deploy successfully,

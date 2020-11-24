@@ -4,11 +4,48 @@ describe HybridPlatformsConductor::Deployer do
 
     deploy_specs_for(check_mode: false)
 
+    # Expect the test services handler to be called to deploy a given list of services
+    #
+    # Parameters::
+    # * *services* (Hash<String, Array<String> >): List of services to be expected, per node name
+    def expect_services_handler_to_deploy(services)
+      expect(test_services_handler).to receive(:deploy_allowed?).with(
+        services: services,
+        secrets: {},
+        local_environment: false
+      ) do
+        nil
+      end
+      expect(test_services_handler).to receive(:package).with(
+        services: services,
+        secrets: {},
+        local_environment: false
+      )
+      expect(test_services_handler).to receive(:prepare_for_deploy).with(
+        services: services,
+        secrets: {},
+        local_environment: false,
+        why_run: false
+      )
+      services.each do |node, services|
+        expect(test_services_handler).to receive(:actions_to_deploy_on).with(node, services, false) do
+          [{ bash: "echo \"Deploying on #{node}\"" }]
+        end
+        expect(test_services_handler).to receive(:log_info_for).with(node, services) do
+          {
+            repo_name_0: 'platform',
+            commit_id_0: '123456',
+            commit_message_0: "Test commit for #{node}: #{services.join(', ')}"
+          }
+        end
+      end
+    end
+
     it 'deploys correct logs information on 1 node' do
-      with_test_platform({ nodes: { 'node' => { services: %w[service1 service2] } } }, true) do |repository|
-        FileUtils.touch "#{repository}/new_file"
+      with_test_platform({ nodes: { 'node' => { services: %w[service1 service2] } } }, true) do
         with_connections_mocked_on ['node'] do
           test_actions_executor.connector(:ssh).ssh_user = 'test_user'
+          expect_services_handler_to_deploy('node' => %w[service1 service2])
           expect_actions_executor_runs([
             # First run, we expect the mutex to be setup, and the deployment actions to be run
             proc { |actions_per_nodes| expect_actions_to_deploy_on(actions_per_nodes, 'node') },
@@ -23,10 +60,9 @@ describe HybridPlatformsConductor::Deployer do
                 date: /\d\d\d\d-\d\d-\d\d \d\d:\d\d:\d\d/,
                 user: 'test_user',
                 debug: 'No',
-                repo_name: 'my_remote_platform',
-                commit_id: Git.open(repository).log.first.sha,
-                commit_message: 'Test commit',
-                diff_files: 'new_file',
+                repo_name_0: 'platform',
+                commit_id_0: '123456',
+                commit_message_0: 'Test commit for node: service1, service2',
                 services: 'service1, service2',
                 exit_status: '0'
               )
@@ -39,10 +75,10 @@ describe HybridPlatformsConductor::Deployer do
     end
 
     it 'deploys correct logs information on 1 node even when there is a failing deploy' do
-      with_test_platform({ nodes: { 'node' => { services: %w[service1 service2] } } }, true) do |repository|
-        FileUtils.touch "#{repository}/new_file"
+      with_test_platform({ nodes: { 'node' => { services: %w[service1 service2] } } }, true) do
         with_connections_mocked_on ['node'] do
           test_actions_executor.connector(:ssh).ssh_user = 'test_user'
+          expect_services_handler_to_deploy('node' => %w[service1 service2])
           expect_actions_executor_runs([
             # First run, we expect the mutex to be setup, and the deployment actions to be run
             proc do |actions_per_nodes|
@@ -63,10 +99,9 @@ describe HybridPlatformsConductor::Deployer do
                 date: /\d\d\d\d-\d\d-\d\d \d\d:\d\d:\d\d/,
                 user: 'test_user',
                 debug: 'No',
-                repo_name: 'my_remote_platform',
-                commit_id: Git.open(repository).log.first.sha,
-                commit_message: 'Test commit',
-                diff_files: 'new_file',
+                repo_name_0: 'platform',
+                commit_id_0: '123456',
+                commit_message_0: 'Test commit for node: service1, service2',
                 services: 'service1, service2',
                 exit_status: 'failed_action'
               )
@@ -105,7 +140,8 @@ describe HybridPlatformsConductor::Deployer do
             { 'node' => [0, <<~EOS, ''] }
               date: Thu Nov 23 18:43:01 UTC 2017
               debug: Yes
-              diff_files: file1, file2, file3
+              diff_files_0: file1, file2, file3
+              services: service1, service2, service3
             EOS
           end
         ])
@@ -113,7 +149,8 @@ describe HybridPlatformsConductor::Deployer do
           'node' => {
             date: Time.parse('2017-11-23 18:43:01 UTC'),
             debug: true,
-            diff_files: %w[file1 file2 file3]
+            diff_files_0: %w[file1 file2 file3],
+            services: %w[service1 service2 service3]
           }
         )
       end

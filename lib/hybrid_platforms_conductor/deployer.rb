@@ -149,8 +149,11 @@ module HybridPlatformsConductor
     # Result::
     # * Hash<String, [Integer or Symbol, String, String]>: Exit status code (or Symbol in case of error or dry run), standard output and error for each node that has been deployed.
     def deploy_on(*nodes_selectors)
-      # Get the list of nodes we deploy on
-      nodes = @nodes_handler.select_nodes(nodes_selectors.flatten)
+      # Get the sorted list of services to be deployed, per node
+      # Hash<String, Array<String> >
+      services_to_deploy = Hash[@nodes_handler.select_nodes(nodes_selectors.flatten).map do |node|
+        [node, @nodes_handler.get_services_of(node)]
+      end]
 
       # Get the secrets to be deployed
       secrets = {}
@@ -164,7 +167,7 @@ module HybridPlatformsConductor
       # Check that we are allowed to deploy
       unless @use_why_run
         reason_for_interdiction = @services_handler.deploy_allowed?(
-          nodes: nodes,
+          services: services_to_deploy,
           secrets: secrets,
           local_environment: @local_environment
         )
@@ -174,25 +177,19 @@ module HybridPlatformsConductor
       # Package the deployment
       # Protect packaging by a Futex
       Futex.new(PACKAGING_FUTEX_FILE, timeout: PACKAGING_FUTEX_TIMEOUT).open do
-        unless @services_handler.packaged?(
-          nodes: nodes,
-          secrets: secrets,
-          local_environment: @local_environment
-        )
-          section 'Packaging deployment' do
-            @services_handler.package(
-              nodes: nodes,
-              secrets: secrets,
-              local_environment: @local_environment
-            )
-          end
+        section 'Packaging deployment' do
+          @services_handler.package(
+            services: services_to_deploy,
+            secrets: secrets,
+            local_environment: @local_environment
+          )
         end
       end
 
       # Prepare the deployment as a whole, before getting individual deployment actions.
       # Do this after packaging, this way we ensure that services packaging cannot depend on the way deployment will be performed.
       @services_handler.prepare_for_deploy(
-        nodes: nodes,
+        services: services_to_deploy,
         secrets: secrets,
         local_environment: @local_environment,
         why_run: @use_why_run
@@ -201,14 +198,14 @@ module HybridPlatformsConductor
       # Launch deployment processes
       results = {}
 
-      section "#{@use_why_run ? 'Checking' : 'Deploying'} on #{nodes.size} nodes" do
+      section "#{@use_why_run ? 'Checking' : 'Deploying'} on #{services_to_deploy.keys.size} nodes" do
         # Prepare all the control masters here, as they will be reused for the whole process, including mutexes, deployment and logs saving
-        @actions_executor.with_connections_prepared_to(nodes, no_exception: true) do
+        @actions_executor.with_connections_prepared_to(services_to_deploy.keys, no_exception: true) do
 
           nbr_retries = @nbr_retries_on_error
-          remaining_nodes_to_deploy = nodes
+          remaining_nodes_to_deploy = services_to_deploy.keys
           while nbr_retries >= 0 && !remaining_nodes_to_deploy.empty?
-            last_deploy_results = deploy(remaining_nodes_to_deploy)
+            last_deploy_results = deploy(services_to_deploy.slice(*remaining_nodes_to_deploy))
             if nbr_retries > 0
               # Check if we need to retry deployment on some nodes
               # Only parse the last deployment attempt logs
@@ -359,18 +356,19 @@ module HybridPlatformsConductor
             else
               stdout_lines.each do |line|
                 if line =~ /^([^:]+): (.+)$/
-                  key, value = $1.to_sym, $2
+                  key_str, value = $1, $2
+                  key = key_str.to_sym
                   # Type-cast some values
-                  case key
-                  when :date
+                  case key_str
+                  when 'date'
                     # Date and time values
                     # Thu Nov 23 18:43:01 UTC 2017
                     deploy_info[key] = Time.parse(value)
-                  when :debug
+                  when 'debug'
                     # Boolean values
                     # Yes
                     deploy_info[key] = (value == 'Yes')
-                  when :diff_files, :services
+                  when /^diff_files_.+$/, 'services'
                     # Array of strings
                     # my_file.txt, other_file.txt
                     deploy_info[key] = value.split(', ')
@@ -406,7 +404,7 @@ module HybridPlatformsConductor
     #     * *:identical*: The task has not been changed
     #   * *diffs* (String): Differences, if any
     def parse_deploy_output(node, stdout, stderr)
-      @services_handler.parse_deploy_output(node, stdout, stderr)
+      @services_handler.parse_deploy_output(stdout, stderr).map { |deploy_info| deploy_info[:tasks] }.flatten
     end
 
     private
@@ -448,19 +446,19 @@ module HybridPlatformsConductor
     # Deploy on all the nodes.
     #
     # Parameters::
-    # * *nodes* (Array<String>): List of nodes
+    # * *services* (Hash<String, Array<String>>): List of services to be deployed, per node
     # Result::
     # * Hash<String, [Integer or Symbol, String, String]>: Exit status code (or Symbol in case of error or dry run), standard output and error for each node.
-    def deploy(nodes)
+    def deploy(services)
       outputs = {}
 
       # Get the ssh user directly from the connector
       ssh_user = @actions_executor.connector(:ssh).ssh_user
 
       # Deploy for real
-      @nodes_handler.prefetch_metadata_of nodes, :image
+      @nodes_handler.prefetch_metadata_of services.keys, :image
       outputs = @actions_executor.execute_actions(
-        Hash[nodes.map do |node|
+        Hash[services.map do |node, node_services|
           image_id = @nodes_handler.get_image_of(node)
           # Install My_company corporate certificates if present
           certificate_actions =
@@ -518,7 +516,7 @@ module HybridPlatformsConductor
               }
             ] +
               certificate_actions +
-              @services_handler.actions_to_deploy_on(node, @use_why_run)
+              @services_handler.actions_to_deploy_on(node, node_services, @use_why_run)
           ]
         end],
         timeout: @timeout,
@@ -527,7 +525,7 @@ module HybridPlatformsConductor
       )
       # Free eventual locks
       @actions_executor.execute_actions(
-        Hash[nodes.map do |node|
+        Hash[services.keys.map do |node|
           [
             node,
             { remote_bash: "#{ssh_user == 'root' ? '' : 'sudo '}./mutex_dir unlock /tmp/hybrid_platforms_conductor_deploy_lock" }
@@ -539,7 +537,7 @@ module HybridPlatformsConductor
       )
 
       # Save logs
-      save_logs(outputs) if !@use_why_run && !@cmd_runner.dry_run
+      save_logs(outputs, services) if !@use_why_run && !@cmd_runner.dry_run
 
       outputs
     end
@@ -549,7 +547,8 @@ module HybridPlatformsConductor
     #
     # Parameters::
     # * *logs* (Hash<String, [Integer or Symbol, String, String]>): Exit status code (or Symbol in case of error or dry run), standard output and error for each node.
-    def save_logs(logs)
+    # * *services* (Hash<String, Array<String>>): List of services that have been deployed, per node
+    def save_logs(logs, services)
       section "Saving deployment logs for #{logs.size} nodes" do
         Dir.mktmpdir('hybrid_platforms_conductor-logs') do |tmp_dir|
           ssh_user = @actions_executor.connector(:ssh).ssh_user
@@ -558,14 +557,14 @@ module HybridPlatformsConductor
               # Create a log file to be scp with all relevant info
               now = Time.now.utc
               log_file = "#{tmp_dir}/#{now.strftime('%F_%H%M%S')}_#{ssh_user}"
-              services_info = @services_handler.log_info_for(node)
+              services_info = @services_handler.log_info_for(node, services[node])
               File.write(
                 log_file,
                 services_info.merge(
                   date: now.strftime('%F %T'),
                   user: ssh_user,
                   debug: log_debug? ? 'Yes' : 'No',
-                  services: (@nodes_handler.get_services_of(node) || []).join(', '),
+                  services: services[node].join(', '),
                   exit_status: exit_status
                 ).map { |property, value| "#{property}: #{value}" }.join("\n") +
                   "\n===== STDOUT =====\n" +

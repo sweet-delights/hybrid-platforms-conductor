@@ -1,3 +1,4 @@
+require 'git'
 require 'hybrid_platforms_conductor/cmd_runner'
 require 'hybrid_platforms_conductor/cmdb'
 require 'hybrid_platforms_conductor/logger_helpers'
@@ -11,14 +12,19 @@ module HybridPlatformsConductor
 
     class << self
 
-      # List of platform names that have been packaged.
+      # List of deployments that have been packaged.
+      # Each deployment has the following info:
+      # * *platform_name* (String): The platform name
+      # * *services* (Hash< String, Array<String> >): Services to be deployed, per node
+      # * *secrets* (Hash): Secrets for which this has been packaged
+      # * *local_environment* (Boolean): Has it been packaged for local environment?
       # Make this at class level as several Deployer instances can be used in a multi-thread environmnent.
-      #   Array<String>
-      attr_reader :packaged_platforms
+      #   Array< Hash<Symbol, Object> >
+      attr_reader :packaged_deployments
 
     end
 
-    @packaged_platforms = []
+    @packaged_deployments = []
 
     include LoggerHelpers, ParallelThreads
 
@@ -54,13 +60,13 @@ module HybridPlatformsConductor
     # This checks eventual restrictions on deployments, considering environments, options, secrets...
     #
     # Parameters::
-    # * *nodes* (Array<String>): Nodes for which we deploy
+    # * *services* (Hash< String, Array<String> >): Services to be deployed, per node
     # * *secrets* (Hash): Secrets to be used for deployment
     # * *local_environment* (Boolean): Are we deploying to a local environment?
     # Result::
     # * String or nil: Reason for which we are not allowed to deploy, or nil if deployment is authorized
     def deploy_allowed?(
-      nodes:,
+      services:,
       secrets:,
       local_environment:
     )
@@ -69,9 +75,19 @@ module HybridPlatformsConductor
       else
         # Check that master is checked out correctly before deploying.
         # Check it on every platform having at least 1 node to be deployed.
-        wrong_platforms = platforms_for(nodes).select do |platform|
-          _exit_status, stdout, _stderr = @cmd_runner.run_cmd "cd #{platform.repository_path} && git status | head -n 1"
-          stdout.strip != 'On branch master'
+        wrong_platforms = platforms_for(services).keys.select do |platform|
+          git = nil
+          begin
+            git = Git.open(platform.repository_path)
+          rescue
+            log_debug "Platform #{platform.repository_path} is not a git repository"
+          end
+          if git.nil?
+            false
+          else
+            head_commit_id = git.log.first.sha
+            git.branches.all? { |branch| !(branch.full == 'master' || branch.full =~ /^remotes\/.+\/master$/) || branch.gcommit.sha != head_commit_id }
+          end
         end
         if wrong_platforms.empty?
           nil
@@ -81,46 +97,34 @@ module HybridPlatformsConductor
       end
     end
 
-    # Is the configuration already packaged for a given deployment?
-    #
-    # Parameters::
-    # * *nodes* (Array<String>): Nodes for which we deploy
-    # * *secrets* (Hash): Secrets to be used for deployment
-    # * *local_environment* (Boolean): Are we deploying to a local environment?
-    # Result::
-    # * Boolean: Is the configuration already packaged for a given deployment?
-    def packaged?(
-      nodes:,
-      secrets:,
-      local_environment:
-    )
-      # So far we only mimick the same deployment behaviour as before, with the same checks of package reusability done in the package method.
-      # TODO: Implement this function correctly when service-oriented deployment will be implemented.
-      platforms_for(nodes).all? { |platform| ServicesHandler.packaged_platforms.include?(platform.name) }
-    end
-
     # Package a configuration for a given deployment
     #
     # Parameters::
-    # * *nodes* (Array<String>): Nodes for which we deploy
+    # * *services* (Hash< String, Array<String> >): Services to be deployed, per node
     # * *secrets* (Hash): Secrets to be used for deployment
     # * *local_environment* (Boolean): Are we deploying to a local environment?
     def package(
-      nodes:,
+      services:,
       secrets:,
       local_environment:
     )
-      platforms_for(nodes).each do |platform|
+      platforms_for(services).each do |platform, platform_services|
         platform_name = platform.name
-        if ServicesHandler.packaged_platforms.include?(platform_name)
-          log_debug "Platform #{platform_name} has already been packaged. Won't package it another time."
+        deployment_info = {
+          platform_name: platform_name,
+          services: platform_services,
+          secrets: secrets,
+          local_environment: local_environment
+        }
+        if ServicesHandler.packaged_deployments.include?(deployment_info)
+          log_debug "Platform #{platform_name} has already been packaged for this deployment. Won't package it another time."
         else
           platform.package(
-            nodes: nodes,
+            services: platform_services,
             secrets: secrets,
             local_environment: local_environment
           )
-          ServicesHandler.packaged_platforms << platform_name
+          ServicesHandler.packaged_deployments << deployment_info
         end
       end
     end
@@ -128,19 +132,19 @@ module HybridPlatformsConductor
     # Prepare the deployment to be performed
     #
     # Parameters::
-    # * *nodes* (Array<String>): Nodes for which we deploy
+    # * *services* (Hash< String, Array<String> >): Services to be deployed, per node
     # * *secrets* (Hash): Secrets to be used for deployment
     # * *local_environment* (Boolean): Are we deploying to a local environment?
     # * *why_run* (Boolean): Are we deploying in why-run mode?
     def prepare_for_deploy(
-      nodes:,
+      services:,
       secrets:,
       local_environment:,
       why_run:
     )
-      platforms_for(nodes).each do |platform|
+      platforms_for(services).each do |platform, platform_services|
         platform.prepare_for_deploy(
-          nodes: nodes,
+          services: platform_services,
           secrets: secrets,
           local_environment: local_environment,
           why_run: why_run
@@ -152,56 +156,113 @@ module HybridPlatformsConductor
     #
     # Parameters::
     # * *node* (String): The node to be deployed
+    # * *services* (Array<String>): List of services to deploy on this node
     # * *why_run* (Boolean): Are we in why-run mode?
     # Result::
     # * Array< Hash<Symbol,Object> >: List of actions to be done
-    def actions_to_deploy_on(node, why_run)
-      @platforms_handler.known_platforms.find { |platform| platform.known_nodes.include?(node) }.actions_to_deploy_on(node, use_why_run: why_run)
+    def actions_to_deploy_on(node, services, why_run)
+      services.map do |service|
+        platform = @platforms_handler.known_platforms.find { |platform| platform.deployable_services.include?(service) }
+        raise "No platform is able to deploy the service #{service}" if platform.nil?
+        # Add some markers in stdout and stderr so that parsing services-oriented deployment output is easier
+        deploy_marker = "===== [ #{node} / #{service} ] - HPC Service #{why_run ? 'Check' : 'Deploy' } ====="
+        [{
+          ruby: proc do |stdout, stderr|
+            stdout << "#{deploy_marker} Begin\n"
+            stderr << "#{deploy_marker} Begin\n"
+          end
+        }] +
+          platform.actions_to_deploy_on(node, service, use_why_run: why_run) +
+          [{
+            ruby: proc do |stdout, stderr|
+              stdout << "#{deploy_marker} End\n"
+              stderr << "#{deploy_marker} End\n"
+            end
+          }]
+      end.flatten
     end
 
     # Get some information to be logged regarding a deployment of services on a node
     #
     # Parameters::
     # * *node* (String): The node for which we get the info
+    # * *services* (Array<String>): Services that have been deployed on this node
     # Result::
     # * Hash<Symbol,Object>: Information to be added to the deployment logs
-    def log_info_for(node)
-      platform = @platforms_handler.known_platforms.find { |platform| platform.known_nodes.include?(node) }
-      {
-        repo_name: platform.name,
-        commit_id: platform.info[:commit][:id],
-        commit_message: platform.info[:commit][:message].split("\n").first,
-        diff_files: (platform.info[:status][:changed_files] + platform.info[:status][:added_files] + platform.info[:status][:deleted_files] + platform.info[:status][:untracked_files]).join(', ')
-      }
+    def log_info_for(node, services)
+      log_info = {}
+      # Get all platforms involved in the deployment of those services on this node
+      platforms_for(node => services).keys.each.with_index do |platform, platform_idx|
+        log_info.merge!(
+          "repo_name_#{platform_idx}".to_sym => platform.name
+        )
+        if platform.info.key?(:commit)
+          log_info.merge!(
+            "commit_id_#{platform_idx}".to_sym => platform.info[:commit][:id],
+            "commit_message_#{platform_idx}".to_sym => platform.info[:commit][:message].split("\n").first,
+            "diff_files_#{platform_idx}".to_sym => (platform.info[:status][:changed_files] + platform.info[:status][:added_files] + platform.info[:status][:deleted_files] + platform.info[:status][:untracked_files]).join(', ')
+          )
+        end
+      end
+      log_info
     end
 
-    # Parse stdout and stderr of a given deploy run and get the list of tasks with their status
+    # Regexp: The marker regexp used to separate services deployment
+    MARKER_REGEXP = /^===== \[ (.+?) \/ (.+?) \] - HPC Service (\w+) ===== Begin$(.+?)^===== \[ \1 \/ \2 \] - HPC Service \3 ===== End$/m
+
+    # Parse stdout and stderr of a given deploy run and get the list of tasks with their status, organized per service and node deployed.
     #
     # Parameters::
-    # * *node* (String): Node for which this deploy run has been done.
     # * *stdout* (String): stdout to be parsed.
     # * *stderr* (String): stderr to be parsed.
     # Result::
-    # * Array< Hash<Symbol,Object> >: List of task properties. The following properties should be returned, among free ones:
-    #   * *name* (String): Task name
-    #   * *status* (Symbol): Task status. Should be on of:
-    #     * *:changed*: The task has been changed
-    #     * *:identical*: The task has not been changed
-    #   * *diffs* (String): Differences, if any
-    def parse_deploy_output(node, stdout, stderr)
-      @platforms_handler.known_platforms.find { |platform| platform.known_nodes.include?(node) }.parse_deploy_output(stdout, stderr)
+    # * Array< Hash<Symbol,Object> >: List of deployed services (in the order of the logs). Here are the returned properties:
+    #   * *node* (String): Node that has been deployed
+    #   * *service* (String): Service that has been deployed
+    #   * *check* (Boolean): Has the service been deployed in check-mode?
+    #   * *tasks* (Array< Hash<Symbol,Object> >): List of task properties. The following properties should be returned, among free ones:
+    #     * *name* (String): Task name
+    #     * *status* (Symbol): Task status. Should be on of:
+    #       * *:changed*: The task has been changed
+    #       * *:identical*: The task has not been changed
+    #     * *diffs* (String): Differences, if any
+    def parse_deploy_output(stdout, stderr)
+      stdout.scan(MARKER_REGEXP).zip(stderr.scan(MARKER_REGEXP)).map do |((stdout_node, stdout_service, stdout_mode, stdout_logs), (stderr_node, stderr_service, stderr_mode, stderr_logs))|
+        # Some consistency checking
+        log_warn "Mismatch in deployment logs between stdout and stderr: stdout deployed node #{stdout_node}, stderr deployed node #{stderr_node}" unless stdout_node == stderr_node
+        log_warn "Mismatch in deployment logs between stdout and stderr: stdout deployed service #{stdout_service}, stderr deployed service #{stderr_service}" unless stdout_service == stderr_service
+        log_warn "Mismatch in deployment logs between stdout and stderr: stdout deployed mode is #{stdout_mode}, stderr deployed mode is #{stderr_mode}" unless stdout_mode == stderr_mode
+        platform = @platforms_handler.known_platforms.find { |platform| platform.deployable_services.include?(stdout_service) }
+        raise "No platform is able to deploy the service #{stdout_service}" if platform.nil?
+        {
+          node: stdout_node,
+          service: stdout_service,
+          check: stdout_mode == 'Check',
+          tasks: platform.parse_deploy_output(stdout_logs, stderr_logs || '')
+        }
+      end
     end
 
     private
 
-    # Get platforms concerned by a list of nodes
+    # Get platforms concerned by a list of services to be deployed per node
     #
     # Parameters::
-    # * *nodes* (Array<String>): List of nodes
+    # * *services* (Hash< String, Array<String> >): Services to be deployed, per node
     # Result::
-    # * Array<PlatformHandler>: List of corresponding platforms
-    def platforms_for(nodes)
-      nodes.map { |node| @platforms_handler.known_platforms.find { |platform| platform.known_nodes.include?(node) } }.uniq
+    # * Hash< PlatformHandler, Hash< String, Array<String> > >: List of services to be deployed, per node, per PlatformHandler handling those services
+    def platforms_for(services)
+      concerned_platforms = {}
+      @platforms_handler.known_platforms.each do |platform|
+        deployable_nodes = {}
+        platform_services = platform.deployable_services
+        services.each do |node, node_services|
+          node_deployable_services = platform_services & node_services
+          deployable_nodes[node] = node_deployable_services unless node_deployable_services.empty?
+        end
+        concerned_platforms[platform] = deployable_nodes unless deployable_nodes.empty?
+      end
+      concerned_platforms
     end
 
   end
