@@ -1,3 +1,9 @@
+# [32.1.0](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv32.0.0&sourceBranch=refs%2Ftags%2Fv32.1.0) (2020-11-24)
+
+### New features
+
+* [Feature] Add a way to prioritize CMDBs by defining masters for some properties in case of conflicts ([269e6185](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/commits/269e6185e1dec7deae56e3ce64fbf6c000a76c2d))
+
 # [32.0.0](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv31.0.0&sourceBranch=refs%2Ftags%2Fv32.0.0) (2020-11-24)
 
 ### Breaking changes
