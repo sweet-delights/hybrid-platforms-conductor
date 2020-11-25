@@ -1,3 +1,10 @@
+# [32.2.2](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv32.2.1&sourceBranch=refs%2Ftags%2Fv32.2.2) (2020-11-25)
+
+### Fixes
+
+* [Hotfix] Fix tests ([11d9b476](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/commits/11d9b47607742629fc367d960bf06a1719ea7b06))
+* [Hotfix] Increase timeout for network latencies ([bd41bd91](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/commits/bd41bd916e2f21befa2c5b497d3e83ffde1c00a3))
+
 # [32.2.1](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv32.2.0&sourceBranch=refs%2Ftags%2Fv32.2.1) (2020-11-24)
 
 ### Fixes
