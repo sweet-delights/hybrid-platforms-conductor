@@ -9,7 +9,7 @@ module HybridPlatformsConductor
     include LoggerHelpers
 
     # Integer or Float: Default timeout in seconds that is used for wait operations
-    DEFAULT_TIMEOUT = 30
+    DEFAULT_TIMEOUT = 60
 
     # Constructor
     #
