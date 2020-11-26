@@ -1,3 +1,9 @@
+# [32.2.3](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv32.2.2&sourceBranch=refs%2Ftags%2Fv32.2.3) (2020-11-26)
+
+### Fixes
+
+* [Hotfix] Find old deployment logs correctly ([83413d44](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/commits/83413d44f50954f8898b602be83b2d3b16055763))
+
 # [32.2.2](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv32.2.1&sourceBranch=refs%2Ftags%2Fv32.2.2) (2020-11-25)
 
 ### Fixes
