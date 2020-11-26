@@ -63,7 +63,7 @@ unless ignore_deploy_info
     elsif !node_deploy_info.key?(:exit_status) || node_deploy_info[:exit_status] != '0'
       executable.log_warn "[ #{node} ] - Last deployment did not end successfully: #{node_deploy_info[:exit_status]}"
       true
-    else
+    elsif node_deploy_info.key?(:repo_name_0)
       node_impacted = false
       # Loop over all possible repositories concerned by this deployment
       repo_idx = 0
@@ -90,6 +90,10 @@ unless ignore_deploy_info
         repo_idx += 1
       end
       node_impacted
+    else
+      # The deployment log has no repo name info.
+      # Consider it always has to be deployed.
+      true
     end
   end
 end

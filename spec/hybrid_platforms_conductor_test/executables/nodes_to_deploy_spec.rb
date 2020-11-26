@@ -84,6 +84,28 @@ describe 'nodes_to_deploy executable' do
     end
   end
 
+  it 'considers nodes having no repository info in their logs to be deployed' do
+    with_test_platform_for_nodes_to_deploy do
+      expect_actions_executor_runs([proc do |actions|
+        expect(actions).to eq(
+          'node1' => { remote_bash: "cd /var/log/deployments && ls -t | head -1 | xargs sed '/===== STDOUT =====/q'" },
+          'node2' => { remote_bash: "cd /var/log/deployments && ls -t | head -1 | xargs sed '/===== STDOUT =====/q'" }
+        )
+        {
+          'node1' => [0, "exit_status: 0\n", ''],
+          'node2' => [0, "repo_name_0: platform\nexit_status: 0\ncommit_id_0: abcdef2", '']
+        }
+      end])
+      expect(test_nodes_handler).to receive(:impacted_nodes_from_git_diff).with('platform', from_commit: 'abcdef2', to_commit: 'master') { [%w[], [], [], false] }
+      exit_code, stdout, stderr = run 'nodes_to_deploy'
+      expect(exit_code).to eq 0
+      expect(stdout).to eq <<~EOS
+        ===== Nodes to deploy =====
+        node1
+      EOS
+    end
+  end
+
   it 'ignores impacts if asked' do
     with_test_platform_for_nodes_to_deploy do
       exit_code, stdout, stderr = run 'nodes_to_deploy', '--ignore-deployed-info'
