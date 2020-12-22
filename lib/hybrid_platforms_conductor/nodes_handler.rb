@@ -517,7 +517,7 @@ module HybridPlatformsConductor
           (
             impacted_nodes + impacted_services.map do |service|
               service_nodes = select_nodes([{ service: service }])
-              smallest_set ? [service_nodes.first] : service_nodes
+              smallest_set ? [service_nodes.first].compact : service_nodes
             end
           ).flatten.sort.uniq
         end,

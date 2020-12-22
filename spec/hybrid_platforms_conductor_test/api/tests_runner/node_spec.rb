@@ -111,15 +111,15 @@ describe HybridPlatformsConductor::TestsRunner do
           'node12' => 0.2,
           'node13' => 0.6,
           'node21' => 0.8,
-          'node22' => 0.5,
+          'node22' => 0.6,
           'node23' => 1
         } }
         # Here is the sequence:
         # Thread 1: +-node11 1.4--------------------------------------------+
         # Thread 2: +-node12 0.2-+-node21 0.8--------------+-node23 1.0-----|---+
-        # Thread 3: +-node13 0.6-|------------+-node22 0.5-|------------+   |   |
+        # Thread 3: +-node13 0.6-|------------+-node22 0.6-|------------+   |   |
         #           |            |            |            |            |   |   |
-        # Time    : 0            0.2          0.6          1.0          1.1 1.4 2.0
+        # Time    : 0            0.2          0.6          1.0          1.2 1.4 2.0
         expect(test_tests_runner.run_tests([{ all: true }])).to eq 0
         expect(HybridPlatformsConductorTest::TestPlugins::Node.runs).to eq [
           [:node_test, 'node12'],

@@ -84,11 +84,11 @@ describe HybridPlatformsConductor::ActionsExecutor do
               sleep 1
             end } },
             { test_action: { code: proc do |stdout, _stderr, action|
-              expect(action.timeout).to be_between(3.9, 4)
+              expect(action.timeout).to be_between(3.8, 4)
               sleep 1
             end } },
             { test_action: { code: proc do |stdout, _stderr, action|
-              expect(action.timeout).to be_between(2.9, 3)
+              expect(action.timeout).to be_between(2.8, 3)
             end } }
           ] },
           timeout: 5
