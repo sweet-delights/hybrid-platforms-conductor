@@ -1,3 +1,9 @@
+# [32.2.4](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv32.2.3&sourceBranch=refs%2Ftags%2Fv32.2.4) (2020-12-22)
+
+### Fixes
+
+* [Hotfix] Fix failing git_diff_impacts for services not directly used by nodes ([769f0766](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/commits/769f07660b8a63f127bb27f3f89567b3eefcd8b9))
+
 # [32.2.3](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv32.2.2&sourceBranch=refs%2Ftags%2Fv32.2.3) (2020-11-26)
 
 ### Fixes
