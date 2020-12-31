@@ -8,9 +8,6 @@ module HybridPlatformsConductor
 
     include LoggerHelpers
 
-    # Integer or Float: Default timeout in seconds that is used for wait operations
-    DEFAULT_TIMEOUT = 60
-
     # Constructor
     #
     # Parameters::
@@ -38,6 +35,14 @@ module HybridPlatformsConductor
       @cmd_runner = cmd_runner
       @nodes_handler = nodes_handler
       @actions_executor = actions_executor
+    end
+
+    # Return the default timeout to apply when waiting for an instance to be started/stopped...
+    #
+    # Result::
+    # * Integer: The timeout in seconds
+    def default_timeout
+      60
     end
 
     # Provision a running instance for the needed node and environment.
@@ -93,10 +98,10 @@ module HybridPlatformsConductor
     #
     # Parameters::
     # * *states* (Symbol or Array<Symbol>): States (or single state) the instance should be in
-    # * *timeout* (Integer): Timeout before failing, in seconds [default = DEFAULT_TIMEOUT]
+    # * *timeout* (Integer): Timeout before failing, in seconds [default = default_timeout]
     # Result::
     # * Boolean: Is the instance in one of the expected states?
-    def wait_for_state(states, timeout = DEFAULT_TIMEOUT)
+    def wait_for_state(states, timeout = default_timeout)
       states = [states] unless states.is_a?(Array)
       log_debug "[ #{@node}/#{@environment} ] - Wait for instance to be in state #{states.join(', ')} (timeout #{timeout})..."
       current_state = nil
@@ -116,8 +121,8 @@ module HybridPlatformsConductor
     #
     # Parameters::
     # * *states* (Symbol or Array<Symbol>): States (or single state) the instance should be in
-    # * *timeout* (Integer): Timeout before failing, in seconds [default = DEFAULT_TIMEOUT]
-    def wait_for_state!(states, timeout = DEFAULT_TIMEOUT)
+    # * *timeout* (Integer): Timeout before failing, in seconds [default = default_timeout]
+    def wait_for_state!(states, timeout = default_timeout)
       states = [states] unless states.is_a?(Array)
       raise "[ #{@node}/#{@environment} ] - Instance fails to be in a state among (#{states.join(', ')}) with timeout #{timeout}. Currently in state #{state}" unless wait_for_state(states, timeout)
     end
@@ -126,10 +131,10 @@ module HybridPlatformsConductor
     #
     # Parameters::
     # * *port* (Integer): Port to wait for
-    # * *timeout* (Integer): Timeout before failing, in seconds [default = DEFAULT_TIMEOUT]
+    # * *timeout* (Integer): Timeout before failing, in seconds [default = default_timeout]
     # Result::
     # * Boolean: Is port listening?
-    def wait_for_port(port, timeout = DEFAULT_TIMEOUT)
+    def wait_for_port(port, timeout = default_timeout)
       instance_ip = ip
       log_debug "[ #{@node}/#{@environment} ] - Wait for #{instance_ip}:#{port} to be opened (timeout #{timeout})..."
       port_listening = false
@@ -156,8 +161,8 @@ module HybridPlatformsConductor
     #
     # Parameters::
     # * *port* (Integer): Port to wait for
-    # * *timeout* (Integer): Timeout before failing, in seconds [default = DEFAULT_TIMEOUT]
-    def wait_for_port!(port, timeout = DEFAULT_TIMEOUT)
+    # * *timeout* (Integer): Timeout before failing, in seconds [default = default_timeout]
+    def wait_for_port!(port, timeout = default_timeout)
       raise "[ #{@node}/#{@environment} ] - Instance fails to have port #{port} opened with timeout #{timeout}." unless wait_for_port(port, timeout)
     end
 

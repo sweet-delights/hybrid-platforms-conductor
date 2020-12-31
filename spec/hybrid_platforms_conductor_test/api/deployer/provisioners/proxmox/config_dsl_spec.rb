@@ -57,7 +57,8 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
               vm_dns_servers: ['9.9.9.9'],
               vm_search_domain: 'my-domain2.com',
               vm_gateway: '192.168.0.2'
-            }
+            },
+            default_timeout: 666
           )
         EOS
         with_platforms platforms do
@@ -112,7 +113,8 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
                 vm_dns_servers: ['9.9.9.9'],
                 vm_search_domain: 'my-domain2.com',
                 vm_gateway: '192.168.0.2'
-              }
+              },
+              default_timeout: 666
             }
           ]
         end

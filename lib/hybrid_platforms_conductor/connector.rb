@@ -47,13 +47,15 @@ module HybridPlatformsConductor
 
     # Prepare connections to a given set of nodes.
     # Useful to prefetch metadata or open bulk connections.
-    # Default implementation deos nothing.
     #
     # Parameters::
     # * *nodes* (Array<String>): Nodes to prepare the connection to
+    # * *no_exception* (Boolean): Should we still continue if some nodes have connection errors? [default: false]
     # * Proc: Code called with the connections prepared.
-    def with_connection_to(nodes)
-      yield
+    #   * Parameters::
+    #     * *connected_nodes* (Array<String>): The list of connected nodes (should be equal to nodes unless no_exception == true and some nodes failed to connect)
+    def with_connection_to(nodes, no_exception: false)
+      yield nodes
     end
 
     private

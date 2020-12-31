@@ -85,6 +85,15 @@ module HybridPlatformsConductor
           @vm.ip_address
         end
 
+        # Return the default timeout to apply when waiting for an instance to be started/stopped...
+        # [API] - This method is optional
+        #
+        # Result::
+        # * Integer: The timeout in seconds
+        def default_timeout
+          3600
+        end
+
       end
 
     end

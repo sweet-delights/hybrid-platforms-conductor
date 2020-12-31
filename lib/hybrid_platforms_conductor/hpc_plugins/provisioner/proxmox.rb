@@ -246,6 +246,15 @@ module HybridPlatformsConductor
           @lxc_details[:vm_ip]
         end
 
+        # Return the default timeout to apply when waiting for an instance to be started/stopped...
+        # [API] - This method is optional
+        #
+        # Result::
+        # * Integer: The timeout in seconds
+        def default_timeout
+          proxmox_test_info[:default_timeout] || 3600
+        end
+
         private
 
         # Connect to the Proxmox API
@@ -471,7 +480,7 @@ module HybridPlatformsConductor
           destroyed_vm_info
         end
 
-        # Maximum size a file ID can have (file IDs are used differentiate create/destroy/config files for a givne node/environment).
+        # Maximum size a file ID can have (file IDs are used differentiate create/destroy/config files for a given node/environment).
         # File names are 255 chars max.
         # Consider that it is to be used on the following patterns: (config|create|destroy)_<ID>.json
         # So remaining length is 255 - 13 = 242 characters.
@@ -500,6 +509,7 @@ module HybridPlatformsConductor
         #   * *sync_node* (String): Node to be used to synchronize Proxmox resources acquisition
         #   * *test_config* (Hash<Symbol,Object>): The test configuration. Check ProxmoxWaiter#initialize (config_file structure) method to get details.
         #   * *vm_config* (Hash<Symbol,Object>): Extra configuration of a created container. Check #request_lxc_creation_for results to get details.
+        #   * *default_timeout* (Integer): The default timeout tobe applied when starting/stopping containers [default: 3600].
         def proxmox_test_info
           @config.proxmox_servers.first
         end
