@@ -87,7 +87,7 @@ module HybridPlatformsConductorTest
     # Result::
     # * Integer: The timeout in seconds
     def default_timeout
-      self.class.mocked_default_timeout || 1
+      self.class.mocked_default_timeout
     end
 
   end
