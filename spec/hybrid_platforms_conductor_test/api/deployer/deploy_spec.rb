@@ -74,6 +74,60 @@ describe HybridPlatformsConductor::Deployer do
       end
     end
 
+    it 'deploys correct logs information on several nodes' do
+      with_test_platform({ nodes: {
+        'node1' => { services: %w[service1] },
+        'node2' => { services: %w[service2] }
+      } }, true) do
+        with_connections_mocked_on %w[node1 node2] do
+          test_actions_executor.connector(:ssh).ssh_user = 'test_user'
+          expect_services_handler_to_deploy(
+            'node1' => %w[service1],
+            'node2' => %w[service2]
+          )
+          expect_actions_executor_runs([
+            # First run, we expect the mutex to be setup, and the deployment actions to be run
+            proc { |actions_per_nodes| expect_actions_to_deploy_on(actions_per_nodes, %w[node1 node2]) },
+            # Second run, we expect the mutex to be released
+            proc { |actions_per_nodes| expect_actions_to_unlock(actions_per_nodes, %w[node1 node2]) },
+            # Third run, we expect logs to be uploaded on the node
+            proc do |actions_per_nodes|
+              # Check logs content
+              local_log_file1 = actions_per_nodes['node1'][:scp].first[0]
+              expect(File.exist?(local_log_file1)).to eq true
+              expect_logs_to_be(File.read(local_log_file1), 'Deploy successful', '',
+                date: /\d\d\d\d-\d\d-\d\d \d\d:\d\d:\d\d/,
+                user: 'test_user',
+                debug: 'No',
+                repo_name_0: 'platform',
+                commit_id_0: '123456',
+                commit_message_0: 'Test commit for node1: service1',
+                services: 'service1',
+                exit_status: '0'
+              )
+              local_log_file2 = actions_per_nodes['node2'][:scp].first[0]
+              expect(File.exist?(local_log_file2)).to eq true
+              expect_logs_to_be(File.read(local_log_file2), 'Deploy successful', '',
+                date: /\d\d\d\d-\d\d-\d\d \d\d:\d\d:\d\d/,
+                user: 'test_user',
+                debug: 'No',
+                repo_name_0: 'platform',
+                commit_id_0: '123456',
+                commit_message_0: 'Test commit for node2: service2',
+                services: 'service2',
+                exit_status: '0'
+              )
+              expect_actions_to_upload_logs(actions_per_nodes, %w[node1 node2])
+            end
+          ])
+          expect(test_deployer.deploy_on(%w[node1 node2])).to eq(
+            'node1' => [0, 'Deploy successful', ''],
+            'node2' => [0, 'Deploy successful', '']
+          )
+        end
+      end
+    end
+
     it 'deploys correct logs information on 1 node even when there is a failing deploy' do
       with_test_platform({ nodes: { 'node' => { services: %w[service1 service2] } } }, true) do
         with_connections_mocked_on ['node'] do
