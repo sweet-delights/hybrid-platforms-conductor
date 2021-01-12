@@ -86,7 +86,11 @@ module HybridPlatformsConductor
             false
           else
             head_commit_id = git.log.first.sha
-            git.branches.all? { |branch| !(branch.full == 'master' || branch.full =~ /^remotes\/.+\/master$/) || branch.gcommit.sha != head_commit_id }
+            git.branches.all? do |branch|
+              branch.gcommit.objectish.include?(' -> ') || (
+                !(branch.full == 'master' || branch.full =~ /^remotes\/.+\/master$/) || branch.gcommit.sha != head_commit_id
+              )
+            end
           end
         end
         if wrong_platforms.empty?
