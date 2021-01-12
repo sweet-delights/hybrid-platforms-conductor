@@ -104,6 +104,7 @@ module HybridPlatformsConductorTest
         HybridPlatformsConductorTest::ReportPlugin.generated_reports = []
         HybridPlatformsConductorTest::TestProvisioner.mocked_states = []
         HybridPlatformsConductorTest::TestProvisioner.mocked_ip = nil
+        HybridPlatformsConductorTest::TestProvisioner.mocked_default_timeout = 1
         HybridPlatformsConductorTest::TestPlugins::Global.nbr_runs = 0
         HybridPlatformsConductorTest::TestPlugins::Global.fail = false
         HybridPlatformsConductorTest::TestPlugins::Platform.runs = []

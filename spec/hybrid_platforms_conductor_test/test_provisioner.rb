@@ -12,6 +12,9 @@ module HybridPlatformsConductorTest
       # String: Mocked IP to be returned
       attr_accessor :mocked_ip
 
+      # Integer: Mocked default_timeout to be returned
+      attr_accessor :mocked_default_timeout
+
     end
 
     # Array<Symbol>: Actions that have been performed on a provisioner
@@ -76,6 +79,15 @@ module HybridPlatformsConductorTest
     def ip
       @actions << :ip
       self.class.mocked_ip
+    end
+
+    # Return the default timeout to apply when waiting for an instance to be started/stopped...
+    # [API] - This method is optional
+    #
+    # Result::
+    # * Integer: The timeout in seconds
+    def default_timeout
+      self.class.mocked_default_timeout
     end
 
   end
