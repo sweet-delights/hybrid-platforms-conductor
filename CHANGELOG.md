@@ -1,3 +1,14 @@
+# [32.3.0](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv32.2.4&sourceBranch=refs%2Ftags%2Fv32.3.0) (2021-01-12)
+
+### New features
+
+* [Feature] Make timeouts provisioner-specific + Make Proxmox timeouts configurable ([8bf3b65d](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/commits/8bf3b65d4b4d49797dcb7d89efccb824469d4058))
+
+### Fixes
+
+* Workaround bug impacted when git lib returns strange sha ids ([54ee8bd9](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/commits/54ee8bd9a653c1b2d059a8f86d2d7eb2baaf2100))
+* Corrected bug saving wrong logs on nodes when deployed in parallel ([3da6a34a](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/commits/3da6a34a77448dda2f9f5135bf4ddcfaa7de3aa0))
+
 # [32.2.4](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv32.2.3&sourceBranch=refs%2Ftags%2Fv32.2.4) (2020-12-22)
 
 ### Fixes
