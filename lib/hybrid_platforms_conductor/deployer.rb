@@ -556,7 +556,7 @@ module HybridPlatformsConductor
             Hash[logs.map do |node, (exit_status, stdout, stderr)|
               # Create a log file to be scp with all relevant info
               now = Time.now.utc
-              log_file = "#{tmp_dir}/#{now.strftime('%F_%H%M%S')}_#{ssh_user}"
+              log_file = "#{tmp_dir}/#{node}_#{now.strftime('%F_%H%M%S')}_#{ssh_user}"
               services_info = @services_handler.log_info_for(node, services[node])
               File.write(
                 log_file,
