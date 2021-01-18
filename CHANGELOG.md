@@ -1,3 +1,9 @@
+# [v32.3.1](https://www.site.my_company.net/git/scm/PROJECThybrid_platforms_conductor/compare/v32.3.0...v32.3.1) (2021-01-18 15:48:22)
+
+### Patches
+
+* [[Hotfix] Bump ci-helpers version](https://www.site.my_company.net/git/scm/PROJECThybrid_platforms_conductor/commit/8c8c382329484e5cee7ffbc5764e496acb62f93c)
+
 # [32.3.0](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv32.2.4&sourceBranch=refs%2Ftags%2Fv32.3.0) (2021-01-12)
 
 ### New features
