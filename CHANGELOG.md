@@ -1,3 +1,9 @@
+# [v32.3.2](https://www.site.my_company.net/git/scm/PROJECThybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2F32.3.2&sourceBranch=refs%2Ftags%2Fv32.3.1) (2021-01-18 16:34:58)
+
+### Patches
+
+* [[Hotfix] Correct changelog URLs](https://www.site.my_company.net/git/scm/PROJECThybrid_platforms_conductor/commits/c72329e8c94b1d56d8f97f34e6cf83a1536ac39c)
+
 # [v32.3.1](https://www.site.my_company.net/git/scm/PROJECThybrid_platforms_conductor/compare/v32.3.0...v32.3.1) (2021-01-18 15:48:22)
 
 ### Patches
