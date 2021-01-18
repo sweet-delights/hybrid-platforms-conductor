@@ -1,3 +1,9 @@
+# [v32.3.4](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv32.3.3&sourceBranch=refs%2Ftags%2Fv32.3.4) (2021-01-18 18:00:45)
+
+### Patches
+
+* [[Hotfix] Typo in Bitbucket's URLs](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/commits/763ad926643e3fb77fbe759a07faec355da7dd8b)
+
 # [v32.3.3](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv32.3.3&sourceBranch=refs%2Ftags%2Fv32.3.2) (2021-01-18 17:13:58)
 
 ### Patches
