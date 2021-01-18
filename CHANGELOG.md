@@ -1,3 +1,9 @@
+# [v32.3.3](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv32.3.3&sourceBranch=refs%2Ftags%2Fv32.3.2) (2021-01-18 17:13:58)
+
+### Patches
+
+* [[Hotfix] Correct Bitbuket URLs in changelog](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/commits/469171ee8c67f644833a064dae4ffcdede374722)
+
 # [v32.3.2](https://www.site.my_company.net/git/scm/PROJECThybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2F32.3.2&sourceBranch=refs%2Ftags%2Fv32.3.1) (2021-01-18 16:34:58)
 
 ### Patches
