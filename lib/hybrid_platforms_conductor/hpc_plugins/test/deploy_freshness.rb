@@ -23,7 +23,7 @@ module HybridPlatformsConductor
               else
                 # Expecting following file names
                 # 2017-12-01_093418_a_usernme
-                file_match = stdout.first.match(/^(\d{4}-\d{2}-\d{2})_.+$/)
+                file_match = stdout.first.match(/^#{Regexp.escape(@node)}_(\d{4}-\d{2}-\d{2})_.+$/)
                 if file_match.nil?
                   error "Invalid chef deployment log file found: #{stdout.first}"
                 else
