@@ -1,3 +1,9 @@
+# [v32.3.5](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv32.3.4&sourceBranch=refs%2Ftags%2Fv32.3.5) (2021-02-01 11:04:30)
+
+### Patches
+
+* [Corrected bug in the deploy_freshness test: deployment log files haved changed names](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/commits/5add87995061e0093ce91610cbabc6ea902a8d5f)
+
 # [v32.3.4](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv32.3.3&sourceBranch=refs%2Ftags%2Fv32.3.4) (2021-01-18 18:00:45)
 
 ### Patches
