@@ -85,7 +85,7 @@ module HybridPlatformsConductorTest
           with_platforms(repositories.map do |platform, dir|
             platform_type = platforms_info[platform].key?(:platform_type) ? platforms_info[platform][:platform_type] : :test
             platform_types << platform_type unless platform_types.include?(platform_type)
-            "#{platform_type}_platform path: '#{dir}'"
+            "#{platform_type}_platform(path: '#{dir}')"
           end.join("\n") + "\n#{additional_platforms_content}") do
             register_platform_handlers(Hash[platform_types.map { |platform_type| [platform_type, HybridPlatformsConductorTest::PlatformHandlerPlugins.const_get(platform_type.to_s.split('_').collect(&:capitalize).join.to_sym)] }])
             self.test_platforms_info = platforms_info

@@ -17,7 +17,7 @@ jobs:
         run: bundle install
 
       - name: Run unit tests
-        run: bundle exec rspec --format documentation
+        run: TEST_DEBUG=1 bundle exec rspec --format documentation -e"ssh_config executable dumps the SSH config with an alternate SSH executable"
 
       - name: Test packaging
         run: bundle exec gem build hybrid_platforms_conductor.gemspec
