@@ -416,7 +416,7 @@ describe HybridPlatformsConductor::ActionsExecutor do
               ['ssh -V 2>&1', proc { [0, "OpenSSH_7.4p1 Debian-10+deb9u7, OpenSSL 1.0.2u  20 Dec 2019\n", ''] }],
             ] +
               [[
-                /^.+\/ssh -o BatchMode=yes -o ControlMaster=yes -o ControlPersist=yes test_user@ti\.node true$/,
+                /^.+\/ssh -o BatchMode=yes -o ControlMaster=yes -o ControlPersist=yes test_user@hpc\.node true$/,
                 proc do
                   nbr_boot_messages += 1
                   [255, '', "System is booting up. See pam_nologin(8)\nAuthentication failed.\n"]
