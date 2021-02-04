@@ -145,12 +145,12 @@ Host my.gateway.com
   ProxyCommand <%= @ssh_exec %> -q -W %h:%p my.gateway.com
 
 # XAE-DMZ gateway provided by TEAM
-Host gw.dmz.ti
+Host gw.dmz.be
   Hostname 192.168.190.141
   ProxyCommand <%= @ssh_exec %> -W %h:%p my.gateway.com
 
 # XAE-DATA gateway provided by TEAM
-Host gw.data.ti
+Host gw.data.be
   Hostname 192.168.190.9
   ProxyCommand <%= @ssh_exec %> -W %h:%p my.gateway.com
 '
@@ -687,14 +687,14 @@ Host my.gateway.com
   Hostname node12hst-nn5.site.my_company.net
 
 # DMZ Gateway
-Host gw.dmz.ti
-  HostName dmz.My_domain.com
+Host gw.dmz.be
+  HostName dmz.my_domain.com
   ProxyCommand ssh -q -W %h:%p my.gateway.com
 
 # Data Gateway
-Host gw.data.ti
-  HostName fr-had.My_domain.com
-  ProxyCommand ssh -q -W %h:%p datagw@gw.dmz.ti
+Host gw.data.be
+  HostName fr-had.my_domain.com
+  ProxyCommand ssh -q -W %h:%p datagw@gw.dmz.be
 
 
 #############
@@ -710,14 +710,14 @@ Host *
 # AD_Win2012_NP0 - 172.16.16.105 - ./cloned_platforms/xae-chef-repo - AD of QlikSense Server (primary AD of Non-production) - AD_Win2012_NP0
 Host hpc.172.16.16.105 hpc.16.105 hpc.AD_Win2012_NP0
   Hostname 172.16.16.105
-  ProxyCommand ssh -q -W %h:%p ubradm@gw.dmz.ti
+  ProxyCommand ssh -q -W %h:%p ubradm@gw.dmz.be
 
 [...]
 
 # xaetitanuwsd01 - 172.16.16.89 - ./cloned_platforms/xae-chef-repo - Traffic Analytics WS (UAT/jessie)
 Host hpc.172.16.16.89 hpc.16.89 hpc.xaetitanuwsd01
   Hostname 172.16.16.89
-  ProxyCommand ssh -q -W %h:%p ubradm@gw.dmz.ti
+  ProxyCommand ssh -q -W %h:%p ubradm@gw.dmz.be
 
 # project-pinger - 192.168.0.2 - ../chef-repo - Product availability tester
 Host hpc.192.168.0.2 hpc.project-pinger
