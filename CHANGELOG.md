@@ -1,3 +1,11 @@
+# [v32.3.6](https://github.com/sweet-delights/hybrid-platforms-conductor/compare/v32.3.5...v32.3.6) (2021-02-04 16:34:56)
+
+### Patches
+
+* [Add missing dependency](https://github.com/sweet-delights/hybrid-platforms-conductor/commit/0a74fd470393d0e6936f3159ccca8cb3af35956a)
+* [Fix Ruby version in CI](https://github.com/sweet-delights/hybrid-platforms-conductor/commit/4ebfa25c447e2bb82f25346513e5ead46ea29de2)
+* [Setup CI](https://github.com/sweet-delights/hybrid-platforms-conductor/commit/0087968b19926795742771606749a89edbf7ce2e)
+
 # [v32.3.5](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/compare/commits?targetBranch=refs%2Ftags%2Fv32.3.4&sourceBranch=refs%2Ftags%2Fv32.3.5) (2021-02-01 11:04:30)
 
 ### Patches
