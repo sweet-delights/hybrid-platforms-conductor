@@ -18,7 +18,30 @@ module HybridPlatformsConductor
   # Gives ways to deploy on several nodes
   class Deployer
 
+    # Extend the Config DSL
+    module ConfigDSLExtension
+
+      # Integer: Timeout (in seconds) for packaging repositories
+      attr_reader :packaging_timeout_secs
+
+      # Mixin initializer
+      def init_deployer_config
+        @packaging_timeout_secs = 60
+      end
+
+      # Set the packaging timeout
+      #
+      # Parameters::
+      # * *packaging_timeout_secs* (Integer): The packaging timeout, in seconds
+      def packaging_timeout(packaging_timeout_secs)
+        @packaging_timeout_secs = packaging_timeout_secs
+      end
+
+    end
+
     include LoggerHelpers
+
+    Config.extend_config_dsl_with ConfigDSLExtension, :init_nodes_handler_config
 
     # Do we use why-run mode while deploying? [default = false]
     #   Boolean
@@ -135,9 +158,6 @@ module HybridPlatformsConductor
     # String: File used as a Futex for packaging
     PACKAGING_FUTEX_FILE = "#{Dir.tmpdir}/hpc_packaging"
 
-    # Integer: Timeout in seconds to get the packaging Futex
-    PACKAGING_FUTEX_TIMEOUT = 60
-
     # Deploy on a given list of nodes selectors.
     # The workflow is the following:
     # 1. Package the services to be deployed, considering the nodes, services and context (options, secrets, environment...)
@@ -176,7 +196,7 @@ module HybridPlatformsConductor
 
       # Package the deployment
       # Protect packaging by a Futex
-      Futex.new(PACKAGING_FUTEX_FILE, timeout: PACKAGING_FUTEX_TIMEOUT).open do
+      Futex.new(PACKAGING_FUTEX_FILE, timeout: @config.packaging_timeout_secs).open do
         section 'Packaging deployment' do
           @services_handler.package(
             services: services_to_deploy,
