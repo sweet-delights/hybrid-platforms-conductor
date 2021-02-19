@@ -1,3 +1,9 @@
+# [v32.4.0](https://github.com/sweet-delights/hybrid-platforms-conductor/compare/v32.3.6...v32.4.0) (2021-02-19 11:24:37)
+
+### Features
+
+* [[Feature] Adding packaging timeout configurable](https://github.com/sweet-delights/hybrid-platforms-conductor/commit/18917ba35a8c0ee0427c81ddef0bc545c50f2a37)
+
 # [v32.3.6](https://github.com/sweet-delights/hybrid-platforms-conductor/compare/v32.3.5...v32.3.6) (2021-02-04 16:34:56)
 
 ### Patches
