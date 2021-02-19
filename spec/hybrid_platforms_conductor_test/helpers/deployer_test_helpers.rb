@@ -1,3 +1,5 @@
+require 'timeout'
+
 module HybridPlatformsConductorTest
 
   module Helpers
@@ -76,6 +78,9 @@ module HybridPlatformsConductorTest
           #
           # Parameters::
           # * *nodes_info* (Hash): Node info to give the platform [default: 1 node having 1 service]
+          # * *expect_package* (Boolean): Should we expect packaging? [default: true]
+          # * *expect_prepare_for_deploy* (Boolean): Should we expect calls to prepare for deploy? [default: true]
+          # * *expect_connections_to_nodes* (Boolean): Should we expect connections to nodes? [default: true]
           # * *expect_default_actions* (Boolean): Should we expect default actions? [default: true]
           # * *expect_sudo* (Boolean): Do we expect sudo to be used in commands? [default: true]
           # * *expect_secrets* (Hash): Secrets to be expected during deployment [default: {}]
@@ -90,6 +95,9 @@ module HybridPlatformsConductorTest
           #     * *repository* (String): Path to the repository
           def with_platform_to_deploy(
             nodes_info: { nodes: { 'node' => { services: %w[service] } } },
+            expect_package: true,
+            expect_prepare_for_deploy: true,
+            expect_connections_to_nodes: true,
             expect_default_actions: true,
             expect_sudo: true,
             expect_secrets: {},
@@ -102,40 +110,52 @@ module HybridPlatformsConductorTest
           )
             platform_name = check_mode ? 'platform' : 'my_remote_platform'
             with_test_platform(nodes_info, !check_mode, additional_config) do |repository|
-              with_connections_mocked_on(nodes_info[:nodes].keys) do
-                # Mock the ServicesHandler accesses
-                expect_services_to_deploy = Hash[nodes_info[:nodes].map do |node, node_info|
-                  [node, node_info[:services]]
-                end]
-                unless check_mode
-                  expect(test_services_handler).to receive(:deploy_allowed?).with(
-                    services: expect_services_to_deploy,
-                    secrets: expect_secrets,
-                    local_environment: expect_local_environment
-                  ) do
-                    nil
-                  end
+              # Mock the ServicesHandler accesses
+              expect_services_to_deploy = Hash[nodes_info[:nodes].map do |node, node_info|
+                [node, node_info[:services]]
+              end]
+              unless check_mode
+                expect(test_services_handler).to receive(:deploy_allowed?).with(
+                  services: expect_services_to_deploy,
+                  secrets: expect_secrets,
+                  local_environment: expect_local_environment
+                ) do
+                  nil
                 end
+              end
+              if expect_package
                 expect(test_services_handler).to receive(:package).with(
                   services: expect_services_to_deploy,
                   secrets: expect_secrets,
                   local_environment: expect_local_environment
                 )
+              else
+                expect(test_services_handler).not_to receive(:package)
+              end
+              if expect_prepare_for_deploy
                 expect(test_services_handler).to receive(:prepare_for_deploy).with(
                   services: expect_services_to_deploy,
                   secrets: expect_secrets,
                   local_environment: expect_local_environment,
                   why_run: check_mode
                 )
-                expect_actions_executor_runs(expected_actions_for_deploy_on(
-                  services: expect_services_to_deploy,
-                  check_mode: check_mode,
-                  sudo: expect_sudo,
-                  additional_expected_actions: expect_additional_actions,
-                  expect_concurrent_actions: expect_concurrent_actions,
-                  expect_actions_timeout: expect_actions_timeout
-                )) if expect_default_actions
-                test_deployer.use_why_run = true if check_mode
+              else
+                expect(test_services_handler).not_to receive(:prepare_for_deploy)
+              end
+              test_deployer.use_why_run = true if check_mode
+              if expect_connections_to_nodes
+                with_connections_mocked_on(nodes_info[:nodes].keys) do
+                  expect_actions_executor_runs(expected_actions_for_deploy_on(
+                    services: expect_services_to_deploy,
+                    check_mode: check_mode,
+                    sudo: expect_sudo,
+                    additional_expected_actions: expect_additional_actions,
+                    expect_concurrent_actions: expect_concurrent_actions,
+                    expect_actions_timeout: expect_actions_timeout
+                  )) if expect_default_actions
+                  yield repository
+                end
+              else
                 yield repository
               end
             end
@@ -357,6 +377,31 @@ module HybridPlatformsConductorTest
                 'node2' => expected_deploy_result,
                 'node3' => expected_deploy_result
               )
+            end
+          end
+
+          it 'fails when packaging timeout has been reached while taking the futex' do
+            with_platform_to_deploy(
+                additional_config: 'packaging_timeout 1',
+                expect_package: false,
+                expect_prepare_for_deploy: false,
+                expect_connections_to_nodes: false
+            ) do
+              # Simulate another process taking the packaging futex
+              futex_file = HybridPlatformsConductor::Deployer.const_get(:PACKAGING_FUTEX_FILE)
+              Futex.new(futex_file).open do
+                # Expect the error to be raised within 2 seconds (as it should timeout after 1 second)
+                begin
+                  Timeout::timeout(2) {
+                    expect { test_deployer.deploy_on('node') }.to raise_error(
+                      Futex::CantLock,
+                      /can't get exclusive access to the file #{Regexp.escape(futex_file)} because of the lock at #{Regexp.escape(futex_file)}\.lock, after 1\.\d+s of waiting/
+                    )
+                  }
+                rescue Timeout::Error
+                  raise 'The packaging timeout (set to 1 seconds) did not fire within 2 seconds. Looks like it is not working properly.'
+                end
+              end
             end
           end
 
