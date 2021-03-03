@@ -33,6 +33,16 @@ describe HybridPlatformsConductor::NodesHandler do
       end
     end
 
+    it 'fails when the commit id is invalid' do
+      with_test_platform({}, true) do
+        with_cmd_runner_mocked([
+          [/cd .+\/my_remote_platform && git --no-pager diff --no-color invalid_id/, proc { raise HybridPlatformsConductor::CmdRunner::UnexpectedExitCodeError, 'Mocked git error due to an invalid commit id' }]
+        ]) do
+          expect { test_nodes_handler.impacted_nodes_from_git_diff('my_remote_platform', from_commit: 'invalid_id') }.to raise_error HybridPlatformsConductor::NodesHandler::GitError, 'Mocked git error due to an invalid commit id'
+        end
+      end
+    end
+
     it 'diffs to another commit if asked' do
       with_test_platform({}, true) do
         with_cmd_runner_mocked([
