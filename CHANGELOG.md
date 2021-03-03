@@ -1,3 +1,9 @@
+# [v32.4.1](https://github.com/sweet-delights/hybrid-platforms-conductor/compare/v32.4.0...v32.4.1) (2021-03-03 13:17:39)
+
+### Patches
+
+* [[#10] Support invalid commit ids in deployment logs](https://github.com/sweet-delights/hybrid-platforms-conductor/commit/f6109f4bd49ecb5dca221d9150f70fc8085261bc)
+
 # [v32.4.0](https://github.com/sweet-delights/hybrid-platforms-conductor/compare/v32.3.6...v32.4.0) (2021-02-19 11:24:37)
 
 ### Features
