@@ -40,6 +40,9 @@ module HybridPlatformsConductor
 
     include LoggerHelpers, ParallelThreads
 
+    class GitError < RuntimeError
+    end
+
     # Constructor
     #
     # Parameters::
@@ -484,7 +487,11 @@ module HybridPlatformsConductor
     def impacted_nodes_from_git_diff(platform_name, from_commit: 'master', to_commit: nil, smallest_set: false)
       platform = @platforms_handler.platform(platform_name)
       raise "Unkown platform #{platform_name}. Possible platforms are #{@platforms_handler.known_platforms.map(&:name).sort.join(', ')}" if platform.nil?
-      _exit_status, stdout, _stderr = @cmd_runner.run_cmd "cd #{platform.repository_path} && git --no-pager diff --no-color #{from_commit} #{to_commit.nil? ? '' : to_commit}", log_to_stdout: log_debug?
+      begin
+        _exit_status, stdout, _stderr = @cmd_runner.run_cmd "cd #{platform.repository_path} && git --no-pager diff --no-color #{from_commit} #{to_commit.nil? ? '' : to_commit}", log_to_stdout: log_debug?
+      rescue CmdRunner::UnexpectedExitCodeError
+        raise GitError, $!.to_s
+      end
       # Parse the git diff output to create a structured diff
       # Hash< String, Hash< Symbol, Object > >: List of diffs info, per file name having a diff. Diffs info have the following properties:
       # * *moved_to* (String): The new file path, in case it has been moved [optional]

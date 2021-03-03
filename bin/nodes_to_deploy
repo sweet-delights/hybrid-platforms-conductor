@@ -72,11 +72,17 @@ unless ignore_deploy_info
         commit_id = node_deploy_info["commit_id_#{repo_idx}".to_sym]
         impacted_nodes = cache_impacted_nodes.dig(repo_name, commit_id)
         if impacted_nodes.nil?
-          impacted_nodes, _single_impacted_nodes, _impacted_services, _impact_global = nodes_handler.impacted_nodes_from_git_diff(
-            repo_name,
-            from_commit: commit_id,
-            to_commit: 'master'
-          )
+          begin
+            impacted_nodes, _single_impacted_nodes, _impacted_services, _impact_global = nodes_handler.impacted_nodes_from_git_diff(
+              repo_name,
+              from_commit: commit_id,
+              to_commit: 'master'
+            )
+          rescue HybridPlatformsConductor::NodesHandler::GitError
+            # Consider the node was deployed with a non-release branch commit (as it is missing)
+            # So we have to make sure we deploy it again
+            impacted_nodes = [node]
+          end
           cache_impacted_nodes[repo_name] = {} unless cache_impacted_nodes.key?(repo_name)
           cache_impacted_nodes[repo_name][commit_id] = impacted_nodes
         end
