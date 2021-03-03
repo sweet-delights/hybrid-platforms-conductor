@@ -16,7 +16,7 @@ jobs:
           ruby-version: '2.7'
 
       - name: Install sshpass as it is needed to test the SSH connector
-        run: apt install sshpass
+        run: sudo apt install sshpass
 
       - name: Install dependencies
         run: bundle install
