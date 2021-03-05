@@ -185,12 +185,6 @@ describe HybridPlatformsConductor::ActionsExecutor do
         end
       end
 
-      it 'fails if a node can\'t be connected to' do
-        with_test_platform(nodes: { 'node' => {} }) do
-          expect { ssh_config_for('node') }.to raise_error(/No connection possible to node/)
-        end
-      end
-
       it 'generates an alias if the node has a hostname' do
         with_test_platform(nodes: { 'node' => { meta: { host_ip: '192.168.42.42', hostname: 'my_hostname.my_domain' } } }) do
           expect(ssh_config_for('node')).to eq <<~EOS
