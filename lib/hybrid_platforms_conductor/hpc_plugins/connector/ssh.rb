@@ -10,6 +10,10 @@ module HybridPlatformsConductor
       # Connect to node using SSH
       class Ssh < HybridPlatformsConductor::Connector
 
+        # Exception raise when a node is not connectable using SSH
+        class NotConnectableError < RuntimeError
+        end
+
         module PlatformsDslSsh
 
           # Initialize the DSL
@@ -329,14 +333,18 @@ module HybridPlatformsConductor
           @nodes_handler.prefetch_metadata_of nodes, %i[private_ips hostname host_ip description]
           nodes.sort.each do |node|
             # Generate the conf for the node
-            connection, gateway, gateway_user = connection_info_for(node)
-            config_content << "# #{node} - #{connection} - #{@nodes_handler.get_description_of(node) || ''}\n"
-            config_content << "Host #{ssh_aliases_for(node).join(' ')}\n"
-            config_content << "  Hostname #{connection}\n"
-            config_content << "  ProxyCommand #{ssh_exec} -q -W %h:%p #{gateway_user}@#{gateway}\n" unless gateway.nil?
-            if @passwords.key?(node)
-              config_content << "  PreferredAuthentications password\n"
-              config_content << "  PubkeyAuthentication no\n"
+            begin
+              connection, gateway, gateway_user = connection_info_for(node)
+              config_content << "# #{node} - #{connection} - #{@nodes_handler.get_description_of(node) || ''}\n"
+              config_content << "Host #{ssh_aliases_for(node).join(' ')}\n"
+              config_content << "  Hostname #{connection}\n"
+              config_content << "  ProxyCommand #{ssh_exec} -q -W %h:%p #{gateway_user}@#{gateway}\n" unless gateway.nil?
+              if @passwords.key?(node)
+                config_content << "  PreferredAuthentications password\n"
+                config_content << "  PubkeyAuthentication no\n"
+              end
+            rescue NotConnectableError
+              config_content << "# #{node} - Not connectable using SSH - #{@nodes_handler.get_description_of(node) || ''}\n"
             end
             config_content << "\n"
           end
@@ -665,7 +673,7 @@ module HybridPlatformsConductor
             elsif @nodes_handler.get_hostname_of(node)
               @nodes_handler.get_hostname_of(node)
             else
-              raise "No connection possible to #{node}"
+              raise NotConnectableError, "No connection possible to #{node}"
             end
           gateway = @nodes_handler.get_gateway_of node
           gateway_user = @nodes_handler.get_gateway_user_of node
