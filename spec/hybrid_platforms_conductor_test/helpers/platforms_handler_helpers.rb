@@ -58,7 +58,7 @@ module HybridPlatformsConductorTest
       #
       # Parameters::
       # * *content* (String): hpc_config.rb's content
-      # * Proc: Code called with the platforms.rb file created.
+      # * Proc: Code called with the hpc_config.rb file created.
       #   * Parameters::
       #     * *hybrid_platforms_dir* (String): The hybrid-platforms directory
       def with_platforms(content)
