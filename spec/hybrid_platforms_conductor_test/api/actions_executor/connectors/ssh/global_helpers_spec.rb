@@ -153,6 +153,24 @@ describe HybridPlatformsConductor::ActionsExecutor do
         end
       end
 
+      it 'generates a simple config for several nodes even when some of them can\'t be connected' do
+        with_test_platform(nodes: {
+          'node1' => { meta: { host_ip: '192.168.42.1' } },
+          'node2' => { meta: {} },
+          'node3' => { meta: { host_ip: '192.168.42.3' } }
+        }) do
+          expect(ssh_config_for('node1')).to eq <<~EOS
+            Host hpc.node1
+              Hostname 192.168.42.1
+          EOS
+          expect(ssh_config_for('node2')).to eq "\n"
+          expect(ssh_config_for('node3')).to eq <<~EOS
+            Host hpc.node3
+              Hostname 192.168.42.3
+          EOS
+        end
+      end
+
       it 'selects nodes when generating the config' do
         with_test_platform(nodes: {
           'node1' => { meta: { host_ip: '192.168.42.1' } },
@@ -164,12 +182,6 @@ describe HybridPlatformsConductor::ActionsExecutor do
               Hostname 192.168.42.1
           EOS
           expect(ssh_config_for('node2', nodes: %w[node1 node3])).to eq nil
-        end
-      end
-
-      it 'fails if a node can\'t be connected to' do
-        with_test_platform(nodes: { 'node' => {} }) do
-          expect { ssh_config_for('node') }.to raise_error(/No connection possible to node/)
         end
       end
 

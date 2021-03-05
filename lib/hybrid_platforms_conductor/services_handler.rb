@@ -12,14 +12,9 @@ module HybridPlatformsConductor
 
     class << self
 
-      # List of deployments that have been packaged.
-      # Each deployment has the following info:
-      # * *platform_name* (String): The platform name
-      # * *services* (Hash< String, Array<String> >): Services to be deployed, per node
-      # * *secrets* (Hash): Secrets for which this has been packaged
-      # * *local_environment* (Boolean): Has it been packaged for local environment?
+      # List of package IDs that have been packaged.
       # Make this at class level as several Deployer instances can be used in a multi-thread environmnent.
-      #   Array< Hash<Symbol, Object> >
+      #   Array<Object>
       attr_reader :packaged_deployments
 
     end
@@ -114,21 +109,22 @@ module HybridPlatformsConductor
     )
       platforms_for(services).each do |platform, platform_services|
         platform_name = platform.name
-        deployment_info = {
+        # Compute the package ID that is unique to this packaging, so that we don't mix it with others if needed.
+        package_id = {
           platform_name: platform_name,
-          services: platform_services,
-          secrets: secrets,
+          services: Hash[platform_services.map { |node, node_services| [node, node_services.sort] }].sort,
+          secrets: secrets.sort,
           local_environment: local_environment
         }
-        if ServicesHandler.packaged_deployments.include?(deployment_info)
-          log_debug "Platform #{platform_name} has already been packaged for this deployment. Won't package it another time."
+        if ServicesHandler.packaged_deployments.include?(package_id)
+          log_debug "Platform #{platform_name} has already been packaged for this deployment (package ID #{package_id}). Won't package it another time."
         else
           platform.package(
             services: platform_services,
             secrets: secrets,
             local_environment: local_environment
           )
-          ServicesHandler.packaged_deployments << deployment_info
+          ServicesHandler.packaged_deployments << package_id
         end
       end
     end
