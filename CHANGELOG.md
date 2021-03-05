@@ -1,3 +1,9 @@
+# [v32.4.2](https://github.com/sweet-delights/hybrid-platforms-conductor/compare/v32.4.1...v32.4.2) (2021-03-05 13:29:25)
+
+### Patches
+
+* [Ssh config fix](https://github.com/sweet-delights/hybrid-platforms-conductor/commit/e2cfe52ab98fb246e2759d146aea297cb0f37321)
+
 # [v32.4.1](https://github.com/sweet-delights/hybrid-platforms-conductor/compare/v32.4.0...v32.4.1) (2021-03-03 13:17:39)
 
 ### Patches
