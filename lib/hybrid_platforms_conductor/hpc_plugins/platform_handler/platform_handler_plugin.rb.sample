@@ -173,7 +173,7 @@ module HybridPlatformsConductor
         # * *local_environment* (Boolean): Are we deploying to a local environment?
         def package(services:, secrets:, local_environment:)
           # This method should take all actions to prepare the repository to be deployed on nodes later.
-          File.write('temporary_secrets_to_be_deployed.json', secrets)
+          File.write("#{@repository_path}/temporary_secrets_to_be_deployed.json", secrets.to_json)
           # Usually it is meant to package the deployment scripts.
           @cmd_runner.run_cmd "cd #{@repository_path} && ./scripts/package_in_debian_format.sh"
         end
