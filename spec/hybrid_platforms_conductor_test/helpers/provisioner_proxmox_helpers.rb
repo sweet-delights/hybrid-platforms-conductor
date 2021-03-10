@@ -330,7 +330,7 @@ module HybridPlatformsConductorTest
             expect(actions).to eq({
               'node' => {
                 remote_bash: {
-                  commands: "#{expected_sudo ? 'sudo -E ' : ''}./proxmox/reserve_proxmox_container --create ./proxmox/create/create_#{expected_file_id}.json --config ./proxmox/config/config_#{expected_file_id}.json",
+                  commands: "#{expected_sudo ? 'sudo -u root -E ' : ''}./proxmox/reserve_proxmox_container --create ./proxmox/create/create_#{expected_file_id}.json --config ./proxmox/config/config_#{expected_file_id}.json",
                   env: {
                     'hpc_user_for_proxmox' => proxmox_user,
                     'hpc_password_for_proxmox' => proxmox_password,
@@ -382,7 +382,7 @@ module HybridPlatformsConductorTest
               expect(actions).to eq({
                 'node' => {
                   remote_bash: {
-                    commands: "#{expected_sudo ? 'sudo -E ' : ''}./proxmox/reserve_proxmox_container --destroy ./proxmox/destroy/destroy_#{expected_file_id}.json --config ./proxmox/config/config_#{expected_file_id}.json",
+                    commands: "#{expected_sudo ? 'sudo -u root -E ' : ''}./proxmox/reserve_proxmox_container --destroy ./proxmox/destroy/destroy_#{expected_file_id}.json --config ./proxmox/config/config_#{expected_file_id}.json",
                     env: {
                       'hpc_user_for_proxmox' => proxmox_user,
                       'hpc_password_for_proxmox' => proxmox_password,

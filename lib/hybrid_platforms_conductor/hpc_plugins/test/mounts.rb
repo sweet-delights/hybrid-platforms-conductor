@@ -61,7 +61,7 @@ module HybridPlatformsConductor
         # Check my_test_plugin.rb.sample documentation for signature details.
         def test_on_node
           {
-            'sudo mount' => proc do |stdout|
+            "#{@nodes_handler.sudo_on(@node)} mount" => proc do |stdout|
               mounts_info = stdout.map do |line|
                 fields = line.split
                 {

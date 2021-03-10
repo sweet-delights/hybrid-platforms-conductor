@@ -92,10 +92,24 @@ describe HybridPlatformsConductor::ActionsExecutor do
         with_test_platform_for_remote_testing(
           expected_cmds: [
             [
-              /cd \/path\/to && tar\s+--create\s+--gzip\s+--file -\s+src.file \| \/.+\/ssh\s+test_user@hpc\.node\s+"sudo tar\s+--extract\s+--gunzip\s+--file -\s+--directory \/remote_path\/to\/dst.dir\s+--owner root\s+"/,
+              /cd \/path\/to && tar\s+--create\s+--gzip\s+--file -\s+src.file \| \/.+\/ssh\s+test_user@hpc\.node\s+"sudo -u root tar\s+--extract\s+--gunzip\s+--file -\s+--directory \/remote_path\/to\/dst.dir\s+--owner root\s+"/,
               proc { [0, '', ''] }
             ]
           ]
+        ) do
+          test_connector.remote_copy('/path/to/src.file', '/remote_path/to/dst.dir', sudo: true)
+        end
+      end
+
+      it 'copies files remotely with a different sudo' do
+        with_test_platform_for_remote_testing(
+          expected_cmds: [
+            [
+              /cd \/path\/to && tar\s+--create\s+--gzip\s+--file -\s+src.file \| \/.+\/ssh\s+test_user@hpc\.node\s+"other_sudo --user root tar\s+--extract\s+--gunzip\s+--file -\s+--directory \/remote_path\/to\/dst.dir\s+--owner root\s+"/,
+              proc { [0, '', ''] }
+            ]
+          ],
+          additional_config: 'sudo_for { |user| "other_sudo --user #{user}" }'
         ) do
           test_connector.remote_copy('/path/to/src.file', '/remote_path/to/dst.dir', sudo: true)
         end

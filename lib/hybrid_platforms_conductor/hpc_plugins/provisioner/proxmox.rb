@@ -404,7 +404,7 @@ module HybridPlatformsConductor
                 {
                   proxmox_test_info[:sync_node] => {
                     remote_bash: {
-                      commands: "#{@actions_executor.connector(:ssh).ssh_user == 'root' ? '' : 'sudo -E '}./proxmox/#{cmd}",
+                      commands: "#{@actions_executor.connector(:ssh).ssh_user == 'root' ? '' : "#{@nodes_handler.sudo_on(proxmox_test_info[:sync_node])} -E "}./proxmox/#{cmd}",
                       env: {
                         'hpc_user_for_proxmox' => user,
                         'hpc_password_for_proxmox' => password,

@@ -94,9 +94,17 @@ module HybridPlatformsConductorTest
       # * *expected_stderr* (String): Expected stderr after client code execution [default: '']
       # * *timeout* (Integer or nil): Timeout to prepare the connector for [default: nil]
       # * *password* (String or nil): Password to set for the node, or nil for none [default: nil]
+      # * *additional_config* (String): Additional config [default: '']
       # * Proc: Client code to execute testing
-      def with_test_platform_for_remote_testing(expected_cmds: [], expected_stdout: '', expected_stderr: '', timeout: nil, password: nil)
-        with_test_platform(nodes: { 'node' => { meta: { host_ip: '192.168.42.42' } } }) do
+      def with_test_platform_for_remote_testing(
+        expected_cmds: [],
+        expected_stdout: '',
+        expected_stderr: '',
+        timeout: nil,
+        password: nil,
+        additional_config: ''
+      )
+        with_test_platform({ nodes: { 'node' => { meta: { host_ip: '192.168.42.42' } } } }, false, additional_config) do
           with_cmd_runner_mocked(
             [
               ['which env', proc { [0, "/usr/bin/env\n", ''] }],

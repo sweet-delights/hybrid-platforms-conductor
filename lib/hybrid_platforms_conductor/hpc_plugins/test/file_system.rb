@@ -17,7 +17,7 @@ module HybridPlatformsConductor
           Hash[
             @config.aggregate_files_rules(@nodes_handler, @node).map do |path, rule_info|
               [
-                "if sudo /bin/bash -c '[[ -d \"#{path}\" ]]' ; then echo 1 ; else echo 0 ; fi",
+                "if #{@nodes_handler.sudo_on(@node)} /bin/bash -c '[[ -d \"#{path}\" ]]' ; then echo 1 ; else echo 0 ; fi",
                 {
                   validator: proc do |stdout, stderr|
                     case stdout.last

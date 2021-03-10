@@ -9,12 +9,12 @@ module HybridPlatformsConductorTest
       # Parameters::
       # * *action* (Hash<Symbol,Object>): The action to check
       # * *node* (String): The concerned node
-      # * *sudo* (Boolean): Is sudo supposed to be used? [default: true]
-      def expect_action_to_lock_node(action, node, sudo: true)
+      # * *sudo* (String or nil): sudo supposed to be used, or nil if none [default: 'sudo -u root']
+      def expect_action_to_lock_node(action, node, sudo: 'sudo -u root')
         expect(action[:scp].size).to eq 1
         expect(action[:scp].first[0]).to match /^.+\/mutex_dir$/
         expect(action[:scp].first[1]).to eq '.'
-        expect(action[:remote_bash]).to eq "while ! #{sudo ? 'sudo ' : ''}./mutex_dir lock /tmp/hybrid_platforms_conductor_deploy_lock \"$(ps -o ppid= -p $$)\"; do echo -e 'Another deployment is running on #{node}. Waiting for it to finish to continue...' ; sleep 5 ; done"
+        expect(action[:remote_bash]).to eq "while ! #{sudo ? "#{sudo} " : ''}./mutex_dir lock /tmp/hybrid_platforms_conductor_deploy_lock \"$(ps -o ppid= -p $$)\"; do echo -e 'Another deployment is running on #{node}. Waiting for it to finish to continue...' ; sleep 5 ; done"
       end
 
       # Expect a given action to be releasing the mutex on a given node
@@ -22,9 +22,9 @@ module HybridPlatformsConductorTest
       # Parameters::
       # * *action* (Hash<Symbol,Object>): The action to check
       # * *node* (String): The concerned node
-      # * *sudo* (Boolean): Is sudo supposed to be used? [default: true]
-      def expect_action_to_unlock_node(action, node, sudo: true)
-        expect(action).to eq(remote_bash: "#{sudo ? 'sudo ' : ''}./mutex_dir unlock /tmp/hybrid_platforms_conductor_deploy_lock")
+      # * *sudo* (String or nil): sudo supposed to be used, or nil if none [default: 'sudo -u root']
+      def expect_action_to_unlock_node(action, node, sudo: 'sudo -u root')
+        expect(action).to eq(remote_bash: "#{sudo ? "#{sudo} " : ''}./mutex_dir unlock /tmp/hybrid_platforms_conductor_deploy_lock")
       end
 
       # Expect a given set of actions to be a deployment
@@ -33,12 +33,12 @@ module HybridPlatformsConductorTest
       # * *actions* (Object): Actions
       # * *nodes* (String or Array<String>): Node (or list of nodes) that should be checked
       # * *check* (Boolean): Is the deploy only a check? [default: false]
-      # * *sudo* (Boolean): Is sudo supposed to be used? [default: true]
+      # * *sudo* (String or nil): sudo supposed to be used, or nil if none [default: 'sudo -u root']
       # * *expected_actions* (Array<Object>): Additional expected actions [default: []]
       # * *mocked_result* (Hash<String, [Object, String, String]>): Expected result of the actions, per node, or nil for success [default: nil]
       # Result::
       # * Hash<String, [Integer or Symbol, String, String] >: Expected result of those expected actions
-      def expect_actions_to_deploy_on(actions, nodes, check: false, sudo: true, expected_actions: [], mocked_result: nil)
+      def expect_actions_to_deploy_on(actions, nodes, check: false, sudo: 'sudo -u root', expected_actions: [], mocked_result: nil)
         nodes = [nodes] if nodes.is_a?(String)
         mocked_result = Hash[nodes.map { |node| [node, [0, "#{check ? 'Check' : 'Deploy'} successful", '']] }] if mocked_result.nil?
         expect(actions.size).to eq nodes.size
@@ -57,8 +57,8 @@ module HybridPlatformsConductorTest
       # Parameters::
       # * *actions* (Object): Actions
       # * *nodes* (String or Array<String>): Node (or list of nodes) that should be checked
-      # * *sudo* (Boolean): Is sudo supposed to be used? [default: true]
-      def expect_actions_to_unlock(actions, nodes, sudo: true)
+      # * *sudo* (String or nil): sudo supposed to be used, or nil if none [default: 'sudo -u root']
+      def expect_actions_to_unlock(actions, nodes, sudo: 'sudo -u root')
         nodes = [nodes] if nodes.is_a?(String)
         expect(actions.size).to eq nodes.size
         nodes.each do |node|
@@ -73,17 +73,17 @@ module HybridPlatformsConductorTest
       # Parameters::
       # * *actions* (Object): Actions
       # * *nodes* (String or Array<String>): Node (or list of nodes) that should be checked
-      # * *sudo* (Boolean): Is sudo supposed to be used? [default: true]
-      def expect_actions_to_upload_logs(actions, nodes, sudo: true)
+      # * *sudo* (String or nil): sudo supposed to be used, or nil if none [default: 'sudo -u root']
+      def expect_actions_to_upload_logs(actions, nodes, sudo: 'sudo -u root')
         nodes = [nodes] if nodes.is_a?(String)
         expect(actions.size).to eq nodes.size
         nodes.each do |node|
           expect(actions.key?(node)).to eq true
-          expect(actions[node][:remote_bash]).to eq "#{sudo ? 'sudo ' : ''}mkdir -p /var/log/deployments"
+          expect(actions[node][:remote_bash]).to eq "#{sudo ? "#{sudo} " : ''}mkdir -p /var/log/deployments"
           expect(actions[node][:scp].first[1]).to eq '/var/log/deployments'
           expect(actions[node][:scp][:group]).to eq 'root'
           expect(actions[node][:scp][:owner]).to eq 'root'
-          expect(actions[node][:scp][:sudo]).to eq sudo
+          expect(actions[node][:scp][:sudo]).to eq (!sudo.nil?)
         end
         Hash[nodes.map { |node| [node, [0, 'Logs uploaded', '']] }]
       end
