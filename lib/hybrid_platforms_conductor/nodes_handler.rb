@@ -18,9 +18,20 @@ module HybridPlatformsConductor
       # Array< Hash<Symbol, Object> >
       attr_reader :cmdb_masters
 
+      # List of sudo methods. Each info has the following properties:
+      # * *nodes_selectors_stack* (Array<Object>): Stack of nodes selectors impacted by this rule.
+      # * *sudo_proc* (Proc): Code giving the sudo line for a given user
+      #   Parameters::
+      #   * *user* (String): User for which we want sudo
+      #   Result::
+      #   * String: Corresponding sudo string
+      # Array< Hash<Symbol, Object> >
+      attr_reader :sudo_procs
+
       # Mixin initializer
       def init_nodes_handler_config
         @cmdb_masters = []
+        @sudo_procs = []
       end
 
       # Set CMDB masters
@@ -31,6 +42,17 @@ module HybridPlatformsConductor
         @cmdb_masters << {
           cmdb_masters: Hash[master_cmdbs_info.map { |cmdb, properties| [cmdb, properties.is_a?(Array) ? properties : [properties]] }],
           nodes_selectors_stack: current_nodes_selectors_stack
+        }
+      end
+
+      # Set a sudo proc
+      #
+      # Parameters::
+      # * *sudo_proc* (Proc): The sudo proc (see #sudo_procs doc to know the signature)
+      def sudo_for(&sudo_proc)
+        @sudo_procs << {
+          nodes_selectors_stack: current_nodes_selectors_stack,
+          sudo_proc: sudo_proc
         }
       end
 
@@ -566,6 +588,21 @@ module HybridPlatformsConductor
     # * Array<String>: List of nodes
     def select_from_nodes_selector_stack(nodes_selector_stack)
       nodes_selector_stack.inject(known_nodes) { |selected_nodes, nodes_selector| selected_nodes & select_nodes(nodes_selector) }
+    end
+
+    # Get the sudo command for a given user on a given node
+    #
+    # Parameters::
+    # * *node* (String): Node on which we need sudo
+    # * *user* (String): User for which we need sudo [default = 'root']
+    # Result::
+    # * String: The corresponding sudo string
+    def sudo_on(node, user = 'root')
+      sudo = nil
+      select_confs_for_node(node, @config.sudo_procs).each do |sudo_proc_info|
+        sudo = sudo_proc_info[:sudo_proc].call(user)
+      end
+      sudo.nil? ? "sudo -u #{user}" : sudo
     end
 
     private
