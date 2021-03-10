@@ -1,3 +1,9 @@
+# [v32.5.0](https://github.com/sweet-delights/hybrid-platforms-conductor/compare/v32.4.2...v32.5.0) (2021-03-10 19:11:10)
+
+### Features
+
+* [[#12] Configurable sudo](https://github.com/sweet-delights/hybrid-platforms-conductor/commit/b0da1e6f9bfd56f51730afb3c17c2607d719e56c)
+
 # [v32.4.2](https://github.com/sweet-delights/hybrid-platforms-conductor/compare/v32.4.1...v32.4.2) (2021-03-05 13:29:25)
 
 ### Patches
