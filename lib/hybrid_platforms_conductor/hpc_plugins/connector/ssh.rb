@@ -272,7 +272,7 @@ module HybridPlatformsConductor
               #{File.basename(from)} | \
             #{ssh_exec} \
               #{ssh_url} \
-              \"#{sudo ? 'sudo ' : ''}tar \
+              \"#{sudo ? "#{@nodes_handler.sudo_on(@node)} " : ''}tar \
                 --extract \
                 --gunzip \
                 --file - \

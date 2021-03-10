@@ -480,6 +480,7 @@ module HybridPlatformsConductor
       outputs = @actions_executor.execute_actions(
         Hash[services.map do |node, node_services|
           image_id = @nodes_handler.get_image_of(node)
+          sudo = (ssh_user == 'root' ? '' : "#{@nodes_handler.sudo_on(node)} ")
           # Install My_company corporate certificates if present
           certificate_actions =
             if @local_environment && ENV['hpc_certificates']
@@ -489,20 +490,20 @@ module HybridPlatformsConductor
                 when 'debian_9', 'debian_10'
                   [
                     {
-                      remote_bash: "#{ssh_user == 'root' ? '' : 'sudo '}apt update && #{ssh_user == 'root' ? '' : 'sudo '}apt install -y ca-certificates"
+                      remote_bash: "#{sudo}apt update && #{sudo}apt install -y ca-certificates"
                     },
                     {
                       scp: {
                         ENV['hpc_certificates'] => '/usr/local/share/ca-certificates',
                         :sudo => ssh_user != 'root'
                       },
-                      remote_bash: "#{ssh_user == 'root' ? '' : 'sudo '}update-ca-certificates"
+                      remote_bash: "#{sudo}update-ca-certificates"
                     }
                   ]
                 when 'centos_7'
                   [
                     {
-                      remote_bash: "#{ssh_user == 'root' ? '' : 'sudo '}yum install -y ca-certificates"
+                      remote_bash: "#{sudo}yum install -y ca-certificates"
                     },
                     {
                       scp: Hash[Dir.glob("#{ENV['hpc_certificates']}/*.crt").map do |cert_file|
@@ -512,8 +513,8 @@ module HybridPlatformsConductor
                         ]
                       end].merge(sudo: ssh_user != 'root'),
                       remote_bash: [
-                        "#{ssh_user == 'root' ? '' : 'sudo '}update-ca-trust enable",
-                        "#{ssh_user == 'root' ? '' : 'sudo '}update-ca-trust extract"
+                        "#{sudo}update-ca-trust enable",
+                        "#{sudo}update-ca-trust extract"
                       ]
                     }
                   ]
@@ -532,7 +533,7 @@ module HybridPlatformsConductor
               # Install the mutex lock and acquire it
               {
                 scp: { "#{__dir__}/mutex_dir" => '.' },
-                remote_bash: "while ! #{ssh_user == 'root' ? '' : 'sudo '}./mutex_dir lock /tmp/hybrid_platforms_conductor_deploy_lock \"$(ps -o ppid= -p $$)\"; do echo -e 'Another deployment is running on #{node}. Waiting for it to finish to continue...' ; sleep 5 ; done"
+                remote_bash: "while ! #{sudo}./mutex_dir lock /tmp/hybrid_platforms_conductor_deploy_lock \"$(ps -o ppid= -p $$)\"; do echo -e 'Another deployment is running on #{node}. Waiting for it to finish to continue...' ; sleep 5 ; done"
               }
             ] +
               certificate_actions +
@@ -548,7 +549,7 @@ module HybridPlatformsConductor
         Hash[services.keys.map do |node|
           [
             node,
-            { remote_bash: "#{ssh_user == 'root' ? '' : 'sudo '}./mutex_dir unlock /tmp/hybrid_platforms_conductor_deploy_lock" }
+            { remote_bash: "#{ssh_user == 'root' ? '' : "#{@nodes_handler.sudo_on(node)} "}./mutex_dir unlock /tmp/hybrid_platforms_conductor_deploy_lock" }
           ]
         end],
         timeout: 10,
@@ -595,7 +596,7 @@ module HybridPlatformsConductor
               [
                 node,
                 {
-                  remote_bash: "#{ssh_user == 'root' ? '' : 'sudo '}mkdir -p /var/log/deployments",
+                  remote_bash: "#{ssh_user == 'root' ? '' : "#{@nodes_handler.sudo_on(node)} "}mkdir -p /var/log/deployments",
                   scp: {
                     log_file => '/var/log/deployments',
                     :sudo => ssh_user != 'root',

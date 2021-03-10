@@ -15,7 +15,7 @@ module HybridPlatformsConductor
         def test_on_node
           now = Time.now
           {
-            'sudo ls -t /var/log/deployments' => proc do |stdout|
+            "#{@nodes_handler.sudo_on(@node)} ls -t /var/log/deployments" => proc do |stdout|
               if stdout.empty?
                 error 'Node has never been deployed using deploy (/var/log/deployments is empty)'
               elsif stdout.first =~ /No such file or directory/

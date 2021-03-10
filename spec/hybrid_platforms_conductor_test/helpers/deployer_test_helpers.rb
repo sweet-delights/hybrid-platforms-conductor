@@ -20,7 +20,7 @@ module HybridPlatformsConductorTest
           #
           # Parameters::
           # * *services* (Hash<String, Array<String> >): Expected nodes that should be deployed, with their corresponding services [default: { 'node' => %w[service] }]
-          # * *sudo* (Boolean): Do we expect sudo to be used in commands? [default: true]
+          # * *sudo* (String or nil): sudo supposed to be used, or nil if none [default: 'sudo -u root']
           # * *check_mode* (Boolean): Are we testing in check mode? [default: @check_mode]
           # * *mocked_deploy_result* (Hash or nil): Mocked result of the deployment actions, or nil to use the helper's default [default: nil]
           # * *additional_expected_actions* (Array): Additional expected actions [default: []]
@@ -28,7 +28,7 @@ module HybridPlatformsConductorTest
           # * *expect_actions_timeout* (Integer or nil): Expected timeout in actions, or nil for none [default: nil]
           def expected_actions_for_deploy_on(
             services: { 'node' => %w[service] },
-            sudo: true,
+            sudo: 'sudo -u root',
             check_mode: @check_mode,
             mocked_deploy_result: nil,
             additional_expected_actions: [],
@@ -82,7 +82,7 @@ module HybridPlatformsConductorTest
           # * *expect_prepare_for_deploy* (Boolean): Should we expect calls to prepare for deploy? [default: true]
           # * *expect_connections_to_nodes* (Boolean): Should we expect connections to nodes? [default: true]
           # * *expect_default_actions* (Boolean): Should we expect default actions? [default: true]
-          # * *expect_sudo* (Boolean): Do we expect sudo to be used in commands? [default: true]
+          # * *expect_sudo* (String or nil): Expected sudo command, or nil if none [default: 'sudo -u root']
           # * *expect_secrets* (Hash): Secrets to be expected during deployment [default: {}]
           # * *expect_local_environment* (Boolean): Expected local environment flag [default: false]
           # * *expect_additional_actions* (Array): Additional expected actions [default: []]
@@ -99,7 +99,7 @@ module HybridPlatformsConductorTest
             expect_prepare_for_deploy: true,
             expect_connections_to_nodes: true,
             expect_default_actions: true,
-            expect_sudo: true,
+            expect_sudo: 'sudo -u root',
             expect_secrets: {},
             expect_local_environment: false,
             expect_additional_actions: [],
@@ -201,8 +201,17 @@ module HybridPlatformsConductorTest
           end
 
           it 'deploys on 1 node using root' do
-            with_platform_to_deploy(expect_sudo: false) do
+            with_platform_to_deploy(expect_sudo: nil) do
               test_actions_executor.connector(:ssh).ssh_user = 'root'
+              expect(test_deployer.deploy_on('node')).to eq('node' => expected_deploy_result)
+            end
+          end
+
+          it 'deploys on 1 node using an alternate sudo' do
+            with_platform_to_deploy(
+              expect_sudo: 'other_sudo --user root',
+              additional_config: 'sudo_for { |user| "other_sudo --user #{user}" }'
+            ) do
               expect(test_deployer.deploy_on('node')).to eq('node' => expected_deploy_result)
             end
           end
@@ -227,15 +236,40 @@ module HybridPlatformsConductorTest
                 nodes_info: { nodes: { 'node' => { meta: { image: 'debian_9' }, services: %w[service] } } },
                 expect_local_environment: true,
                 expect_additional_actions: [
-                  { remote_bash: 'sudo apt update && sudo apt install -y ca-certificates' },
+                  { remote_bash: 'sudo -u root apt update && sudo -u root apt install -y ca-certificates' },
                   {
-                    remote_bash: 'sudo update-ca-certificates',
+                    remote_bash: 'sudo -u root update-ca-certificates',
                     scp:  {
                       certs_dir => '/usr/local/share/ca-certificates',
                       :sudo => true
                     }
                   }
                 ]
+              ) do
+                ENV['hpc_certificates'] = certs_dir
+                test_deployer.local_environment = true
+                expect(test_deployer.deploy_on('node')).to eq('node' => expected_deploy_result)
+              end
+            end
+          end
+
+          it 'deploys on 1 node in local environment with certificates to install using hpc_certificates on Debian and an alternate sudo' do
+            with_certs_dir do |certs_dir|
+              with_platform_to_deploy(
+                nodes_info: { nodes: { 'node' => { meta: { image: 'debian_9' }, services: %w[service] } } },
+                expect_sudo: 'other_sudo --user root',
+                expect_local_environment: true,
+                expect_additional_actions: [
+                  { remote_bash: 'other_sudo --user root apt update && other_sudo --user root apt install -y ca-certificates' },
+                  {
+                    remote_bash: 'other_sudo --user root update-ca-certificates',
+                    scp:  {
+                      certs_dir => '/usr/local/share/ca-certificates',
+                      :sudo => true
+                    }
+                  }
+                ],
+                additional_config: 'sudo_for { |user| "other_sudo --user #{user}" }'
               ) do
                 ENV['hpc_certificates'] = certs_dir
                 test_deployer.local_environment = true
@@ -257,7 +291,7 @@ module HybridPlatformsConductorTest
             with_certs_dir do |certs_dir|
               with_platform_to_deploy(
                 nodes_info: { nodes: { 'node' => { meta: { image: 'debian_9' }, services: %w[service] } } },
-                expect_sudo: false,
+                expect_sudo: nil,
                 expect_local_environment: true,
                 expect_additional_actions: [
                   { remote_bash: 'apt update && apt install -y ca-certificates' },
@@ -284,9 +318,9 @@ module HybridPlatformsConductorTest
                 nodes_info: { nodes: { 'node' => { meta: { image: 'centos_7' }, services: %w[service] } } },
                 expect_local_environment: true,
                 expect_additional_actions: [
-                  { remote_bash: 'sudo yum install -y ca-certificates' },
+                  { remote_bash: 'sudo -u root yum install -y ca-certificates' },
                   {
-                    remote_bash: ['sudo update-ca-trust enable', 'sudo update-ca-trust extract'],
+                    remote_bash: ['sudo -u root update-ca-trust enable', 'sudo -u root update-ca-trust extract'],
                     scp: {
                       "#{certs_dir}/test_cert.crt" => '/etc/pki/ca-trust/source/anchors',
                       :sudo => true
@@ -301,11 +335,36 @@ module HybridPlatformsConductorTest
             end
           end
 
+          it 'deploys on 1 node with certificates to install using hpc_certificates on CentOS and an alternate sudo' do
+            with_certs_dir do |certs_dir|
+              with_platform_to_deploy(
+                nodes_info: { nodes: { 'node' => { meta: { image: 'centos_7' }, services: %w[service] } } },
+                expect_sudo: 'other_sudo --user root',
+                expect_local_environment: true,
+                expect_additional_actions: [
+                  { remote_bash: 'other_sudo --user root yum install -y ca-certificates' },
+                  {
+                    remote_bash: ['other_sudo --user root update-ca-trust enable', 'other_sudo --user root update-ca-trust extract'],
+                    scp: {
+                      "#{certs_dir}/test_cert.crt" => '/etc/pki/ca-trust/source/anchors',
+                      :sudo => true
+                    }
+                  }
+                ],
+                additional_config: 'sudo_for { |user| "other_sudo --user #{user}" }'
+              ) do
+                ENV['hpc_certificates'] = certs_dir
+                test_deployer.local_environment = true
+                expect(test_deployer.deploy_on('node')).to eq('node' => expected_deploy_result)
+              end
+            end
+          end
+
           it 'deploys on 1 node with certificates to install using hpc_certificates on CentOS using root' do
             with_certs_dir do |certs_dir|
               with_platform_to_deploy(
                 nodes_info: { nodes: { 'node' => { meta: { image: 'centos_7' }, services: %w[service] } } },
-                expect_sudo: false,
+                expect_sudo: nil,
                 expect_local_environment: true,
                 expect_additional_actions: [
                   { remote_bash: 'yum install -y ca-certificates' },

@@ -57,7 +57,7 @@ module HybridPlatformsConductor
         # Check my_test_plugin.rb.sample documentation for signature details.
         def test_on_node
           {
-            "sudo cat /etc/passwd" => proc do |stdout|
+            "#{@nodes_handler.sudo_on(@node)} cat /etc/passwd" => proc do |stdout|
               passwd_users = stdout.map { |passwd_line| passwd_line.split(':').first }
               missing_users = @nodes_handler.
                 select_confs_for_node(@node, @config.users_that_should_be_present).

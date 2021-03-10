@@ -54,6 +54,7 @@ module HybridPlatformsConductor
                   current_url
                 end
               )
+              sudo = @nodes_handler.sudo_on(@node)
               Hash[urls.map do |url|
                 # 1. Get the OVAL file on the node to be tested (uncompress it if needed)
                 # 2. Make sure oscap is installed
@@ -74,9 +75,9 @@ module HybridPlatformsConductor
                   #{
                     case image
                     when :centos_7
-                      "sudo yum install -y wget openscap-scanner #{packages_to_install.join(' ')}"
+                      "#{sudo} yum install -y wget openscap-scanner #{packages_to_install.join(' ')}"
                     when :debian_9
-                      "sudo apt install -y wget libopenscap8 #{packages_to_install.join(' ')}"
+                      "#{sudo} apt install -y wget libopenscap8 #{packages_to_install.join(' ')}"
                     when :debian_10
                       # On Debian 10 we have to compile it from sources, as the packaged official version has core dumps.
                       # cf https://www.mail-archive.com/debian-bugs-dist@lists.debian.org/msg1688223.html
@@ -86,13 +87,13 @@ module HybridPlatformsConductor
                           rm -rf openscap
                           git clone --recurse-submodules https://github.com/OpenSCAP/openscap.git
                           cd openscap
-                          sudo apt install -y cmake libdbus-1-dev libdbus-glib-1-dev libcurl4-openssl-dev libgcrypt20-dev libselinux1-dev libxslt1-dev libgconf2-dev libacl1-dev libblkid-dev libcap-dev libxml2-dev libldap2-dev libpcre3-dev python-dev swig libxml-parser-perl libxml-xpath-perl libperl-dev libbz2-dev librpm-dev g++ libapt-pkg-dev libyaml-dev
+                          #{sudo} apt install -y cmake libdbus-1-dev libdbus-glib-1-dev libcurl4-openssl-dev libgcrypt20-dev libselinux1-dev libxslt1-dev libgconf2-dev libacl1-dev libblkid-dev libcap-dev libxml2-dev libldap2-dev libpcre3-dev python-dev swig libxml-parser-perl libxml-xpath-perl libperl-dev libbz2-dev librpm-dev g++ libapt-pkg-dev libyaml-dev
                           cd build
                           cmake ../
                           make
-                          sudo make install
+                          #{sudo} make install
                         fi
-                        sudo apt install -y wget #{packages_to_install.join(' ')}
+                        #{sudo} apt install -y wget #{packages_to_install.join(' ')}
                       EOS2
                     else
                       raise "Non supported image: #{image}. Please adapt this test's code."
@@ -103,7 +104,7 @@ module HybridPlatformsConductor
                   cd hpc_vulnerabilities_test
                   wget -N #{url}
                   #{uncompress_cmds.join("\n")}
-                  sudo oscap oval eval --skip-valid --results "#{local_oval_file}.results.xml" "#{local_oval_file}"
+                  #{sudo} oscap oval eval --skip-valid --results "#{local_oval_file}.results.xml" "#{local_oval_file}"
                   echo "===== RESULTS ====="
                   cat "#{local_oval_file}.results.xml"
                   cd ..
