@@ -1,3 +1,15 @@
+# [v32.6.0](https://github.com/sweet-delights/hybrid-platforms-conductor/compare/v32.5.0...v32.6.0) (2021-03-11 14:19:39)
+
+## Global changes
+### Patches
+
+* [[Feature(connector_ssh)] Add a way to transform SSH connection details for nodes](https://github.com/sweet-delights/hybrid-platforms-conductor/commit/a3b690f04032ceeb55606fa7a7a8df785a80f48c)
+
+## Changes for connector_ssh
+### Features
+
+* [[Feature(connector_ssh)] Add a way to transform SSH connection details for nodes](https://github.com/sweet-delights/hybrid-platforms-conductor/commit/a3b690f04032ceeb55606fa7a7a8df785a80f48c)
+
 # [v32.5.0](https://github.com/sweet-delights/hybrid-platforms-conductor/compare/v32.4.2...v32.5.0) (2021-03-10 19:11:10)
 
 ### Features
