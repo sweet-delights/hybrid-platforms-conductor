@@ -63,7 +63,7 @@ module HybridPlatformsConductorTest
                   File.write(control_file, '')
                   # If there is no Session Exec, this is done in a separate thread.
                   # So keep it alive until the user wants to stop it (which is done using an ssh -O exit command).
-                  loop { sleep 0.1 }
+                  loop { sleep 0.1 } unless with_session_exec
                   [0, '', '']
                 else
                   [255, '', node_connection_info[:control_master_create_error]]
