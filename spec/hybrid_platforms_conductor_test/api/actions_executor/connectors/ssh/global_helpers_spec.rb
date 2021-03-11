@@ -35,8 +35,11 @@ describe HybridPlatformsConductor::ActionsExecutor do
         begin_marker = node.nil? ? /^Host \*$/ : /^# #{Regexp.escape(node)} - .+$/
         start_idx = ssh_config_lines.index { |line| line =~ begin_marker }
         return nil if start_idx.nil?
-        end_marker = /^# \w+ - .+$/
-        end_idx = ssh_config_lines[start_idx + 1..-1].index { |line| line =~ end_marker }
+        end_markers = [
+          /^\# \w+ - .+$/,
+          /^\#+$/
+        ]
+        end_idx = ssh_config_lines[start_idx + 1..-1].index { |line| end_markers.any? { |end_marker| line =~ end_marker } }
         end_idx = end_idx.nil? ? -1 : start_idx + end_idx
         ssh_config_lines[start_idx..end_idx].select do |line|
           stripped_line = line.strip
@@ -50,7 +53,7 @@ describe HybridPlatformsConductor::ActionsExecutor do
           expect(ssh_config_for(nil)).to eq <<~EOS
             Host *
               User test_user
-              ControlPath #{Dir.tmpdir}/hpc_ssh/hpc_actions_executor_mux_%h_%p_%r
+              ControlPath #{Dir.tmpdir}/hpc_ssh/hpc_ssh_mux_%h_%p_%r
               PubkeyAcceptedKeyTypes +ssh-dss
           EOS
         end
@@ -62,7 +65,7 @@ describe HybridPlatformsConductor::ActionsExecutor do
           expect(ssh_config_for(nil)).to eq <<~EOS
             Host *
               User test_user
-              ControlPath #{Dir.tmpdir}/hpc_ssh/hpc_actions_executor_mux_%h_%p_%r
+              ControlPath #{Dir.tmpdir}/hpc_ssh/hpc_ssh_mux_%h_%p_%r
               PubkeyAcceptedKeyTypes +ssh-dss
           EOS
         end
@@ -74,7 +77,7 @@ describe HybridPlatformsConductor::ActionsExecutor do
           expect(ssh_config_for(nil, known_hosts_file: '/path/to/known_hosts')).to eq <<~EOS
             Host *
               User test_user
-              ControlPath #{Dir.tmpdir}/hpc_ssh/hpc_actions_executor_mux_%h_%p_%r
+              ControlPath #{Dir.tmpdir}/hpc_ssh/hpc_ssh_mux_%h_%p_%r
               PubkeyAcceptedKeyTypes +ssh-dss
               UserKnownHostsFile /path/to/known_hosts
           EOS
@@ -88,7 +91,7 @@ describe HybridPlatformsConductor::ActionsExecutor do
           expect(ssh_config_for(nil)).to eq <<~EOS
             Host *
               User test_user
-              ControlPath #{Dir.tmpdir}/hpc_ssh/hpc_actions_executor_mux_%h_%p_%r
+              ControlPath #{Dir.tmpdir}/hpc_ssh/hpc_ssh_mux_%h_%p_%r
               PubkeyAcceptedKeyTypes +ssh-dss
               StrictHostKeyChecking no
           EOS

@@ -13,7 +13,7 @@ describe HybridPlatformsConductor::ActionsExecutor do
 
       it 'provides an SSH URL that can be used by other processes to connect to this node' do
         with_test_platform_for_remote_testing do
-          expect(test_connector.ssh_url).to eq 'test_user@hpc.node'
+          expect(test_connector.ssh_url).to eq 'hpc.node'
         end
       end
 

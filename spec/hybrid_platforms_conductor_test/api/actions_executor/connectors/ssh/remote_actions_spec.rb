@@ -6,7 +6,7 @@ describe HybridPlatformsConductor::ActionsExecutor do
 
       it 'executes bash commands remotely' do
         with_test_platform_for_remote_testing(
-          expected_cmds: [[/.+\/ssh test_user@hpc\.node \/bin\/bash <<'EOF'\nbash_cmd.bash\nEOF/, proc { [0, 'Bash commands executed on node', ''] }]],
+          expected_cmds: [[/.+\/ssh hpc\.node \/bin\/bash <<'EOF'\nbash_cmd.bash\nEOF/, proc { [0, 'Bash commands executed on node', ''] }]],
           expected_stdout: 'Bash commands executed on node'
         ) do
           test_connector.remote_bash('bash_cmd.bash')
@@ -17,7 +17,7 @@ describe HybridPlatformsConductor::ActionsExecutor do
         with_test_platform_for_remote_testing(
           expected_cmds: [
             [
-              /.+\/ssh test_user@hpc\.node \/bin\/bash <<'EOF'\nbash_cmd.bash\nEOF/,
+              /.+\/ssh hpc\.node \/bin\/bash <<'EOF'\nbash_cmd.bash\nEOF/,
               proc do |cmd, log_to_file: nil, log_to_stdout: true, log_stdout_to_io: nil, log_stderr_to_io: nil, expected_code: 0, timeout: nil, no_exception: false|
                 expect(timeout).to eq 5
                 [0, '', '']
@@ -33,7 +33,7 @@ describe HybridPlatformsConductor::ActionsExecutor do
       it 'executes interactive commands remotely' do
         with_test_platform_for_remote_testing do
           expect(test_connector).to receive(:system) do |cmd|
-            expect(cmd).to match /^.+\/ssh test_user@hpc\.node$/
+            expect(cmd).to match /^.+\/ssh hpc\.node$/
           end
           test_connector.remote_interactive
         end
@@ -43,7 +43,7 @@ describe HybridPlatformsConductor::ActionsExecutor do
         with_test_platform_for_remote_testing(
           expected_cmds: [
             [
-              /cd \/path\/to && tar\s+--create\s+--gzip\s+--file -\s+src.file \| \/.+\/ssh\s+test_user@hpc\.node\s+"tar\s+--extract\s+--gunzip\s+--file -\s+--directory \/remote_path\/to\/dst.dir\s+--owner root\s+"/,
+              /cd \/path\/to && tar\s+--create\s+--gzip\s+--file -\s+src.file \| \/.+\/ssh\s+hpc\.node\s+"tar\s+--extract\s+--gunzip\s+--file -\s+--directory \/remote_path\/to\/dst.dir\s+--owner root\s+"/,
               proc { [0, '', ''] }
             ]
           ]
@@ -56,7 +56,7 @@ describe HybridPlatformsConductor::ActionsExecutor do
         with_test_platform_for_remote_testing(
           expected_cmds: [
             [
-              /cd \/path\/to && tar\s+--create\s+--gzip\s+--file -\s+src.file \| \/.+\/ssh\s+test_user@hpc\.node\s+"tar\s+--extract\s+--gunzip\s+--file -\s+--directory \/remote_path\/to\/dst.dir\s+--owner root\s+"/,
+              /cd \/path\/to && tar\s+--create\s+--gzip\s+--file -\s+src.file \| \/.+\/ssh\s+hpc\.node\s+"tar\s+--extract\s+--gunzip\s+--file -\s+--directory \/remote_path\/to\/dst.dir\s+--owner root\s+"/,
               proc do |cmd, log_to_file: nil, log_to_stdout: true, log_stdout_to_io: nil, log_stderr_to_io: nil, expected_code: 0, timeout: nil, no_exception: false|
                 expect(timeout).to eq 5
                 [0, '', '']
@@ -76,7 +76,7 @@ describe HybridPlatformsConductor::ActionsExecutor do
             [
               /.+\/hpc_temp_cmds_.+\.sh$/,
               proc do |received_cmd|
-                expect(File.read(received_cmd)).to match /.+\/ssh test_user@hpc\.node \/bin\/bash <<'EOF'\n#{Regexp.escape(cmd)}\nEOF/
+                expect(File.read(received_cmd)).to match /.+\/ssh hpc\.node \/bin\/bash <<'EOF'\n#{Regexp.escape(cmd)}\nEOF/
                 [0, 'Bash commands executed on node', '']
               end
             ]
@@ -92,7 +92,7 @@ describe HybridPlatformsConductor::ActionsExecutor do
         with_test_platform_for_remote_testing(
           expected_cmds: [
             [
-              /cd \/path\/to && tar\s+--create\s+--gzip\s+--file -\s+src.file \| \/.+\/ssh\s+test_user@hpc\.node\s+"sudo -u root tar\s+--extract\s+--gunzip\s+--file -\s+--directory \/remote_path\/to\/dst.dir\s+--owner root\s+"/,
+              /cd \/path\/to && tar\s+--create\s+--gzip\s+--file -\s+src.file \| \/.+\/ssh\s+hpc\.node\s+"sudo -u root tar\s+--extract\s+--gunzip\s+--file -\s+--directory \/remote_path\/to\/dst.dir\s+--owner root\s+"/,
               proc { [0, '', ''] }
             ]
           ]
@@ -105,7 +105,7 @@ describe HybridPlatformsConductor::ActionsExecutor do
         with_test_platform_for_remote_testing(
           expected_cmds: [
             [
-              /cd \/path\/to && tar\s+--create\s+--gzip\s+--file -\s+src.file \| \/.+\/ssh\s+test_user@hpc\.node\s+"other_sudo --user root tar\s+--extract\s+--gunzip\s+--file -\s+--directory \/remote_path\/to\/dst.dir\s+--owner root\s+"/,
+              /cd \/path\/to && tar\s+--create\s+--gzip\s+--file -\s+src.file \| \/.+\/ssh\s+hpc\.node\s+"other_sudo --user root tar\s+--extract\s+--gunzip\s+--file -\s+--directory \/remote_path\/to\/dst.dir\s+--owner root\s+"/,
               proc { [0, '', ''] }
             ]
           ],
@@ -119,7 +119,7 @@ describe HybridPlatformsConductor::ActionsExecutor do
         with_test_platform_for_remote_testing(
           expected_cmds: [
             [
-              /cd \/path\/to && tar\s+--create\s+--gzip\s+--file -\s+--owner remote_user\s+src.file \| \/.+\/ssh\s+test_user@hpc\.node\s+"tar\s+--extract\s+--gunzip\s+--file -\s+--directory \/remote_path\/to\/dst.dir\s+--owner root\s+"/,
+              /cd \/path\/to && tar\s+--create\s+--gzip\s+--file -\s+--owner remote_user\s+src.file \| \/.+\/ssh\s+hpc\.node\s+"tar\s+--extract\s+--gunzip\s+--file -\s+--directory \/remote_path\/to\/dst.dir\s+--owner root\s+"/,
               proc { [0, '', ''] }
             ]
           ]
@@ -132,7 +132,7 @@ describe HybridPlatformsConductor::ActionsExecutor do
         with_test_platform_for_remote_testing(
           expected_cmds: [
             [
-              /cd \/path\/to && tar\s+--create\s+--gzip\s+--file -\s+--group remote_group\s+src.file \| \/.+\/ssh\s+test_user@hpc\.node\s+"tar\s+--extract\s+--gunzip\s+--file -\s+--directory \/remote_path\/to\/dst.dir\s+--owner root\s+"/,
+              /cd \/path\/to && tar\s+--create\s+--gzip\s+--file -\s+--group remote_group\s+src.file \| \/.+\/ssh\s+hpc\.node\s+"tar\s+--extract\s+--gunzip\s+--file -\s+--directory \/remote_path\/to\/dst.dir\s+--owner root\s+"/,
               proc { [0, '', ''] }
             ]
           ]
