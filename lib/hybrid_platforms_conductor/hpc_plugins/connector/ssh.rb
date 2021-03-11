@@ -234,7 +234,7 @@ module HybridPlatformsConductor
         # * *bash_cmds* (String): Bash commands to execute
         def remote_bash(bash_cmds)
           ssh_cmd =
-            if @nodes_handler.get_ssh_exec_session_of(@node) == 'false'
+            if @nodes_handler.get_ssh_session_exec_of(@node) == 'false'
               # When ExecSession is disabled we need to use stdin directly
               "{ cat | #{ssh_exec} #{ssh_url} -T; } <<'EOF'\n#{bash_cmds}\nEOF"
             else
@@ -296,7 +296,7 @@ module HybridPlatformsConductor
         # * *owner* (String or nil): Owner to be used when copying the files, or nil for current one [default: nil]
         # * *group* (String or nil): Group to be used when copying the files, or nil for current one [default: nil]
         def remote_copy(from, to, sudo: false, owner: nil, group: nil)
-          if @nodes_handler.get_ssh_exec_session_of(@node) == 'false'
+          if @nodes_handler.get_ssh_session_exec_of(@node) == 'false'
             # We don't have ExecSession, so don't use ssh, but scp instead.
             run_cmd "scp -S #{ssh_exec} #{from} #{ssh_url}:#{to}"
           else
@@ -502,7 +502,7 @@ module HybridPlatformsConductor
                     if current_users.empty?
                       log_debug "[ ControlMaster - #{ssh_url} ] - Creating SSH ControlMaster..."
                       exit_status = nil
-                      if @nodes_handler.get_ssh_exec_session_of(node) == 'false'
+                      if @nodes_handler.get_ssh_session_exec_of(node) == 'false'
                         # Here we have to create a ControlMaster using an interactive session, as the SSH server prohibits ExecSession, and so command executions.
                         # We'll do that using another terminal spawned in the background.
                         Thread.new do

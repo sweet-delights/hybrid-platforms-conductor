@@ -14,7 +14,6 @@ module HybridPlatformsConductorTest
       # * *cmd_runner* (CmdRunner): The CmdRunner to mock [default: test_cmd_runner]
       # * Proc: Code called with the command runner mocked
       def with_cmd_runner_mocked(commands, cmd_runner: test_cmd_runner)
-        unexpected_commands = []
         remaining_expected_commands = commands.clone
         # We need to protect the access to this array as the mocked commands can be called by competing threads
         remaining_expected_commands_mutex = Mutex.new
@@ -64,13 +63,10 @@ module HybridPlatformsConductorTest
             log_stderr_to_io << mocked_stderr if !mocked_stderr.empty? && !log_stderr_to_io.nil?
             [mocked_exit_status, mocked_stdout, mocked_stderr]
           else
-            logger.error "[ Mocked CmdRunner ] - !!! Unexpected command run: #{cmd}"
-            unexpected_commands << cmd
-            [:unexpected_command_to_mock, '', "Could not mock unexpected command #{cmd}"]
+            raise "Unexpected command run: #{cmd}"
           end
         end
         yield
-        expect(unexpected_commands).to eq []
         expect(remaining_expected_commands).to eq([]), "Expected CmdRunner commands were not run:\n#{remaining_expected_commands.map(&:first).join("\n")}"
         # Un-mock the command runner
         allow(cmd_runner).to receive(:run_cmd).and_call_original
