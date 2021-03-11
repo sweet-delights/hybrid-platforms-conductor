@@ -1,3 +1,15 @@
+# [v32.7.0](https://github.com/sweet-delights/hybrid-platforms-conductor/compare/v32.6.0...v32.7.0) (2021-03-11 19:10:23)
+
+## Global changes
+### Patches
+
+* [Ssh without session exec](https://github.com/sweet-delights/hybrid-platforms-conductor/commit/8f105ae28cb43d48f1fb40d3f964c1e3a14d94fe)
+
+## Changes for connector_ssh
+### Features
+
+* [Ssh without session exec](https://github.com/sweet-delights/hybrid-platforms-conductor/commit/8f105ae28cb43d48f1fb40d3f964c1e3a14d94fe)
+
 # [v32.6.0](https://github.com/sweet-delights/hybrid-platforms-conductor/compare/v32.5.0...v32.6.0) (2021-03-11 14:19:39)
 
 ## Global changes
