@@ -574,28 +574,33 @@ module HybridPlatformsConductor
                     end
                   end
                 end
+              else
+                # We have not created any ControlMaster, but still consider the nodes to be ready to connect
+                user_locks = Hash[nodes.map { |node| [node, nil]} ]
               end
               yield user_locks.keys
             ensure
-              user_locks_mutex.synchronize do
-                user_locks.each do |node, user_id|
-                  with_lock_on_control_master_for(node, user_id: user_id) do |current_users, user_id|
-                    ssh_url = "hpc.#{node}"
-                    log_warn "[ ControlMaster - #{ssh_url} ] - Current process/thread was not part of the ControlMaster users anymore whereas it should have been" unless current_users.include?(user_id)
-                    remaining_users = current_users - [user_id]
-                    if remaining_users.empty?
-                      # Stop the ControlMaster
-                      log_debug "[ ControlMaster - #{ssh_url} ] - Stopping ControlMaster..."
-                      # Dumb verbose ssh! Tricky trick to just silence what is useless.
-                      # Don't fail if the connection close fails (but still log the error), as it can be seen as only a warning: it means the connection was closed anyway.
-                      @cmd_runner.run_cmd "#{ssh_exec_for(node)} -O exit #{ssh_url} 2>&1 | grep -v 'Exit request sent.'", log_to_stdout: log_debug?, expected_code: 1, timeout: timeout, no_exception: true
-                      log_debug "[ ControlMaster - #{ssh_url} ] - ControlMaster stopped"
-                      # Uncomment if you want to test that the connection has been closed
-                      # @cmd_runner.run_cmd "#{ssh_exec_for(node)} -O check #{ssh_url}", log_to_stdout: log_debug?, expected_code: 255, timeout: timeout
-                    else
-                      log_debug "[ ControlMaster - #{ssh_url} ] - Leaving ControlMaster started as #{remaining_users.size} processes/threads are still using it."
+              if @ssh_use_control_master
+                user_locks_mutex.synchronize do
+                  user_locks.each do |node, user_id|
+                    with_lock_on_control_master_for(node, user_id: user_id) do |current_users, user_id|
+                      ssh_url = "hpc.#{node}"
+                      log_warn "[ ControlMaster - #{ssh_url} ] - Current process/thread was not part of the ControlMaster users anymore whereas it should have been" unless current_users.include?(user_id)
+                      remaining_users = current_users - [user_id]
+                      if remaining_users.empty?
+                        # Stop the ControlMaster
+                        log_debug "[ ControlMaster - #{ssh_url} ] - Stopping ControlMaster..."
+                        # Dumb verbose ssh! Tricky trick to just silence what is useless.
+                        # Don't fail if the connection close fails (but still log the error), as it can be seen as only a warning: it means the connection was closed anyway.
+                        @cmd_runner.run_cmd "#{ssh_exec_for(node)} -O exit #{ssh_url} 2>&1 | grep -v 'Exit request sent.'", log_to_stdout: log_debug?, expected_code: 1, timeout: timeout, no_exception: true
+                        log_debug "[ ControlMaster - #{ssh_url} ] - ControlMaster stopped"
+                        # Uncomment if you want to test that the connection has been closed
+                        # @cmd_runner.run_cmd "#{ssh_exec_for(node)} -O check #{ssh_url}", log_to_stdout: log_debug?, expected_code: 255, timeout: timeout
+                      else
+                        log_debug "[ ControlMaster - #{ssh_url} ] - Leaving ControlMaster started as #{remaining_users.size} processes/threads are still using it."
+                      end
+                      false
                     end
-                    false
                   end
                 end
               end

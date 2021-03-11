@@ -294,7 +294,8 @@ describe HybridPlatformsConductor::ActionsExecutor do
           ) do
             test_connector.ssh_use_control_master = false
             test_connector.ssh_user = 'test_user'
-            test_connector.with_connection_to(['node']) do
+            test_connector.with_connection_to(['node']) do |connected_nodes|
+              expect(connected_nodes).to eq %w[node]
             end
           end
         end
