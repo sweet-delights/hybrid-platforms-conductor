@@ -277,6 +277,47 @@ describe HybridPlatformsConductor::ActionsExecutor do
         end
       end
 
+      it 'uses node transformed SSH connection' do
+        with_test_platform(
+          { nodes: {
+            'node1' => { meta: { host_ip: '192.168.42.1', gateway: 'test_gateway1', gateway_user: 'test_gateway1_user' } },
+            'node2' => { meta: { host_ip: '192.168.42.2', gateway: 'test_gateway2', gateway_user: 'test_gateway2_user' } },
+            'node3' => { meta: { host_ip: '192.168.42.3', gateway: 'test_gateway3', gateway_user: 'test_gateway3_user' } }
+          } },
+          false,
+          '
+            for_nodes(%w[node1 node3]) do
+              transform_ssh_connection do |node, connection, connection_user, gateway, gateway_user|
+                ["#{connection}_#{node}_13", "#{connection_user}_#{node}_13", "#{gateway}_#{node}_13", "#{gateway_user}_#{node}_13"]
+              end
+            end
+            for_nodes(\'node1\') do
+              transform_ssh_connection do |node, connection, connection_user, gateway, gateway_user|
+                ["#{connection}_#{node}_1", "#{connection_user}_#{node}_1", "#{gateway}_#{node}_1", "#{gateway_user}_#{node}_1"]
+              end
+            end
+          ') do
+          test_connector.ssh_user = 'test_user'
+          expect(ssh_config_for('node1')).to eq <<~EOS
+            Host hpc.node1
+              Hostname 192.168.42.1_node1_13_node1_1
+              User "test_user_node1_13_node1_1"
+              ProxyCommand ssh -q -W %h:%p test_gateway1_user_node1_13_node1_1@test_gateway1_node1_13_node1_1
+          EOS
+          expect(ssh_config_for('node2')).to eq <<~EOS
+            Host hpc.node2
+              Hostname 192.168.42.2
+              ProxyCommand ssh -q -W %h:%p test_gateway2_user@test_gateway2
+          EOS
+          expect(ssh_config_for('node3')).to eq <<~EOS
+            Host hpc.node3
+              Hostname 192.168.42.3_node3_13
+              User "test_user_node3_13"
+              ProxyCommand ssh -q -W %h:%p test_gateway3_user_node3_13@test_gateway3_node3_13
+          EOS
+        end
+      end
+
       it 'generates a config compatible for passwords authentication' do
         with_test_platform(nodes: { 'node' => { meta: { host_ip: '192.168.42.42' } } }) do
           test_connector.passwords['node'] = 'PaSsWoRd'

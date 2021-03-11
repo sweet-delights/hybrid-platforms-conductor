@@ -10,6 +10,7 @@ module HybridPlatformsConductorTest
       # Parameters::
       # * *nodes_connections* (Hash<String, Hash<Symbol,Object> >): Nodes' connections info, per node name:
       #   * *connection* (String): Connection string (fqdn, IP...) used by SSH
+      #   * *ip* (String): IP used by SSH (can be different from connection in case of transformed SSH) [default: connection]
       #   * *user* (String): User used by SSH
       #   * *times* (Integer): Number of times this connection should be used [default: 1]
       #   * *control_master_create_error* (String or nil): Error to simulate during the SSH ControlMaster creation, or nil for none [default: nil]
@@ -33,10 +34,11 @@ module HybridPlatformsConductorTest
           ssh_commands_once = []
           ssh_commands_per_connection = []
           if with_strict_host_key_checking
+            ip = node_connection_info[:ip] || node_connection_info[:connection]
             ssh_commands_once.concat([
               [
-                "ssh-keyscan #{node_connection_info[:connection]}",
-                proc { [0, "#{node_connection_info[:connection]} ssh-rsa fake_host_key_for_#{node_connection_info[:connection]}", ''] }
+                "ssh-keyscan #{ip}",
+                proc { [0, "#{ip} ssh-rsa fake_host_key_for_#{ip}", ''] }
               ]
             ])
           end
