@@ -16,11 +16,40 @@ module HybridPlatformsConductor
 
         module PlatformsDslSsh
 
+          # List of SSH connection transformations:
+          # * *nodes_selectors_stack* (Array<Object>): Stack of nodes selectors impacted by this rule
+          # * *transform* (Proc): Code called to transform SSH connection info:
+          #   Parameters::
+          #   * *node* (String): Node for which we transform the SSH connection
+          #   * *connection* (String or nil): The connection host or IP, or nil if none
+          #   * *connection_user* (String): The connection user
+          #   * *gateway* (String or nil): The gateway name, or nil if none
+          #   * *gateway_user* (String or nil): The gateway user, or nil if none
+          #   Result::
+          #   * String: The transformed connection host or IP, or nil if none
+          #   * String: The transformed connection user
+          #   * String or nil: The transformed gateway name, or nil if none
+          #   * String or nil: The transformed gateway user, or nil if none
+          # Array< Hash<Symbol, Object> >
+          attr_reader :ssh_connection_transforms
+
           # Initialize the DSL
           def init_ssh
             # List of gateway configurations, per gateway config name
             # Hash<Symbol, String>
             @gateways = {}
+            @ssh_connection_transforms = []
+          end
+
+          # Define a transformation of SSH connection.
+          #
+          # Parameters::
+          # * *transform* (Proc): Code to be called to transform an SSH connection (see ssh_connection_transforms signature for details)
+          def transform_ssh_connection(&transform)
+            @ssh_connection_transforms << {
+              nodes_selectors_stack: current_nodes_selectors_stack,
+              transform: transform
+            }
           end
 
           # Register a new gateway configuration
@@ -295,7 +324,7 @@ module HybridPlatformsConductor
         # Result::
         # * String: The ssh URL connecting to the current node
         def ssh_url
-          "#{@ssh_user}@hpc.#{@node}"
+          "hpc.#{@node}"
         end
 
         # Get an SSH configuration content giving access to nodes of the platforms with the current configuration
@@ -318,6 +347,35 @@ module HybridPlatformsConductor
             # ENDPOINTS #
             #############
 
+          EOS
+
+          # Add each node
+          # Query for the metadata of all nodes at once
+          @nodes_handler.prefetch_metadata_of nodes, %i[private_ips hostname host_ip description]
+          nodes.sort.each do |node|
+            # Generate the conf for the node
+            connection, connection_user, gateway, gateway_user = connection_info_for(node, no_exception: true)
+            if connection.nil?
+              config_content << "# #{node} - Not connectable using SSH - #{@nodes_handler.get_description_of(node) || ''}\n"
+            else
+              config_content << "# #{node} - #{connection} - #{@nodes_handler.get_description_of(node) || ''}\n"
+              config_content << "Host #{ssh_aliases_for(node).join(' ')}\n"
+              config_content << "  Hostname #{connection}\n"
+              config_content << "  User \"#{connection_user}\"\n" if connection_user != @ssh_user
+              config_content << "  ProxyCommand #{ssh_exec} -q -W %h:%p #{gateway_user}@#{gateway}\n" unless gateway.nil?
+              if @passwords.key?(node)
+                config_content << "  PreferredAuthentications password\n"
+                config_content << "  PubkeyAuthentication no\n"
+              end
+            end
+            config_content << "\n"
+          end
+          # Add global definitions at the end of the SSH config, as they might be overriden by previous ones, and first match wins.
+          config_content << <<~EOS
+            ###########
+            # GLOBALS #
+            ###########
+
             Host *
               User #{@ssh_user}
               # Default control socket path to be used when multiplexing SSH connections
@@ -327,27 +385,6 @@ module HybridPlatformsConductor
               #{@ssh_strict_host_key_checking ? '' : 'StrictHostKeyChecking no'}
 
           EOS
-
-          # Add each node
-          # Query for the metadata of all nodes at once
-          @nodes_handler.prefetch_metadata_of nodes, %i[private_ips hostname host_ip description]
-          nodes.sort.each do |node|
-            # Generate the conf for the node
-            begin
-              connection, gateway, gateway_user = connection_info_for(node)
-              config_content << "# #{node} - #{connection} - #{@nodes_handler.get_description_of(node) || ''}\n"
-              config_content << "Host #{ssh_aliases_for(node).join(' ')}\n"
-              config_content << "  Hostname #{connection}\n"
-              config_content << "  ProxyCommand #{ssh_exec} -q -W %h:%p #{gateway_user}@#{gateway}\n" unless gateway.nil?
-              if @passwords.key?(node)
-                config_content << "  PreferredAuthentications password\n"
-                config_content << "  PubkeyAuthentication no\n"
-              end
-            rescue NotConnectableError
-              config_content << "# #{node} - Not connectable using SSH - #{@nodes_handler.get_description_of(node) || ''}\n"
-            end
-            config_content << "\n"
-          end
           config_content
         end
 
@@ -450,7 +487,7 @@ module HybridPlatformsConductor
                   with_lock_on_control_master_for(node) do |current_users, user_id|
                     working_master = false
                     ssh_exec = ssh_exec_for(node)
-                    ssh_url = "#{@ssh_user}@hpc.#{node}"
+                    ssh_url = "hpc.#{node}"
                     if current_users.empty?
                       log_debug "[ ControlMaster - #{ssh_url} ] - Creating SSH ControlMaster..."
                       # Create the control master
@@ -518,7 +555,7 @@ module HybridPlatformsConductor
               user_locks_mutex.synchronize do
                 user_locks.each do |node, user_id|
                   with_lock_on_control_master_for(node, user_id: user_id) do |current_users, user_id|
-                    ssh_url = "#{@ssh_user}@hpc.#{node}"
+                    ssh_url = "hpc.#{node}"
                     log_warn "[ ControlMaster - #{ssh_url} ] - Current process/thread was not part of the ControlMaster users anymore whereas it should have been" unless current_users.include?(user_id)
                     remaining_users = current_users - [user_id]
                     if remaining_users.empty?
@@ -562,8 +599,9 @@ module HybridPlatformsConductor
             # TODO: Add test case when control file is missing ad when it is stale
             # Get the list of existing process/thread ids using this control master
             existing_users = File.exist?(control_master_users_file) ? File.read(control_master_users_file).split("\n") : []
-            ssh_url = "#{@ssh_user}@hpc.#{node}"
-            control_path_file = control_master_file(connection_info_for(node).first, '22', @ssh_user)
+            ssh_url = "hpc.#{node}"
+            connection, connection_user, _gateway, _gateway_user = connection_info_for(node)
+            control_path_file = control_master_file(connection, '22', connection_user)
             if existing_users.empty?
               # Make sure there is no stale one.
               if File.exist?(control_path_file)
@@ -595,7 +633,7 @@ module HybridPlatformsConductor
         # * *port* (String): The port. Can be a string as ssh config uses wildchars.
         # * *user* (String): The user
         def control_master_file(host, port, user)
-          "#{@tmp_dir}/hpc_actions_executor_mux_#{host}_#{port}_#{user}"
+          "#{@tmp_dir}/hpc_ssh_mux_#{host}_#{port}_#{user}"
         end
 
         # Provide a bootstrapped ssh executable that includes an SSH config allowing access to nodes.
@@ -627,7 +665,7 @@ module HybridPlatformsConductor
                 nodes.sort.each do |node|
                   host_keys = @nodes_handler.get_host_keys_of(node)
                   if host_keys && !host_keys.empty?
-                    connection, _gateway, _gateway_user = connection_info_for(node)
+                    connection, _connection_user, _gateway, _gateway_user = connection_info_for(node)
                     host_keys.each do |host_key|
                       file.puts "#{connection} #{host_key}"
                     end
@@ -660,11 +698,13 @@ module HybridPlatformsConductor
         #
         # Parameters::
         # * *node* (String): The node to access
+        # * *no_exception* (Boolean): Should we skip exceptions in case of no connection possible? [default: false]
         # Result::
-        # * String: The real hostname or IP to be used to connect
+        # * String: The real hostname or IP to be used to connect, or nil if none and no_exception is true
+        # * String: The real user to be used to connect, or nil if none and no_exception is true
         # * String or nil: The gateway name to be used (should be defined by the gateways configurations), or nil if no gateway to be used.
         # * String or nil: The gateway user to be used, or nil if none.
-        def connection_info_for(node)
+        def connection_info_for(node, no_exception: false)
           connection =
             if @nodes_handler.get_host_ip_of(node)
               @nodes_handler.get_host_ip_of(node)
@@ -673,12 +713,18 @@ module HybridPlatformsConductor
             elsif @nodes_handler.get_hostname_of(node)
               @nodes_handler.get_hostname_of(node)
             else
-              raise NotConnectableError, "No connection possible to #{node}"
+              nil
             end
+          connection_user = @ssh_user
           gateway = @nodes_handler.get_gateway_of node
           gateway_user = @nodes_handler.get_gateway_user_of node
           gateway_user = @ssh_gateway_user if !gateway.nil? && gateway_user.nil?
-          [connection, gateway, gateway_user]
+          # In case we want to transform the connection info, do it here.
+          @nodes_handler.select_confs_for_node(node, @config.ssh_connection_transforms).each do |transform_info|
+            connection, connection_user, gateway, gateway_user = transform_info[:transform].call(node, connection, connection_user, gateway, gateway_user)
+          end
+          raise NotConnectableError, "No connection possible to #{node}" if connection.nil? && !no_exception
+          [connection, connection_user, gateway, gateway_user]
         end
 
         # Get the possible SSH aliases for a given node.

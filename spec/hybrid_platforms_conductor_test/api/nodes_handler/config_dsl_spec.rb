@@ -59,10 +59,10 @@ describe HybridPlatformsConductor::NodesHandler do
         '
       ) do
         expect(test_config.sudo_procs.size).to eq 2
-        expect(test_config.sudo_procs[0][:nodes_selectors_stack]). to eq []
-        expect(test_config.sudo_procs[0][:sudo_proc].call('test_user')). to eq 'alt_sudo1 -p test_user'
-        expect(test_config.sudo_procs[1][:nodes_selectors_stack]). to eq ['node2']
-        expect(test_config.sudo_procs[1][:sudo_proc].call('test_user')). to eq 'alt_sudo2 -q test_user'
+        expect(test_config.sudo_procs[0][:nodes_selectors_stack]).to eq []
+        expect(test_config.sudo_procs[0][:sudo_proc].call('test_user')).to eq 'alt_sudo1 -p test_user'
+        expect(test_config.sudo_procs[1][:nodes_selectors_stack]).to eq ['node2']
+        expect(test_config.sudo_procs[1][:sudo_proc].call('test_user')).to eq 'alt_sudo2 -q test_user'
       end
     end
 

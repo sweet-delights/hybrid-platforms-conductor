@@ -35,8 +35,11 @@ describe HybridPlatformsConductor::ActionsExecutor do
         begin_marker = node.nil? ? /^Host \*$/ : /^# #{Regexp.escape(node)} - .+$/
         start_idx = ssh_config_lines.index { |line| line =~ begin_marker }
         return nil if start_idx.nil?
-        end_marker = /^# \w+ - .+$/
-        end_idx = ssh_config_lines[start_idx + 1..-1].index { |line| line =~ end_marker }
+        end_markers = [
+          /^\# \w+ - .+$/,
+          /^\#+$/
+        ]
+        end_idx = ssh_config_lines[start_idx + 1..-1].index { |line| end_markers.any? { |end_marker| line =~ end_marker } }
         end_idx = end_idx.nil? ? -1 : start_idx + end_idx
         ssh_config_lines[start_idx..end_idx].select do |line|
           stripped_line = line.strip
@@ -50,7 +53,7 @@ describe HybridPlatformsConductor::ActionsExecutor do
           expect(ssh_config_for(nil)).to eq <<~EOS
             Host *
               User test_user
-              ControlPath #{Dir.tmpdir}/hpc_ssh/hpc_actions_executor_mux_%h_%p_%r
+              ControlPath #{Dir.tmpdir}/hpc_ssh/hpc_ssh_mux_%h_%p_%r
               PubkeyAcceptedKeyTypes +ssh-dss
           EOS
         end
@@ -62,7 +65,7 @@ describe HybridPlatformsConductor::ActionsExecutor do
           expect(ssh_config_for(nil)).to eq <<~EOS
             Host *
               User test_user
-              ControlPath #{Dir.tmpdir}/hpc_ssh/hpc_actions_executor_mux_%h_%p_%r
+              ControlPath #{Dir.tmpdir}/hpc_ssh/hpc_ssh_mux_%h_%p_%r
               PubkeyAcceptedKeyTypes +ssh-dss
           EOS
         end
@@ -74,7 +77,7 @@ describe HybridPlatformsConductor::ActionsExecutor do
           expect(ssh_config_for(nil, known_hosts_file: '/path/to/known_hosts')).to eq <<~EOS
             Host *
               User test_user
-              ControlPath #{Dir.tmpdir}/hpc_ssh/hpc_actions_executor_mux_%h_%p_%r
+              ControlPath #{Dir.tmpdir}/hpc_ssh/hpc_ssh_mux_%h_%p_%r
               PubkeyAcceptedKeyTypes +ssh-dss
               UserKnownHostsFile /path/to/known_hosts
           EOS
@@ -88,7 +91,7 @@ describe HybridPlatformsConductor::ActionsExecutor do
           expect(ssh_config_for(nil)).to eq <<~EOS
             Host *
               User test_user
-              ControlPath #{Dir.tmpdir}/hpc_ssh/hpc_actions_executor_mux_%h_%p_%r
+              ControlPath #{Dir.tmpdir}/hpc_ssh/hpc_ssh_mux_%h_%p_%r
               PubkeyAcceptedKeyTypes +ssh-dss
               StrictHostKeyChecking no
           EOS
@@ -270,6 +273,47 @@ describe HybridPlatformsConductor::ActionsExecutor do
             Host hpc.node
               Hostname 192.168.42.42
               ProxyCommand new_ssh -q -W %h:%p test_gateway_user@test_gateway
+          EOS
+        end
+      end
+
+      it 'uses node transformed SSH connection' do
+        with_test_platform(
+          { nodes: {
+            'node1' => { meta: { host_ip: '192.168.42.1', gateway: 'test_gateway1', gateway_user: 'test_gateway1_user' } },
+            'node2' => { meta: { host_ip: '192.168.42.2', gateway: 'test_gateway2', gateway_user: 'test_gateway2_user' } },
+            'node3' => { meta: { host_ip: '192.168.42.3', gateway: 'test_gateway3', gateway_user: 'test_gateway3_user' } }
+          } },
+          false,
+          '
+            for_nodes(%w[node1 node3]) do
+              transform_ssh_connection do |node, connection, connection_user, gateway, gateway_user|
+                ["#{connection}_#{node}_13", "#{connection_user}_#{node}_13", "#{gateway}_#{node}_13", "#{gateway_user}_#{node}_13"]
+              end
+            end
+            for_nodes(\'node1\') do
+              transform_ssh_connection do |node, connection, connection_user, gateway, gateway_user|
+                ["#{connection}_#{node}_1", "#{connection_user}_#{node}_1", "#{gateway}_#{node}_1", "#{gateway_user}_#{node}_1"]
+              end
+            end
+          ') do
+          test_connector.ssh_user = 'test_user'
+          expect(ssh_config_for('node1')).to eq <<~EOS
+            Host hpc.node1
+              Hostname 192.168.42.1_node1_13_node1_1
+              User "test_user_node1_13_node1_1"
+              ProxyCommand ssh -q -W %h:%p test_gateway1_user_node1_13_node1_1@test_gateway1_node1_13_node1_1
+          EOS
+          expect(ssh_config_for('node2')).to eq <<~EOS
+            Host hpc.node2
+              Hostname 192.168.42.2
+              ProxyCommand ssh -q -W %h:%p test_gateway2_user@test_gateway2
+          EOS
+          expect(ssh_config_for('node3')).to eq <<~EOS
+            Host hpc.node3
+              Hostname 192.168.42.3_node3_13
+              User "test_user_node3_13"
+              ProxyCommand ssh -q -W %h:%p test_gateway3_user_node3_13@test_gateway3_node3_13
           EOS
         end
       end

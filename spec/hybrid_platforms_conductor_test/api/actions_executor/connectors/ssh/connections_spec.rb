@@ -52,6 +52,45 @@ describe HybridPlatformsConductor::ActionsExecutor do
         end
       end
 
+      it 'creates SSH master to several nodes with ssh connections transformed' do
+        with_test_platform(
+          { nodes: {
+          'node1' => { meta: { host_ip: '192.168.42.1' } },
+          'node2' => { meta: { host_ip: '192.168.42.2' } },
+          'node3' => { meta: { host_ip: '192.168.42.3' } }
+          } },
+          false,
+          '
+            for_nodes(%w[node1 node3]) do
+              transform_ssh_connection do |node, connection, connection_user, gateway, gateway_user|
+                ["#{connection}_#{node}_13", "#{connection_user}_#{node}_13", "#{gateway}_#{node}_13", "#{gateway_user}_#{node}_13"]
+              end
+            end
+            for_nodes(\'node1\') do
+              transform_ssh_connection do |node, connection, connection_user, gateway, gateway_user|
+                ["#{connection}_#{node}_1", "#{connection_user}_#{node}_1", "#{gateway}_#{node}_1", "#{gateway_user}_#{node}_1"]
+              end
+            end
+          '
+        ) do
+          with_cmd_runner_mocked(
+            [
+              ['which env', proc { [0, "/usr/bin/env\n", ''] }],
+              ['ssh -V 2>&1', proc { [0, "OpenSSH_7.4p1 Debian-10+deb9u7, OpenSSL 1.0.2u  20 Dec 2019\n", ''] }]
+            ] + ssh_expected_commands_for(
+              'node1' => { ip: '192.168.42.1', connection: '192.168.42.1_node1_13_node1_1', user: 'test_user_node1_13_node1_1' },
+              'node2' => { ip: '192.168.42.2', connection: '192.168.42.2', user: 'test_user' },
+              'node3' => { ip: '192.168.42.3', connection: '192.168.42.3_node3_13', user: 'test_user_node3_13' }
+            )
+          ) do
+            test_connector.ssh_user = 'test_user'
+            test_connector.with_connection_to(%w[node1 node2 node3]) do |connected_nodes|
+              expect(connected_nodes.sort).to eq %w[node1 node2 node3].sort
+            end
+          end
+        end
+      end
+
       it 'fails when an SSH master can\'t be created' do
         with_test_platform(nodes: {
           'node1' => { meta: { host_ip: '192.168.42.1' } },
@@ -73,7 +112,7 @@ describe HybridPlatformsConductor::ActionsExecutor do
             )
           ) do
             test_connector.ssh_user = 'test_user'
-            expect { test_connector.with_connection_to(%w[node1 node2 node3]) }.to raise_error(/^Error while starting SSH Control Master with .+\/ssh -o BatchMode=yes -o ControlMaster=yes -o ControlPersist=yes test_user@hpc.node2 true: Can't connect to 192.168.42.2$/)
+            expect { test_connector.with_connection_to(%w[node1 node2 node3]) }.to raise_error(/^Error while starting SSH Control Master with .+\/ssh -o BatchMode=yes -o ControlMaster=yes -o ControlPersist=yes hpc.node2 true: Can't connect to 192.168.42.2$/)
           end
         end
       end
@@ -416,7 +455,7 @@ describe HybridPlatformsConductor::ActionsExecutor do
               ['ssh -V 2>&1', proc { [0, "OpenSSH_7.4p1 Debian-10+deb9u7, OpenSSL 1.0.2u  20 Dec 2019\n", ''] }],
             ] +
               [[
-                /^.+\/ssh -o BatchMode=yes -o ControlMaster=yes -o ControlPersist=yes test_user@hpc\.node true$/,
+                /^.+\/ssh -o BatchMode=yes -o ControlMaster=yes -o ControlPersist=yes hpc\.node true$/,
                 proc do
                   nbr_boot_messages += 1
                   [255, '', "System is booting up. See pam_nologin(8)\nAuthentication failed.\n"]
