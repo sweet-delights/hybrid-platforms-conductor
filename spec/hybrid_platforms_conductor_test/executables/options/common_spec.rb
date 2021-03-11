@@ -50,7 +50,8 @@ describe 'executables\' common options' do
         with_test_platform_for_common_options do
           exit_code, stdout, stderr = run executable, *(['--debug'] + default_options)
           expect(exit_code).to eq 0
-          expect(stderr).to eq ''
+          # Make sure to ignore the deployment markers from stderr.
+          expect(stderr.gsub("===== [ node1 / node1_service ] - HPC Service Check ===== Begin\n===== [ node1 / node1_service ] - HPC Service Check ===== End\n", '')).to eq ''
         end
       end
 
