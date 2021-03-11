@@ -141,6 +141,30 @@ describe HybridPlatformsConductor::ActionsExecutor do
         end
       end
 
+      it 'executes bash commands remotely without Session Exec capabilities' do
+        with_test_platform_for_remote_testing(
+          expected_cmds: [[/^\{ cat \| .+\/ssh hpc\.node -T; } <<'EOF'\nbash_cmd.bash\nEOF$/, proc { [0, 'Bash commands executed on node', ''] }]],
+          expected_stdout: 'Bash commands executed on node',
+          session_exec: false
+        ) do
+          test_connector.remote_bash('bash_cmd.bash')
+        end
+      end
+
+      it 'copies files remotely without Session Exec capabilities' do
+        with_test_platform_for_remote_testing(
+          expected_cmds: [
+            [
+              /^scp -S .+\/ssh \/path\/to\/src.file hpc\.node:\/remote_path\/to\/dst.dir$/,
+              proc { [0, '', ''] }
+            ]
+          ],
+          session_exec: false
+        ) do
+          test_connector.remote_copy('/path/to/src.file', '/remote_path/to/dst.dir')
+        end
+      end
+
     end
 
   end

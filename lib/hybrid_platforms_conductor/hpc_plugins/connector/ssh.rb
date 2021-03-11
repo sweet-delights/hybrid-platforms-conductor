@@ -233,7 +233,13 @@ module HybridPlatformsConductor
         # Parameters::
         # * *bash_cmds* (String): Bash commands to execute
         def remote_bash(bash_cmds)
-          ssh_cmd = "#{ssh_exec} #{ssh_url} /bin/bash <<'EOF'\n#{bash_cmds}\nEOF"
+          ssh_cmd =
+            if @nodes_handler.get_ssh_session_exec_of(@node) == 'false'
+              # When ExecSession is disabled we need to use stdin directly
+              "{ cat | #{ssh_exec} #{ssh_url} -T; } <<'EOF'\n#{bash_cmds}\nEOF"
+            else
+              "#{ssh_exec} #{ssh_url} /bin/bash <<'EOF'\n#{bash_cmds}\nEOF"
+            end
           # Due to a limitation of Process.spawn, each individual argument is limited to 128KB of size.
           # Therefore we need to make sure that if bash_cmds exceeds MAX_CMD_ARG_LENGTH bytes (considering EOF chars) then we use an intermediary shell script to store the commands.
           if bash_cmds.size > MAX_CMD_ARG_LENGTH
@@ -290,25 +296,30 @@ module HybridPlatformsConductor
         # * *owner* (String or nil): Owner to be used when copying the files, or nil for current one [default: nil]
         # * *group* (String or nil): Group to be used when copying the files, or nil for current one [default: nil]
         def remote_copy(from, to, sudo: false, owner: nil, group: nil)
-          run_cmd <<~EOS
-            cd #{File.dirname(from)} && \
-            tar \
-              --create \
-              --gzip \
-              --file - \
-              #{owner.nil? ? '' : "--owner #{owner}"} \
-              #{group.nil? ? '' : "--group #{group}"} \
-              #{File.basename(from)} | \
-            #{ssh_exec} \
-              #{ssh_url} \
-              \"#{sudo ? "#{@nodes_handler.sudo_on(@node)} " : ''}tar \
-                --extract \
-                --gunzip \
+          if @nodes_handler.get_ssh_session_exec_of(@node) == 'false'
+            # We don't have ExecSession, so don't use ssh, but scp instead.
+            run_cmd "scp -S #{ssh_exec} #{from} #{ssh_url}:#{to}"
+          else
+            run_cmd <<~EOS
+              cd #{File.dirname(from)} && \
+              tar \
+                --create \
+                --gzip \
                 --file - \
-                --directory #{to} \
-                --owner root \
-              \"
-          EOS
+                #{owner.nil? ? '' : "--owner #{owner}"} \
+                #{group.nil? ? '' : "--group #{group}"} \
+                #{File.basename(from)} | \
+              #{ssh_exec} \
+                #{ssh_url} \
+                \"#{sudo ? "#{@nodes_handler.sudo_on(@node)} " : ''}tar \
+                  --extract \
+                  --gunzip \
+                  --file - \
+                  --directory #{to} \
+                  --owner root \
+                \"
+            EOS
+          end
         end
 
         # Get the ssh executable to be used when connecting to the current node
@@ -490,31 +501,45 @@ module HybridPlatformsConductor
                     ssh_url = "hpc.#{node}"
                     if current_users.empty?
                       log_debug "[ ControlMaster - #{ssh_url} ] - Creating SSH ControlMaster..."
-                      # Create the control master
-                      ssh_control_master_start_cmd = "#{ssh_exec}#{@passwords.key?(node) || @auth_password ? '' : ' -o BatchMode=yes'} -o ControlMaster=yes -o ControlPersist=yes #{ssh_url} true"
                       exit_status = nil
-                      idx_try = 0
-                      loop do
-                        stderr = nil
-                        exit_status, _stdout, stderr = @cmd_runner.run_cmd ssh_control_master_start_cmd, log_to_stdout: log_debug?, no_exception: true, timeout: timeout
-                        if exit_status == 0
-                          break
-                        elsif stderr =~ /System is booting up/
-                          if idx_try == MAX_RETRIES_FOR_BOOT
-                            if no_exception
-                              break
-                            else
-                              raise ActionsExecutor::ConnectionError, "Tried #{idx_try} times to create SSH Control Master with #{ssh_control_master_start_cmd} but system says it's booting up."
+                      if @nodes_handler.get_ssh_session_exec_of(node) == 'false'
+                        # Here we have to create a ControlMaster using an interactive session, as the SSH server prohibits ExecSession, and so command executions.
+                        # We'll do that using another terminal spawned in the background.
+                        Thread.new do
+                          log_debug "[ ControlMaster - #{ssh_url} ] - Spawn interactive ControlMaster in separate terminal"
+                          @cmd_runner.run_cmd "xterm -e '#{ssh_exec} -o ControlMaster=yes -o ControlPersist=yes #{ssh_url}'", log_to_stdout: log_debug?
+                          log_debug "[ ControlMaster - #{ssh_url} ] - Separate interactive ControlMaster closed"
+                        end
+                        out 'External ControlMaster has been spawned.'
+                        out 'Please login into it, keep its session opened and press enter here when done...'
+                        $stdin.gets
+                        exit_status = 0
+                      else
+                        # Create the control master
+                        ssh_control_master_start_cmd = "#{ssh_exec}#{@passwords.key?(node) || @auth_password ? '' : ' -o BatchMode=yes'} -o ControlMaster=yes -o ControlPersist=yes #{ssh_url} true"
+                        idx_try = 0
+                        loop do
+                          stderr = nil
+                          exit_status, _stdout, stderr = @cmd_runner.run_cmd ssh_control_master_start_cmd, log_to_stdout: log_debug?, no_exception: true, timeout: timeout
+                          if exit_status == 0
+                            break
+                          elsif stderr =~ /System is booting up/
+                            if idx_try == MAX_RETRIES_FOR_BOOT
+                              if no_exception
+                                break
+                              else
+                                raise ActionsExecutor::ConnectionError, "Tried #{idx_try} times to create SSH Control Master with #{ssh_control_master_start_cmd} but system says it's booting up."
+                              end
                             end
+                            # Wait a bit and try again
+                            idx_try += 1
+                            log_debug "[ ControlMaster - #{ssh_url} ] - System is booting up (try ##{idx_try}). Wait #{WAIT_TIME_FOR_BOOT} seconds before trying ControlMaster's creation again."
+                            sleep WAIT_TIME_FOR_BOOT
+                          elsif no_exception
+                            break
+                          else
+                            raise ActionsExecutor::ConnectionError, "Error while starting SSH Control Master with #{ssh_control_master_start_cmd}: #{stderr.strip}"
                           end
-                          # Wait a bit and try again
-                          idx_try += 1
-                          log_debug "[ ControlMaster - #{ssh_url} ] - System is booting up (try ##{idx_try}). Wait #{WAIT_TIME_FOR_BOOT} seconds before trying ControlMaster's creation again."
-                          sleep WAIT_TIME_FOR_BOOT
-                        elsif no_exception
-                          break
-                        else
-                          raise ActionsExecutor::ConnectionError, "Error while starting SSH Control Master with #{ssh_control_master_start_cmd}: #{stderr.strip}"
                         end
                       end
                       if exit_status == 0
