@@ -77,7 +77,11 @@ module HybridPlatformsConductorTest
             log_stderr_to_io << mocked_stderr if !mocked_stderr.empty? && !log_stderr_to_io.nil?
             [mocked_exit_status, mocked_stdout, mocked_stderr]
           else
-            raise "Unexpected command run: #{cmd}"
+            raise "Unexpected command run:\n#{cmd}\nRemaining expected commands:\n#{
+              remaining_expected_commands.map do |(expected_command, _command_code, _options)|
+                expected_command
+              end.join("\n")
+            }"
           end
         end
         yield
