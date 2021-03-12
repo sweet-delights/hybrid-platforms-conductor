@@ -1,3 +1,17 @@
+# [v32.7.1](https://github.com/sweet-delights/hybrid-platforms-conductor/compare/v32.7.0...v32.7.1) (2021-03-12 10:06:58)
+
+## Global changes
+### Patches
+
+* [[Hotfix] Correct non-deterministic test case when ControlMaster creation is done on a slow thread](https://github.com/sweet-delights/hybrid-platforms-conductor/commit/d59bc6edefc297bf29ca61680647a52165e7b3d6)
+* [[Hotfix] Corrected test that failed in a non-deterministic way](https://github.com/sweet-delights/hybrid-platforms-conductor/commit/20036c6b2898b85bfa867f41ee8356f61700722f)
+* [[#21] [Fix(connector_ssh)] Fix bug that did not execute SSH remote co…](https://github.com/sweet-delights/hybrid-platforms-conductor/commit/1fb09487f56e61b39d9f1f708176aa9643582336)
+
+## Changes for connector_ssh
+### Patches
+
+* [[#21] [Fix(connector_ssh)] Fix bug that did not execute SSH remote co…](https://github.com/sweet-delights/hybrid-platforms-conductor/commit/1fb09487f56e61b39d9f1f708176aa9643582336)
+
 # [v32.7.0](https://github.com/sweet-delights/hybrid-platforms-conductor/compare/v32.6.0...v32.7.0) (2021-03-11 19:10:23)
 
 ## Global changes
