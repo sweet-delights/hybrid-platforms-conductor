@@ -89,7 +89,11 @@ module HybridPlatformsConductorTest
           remaining_expected_commands.select do |(_expected_command, _command_code, options)|
             !options[:optional]
           end
-        ).to eq([]), "Expected CmdRunner commands were not run:\n#{remaining_expected_commands.map(&:first).join("\n")}"
+        ).to eq([]), "Expected CmdRunner commands were not run:\n#{
+          remaining_expected_commands.map do |(expected_command, _command_code, options)|
+            "#{options[:optional] ? '[Optional] ' : ''}#{expected_command}"
+          end.join("\n")
+        }"
         # Un-mock the command runner
         allow(cmd_runner).to receive(:run_cmd).and_call_original
       end

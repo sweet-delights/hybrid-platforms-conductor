@@ -15,6 +15,7 @@ module HybridPlatformsConductorTest
       #   * *times* (Integer): Number of times this connection should be used [default: 1]
       #   * *control_master_create_error* (String or nil): Error to simulate during the SSH ControlMaster creation, or nil for none [default: nil]
       # * *with_control_master_create* (Boolean): Do we create the control master? [default: true]
+      # * *with_control_master_create_optional* (Boolean): If true, then consider the ControlMaster creation to be optional [default: false]
       # * *with_control_master_check* (Boolean): Do we check the control master? [default: false]
       # * *with_control_master_destroy* (Boolean): Do we destroy the control master? [default: true]
       # * *with_control_master_destroy_optional* (Boolean): If true, then consider the ControlMaster destruction to be optional [default: false]
@@ -26,6 +27,7 @@ module HybridPlatformsConductorTest
       def ssh_expected_commands_for(
         nodes_connections,
         with_control_master_create: true,
+        with_control_master_create_optional: false,
         with_control_master_check: false,
         with_control_master_destroy: true,
         with_control_master_destroy_optional: false,
@@ -78,7 +80,8 @@ module HybridPlatformsConductorTest
                 else
                   [255, '', node_connection_info[:control_master_create_error]]
                 end
-              end
+              end,
+              { optional: with_control_master_create_optional }
             ]
           end
           if with_control_master_check

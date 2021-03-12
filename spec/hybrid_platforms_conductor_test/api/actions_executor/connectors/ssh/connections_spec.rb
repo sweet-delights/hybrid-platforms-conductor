@@ -123,6 +123,8 @@ describe HybridPlatformsConductor::ActionsExecutor do
                 'node3' => { connection: '192.168.42.3', user: 'test_user' }
               },
               # Here the threads for node1's and node3's ControlMasters might not trigger before the one for node2, so they will not destroy it.
+              # Sometimes they don't even have time to create the Control Masters that node2 has already failed.
+              with_control_master_create_optional: true,
               with_control_master_destroy_optional: true
             ) + ssh_expected_commands_for(
               {
