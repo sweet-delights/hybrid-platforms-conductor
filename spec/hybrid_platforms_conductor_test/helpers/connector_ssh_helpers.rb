@@ -47,12 +47,19 @@ module HybridPlatformsConductorTest
             ])
           end
           if with_control_master_create
+            control_master_created = false
             ssh_commands_per_connection << [
               if with_session_exec
                 /^.+\/ssh #{with_batch_mode ? '-o BatchMode=yes ' : ''}-o ControlMaster=yes -o ControlPersist=yes hpc\.#{Regexp.escape(node)} true$/
               else
-                # Mock the user hitting enter as the Control MAster will be created in another thread and the main thread waits for user input.
-                expect($stdin).to receive(:gets) { "\n" }
+                # Mock the user hitting enter as the Control Master will be created in another thread and the main thread waits for user input.
+                expect($stdin).to receive(:gets) do
+                  # We have to wait for the Control Master creation thread to actually create the Control Master before hitting Enter.
+                  while !control_master_created do
+                    sleep 0.1
+                  end
+                  "\n"
+                end
                 /^xterm -e '.+\/ssh -o ControlMaster=yes -o ControlPersist=yes hpc\.#{Regexp.escape(node)}'$/
               end,
               proc do
@@ -63,6 +70,7 @@ module HybridPlatformsConductorTest
                 elsif node_connection_info[:control_master_create_error].nil?
                   # Really touch a fake control file, as ssh connector checks for its existence
                   File.write(control_file, '')
+                  control_master_created = true
                   # If there is no Session Exec, this is done in a separate thread.
                   # So keep it alive until the user wants to stop it (which is done using an ssh -O exit command).
                   loop { sleep 0.1 } unless with_session_exec
