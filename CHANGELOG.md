@@ -1,3 +1,9 @@
+# [v32.7.2](https://github.com/sweet-delights/hybrid-platforms-conductor/compare/v32.7.1...v32.7.2) (2021-03-12 12:50:01)
+
+### Patches
+
+* [Improve error reporting of unexpected commands in tests](https://github.com/sweet-delights/hybrid-platforms-conductor/commit/62679699cac87a25715aaf5296bf6213922db263)
+
 # [v32.7.1](https://github.com/sweet-delights/hybrid-platforms-conductor/compare/v32.7.0...v32.7.1) (2021-03-12 10:06:58)
 
 ## Global changes
