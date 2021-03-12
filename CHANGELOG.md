@@ -1,3 +1,10 @@
+# [v32.7.3](https://github.com/sweet-delights/hybrid-platforms-conductor/compare/v32.7.2...v32.7.3) (2021-03-12 20:22:50)
+
+### Patches
+
+* [[Hotfix] Fix non-deterministic tests when threads are really slow](https://github.com/sweet-delights/hybrid-platforms-conductor/commit/268b97977c777bf6a42763502c4c6f1788d3be96)
+* [[#25] Instances provisioned for test should reset sudo and SSH transf…](https://github.com/sweet-delights/hybrid-platforms-conductor/commit/52332f077da4fbc280ef2ea6d82fa6ad3080b668)
+
 # [v32.7.2](https://github.com/sweet-delights/hybrid-platforms-conductor/compare/v32.7.1...v32.7.2) (2021-03-12 12:50:01)
 
 ### Patches
