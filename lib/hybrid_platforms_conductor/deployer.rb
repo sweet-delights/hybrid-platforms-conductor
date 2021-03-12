@@ -311,13 +311,24 @@ module HybridPlatformsConductor
           environment: environment,
           logger: @logger,
           logger_stderr: @logger_stderr,
-          config: @config,
+          config: sub_executable.config,
           cmd_runner: @cmd_runner,
           # Here we use the NodesHandler that will be bound to the sub-Deployer only, as the node's metadata might be modified by the Provisioner.
           nodes_handler: sub_executable.nodes_handler,
           actions_executor: @actions_executor
         )
         instance.with_running_instance(stop_on_exit: true, destroy_on_exit: !reuse_instance, port: 22) do
+          # Test-provisioned nodes have SSH Session Exec capabilities
+          sub_executable.nodes_handler.override_metadata_of node, :ssh_session_exec, 'true'
+          # Test-provisioned nodes use default sudo
+          sub_executable.config.sudo_procs.replace(sub_executable.config.sudo_procs.map do |sudo_proc_info|
+            {
+              nodes_selectors_stack: sudo_proc_info[:nodes_selectors_stack].map do |nodes_selector|
+                @nodes_handler.select_nodes(nodes_selector).select { |selected_node| selected_node != node }
+              end,
+              sudo_proc: sudo_proc_info[:sudo_proc]
+            }
+          end)
           actions_executor = sub_executable.actions_executor
           deployer = sub_executable.deployer
           # Setup test environment for this container

@@ -76,6 +76,15 @@ module HybridPlatformsConductor
             # Make sure we update it.
             @nodes_handler.override_metadata_of @node, :host_ip, instance_ip
             @nodes_handler.invalidate_metadata_of @node, :host_keys
+            # Make sure the SSH transformations don't apply to this node
+            @config.ssh_connection_transforms.replace(@config.ssh_connection_transforms.map do |ssh_transform_info|
+              {
+                nodes_selectors_stack: ssh_transform_info[:nodes_selectors_stack].map do |nodes_selector|
+                  @nodes_handler.select_nodes(nodes_selector).select { |selected_node| selected_node != @node }
+                end,
+                transform: ssh_transform_info[:transform]
+              }
+            end)
           end
           wait_for_port!(port) if port
           yield
