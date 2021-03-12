@@ -118,8 +118,12 @@ describe HybridPlatformsConductor::ActionsExecutor do
               ['which env', proc { [0, "/usr/bin/env\n", ''] }],
               ['ssh -V 2>&1', proc { [0, "OpenSSH_7.4p1 Debian-10+deb9u7, OpenSSL 1.0.2u  20 Dec 2019\n", ''] }]
             ] + ssh_expected_commands_for(
-              'node1' => { connection: '192.168.42.1', user: 'test_user' },
-              'node3' => { connection: '192.168.42.3', user: 'test_user' }
+              {
+                'node1' => { connection: '192.168.42.1', user: 'test_user' },
+                'node3' => { connection: '192.168.42.3', user: 'test_user' }
+              },
+              # Here the threads for node1's and node3's ControlMasters might not trigger before the one for node2, so they will not destroy it.
+              with_control_master_destroy_optional: true
             ) + ssh_expected_commands_for(
               {
                 'node2' => { connection: '192.168.42.2', user: 'test_user', control_master_create_error: 'Can\'t connect to 192.168.42.2' }

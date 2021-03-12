@@ -17,16 +17,18 @@ module HybridPlatformsConductorTest
       # * *with_control_master_create* (Boolean): Do we create the control master? [default: true]
       # * *with_control_master_check* (Boolean): Do we check the control master? [default: false]
       # * *with_control_master_destroy* (Boolean): Do we destroy the control master? [default: true]
+      # * *with_control_master_destroy_optional* (Boolean): If true, then consider the ControlMaster destruction to be optional [default: false]
       # * *with_strict_host_key_checking* (Boolean): Do we use strict host key checking? [default: true]
       # * *with_batch_mode* (Boolean): Do we use BatchMode when creating the control master? [default: true]
       # * *with_session_exec* (Boolean): Do we use Sessien Exec capabilities when creating the control master? [default: true]
       # Result::
-      # * Array< [String or Regexp, Proc] >: The expected commands that should be used, and their corresponding mocked code
+      # * Array<Array>: The expected commands that should be used, and their corresponding mocked code and options
       def ssh_expected_commands_for(
         nodes_connections,
         with_control_master_create: true,
         with_control_master_check: false,
         with_control_master_destroy: true,
+        with_control_master_destroy_optional: false,
         with_strict_host_key_checking: true,
         with_batch_mode: true,
         with_session_exec: true
@@ -84,7 +86,8 @@ module HybridPlatformsConductorTest
                 # Really mock the control file deletion
                 File.unlink(test_actions_executor.connector(:ssh).send(:control_master_file, node_connection_info[:connection], '22', node_connection_info[:user]))
                 [1, '', '']
-              end
+              end,
+              { optional: with_control_master_destroy_optional }
             ]
           end
           ssh_commands_once + ssh_commands_per_connection * node_connection_info[:times]

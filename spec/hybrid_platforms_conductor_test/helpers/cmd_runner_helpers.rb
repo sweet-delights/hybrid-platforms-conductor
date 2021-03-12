@@ -8,13 +8,27 @@ module HybridPlatformsConductorTest
       # Run expectations on the expected commands to be called.
       #
       # Parameters::
-      # * *commands* (Array< [String or Regexp, Proc] >): Expected commands that should be called on CmdRunner: the command name or regexp and the corresponding mocked code
-      #   * Parameters::
-      #     * Same parameters as CmdRunner@run_cmd
+      # * *commands* (Array<Array>): List of expected commands that should be called on CmdRunner. Each specification is a list containing those items:
+      #   * *0* (String or Regexp): The command name or regexp matching the command name
+      #   * *1* (Proc): The mocking code to be called in place of the real command:
+      #     * Parameters::
+      #       * Same parameters as CmdRunner@run_cmd
+      #     * Result::
+      #       * Same results as CmdRunner@run_cmd
+      #   * *2* (Hash): Optional hash of options. Can be ommited. [default = {}]
+      #     * *optional* (Boolean): If true then don't fail if the command to be mocked has not been called [default: false]
       # * *cmd_runner* (CmdRunner): The CmdRunner to mock [default: test_cmd_runner]
       # * Proc: Code called with the command runner mocked
       def with_cmd_runner_mocked(commands, cmd_runner: test_cmd_runner)
-        remaining_expected_commands = commands.clone
+        remaining_expected_commands = commands.map do |(expected_command, command_code, options)|
+          [
+            expected_command,
+            command_code,
+            {
+              optional: false
+            }.merge(options || {})
+          ]
+        end
         # We need to protect the access to this array as the mocked commands can be called by competing threads
         remaining_expected_commands_mutex = Mutex.new
         allow(cmd_runner).to receive(:run_cmd) do |cmd, log_to_file: nil, log_to_stdout: true, log_stdout_to_io: nil, log_stderr_to_io: nil, expected_code: 0, timeout: nil, no_exception: false|
@@ -22,7 +36,7 @@ module HybridPlatformsConductorTest
           found_command = nil
           found_command_code = nil
           remaining_expected_commands_mutex.synchronize do
-            remaining_expected_commands.delete_if do |(expected_command, command_code)|
+            remaining_expected_commands.delete_if do |(expected_command, command_code, _options)|
               break unless found_command.nil?
               if (expected_command.is_a?(String) && expected_command == cmd) || (expected_command.is_a?(Regexp) && cmd =~ expected_command)
                 found_command = expected_command
@@ -67,7 +81,11 @@ module HybridPlatformsConductorTest
           end
         end
         yield
-        expect(remaining_expected_commands).to eq([]), "Expected CmdRunner commands were not run:\n#{remaining_expected_commands.map(&:first).join("\n")}"
+        expect(
+          remaining_expected_commands.select do |(_expected_command, _command_code, options)|
+            !options[:optional]
+          end
+        ).to eq([]), "Expected CmdRunner commands were not run:\n#{remaining_expected_commands.map(&:first).join("\n")}"
         # Un-mock the command runner
         allow(cmd_runner).to receive(:run_cmd).and_call_original
       end
