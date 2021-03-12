@@ -54,17 +54,19 @@ module HybridPlatformsConductor
                 instance.stop
                 instance.with_running_instance(port: 22) do
 
-                  # ===== Deploy removes root access
-                  # Check that we can't connect with root
-                  ssh_ok = false
-                  begin
-                    Net::SSH.start(instance.ip, 'root', password: 'root_pwd', auth_methods: ['password'], verify_host_key: :never) do |ssh|
-                      ssh_ok = ssh.exec!('echo Works').strip == 'Works'
+                  unless @nodes_handler.get_root_access_allowed_of(@node) == 'true'
+                    # ===== Deploy removes root access
+                    # Check that we can't connect with root
+                    ssh_ok = false
+                    begin
+                      Net::SSH.start(instance.ip, 'root', password: 'root_pwd', auth_methods: ['password'], verify_host_key: :never) do |ssh|
+                        ssh_ok = ssh.exec!('echo Works').strip == 'Works'
+                      end
+                    rescue
                     end
-                  rescue
+                    assert_equal ssh_ok, false, 'Root can still connect on the image after deployment'
+                    # Even if we can connect using root, run the idempotence test
                   end
-                  assert_equal ssh_ok, false, 'Root can still connect on the image after deployment'
-                  # Even if we can connect using root, run the idempotence test
 
                   # ===== Idempotence
                   unless ssh_ok
