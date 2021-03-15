@@ -53,9 +53,8 @@ describe HybridPlatformsConductor::ActionsExecutor do
               ['ssh -V 2>&1', proc { [0, "OpenSSH_7.4p1 Debian-10+deb9u7, OpenSSL 1.0.2u  20 Dec 2019\n", ''] }]
             ] + ssh_expected_commands_for(
               { 'node' => { connection: '192.168.42.42', user: 'test_user' } },
-              with_control_master_create_optional: true,
-              with_control_master_destroy: false,
-              with_session_exec: false
+              with_control_master_create: false,
+              with_control_master_destroy: false
             )
           ) do
             test_connector.ssh_user = 'test_user'
@@ -63,6 +62,36 @@ describe HybridPlatformsConductor::ActionsExecutor do
               test_connector.with_connection_to(['node']) do
               end
             end.to raise_error 'Can\'t spawn interactive ControlMaster to node in non-interactive mode. You may want to change the hpc_interactive env variable.'
+          end
+        end
+      end
+
+      it 'fails without creating exception when creating an SSH master to 1 node not having Session Exec capabilities when hpc_interactive is false and we use no_exception' do
+        with_test_platform(nodes: {
+          'node1' => { meta: { host_ip: '192.168.42.1' } },
+          'node2' => { meta: { host_ip: '192.168.42.2', ssh_session_exec: 'false' } },
+          'node3' => { meta: { host_ip: '192.168.42.3' } }
+        }) do
+          ENV['hpc_interactive'] = 'false'
+          with_cmd_runner_mocked(
+            [
+              ['which env', proc { [0, "/usr/bin/env\n", ''] }],
+              ['ssh -V 2>&1', proc { [0, "OpenSSH_7.4p1 Debian-10+deb9u7, OpenSSL 1.0.2u  20 Dec 2019\n", ''] }]
+            ] + ssh_expected_commands_for(
+              'node1' => { connection: '192.168.42.1', user: 'test_user' },
+              'node3' => { connection: '192.168.42.3', user: 'test_user' }
+            ) + ssh_expected_commands_for(
+              {
+                'node2' => { connection: '192.168.42.2', user: 'test_user' }
+              },
+              with_control_master_create: false,
+              with_control_master_destroy: false
+            )
+          ) do
+            test_connector.ssh_user = 'test_user'
+            test_connector.with_connection_to(%w[node1 node2 node3], no_exception: true) do |connected_nodes|
+              expect(connected_nodes.sort).to eq %w[node1 node3].sort
+            end
           end
         end
       end

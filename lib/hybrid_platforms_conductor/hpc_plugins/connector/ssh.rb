@@ -505,16 +505,25 @@ module HybridPlatformsConductor
                       if @nodes_handler.get_ssh_session_exec_of(node) == 'false'
                         # Here we have to create a ControlMaster using an interactive session, as the SSH server prohibits ExecSession, and so command executions.
                         # We'll do that using another terminal spawned in the background.
-                        Thread.new do
-                          log_debug "[ ControlMaster - #{ssh_url} ] - Spawn interactive ControlMaster in separate terminal"
-                          @cmd_runner.run_cmd "xterm -e '#{ssh_exec} -o ControlMaster=yes -o ControlPersist=yes #{ssh_url}'", log_to_stdout: log_debug?
-                          log_debug "[ ControlMaster - #{ssh_url} ] - Separate interactive ControlMaster closed"
+                        if ENV['hpc_interactive'] == 'false'
+                          error = "Can't spawn interactive ControlMaster to #{node} in non-interactive mode. You may want to change the hpc_interactive env variable."
+                          if no_exception
+                            log_error error
+                            exit_status = :non_interactive
+                          else
+                            raise error
+                          end
+                        else
+                          Thread.new do
+                            log_debug "[ ControlMaster - #{ssh_url} ] - Spawn interactive ControlMaster in separate terminal"
+                            @cmd_runner.run_cmd "xterm -e '#{ssh_exec} -o ControlMaster=yes -o ControlPersist=yes #{ssh_url}'", log_to_stdout: log_debug?
+                            log_debug "[ ControlMaster - #{ssh_url} ] - Separate interactive ControlMaster closed"
+                          end
+                          out 'External ControlMaster has been spawned.'
+                          out 'Please login into it, keep its session opened and press enter here when done...'
+                          $stdin.gets
+                          exit_status = 0
                         end
-                        out 'External ControlMaster has been spawned.'
-                        out 'Please login into it, keep its session opened and press enter here when done...'
-                        raise "Can't spawn interactive ControlMaster to #{node} in non-interactive mode. You may want to change the hpc_interactive env variable." if ENV['hpc_interactive'] == 'false'
-                        $stdin.gets
-                        exit_status = 0
                       else
                         # Create the control master
                         ssh_control_master_start_cmd = "#{ssh_exec}#{@passwords.key?(node) || @auth_password ? '' : ' -o BatchMode=yes'} -o ControlMaster=yes -o ControlPersist=yes #{ssh_url} true"
