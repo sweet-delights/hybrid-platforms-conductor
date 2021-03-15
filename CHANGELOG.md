@@ -1,3 +1,15 @@
+# [v32.8.1](https://github.com/sweet-delights/hybrid-platforms-conductor/compare/v32.8.0...v32.8.1) (2021-03-15 11:40:09)
+
+## Global changes
+### Patches
+
+* [[Hotfix(connector_ssh)] Don't fail when no_exception is true](https://github.com/sweet-delights/hybrid-platforms-conductor/commit/67be9c1d2f0452a9de39dae39e39cbfbac3a658f)
+
+## Changes for connector_ssh
+### Patches
+
+* [[Hotfix(connector_ssh)] Don't fail when no_exception is true](https://github.com/sweet-delights/hybrid-platforms-conductor/commit/67be9c1d2f0452a9de39dae39e39cbfbac3a658f)
+
 # [v32.8.0](https://github.com/sweet-delights/hybrid-platforms-conductor/compare/v32.7.3...v32.8.0) (2021-03-15 10:43:06)
 
 ### Features
