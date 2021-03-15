@@ -94,6 +94,7 @@ module HybridPlatformsConductorTest
         ENV.delete 'hpc_password_for_thycotic'
         ENV.delete 'hpc_domain_for_thycotic'
         ENV.delete 'hpc_certificates'
+        ENV.delete 'hpc_interactive'
         # Set the necessary Hybrid Platforms Conductor environment variables
         ENV['hpc_ssh_user'] = 'test_user'
         HybridPlatformsConductor::ServicesHandler.packaged_deployments.clear
