@@ -44,6 +44,29 @@ describe HybridPlatformsConductor::ActionsExecutor do
         end
       end
 
+      it 'can\'t create an SSH master to 1 node not having Session Exec capabilities when hpc_interactive is false' do
+        with_test_platform(nodes: { 'node' => { meta: { host_ip: '192.168.42.42', ssh_session_exec: 'false' } } }) do
+          ENV['hpc_interactive'] = 'false'
+          with_cmd_runner_mocked(
+            [
+              ['which env', proc { [0, "/usr/bin/env\n", ''] }],
+              ['ssh -V 2>&1', proc { [0, "OpenSSH_7.4p1 Debian-10+deb9u7, OpenSSL 1.0.2u  20 Dec 2019\n", ''] }]
+            ] + ssh_expected_commands_for(
+              { 'node' => { connection: '192.168.42.42', user: 'test_user' } },
+              with_control_master_create_optional: true,
+              with_control_master_destroy: false,
+              with_session_exec: false
+            )
+          ) do
+            test_connector.ssh_user = 'test_user'
+            expect do
+              test_connector.with_connection_to(['node']) do
+              end
+            end.to raise_error 'Can\'t spawn interactive ControlMaster to node in non-interactive mode. You may want to change the hpc_interactive env variable.'
+          end
+        end
+      end
+
       it 'creates SSH master to several nodes' do
         with_test_platform(nodes: {
           'node1' => { meta: { host_ip: '192.168.42.1' } },

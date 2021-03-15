@@ -54,13 +54,15 @@ module HybridPlatformsConductorTest
               if with_session_exec
                 /^.+\/ssh #{with_batch_mode ? '-o BatchMode=yes ' : ''}-o ControlMaster=yes -o ControlPersist=yes hpc\.#{Regexp.escape(node)} true$/
               else
-                # Mock the user hitting enter as the Control Master will be created in another thread and the main thread waits for user input.
-                expect($stdin).to receive(:gets) do
-                  # We have to wait for the Control Master creation thread to actually create the Control Master before hitting Enter.
-                  while !control_master_created do
-                    sleep 0.1
+                unless ENV['hpc_interactive'] == 'false'
+                  # Mock the user hitting enter as the Control Master will be created in another thread and the main thread waits for user input.
+                  expect($stdin).to receive(:gets) do
+                    # We have to wait for the Control Master creation thread to actually create the Control Master before hitting Enter.
+                    while !control_master_created do
+                      sleep 0.1
+                    end
+                    "\n"
                   end
-                  "\n"
                 end
                 /^xterm -e '.+\/ssh -o ControlMaster=yes -o ControlPersist=yes hpc\.#{Regexp.escape(node)}'$/
               end,

@@ -512,6 +512,7 @@ module HybridPlatformsConductor
                         end
                         out 'External ControlMaster has been spawned.'
                         out 'Please login into it, keep its session opened and press enter here when done...'
+                        raise "Can't spawn interactive ControlMaster to #{node} in non-interactive mode. You may want to change the hpc_interactive env variable." if ENV['hpc_interactive'] == 'false'
                         $stdin.gets
                         exit_status = 0
                       else
