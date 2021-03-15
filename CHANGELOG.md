@@ -1,3 +1,9 @@
+# [v32.8.0](https://github.com/sweet-delights/hybrid-platforms-conductor/compare/v32.7.3...v32.8.0) (2021-03-15 10:43:06)
+
+### Features
+
+* [[#27] [Feature] Add a way to specify non-interactive environment + Make sure non-SessionExec SSH connections fail in non-interactive env](https://github.com/sweet-delights/hybrid-platforms-conductor/commit/c0a40dcd4d2e520f9bc8ffed3bc90da16fe81c72)
+
 # [v32.7.3](https://github.com/sweet-delights/hybrid-platforms-conductor/compare/v32.7.2...v32.7.3) (2021-03-12 20:22:50)
 
 ### Patches
