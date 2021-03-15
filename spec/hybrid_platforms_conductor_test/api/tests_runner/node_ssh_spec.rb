@@ -69,7 +69,7 @@ describe HybridPlatformsConductor::TestsRunner do
           'node12' => { 'test_node12.sh' => proc { |stdout, stderr, exit_code| ssh_executions << ['node12', stdout, stderr, exit_code] } },
           'node21' => { 'test_node21.sh' => proc { |stdout, stderr, exit_code| ssh_executions << ['node21', stdout, stderr, exit_code] } },
           'node22' => { 'test_node22.sh' => proc { |stdout, stderr, exit_code| ssh_executions << ['node22', stdout, stderr, exit_code] } }
-        }}
+        } }
         expect(test_tests_runner.run_tests([{ all: true }])).to eq 0
         expect(ssh_executions.sort).to eq [
           ['node11', ['stdout11'], ['stderr11'], 0],
@@ -88,12 +88,25 @@ describe HybridPlatformsConductor::TestsRunner do
         HybridPlatformsConductorTest::TestPlugins::NodeSsh.node_tests = { node_ssh_test: {
           'node12' => { 'test_node12.sh' => proc { |stdout, stderr, exit_code| ssh_executions << ['node12', stdout, stderr, exit_code] } },
           'node22' => { 'test_node22.sh' => proc { |stdout, stderr, exit_code| ssh_executions << ['node22', stdout, stderr, exit_code] } }
-        }}
+        } }
         expect(test_tests_runner.run_tests(%w[node12 node22])).to eq 0
         expect(ssh_executions.sort).to eq [
           ['node12', ['stdout12'], ['stderr12'], 0],
           ['node22', ['stdout22'], ['stderr22'], 0]
         ].sort
+      end
+    end
+
+    it 'does not execute anything when the tests report no command' do
+      with_test_platform_for_node_connection_tests do
+        test_tests_runner.tests = [:node_ssh_test]
+        ssh_executions = []
+        HybridPlatformsConductorTest::TestPlugins::NodeSsh.node_tests = { node_ssh_test: {
+          'node12' => {},
+          'node22' => {}
+        } }
+        expect(test_tests_runner.run_tests(%w[node12 node22])).to eq 0
+        expect(ssh_executions).to eq []
       end
     end
 
