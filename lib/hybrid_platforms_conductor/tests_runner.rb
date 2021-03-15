@@ -428,9 +428,11 @@ module HybridPlatformsConductor
             end
           end
           # Compute the timeout that will be applied, from the max timeout sum for every node that has tests to run
-          timeout = CONNECTION_TIMEOUT + @cmds_to_run.map do |_node, cmds_list|
-            cmds_list.inject(0) { |total_timeout, (_cmd, test_info)| test_info[:timeout] + total_timeout }
-          end.max
+          timeout = CONNECTION_TIMEOUT + (
+            @cmds_to_run.map do |_node, cmds_list|
+              cmds_list.inject(0) { |total_timeout, (_cmd, test_info)| test_info[:timeout] + total_timeout }
+            end.max || 0
+          )
           # Run commands on nodes, in grouped way to avoid too many connections, per node
           # Hash< String, Array<String> >
           @test_cmds = Hash[@cmds_to_run.map do |node, cmds_list|
@@ -464,33 +466,35 @@ module HybridPlatformsConductor
         end,
         test_execution: proc do |test|
           exit_status, stdout, stderr = @actions_result[test.node]
-          if exit_status.is_a?(Symbol)
-            test.error "Error while executing tests: #{exit_status}: #{stderr}"
-          else
-            log_debug <<~EOS
-              ----- Commands for #{test.node}:
-              #{@test_cmds[test.node][:remote_bash].join("\n")}
-              ----- STDOUT:
-              #{stdout}
-              ----- STDERR:
-              #{stderr}
-              -----
-            EOS
-            # Skip the first section, as it can contain SSH banners
-            cmd_stdouts = stdout.split("#{CMD_SEPARATOR}\n")[1..-1]
-            cmd_stdouts = [] if cmd_stdouts.nil?
-            cmd_stderrs = stderr.split("#{CMD_SEPARATOR}\n")[1..-1]
-            cmd_stderrs = [] if cmd_stderrs.nil?
-            @cmds_to_run[test.node].zip(cmd_stdouts, cmd_stderrs).each do |(cmd, test_info), cmd_stdout, cmd_stderr|
-              # Find the section that corresponds to this test
-              if test_info[:test] == test
-                cmd_stdout = '' if cmd_stdout.nil?
-                cmd_stderr = '' if cmd_stderr.nil?
-                stdout_lines = cmd_stdout.split("\n")
-                # Last line of stdout is the return code
-                return_code = stdout_lines.empty? ? :command_cant_run : Integer(stdout_lines.last)
-                test.error "Command '#{cmd}' returned error code #{return_code}", "----- STDOUT:\n#{stdout_lines[0..-2].join("\n")}\n----- STDERR:\n#{cmd_stderr}" unless return_code == 0
-                test_info[:validator].call(stdout_lines[0..-2], cmd_stderr.split("\n"), return_code)
+          unless exit_status.nil?
+            if exit_status.is_a?(Symbol)
+              test.error "Error while executing tests: #{exit_status}: #{stderr}"
+            else
+              log_debug <<~EOS
+                ----- Commands for #{test.node}:
+                #{@test_cmds[test.node][:remote_bash].join("\n")}
+                ----- STDOUT:
+                #{stdout}
+                ----- STDERR:
+                #{stderr}
+                -----
+              EOS
+              # Skip the first section, as it can contain SSH banners
+              cmd_stdouts = stdout.split("#{CMD_SEPARATOR}\n")[1..-1]
+              cmd_stdouts = [] if cmd_stdouts.nil?
+              cmd_stderrs = stderr.split("#{CMD_SEPARATOR}\n")[1..-1]
+              cmd_stderrs = [] if cmd_stderrs.nil?
+              @cmds_to_run[test.node].zip(cmd_stdouts, cmd_stderrs).each do |(cmd, test_info), cmd_stdout, cmd_stderr|
+                # Find the section that corresponds to this test
+                if test_info[:test] == test
+                  cmd_stdout = '' if cmd_stdout.nil?
+                  cmd_stderr = '' if cmd_stderr.nil?
+                  stdout_lines = cmd_stdout.split("\n")
+                  # Last line of stdout is the return code
+                  return_code = stdout_lines.empty? ? :command_cant_run : Integer(stdout_lines.last)
+                  test.error "Command '#{cmd}' returned error code #{return_code}", "----- STDOUT:\n#{stdout_lines[0..-2].join("\n")}\n----- STDERR:\n#{cmd_stderr}" unless return_code == 0
+                  test_info[:validator].call(stdout_lines[0..-2], cmd_stderr.split("\n"), return_code)
+                end
               end
             end
           end
