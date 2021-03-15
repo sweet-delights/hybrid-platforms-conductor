@@ -1,3 +1,15 @@
+# [v32.8.2](https://github.com/sweet-delights/hybrid-platforms-conductor/compare/v32.8.1...v32.8.2) (2021-03-15 12:38:14)
+
+## Global changes
+### Patches
+
+* [[#29] [Fix(tests_runner)] Don't fail when remote node tests return no test to be executed](https://github.com/sweet-delights/hybrid-platforms-conductor/commit/c23c0c73414962140c2e5ed86a7183a4ea572d1b)
+
+## Changes for tests_runner
+### Patches
+
+* [[#29] [Fix(tests_runner)] Don't fail when remote node tests return no test to be executed](https://github.com/sweet-delights/hybrid-platforms-conductor/commit/c23c0c73414962140c2e5ed86a7183a4ea572d1b)
+
 # [v32.8.1](https://github.com/sweet-delights/hybrid-platforms-conductor/compare/v32.8.0...v32.8.1) (2021-03-15 11:40:09)
 
 ## Global changes
