@@ -1,3 +1,15 @@
+# [v32.9.0](https://github.com/sweet-delights/hybrid-platforms-conductor/compare/v32.8.2...v32.9.0) (2021-03-22 19:20:50)
+
+## Global changes
+### Patches
+
+* [[Feature(provisioner_proxmox)] Add configurable retry mechanism on Proxmox API](https://github.com/sweet-delights/hybrid-platforms-conductor/commit/bd1c5d511844d643170eccc1b24c38734aeba693)
+
+## Changes for provisioner_proxmox
+### Features
+
+* [[Feature(provisioner_proxmox)] Add configurable retry mechanism on Proxmox API](https://github.com/sweet-delights/hybrid-platforms-conductor/commit/bd1c5d511844d643170eccc1b24c38734aeba693)
+
 # [v32.8.2](https://github.com/sweet-delights/hybrid-platforms-conductor/compare/v32.8.1...v32.8.2) (2021-03-15 12:38:14)
 
 ## Global changes
