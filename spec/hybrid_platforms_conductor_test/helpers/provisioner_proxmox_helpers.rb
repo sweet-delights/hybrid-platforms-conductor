@@ -23,6 +23,8 @@ module HybridPlatformsConductorTest
             test_platform path: '#{repository}'
             proxmox(
               api_url: 'https://my-proxmox.my-domain.com:8006',
+              api_max_retries: 3,
+              api_wait_between_retries_secs: 0,
               sync_node: 'node',
               test_config: {
                 pve_nodes: ['pve_node_name'],
@@ -75,12 +77,20 @@ module HybridPlatformsConductorTest
       # * *proxmox_password* (String or nil): Proxmox password used to connect to Proxmox API [default: nil]
       # * *proxmox_realm* (String or nil): Proxmox realm used to connect to Proxmox API [default: 'pam']
       # * *nodes_info* (Array<Hash>): Nodes info returned by the Proxmox API [default: []]
+      # * *nbr_api_errors* (Integer): Number of API errors 500 to mock before getting a successful query [defaults: 0]
       # * *extra_expects* (Proc or nil): Code called for additional expectations on the proxmox instance, or nil if none [default: nil]
       #   * Parameters::
       #     * *proxmox* (Double): The mocked Proxmox instance
       # Result::
       # * Proc: Code called in place of Proxmox.new. Signature is the same as Proxmox.new.
-      def mock_proxmox_to_get_nodes_info(proxmox_user: nil, proxmox_password: nil, proxmox_realm: 'pam', nodes_info: [], extra_expects: nil)
+      def mock_proxmox_to_get_nodes_info(
+        proxmox_user: nil,
+        proxmox_password: nil,
+        proxmox_realm: 'pam',
+        nodes_info: [],
+        nbr_api_errors: 0,
+        extra_expects: nil
+      )
         proc do |url, pve_node, user, password, realm, options|
           expect(url).to eq 'https://my-proxmox.my-domain.com:8006/api2/json/'
           expect(pve_node).to eq 'my-proxmox'
@@ -97,8 +107,10 @@ module HybridPlatformsConductorTest
             # Nothing
           end
           # Mock checking existing nodes
-          expect(proxmox).to receive(:get).with('nodes') do
-            nodes_info
+          idx_try = 0
+          expect(proxmox).to receive(:get).exactly(nbr_api_errors + 1).times.with('nodes') do
+            idx_try += 1
+            idx_try <= nbr_api_errors ? 'NOK: error code = 500' : nodes_info
           end
           extra_expects.call(proxmox) unless extra_expects.nil?
           proxmox
@@ -243,13 +255,15 @@ module HybridPlatformsConductorTest
       # Parameters::
       # * *proxmox_user* (String or nil): Proxmox user used to connect to Proxmox API [default: nil]
       # * *proxmox_password* (String or nil): Proxmox password used to connect to Proxmox API [default: nil]
-      # * *status* (String): Mocked status [default: 'created']
+      # * *status* (String or nil): Mocked status, or nil if it should not be asked [default: 'created']
+      # * *nbr_api_errors* (Integer): Number of API errors 500 to mock before getting a successful query [defaults: 0]
       # Result::
       # * Proc: Code called in place of Proxmox.new. Signature is the same as Proxmox.new.
       def mock_proxmox_to_status_node(
         proxmox_user: nil,
         proxmox_password: nil,
-        task_status: 'OK'
+        status: 'created',
+        nbr_api_errors: 0
       )
         proc do |url, pve_node, user, password, realm, options|
           expect(url).to eq 'https://my-proxmox.my-domain.com:8006/api2/json/'
@@ -267,17 +281,25 @@ module HybridPlatformsConductorTest
             # Nothing
           end
           # Mock getting status of a container
-          expect(proxmox).to receive(:get).with('nodes/pve_node_name/lxc') do
-            [
-              {
-                'vmid' => '1024'
-              }
-            ]
+          idx_try = 0
+          expect(proxmox).to receive(:get).exactly(nbr_api_errors + (status.nil? ? 0 : 1)).times.with('nodes/pve_node_name/lxc') do
+            idx_try += 1
+            if idx_try <= nbr_api_errors
+              'NOK: error code = 500'
+            else
+              [
+                {
+                  'vmid' => '1024'
+                }
+              ]
+            end
           end
-          expect(proxmox).to receive(:get).with('nodes/pve_node_name/lxc/1024/status/current') do
-            {
-              'status' => 'created'
-            }
+          unless status.nil?
+            expect(proxmox).to receive(:get).with('nodes/pve_node_name/lxc/1024/status/current') do
+              {
+                'status' => 'created'
+              }
+            end
           end
           proxmox
         end
@@ -548,13 +570,17 @@ module HybridPlatformsConductorTest
                   ]
                 when /^nodes\/([^\/]+)\/lxc$/
                   pve_node_name = $1
-                  pve_nodes[pve_node_name][:lxc_containers].map do |vm_id, vm_info|
-                    {
-                      'vmid' => vm_id.to_s,
-                      'maxdisk' => vm_info[:maxdisk],
-                      'maxmem' => vm_info[:maxmem],
-                      'cpus' => vm_info[:cpus]
-                    }
+                  if pve_nodes[pve_node_name][:error_strings].nil? || pve_nodes[pve_node_name][:error_strings].empty?
+                    pve_nodes[pve_node_name][:lxc_containers].map do |vm_id, vm_info|
+                      {
+                        'vmid' => vm_id.to_s,
+                        'maxdisk' => vm_info[:maxdisk],
+                        'maxmem' => vm_info[:maxmem],
+                        'cpus' => vm_info[:cpus]
+                      }
+                    end
+                  else
+                    pve_nodes[pve_node_name][:error_strings].shift
                   end
                 when /^nodes\/([^\/]+)\/lxc\/([^\/]+)\/config$/
                   pve_node_name = $1
@@ -642,14 +668,26 @@ module HybridPlatformsConductorTest
       # * *wait_before_retry* (Integer): Specify the number of seconds to wait before retry [default: 0]
       # * *create* (Hash or nil): Create file content, or nil if none [default: nil]
       # * *destroy* (Hash or nil): Destroy file content, or nil if none [default: nil]
+      # * *api_max_retries* (Integer): Max number of API retries [default: 3]
+      # * *api_wait_between_retries_secs* (Integer): Number of seconds to wait between API retries [default: 0]
       # Result::
       # * Hash: JSON result of the call
-      def call_reserve_proxmox_container_with(config: {}, max_retries: 1, wait_before_retry: 0, create: nil, destroy: nil)
+      def call_reserve_proxmox_container_with(
+        config: {},
+        max_retries: 1,
+        wait_before_retry: 0,
+        create: nil,
+        destroy: nil,
+        api_max_retries: 3,
+        api_wait_between_retries_secs: 0
+      )
         # Make sure we set default values in the config
         config = {
           proxmox_api_url: 'https://my-proxmox.my-domain.com:8006',
           futex_file: "#{@repository}/proxmox/allocations.futex",
           logs_dir: "#{Dir.tmpdir}/hpc_test_proxmox_waiter_logs",
+          api_max_retries: api_max_retries,
+          api_wait_between_retries_secs: api_wait_between_retries_secs,
           pve_nodes: ['pve_node_name'],
           vm_ips_list: %w[
             192.168.0.100
@@ -716,7 +754,14 @@ module HybridPlatformsConductorTest
       # * *wait_before_retry* (Integer): Specify the number of seconds to wait before retry [default: 0]
       # Result::
       # * Hash: JSON result of the call
-      def call_reserve_proxmox_container(cpus, ram_mb, disk_gb, config: {}, max_retries: 1, wait_before_retry: 0)
+      def call_reserve_proxmox_container(
+        cpus,
+        ram_mb,
+        disk_gb,
+        config: {},
+        max_retries: 1,
+        wait_before_retry: 0
+      )
         call_reserve_proxmox_container_with(
           config: config,
           max_retries: max_retries,

@@ -26,6 +26,8 @@ class ProxmoxWaiter
   #   * *proxmox_api_url* (String): Proxmox API URL.
   #   * *futex_file* (String): Path to the file serving as a futex.
   #   * *logs_dir* (String): Path to the directory containing logs [default: '.']
+  #   * *api_max_retries* (Integer): Max number of API retries
+  #   * *api_wait_between_retries_secs* (Integer): Number of seconds to wait between API retries
   #   * *pve_nodes* (Array<String>): List of PVE nodes allowed to spawn new containers [default: all]
   #   * *vm_ips_list* (Array<String>): The list of IPs that are available for the Proxomx containers.
   #   * *vm_ids_range* ([Integer, Integer]): Minimum and maximum reservable VM ID
@@ -637,11 +639,23 @@ class ProxmoxWaiter
 
   # Get a path from the API it returns its JSON result.
   # Keep a cache of it, whose lifespan is this ProxmoxWaiter instance.
+  # Have a retry mechanism to make sure eventual non-deterministic 50x errors are not an issue.
   #
   # Parameters::
   # * *path* (String): API path to query
-  def api_get(path)
-    @gets_cache[path] = @proxmox.get(path) unless @gets_cache.key?(path)
+  # Result::
+  # * Object: The API response
+  def api_get(path, nbr_retries: 3, wait_between_retry_secs: 10)
+    unless @gets_cache.key?(path)
+      idx_try = 0
+      loop do
+        @gets_cache[path] = @proxmox.get(path)
+        break unless @gets_cache[path].is_a?(String) && @gets_cache[path] =~ /^NOK: error code = 5\d\d$/
+        raise "Proxmox API get #{path} returns #{@gets_cache[path]} continuously (tried #{idx_try + 1} times)" if idx_try >= @config['api_max_retries']
+        idx_try += 1
+        sleep @config['api_wait_between_retries_secs']
+      end
+    end
     @gets_cache[path]
   end
 
