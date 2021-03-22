@@ -639,7 +639,7 @@ class ProxmoxWaiter
 
   # Get a path from the API it returns its JSON result.
   # Keep a cache of it, whose lifespan is this ProxmoxWaiter instance.
-  # Have a retry mechanism to make sure eventual non-deterministic 50x errors are not an issue.
+  # Have a retry mechanism to make sure eventual non-deterministic 5xx errors are not an issue.
   #
   # Parameters::
   # * *path* (String): API path to query

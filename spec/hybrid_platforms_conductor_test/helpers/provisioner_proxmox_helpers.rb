@@ -297,7 +297,7 @@ module HybridPlatformsConductorTest
           unless status.nil?
             expect(proxmox).to receive(:get).with('nodes/pve_node_name/lxc/1024/status/current') do
               {
-                'status' => 'created'
+                'status' => status
               }
             end
           end
