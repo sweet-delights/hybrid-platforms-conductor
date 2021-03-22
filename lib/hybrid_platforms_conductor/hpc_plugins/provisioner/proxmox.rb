@@ -74,13 +74,13 @@ module HybridPlatformsConductor
           # First check if we already have a test container that corresponds to this node and environment
           @lxc_details = nil
           with_proxmox do |proxmox|
-            proxmox.get('nodes').each do |node_info|
+            proxmox_get(proxmox, 'nodes').each do |node_info|
               if proxmox_test_info[:test_config][:pve_nodes].include?(node_info['node']) && node_info['status'] == 'online'
-                proxmox.get("nodes/#{node_info['node']}/lxc").each do |lxc_info|
+                proxmox_get(proxmox, "nodes/#{node_info['node']}/lxc").each do |lxc_info|
                   vm_id = Integer(lxc_info['vmid'])
                   if vm_id.between?(*proxmox_test_info[:test_config][:vm_ids_range])
                     # Check if the description contains our ID
-                    lxc_config = proxmox.get("nodes/#{node_info['node']}/lxc/#{vm_id}/config")
+                    lxc_config = proxmox_get(proxmox, "nodes/#{node_info['node']}/lxc/#{vm_id}/config")
                     vm_description_lines = (lxc_config['description'] || '').split("\n")
                     hpc_marker_idx = vm_description_lines.index('===== HPC info =====')
                     unless hpc_marker_idx.nil?
@@ -222,8 +222,8 @@ module HybridPlatformsConductor
             with_proxmox do |proxmox|
               vm_id_str = @lxc_details[:vm_id].to_s
               status =
-                if proxmox.get("nodes/#{@lxc_details[:pve_node]}/lxc").any? { |data_info| data_info['vmid'] == vm_id_str }
-                  status_info = proxmox.get("nodes/#{@lxc_details[:pve_node]}/lxc/#{@lxc_details[:vm_id]}/status/current")
+                if proxmox_get(proxmox, "nodes/#{@lxc_details[:pve_node]}/lxc").any? { |data_info| data_info['vmid'] == vm_id_str }
+                  status_info = proxmox_get(proxmox, "nodes/#{@lxc_details[:pve_node]}/lxc/#{@lxc_details[:vm_id]}/status/current")
                   # Careful that it is possible that somebody destroyed the VM and so its status is missing
                   status = status_info.key?('status') ? status_info['status'].to_sym : :missing
                   status = :exited if status == :stopped
@@ -292,11 +292,27 @@ module HybridPlatformsConductor
           end
         end
 
-        # Maximum number of retries to perform on the Proxmox API.
-        NBR_RETRIES_MAX = 5
-
-        # Minimum seconds to wait between retries
-        RETRY_WAIT_TIME_SECS = 5
+        # Perform a get operation on the API
+        # Protect the get API methods with a retry mechanism in case of 5xx errors.
+        #
+        # Parameters::
+        # * *proxmox* (Proxmox): The Proxmox instance
+        # * *path* (String): Path to get
+        # Result::
+        # * Object: API response
+        def proxmox_get(proxmox, path)
+          response = nil
+          idx_try = 0
+          loop do
+            response = proxmox.get(path)
+            break if !(response.is_a?(String)) || !(response =~ /^NOK: error code = 5\d\d$/)
+            log_warn "[ #{@node}/#{@environment} ] - Proxmox API call get #{path} returned error #{response} (attempt ##{idx_try}/#{proxmox_test_info[:api_max_retries]})"
+            raise "[ #{@node}/#{@environment} ] - Proxmox API call get #{path} returns #{response} continuously (tried #{idx_try + 1} times)" if idx_try >= proxmox_test_info[:api_max_retries]
+            idx_try += 1
+            sleep proxmox_test_info[:api_wait_between_retries_secs] + rand(5)
+          end
+          response
+        end
 
         # Run a Proxmox task.
         # Handle a retry mechanism in case of 5xx errors.
@@ -313,11 +329,11 @@ module HybridPlatformsConductor
           while task.nil? do
             task = proxmox.send(http_method, "nodes/#{pve_node}/#{sub_path}", *args)
             if task =~ /^NOK: error code = 5\d\d$/
-              log_warn "[ #{@node}/#{@environment} ] - Proxmox API call #{http_method} nodes/#{pve_node}/#{sub_path} #{args} returned error #{task} (attempt ##{idx_try}/#{NBR_RETRIES_MAX})"
+              log_warn "[ #{@node}/#{@environment} ] - Proxmox API call #{http_method} nodes/#{pve_node}/#{sub_path} #{args} returned error #{task} (attempt ##{idx_try}/#{proxmox_test_info[:api_max_retries]})"
               task = nil
+              break if idx_try >= proxmox_test_info[:api_max_retries]
               idx_try += 1
-              break if idx_try == NBR_RETRIES_MAX
-              sleep RETRY_WAIT_TIME_SECS + rand(5)
+              sleep proxmox_test_info[:api_wait_between_retries_secs] + rand(5)
             end
           end
           if task.nil?
@@ -358,7 +374,7 @@ module HybridPlatformsConductor
         # Result::
         # * String: The task status
         def task_status(proxmox, pve_node, task)
-          status_info = proxmox.get("nodes/#{pve_node}/tasks/#{task}/status")
+          status_info = proxmox_get(proxmox, "nodes/#{pve_node}/tasks/#{task}/status")
           "#{status_info['status']}#{status_info['exitstatus'] ? ":#{status_info['exitstatus']}" : ''}"
         end
 
@@ -377,7 +393,9 @@ module HybridPlatformsConductor
             (proxmox_test_info[:test_config].merge(
               proxmox_api_url: proxmox_test_info[:api_url],
               futex_file: '/tmp/hpc_proxmox_allocations.futex',
-              logs_dir: '/tmp/hpc_proxmox_waiter_logs'
+              logs_dir: '/tmp/hpc_proxmox_waiter_logs',
+              api_max_retries: proxmox_test_info[:api_max_retries],
+              api_wait_between_retries_secs: proxmox_test_info[:api_wait_between_retries_secs]
             )).to_json
           )
           result = nil
@@ -486,7 +504,7 @@ module HybridPlatformsConductor
         # So remaining length is 255 - 13 = 242 characters.
         MAX_FILE_ID_SIZE = 242
 
-        # Get an ID unique for theis node/environment and that can be used in file names.
+        # Get an ID unique for this node/environment and that can be used in file names.
         #
         # Result::
         # * String: ID
@@ -506,6 +524,8 @@ module HybridPlatformsConductor
         # Result::
         # * Hash<Symbol,Object>: Configuration of the Proxmox instance to be used:
         #   * *api_url* (String): The Proxmox API URL
+        #   * *api_max_retries* (Integer): Max number of API retries
+        #   * *api_wait_between_retries_secs* (Integer): Number of seconds to wait between API retries
         #   * *sync_node* (String): Node to be used to synchronize Proxmox resources acquisition
         #   * *test_config* (Hash<Symbol,Object>): The test configuration. Check ProxmoxWaiter#initialize (config_file structure) method to get details.
         #   * *vm_config* (Hash<Symbol,Object>): Extra configuration of a created container. Check #request_lxc_creation_for results to get details.
