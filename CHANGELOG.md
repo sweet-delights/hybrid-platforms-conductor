@@ -1,3 +1,15 @@
+# [v32.9.1](https://github.com/sweet-delights/hybrid-platforms-conductor/compare/v32.9.0...v32.9.1) (2021-03-23 15:14:43)
+
+## Global changes
+### Patches
+
+* [[#33] [fix(provisioner_proxmox)] Make sure we re-authenticate on Proxmox API in case of 5xx errors](https://github.com/sweet-delights/hybrid-platforms-conductor/commit/ebdbdef98214c88391d70329af62d07cd93bc499)
+
+## Changes for provisioner_proxmox
+### Patches
+
+* [[#33] [fix(provisioner_proxmox)] Make sure we re-authenticate on Proxmox API in case of 5xx errors](https://github.com/sweet-delights/hybrid-platforms-conductor/commit/ebdbdef98214c88391d70329af62d07cd93bc499)
+
 # [v32.9.0](https://github.com/sweet-delights/hybrid-platforms-conductor/compare/v32.8.2...v32.9.0) (2021-03-22 19:20:50)
 
 ## Global changes
