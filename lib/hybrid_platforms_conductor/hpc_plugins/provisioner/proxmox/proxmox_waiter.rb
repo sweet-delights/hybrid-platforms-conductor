@@ -653,6 +653,9 @@ class ProxmoxWaiter
         break unless @gets_cache[path].is_a?(String) && @gets_cache[path] =~ /^NOK: error code = 5\d\d$/
         raise "Proxmox API get #{path} returns #{@gets_cache[path]} continuously (tried #{idx_try + 1} times)" if idx_try >= @config['api_max_retries']
         idx_try += 1
+        # We have to reauthenticate: error 500 raised by Proxmox are often due to token being invalidated wrongly
+        # TODO: Provide a way to do it properly in the official gem
+        @proxmox.instance_variable_set(:@auth_params, @proxmox.send(:create_ticket))
         sleep @config['api_wait_between_retries_secs']
       end
     end

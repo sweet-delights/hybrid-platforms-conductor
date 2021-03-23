@@ -23,6 +23,13 @@ module HybridPlatformsConductor
           super
         end
 
+        # Re-authenticate the Proxmox instance
+        # This can be useful when the API returns errors due to invalidated tokens
+        def reauthenticate
+          log_info 'Force re-authentication to Proxmox'
+          @auth_params = create_ticket
+        end
+
       end
       ::Proxmox::Proxmox.prepend ProxmoxPatches
 
@@ -309,6 +316,8 @@ module HybridPlatformsConductor
             log_warn "[ #{@node}/#{@environment} ] - Proxmox API call get #{path} returned error #{response} (attempt ##{idx_try}/#{proxmox_test_info[:api_max_retries]})"
             raise "[ #{@node}/#{@environment} ] - Proxmox API call get #{path} returns #{response} continuously (tried #{idx_try + 1} times)" if idx_try >= proxmox_test_info[:api_max_retries]
             idx_try += 1
+            # We have to reauthenticate: error 500 raised by Proxmox are often due to token being invalidated wrongly
+            proxmox.reauthenticate
             sleep proxmox_test_info[:api_wait_between_retries_secs] + rand(5)
           end
           response
@@ -333,6 +342,8 @@ module HybridPlatformsConductor
               task = nil
               break if idx_try >= proxmox_test_info[:api_max_retries]
               idx_try += 1
+              # We have to reauthenticate: error 500 raised by Proxmox are often due to token being invalidated wrongly
+              proxmox.reauthenticate
               sleep proxmox_test_info[:api_wait_between_retries_secs] + rand(5)
             end
           end
