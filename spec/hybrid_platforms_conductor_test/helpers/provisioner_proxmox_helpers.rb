@@ -156,6 +156,7 @@ module HybridPlatformsConductorTest
             idx_try += 1
             idx_try <= nbr_api_errors ? 'NOK: error code = 500' : task_name
           end
+          expect(proxmox).to receive(:reauthenticate).exactly(nbr_api_errors - (task_status.nil? ? 1 : 0)).times
           # Mock checking task status
           unless task_status.nil?
             # Mock checking task status
@@ -294,6 +295,7 @@ module HybridPlatformsConductorTest
               ]
             end
           end
+          expect(proxmox).to receive(:reauthenticate).exactly(nbr_api_errors - (status.nil? ? 1 : 0)).times
           unless status.nil?
             expect(proxmox).to receive(:get).with('nodes/pve_node_name/lxc/1024/status/current') do
               {
@@ -641,6 +643,10 @@ module HybridPlatformsConductorTest
                   raise "Unknown Proxmox API post call: #{path}. Please adapt the test framework."
                 end
               end
+              # Mock create_ticket
+              allow(proxmox).to receive(:create_ticket) do
+                @proxmox_actions << [:create_ticket]
+              end
               proxmox
             end
           end,
@@ -808,7 +814,13 @@ module HybridPlatformsConductorTest
       # Parameters::
       # * *expected_proxmox_actions* (Array<Array>): Expected Proxmox actions
       def expect_proxmox_actions_to_be(expected_proxmox_actions)
-        expect(@proxmox_actions.size).to eq expected_proxmox_actions.size
+        expect(@proxmox_actions.size).to eq(expected_proxmox_actions.size), <<~EOS
+          Expected #{expected_proxmox_actions.size} Proxmox actions, but got #{@proxmox_actions.size} instead:
+          ----- Received:
+          #{@proxmox_actions.map(&:inspect).join("\n")}
+          ----- Expected:
+          #{expected_proxmox_actions.map(&:inspect).join("\n")}
+        EOS
         @proxmox_actions.zip(expected_proxmox_actions).each do |proxmox_action, expected_proxmox_action|
           expect(proxmox_action.size).to eq expected_proxmox_action.size
           expect(proxmox_action[0..1]).to eq expected_proxmox_action[0..1]

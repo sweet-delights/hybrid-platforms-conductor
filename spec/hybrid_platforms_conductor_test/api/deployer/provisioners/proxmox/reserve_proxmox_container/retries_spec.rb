@@ -10,6 +10,7 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
         with_sync_node do
           mock_proxmox(mocked_pve_nodes: [{ 'pve_node_name' => {} }] * 5)
           expect(call_reserve_proxmox_container(2, 128 * 1024, 4, max_retries: 5)).to eq(error: 'not_enough_resources')
+          expect_proxmox_actions_to_be []
         end
       end
 
@@ -25,6 +26,23 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
             vm_id: 1000,
             vm_ip: '192.168.0.100'
           )
+          expect_proxmox_actions_to_be [
+            [
+              :post,
+              'nodes/pve_node_name/lxc',
+              {
+                'ostemplate' => 'test_template.iso',
+                'hostname' => 'test.hostname.my-domain.com',
+                'description' => /node: test_node\nenvironment: test_env/,
+                'cores' => 2,
+                'cpulimit' => 2,
+                'memory' => 1024,
+                'rootfs' => 'local-lvm:4',
+                'net0' => 'name=eth0,bridge=vmbr0,gw=172.16.16.16,ip=192.168.0.100/32',
+                'vmid' => 1000
+              }
+            ]
+          ]
         end
       end
 
@@ -34,6 +52,12 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
           result = call_reserve_proxmox_container(2, 1024, 4, config: { api_max_retries: 4 })
           expect(result[:error]).not_to eq nil
           expect(result[:error]).to match /Unhandled exception from reserve_proxmox_container: Proxmox API get nodes\/pve_node_name\/lxc returns NOK: error code = 500 continuously \(tried 5 times\)/
+          expect_proxmox_actions_to_be [
+            [:create_ticket],
+            [:create_ticket],
+            [:create_ticket],
+            [:create_ticket]
+          ]
         end
       end
 
@@ -45,6 +69,26 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
             vm_id: 1000,
             vm_ip: '192.168.0.100'
           )
+          expect_proxmox_actions_to_be [
+            [:create_ticket],
+            [:create_ticket],
+            [:create_ticket],
+            [
+              :post,
+              'nodes/pve_node_name/lxc',
+              {
+                'ostemplate' => 'test_template.iso',
+                'hostname' => 'test.hostname.my-domain.com',
+                'description' => /node: test_node\nenvironment: test_env/,
+                'cores' => 2,
+                'cpulimit' => 2,
+                'memory' => 1024,
+                'rootfs' => 'local-lvm:4',
+                'net0' => 'name=eth0,bridge=vmbr0,gw=172.16.16.16,ip=192.168.0.100/32',
+                'vmid' => 1000
+              }
+            ]
+          ]
         end
       end
 

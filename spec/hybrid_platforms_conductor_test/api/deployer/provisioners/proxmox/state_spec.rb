@@ -23,20 +23,6 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
       end
     end
 
-
-    it '' do
-      with_test_proxmox_platform do |instance|
-        mock_proxmox_calls_with [
-          # 1 - The info on existing containers
-          mock_proxmox_to_get_nodes_info,
-          # 2 - The start of the container - fail a few times
-          mock_proxmox_to_start_node(nbr_api_errors: 2)
-        ]
-        instance.create
-        instance.start
-      end
-    end
-
     it 'retries calls to the API when getting back errors 5xx' do
       with_test_proxmox_platform do |instance|
         mock_proxmox_calls_with [
