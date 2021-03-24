@@ -1,3 +1,15 @@
+# [v32.10.0](https://github.com/sweet-delights/hybrid-platforms-conductor/compare/v32.9.1...v32.10.0) (2021-03-24 17:01:18)
+
+## Global changes
+### Patches
+
+* [[#35] [Feature(provisioner_proxmox)] Clean leftover files in cgroups for removed containers](https://github.com/sweet-delights/hybrid-platforms-conductor/commit/0aea05de6c4cb385cc1fcc211b40e600b3746dd2)
+
+## Changes for provisioner_proxmox
+### Features
+
+* [[#35] [Feature(provisioner_proxmox)] Clean leftover files in cgroups for removed containers](https://github.com/sweet-delights/hybrid-platforms-conductor/commit/0aea05de6c4cb385cc1fcc211b40e600b3746dd2)
+
 # [v32.9.1](https://github.com/sweet-delights/hybrid-platforms-conductor/compare/v32.9.0...v32.9.1) (2021-03-23 15:14:43)
 
 ## Global changes
