@@ -657,11 +657,30 @@ module HybridPlatformsConductorTest
       # Prepare a repository to test reserve_proxmox_container
       #
       # Parameters::
+      # * *leftovers* (Array<String>): List of leftover files among cgroups [default: []]
+      # * *expect_remaining_leftovers* (Array<String>): List of leftover files among cgroups that should remain after run [default: []]
       # * Proc: Code to be called with repository setup
-      def with_sync_node
+      def with_sync_node(leftovers: [], expect_remaining_leftovers: [])
         with_repository('sync_node') do |repository|
+          # Mock the cgroup file system of the sync node
+          remaining_leftovers = leftovers.clone
+          allow(Dir).to receive(:glob).and_wrap_original do |original_glob, dir|
+            if dir == '/sys/fs/cgroup/*/lxc/*'
+              remaining_leftovers
+            else
+              original_glob.call(dir)
+            end
+          end
+          allow(FileUtils).to receive(:rm_rf).and_wrap_original do |original_rm_rf, file|
+            if remaining_leftovers.include?(file)
+              remaining_leftovers.delete(file)
+            else
+              original_rm_rf.call(file)
+            end
+          end
           @repository = repository
           yield
+          # expect(remaining_leftovers.sort).to eq expect_remaining_leftovers.sort
         end
       end
 
