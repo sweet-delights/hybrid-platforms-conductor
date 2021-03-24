@@ -18,15 +18,16 @@ module HybridPlatformsConductor
         attr_accessor *%i[logger logger_stderr]
 
         def check_response(response)
-          log_debug "Response from Proxmox API: #{response}"
-          log_warn "Response from Proxmox API: #{response}" if response.code >= 400 && !log_debug?
+          msg = "Response from Proxmox API: #{response} - #{response.net_http_res.message}"
+          log_debug msg
+          log_warn msg if response.code >= 400 && !log_debug?
           super
         end
 
         # Re-authenticate the Proxmox instance
         # This can be useful when the API returns errors due to invalidated tokens
         def reauthenticate
-          log_info 'Force re-authentication to Proxmox'
+          log_debug 'Force re-authentication to Proxmox'
           @auth_params = create_ticket
         end
 

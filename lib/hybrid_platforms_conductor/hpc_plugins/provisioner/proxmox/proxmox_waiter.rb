@@ -605,10 +605,35 @@ class ProxmoxWaiter
   # Result::
   # * Array<Integer>: List of available VM IDs
   def free_vm_ids
-    Range.new(*@config['vm_ids_range']).to_a -
+    vm_ids = Range.new(*@config['vm_ids_range']).to_a -
       api_get('nodes').map do |pve_node_info|
         api_get("nodes/#{pve_node_info['node']}/lxc").map { |lxc_info| Integer(lxc_info['vmid']) }
       end.flatten
+    # Make sure the vm_ids that are available don't have any leftovers in the cgroups.
+    # This can happen with some Proxmox bugs, and make the API returns 500 errors.
+    # cf. https://forum.proxmox.com/threads/lxc-console-cleanup-error.38293/
+    # TODO: Remove this when Proxmox will have solved the issue with leftovers of destroyed vms.
+    (vm_ids.map(&:to_s) & vm_ids_in_cgroups).each do |vm_id_str|
+      # We are having a vm_id that is available but still has some leftovers in cgroups.
+      # Clean those to avoid 500 errors in API.
+      log "Found VMID #{vm_id_str} with leftovers in cgroups. Cleaning those."
+      Dir.glob("/sys/fs/cgroup/*/lxc/#{vm_id_str}") do |cgroup_dir|
+        log "Removing #{cgroup_dir}"
+        FileUtils.rm_rf cgroup_dir
+      end
+    end
+    vm_ids
+  end
+
+  # Return the list of VM IDs present in cgroups
+  #
+  # Result::
+  # * Array<String>: List of VM IDs as strings (as some are not Integers like '1010-1')
+  def vm_ids_in_cgroups
+    Dir.glob('/sys/fs/cgroup/*/lxc/*').map do |file|
+      basename = File.basename(file)
+      basename =~ /^\d.+$/ ? basename : nil
+    end.compact.sort.uniq
   end
 
   # Wait for a given Proxmox task completion

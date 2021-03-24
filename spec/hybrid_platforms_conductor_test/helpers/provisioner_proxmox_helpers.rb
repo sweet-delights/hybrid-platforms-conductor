@@ -657,11 +657,36 @@ module HybridPlatformsConductorTest
       # Prepare a repository to test reserve_proxmox_container
       #
       # Parameters::
+      # * *leftovers* (Array<String>): List of leftover files among cgroups [default: []]
+      # * *expect_remaining_leftovers* (Array<String>): List of leftover files among cgroups that should remain after run [default: []]
       # * Proc: Code to be called with repository setup
-      def with_sync_node
+      def with_sync_node(leftovers: [], expect_remaining_leftovers: [])
         with_repository('sync_node') do |repository|
+          # Mock the cgroup file system of the sync node
+          remaining_leftovers = leftovers.clone
+          allow(Dir).to receive(:glob).and_wrap_original do |original_glob, dir, &block|
+            case dir
+            when '/sys/fs/cgroup/*/lxc/*'
+              block.nil? ? remaining_leftovers : remaining_leftovers.each(&block)
+            when /^\/sys\/fs\/cgroup\/\*\/lxc\/(.+)$/
+              vm_id_str = $1
+              file_pattern = /^\/sys\/fs\/cgroup\/.+\/lxc\/#{Regexp.escape(vm_id_str)}$/
+              matched_files = remaining_leftovers.select { |file| file =~ file_pattern }
+              block.nil? ? matched_files : matched_files.each(&block)
+            else
+              original_glob.call(dir, &block)
+            end
+          end
+          allow(FileUtils).to receive(:rm_rf).and_wrap_original do |original_rm_rf, path|
+            if path.start_with?('/sys/fs/cgroup')
+              remaining_leftovers.delete_if { |file| file.start_with?(path) }
+            else
+              original_rm_rf.call(path)
+            end
+          end
           @repository = repository
           yield
+          expect(remaining_leftovers.sort).to eq expect_remaining_leftovers.sort
         end
       end
 
