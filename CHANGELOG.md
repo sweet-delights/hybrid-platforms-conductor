@@ -1,3 +1,9 @@
+# [v32.11.0](https://github.com/sweet-delights/hybrid-platforms-conductor/compare/v32.10.0...v32.11.0) (2021-03-31 13:14:23)
+
+### Features
+
+* [[#37] [Feature] Add a way to specify divergent tasks to be ignored and use it in tests](https://github.com/sweet-delights/hybrid-platforms-conductor/commit/61562561f69392fc5ee11d977a55576c3f3b964f)
+
 # [v32.10.0](https://github.com/sweet-delights/hybrid-platforms-conductor/compare/v32.9.1...v32.10.0) (2021-03-24 17:01:18)
 
 ## Global changes
