@@ -43,9 +43,10 @@ module HybridPlatformsConductor
                   assert_equal tested_node, @node, "Wrong node being tested: #{tested_node} should be #{@node}"
                   assert_equal exit_status, 0, "Check-node returned error code #{exit_status}"
                   # Check that the output of the check-node returns no changes.
-                  ignored_tasks = @nodes_handler.select_confs_for_node(@node, @config.ignored_idempotence_tasks).inject({}) do |merged_ignored_tasks, conf|
-                    merged_ignored_tasks.merge(conf[:ignored_tasks])
-                  end
+                  ignored_tasks = (
+                    @nodes_handler.select_confs_for_node(@node, @config.ignored_idempotence_tasks) +
+                      @nodes_handler.select_confs_for_node(@node, @config.ignored_divergent_tasks)
+                  ).inject({}) do |merged_ignored_tasks, conf|
                   @deployer.parse_deploy_output(@node, stdout, stderr).each do |task_info|
                     if task_info[:status] == :changed
                       if ignored_tasks.key?(task_info[:name])

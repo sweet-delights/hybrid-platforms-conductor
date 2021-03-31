@@ -11,13 +11,24 @@ module HybridPlatformsConductor
       # Array< Hash<Symbol, Object> >
       attr_reader :ignored_idempotence_tasks
 
-      # Initialize the DSL 
+      # List of ignored tasks info. Each info has the following properties:
+      # * *nodes_selectors_stack* (Array<Object>): Stack of nodes selectors impacted by this rule
+      # * *ignored_tasks* (Hash<String, String>): List of task names for which we ignore divergence errors, with the corresponding descriptive reason for ignore.
+      # Array< Hash<Symbol, Object> >
+      attr_reader :ignored_divergent_tasks
+
+      # Initialize the DSL
       def init_idempotence_tests
         # List of ignored tasks info. Each info has the following properties:
         # * *nodes_selectors_stack* (Array<Object>): Stack of nodes selectors impacted by this rule
         # * *ignored_tasks* (Hash<String, String>): List of task names for which we ignore idempotence errors, with the corresponding descriptive reason for ignore.
         # Array< Hash<Symbol, Object> >
         @ignored_idempotence_tasks = []
+        # List of ignored tasks info. Each info has the following properties:
+        # * *nodes_selectors_stack* (Array<Object>): Stack of nodes selectors impacted by this rule
+        # * *ignored_tasks* (Hash<String, String>): List of task names for which we ignore divergence errors, with the corresponding descriptive reason for ignore.
+        # Array< Hash<Symbol, Object> >
+        @ignored_divergent_tasks = []
       end
 
       # Ignore idempotence errors on a set of tasks
@@ -26,6 +37,17 @@ module HybridPlatformsConductor
       # * *tasks_to_ignore* (Hash<String, String>): Set of tasks to ignore, along with the reason
       def ignore_idempotence_tasks(tasks_to_ignore)
         @ignored_idempotence_tasks << {
+          ignored_tasks: tasks_to_ignore,
+          nodes_selectors_stack: current_nodes_selectors_stack,
+        }
+      end
+
+      # Ignore idempotence errors on a set of tasks
+      #
+      # Parameters::
+      # * *tasks_to_ignore* (Hash<String, String>): Set of tasks to ignore, along with the reason
+      def ignore_divergent_tasks(tasks_to_ignore)
+        @ignored_divergent_tasks << {
           ignored_tasks: tasks_to_ignore,
           nodes_selectors_stack: current_nodes_selectors_stack,
         }
