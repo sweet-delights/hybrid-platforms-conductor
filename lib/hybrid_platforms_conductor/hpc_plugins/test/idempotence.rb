@@ -47,6 +47,8 @@ module HybridPlatformsConductor
                     @nodes_handler.select_confs_for_node(@node, @config.ignored_idempotence_tasks) +
                       @nodes_handler.select_confs_for_node(@node, @config.ignored_divergent_tasks)
                   ).inject({}) do |merged_ignored_tasks, conf|
+                    merged_ignored_tasks.merge(conf[:ignored_tasks])
+                  end
                   @deployer.parse_deploy_output(@node, stdout, stderr).each do |task_info|
                     if task_info[:status] == :changed
                       if ignored_tasks.key?(task_info[:name])
