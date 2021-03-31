@@ -81,7 +81,10 @@ module HybridPlatformsConductor
                   exit_status, stdout, stderr = deployer.deploy_on(@node)[@node]
                   assert_equal exit_status, 0, "Check-node after deployment returned error code #{exit_status}", log_debug? ? nil : deployer.stdouts_to_s
                   # Check that the output of the check-node returns no changes.
-                  ignored_tasks = @nodes_handler.select_confs_for_node(@node, @config.ignored_idempotence_tasks).inject({}) do |merged_ignored_tasks, conf|
+                  ignored_tasks = (
+                    @nodes_handler.select_confs_for_node(@node, @config.ignored_idempotence_tasks) +
+                      @nodes_handler.select_confs_for_node(@node, @config.ignored_divergent_tasks)
+                  ).inject({}) do |merged_ignored_tasks, conf|
                     merged_ignored_tasks.merge(conf[:ignored_tasks])
                   end
                   @deployer.parse_deploy_output(@node, stdout, stderr).each do |task_info|
