@@ -15,7 +15,7 @@ nodes_handler = NodesHandler.new
 ```
 
 Then handful of methods can be used on this `nodes_handler` object.
-Check the [NodesHandler public methods](lib/hybrid_platforms_conductor/nodes_handler.rb) to have an exhaustive list.
+Check the [NodesHandler public methods](../lib/hybrid_platforms_conductor/nodes_handler.rb) to have an exhaustive list.
 
 Examples:
 ```ruby
@@ -39,7 +39,7 @@ actions_executor = ActionsExecutor.new
 ```
 
 Then handful of methods can be used on this `actions_executor` object.
-Check the [ActionsExecutor public methods](lib/hybrid_platforms_conductor/actions_executor.rb) to have an exhaustive list.
+Check the [ActionsExecutor public methods](../lib/hybrid_platforms_conductor/actions_executor.rb) to have an exhaustive list.
 
 Examples:
 ```ruby

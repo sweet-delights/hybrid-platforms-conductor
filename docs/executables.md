@@ -582,7 +582,7 @@ Free VEIDs: [420, 426, 428, 430, 434, 437..438, 445..446, 449..450, 453, 456..45
 ## report
 
 The `report` executable will produce some reports for a list of hosts, using a given format and locale. It will output it on stdout.
-This executable is using report generators plugins stored in `./lib/hybrid_platforms_conductor/reports/*.rb`, so that the tool is easily extensible to any format or locale needed (think of CSV, Excel, DNS configuration files, other configuration management tools...). Just adding 1 file in the `./helpers/reports/` directory is enough for the plugin to be taken into account. Check file `./lib/hybrid_platforms_conductor/reports/my_report_plugin.rb.sample` to know how to write new ones.
+This executable is using report generators plugins so that the tool is easily extensible to any format or locale needed (think of CSV, Excel, DNS configuration files, other configuration management tools...). Check file [`lib/hybrid_platforms_conductor/reports/my_report_plugin.rb.sample`](../lib/hybrid_platforms_conductor/reports/my_report_plugin.rb.sample) to know how to write new ones.
 
 ```
 Usage: ./bin/report [options]
@@ -1018,12 +1018,12 @@ node12hst-nn2
 The `test` executable runs various tests and displays the eventual errors that have occurred.
 Errors are being displayed at the end of the execution, along with a summary of the failed tests and nodes.
 
-This `test` executable is using test plugins to be able to validate various tests (at global level, on each node, or on the check-node output). Those plugins are located in `./lib/hybrid_platforms_conductor/tests/plugins`. They are meant to be completed with any test deemed useful.
-Check the file [`./lib/hybrid_platforms_conductor/tests/plugins/my_test_plugin.rb.sample`](https://www.site.my_company.net/git/projects/PROJECTrepos/hybrid_platforms_conductor/browse/lib/hybrid_platforms_conductor/tests/plugins/my_test_plugin.rb.sample) to know how to write a new test plugin.
+This `test` executable is using test plugins to be able to validate various tests (at global level, on each node, or on the check-node output).
+Check the file [`lib/hybrid_platforms_conductor/tests/plugins/my_test_plugin.rb.sample`](../lib/hybrid_platforms_conductor/tests/plugins/my_test_plugin.rb.sample) to know how to write a new test plugin.
 
 This executable is perfectly suited to be integrated in a continuous integration workflow.
 
-See [the tests list](docs/tests.md) for more details.
+See [the tests list](../docs/tests.md) for more details.
 
 ```
 Usage: ./bin/test [options]

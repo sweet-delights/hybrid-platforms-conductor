@@ -133,38 +133,38 @@ Your test plugin can now be used directly from Hybrid Platforms Conductor.
 
 ## Plugin type `action`
 
-These plugins are meant to define new action types that can be used by the [`ActionsExecutor`](lib/hybrid_platforms_conductor/actions_executor.rb).
+These plugins are meant to define new action types that can be used by the [`ActionsExecutor`](../lib/hybrid_platforms_conductor/actions_executor.rb).
 
 Examples of actions are:
 * Remote bash: Execute remote bash on the node
 * Ruby: Execute Ruby code
 
-Check the [sample plugin file](lib/hybrid_platforms_conductor/hpc_plugins/action/my_action.rb.sample) to know more about the API that needs to be implemented by such plugins.
+Check the [sample plugin file](../lib/hybrid_platforms_conductor/hpc_plugins/action/my_action.rb.sample) to know more about the API that needs to be implemented by such plugins.
 
 ## Plugin type `cmdb`
 
-These plugins allow to retrieve metadata associated to a node, returned by the [`NodesHandler`](lib/hybrid_platforms_conductor/nodes_handler.rb). New plugins can be used to retrieve new properties that can then be used by Hybrid Platforms Conductor.
+These plugins allow to retrieve metadata associated to a node, returned by the [`NodesHandler`](../lib/hybrid_platforms_conductor/nodes_handler.rb). New plugins can be used to retrieve new properties that can then be used by Hybrid Platforms Conductor.
 
 Examples of CMDBs are:
 * Host keys: Get host keys associated to nodes
 * Host IPs: Get a node's host IP
 
-Check the [sample plugin file](lib/hybrid_platforms_conductor/hpc_plugins/cmdb/my_cmdb.rb.sample) to know more about the API that needs to be implemented by such plugins.
+Check the [sample plugin file](../lib/hybrid_platforms_conductor/hpc_plugins/cmdb/my_cmdb.rb.sample) to know more about the API that needs to be implemented by such plugins.
 
 ## Plugin type `connector`
 
-These plugins give ways for the [`ActionsExecutor`](lib/hybrid_platforms_conductor/actions_executor.rb) to connect to nodes when some actions require it (like the remote code executions for example).
+These plugins give ways for the [`ActionsExecutor`](../lib/hybrid_platforms_conductor/actions_executor.rb) to connect to nodes when some actions require it (like the remote code executions for example).
 
 Examples of connectors are:
 * SSH: Connect to a node using SSH
 * Docker: Connect using a Docker socket
 * awscli: Connect using awscli
 
-Check the [sample plugin file](lib/hybrid_platforms_conductor/hpc_plugins/connector/my_connector.rb.sample) to know more about the API that needs to be implemented by such plugins.
+Check the [sample plugin file](../lib/hybrid_platforms_conductor/hpc_plugins/connector/my_connector.rb.sample) to know more about the API that needs to be implemented by such plugins.
 
 ## Plugin type `platform_handler`
 
-These plugins are used to support different types of platforms' repositories, returned by the [`NodesHandler`](lib/hybrid_platforms_conductor/nodes_handler.rb)
+These plugins are used to support different types of platforms' repositories, returned by the [`NodesHandler`](../lib/hybrid_platforms_conductor/nodes_handler.rb)
 
 Platforms are registered in the `./hpc_config.rb` file of your project.
 
@@ -182,11 +182,11 @@ Examples of platform handlers are:
 * Chef: Handle a platform using Chef
 * Ansible: Handle a platform using Ansible
 
-Check the [sample plugin file](lib/hybrid_platforms_conductor/hpc_plugins/platform_handler/platform_handler_plugin.rb.sample) to know more about the API that needs to be implemented by such plugins.
+Check the [sample plugin file](../lib/hybrid_platforms_conductor/hpc_plugins/platform_handler/platform_handler_plugin.rb.sample) to know more about the API that needs to be implemented by such plugins.
 
 ## Plugin type `provisioner`
 
-These plugins add new ways to provision infrastructure, used by the [`Deployer`](lib/hybrid_platforms_conductor/deployer.rb)
+These plugins add new ways to provision infrastructure, used by the [`Deployer`](../lib/hybrid_platforms_conductor/deployer.rb)
 
 Examples of provisioners are:
 * Docker: Provision Docker containers
@@ -194,21 +194,21 @@ Examples of provisioners are:
 * Terraform: Provision nodes through Terraform
 * Proxmox: Provision containers or VMs using Proxmox
 
-Check the [sample plugin file](lib/hybrid_platforms_conductor/hpc_plugins/provisioner/my_provisioner.rb.sample) to know more about the API that needs to be implemented by such plugins.
+Check the [sample plugin file](../lib/hybrid_platforms_conductor/hpc_plugins/provisioner/my_provisioner.rb.sample) to know more about the API that needs to be implemented by such plugins.
 
 ## Plugin type `report`
 
-These plugins add new ways to publish inventory reports produced by the [`ReportsHandler`](lib/hybrid_platforms_conductor/reports_handler.rb)
+These plugins add new ways to publish inventory reports produced by the [`ReportsHandler`](../lib/hybrid_platforms_conductor/reports_handler.rb)
 
 Examples of reports are:
 * stdout: Just dump inventory on stdout
 * Mediawiki: Dump inventory in a Mediawiki page
 
-Check the [sample plugin file](lib/hybrid_platforms_conductor/hpc_plugins/report/my_report_plugin.rb.sample) to know more about the API that needs to be implemented by such plugins.
+Check the [sample plugin file](../lib/hybrid_platforms_conductor/hpc_plugins/report/my_report_plugin.rb.sample) to know more about the API that needs to be implemented by such plugins.
 
 ## Plugin type `test`
 
-These plugins add available tests to the [`TestsRunner`](lib/hybrid_platforms_conductor/tests_runner.rb).
+These plugins add available tests to the [`TestsRunner`](../lib/hybrid_platforms_conductor/tests_runner.rb).
 Depending on the API they implement, they can define tests at global level, at platform level or at node level.
 
 Examples of tests are:
@@ -216,11 +216,11 @@ Examples of tests are:
 * Executables: Test that executables run without errors
 * Divergence: Test that a node has not diverged from the configuration stored in its platform handler
 
-Check the [sample plugin file](lib/hybrid_platforms_conductor/hpc_plugins/test/my_test_plugin.rb.sample) to know more about the API that needs to be implemented by such plugins.
+Check the [sample plugin file](../lib/hybrid_platforms_conductor/hpc_plugins/test/my_test_plugin.rb.sample) to know more about the API that needs to be implemented by such plugins.
 
 ## Plugin type `test_report`
 
-These plugins add new ways to publish tests reports, done by the [`TestsRunner`](lib/hybrid_platforms_conductor/tests_runner.rb).
+These plugins add new ways to publish tests reports, done by the [`TestsRunner`](../lib/hybrid_platforms_conductor/tests_runner.rb).
 
 Examples of tests reports are:
 * stdout: Just dump tests results on stdout
