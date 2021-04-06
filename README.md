@@ -7,6 +7,7 @@
   * [Installation](#installation)
   * [First time setup](#first_setup)
   * [How to use tools from Hybrid Platforms Conductor](#how_to)
+  * [Concepts](#concepts)
   * [List of tools available](#tools_list)
   * [Credentials](#credentials)
   * [Development API](#development_api)
@@ -29,6 +30,8 @@ However reality is not that simple for a lot of organizations:
 Now being able to keep DevOps agile and robust is really difficult around multiple platforms and technologies.
 
 **This is where Hybrid Platforms Conductor can help: it helps DevOps define simple, robust and scalable processes that can adapt easily to ever-changing platforms and technologies in your development and operations environments.**
+
+In other words, Hybrid Platforms Conductor lets you **map your DevOps processes in a platform and technology independent way on simple interfaces** (CLI executables, APIs...).
 
 ## How?
 
@@ -83,19 +86,6 @@ Example of `hpc_config.rb`:
 chef_platform path: "#{hybrid_platforms_dir}/my-chef-repo"
 chef_platform git: 'https://www.site.my_company.net/git/scm/team17/xae-chef-repo.git'
 
-# Define the gateways
-gateway :prod_gateway, <<~EOS
-# Common gateway
-Host common.gateway.com
-  Hostname node12host.site.my_company.net
-
-# Production-only gateway
-Host prod.gateway.com
-  Hostname nodetest001.os.my_company.net
-  User prd_<%= @user %>
-  ProxyCommand <%= @ssh_exec %> -q -W %h:%p common.gateway.com
-EOS
-
 # Define images that are referenced by the platforms inventory
 os_image :centos, '/path/to/centos/os_image'
 ```
@@ -131,7 +121,7 @@ This will install the dependencies for any configuration management tool used by
 ./bin/setup
 ```
 
-It is to be re-executed only if one of the platform is updating its tools dependencies.
+It is to be re-executed only if the platforms definitions in `hpc_config.rb` are changed or if one of the platforms is updating its tools dependencies.
 
 ## 4. Perform a quick test to validate the setup
 
@@ -203,6 +193,50 @@ Deployer options:
 ```
 
 All executables also have the `--debug` switch to display more verbose and debugging information.
+
+<a name="concepts"></a>
+# Concepts
+
+As an example, a DevOps process can be "As a DevOps team member, I deploy a service on a newly provisioned node in a platform".
+We want this process to work with what the DevOps team is responsible for:
+* Their services: web servers, firewalls, sshd configurations...
+* The platforms they maintain: in-house bare metals, VPS in cloud providers, shared computers...
+* The nodes belonging to these platforms: Docker containers, VMs, bare metal installations...
+* The configuration management tools they use: Chef, Puppet, Terraform, Ansible, simple scripts...
+* The configuration management databases they use: Chef/Ansible inventories, Consul, spreadsheets...
+
+To achieve this, Hybrid Platforms Conductor handles the following generic concepts:
+* A **service** is a software component that can be deployed or configured. Some examples: a web server, a cluster's configuration, a network configuration, a monitoring tool.
+* A **node** is a target for **services** to be deployed, like a VM, a container, an SSH-accessible computer. It can map a provisioned resource (like a VM or a container behind a hostname or ip), or it can be also virtual (like a Cloud managed service - no single hostname/ip behind, but still something to configure services on).
+* A **platform** is a repository (local path or a git URL) defining an inventory of **nodes**, and **services** that can be deployed. Usually a platform is bound and structured to a given configuration management tool (like a Chef or Ansible repository), but it could be as simple as a collection of inventory text files and service bash scripts.
+* A **platform type** is the flavor of a given **platform**. It defines how Hybrid Platforms Conductor is using a **platform**'s repository. For example we can have several **platforms** being different Chef repositories (each one with its own **nodes** inventory and **services**), but the way to use them (deploy a **service** on a **node**) is done the same way (calling the Chef's executables). In this case those **platforms** will have the same **platform type**.
+* A **metadata** is a property (in the form key => value) associated to a **node**. It can be set by various configuration management databases, and also from the **platforms**' inventory. Some Hybrid Platforms Conductor's executables will use **nodes**'s specific **metadata** to adapt their behaviours (for example SSH connection details, IP addresses, operating system...).
+* An **action** is an operation that can be performed as part of a process. For example: bash code execution on a **node**, file copy, ruby code execution...
+
+Hybrid Platforms Conductor then provides executables that map the processes we want to address. See [the executables list](docs/executables.md) for an exhaustive list of those executables, but in our process' example the executable used to deploy **services** on a **node** is called `deploy`.
+
+Hybrid Platforms Conductor uses plugins to adapt its processes to the various technologies involved (**platform types**, configuration management databases, connectivity...). Everytime a process uses plugins at a given stage, it means any Hybrid Platforms Conductor's user can extend the functionality by adding its own plugin at this stage of the process.
+Here are the various plugin categories:
+* **Actions** implement a given **action**. For example: bash code execution, ruby code execution, file transfer...
+* **Cmdbs** parse **metadata** from various sources. For example: a database, Chef/Ansible inventory files, a configuration management database such as Consul...
+* **Connectors** give ways to execute commands and transfer files on **nodes**. For example: using an SSH connection, a CLI for a Cloud provider...
+* **Platform handlers** handle any **platform** of a given **platform type**. They read **nodes**' inventory and **services** from **platforms**, and provide **actions** to deploy a **service** on a **node**.
+* **Provisioners** provision (create, destroy, start, stop...) **nodes**. For example: using OpenShift, Proxmox, Docker, Podman...
+* **Reports** gather **platforms** and **nodes**' inventory information and publish them to some medium. For example: on command line, as a JSON file, on a content management system like Confluence or Mediawiki...
+* **Tests** define tests to be performed on **platforms** and **nodes**.
+* **Tests reports** publish tests results to some medium. For example: on command line, as a JSON file, on a content management system like Confluence or Mediawiki...
+
+So with the concepts described above, the process described as deploying a **service** on a **node** can be seen as below:
+
+```mermaid
+graph TD
+A[Platform]
+B(Deploy --node my_node)
+C(Platform Handler)
+
+B -->|Query node information| C
+C -->|Read platform nodes and services info| A
+```
 
 <a name="tools_list"></a>
 # List of tools available
