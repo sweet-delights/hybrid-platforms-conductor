@@ -165,6 +165,39 @@ describe HybridPlatformsConductor::ActionsExecutor do
         end
       end
 
+      it 'copies files remotely without Session Exec capabilities and with sudo' do
+        with_test_platform_for_remote_testing(
+          expected_cmds: [
+            [/^\{ cat \| .+\/ssh hpc\.node -T; } <<'EOF'\nmkdir -p hpc_tmp_scp\nEOF$/, proc { [0, '', ''] }],
+            [
+              /^scp -S .+\/ssh \/path\/to\/src.file hpc\.node:\.\/hpc_tmp_scp$/,
+              proc { [0, '', ''] }
+            ],
+            [/^\{ cat \| .+\/ssh hpc\.node -T; } <<'EOF'\nsudo -u root mv \.\/hpc_tmp_scp\/src\.file \/remote_path\/to\/dst\.dir\nEOF$/, proc { [0, '', ''] }]
+          ],
+          session_exec: false
+        ) do
+          test_connector.remote_copy('/path/to/src.file', '/remote_path/to/dst.dir', sudo: true)
+        end
+      end
+
+      it 'copies files remotely without Session Exec capabilities and with a different sudo' do
+        with_test_platform_for_remote_testing(
+          expected_cmds: [
+            [/^\{ cat \| .+\/ssh hpc\.node -T; } <<'EOF'\nmkdir -p hpc_tmp_scp\nEOF$/, proc { [0, '', ''] }],
+            [
+              /^scp -S .+\/ssh \/path\/to\/src.file hpc\.node:\.\/hpc_tmp_scp$/,
+              proc { [0, '', ''] }
+            ],
+            [/^\{ cat \| .+\/ssh hpc\.node -T; } <<'EOF'\nother_sudo --user root mv \.\/hpc_tmp_scp\/src\.file \/remote_path\/to\/dst\.dir\nEOF$/, proc { [0, '', ''] }]
+          ],
+          additional_config: 'sudo_for { |user| "other_sudo --user #{user}" }',
+          session_exec: false
+        ) do
+          test_connector.remote_copy('/path/to/src.file', '/remote_path/to/dst.dir', sudo: true)
+        end
+      end
+
     end
 
   end
