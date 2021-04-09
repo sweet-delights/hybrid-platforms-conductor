@@ -298,7 +298,14 @@ module HybridPlatformsConductor
         def remote_copy(from, to, sudo: false, owner: nil, group: nil)
           if @nodes_handler.get_ssh_session_exec_of(@node) == 'false'
             # We don't have ExecSession, so don't use ssh, but scp instead.
-            run_cmd "scp -S #{ssh_exec} #{from} #{ssh_url}:#{to}"
+            if sudo
+              # We need to first copy the file in an accessible directory, and then sudo mv
+              remote_bash('mkdir -p hpc_tmp_scp')
+              run_cmd "scp -S #{ssh_exec} #{from} #{ssh_url}:./hpc_tmp_scp"
+              remote_bash("#{@nodes_handler.sudo_on(@node)} mv ./hpc_tmp_scp/#{File.basename(from)} #{to}")
+            else
+              run_cmd "scp -S #{ssh_exec} #{from} #{ssh_url}:#{to}"
+            end
           else
             run_cmd <<~EOS
               cd #{File.dirname(from)} && \
