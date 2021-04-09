@@ -1,3 +1,15 @@
+# [v32.12.0](https://github.com/sweet-delights/hybrid-platforms-conductor/compare/v32.11.2...v32.12.0) (2021-04-09 14:09:29)
+
+## Global changes
+### Patches
+
+* [[Feature(connector_ssh)] [#52] Make sure remote copy files with scp work with sudo and without SSH SessionExec](https://github.com/sweet-delights/hybrid-platforms-conductor/commit/5aac50db89947dbb5f781d88737c3b2b3934785c)
+
+## Changes for connector_ssh
+### Features
+
+* [[Feature(connector_ssh)] [#52] Make sure remote copy files with scp work with sudo and without SSH SessionExec](https://github.com/sweet-delights/hybrid-platforms-conductor/commit/5aac50db89947dbb5f781d88737c3b2b3934785c)
+
 # [v32.11.2](https://github.com/sweet-delights/hybrid-platforms-conductor/compare/v32.11.1...v32.11.2) (2021-04-05 16:50:08)
 
 ### Patches
