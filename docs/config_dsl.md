@@ -2,13 +2,9 @@
 
 The DSL used in configuration files is comprised of Ruby methods that can be called directly in the main `hpc_config.rb` file.
 
-This DSL can also be completed by plugins.
+This DSL can also be completed by plugins. Check [the plugins documentations](./docs/plugins) to know about DSL extensions brought by plugins.
 
-## Common DSL
-
-This DSL is always accessible, without any plugin.
-
-### `<platform_type>_platform`
+## `<platform_type>_platform`
 
 Declare a new platform, providing either a local path to it (using `path: '/path/to/files'`) or a git repository to it (using `git: 'git_url'`).
 
@@ -38,7 +34,7 @@ chef_platform(
 end
 ```
 
-### `os_image`
+## `os_image`
 
 Declare a new OS image, with its corresponding path.
 
@@ -58,7 +54,7 @@ os_image :centos_7, '/path/to/images/centos_7'
 # Any node having the image metadata set to centos_7 will use this Dockerfile.
 ```
 
-### `hybrid_platforms_dir`
+## `hybrid_platforms_dir`
 
 Get the directory in which the `hpc_config.rb` file is stored.
 
@@ -68,27 +64,4 @@ Examples:
 ```ruby
 # We have our images paths in the same directory storing hpc_config.rb
 os_image :centos_7, "#{hybrid_platforms_dir}/images/centos_7"
-```
-
-## Connector ssh DSL
-
-The connector plugin `ssh` defines the following DSL:
-
-### `gateway`
-
-Declare a new SSH gateway, with 2 parameters: its name (as a Symbol) and its SSH configuration (as a String).
-This is used directly in any SSH configuration file used to connect to nodes.
-Any node can then reference this gateway by using the `gateway` metadata.
-
-The gateway definition is an ERB template can use the following variables:
-* `@user` (String): The SSH user name
-* `@ssh_exec` (String): Path to the SSH executable to be used. Always use this variable instead of `ssh` (for example in proxy commands) as the connector might use a different ssh executable to encapsulate the configuration without polluting the system ssh.
-
-Examples:
-```ruby
-gateway :prod_gw, <<~EOS
-Host prod.gateway.com
-  User gateway_<%= @user %>
-  ProxyCommand <%= @ssh_exec %> -q -W %h:%p all.gateway.com
-EOS
 ```

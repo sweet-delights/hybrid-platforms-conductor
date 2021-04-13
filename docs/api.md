@@ -19,10 +19,10 @@ Check the [NodesHandler public methods](../lib/hybrid_platforms_conductor/nodes_
 
 Examples:
 ```ruby
-# Get the list of hostnames in a list
-hosts = nodes_handler.known_nodes
+# Get the list of nodes
+nodes = nodes_handler.known_nodes
 
-# Display the node's description of node23hst-nn2, taken from its metadata
+# Display a node's description, taken from its metadata
 puts nodes_handler.get_description_of 'node23hst-nn2'
 ```
 

@@ -5,6 +5,7 @@ This section explains how plugins work in Hybrid Platforms Conductor, and how to
 Plugins are auto-discovered from any Rubygem that is part of a project, by parsing files named `hpc_plugins/<plugin_type>/<plugin_id>.rb`, wherever they are located in the included Rubygem. Those files then declare plugin classes that inherit from the plugin type's base class, named `HybridPlatformsConductor::<PluginType>`.
 
 Having such simple plugins engine allow projects to adapt their plugins' organization among different repositories or Rubygems the way they see fit.
+Default plugins are shipped with the `hybrid_platforms_conductor` gem. Check [the plugins' list](./plugins) for details.
 
 The following sub-sections explain how to install a plugin and the different plugin types that are supported.
 

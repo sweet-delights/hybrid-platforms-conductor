@@ -197,7 +197,7 @@ All executables also have the `--debug` switch to display more verbose and debug
 <a name="concepts"></a>
 # Concepts
 
-As an example, a DevOps process can be "As a DevOps team member, I deploy a service on a newly provisioned node in a platform".
+As an example, a DevOps process can be "As a DevOps team member, I configure a newly provisioned node in a platform".
 We want this process to work with what the DevOps team is responsible for:
 * Their services: web servers, firewalls, sshd configurations...
 * The platforms they maintain: in-house bare metals, VPS in cloud providers, shared computers...
@@ -226,17 +226,32 @@ Here are the various plugin categories:
 * **Tests** define tests to be performed on **platforms** and **nodes**.
 * **Tests reports** publish tests results to some medium. For example: on command line, as a JSON file, on a content management system like Confluence or Mediawiki...
 
-So with the concepts described above, the process described as deploying a **service** on a **node** can be seen as below:
+So with the concepts described above, the process described as deploying **services** on a **node** can be seen as below:
 
 ```mermaid
-graph TD
-A[Platform]
-B(Deploy --node my_node)
-C(Platform Handler)
+sequenceDiagram
+participant Deploy as ./bin/deploy --node my_node
+participant CMDB as CMDB
+participant PlatformHandler as Platform Handler
+participant PlatformRepo as Platform repository (ie Chef)
+participant Connector as Connector (ie SSH)
+participant Node as Provisioned node (my_node)
 
-B -->|Query node information| C
-C -->|Read platform nodes and services info| A
+Deploy->>+CMDB: Get services to be deployed on my_node
+CMDB->>+PlatformHandler: Get my_node metadata from the platform
+PlatformHandler->>+PlatformRepo: Read platform inventory files
+PlatformRepo-->>-PlatformHandler: Platform inventory
+PlatformHandler-->>-CMDB: Services metadata containing my_web_app
+CMDB-->>-Deploy: my_node has service my_web_app
+Deploy->>+PlatformHandler: Get actions to deploy my_web_app
+PlatformHandler-->>-Deploy: Actions to deploy my_web_app (ie using Chef command line)
+Deploy->>+Connector: Connect to my_node to execute actions
+Connector->>+Node: Execute actions through SSH to deploy my_web_app on my_node
+Node-->>-Connector: my_web_app is deployed successfully
+Connector-->>-Deploy: Close connection
 ```
+
+Having such a process defined with extensible plugins let DevOps teams adapt very easily to hybrid environments without having to duplicate configuration, inventories, information or workflows.
 
 <a name="tools_list"></a>
 # List of tools available
@@ -305,6 +320,8 @@ Don't forget to add `[Feature]` or `[Breaking]` into your git commit comment if 
 
 Automatic semantic releasing is done by [`sem_ver_components`](https://github.com/Muriel-Salvan/sem_ver_components/).
 
+Change log can be accessed in the [CHANGELOG.md file](CHANGELOG.md).
+
 ## Tests
 
 The whole tests suite can be run by using `bundle exec rspec`.
@@ -312,3 +329,7 @@ The whole tests suite can be run by using `bundle exec rspec`.
 A subset of tests (or even a single test) can be run by using a part of their name this way: `bundle exec rspec -e "HybridPlatformsConductor::Deployer checking the docker images provisioning"`
 
 To enable debugging logs during tests run, set the environment variable `TEST_DEBUG` to `1`: `TEST_DEBUG=1 bundle exec rspec -e "HybridPlatformsConductor::Deployer checking the docker images provisioning"`
+
+## License
+
+BSD license (details in the [LICENSE.md file](LICENSE.md)).
