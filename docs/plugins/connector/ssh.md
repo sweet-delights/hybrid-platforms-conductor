@@ -64,39 +64,16 @@ No credentials used.
 
 Some metadata properties are used by the `ssh` plugin.
 
-### `description` (`String`)
-
-Use the `description` metadata in the generated SSH configs.
-
-### `gateway` (`String`)
-
-Name of the gateway to be used in the SSH config used by the connector.
-
-### `gateway_user` (`String`)
-
-Name of the gateway user to be used in the SSH config used by the connector.
-
-### `host_ip` (`String`)
-
-`host_ip` metadata is used to get the node's IP address to connect to using SSH.
-If this metadata is not set, then the node is considered as not connectable using the `ssh` connector.
-
-### `host_keys` (`Array<String>`)
-
-`host_keys` metadata is used to get the node's host keys and generate a `known_hosts` file with those to avoid user confirmations when connecting.
-
-### `hostname` (`String`)
-
-In case no IP address can be associated to a node, the `hostname` metadata is used to connect to.
-
-### `private_ips` (`Array<String>`)
-
-`private_ips` metadata can be used in place of `host_ip` to get the IP address to be used to connect.
-
-### `ssh_session_exec` (`String`)
-
-If set to the string `false`, then consider that the node does not have any SSH SessionExec capabilities.
-This will make sure that remote command executions is done using stdin piping on interactive sessions instead of SSH commands execution.
+| Metadata | Type | Usage
+| --- | --- | --- |
+| `description` | `String` | Nodes description added in generated SSH configs |
+| `gateway` | `String` | Name of the gateway to be used in the SSH config used by the connector. |
+| `gateway_user` | `String` | Name of the gateway user to be used in the SSH config used by the connector. |
+| `host_ip` | `String` | The node's IP address to connect to using SSH. If this metadata is not set, then the node is considered as not connectable using the `ssh` connector. |
+| `host_keys` | `Array<String>` | The node's host keys used to generate a `known_hosts` file with those to avoid user confirmations when connecting. |
+| `hostname` | `String` | Host name used to connect in case no IP address can be found in metadata. |
+| `private_ips` | `Array<String>` | IP list to connect in case `host_ip` is not defined in metadata. |
+| `ssh_session_exec` | `String` | If set to the string `false`, then consider that the node does not have any SSH SessionExec capabilities. This will make sure that remote command executions is done using stdin piping on interactive sessions instead of SSH commands execution. |
 
 ## Used environment variables
 

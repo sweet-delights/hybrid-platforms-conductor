@@ -32,6 +32,7 @@ Now being able to keep DevOps agile and robust is really difficult around multip
 **This is where Hybrid Platforms Conductor can help: it helps DevOps define simple, robust and scalable processes that can adapt easily to ever-changing platforms and technologies in your development and operations environments.**
 
 In other words, Hybrid Platforms Conductor lets you **map your DevOps processes in a platform and technology independent way on simple interfaces** (CLI executables, APIs...).
+Having simple interfaces on your processes move the technical complexity in code instead of having it scattered around documentation becoming obsolete and increasing the learning curve.
 
 ## How?
 
@@ -217,14 +218,14 @@ Hybrid Platforms Conductor then provides executables that map the processes we w
 
 Hybrid Platforms Conductor uses plugins to adapt its processes to the various technologies involved (**platform types**, configuration management databases, connectivity...). Everytime a process uses plugins at a given stage, it means any Hybrid Platforms Conductor's user can extend the functionality by adding its own plugin at this stage of the process.
 Here are the various plugin categories:
-* **Actions** implement a given **action**. For example: bash code execution, ruby code execution, file transfer...
-* **Cmdbs** parse **metadata** from various sources. For example: a database, Chef/Ansible inventory files, a configuration management database such as Consul...
-* **Connectors** give ways to execute commands and transfer files on **nodes**. For example: using an SSH connection, a CLI for a Cloud provider...
-* **Platform handlers** handle any **platform** of a given **platform type**. They read **nodes**' inventory and **services** from **platforms**, and provide **actions** to deploy a **service** on a **node**.
-* **Provisioners** provision (create, destroy, start, stop...) **nodes**. For example: using OpenShift, Proxmox, Docker, Podman...
-* **Reports** gather **platforms** and **nodes**' inventory information and publish them to some medium. For example: on command line, as a JSON file, on a content management system like Confluence or Mediawiki...
-* **Tests** define tests to be performed on **platforms** and **nodes**.
-* **Tests reports** publish tests results to some medium. For example: on command line, as a JSON file, on a content management system like Confluence or Mediawiki...
+* **[Actions](docs/plugins/action)** implement a given **action**. For example: bash code execution, ruby code execution, file transfer...
+* **[Cmdbs](docs/plugins/cmdb)** parse **metadata** from various sources. For example: a database, Chef/Ansible inventory files, a configuration management database such as Consul...
+* **[Connectors](docs/plugins/connector)** give ways to execute commands and transfer files on **nodes**. For example: using an SSH connection, a CLI for a Cloud provider...
+* **[Platform handlers](docs/plugins/platform_handler)** handle any **platform** of a given **platform type**. They read **nodes**' inventory and **services** from **platforms**, and provide **actions** to deploy a **service** on a **node**.
+* **[Provisioners](docs/plugins/provisioner)** provision (create, destroy, start, stop...) **nodes**. For example: using OpenShift, Proxmox, Docker, Podman...
+* **[Reports](docs/plugins/report)** gather **platforms** and **nodes**' inventory information and publish them to some medium. For example: on command line, as a JSON file, on a content management system like Confluence or Mediawiki...
+* **[Tests](docs/plugins/test)** define tests to be performed on **platforms** and **nodes**.
+* **[Tests reports](docs/plugins/test_report)** publish tests results to some medium. For example: on command line, as a JSON file, on a content management system like Confluence or Mediawiki...
 
 So with the concepts described above, the process described as deploying **services** on a **node** can be seen as below:
 
@@ -251,7 +252,7 @@ Node-->>-Connector: my_web_app is deployed successfully
 Connector-->>-Deploy: Close connection
 ```
 
-Having such a process defined with extensible plugins let DevOps teams adapt very easily to hybrid environments without having to duplicate configuration, inventories, information or workflows.
+Having such a process defined with extensible plugins lets DevOps teams adapt very easily to hybrid environments without having to duplicate configuration, inventories, information or workflows.
 
 <a name="tools_list"></a>
 # List of tools available
