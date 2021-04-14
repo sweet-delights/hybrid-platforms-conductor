@@ -4,5 +4,6 @@ Gemfile.lock
 # Don't commit files that could have been generated in examples
 examples/*/.bundle
 examples/*/bin
-examples/*/vendor
 examples/*/Gemfile.lock
+examples/*/run_logs
+examples/*/vendor

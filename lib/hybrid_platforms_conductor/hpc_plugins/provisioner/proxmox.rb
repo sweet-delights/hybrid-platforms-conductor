@@ -15,7 +15,7 @@ module HybridPlatformsConductor
 
         include LoggerHelpers
 
-        attr_accessor *%i[logger logger_stderr]
+        attr_accessor(*%i[logger logger_stderr])
 
         def check_response(response)
           msg = "Response from Proxmox API: #{response} - #{response.net_http_res.message}"

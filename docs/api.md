@@ -3,18 +3,36 @@
 Hybrid Platforms Conductor exposes a Ruby API, used internally by all the executables it provides.
 This API is organized around several areas, mapping the processes used internally.
 
+The way to access the API is by instantiating an entry point class (`HybridPlatformsConductor::Executable`) and call the various Hybrid Platforms Conductor API components from there.
+Example:
+```ruby
+require 'hybrid_platforms_conductor/executable'
+
+executable = HybridPlatformsConductor::Executable.new
+
+# Access the Config to read the configuration directory
+puts executable.config.hybrid_platforms_dir
+# => /path/to/my/platforms
+
+# Access the NodesHandler to get the list of nodes
+puts executable.nodes_handler.known_nodes.join(', ')
+# => prod_web_server, test_web_server, test_firewall
+```
+
+Following sections are describing the various API components.
+
 ## NodesHandler
 
-The `NodesHandler` library gives ways to handle the nodes configurations stored in the platforms configuration, with helpers for hostnames, ips...
+The `NodesHandler` API gives ways to handle the nodes inventory and the metadata.
 
 Main usage:
 ```ruby
-require 'hybrid_platforms_conductor/nodes_handler'
+require 'hybrid_platforms_conductor/executable'
 
-nodes_handler = NodesHandler.new
+nodes_handler = HybridPlatformsConductor::Executable.new.nodes_handler
 ```
 
-Then handful of methods can be used on this `nodes_handler` object.
+Then methods can be used on this `nodes_handler` object.
 Check the [NodesHandler public methods](../lib/hybrid_platforms_conductor/nodes_handler.rb) to have an exhaustive list.
 
 Examples:
@@ -23,22 +41,22 @@ Examples:
 nodes = nodes_handler.known_nodes
 
 # Display a node's description, taken from its metadata
-puts nodes_handler.get_description_of 'node23hst-nn2'
+puts nodes_handler.get_description_of 'prod_node'
 ```
 
 ## ActionsExecutor
 
-The `ActionsExecutor` library gives powerful ways to connect to hosts using and perform commands there.
+The `ActionsExecutor` API gives powerful ways to connect to nodes and perform commands there.
 It can handle host names resolution, SSH proxy settings, timeouts, parallel threads, logs in files...
 
 Main usage:
 ```ruby
-require 'hybrid_platforms_conductor/actions_executor'
+require 'hybrid_platforms_conductor/executable'
 
-actions_executor = ActionsExecutor.new
+actions_executor = HybridPlatformsConductor::Executable.new.actions_executor
 ```
 
-Then handful of methods can be used on this `actions_executor` object.
+Then methods can be used on this `actions_executor` object.
 Check the [ActionsExecutor public methods](../lib/hybrid_platforms_conductor/actions_executor.rb) to have an exhaustive list.
 
 Examples:

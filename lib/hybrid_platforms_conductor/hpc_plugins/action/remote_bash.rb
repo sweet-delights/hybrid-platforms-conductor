@@ -14,7 +14,7 @@ module HybridPlatformsConductor
         # [API] - @actions_executor is accessible
         #
         # Parameters::
-        # * *remote_bash* (Array< Hash<Symbol, Object> or Array<String> or String>): List of bash actions to execute. Each action can have the following properties:
+        # * *remote_bash* (Hash<Symbol, Object> or Array<String> or String): List of bash actions to execute. Each action can have the following properties:
         #   * *commands* (Array<String> or String): List of bash commands to execute (can be a single one). This is the default property also that allows to not use the Hash form for brevity.
         #   * *file* (String): Name of file from which commands should be taken.
         #   * *env* (Hash<String, String>): Environment variables to be set before executing those commands.

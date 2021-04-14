@@ -5,8 +5,6 @@ It supports different ways to retrieve the SSH connection details, from configur
 
 ## Config DSL extension
 
-The following DSL methods are added by the `ssh` plugin.
-
 ### `gateway`
 
 Declare a new SSH gateway, with 2 parameters: its name (as a Symbol) and its SSH configuration (as a String).
@@ -58,17 +56,16 @@ end
 
 ## Used credentials
 
-No credentials used.
+| Credential | Usage
+| --- | --- |
 
 ## Used Metadata
-
-Some metadata properties are used by the `ssh` plugin.
 
 | Metadata | Type | Usage
 | --- | --- | --- |
 | `description` | `String` | Nodes description added in generated SSH configs |
-| `gateway` | `String` | Name of the gateway to be used in the SSH config used by the connector. |
 | `gateway_user` | `String` | Name of the gateway user to be used in the SSH config used by the connector. |
+| `gateway` | `String` | Name of the gateway to be used in the SSH config used by the connector. |
 | `host_ip` | `String` | The node's IP address to connect to using SSH. If this metadata is not set, then the node is considered as not connectable using the `ssh` connector. |
 | `host_keys` | `Array<String>` | The node's host keys used to generate a `known_hosts` file with those to avoid user confirmations when connecting. |
 | `hostname` | `String` | Host name used to connect in case no IP address can be found in metadata. |
@@ -77,25 +74,10 @@ Some metadata properties are used by the `ssh` plugin.
 
 ## Used environment variables
 
-Some environment variables are used by the `ssh` plugin.
-
-### `hpc_interactive`
-
-If set to `false`, then interactive SSH sessions will fail with an error.
-Useful to not try interactive mode in non-interactive environments like CI/CD.
-
-### `hpc_ssh_gateways_conf`
-
-Gateways configuration name to be used in the SSH configuration. The name should match one of the names declared in the configuration (see the `gateway` config DSL extension).
-
-### `hpc_ssh_gateway_user`
-
-Default gateway user to be used (can be overriden by the `gateway_user` metadata).
-
-### `hpc_ssh_user`
-
-Name of the user to be used in SSH connections.
-
-### `USER`
-
-Name of the user to be used in SSH connections (only used if the env variable `hpc_ssh_user` is not set).
+| Variable | Usage
+| --- | --- |
+| `hpc_interactive` | If set to `false`, then interactive SSH sessions will fail with an error. Useful to not try interactive mode in non-interactive environments like CI/CD. |
+| `hpc_ssh_gateway_user` | Default gateway user to be used (can be overriden by the `gateway_user` metadata). |
+| `hpc_ssh_gateways_conf` | Gateways configuration name to be used in the SSH configuration. The name should match one of the names declared in the configuration (see the `gateway` config DSL extension). |
+| `hpc_ssh_user` | Name of the user to be used in SSH connections. |
+| `USER` | Name of the user to be used in SSH connections (only used if the env variable `hpc_ssh_user` is not set). |

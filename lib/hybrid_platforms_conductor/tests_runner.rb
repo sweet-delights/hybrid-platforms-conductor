@@ -452,7 +452,6 @@ module HybridPlatformsConductor
           end]
           section "Run test commands on #{@test_cmds.keys.size} connected nodes (timeout to #{timeout} secs)" do
             start_time = Time.now
-            nbr_secs = nil
             @actions_executor.max_threads = @max_threads_connection_on_nodes
             @actions_result = @actions_executor.execute_actions(
               @test_cmds,

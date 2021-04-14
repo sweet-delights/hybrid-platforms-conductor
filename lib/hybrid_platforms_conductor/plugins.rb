@@ -29,6 +29,7 @@ module HybridPlatformsConductor
       # All the plugins classes we know of this type, per plugin ID
       # Hash<Symbol, Class>
       @plugins = {}
+      require "hybrid_platforms_conductor/#{plugins_type}"
       register_plugins_from_gems if parse_gems
     end
 

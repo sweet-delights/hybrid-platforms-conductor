@@ -135,7 +135,7 @@ module HybridPlatformsConductor
         # Parameters::
         # * *from* (String): Local file to copy
         # * *to* (String): Remote directory to copy to
-        # * *sudo* (Boolean): Do we use sudo to copy? [default: false]
+        # * *sudo* (Boolean): Do we use sudo on the remote to copy? [default: false]
         # * *owner* (String or nil): Owner to be used when copying the files, or nil for current one [default: nil]
         # * *group* (String or nil): Group to be used when copying the files, or nil for current one [default: nil]
         def remote_copy(from, to, sudo: false, owner: nil, group: nil)
