@@ -31,3 +31,7 @@ None
 
 | Variable | Usage
 | --- | --- |
+
+## External tools dependencies
+
+None

@@ -81,3 +81,14 @@ end
 | `hpc_ssh_gateways_conf` | Gateways configuration name to be used in the SSH configuration. The name should match one of the names declared in the configuration (see the `gateway` config DSL extension). |
 | `hpc_ssh_user` | Name of the user to be used in SSH connections. |
 | `USER` | Name of the user to be used in SSH connections (only used if the env variable `hpc_ssh_user` is not set). |
+
+## External tools dependencies
+
+* `cat`: Used to pipe commands on SSH connections not having SessionExec capabilities.
+* `env`: Used to set shebangs in bash scripts.
+* `gzip`: Used to transfer files on SSH connections having SessionExec capabilities.
+* `scp`: Used to transfer files on SSH connections not having SessionExec capabilities.
+* `ssh`: Used to run SSH commands or interactive sessions.
+* `sshpass`: Used when the SSH connections is done using a password that needs to be set automatically (using the `passwords` accessor from the connector).
+* `tar`: Used to transfer files on SSH connections having SessionExec capabilities.
+* `xterm`: Used to initiate an interactive ControlMaster on SSH connections not having SessionExec capabilities.

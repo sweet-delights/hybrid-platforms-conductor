@@ -540,7 +540,10 @@ module HybridPlatformsConductor
         #   * *api_wait_between_retries_secs* (Integer): Number of seconds to wait between API retries
         #   * *sync_node* (String): Node to be used to synchronize Proxmox resources acquisition
         #   * *test_config* (Hash<Symbol,Object>): The test configuration. Check ProxmoxWaiter#initialize (config_file structure) method to get details.
-        #   * *vm_config* (Hash<Symbol,Object>): Extra configuration of a created container. Check #request_lxc_creation_for results to get details.
+        #   * *vm_config* (Hash<Symbol,Object>): Extra configuration of a created container:
+        #     * *vm_dns_servers* (Array<String>): List of DNS servers
+        #     * *vm_search_domain* (String): Default search domain
+        #     * *vm_gateway* (String): Gateway hostname or IP
         #   * *default_timeout* (Integer): The default timeout tobe applied when starting/stopping containers [default: 3600].
         def proxmox_test_info
           @config.proxmox_servers.first
