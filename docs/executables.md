@@ -4,7 +4,24 @@ Here is the list of executables that come bundled with the Hybrid Platforms Cond
 
 You can check the common command line options [at the end of this document](#common_options).
 
-## check-node
+# Table of Contents
+  * [`check-node`](#check_node)
+  * [`deploy`](#deploy)
+  * [`run`](#run)
+  * [`ssh_config`](#ssh_config)
+  * [`nodes_to_deploy`](#nodes_to_deploy)
+  * [`free_ips`](#free_ips)
+  * [`free_veids`](#free_veids)
+  * [`report`](#report)
+  * [`last_deploys`](#last_deploys)
+  * [`dump_nodes_json`](#dump_nodes_json)
+  * [`topograph`](#topograph)
+  * [`get_impacted_nodes`](#get_impacted_nodes)
+  * [`test`](#test)
+  * [`setup`](#setup)
+
+<a name="check_node"></a>
+## `check-node`
 
 The `check-node` executable serves in testing the current status of a node versus its expected configuration.
 It will:
@@ -107,7 +124,8 @@ Chef Client finished, 3/133 resources would have been updated
 ===== Checking on 1 hosts ===== ...End =====
 ```
 
-## deploy
+<a name="deploy"></a>
+## `deploy`
 
 The `deploy` executable will deploy the `master` branch on a node or list of nodes.
 It will:
@@ -247,7 +265,8 @@ Chef Client finished, 3/133 resources would have been updated
 ===== Checking on 1 hosts ===== ...End =====
 ```
 
-## run
+<a name="run"></a>
+## `run`
 
 The `run` executable will run any command (or interactive session) on a node (or list of nodes).
 It will handle any proxy configuration, without relying on the local SSH configuration.
@@ -331,7 +350,8 @@ Example of output:
 node12host.site.my_company.net
 ```
 
-## ssh_config
+<a name="ssh_config"></a>
+## `ssh_config`
 
 The `ssh_config` executable will output (in standard output) an SSH config file ready to be used to address any host from platforms handled by HPC, using for each node several ways to address it:
 * `hpc.<private_ip>` where `<private_ip>` is every private IP declared for this node. (for example `hpc.172.16.110.42`)
@@ -440,7 +460,8 @@ Host hpc.192.168.0.2 hpc.project-pinger
 
 ```
 
-## nodes_to_deploy
+<a name="nodes_to_deploy"></a>
+## `nodes_to_deploy`
 
 The `nodes_to_deploy` executable is used to know which nodes need to be deployed, considering:
 * the deployment schedule allocated to the nodes,
@@ -527,7 +548,8 @@ node12hst-nn3
 node12lnx18
 ```
 
-## free_ips
+<a name="free_ips"></a>
+## `free_ips`
 
 The `free_ips` executable will output all free IP ranges for any used range.
 Pretty useful to assign new IPs.
@@ -563,7 +585,8 @@ Free IPs for 172.30.14: [227..255]
 Free IPs for 192.168.0: [3..255]
 ```
 
-## free_veids
+<a name="free_veids"></a>
+## `free_veids`
 
 The `free_veids` executable will output all free VEIDs (smaller than 10000).
 Pretty useful to assign unused VEIDs to new VMs to be created.
@@ -579,7 +602,8 @@ Example of output:
 Free VEIDs: [420, 426, 428, 430, 434, 437..438, 445..446, 449..450, 453, 456..457, 459, 464, 466..467, 471, 475..476, 484, 488, 490, 493, 500..502, 504..513, 523, 525, 536, 544, 546, 554..555, 560..566, 578, 589, 594, 642..659, 668..9999]
 ```
 
-## report
+<a name="report"></a>
+## `report`
 
 The `report` executable will produce some reports for a list of hosts, using a given format and locale. It will output it on stdout.
 This executable is using report generators plugins so that the tool is easily extensible to any format or locale needed (think of CSV, Excel, DNS configuration files, other configuration management tools...). Check file [`lib/hybrid_platforms_conductor/reports/my_report_plugin.rb.sample`](../lib/hybrid_platforms_conductor/reports/my_report_plugin.rb.sample) to know how to write new ones.
@@ -696,7 +720,8 @@ Back to the [[Hadoop]] / [[Impala]] / [[XAE_Network_Topology]] portal pages
 [[Category:Chef]]
 ```
 
-## last_deploys
+<a name="last_deploys"></a>
+## `last_deploys`
 
 The `last_deploys` executable will fetch the last deployments information for a given list of nodes.
 
@@ -767,7 +792,8 @@ Example of output:
 +----------------+---------------------+-----------+---------------+------------------+-------------+----------------------------+-------+
 ```
 
-## dump_nodes_json
+<a name="dump_nodes_json"></a>
+## `dump_nodes_json`
 
 The `dump_nodes_json` executable will dump the complete JSON node configurations as seen during a deployment in a JSON file.
 The JSON dumped are in the directory `./nodes_json`.
@@ -850,7 +876,8 @@ Example of output:
 [ node23hst-nn8 ] - OK. Check nodes_json/node23hst-nn8.json
 ```
 
-## topograph
+<a name="topograph"></a>
+## `topograph`
 
 The `topograph` executable will dump the topology graph of a set of nodes.
 This is useful to have a visualization of the network.
@@ -962,7 +989,8 @@ Example of output:
 ===== Write graphviz file graph.gv...
 ```
 
-## get_impacted_nodes
+<a name="get_impacted_nodes"></a>
+## `get_impacted_nodes`
 
 The `get_impacted_nodes` executable reports nodes impacted by a git diff in one of the platforms.
 This is especially useful to know which nodes have to be tested against a given PR or local code difference.
@@ -1013,7 +1041,8 @@ node12hst-nn2
 node12hst-nn2
 ```
 
-## test
+<a name="test"></a>
+## `test`
 
 The `test` executable runs various tests and displays the eventual errors that have occurred.
 Errors are being displayed at the end of the execution, along with a summary of the failed tests and nodes.
@@ -1159,7 +1188,8 @@ Here is an example of output:
 ===== Some errors were found. Check output. =====
 ```
 
-## setup
+<a name="setup"></a>
+## `setup`
 
 The `setup` executable installs all dependencies needed for a platform to be operated by Hybrid Platforms Conductor.
 It is intended to be run only for the initial setup or when such dependencies change (for example if a `Gemfile` of a `chef` platform changes).

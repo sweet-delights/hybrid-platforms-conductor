@@ -8,6 +8,7 @@
   * [First time setup](#first_setup)
   * [How to use tools from Hybrid Platforms Conductor](#how_to)
   * [Concepts](#concepts)
+  * [Tutorial](#tutorial)
   * [List of tools available](#tools_list)
   * [Credentials](#credentials)
   * [Development API](#development_api)
@@ -25,9 +26,9 @@ Having agile DevOps processes when dealing with homogeneous platforms (for examp
 However reality is not that simple for a lot of organizations:
 * IT professionals may want to **not bind themselves to a single platform's technology or cloud provider**.
 * DevOps teams may not want their processes and their agility to be too much coupled to a platform, cloud provider or a technology. Being able to adopt multiple platforms ensure your **DevOps practices are sane, adaptable and will outlive the current technical choices** that are certainly meant to change in the future.
-* Big companies often **inherit from multiple platforms and technologies** that have been built during years. They have to cope with them, improve them, and migration to common technologies or platforms is not always an option (it costs a lot) and is sometimes not desirable (it wastes competencies and may miss features or agility for some part of the organization).
+* Big companies often **inherit from multiple platforms and technologies** that have been built during years. They have to cope with them, improve them, and migration to common technologies or platforms is not always an option, can be costly and is sometimes not desirable. Standardisation can waste competencies and may miss features or agility for some part of the organization.
 
-Now being able to keep DevOps agile and robust is really difficult around multiple platforms and technologies.
+Now being able to keep DevOps processes agile and robust is really difficult around multiple platforms and technologies.
 
 **This is where Hybrid Platforms Conductor can help: it helps DevOps define simple, robust and scalable processes that can adapt easily to ever-changing platforms and technologies in your development and operations environments.**
 
@@ -38,11 +39,10 @@ Having simple interfaces on your processes move the technical complexity in code
 
 Hybrid Platforms Conductor provides a complete **tools set mapping DevOps practices** and that can **orchestrate different platforms to be provisioned, configured, maintained and monitored**.
 
-It is built around a **plugins-oriented architecture** that allows each DevOps team to **adapt its processes to its own specific environments**:
-* Any kind of **platform** (on-premise, in the cloud, PaaS, SaaS...).
-* Any **configuration tool** (Chef, Puppet, Ansible...).
-* Any kind of **test** (network-level, applicative-level, using external testing services...).
-* Any **Configuration Management Database** - CMDB (Consul, in-house spreadsheets, web services...).
+1. It achieves the simplicity, ease of use and integrability of its **interfaces** by having **simple CLI and API** mapping only processes, without technical complexity.
+2. It achieves the adaptability to various technology by having an extensible **plugins-oriented architecture** in every parts of the processes.
+
+### DevOps interfaces
 
 It offers **simple DevOps interfaces** that can **integrate easily in third-party tools**.
 
@@ -61,6 +61,25 @@ It is meant to be used as a **local tool by each DevOps/Developer/IT professiona
 It is **packaged as a simple Rubygem** that you can either install stand-alone or use as part of a DevOps Ruby repository.
 
 The way it works is by having a **configuration file using an extensive DSL to describe the DevOps environment** (platforms, gateways, users, tests configuration...), and then **various executables mapping each DevOps process**.
+
+### Technology plugins
+
+It is built around a plugins that allow each DevOps team to **adapt its processes to its own specific environments**:
+* Any kind of **platform** (on-premise, in the cloud, PaaS, SaaS...).
+* Any **configuration tool** (Chef, Puppet, Ansible...).
+* Any kind of **test** (network-level, applicative-level, using external testing services...).
+* Any **Configuration Management Database** - CMDB (Consul, in-house spreadsheets, web services...).
+
+Everytime a process uses plugins at a given stage, it means any Hybrid Platforms Conductor's user can extend the functionality by adding its own plugin at this stage of the process.
+Here are the various plugin categories:
+* **[Actions](docs/plugins/action)** implement a given **action**. For example: bash code execution, ruby code execution, file transfer...
+* **[Cmdbs](docs/plugins/cmdb)** parse **metadata** from various sources. For example: a database, Chef/Ansible inventory files, a configuration management database such as Consul...
+* **[Connectors](docs/plugins/connector)** give ways to execute commands and transfer files on **nodes**. For example: using an SSH connection, a CLI for a Cloud provider...
+* **[Platform handlers](docs/plugins/platform_handler)** handle any **platform** of a given **platform type**. They read **nodes**' inventory and **services** from **platforms**, and provide **actions** to deploy a **service** on a **node**.
+* **[Provisioners](docs/plugins/provisioner)** provision (create, destroy, start, stop...) **nodes**. For example: using OpenShift, Proxmox, Docker, Podman...
+* **[Reports](docs/plugins/report)** gather **platforms** and **nodes**' inventory information and publish them to some medium. For example: on command line, as a JSON file, on a content management system like Confluence or Mediawiki...
+* **[Tests](docs/plugins/test)** define tests to be performed on **platforms** and **nodes**.
+* **[Tests reports](docs/plugins/test_report)** publish tests results to some medium. For example: on command line, as a JSON file, on a content management system like Confluence or Mediawiki...
 
 <a name="installation"></a>
 # Installation
@@ -83,9 +102,9 @@ It contains the declaration of the platforms and the configuration needed for Hy
 
 Example of `hpc_config.rb`:
 ```ruby
-# Define the known platforms
-chef_platform path: "#{hybrid_platforms_dir}/my-chef-repo"
-chef_platform git: 'https://www.site.my_company.net/git/scm/team17/xae-chef-repo.git'
+# Define the known platforms, either locally or in a git repository
+yaml_inventory_platform path: "#{hybrid_platforms_dir}/my-platform-conf"
+yaml_inventory_platform git: 'https://www.site.my_company.net/git/scm/team17/xae-platform-conf.git'
 
 # Define images that are referenced by the platforms inventory
 os_image :centos, '/path/to/centos/os_image'
@@ -97,7 +116,7 @@ See [the examples directory](examples/) for some use-cases of configurations.
 
 ## 2. Install dependencies
 
-This will install the dependencies for Hybrid Platforms Conductor to work correctly.
+The following installs the dependencies for Hybrid Platforms Conductor to work correctly.
 ```bash
 bundle config set --local path vendor/bundle
 bundle install
@@ -143,6 +162,10 @@ Each executable is installed in a `./bin` directory and can be called directly u
 All executables have a `--help` switch that dump their possible usage in a detailed way.
 
 Example:
+```bash
+./bin/deploy --help
+```
+Outputs:
 ```
 Usage: ./bin/deploy [options]
 
@@ -214,20 +237,9 @@ To achieve this, Hybrid Platforms Conductor handles the following generic concep
 * A **metadata** is a property (in the form key => value) associated to a **node**. It can be set by various configuration management databases, and also from the **platforms**' inventory. Some Hybrid Platforms Conductor's executables will use **nodes**'s specific **metadata** to adapt their behaviours (for example SSH connection details, IP addresses, operating system...).
 * An **action** is an operation that can be performed as part of a process. For example: bash code execution on a **node**, file copy, ruby code execution...
 
-Hybrid Platforms Conductor then provides executables that map the processes we want to address. See [the executables list](docs/executables.md) for an exhaustive list of those executables, but in our process' example the executable used to deploy **services** on a **node** is called `deploy`.
+Hybrid Platforms Conductor then provides executables that map the processes we want to address. See [the executables list](docs/executables.md) for an exhaustive list of those executables, but in our process' example the executable used to deploy **services** on a **node** is called **`deploy`**.
 
-Hybrid Platforms Conductor uses plugins to adapt its processes to the various technologies involved (**platform types**, configuration management databases, connectivity...). Everytime a process uses plugins at a given stage, it means any Hybrid Platforms Conductor's user can extend the functionality by adding its own plugin at this stage of the process.
-Here are the various plugin categories:
-* **[Actions](docs/plugins/action)** implement a given **action**. For example: bash code execution, ruby code execution, file transfer...
-* **[Cmdbs](docs/plugins/cmdb)** parse **metadata** from various sources. For example: a database, Chef/Ansible inventory files, a configuration management database such as Consul...
-* **[Connectors](docs/plugins/connector)** give ways to execute commands and transfer files on **nodes**. For example: using an SSH connection, a CLI for a Cloud provider...
-* **[Platform handlers](docs/plugins/platform_handler)** handle any **platform** of a given **platform type**. They read **nodes**' inventory and **services** from **platforms**, and provide **actions** to deploy a **service** on a **node**.
-* **[Provisioners](docs/plugins/provisioner)** provision (create, destroy, start, stop...) **nodes**. For example: using OpenShift, Proxmox, Docker, Podman...
-* **[Reports](docs/plugins/report)** gather **platforms** and **nodes**' inventory information and publish them to some medium. For example: on command line, as a JSON file, on a content management system like Confluence or Mediawiki...
-* **[Tests](docs/plugins/test)** define tests to be performed on **platforms** and **nodes**.
-* **[Tests reports](docs/plugins/test_report)** publish tests results to some medium. For example: on command line, as a JSON file, on a content management system like Confluence or Mediawiki...
-
-So with the concepts described above, the process described as deploying **services** on a **node** can be seen as below:
+So with the concepts described above, the process described as deploying **services** on a **node** named `my_node` can be invoked with a simple command line: `./bin/deploy --node my_node`. The resulting process can be pictured as below:
 
 ```mermaid
 sequenceDiagram
@@ -252,7 +264,14 @@ Node-->>-Connector: my_web_app is deployed successfully
 Connector-->>-Deploy: Close connection
 ```
 
-Having such a process defined with extensible plugins lets DevOps teams adapt very easily to hybrid environments without having to duplicate configuration, inventories, information or workflows.
+Having such a process defined with extensible plugins lets DevOps teams **adapt very easily to hybrid environments without having to duplicate configuration, inventories, information or workflows**.
+
+<a name="tutorial"></a>
+# Tutorial
+
+The best way to grasp the power of such agile processes is to learn by doing.
+
+[here](docs/tutorial.md) is a simple tutorial showing how to start playing with Hybrid Platforms Conductor and use it to define simple DevOps processes and extend them easily in a changing environment.
 
 <a name="tools_list"></a>
 # List of tools available
