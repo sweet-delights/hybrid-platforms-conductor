@@ -15,7 +15,7 @@ None
 
 | Metadata | Type | Usage
 | --- | --- | --- |
-| `image` | `String` | The name of the OS image to be used. The [configuration](../config_dsl.md) should define the image and point it to a directory containing a `Dockerfile` that will be used to provision the Docker container. |
+| `image` | `String` | The name of the OS image to be used. The [configuration](../../config_dsl.md) should define the image and point it to a directory containing a `Dockerfile` that will be used to provision the Docker container. |
 
 ## Used environment variables
 

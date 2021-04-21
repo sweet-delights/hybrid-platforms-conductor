@@ -53,7 +53,7 @@ module HybridPlatformsConductor
 
         private
 
-        TEMPLATES_PATH = File.expand_path("#{File.dirname(__FILE__)}/templates")
+        TEMPLATES_PATH = File.expand_path("#{__dir__}/templates")
 
         # Render a given ERB template into a String
         #

@@ -1,4 +1,5 @@
 require 'json'
+require 'hybrid_platforms_conductor/common_config_dsl/idempotence_tests'
 
 module HybridPlatformsConductor
 

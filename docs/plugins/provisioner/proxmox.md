@@ -102,7 +102,7 @@ Example for a CentOS 7 image:
 | Metadata | Type | Usage
 | --- | --- | --- |
 | `deploy_resources_min` | `Hash<Symbol, Integer>` | A hash of resources to allocate to a container for a node. Properties are `cpus`, `ram_mb` and `disk_gb`, and set the number of CPUs, MB of RAM and GB of disk to allocate to the container. Defaults are 2 cpus, 1024 MB of RAM and 10 GB of disk. |
-| `image` | `String` | The name of the OS image to be used. The [configuration](../config_dsl.md) should define the image and point it to a directory containing a `proxmox.json` that will contain Proxmox-specific configuration (see above). |
+| `image` | `String` | The name of the OS image to be used. The [configuration](../../config_dsl.md) should define the image and point it to a directory containing a `proxmox.json` that will contain Proxmox-specific configuration (see above). |
 
 ## Used environment variables
 
