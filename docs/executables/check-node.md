@@ -28,7 +28,7 @@ Main->>+PlatformHandler: Get actions to check my_web_app
 PlatformHandler-->>-Main: Actions to check my_web_app
 Main->>+Connector: Connect to my_node to execute actions
 Connector->>+Node: Execute actions to check my_web_app on my_node
-Node-->>-Connector: Check result of my_web_app on my_node
+Node-->>-Connector: Result of my_web_app check on my_node
 Connector-->>-Main: Close connection
 ```
 

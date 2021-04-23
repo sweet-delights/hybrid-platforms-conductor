@@ -4,6 +4,7 @@ The DSL used in configuration files is comprised of Ruby methods that can be cal
 
 This DSL can also be completed by plugins. Check [the plugins documentations](./docs/plugins) to know about DSL extensions brought by plugins.
 
+<a name="platform_type_platform"></a>
 ## `<platform_type>_platform`
 
 Declare a new platform, providing either a local path to it (using `path: '/path/to/files'`) or a git repository to it (using `git: 'git_url'`).
@@ -34,6 +35,7 @@ chef_platform(
 end
 ```
 
+<a name="os_image"></a>
 ## `os_image`
 
 Declare a new OS image, with its corresponding path.
@@ -54,6 +56,7 @@ os_image :centos_7, '/path/to/images/centos_7'
 # Any node having the image metadata set to centos_7 will use this Dockerfile.
 ```
 
+<a name="hybrid_platforms_dir"></a>
 ## `hybrid_platforms_dir`
 
 Get the directory in which the `hpc_config.rb` file is stored.
@@ -65,3 +68,7 @@ Examples:
 # We have our images paths in the same directory storing hpc_config.rb
 os_image :centos_7, "#{hybrid_platforms_dir}/images/centos_7"
 ```
+
+<a name="deployment_schedule"></a>
+## `deployment_schedule`
+
