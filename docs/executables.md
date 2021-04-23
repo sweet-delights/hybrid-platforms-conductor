@@ -38,6 +38,16 @@ Nodes handler options:
 
 * `--show-nodes`: Display the list of known nodes, nodes lists, platforms, services, description... and exit.
 
+The following metadata is being used to display nodes' information:
+
+| Metadata | Type | Usage
+| --- | --- | --- |
+| `description` | `String` | Node's description |
+| `host_ip` | `String` | Node's IP |
+| `hostname` | `String` | Node's hostname |
+| `private_ips` | `Array<String>` | List of a node's private IPs |
+| `services` | `Array<String>` | List of services attached to a node |
+
 ## Nodes selection options
 
 The nodes selection options are used to select a set of nodes that the tool needs as input.
@@ -65,6 +75,12 @@ Nodes selection options:
 * `--node NODE`: Select a single node. A regular expression can also be used when `NODE` is enclosed with `/` character (the regular expression grammar is [the Ruby one](http://ruby-doc.org/core-2.5.0/Regexp.html)). Examples: `--node my_node_1`, `--node /my_node_.+/`.
 * `--nodes-service SERVICE`: Select all nodes that implement a given service.
 * `--nodes-git-impact GIT_IMPACT`: Select nodes that are impacted by a git diff on a platform. 2 commit ids or refspecs can be specified for the diff. Examples: `--nodes-git-impact chef-repo::my_branch` will select all nodes that are impacted by the diffs made between `my_branch` and `master` on the git repository belong to the `chef-repo` platform.
+
+The following metadata is being used by some selectors:
+
+| Metadata | Type | Usage
+| --- | --- | --- |
+| `services` | `Array<String>` | List of services attached to a node, used to retrieve nodes selected by a service |
 
 ## Command Runner options
 

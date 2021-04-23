@@ -1,7 +1,7 @@
 # `report`
 
 The `report` executable will produce some reports for a list of nodes, using a given format and locale.
-This executable is using [report plugins](../plugins/report) so that the tool is easily extensible to any format or locale needed (think of CSV, Excel, DNS configuration files, other configuration management tools...).
+This executable is using [report plugins](../plugins.md#report) so that the tool is easily extensible to any format or locale needed (think of CSV, Excel, DNS configuration files, other configuration management tools...).
 
 ## Process
 

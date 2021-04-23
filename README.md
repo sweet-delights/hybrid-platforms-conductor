@@ -11,6 +11,8 @@
   * [Tutorial](#tutorial)
   * [List of tools available](#tools_list)
   * [Credentials](#credentials)
+  * [Environment variables](#environment)
+  * [Metadata](#metadata)
   * [Development API](#development_api)
   * [Extending Hybrid Platforms Conductor with plugins](#extending)
   * [Development corner](#development_corner)
@@ -316,13 +318,27 @@ machine my_other_host.my_domain2.com login my_other_user password Pa$$w0Rd!
 
 Environment variables can be used to trive some Hybrid Platform Conductor's processes.
 
-| Variable | Usage
+| Variable | Usage |
 | --- | --- |
 | `hpc_platforms` | Directory containing the main `hpc_config.rb` file. Defaults to `.` |
 
-See [the executables documentation](docs/executables) for environment variables used by some executables.
+See [the executables documentation](docs/executables.md) for environment variables used by some executables.
 
-See [the plugins documentation](docs/plugins) for environment variables used by some plugins.
+See [the plugins documentation](docs/plugins.md) for environment variables used by some plugins.
+
+<a name="metadata"></a>
+# Metadata
+
+Metadata associated to the nodes (retrieved by CMDB) is used a lot by various processes of Hybrid Platforms Conductor.
+Here is the main metadata used in common processes:
+
+| Metadata | Type | Usage
+| --- | --- | --- |
+| `services` | `Array<String>` | List of services attached to a node |
+
+See [the executables documentation](docs/executables.md) for metadata used by some executables.
+
+See [the plugins documentation](docs/plugins.md) for metadata used by some plugins.
 
 <a name="development_api"></a>
 # Development API
@@ -337,7 +353,9 @@ See [the API](docs/api.md) for more details.
 
 Hybrid Platforms Conductor is built around plugins-oriented architecture that lets it easily being extended.
 
-See [the plugins documentation](docs/plugins.md) for more details.
+See [the plugins documentation](docs/plugins.md) for a list of all plugins already shipped by default.
+
+See [how to create a plugin](docs/plugins_create.md) to easily add your own plugins adapting Hybrid Platforms Conductor to your technology stack.
 
 <a name="development_corner"></a>
 # Development corner

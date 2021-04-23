@@ -73,7 +73,7 @@ module HybridPlatformsConductor
         # Result::
         # * Array<String>: List of nodes we can connect to from the candidates
         def connectable_nodes_from(nodes)
-          nodes.select { |node| @nodes_handler.get_ip_of(node) =~ /^192\.168\..+$/ }
+          nodes.select { |node| @nodes_handler.get_host_ip_of(node) =~ /^192\.168\..+$/ }
         end
 
         # Prepare connections to a given set of nodes.

@@ -176,6 +176,8 @@ Chef Client finished, 3/133 resources would have been updated
 
 | Metadata | Type | Usage
 | --- | --- | --- |
+| `image` | `String` | OS image corresponding to the node |
+| `services` | `Array<String>` | List of services to deploy |
 
 ## Used environment variables
 

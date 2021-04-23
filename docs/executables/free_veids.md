@@ -54,6 +54,7 @@ Free VEIDs: [420, 426, 428, 430, 434, 437..438, 445..446, 449..450, 453, 456..45
 
 | Metadata | Type | Usage
 | --- | --- | --- |
+| `veid` | `String` or `Integer` | VEID associated to the node |
 
 ## Used environment variables
 

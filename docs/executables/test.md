@@ -3,7 +3,7 @@
 The `test` executable runs various tests and displays the eventual errors that have occurred.
 Errors are being displayed at the end of the execution, along with a summary of the failed tests and nodes.
 
-This `test` executable is using [test plugins](../plugins/test) to be able to validate various tests (at global level, on each node, or on the check-node output), and uses [test report plugins](../plugins/test_report) to publish test reports on various mediums.
+This `test` executable is using [test plugins](../plugins.md#test) to be able to validate various tests (at global level, on each node, or on the check-node output), and uses [test report plugins](../plugins.md#test_report) to publish test reports on various mediums.
 
 This executable is perfectly suited to be integrated in a continuous integration workflow.
 
@@ -192,6 +192,9 @@ Here is an example of output:
 
 | Metadata | Type | Usage
 | --- | --- | --- |
+| `host_ip` | `String` | IP address on which a node can be reachable |
+| `image` | `String` | OS image to be used for tests |
+| `services` | `Array<String>` | List of services to check for in tests |
 
 ## Used environment variables
 

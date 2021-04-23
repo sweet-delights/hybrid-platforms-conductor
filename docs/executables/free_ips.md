@@ -74,6 +74,7 @@ Free IPs for 192.168.0: [3..255]
 
 | Metadata | Type | Usage
 | --- | --- | --- |
+| `private_ips` | `Array<String>` | List of private IPs |
 
 ## Used environment variables
 

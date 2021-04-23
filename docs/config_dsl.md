@@ -22,7 +22,7 @@ This DSL can also be completed by plugins. Check [the plugins documentations](pl
 <a name="platform_type_platform"></a>
 ## `<platform_type>_platform`
 
-Declare a new platform of type `<platform_type>`, providing either a local path to it (using `path: '/path/to/files'`) or a git repository to it (using `git: 'git_url'`). The possible platform types are the names of the [`platform_handler` plugins](plugins/platform_handler).
+Declare a new platform of type `<platform_type>`, providing either a local path to it (using `path: '/path/to/files'`) or a git repository to it (using `git: 'git_url'`). The possible platform types are the names of the [`platform_handler` plugins](plugins.md#platform_handler).
 
 Git branches can also be specified using `branch: 'branch_name'`.
 An optional code block taking the local repository path as parameter can also be specified to add configuration that is specific to this platform.
@@ -170,7 +170,7 @@ os_image :centos_7, "#{hybrid_platforms_dir}/images/centos_7"
 
 Specify which provisioner should be used when tests need to provision a test container.
 Takes a Symbol as parameter, being the name of the provisioner.
-Possible values are names of [`provisioner` plugins](plugins/provisioner). Defaults to `docker`.
+Possible values are names of [`provisioner` plugins](plugins.md#provisioner). Defaults to `docker`.
 
 Examples:
 ```ruby
@@ -184,7 +184,7 @@ tests_provisioner :proxmox
 Inform the tests reports that some tests are expected to be failing.
 This can be useful when tests are failing for temporary reasons or when technical debt is accumulating but we still want to track it.
 Takes 2 parameters:
-* **tests** (`Symbol` or `Array<Symbol>`): Test name (or list of test names) that are expected to fail. Names are [`test` plugins](plugins/test)'s names.
+* **tests** (`Symbol` or `Array<Symbol>`): Test name (or list of test names) that are expected to fail. Names are [`test` plugins](plugins.md#test)'s names.
 * **reason** (`String`): Descriptive reason for the expected failure. Used in logging only.
 
 Can be applied to subset of nodes using the [`for_nodes` DSL method](#for_nodes).
@@ -269,7 +269,7 @@ packaging_timeout 600
 
 `master_cmdbs` is a method that helps in resolving metadata conflicts between different CMDB.
 Depending on the context and environments, some metadata conflicts might be unacceptable (like IP conflicts) and others might be mergeable (like services definitions).
-`master_cmdbs` takes a hash of CMDB names (taken as names of [`cmdb` plugins](plugins/cmdb)), and the corresponding metadata identifiers (as `Array<Symbol>` or `Symbol`) for which this CMDB is considered the authority in case of conflicts.
+`master_cmdbs` takes a hash of CMDB names (taken as names of [`cmdb` plugins](plugins.md#cmdb)), and the corresponding metadata identifiers (as `Array<Symbol>` or `Symbol`) for which this CMDB is considered the authority in case of conflicts.
 
 Can be applied to subset of nodes using the [`for_nodes` DSL method](#for_nodes).
 
