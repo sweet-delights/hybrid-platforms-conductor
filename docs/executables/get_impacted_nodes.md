@@ -66,3 +66,22 @@ node12hst-nn6
 node12hst-nn1
 node12hst-nn2
 ```
+
+## Used credentials
+
+| Credential | Usage
+| --- | --- |
+
+## Used Metadata
+
+| Metadata | Type | Usage
+| --- | --- | --- |
+
+## Used environment variables
+
+| Variable | Usage
+| --- | --- |
+
+## External tools dependencies
+
+None

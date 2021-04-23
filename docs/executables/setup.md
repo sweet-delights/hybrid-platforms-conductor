@@ -64,3 +64,22 @@ Installing rake 12.3.1
 Bundle complete! 9 Gemfile dependencies, 98 gems now installed.
 Bundled gems are installed into `./vendor/bundle`
 ```
+
+## Used credentials
+
+| Credential | Usage
+| --- | --- |
+
+## Used Metadata
+
+| Metadata | Type | Usage
+| --- | --- | --- |
+
+## Used environment variables
+
+| Variable | Usage
+| --- | --- |
+
+## External tools dependencies
+
+None

@@ -311,6 +311,19 @@ machine my_host.my_domain1.com login my_user password My_PaSsWoRd
 machine my_other_host.my_domain2.com login my_other_user password Pa$$w0Rd!
 ```
 
+<a name="environment"></a>
+# Environment variables
+
+Environment variables can be used to trive some Hybrid Platform Conductor's processes.
+
+| Variable | Usage
+| --- | --- |
+| `hpc_platforms` | Directory containing the main `hpc_config.rb` file. Defaults to `.` |
+
+See [the executables documentation](docs/executables) for environment variables used by some executables.
+
+See [the plugins documentation](docs/plugins) for environment variables used by some plugins.
+
 <a name="development_api"></a>
 # Development API
 

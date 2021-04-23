@@ -182,3 +182,22 @@ Here is an example of output:
 
 ===== Some errors were found. Check output. =====
 ```
+
+## Used credentials
+
+| Credential | Usage
+| --- | --- |
+
+## Used Metadata
+
+| Metadata | Type | Usage
+| --- | --- | --- |
+
+## Used environment variables
+
+| Variable | Usage
+| --- | --- |
+
+## External tools dependencies
+
+None

@@ -98,3 +98,22 @@ Example of output:
 => ./bin/run --node node12had01 --command hostname
 node12host.site.my_company.net
 ```
+
+## Used credentials
+
+| Credential | Usage
+| --- | --- |
+
+## Used Metadata
+
+| Metadata | Type | Usage
+| --- | --- | --- |
+
+## Used environment variables
+
+| Variable | Usage
+| --- | --- |
+
+## External tools dependencies
+
+None

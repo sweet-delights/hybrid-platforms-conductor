@@ -64,3 +64,22 @@ Free IPs for 172.16.139: [99..255]
 Free IPs for 172.30.14: [227..255]
 Free IPs for 192.168.0: [3..255]
 ```
+
+## Used credentials
+
+| Credential | Usage
+| --- | --- |
+
+## Used Metadata
+
+| Metadata | Type | Usage
+| --- | --- | --- |
+
+## Used environment variables
+
+| Variable | Usage
+| --- | --- |
+
+## External tools dependencies
+
+None

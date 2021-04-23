@@ -5,7 +5,7 @@ The DSL used in configuration files is comprised of Ruby methods that can be cal
 This DSL can also be completed by plugins. Check [the plugins documentations](plugins) to know about DSL extensions brought by plugins.
 
 # Table of Contents
-  * [`platform_type_platform`](#platform_type_platform)
+  * [`<platform_type>_platform`](#platform_type_platform)
   * [`include_config_from`](#include_config_from)
   * [`os_image`](#os_image)
   * [`deployment_schedule`](#deployment_schedule)

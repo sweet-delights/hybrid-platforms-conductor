@@ -131,3 +131,22 @@ Back to the [[Hadoop]] / [[Impala]] / [[XAE_Network_Topology]] portal pages
 [[Category:Configuration]]
 [[Category:Chef]]
 ```
+
+## Used credentials
+
+| Credential | Usage
+| --- | --- |
+
+## Used Metadata
+
+| Metadata | Type | Usage
+| --- | --- | --- |
+
+## Used environment variables
+
+| Variable | Usage
+| --- | --- |
+
+## External tools dependencies
+
+None

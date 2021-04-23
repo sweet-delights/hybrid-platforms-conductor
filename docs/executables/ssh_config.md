@@ -123,3 +123,22 @@ Host hpc.192.168.0.2 hpc.project-pinger
   Hostname 192.168.0.77
 
 ```
+
+## Used credentials
+
+| Credential | Usage
+| --- | --- |
+
+## Used Metadata
+
+| Metadata | Type | Usage
+| --- | --- | --- |
+
+## Used environment variables
+
+| Variable | Usage
+| --- | --- |
+
+## External tools dependencies
+
+None

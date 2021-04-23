@@ -89,3 +89,22 @@ Example of output:
 [ node23hst-nn90 ] - OK. Check nodes_json/node23hst-nn90.json
 [ node23hst-nn8 ] - OK. Check nodes_json/node23hst-nn8.json
 ```
+
+## Used credentials
+
+| Credential | Usage
+| --- | --- |
+
+## Used Metadata
+
+| Metadata | Type | Usage
+| --- | --- | --- |
+
+## Used environment variables
+
+| Variable | Usage
+| --- | --- |
+
+## External tools dependencies
+
+None

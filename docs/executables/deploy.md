@@ -165,3 +165,25 @@ Recipe: ssh::server
 Chef Client finished, 3/133 resources would have been updated
 ===== Checking on 1 hosts ===== ...End =====
 ```
+
+## Used credentials
+
+| Credential | Usage
+| --- | --- |
+| `thycotic` | Used to connect to the Thycotic secret server if used within the `--secrets` option |
+
+## Used Metadata
+
+| Metadata | Type | Usage
+| --- | --- | --- |
+
+## Used environment variables
+
+| Variable | Usage
+| --- | --- |
+| `hpc_certificates` | Directory containing certificates to be deployed on nodes by default. If ommitted, then no certificate is deployed. |
+| `hpc_domain_for_thycotic` | Logon domain used to connect to the Thycotic secret server if used within the `--secrets` option |
+
+## External tools dependencies
+
+None

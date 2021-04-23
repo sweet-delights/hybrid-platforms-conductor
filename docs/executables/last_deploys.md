@@ -86,3 +86,22 @@ Example of output:
 | xaeprjcttlbd01 | 2017-11-23 18:43:01 | a_usernme | 172.16.0.46   | v20171123T194235 | 73c2017a2a8 | Added sorting capabilities |       |
 +----------------+---------------------+-----------+---------------+------------------+-------------+----------------------------+-------+
 ```
+
+## Used credentials
+
+| Credential | Usage
+| --- | --- |
+
+## Used Metadata
+
+| Metadata | Type | Usage
+| --- | --- | --- |
+
+## Used environment variables
+
+| Variable | Usage
+| --- | --- |
+
+## External tools dependencies
+
+None
