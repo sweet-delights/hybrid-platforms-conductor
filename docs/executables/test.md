@@ -126,7 +126,7 @@ Here is an example of output:
 
 ======= By test:
 
-===== configuration_test found 604 nodes having errors:
+===== configuration_test found 2 nodes having errors:
   * [ nodehst-nn3 ] - 3 errors:
     - Failed to execute command "hostname -I"
     - Failed to execute command "hostname -s"

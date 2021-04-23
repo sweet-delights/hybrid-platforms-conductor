@@ -41,7 +41,7 @@ module HybridPlatformsConductor
 
     include LoggerHelpers
 
-    Config.extend_config_dsl_with ConfigDSLExtension, :init_nodes_handler_config
+    Config.extend_config_dsl_with ConfigDSLExtension, :init_deployer_config
 
     # Do we use why-run mode while deploying? [default = false]
     #   Boolean
