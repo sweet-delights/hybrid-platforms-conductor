@@ -56,7 +56,7 @@ module HybridPlatformsConductor
       nodes = @nodes_handler.select_nodes(nodes_selectors)
       unless @skip_run
         nodes.map { |node| @nodes_handler.platform_for(node) }.uniq.each.each do |platform_handler|
-          platform_handler.prepare_why_run_deploy_for_json_dump
+          platform_handler.prepare_why_run_deploy_for_json_dump if platform_handler.respond_to?(:prepare_why_run_deploy_for_json_dump)
         end
         @deployer.concurrent_execution = true
         @deployer.use_why_run = true

@@ -47,7 +47,7 @@ describe HybridPlatformsConductor::ActionsExecutor do
         end.join("\n") + "\n"
       end
 
-      it 'generates a global configuration with user from environment' do
+      it 'generates a global configuration with user from hpc_ssh_user environment variable' do
         with_test_platform do
           ENV['hpc_ssh_user'] = 'test_user'
           expect(ssh_config_for(nil)).to eq <<~EOS
@@ -56,6 +56,43 @@ describe HybridPlatformsConductor::ActionsExecutor do
               ControlPath #{Dir.tmpdir}/hpc_ssh/hpc_ssh_mux_%h_%p_%r
               PubkeyAcceptedKeyTypes +ssh-dss
           EOS
+        end
+      end
+
+      it 'generates a global configuration with user from USER environment variable' do
+        with_test_platform do
+          ENV['USER'] = 'test_user'
+          expect(ssh_config_for(nil)).to eq <<~EOS
+            Host *
+              User test_user
+              ControlPath #{Dir.tmpdir}/hpc_ssh/hpc_ssh_mux_%h_%p_%r
+              PubkeyAcceptedKeyTypes +ssh-dss
+          EOS
+        end
+      end
+
+      it 'generates a global configuration with user taken from whoami when no env variable is set' do
+        with_test_platform do
+          original_user = ENV['USER']
+          begin
+            ENV.delete 'USER'
+            ENV.delete 'hpc_ssh_user'
+            with_cmd_runner_mocked(
+              [
+                ['ssh -V 2>&1', proc { [0, "OpenSSH_7.4p1 Debian-10+deb9u7, OpenSSL 1.0.2u  20 Dec 2019\n", ''] }],
+                ['whoami', proc { [0, 'test_whoami_user', ''] }]
+              ]
+            ) do
+              expect(ssh_config_for(nil)).to eq <<~EOS
+                Host *
+                  User test_whoami_user
+                  ControlPath #{Dir.tmpdir}/hpc_ssh/hpc_ssh_mux_%h_%p_%r
+                  PubkeyAcceptedKeyTypes +ssh-dss
+              EOS
+            end
+          ensure
+            ENV['USER'] = original_user
+          end
         end
       end
 

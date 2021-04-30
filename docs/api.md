@@ -21,6 +21,8 @@ puts executable.nodes_handler.known_nodes.join(', ')
 
 Following sections are describing the various API components.
 
+***This section is still incompletely documented***
+
 ## NodesHandler
 
 The `NodesHandler` API gives ways to handle the nodes inventory and the metadata.

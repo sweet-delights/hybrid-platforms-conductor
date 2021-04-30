@@ -15,7 +15,7 @@ module HybridPlatformsConductor
         # [API] - @cmd_runner is accessible.
         def init
           # This method is called when initializing a new instance of this platform handler, for a given repository.
-          inv_file = 'inventory.yaml'
+          inv_file = "#{@repository_path}/inventory.yaml"
           @inventory = File.exist?(inv_file) ? YAML.load(File.read(inv_file)) : {}
         end
 
@@ -56,19 +56,7 @@ module HybridPlatformsConductor
         # Result::
         # * Array<String>: The corresponding services
         def deployable_services
-          []
-        end
-
-        # Package the repository, ready to be deployed on artefacts or directly to a node.
-        # [API] - This method is mandatory.
-        # [API] - @cmd_runner is accessible.
-        # [API] - @actions_executor is accessible.
-        #
-        # Parameters::
-        # * *services* (Hash< String, Array<String> >): Services to be deployed, per node
-        # * *secrets* (Hash): Secrets to be used for deployment
-        # * *local_environment* (Boolean): Are we deploying to a local environment?
-        def package(services:, secrets:, local_environment:)
+          Dir.glob("#{@repository_path}/service_*.rb").map { |file| File.basename(file).match(/^service_(.*)\.rb$/)[1] }
         end
 
         # Get the list of actions to perform to deploy on a given node.
@@ -84,15 +72,46 @@ module HybridPlatformsConductor
         # Result::
         # * Array< Hash<Symbol,Object> >: List of actions to be done
         def actions_to_deploy_on(node, service, use_why_run: true)
-          []
-        end
+          # Load the check and deploy methods in a temporary class for encapsulation
+          service_file = "#{@repository_path}/service_#{service}.rb"
+          Class.new do
 
-        # Prepare a why-run deployment so that a JSON file describing the nodes will be output in the run_logs.
-        # [API] - This method is mandatory.
-        # [API] - @cmd_runner is accessible.
-        # [API] - @actions_executor is accessible.
-        # [API] - @deployer is accessible.
-        def prepare_why_run_deploy_for_json_dump
+            include LoggerHelpers
+
+            # Constructor
+            #
+            # Parameters::
+            # * *platform_handler* (PlatformHandler): PlatformHandler needing this service to be deployed
+            # * *logger* (Logger): Logger to be used [default: Logger.new(STDOUT)]
+            # * *logger_stderr* (Logger): Logger to be used for stderr [default: Logger.new(STDERR)]
+            # * *config* (Config): Config to be used. [default: Config.new]
+            # * *nodes_handler* (NodesHandler): NodesHandler to be used [default: NodesHandler.new]
+            # * *cmd_runner* (CmdRunner): CmdRunner to be used [default: CmdRunner.new]
+            def initialize(
+              platform_handler,
+              logger: Logger.new(STDOUT),
+              logger_stderr: Logger.new(STDERR),
+              config: Config.new,
+              nodes_handler: NodesHandler.new,
+              cmd_runner: CmdRunner.new
+            )
+              init_loggers(logger, logger_stderr)
+              @platform_handler = platform_handler
+              @config = config
+              @nodes_handler = nodes_handler
+              @cmd_runner = cmd_runner
+            end
+
+            class_eval(File.read(service_file))
+
+          end.new(
+            self,
+            logger: @logger,
+            logger_stderr: @logger_stderr,
+            config: @config,
+            nodes_handler: @nodes_handler,
+            cmd_runner: @cmd_runner
+          ).send(use_why_run ? :check : :deploy, node)
         end
 
         # Parse stdout and stderr of a given deploy run and get the list of tasks with their status
@@ -104,7 +123,7 @@ module HybridPlatformsConductor
         # Result::
         # * Array< Hash<Symbol,Object> >: List of task properties. The following properties should be returned, among free ones:
         #   * *name* (String): Task name
-        #   * *status* (Symbol): Task status. Should be on of:
+        #   * *status* (Symbol): Task status. Should be one of:
         #     * *:changed*: The task has been changed
         #     * *:identical*: The task has not been changed
         #   * *diffs* (String): Differences, if any

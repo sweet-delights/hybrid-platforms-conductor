@@ -91,4 +91,5 @@ end
 * `ssh`: Used to run SSH commands or interactive sessions.
 * `sshpass`: Used when the SSH connections is done using a password that needs to be set automatically (using the `passwords` accessor from the connector).
 * `tar`: Used to transfer files on SSH connections having SessionExec capabilities.
+* `whoami`: Used to get ssh user name when environment variables `hpc_ssh_user` and `USER` are not set.
 * `xterm`: Used to initiate an interactive ControlMaster on SSH connections not having SessionExec capabilities.

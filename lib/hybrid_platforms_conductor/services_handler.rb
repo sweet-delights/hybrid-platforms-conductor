@@ -108,23 +108,25 @@ module HybridPlatformsConductor
       local_environment:
     )
       platforms_for(services).each do |platform, platform_services|
-        platform_name = platform.name
-        # Compute the package ID that is unique to this packaging, so that we don't mix it with others if needed.
-        package_id = {
-          platform_name: platform_name,
-          services: Hash[platform_services.map { |node, node_services| [node, node_services.sort] }].sort,
-          secrets: secrets.sort,
-          local_environment: local_environment
-        }
-        if ServicesHandler.packaged_deployments.include?(package_id)
-          log_debug "Platform #{platform_name} has already been packaged for this deployment (package ID #{package_id}). Won't package it another time."
-        else
-          platform.package(
-            services: platform_services,
-            secrets: secrets,
+        if platform.respond_to?(:package)
+          platform_name = platform.name
+          # Compute the package ID that is unique to this packaging, so that we don't mix it with others if needed.
+          package_id = {
+            platform_name: platform_name,
+            services: Hash[platform_services.map { |node, node_services| [node, node_services.sort] }].sort,
+            secrets: secrets.sort,
             local_environment: local_environment
-          )
-          ServicesHandler.packaged_deployments << package_id
+          }
+          if ServicesHandler.packaged_deployments.include?(package_id)
+            log_debug "Platform #{platform_name} has already been packaged for this deployment (package ID #{package_id}). Won't package it another time."
+          else
+            platform.package(
+              services: platform_services,
+              secrets: secrets,
+              local_environment: local_environment
+            )
+            ServicesHandler.packaged_deployments << package_id
+          end
         end
       end
     end

@@ -69,7 +69,7 @@ module HybridPlatformsConductor
         end
 
         # Setup the platform, install dependencies...
-        # [API] - This method is mandatory.
+        # [API] - This method is optional.
         # [API] - @cmd_runner is accessible.
         def setup
           # This method is called by the setup executable.
@@ -163,7 +163,7 @@ module HybridPlatformsConductor
         end
 
         # Package the repository, ready to be deployed on artefacts or directly to a node.
-        # [API] - This method is mandatory.
+        # [API] - This method is optional.
         # [API] - @cmd_runner is accessible.
         # [API] - @actions_executor is accessible.
         #
@@ -212,7 +212,7 @@ module HybridPlatformsConductor
           # This method returns all the actions to execute to deploy on a node.
           # The use_why_run switch is on if the deployment should just be simulated.
           # Those actions (bash commands, scp of files, ruby code...) should be thread safe as they can be executed in parallel with other deployment actions for other nodes in case of a concurrent deployment on several nodes.
-          # The complete description of an action can be found in actions_executor.rb file, in the execute_actions_on method description.
+          # The complete description of an action can be found in the action plugins' documentation.
           [
             {
               scp: {
@@ -229,7 +229,7 @@ module HybridPlatformsConductor
         end
 
         # Prepare a why-run deployment so that a JSON file describing the nodes will be output in the run_logs.
-        # [API] - This method is mandatory.
+        # [API] - This method is optional.
         # [API] - @cmd_runner is accessible.
         # [API] - @actions_executor is accessible.
         # [API] - @deployer is accessible.
@@ -247,7 +247,7 @@ module HybridPlatformsConductor
         # Result::
         # * Array< Hash<Symbol,Object> >: List of task properties. The following properties should be returned, among free ones:
         #   * *name* (String): Task name
-        #   * *status* (Symbol): Task status. Should be on of:
+        #   * *status* (Symbol): Task status. Should be one of:
         #     * *:changed*: The task has been changed
         #     * *:identical*: The task has not been changed
         #   * *diffs* (String): Differences, if any

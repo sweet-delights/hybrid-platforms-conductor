@@ -131,6 +131,10 @@ module HybridPlatformsConductor
           # Default values
           @ssh_user = ENV['hpc_ssh_user']
           @ssh_user = ENV['USER'] if @ssh_user.nil? || @ssh_user.empty?
+          if @ssh_user.nil? || @ssh_user.empty?
+            _exit_status, stdout = @cmd_runner.run_cmd 'whoami', log_to_stdout: log_debug?
+            @ssh_user = stdout.strip
+          end
           @ssh_use_control_master = true
           @ssh_strict_host_key_checking = true
           @passwords = {}
@@ -236,9 +240,9 @@ module HybridPlatformsConductor
           ssh_cmd =
             if @nodes_handler.get_ssh_session_exec_of(@node) == 'false'
               # When ExecSession is disabled we need to use stdin directly
-              "{ cat | #{ssh_exec} #{ssh_url} -T; } <<'EOF'\n#{bash_cmds}\nEOF"
+              "{ cat | #{ssh_exec} #{ssh_url} -T; } <<'HPC_EOF'\n#{bash_cmds}\nHPC_EOF"
             else
-              "#{ssh_exec} #{ssh_url} /bin/bash <<'EOF'\n#{bash_cmds}\nEOF"
+              "#{ssh_exec} #{ssh_url} /bin/bash <<'HPC_EOF'\n#{bash_cmds}\nHPC_EOF"
             end
           # Due to a limitation of Process.spawn, each individual argument is limited to 128KB of size.
           # Therefore we need to make sure that if bash_cmds exceeds MAX_CMD_ARG_LENGTH bytes (considering EOF chars) then we use an intermediary shell script to store the commands.

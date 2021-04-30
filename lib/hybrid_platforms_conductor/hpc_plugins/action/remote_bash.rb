@@ -14,16 +14,33 @@ module HybridPlatformsConductor
         # [API] - @actions_executor is accessible
         #
         # Parameters::
-        # * *remote_bash* (Hash<Symbol, Object> or Array<String> or String): List of bash actions to execute. Each action can have the following properties:
-        #   * *commands* (Array<String> or String): List of bash commands to execute (can be a single one). This is the default property also that allows to not use the Hash form for brevity.
-        #   * *file* (String): Name of file from which commands should be taken.
-        #   * *env* (Hash<String, String>): Environment variables to be set before executing those commands.
+        # * *remote_bash* (Array or Object): List of commands (or single command) to be executed. Each command can be the following:
+        #   * String: Simple bash command.
+        #   * Hash<Symbol, Object>: Information about the commands to execute. Can have the following properties:
+        #     * *commands* (Array<String> or String): List of bash commands to execute (can be a single one) [default: ''].
+        #     * *file* (String): Name of file from which commands should be taken [optional].
+        #     * *env* (Hash<String, String>): Environment variables to be set before executing those commands [default: {}].
         def setup(remote_bash)
-          @remote_bash = remote_bash
-          # Normalize the parameters
-          @remote_bash = [@remote_bash] if @remote_bash.is_a?(String)
-          @remote_bash = { commands: @remote_bash } if @remote_bash.is_a?(Array)
-          @remote_bash[:commands] = [@remote_bash[:commands]] if @remote_bash[:commands].is_a?(String)
+          # Normalize the parameters.
+          # Array< Hash<Symbol,Object> >: Simple array of info:
+          # * *commands* (Array<String>): List of bash commands to execute.
+          # * *env* (Hash<String, String>): Environment variables to be set before executing those commands.
+          @remote_bash = (remote_bash.is_a?(Array) ? remote_bash : [remote_bash]).map do |cmd_info|
+            if cmd_info.is_a?(String)
+              {
+                commands: [cmd_info],
+                env: {}
+              }
+            else
+              commands = []
+              commands.concat(cmd_info[:commands].is_a?(String) ? [cmd_info[:commands]] : cmd_info[:commands]) if cmd_info[:commands]
+              commands << File.read(cmd_info[:file]) if cmd_info[:file]
+              {
+                commands: commands,
+                env: cmd_info[:env] || {}
+              }
+            end
+          end
         end
 
         # Do we need a connector to execute this action on a node?
@@ -46,10 +63,9 @@ module HybridPlatformsConductor
         # [API] - @stderr_io can be used to log stderr messages
         # [API] - run_cmd(String) method can be used to execute a command. See CmdRunner#run_cmd to know about the result's signature.
         def execute
-          bash_commands = (@remote_bash[:env] || {}).map { |var_name, var_value| "export #{var_name}='#{var_value}'" }
-          bash_commands.concat(@remote_bash[:commands].clone) if @remote_bash.key?(:commands)
-          bash_commands << File.read(@remote_bash[:file]) if @remote_bash.key?(:file)
-          bash_str = bash_commands.join("\n")
+          bash_str = @remote_bash.map do |cmd_info|
+            (cmd_info[:env].map { |var_name, var_value| "export #{var_name}='#{var_value}'" } + cmd_info[:commands]).join("\n")
+          end.join("\n")
           log_debug "[#{@node}] - Execute remote Bash commands \"#{bash_str}\"..."
           @connector.remote_bash bash_str
         end

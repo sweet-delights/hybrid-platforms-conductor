@@ -76,6 +76,7 @@ Examples of connectors are:
 Check the [sample plugin file](../lib/hybrid_platforms_conductor/hpc_plugins/connector/my_connector.rb.sample) to know more about the API that needs to be implemented by such plugins.
 
 Plugins shipped by default:
+* [`local`](plugins/connector/local.md)
 * [`ssh`](plugins/connector/ssh.md)
 
 <a name="platform_handler"></a>
