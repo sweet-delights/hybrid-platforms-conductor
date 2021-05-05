@@ -13,8 +13,7 @@ MARKER_END = '<!-- Mermaid generator - Section end -->'
 # * *file* (String): Markdown file to be parsed
 def gen_mermaid(file)
   markdown = []
-  mermaid_content = []
-  in_mermaid_content = false
+  mermaid_content = nil
   in_markers = false
   idx_mermaid = 0
   File.read(file).split("\n").each do |line|
@@ -27,10 +26,12 @@ def gen_mermaid(file)
     elsif line == MARKER_END
       in_markers = false
     elsif line == '```mermaid'
-      in_mermaid_content = true
+      mermaid_content = []
     elsif line == '```'
       # End any block, including Mermaid block
-      if in_mermaid_content
+      if mermaid_content.nil?
+        markdown << line
+      else
         # We have a diagram to generate
         gen_file = "docs/gen/mermaid/#{file}-#{idx_mermaid}.png"
         puts "Generate #{file} / Diagram ##{idx_mermaid} => #{gen_file}..."
@@ -54,11 +55,9 @@ def gen_mermaid(file)
           MARKER_END
         ]
         idx_mermaid += 1
-        in_mermaid_content = false
-      else
-        markdown << line
+        mermaid_content = nil
       end
-    elsif in_mermaid_content
+    elsif !mermaid_content.nil?
       # We are in a Mermaid content
       mermaid_content << line
     elsif !in_markers

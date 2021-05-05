@@ -97,11 +97,15 @@ describe HybridPlatformsConductor::ActionsExecutor do
         end
       end
 
-      it 'fails if no user name has been given, either through environment or command-line' do
+      it 'fails if no user name has been given, either through environment, command-line or using whoami' do
         ENV.delete 'hpc_ssh_user'
         ENV.delete 'USER'
         with_test_platform_for_cli do
-          expect { run 'run', '--node', 'node', '--command', 'echo Hello' }.to raise_error(RuntimeError, 'No SSH user name specified. Please use --ssh-user option or hpc_ssh_user environment variable to set it.')
+          with_cmd_runner_mocked([
+            ['whoami', proc { [0, '', ''] }]
+          ]) do
+            expect { run 'run', '--node', 'node', '--command', 'echo Hello' }.to raise_error(RuntimeError, 'No SSH user name specified. Please use --ssh-user option or hpc_ssh_user environment variable to set it.')
+          end
         end
       end
 
