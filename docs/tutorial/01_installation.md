@@ -69,8 +69,8 @@ Then we create a Ruby project directory in which we put:
 * The entry point of our Hybrid Platforms Conductor's configuration: the **`hpc_config.rb`** configuration file. For now it will be empty, and we will edit it later.
 ```bash
 cd
-mkdir my-platforms
-cd my-platforms
+mkdir -p hpc_tutorial/my-platforms
+cd hpc_tutorial/my-platforms
 cat <<EOF >Gemfile
 source 'http://rubygems.org'
 
@@ -79,7 +79,7 @@ EOF
 touch hpc_config.rb
 ```
 
-Please note that by default all commands starting from here in this tutorial should be run from this `my-platforms` directory unless stated otherwise.
+Please note that by default all commands starting from here in this tutorial should be run from this `hpc_tutorial/my-platforms` directory unless stated otherwise.
 
 We will then install the `hybrid_platforms_conductor` gem using the bundler tool:
 ```bash

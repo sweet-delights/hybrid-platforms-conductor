@@ -40,6 +40,9 @@ docker start -ai hpc_tutorial
 
 The tutorial assumes that all of the Hybrid Platforms Conductor commands will be executed from the bash instance of this `hpc_tutorial` container, as `root`.
 
+All steps, command lines and files creations are explicitly detailed in the tutorial steps.
+No previous knowledge of Ruby is required to get through this tutorial.
+
 **[Next >> Let's start by the first step: installation of your Hybrid Platforms Conductor's environment](tutorial/01_installation.md)**
 
 ---

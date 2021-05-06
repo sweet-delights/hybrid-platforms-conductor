@@ -273,7 +273,7 @@ Having such a process defined with extensible plugins lets DevOps teams **adapt 
 
 The best way to grasp the power of such agile processes is to learn by doing.
 
-[here](docs/tutorial.md) is a simple tutorial showing how to start playing with Hybrid Platforms Conductor and use it to define simple DevOps processes and extend them easily in a changing environment.
+[Here is a simple tutorial](docs/tutorial.md) showing how to start playing with Hybrid Platforms Conductor and use it to define simple DevOps processes and extend them easily in a changing environment.
 
 <a name="tools_list"></a>
 # List of tools available
@@ -370,6 +370,8 @@ Don't forget to add `[Feature]` or `[Breaking]` into your git commit comment if 
 [Github Actions](https://github.com/sweet-delights/hybrid-platforms-conductor/actions) automatically catches on new PR merges and publishes a semantically versioned Rubygem on [Rubygems.org](https://rubygems.org/gems/hybrid_platforms_conductor).
 
 Automatic semantic releasing is done by [`sem_ver_components`](https://github.com/Muriel-Salvan/sem_ver_components/).
+
+Some parts of the documentation (like [Mermaid diagrams](https://mermaid-js.github.io/mermaid/)) is being generated during releasing. To achieve that the [`mermaid-cli` npm package](https://github.com/mermaid-js/mermaid-cli) needs to be installed as a local NodeJS package.
 
 Change log can be accessed in the [CHANGELOG.md file](CHANGELOG.md).
 
