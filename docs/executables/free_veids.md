@@ -10,7 +10,7 @@ Useful to assign unused VEIDs to new VMs to be created.
 <!-- Mermaid generator - Section start -->
 ![Mermaid diagram](/docs/gen/mermaid/docs/executables/free_veids.md-0.png)
 <details>
-<summary>See diagram Mermaid code</summary>
+<summary><sub><sup>Diagram code</sup></sub></summary>
 
 ```mermaid
 sequenceDiagram

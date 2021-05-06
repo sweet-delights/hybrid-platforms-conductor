@@ -12,7 +12,7 @@ This executable is perfectly suited to be integrated in a continuous integration
 <!-- Mermaid generator - Section start -->
 ![Mermaid diagram](/docs/gen/mermaid/docs/executables/test.md-0.png)
 <details>
-<summary>See diagram Mermaid code</summary>
+<summary><sub><sup>Diagram code</sup></sub></summary>
 
 ```mermaid
 sequenceDiagram

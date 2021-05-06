@@ -10,7 +10,7 @@ It is intended to be run only for the initial setup or when such dependencies ch
 <!-- Mermaid generator - Section start -->
 ![Mermaid diagram](/docs/gen/mermaid/docs/executables/setup.md-0.png)
 <details>
-<summary>See diagram Mermaid code</summary>
+<summary><sub><sup>Diagram code</sup></sub></summary>
 
 ```mermaid
 sequenceDiagram

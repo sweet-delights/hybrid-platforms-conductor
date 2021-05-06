@@ -8,7 +8,7 @@ This executable is using [report plugins](../plugins.md#report) so that the tool
 <!-- Mermaid generator - Section start -->
 ![Mermaid diagram](/docs/gen/mermaid/docs/executables/report.md-0.png)
 <details>
-<summary>See diagram Mermaid code</summary>
+<summary><sub><sup>Diagram code</sup></sub></summary>
 
 ```mermaid
 sequenceDiagram

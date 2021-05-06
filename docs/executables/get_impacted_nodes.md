@@ -8,7 +8,7 @@ This is especially useful to know which nodes have to be tested against a given 
 <!-- Mermaid generator - Section start -->
 ![Mermaid diagram](/docs/gen/mermaid/docs/executables/get_impacted_nodes.md-0.png)
 <details>
-<summary>See diagram Mermaid code</summary>
+<summary><sub><sup>Diagram code</sup></sub></summary>
 
 ```mermaid
 sequenceDiagram

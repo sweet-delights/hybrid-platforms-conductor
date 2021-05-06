@@ -246,7 +246,7 @@ So with the concepts described above, the process described as deploying **servi
 <!-- Mermaid generator - Section start -->
 ![Mermaid diagram](/docs/gen/mermaid/README.md-0.png)
 <details>
-<summary>See diagram Mermaid code</summary>
+<summary><sub><sup>Diagram code</sup></sub></summary>
 
 ```mermaid
 sequenceDiagram
