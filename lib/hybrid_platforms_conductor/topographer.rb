@@ -110,7 +110,6 @@ module HybridPlatformsConductor
       @skip_run = false
 
       # Parse plugins
-      root_path = File.expand_path("#{File.dirname(__FILE__)}/..")
       @plugins = Hash[Dir.
         glob("#{File.dirname(__FILE__)}/topographer/plugins/*.rb").
         map do |file_name|

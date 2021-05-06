@@ -11,10 +11,9 @@ Gem::Specification.new do |s|
   s.summary = 'Hybrid Platforms Conductor'
   s.description = 'Provides a complete toolset to help DevOps maintain, deploy, monitor and test multiple platforms using various technologies'
 
-  s.files = Dir['{bin,lib,spec}/**/*']
-  Dir['bin/**/*'].each do |exec_name|
-    s.executables << File.basename(exec_name)
-  end
+  s.files = Dir['*.md'] + Dir['{bin,docs,examples,lib,spec,tools}/**/*']
+  s.executables = Dir['bin/**/*'].map { |exec_name| File.basename(exec_name) }
+  s.extra_rdoc_files = Dir['*.md'] + Dir['{docs,examples}/**/*']
 
   # Dependencies
   # To display IP ranges correctly

@@ -60,7 +60,7 @@ module HybridPlatformsConductor
               end
             end
             # Merge checks
-            required_approvers = repo_info.dig *%i[checks pr_settings required_approvers]
+            required_approvers = repo_info.dig(*%i[checks pr_settings required_approvers])
             if required_approvers
               assert_equal(
                 settings_pr.dig('com.atlassian.bitbucket.server.bitbucket-bundled-hooks:requiredApprovers', 'enable'),
@@ -73,7 +73,7 @@ module HybridPlatformsConductor
                 "[#{repo_id}] - Number of required approvers should be #{required_approvers}"
               )
             end
-            required_builds = repo_info.dig *%i[checks pr_settings required_builds]
+            required_builds = repo_info.dig(*%i[checks pr_settings required_builds])
             if required_builds
               assert_equal(
                 settings_pr.dig('com.atlassian.bitbucket.server.bitbucket-build:requiredBuilds', 'enable'),
@@ -87,7 +87,7 @@ module HybridPlatformsConductor
               )
             end
             # Default merge strategy
-            default_merge_strategy = repo_info.dig *%i[checks pr_settings default_merge_strategy]
+            default_merge_strategy = repo_info.dig(*%i[checks pr_settings default_merge_strategy])
             if default_merge_strategy
               assert_equal(
                 settings_pr.dig('mergeConfig', 'defaultStrategy', 'id'),
@@ -104,7 +104,7 @@ module HybridPlatformsConductor
               )
             end
             # Default reviewers should include our team from any branch to any branch
-            mandatory_default_reviewers = repo_info.dig *%i[checks pr_settings mandatory_default_reviewers]
+            mandatory_default_reviewers = repo_info.dig(*%i[checks pr_settings mandatory_default_reviewers])
             if mandatory_default_reviewers
               reviewers_found = default_reviewers.any? do |condition_info|
                 reviewers = condition_info.dig('reviewers')

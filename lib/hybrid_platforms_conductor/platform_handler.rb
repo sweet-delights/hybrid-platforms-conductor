@@ -142,7 +142,7 @@ module HybridPlatformsConductor
             git_status = git.status
             git_commit = git.log.first
             {
-              repo_name: File.basename(git.remotes.first.url).gsub(/\.git$/, ''),
+              repo_name: git.remotes.empty? ? File.basename(@repository_path) : File.basename(git.remotes.first.url).gsub(/\.git$/, ''),
               commit: {
                 id: git_commit.sha,
                 ref: git_commit.name,

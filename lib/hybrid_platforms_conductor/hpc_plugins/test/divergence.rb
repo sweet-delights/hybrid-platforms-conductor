@@ -1,4 +1,5 @@
 require 'json'
+require 'hybrid_platforms_conductor/common_config_dsl/idempotence_tests'
 
 module HybridPlatformsConductor
 
@@ -8,6 +9,8 @@ module HybridPlatformsConductor
 
       # Test that the node has not diverged since last deployment
       class Divergence < HybridPlatformsConductor::Test
+
+        self.extend_config_dsl_with CommonConfigDsl::IdempotenceTests, :init_idempotence_tests
 
         # Check my_test_plugin.rb.sample documentation for signature details.
         def test_on_check_node(stdout, stderr, exit_status)

@@ -22,7 +22,7 @@ module HybridPlatformsConductor
                 error 'Node has never been deployed using deploy (/var/log/deployments does not exist)'
               else
                 # Expecting following file names
-                # 2017-12-01_093418_a_usernme
+                # node-name_2017-12-01_093418_user-name
                 file_match = stdout.first.match(/^#{Regexp.escape(@node)}_(\d{4}-\d{2}-\d{2})_.+$/)
                 if file_match.nil?
                   error "Invalid chef deployment log file found: #{stdout.first}"

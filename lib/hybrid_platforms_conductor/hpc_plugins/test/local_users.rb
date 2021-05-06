@@ -57,7 +57,8 @@ module HybridPlatformsConductor
         # Check my_test_plugin.rb.sample documentation for signature details.
         def test_on_node
           {
-            "#{@nodes_handler.sudo_on(@node)} cat /etc/passwd" => proc do |stdout|
+            # TODO: Access the user correctly when the user notion will be moved out of the ssh connector
+            "#{@deployer.instance_variable_get(:@actions_executor).connector(:ssh).ssh_user == 'root' ? '' : "#{@nodes_handler.sudo_on(@node)} "}cat /etc/passwd" => proc do |stdout|
               passwd_users = stdout.map { |passwd_line| passwd_line.split(':').first }
               missing_users = @nodes_handler.
                 select_confs_for_node(@node, @config.users_that_should_be_present).

@@ -14,9 +14,9 @@ Here are some ways to install it.
 ```bash
 mkdir ruby
 cd ruby
-wget https://cache.ruby-lang.org/pub/ruby/2.7/ruby-2.7.2.tar.gz
-tar xvzf ruby-2.7.2.tar.gz
-cd ruby-2.7.2
+wget https://cache.ruby-lang.org/pub/ruby/2.7/ruby-2.7.3.tar.gz
+tar xvzf ruby-2.7.3.tar.gz
+cd ruby-2.7.3
 sudo apt install -y build-essential zlib1g-dev libyaml-dev libssl-dev libgdbm-dev libreadline-dev libncurses5-dev libffi-dev libgdbm-compat-dev bison
 ./configure
 make

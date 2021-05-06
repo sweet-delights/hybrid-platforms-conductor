@@ -1,0 +1,75 @@
+#!/usr/bin/env ruby
+
+require 'json'
+require 'tempfile'
+
+MARKER_BEGIN = '<!-- Mermaid generator - Section start -->'
+MARKER_END = '<!-- Mermaid generator - Section end -->'
+
+# Generate Mermaid diagrams from a Markdown file.
+# Modify the Markdown file if the Mermaid diagram is to be referenced for the first time.
+#
+# Parameters::
+# * *file* (String): Markdown file to be parsed
+def gen_mermaid(file)
+  markdown = []
+  mermaid_content = nil
+  in_markers = false
+  idx_mermaid = 0
+  File.read(file).split("\n").each do |line|
+    # Logic is simple: Mermaid code blocks should be encapsulated between comment markers that will also include the generated diagram and the details setion.
+    # We always regenerate the content between existing comment markers.
+    # If those comment markers are missing, we will find Mermaid code blocks to add them.
+    # We always re-generate all diagrams.
+    if line == MARKER_BEGIN
+      in_markers = true
+    elsif line == MARKER_END
+      in_markers = false
+    elsif line == '```mermaid'
+      mermaid_content = []
+    elsif line == '```'
+      # End any block, including Mermaid block
+      if mermaid_content.nil?
+        markdown << line
+      else
+        # We have a diagram to generate
+        gen_file = "docs/gen/mermaid/#{file}-#{idx_mermaid}.png"
+        puts "Generate #{file} / Diagram ##{idx_mermaid} => #{gen_file}..."
+        FileUtils.mkdir_p File.dirname(gen_file)
+        Tempfile.create('mermaid') do |mermaid_file|
+          mermaid_file.write(mermaid_content.join("\n"))
+          mermaid_file.flush
+          mmdc_cmd = "./node_modules/.bin/mmdc -p #{@puppeteer_conf} -i #{mermaid_file.path} -o #{gen_file} -w 2048"
+          raise "Error while running mmdc: #{mmdc_cmd}" unless system mmdc_cmd
+        end
+        markdown.concat [
+          MARKER_BEGIN,
+          "![Mermaid diagram](/#{gen_file})",
+          '<details>',
+          '<summary>See diagram Mermaid code</summary>',
+          '',
+          '```mermaid'
+        ] + mermaid_content + [
+          '```',
+          '</details>',
+          MARKER_END
+        ]
+        idx_mermaid += 1
+        mermaid_content = nil
+      end
+    elsif !mermaid_content.nil?
+      # We are in a Mermaid content
+      mermaid_content << line
+    elsif !in_markers
+      markdown << line
+    end
+  end
+  File.write(file, markdown.map { |line| "#{line}\n" }.join) if idx_mermaid > 0
+end
+
+Tempfile.create('puppeteer') do |puppeteer_file|
+  puppeteer_file.write({ args: ['--no-sandbox'] }.to_json)
+  puppeteer_file.flush
+  @puppeteer_conf = puppeteer_file.path
+  ARGV.each { |file| gen_mermaid(file) }
+end

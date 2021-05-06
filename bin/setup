@@ -7,5 +7,5 @@ platforms_handler = executable.platforms_handler
 executable.parse_options!
 
 platforms_handler.known_platforms.each do |platform|
-  platform.setup
+  platform.setup if platform.respond_to?(:setup)
 end

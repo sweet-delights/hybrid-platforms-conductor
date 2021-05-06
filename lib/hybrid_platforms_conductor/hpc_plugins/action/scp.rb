@@ -16,7 +16,7 @@ module HybridPlatformsConductor
         # Parameters::
         # * *mappings* (Hash<String or Symbol, Object>): Set of couples source => destination_dir to copy files or directories from the local file system to the remote file system.
         #   The following properties can also be used:
-        #   * *sudo* (Boolean): Do we use sudo to make the copy? [default: false]
+        #   * *sudo* (Boolean): Do we use sudo on the remote to make the copy? [default: false]
         #   * *owner* (String or nil): Owner to use for files, or nil to use current one [default: nil]
         #   * *group* (String or nil): Group to use for files, or nil to use current one [default: nil]
         def setup(mappings)

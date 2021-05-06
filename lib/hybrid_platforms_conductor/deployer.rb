@@ -41,7 +41,7 @@ module HybridPlatformsConductor
 
     include LoggerHelpers
 
-    Config.extend_config_dsl_with ConfigDSLExtension, :init_nodes_handler_config
+    Config.extend_config_dsl_with ConfigDSLExtension, :init_deployer_config
 
     # Do we use why-run mode while deploying? [default = false]
     #   Boolean
@@ -336,7 +336,8 @@ module HybridPlatformsConductor
           actions_executor.connector(:ssh).passwords[node] = 'root_pwd'
           deployer.local_environment = true
           # Ignore secrets that might have been given: in Docker containers we always use dummy secrets
-          deployer.secrets = [JSON.parse(File.read("#{@config.hybrid_platforms_dir}/dummy_secrets.json"))]
+          dummy_secrets_file = "#{@config.hybrid_platforms_dir}/dummy_secrets.json"
+          deployer.secrets = File.exist?(dummy_secrets_file) ? [JSON.parse(File.read(dummy_secrets_file))] : []
           yield deployer, instance
         end
       rescue

@@ -79,6 +79,22 @@ describe HybridPlatformsConductor::ActionsExecutor do
       end
     end
 
+    it 'executes remote Bash code both from commands and a file in sequence' do
+      with_test_platform_for_action_plugins do |repository|
+        File.write("#{repository}/commands.txt", "bash_cmd3.bash\nbash_cmd4.bash")
+        test_actions_executor.execute_actions('node' => { remote_bash: [
+          'bash_cmd1.bash',
+          'bash_cmd2.bash',
+          { file: "#{repository}/commands.txt" }
+        ] })
+        expect(test_actions_executor.connector(:test_connector).calls).to eq [
+          [:connectable_nodes_from, ['node']],
+          [:with_connection_to, ['node'], { no_exception: true }],
+          [:remote_bash, "bash_cmd1.bash\nbash_cmd2.bash\nbash_cmd3.bash\nbash_cmd4.bash"]
+        ]
+      end
+    end
+
     it 'executes remote Bash code with environment variables set' do
       with_test_platform_for_action_plugins do
         test_actions_executor.execute_actions('node' => { remote_bash: {

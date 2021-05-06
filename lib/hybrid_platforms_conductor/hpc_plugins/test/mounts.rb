@@ -32,7 +32,7 @@ module HybridPlatformsConductor
           #
           # Parameters::
           # * *mount_rules* (Hash<String or Regexp, String or Regexp>):
-          #     List of (or single) sets of { source => destination } mounts that should not be present.
+          #     Set of { source => destination } mounts that should not be present.
           #     Each source or destination can be a string for exact match, or a regexp to match a pattern on the mounts done on the node.
           def check_mounts_do_not_include(mount_rules)
             @mount_rules_that_should_be_absent << {
@@ -45,7 +45,7 @@ module HybridPlatformsConductor
           #
           # Parameters::
           # * *mount_rules* (Hash<String or Regexp, String or Regexp>):
-          #     List of (or single) sets of { source => destination } mounts that should be present.
+          #     Set of { source => destination } mounts that should be present.
           #     Each source or destination can be a string for exact match, or a regexp to match a pattern on the mounts done on the node.
           def check_mounts_do_include(mount_rules)
             @mount_rules_that_should_be_present << {
@@ -61,7 +61,8 @@ module HybridPlatformsConductor
         # Check my_test_plugin.rb.sample documentation for signature details.
         def test_on_node
           {
-            "#{@nodes_handler.sudo_on(@node)} mount" => proc do |stdout|
+            # TODO: Access the user correctly when the user notion will be moved out of the ssh connector
+            "#{@deployer.instance_variable_get(:@actions_executor).connector(:ssh).ssh_user == 'root' ? '' : "#{@nodes_handler.sudo_on(@node)} "}mount" => proc do |stdout|
               mounts_info = stdout.map do |line|
                 fields = line.split
                 {

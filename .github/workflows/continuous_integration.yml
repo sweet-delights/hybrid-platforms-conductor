@@ -1,6 +1,8 @@
 name: continuous-integration
+
 on:
   - push
+
 jobs:
 
   test:
@@ -18,6 +20,12 @@ jobs:
       - name: Install sshpass as it is needed to test the SSH connector
         run: sudo apt install sshpass
 
+      - name: Install Node
+        uses: actions/setup-node@v2
+
+      - name: Install Mermaid
+        run: npm install @mermaid-js/mermaid-cli
+
       - name: Install dependencies
         run: bundle install
 
@@ -27,9 +35,17 @@ jobs:
       - name: Test packaging
         run: bundle exec gem build hybrid_platforms_conductor.gemspec
 
+      - name: Test generating diagrams
+        run: bundle exec ./tools/generate_mermaid README.md docs/**/*.md
+
+      - name: Show changes
+        run: |
+          git status
+
   release:
     needs: test
     runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/master'
     steps:
 
       - name: Check-out code
@@ -43,11 +59,20 @@ jobs:
       - name: Install Node
         uses: actions/setup-node@v2
 
+      - name: Install Mermaid
+        run: npm install @mermaid-js/mermaid-cli
+
       - name: Install semantic-release
         run: npm install @semantic-release/git @semantic-release/changelog @semantic-release/exec semantic-release-rubygem -D
 
       - name: Install dependencies
         run: bundle install
+
+      - name: Generate diagrams
+        run: bundle exec ./tools/generate_mermaid README.md docs/**/*.md
+
+      - name: Add generated diagrams
+        run: git add README.md docs/**/*
 
       - name: Semantic releasing
         run: npx semantic-release

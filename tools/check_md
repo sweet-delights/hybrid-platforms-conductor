@@ -1,0 +1,89 @@
+#!/usr/bin/env ruby
+
+# Parsed information, per file name.
+# Information is:
+# * *anchors* (Array<String>): List of anchors
+# * *links* (Array<String>): List of links
+@info = {}
+
+# Get a file name from a link
+#
+# Parameters::
+# * *link* (String): The link to find the file from
+# * *file* (String): The file from which the link is taken
+# Result::
+# * String: Resulting file
+def link_to_file(link, file)
+  link_file = link.split('#').first
+  if link_file == ''
+    file
+  elsif link_file.start_with?('/')
+    link_file[1..-1]
+  else
+    File.expand_path("#{File.dirname(file)}/#{link_file}").gsub("#{Dir.pwd}/", '')
+  end
+end
+
+# Parse a Markdown file
+#
+# Parameters::
+# * *file* (String): Markdown file to be parsed
+def parse_md(file)
+  unless @info.key?(file)
+    puts "Parsing #{file}..."
+    content = File.read(file)
+    @info[file] = {
+      anchors: content.scan(/<a name="([^"]*)"><\/a>/).map { |(anchor)| anchor },
+      links: content.scan(/\[[^\]]*\]\(([^\)]*)\)/).map { |(link)| link }
+    }
+    # Parse linked files
+    @info[file][:links].each do |link|
+      puts "Found #{file} => #{link}"
+    end
+    @info[file][:links].each do |link|
+      unless link.start_with?('http')
+        linked_file = link_to_file(link, file)
+        parse_md(linked_file) if File.exist?(linked_file) && linked_file.end_with?('.md')
+      end
+    end
+  end
+end
+
+ARGV.each { |file| parse_md(file) }
+
+# Check links
+errors = []
+@info.sort_by { |file, _info| file }.each do |file, info|
+  puts "= Links from #{file}"
+  info[:links].sort.uniq.each do |link|
+    puts "[#{
+      if link.start_with?('http')
+        '*'
+      else
+        anchor = link.split('#')[1]
+        linked_file = link_to_file(link, file)
+        if @info.key?(linked_file)
+          if anchor.nil?
+            '*'
+          elsif @info[linked_file][:anchors].include?(anchor)
+            '*'
+          else
+            errors << "[#{file} -> #{link}] - Destination has no anchor named #{anchor}"
+            ' '
+          end
+        elsif File.exist?(linked_file)
+          '*'
+        else
+          errors << "[#{file} -> #{link}] - Destination file does not exist"
+          ' '
+        end
+      end
+    }] #{link}"
+  end
+end
+
+puts
+puts "#{errors.size} errors:"
+errors.each do |error|
+  puts error
+end

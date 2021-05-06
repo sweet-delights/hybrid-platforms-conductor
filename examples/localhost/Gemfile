@@ -1,0 +1,4 @@
+source 'http://rubygems.org'
+
+# Orchestrate all the platforms with Hybrid Platforms Conductor
+gem 'hybrid_platforms_conductor', path: '../..'
