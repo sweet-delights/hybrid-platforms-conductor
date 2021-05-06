@@ -43,6 +43,10 @@ The tutorial assumes that all of the Hybrid Platforms Conductor commands will be
 All steps, command lines and files creations are explicitly detailed in the tutorial steps.
 No previous knowledge of Ruby is required to get through this tutorial.
 
+If in doubt, you can always refer to the [tutorial example folder](../examples/tutorial) to check files content.
+Please note however that the content of this example tutorial folder maps the content of the files at the end of each section of the tutorial (numberd from 01 to 05), and intermediate steps in the tutorial can modify such files.
+So the tutorial example folders may not reflect the expected content at an intermediate tutorial step.
+
 **[Next >> Let's start by the first step: installation of your Hybrid Platforms Conductor's environment](tutorial/01_installation.md)**
 
 ---

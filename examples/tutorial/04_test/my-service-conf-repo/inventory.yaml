@@ -1,0 +1,100 @@
+---
+local:
+  metadata:
+    description: The local environment
+    local_node: true
+    service_port: 1107
+    service_timeout: 60
+  services:
+    - my-service
+web1:
+  metadata:
+    description: Web service nbr 1
+    image: debian_10
+    hostname: web1.hpc_tutorial.org
+    planet: Mercury
+    service_port: 1201
+    service_timeout: 60
+  services:
+    - web-hello
+    - my-service
+web2:
+  metadata:
+    description: Web service nbr 2
+    image: debian_10
+    hostname: web2.hpc_tutorial.org
+    planet: Venus
+    service_port: 1202
+    service_timeout: 60
+  services:
+    - web-hello
+    - my-service
+web3:
+  metadata:
+    description: Web service nbr 3
+    image: debian_10
+    hostname: web3.hpc_tutorial.org
+    planet: Earth
+    service_port: 1203
+    service_timeout: 60
+  services:
+    - web-hello
+    - my-service
+web4:
+  metadata:
+    description: Web service nbr 4
+    image: debian_10
+    hostname: web4.hpc_tutorial.org
+    planet: Mars
+    service_port: 1204
+    service_timeout: 60
+  services:
+    - web-hello
+    - my-service
+web5:
+  metadata:
+    description: Web service nbr 5
+    image: debian_10
+    hostname: web5.hpc_tutorial.org
+    planet: Jupiter
+    service_port: 1205
+    service_timeout: 60
+  services:
+    - web-hello
+    - my-service
+web6:
+  metadata:
+    description: Web service nbr 6
+    image: debian_10
+    hostname: web6.hpc_tutorial.org
+  services:
+    - web-hello
+web7:
+  metadata:
+    description: Web service nbr 7
+    image: debian_10
+    hostname: web7.hpc_tutorial.org
+  services:
+    - web-hello
+web8:
+  metadata:
+    description: Web service nbr 8
+    image: debian_10
+    hostname: web8.hpc_tutorial.org
+  services:
+    - web-hello
+web9:
+  metadata:
+    description: Web service nbr 9
+    image: debian_10
+    hostname: web9.hpc_tutorial.org
+  services:
+    - web-hello
+web10:
+  metadata:
+    description: Web service nbr 10
+    image: debian_10
+    hostname: web10.hpc_tutorial.org
+  # The list of service names this node should have
+  services:
+    - web-hello

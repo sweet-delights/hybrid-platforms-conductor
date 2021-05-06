@@ -1,0 +1,4 @@
+source 'http://rubygems.org'
+
+gem 'hybrid_platforms_conductor'
+gem 'my_hpc_plugins', path: "#{Dir.home}/hpc_tutorial/my_hpc_plugins"

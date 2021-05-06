@@ -46,7 +46,7 @@ def gen_mermaid(file)
           MARKER_BEGIN,
           "![Mermaid diagram](/#{gen_file})",
           '<details>',
-          '<summary>See diagram Mermaid code</summary>',
+          '<summary><sub><sup>Diagram code</sup></sub></summary>',
           '',
           '```mermaid'
         ] + mermaid_content + [
