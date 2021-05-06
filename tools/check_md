@@ -38,7 +38,9 @@ def parse_md(file)
     }
     # Parse linked files
     @info[file][:links].each do |link|
-      puts "Found #{link}"
+      puts "Found #{file} => #{link}"
+    end
+    @info[file][:links].each do |link|
       unless link.start_with?('http')
         linked_file = link_to_file(link, file)
         parse_md(linked_file) if File.exist?(linked_file) && linked_file.end_with?('.md')

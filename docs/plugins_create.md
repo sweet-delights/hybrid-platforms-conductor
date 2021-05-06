@@ -7,6 +7,8 @@ Plugins are auto-discovered from any Rubygem that is part of a project, by parsi
 Having such simple plugins engine allow projects to adapt their plugins' organization among different repositories or Rubygems the way they see fit.
 Default plugins are shipped with the `hybrid_platforms_conductor` gem. Check [the plugins' list](./plugins.md) for details.
 
+Plugins code can use [Hybrid Platforms Conductor's API components](api.md) to use various features and access platforms' information.
+
 The following sub-sections explain how to install a plugin and the different plugin types that are supported.
 
 ## Example of plugin integration from a repository
@@ -113,7 +115,7 @@ Later when your Rubygem is part of a Git repository you may change it to:
 gem 'my_hpc_plugin', git: '<GIT URL for my_hpc_plugin.git>'
 ```
 
-Even later when your Rubygem is packaged and deployed as Rubygem you may change it to:
+Even later when your Rubygem is packaged and deployed as a Rubygem on rubygems.org you may change it to:
 ```ruby
 gem 'my_hpc_plugin'
 ```
@@ -122,7 +124,7 @@ Once this Gemfile is modified, don't forget to fetch the new dependency:
 ```bash
 bundle install
 ```
-In case the plugin is referenced using a local path, then there is no need to re-issue `bundle install` when the plugin files change (good to develop locally your plugin).
+In case the plugin is referenced using a local path, there is no need to re-issue `bundle install` when the plugin files change (good to develop locally your plugin).
 
 ### 3. Your plugin is ready to use
 
