@@ -1,3 +1,9 @@
+# [v32.13.2](https://github.com/sweet-delights/hybrid-platforms-conductor/compare/v32.13.1...v32.13.2) (2021-05-06 15:47:14)
+
+### Patches
+
+* [Better tutorial navigation](https://github.com/sweet-delights/hybrid-platforms-conductor/commit/b4454f99b0611ec8591ca83894e152a22a61e731)
+
 # [v32.13.1](https://github.com/sweet-delights/hybrid-platforms-conductor/compare/v32.13.0...v32.13.1) (2021-05-06 14:03:16)
 
 ### Patches
