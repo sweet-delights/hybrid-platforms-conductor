@@ -66,7 +66,7 @@ The way it works is by having a **configuration file using an extensive DSL to d
 
 ### Technology plugins
 
-It is built around a plugins that allow each DevOps team to **adapt its processes to its own specific environments**:
+It is built around plugins that allow each DevOps team to **adapt its processes to its own specific environments**:
 * Any kind of **platform** (on-premise, in the cloud, PaaS, SaaS...).
 * Any **configuration tool** (Chef, Puppet, Ansible...).
 * Any kind of **test** (network-level, applicative-level, using external testing services...).
