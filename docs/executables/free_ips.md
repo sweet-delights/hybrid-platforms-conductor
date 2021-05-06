@@ -7,6 +7,11 @@ Useful to assign new IPs.
 
 ## Process
 
+<!-- Mermaid generator - Section start -->
+![Mermaid diagram](/docs/gen/mermaid/docs/executables/free_ips.md-0.png)
+<details>
+<summary>See diagram Mermaid code</summary>
+
 ```mermaid
 sequenceDiagram
 participant Main as ./bin/free_ips
@@ -16,6 +21,8 @@ Main->>+CMDB: Get private IP metadata for nodes
 CMDB-->>-Main: Private IPs
 Main->>Main: Display free private IPs
 ```
+</details>
+<!-- Mermaid generator - Section end -->
 
 ## Usage
 

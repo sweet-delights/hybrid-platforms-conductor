@@ -8,6 +8,11 @@ The list of nodes is given in standard output.
 
 ## Process
 
+<!-- Mermaid generator - Section start -->
+![Mermaid diagram](/docs/gen/mermaid/docs/executables/nodes_to_deploy.md-0.png)
+<details>
+<summary>See diagram Mermaid code</summary>
+
 ```mermaid
 sequenceDiagram
 participant Main as ./bin/nodes_to_deploy
@@ -29,6 +34,8 @@ Node-->>-Connector: Deployment logs
 Connector-->>-Main: Close connection
 Main->>Main: Display nodes to be deployed that have divergent services
 ```
+</details>
+<!-- Mermaid generator - Section end -->
 
 ## Usage
 

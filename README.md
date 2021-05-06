@@ -243,6 +243,11 @@ Hybrid Platforms Conductor then provides executables that map the processes we w
 
 So with the concepts described above, the process described as deploying **services** on a **node** named `my_node` can be invoked with a simple command line: `./bin/deploy --node my_node`. The resulting process can be pictured as below:
 
+<!-- Mermaid generator - Section start -->
+![Mermaid diagram](/docs/gen/mermaid/README.md-0.png)
+<details>
+<summary>See diagram Mermaid code</summary>
+
 ```mermaid
 sequenceDiagram
 participant Deploy as ./bin/deploy --node my_node
@@ -265,6 +270,8 @@ Connector->>+Node: Execute actions through SSH to deploy my_web_app on my_node
 Node-->>-Connector: my_web_app is deployed successfully
 Connector-->>-Deploy: Close connection
 ```
+</details>
+<!-- Mermaid generator - Section end -->
 
 Having such a process defined with extensible plugins lets DevOps teams **adapt very easily to hybrid environments without having to duplicate configuration, inventories, information or workflows**.
 

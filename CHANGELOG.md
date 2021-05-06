@@ -1,3 +1,9 @@
+# [v32.13.0](https://github.com/sweet-delights/hybrid-platforms-conductor/compare/v32.12.0...v32.13.0) (2021-05-06 11:20:57)
+
+### Features
+
+* [Improved documentation + Small improvements to ease adoption](https://github.com/sweet-delights/hybrid-platforms-conductor/commit/3c59e311271a163181fc76357b1777ba7294f567)
+
 # [v32.12.0](https://github.com/sweet-delights/hybrid-platforms-conductor/compare/v32.11.2...v32.12.0) (2021-04-09 14:09:29)
 
 ## Global changes

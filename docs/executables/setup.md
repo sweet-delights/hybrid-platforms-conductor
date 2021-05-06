@@ -7,6 +7,11 @@ It is intended to be run only for the initial setup or when such dependencies ch
 
 ## Process
 
+<!-- Mermaid generator - Section start -->
+![Mermaid diagram](/docs/gen/mermaid/docs/executables/setup.md-0.png)
+<details>
+<summary>See diagram Mermaid code</summary>
+
 ```mermaid
 sequenceDiagram
 participant Main as ./bin/setup
@@ -15,6 +20,8 @@ participant PlatformHandler as Platform Handler
 Main->>+PlatformHandler: Install dependencies for each platform
 PlatformHandler-->>-Main: Dependencies installed
 ```
+</details>
+<!-- Mermaid generator - Section end -->
 
 ## Usage
 

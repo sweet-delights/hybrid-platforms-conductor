@@ -5,6 +5,11 @@ It will use connectors (SSH...) to do so.
 
 ## Process
 
+<!-- Mermaid generator - Section start -->
+![Mermaid diagram](/docs/gen/mermaid/docs/executables/run.md-0.png)
+<details>
+<summary>See diagram Mermaid code</summary>
+
 ```mermaid
 sequenceDiagram
 participant Main as ./bin/run --node my_node --command "echo Hello"
@@ -16,6 +21,8 @@ Connector->>+Node: Execute bash command on my_node
 Node-->>-Connector: stdout of bash execution
 Connector-->>-Main: Close connection
 ```
+</details>
+<!-- Mermaid generator - Section end -->
 
 ## Usage
 

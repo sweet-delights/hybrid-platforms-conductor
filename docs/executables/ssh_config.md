@@ -8,6 +8,11 @@ This executable is also used internally by other tools of Hybrid Platforms Condu
 
 ## Process
 
+<!-- Mermaid generator - Section start -->
+![Mermaid diagram](/docs/gen/mermaid/docs/executables/ssh_config.md-0.png)
+<details>
+<summary>See diagram Mermaid code</summary>
+
 ```mermaid
 sequenceDiagram
 participant Main as ./bin/ssh_config
@@ -22,6 +27,8 @@ Connector->>-Main: List of SSH-connectable nodes
 Main->>+ConnectorSSH: Get the SSH config for selected nodes
 ConnectorSSH-->>-Main: Display SSH config
 ```
+</details>
+<!-- Mermaid generator - Section end -->
 
 ## Usage
 

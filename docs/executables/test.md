@@ -9,6 +9,11 @@ This executable is perfectly suited to be integrated in a continuous integration
 
 ## Process
 
+<!-- Mermaid generator - Section start -->
+![Mermaid diagram](/docs/gen/mermaid/docs/executables/test.md-0.png)
+<details>
+<summary>See diagram Mermaid code</summary>
+
 ```mermaid
 sequenceDiagram
 participant Main as ./bin/test --all
@@ -45,6 +50,8 @@ CheckNodeTest-->>-Main: Deployment tests results
 Main->>+TestReport: Send all tests results to the Test Report
 TestReport-->>-Main: Test report published
 ```
+</details>
+<!-- Mermaid generator - Section end -->
 
 ## Usage
 

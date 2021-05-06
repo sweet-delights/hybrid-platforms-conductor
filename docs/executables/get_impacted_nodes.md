@@ -5,6 +5,11 @@ This is especially useful to know which nodes have to be tested against a given 
 
 ## Process
 
+<!-- Mermaid generator - Section start -->
+![Mermaid diagram](/docs/gen/mermaid/docs/executables/get_impacted_nodes.md-0.png)
+<details>
+<summary>See diagram Mermaid code</summary>
+
 ```mermaid
 sequenceDiagram
 participant Main as ./bin/get_impacted_nodes
@@ -17,6 +22,8 @@ PlatformRepo-->>-PlatformHandler: Git diff details
 PlatformHandler-->>-Main: List of nodes and services impacted by a git diff
 Main->>Main: Display the list of impacted nodes and services
 ```
+</details>
+<!-- Mermaid generator - Section end -->
 
 ## Usage
 

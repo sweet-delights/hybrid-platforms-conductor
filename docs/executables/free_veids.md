@@ -7,6 +7,11 @@ Useful to assign unused VEIDs to new VMs to be created.
 
 ## Process
 
+<!-- Mermaid generator - Section start -->
+![Mermaid diagram](/docs/gen/mermaid/docs/executables/free_veids.md-0.png)
+<details>
+<summary>See diagram Mermaid code</summary>
+
 ```mermaid
 sequenceDiagram
 participant Main as ./bin/free_veids
@@ -16,6 +21,8 @@ Main->>+CMDB: Get VEID metadata for nodes
 CMDB-->>-Main: VEIDs
 Main->>Main: Display free VEIDs
 ```
+</details>
+<!-- Mermaid generator - Section end -->
 
 ## Usage
 

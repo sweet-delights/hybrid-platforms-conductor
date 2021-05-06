@@ -9,6 +9,11 @@ It will:
 
 ## Process
 
+<!-- Mermaid generator - Section start -->
+![Mermaid diagram](/docs/gen/mermaid/docs/executables/check-node.md-0.png)
+<details>
+<summary>See diagram Mermaid code</summary>
+
 ```mermaid
 sequenceDiagram
 participant Main as ./bin/check-node --node my_node
@@ -31,6 +36,8 @@ Connector->>+Node: Execute actions to check my_web_app on my_node
 Node-->>-Connector: Result of my_web_app check on my_node
 Connector-->>-Main: Close connection
 ```
+</details>
+<!-- Mermaid generator - Section end -->
 
 ## Usage
 

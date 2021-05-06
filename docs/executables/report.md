@@ -5,6 +5,11 @@ This executable is using [report plugins](../plugins.md#report) so that the tool
 
 ## Process
 
+<!-- Mermaid generator - Section start -->
+![Mermaid diagram](/docs/gen/mermaid/docs/executables/report.md-0.png)
+<details>
+<summary>See diagram Mermaid code</summary>
+
 ```mermaid
 sequenceDiagram
 participant Main as ./bin/report
@@ -16,6 +21,8 @@ Report->>+CMDB: Get metadata to be reported for nodes
 CMDB-->>-Report: Nodes' metadata
 Report->>-Main: Report produced
 ```
+</details>
+<!-- Mermaid generator - Section end -->
 
 ## Usage
 

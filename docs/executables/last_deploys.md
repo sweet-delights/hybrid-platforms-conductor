@@ -4,6 +4,11 @@ The `last_deploys` executable will fetch the last deployments information for a 
 
 ## Process
 
+<!-- Mermaid generator - Section start -->
+![Mermaid diagram](/docs/gen/mermaid/docs/executables/last_deploys.md-0.png)
+<details>
+<summary>See diagram Mermaid code</summary>
+
 ```mermaid
 sequenceDiagram
 participant Main as ./bin/last_deploys
@@ -16,6 +21,8 @@ Node-->>-Connector: Deployment logs
 Connector-->>-Main: Close connection
 Main->>Main: Display deployment info
 ```
+</details>
+<!-- Mermaid generator - Section end -->
 
 ## Usage
 
