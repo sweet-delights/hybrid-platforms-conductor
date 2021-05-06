@@ -1,0 +1,13 @@
+---
+local:
+  metadata:
+    # This is a simple description of the node
+    description: The local environment
+    # This node is localhost, so here we'll use the local connector, not ssh.
+    local_node: true
+    # Some other metadata, specific to this node and that can be used by later processes
+    service_port: 1107
+    service_timeout: 60
+  # The list of service names this node should have
+  services:
+    - my-service

@@ -299,9 +299,18 @@ And now we try again the tests:
 Here we see that 3 nodes failed, but 1 of them is expected to fail, and is not counted in the failures summaries.
 Expected success is now down to 90 %.
 
-Let's bring back the 2 nodes that are expected to succeed and check tests again:
+Let's bring back the 2 nodes that are expected to succeed and check tests again (we will also make sure to update their IP address in `/etc/hosts` as they could have changed):
 ```bash
+# Restart only web3 and web5 - keep web1 down
 docker container start web3 web5
+
+# Regenerate IPs in /etc/hosts
+sed '/hpc_tutorial.org/d' /etc/hosts >/tmp/hosts
+cp /tmp/hosts /etc/hosts
+for ((i=2;i<=10;i++));
+do
+   echo "$(docker container inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' web$i)        web$i.hpc_tutorial.org" >>/etc/hosts
+done
 
 ./bin/test --all --test connection
 # ===== Run 11 connected tests ==== Begin...
@@ -625,9 +634,10 @@ And now we run all the tests:
 
 All tests are green!
 
-Before going further, let's bring back `web1` online:
+Before going further, let's bring back `web1` online, and add its IP in `/etc/hosts` as well:
 ```bash
 docker container start web1
+echo "$(docker container inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' web1)        web1.hpc_tutorial.org" >>/etc/hosts
 ```
 
 We'll see later how easy to add you own test plugins to complement those, but now it's time to see other kind of tests.

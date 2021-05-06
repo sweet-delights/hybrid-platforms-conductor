@@ -1,0 +1,12 @@
+{
+  "dev1.hpc_tutorial.org": "python",
+  "dev2.hpc_tutorial.org": "python",
+  "dev3.hpc_tutorial.org": "python",
+  "dev4.hpc_tutorial.org": "python",
+  "dev5.hpc_tutorial.org": "python",
+  "dev6.hpc_tutorial.org": "gcc",
+  "dev7.hpc_tutorial.org": "gcc",
+  "dev8.hpc_tutorial.org": "gcc",
+  "dev9.hpc_tutorial.org": "gcc",
+  "dev10.hpc_tutorial.org": "gcc"
+}

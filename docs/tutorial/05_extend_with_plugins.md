@@ -352,8 +352,8 @@ Let's see what does it take to integrate this new platform repository into Hybri
 ### Write a simple platform handler that can handle your existing repository
 
 A [`platform_handler` plugin](/docs/plugins.md#platform_handler) handles a given kind of platform repository, and has basically 2 roles:
-* Provide inventory information (nodes defined, their metadata, the services they are hosting...).
-* Provide services information (how to check/deploy services on a node).
+* Provide **inventory** information (nodes defined, their metadata, the services they are hosting...).
+* Provide **services** information (how to check/deploy services on a node).
 
 So let's write a new plugin handling your repository.
 Like any plugin, we create a file named `lib/<gem_name>/hpc_plugins/<plugin_type>/<plugin_name>.rb` that define a simple class inherting from a plugin's class.
@@ -999,8 +999,6 @@ For that we'll create a report plugin that will publish to our `web10` instance.
 
 Here is the code of our report plugin:
 ```ruby
-# This file is an example of a Reports plugin that can be used to dump information about the platforms.
-# The MyReportPlugin example contains example of code that could be used to write a plugin for a new kind of report.
 require 'hybrid_platforms_conductor/report'
 
 module MyHpcPlugins
@@ -1042,7 +1040,7 @@ module MyHpcPlugins
             end.join("\n")
           )
           # Upload the file on our web10 instance
-          system 'scp -o StrictHostKeyChecking=no /tmp/web_report.txt web10.hpc_tutorial.org:/root/hello_world.txt'
+          system 'scp -o StrictHostKeyChecking=no /tmp/web_report.txt root@web10.hpc_tutorial.org:/root/hello_world.txt'
           out 'Upload successful'
         end
 
