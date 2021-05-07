@@ -1,3 +1,9 @@
+# [v32.13.3](https://github.com/sweet-delights/hybrid-platforms-conductor/compare/v32.13.2...v32.13.3) (2021-05-07 10:09:33)
+
+### Patches
+
+* [Add section about benefits in doc](https://github.com/sweet-delights/hybrid-platforms-conductor/commit/23cd2b22244526e3b6705db0165f8a03e4dd88d8)
+
 # [v32.13.2](https://github.com/sweet-delights/hybrid-platforms-conductor/compare/v32.13.1...v32.13.2) (2021-05-06 15:47:14)
 
 ### Patches
