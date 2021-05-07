@@ -35,7 +35,14 @@ Now being able to keep DevOps processes agile and robust is really difficult aro
 **This is where Hybrid Platforms Conductor can help: it helps DevOps define simple, robust and scalable processes that can adapt easily to ever-changing platforms and technologies in your development and operations environments.**
 
 In other words, Hybrid Platforms Conductor lets you **map your DevOps processes in a platform and technology independent way on simple interfaces** (CLI executables, APIs...).
-Having simple interfaces on your processes move the technical complexity in code instead of having it scattered around documentation becoming obsolete and increasing the learning curve.
+
+**Benefits** are multiple in terms of team organization and agility:
+* **Move the technical complexity** of your processes from scattered, duplicated and **diverging documentation to code that is effectively used**, maintained and tracked in a single place.
+* **Facilitate the adoption of new technologies and frameworks** in your team, without migrating previous ones, and keeping the same level of quality, robustness and agility of your DevOps processes.
+* **Scale easily whatever DevOps process** you have put in place for bigger platforms, bigger teams or more technologies.
+* **Decrease the learning curve** for newcomers in your team by having simple interfaces to be operated, whatever underlying tools and frameworks you are using behind.
+* Make sure **your DevOps processes apply easily to all the platforms** and organizations you want them to apply to.
+* Guarantee that you can **configure** each component of your platforms **in a deterministic and independent way**.
 
 ## How?
 
