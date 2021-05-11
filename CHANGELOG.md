@@ -1,3 +1,15 @@
+# [v32.13.4](https://github.com/sweet-delights/hybrid-platforms-conductor/compare/v32.13.3...v32.13.4) (2021-05-11 14:00:47)
+
+## Global changes
+### Patches
+
+* [[fix(test_vulnerabilities)] [#56] Make sure vulnerabilities test catch errors during setup](https://github.com/sweet-delights/hybrid-platforms-conductor/commit/e058853c6794ccacec33c9ae4d740068a70dcf5f)
+
+## Changes for test_vulnerabilities
+### Patches
+
+* [[fix(test_vulnerabilities)] [#56] Make sure vulnerabilities test catch errors during setup](https://github.com/sweet-delights/hybrid-platforms-conductor/commit/e058853c6794ccacec33c9ae4d740068a70dcf5f)
+
 # [v32.13.3](https://github.com/sweet-delights/hybrid-platforms-conductor/compare/v32.13.2...v32.13.3) (2021-05-07 10:09:33)
 
 ### Patches
