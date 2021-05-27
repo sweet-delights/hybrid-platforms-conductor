@@ -35,6 +35,7 @@ require 'hybrid_platforms_conductor_test/helpers/platforms_handler_helpers'
 require 'hybrid_platforms_conductor_test/helpers/plugins_helpers'
 require 'hybrid_platforms_conductor_test/helpers/provisioner_proxmox_helpers'
 require 'hybrid_platforms_conductor_test/helpers/reports_handler_helpers'
+require 'hybrid_platforms_conductor_test/helpers/serverless_chef_helpers'
 require 'hybrid_platforms_conductor_test/helpers/services_handler_helpers'
 require 'hybrid_platforms_conductor_test/helpers/tests_runner_helpers'
 require 'hybrid_platforms_conductor_test/platform_handler_plugins/test'
@@ -69,6 +70,7 @@ module HybridPlatformsConductorTest
     include PluginsHelpers
     include ProvisionerProxmoxHelpers
     include ReportsHandlerHelpers
+    include ServerlessChefHelpers
     include ServicesHandlerHelpers
     include TestsRunnerHelpers
 
@@ -95,6 +97,7 @@ module HybridPlatformsConductorTest
         ENV.delete 'hpc_domain_for_thycotic'
         ENV.delete 'hpc_certificates'
         ENV.delete 'hpc_interactive'
+        ENV.delete 'hpc_test_cookbooks_path'
         # Set the necessary Hybrid Platforms Conductor environment variables
         ENV['hpc_ssh_user'] = 'test_user'
         HybridPlatformsConductor::ServicesHandler.packaged_deployments.clear

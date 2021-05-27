@@ -107,6 +107,7 @@ Examples of platform handlers are:
 Check the [sample plugin file](../lib/hybrid_platforms_conductor/hpc_plugins/platform_handler/platform_handler_plugin.rb.sample) to know more about the API that needs to be implemented by such plugins.
 
 Plugins shipped by default:
+* [`serverless_chef`](plugins/platform_handler/serverless_chef.md)
 * [`yaml_inventory`](plugins/platform_handler/yaml_inventory.md)
 
 <a name="provisioner"></a>
