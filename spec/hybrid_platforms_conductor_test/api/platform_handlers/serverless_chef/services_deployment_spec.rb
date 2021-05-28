@@ -34,8 +34,10 @@ describe HybridPlatformsConductor::HpcPlugins::PlatformHandler::ServerlessChef d
         {
           remote_bash: [
             'set -e',
+            'set -o pipefail',
+            "if [ -n \"$(command -v apt)\" ]; then #{sudo}apt update && #{sudo}apt install -y curl build-essential ; else #{sudo}yum groupinstall 'Development Tools' && #{sudo}yum install -y curl ; fi",
             'mkdir -p ./hpc_deploy',
-            "curl -L https://omnitruck.chef.io/install.sh | #{sudo}bash -s -- -d /opt/artefacts -v 17.0 -s once"
+            "curl --location https://omnitruck.chef.io/install.sh | tac | tac | #{sudo}bash -s -- -d /opt/artefacts -v 17.0 -s once"
           ]
         },
         {
