@@ -207,6 +207,7 @@ module HybridPlatformsConductor
               {
                 # Install dependencies
                 remote_bash: [
+                  'set -e',
                   'mkdir -p ./hpc_deploy',
                   "curl -L https://omnitruck.chef.io/install.sh | #{sudo}bash -s -- -d /opt/artefacts -v #{required_chef_client_version} -s once"
                 ]
@@ -214,6 +215,7 @@ module HybridPlatformsConductor
               {
                 scp: { package_dir => './hpc_deploy' },
                 remote_bash: [
+                  'set -e',
                   "cd ./hpc_deploy/#{package_name}",
                   "#{sudo}SSL_CERT_DIR=/etc/ssl/certs /opt/chef/bin/chef-client --local-mode --chef-license=accept --json-attributes nodes/#{node}.json#{use_why_run ? ' --why-run' : ''}",
                   'cd ..',

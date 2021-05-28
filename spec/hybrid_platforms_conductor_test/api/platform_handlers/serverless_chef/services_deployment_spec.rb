@@ -33,6 +33,7 @@ describe HybridPlatformsConductor::HpcPlugins::PlatformHandler::ServerlessChef d
       [
         {
           remote_bash: [
+            'set -e',
             'mkdir -p ./hpc_deploy',
             "curl -L https://omnitruck.chef.io/install.sh | #{sudo}bash -s -- -d /opt/artefacts -v 17.0 -s once"
           ]
@@ -40,6 +41,7 @@ describe HybridPlatformsConductor::HpcPlugins::PlatformHandler::ServerlessChef d
         {
           scp: { "#{repository}/dist/#{env}/#{policy}" => './hpc_deploy' },
           remote_bash: [
+            'set -e',
             "cd ./hpc_deploy/#{policy}",
             "#{sudo}SSL_CERT_DIR=/etc/ssl/certs /opt/chef/bin/chef-client --local-mode --chef-license=accept --json-attributes nodes/#{node}.json#{check_mode ? ' --why-run' : ''}",
             'cd ..',
