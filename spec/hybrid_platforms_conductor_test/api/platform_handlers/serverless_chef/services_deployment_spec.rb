@@ -19,6 +19,7 @@ describe HybridPlatformsConductor::HpcPlugins::PlatformHandler::ServerlessChef d
     # * *sudo* (String): sudo prefix command [default: 'sudo -u root ']
     # * *env* (String): Environment expected to be packaged [default: 'prod']
     # * *policy* (String): Expected policy to be packaged [default: 'test_policy']
+    # * *node* (String): Expected node to be deployed [default: 'node']
     # Result::
     # * Array: Expected actions
     def expected_actions_to_deploy_chef(
@@ -26,7 +27,8 @@ describe HybridPlatformsConductor::HpcPlugins::PlatformHandler::ServerlessChef d
       check_mode: false,
       sudo: 'sudo -u root ',
       env: 'prod',
-      policy: 'test_policy'
+      policy: 'test_policy',
+      node: 'node'
     )
       [
         {
@@ -36,14 +38,12 @@ describe HybridPlatformsConductor::HpcPlugins::PlatformHandler::ServerlessChef d
           ]
         },
         {
-          scp: { "#{repository}/dist/#{env}/#{policy}.tgz" => './hpc_deploy' },
+          scp: { "#{repository}/dist/#{env}/#{policy}" => './hpc_deploy' },
           remote_bash: [
-            'cd ./hpc_deploy',
-            "tar xvzf #{policy}.tgz",
-            "cd #{policy}",
-            "#{sudo}/opt/chef/bin/chef-client --local-mode --chef-license=accept#{check_mode ? ' --why-run' : ''}",
+            "cd ./hpc_deploy/#{policy}",
+            "#{sudo}SSL_CERT_DIR=/etc/ssl/certs /opt/chef/bin/chef-client --local-mode --chef-license=accept --json-attributes nodes/#{node}.json#{check_mode ? ' --why-run' : ''}",
             'cd ..',
-            "rm -rf #{policy}.tgz #{policy}"
+            "#{sudo}rm -rf #{policy}"
           ]
         }
       ]
@@ -98,6 +98,30 @@ describe HybridPlatformsConductor::HpcPlugins::PlatformHandler::ServerlessChef d
             why_run: false
           )
           expect(platform.actions_to_deploy_on('node', 'test_policy', use_why_run: false)).to eq expected_actions_to_deploy_chef(repository)
+        end
+      end
+
+      it 'returns actions to deploy on this node with node attributes setup from metadata' do
+        with_serverless_chef_platforms('1_node') do |platform, repository|
+          test_nodes_handler.override_metadata_of 'node', :new_metadata, 'new_value'
+          mock_package(repository)
+          platform.prepare_for_deploy(
+            services: { 'node' => %w[test_policy] },
+            secrets: {},
+            local_environment: false,
+            why_run: false
+          )
+          expect(platform.actions_to_deploy_on('node', 'test_policy', use_why_run: false)).to eq expected_actions_to_deploy_chef(repository)
+          attributes_file = "#{repository}/dist/prod/test_policy/nodes/node.json"
+          expect(File.exist?(attributes_file)).to eq true
+          expect(JSON.parse(File.read(attributes_file))).to eq(
+            'description' => 'Single test node',
+            'image' => 'debian_9',
+            'new_metadata' => 'new_value',
+            'private_ips' => ['172.16.0.1'],
+            'property1' => { 'property11' => 'value11' },
+            'property2' => 'value2',
+          )
         end
       end
 
@@ -194,7 +218,7 @@ describe HybridPlatformsConductor::HpcPlugins::PlatformHandler::ServerlessChef d
             local_environment: false,
             why_run: false
           )
-          expect(platform.actions_to_deploy_on('node2', 'test_policy_1', use_why_run: false)).to eq expected_actions_to_deploy_chef(repository, policy: 'test_policy_1')
+          expect(platform.actions_to_deploy_on('node2', 'test_policy_1', use_why_run: false)).to eq expected_actions_to_deploy_chef(repository, policy: 'test_policy_1', node: 'node2')
         end
       end
 
@@ -209,7 +233,7 @@ describe HybridPlatformsConductor::HpcPlugins::PlatformHandler::ServerlessChef d
           )
           expect(platform.actions_to_deploy_on('local', 'test_policy_1', use_why_run: false)).to eq [
             {
-              bash: "cd #{repository}/dist/prod/test_policy_1 && sudo SSL_CERT_DIR=/etc/ssl/certs /opt/chef-workstation/bin/chef-client --local-mode"
+              bash: "cd #{repository}/dist/prod/test_policy_1 && sudo SSL_CERT_DIR=/etc/ssl/certs /opt/chef-workstation/bin/chef-client --local-mode --json-attributes nodes/local.json"
             }
           ]
         end
@@ -229,7 +253,7 @@ describe HybridPlatformsConductor::HpcPlugins::PlatformHandler::ServerlessChef d
             local_environment: false,
             why_run: false
           )
-          expect(platform_p1.actions_to_deploy_on('node2', 'test_policy_1', use_why_run: false)).to eq expected_actions_to_deploy_chef(repository_p1, policy: 'test_policy_1')
+          expect(platform_p1.actions_to_deploy_on('node2', 'test_policy_1', use_why_run: false)).to eq expected_actions_to_deploy_chef(repository_p1, policy: 'test_policy_1', node: 'node2')
         end
       end
 

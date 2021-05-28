@@ -9,7 +9,6 @@ describe HybridPlatformsConductor::HpcPlugins::PlatformHandler::ServerlessChef d
     # * *policy* (String): Expected policy to be packaged [default: 'test_policy']
     # * *install* (Boolean): Are we expecting the chef install stage? [default: true]
     # * *export* (Boolean): Are we expecting the chef export stage? [default: true]
-    # * *tarball* (Boolean): Do we expect the tarball generation? [default: true]
     # * *data_bags* (Boolean): Do we expect data bags copy? [default: false]
     # * Proc: Code called with mock in place
     def with_packaging_mocked(
@@ -17,7 +16,6 @@ describe HybridPlatformsConductor::HpcPlugins::PlatformHandler::ServerlessChef d
       policy: 'test_policy',
       install: true,
       export: true,
-      tarball: true,
       data_bags: false
     )
       with_cmd_runner_mocked(
@@ -42,19 +40,6 @@ describe HybridPlatformsConductor::HpcPlugins::PlatformHandler::ServerlessChef d
                 FileUtils.mkdir_p "#{repository}/dist/prod/#{policy}"
                 FileUtils.cp_r("#{repository}/data_bags", "#{repository}/dist/prod/#{policy}/") if data_bags
                 [0, 'Chef export done', '']
-              end
-            ]
-          ]
-        else
-          []
-        end +
-        if tarball
-          [
-            [
-              "cd #{repository}\/dist\/prod && tar cvzf #{policy}.tgz --exclude='hpc_package.info' #{policy}",
-              proc do
-                File.write("#{repository}/dist/prod/#{policy}.tgz", 'Dummy tarball')
-                [0, "Tarball #{policy} done", '']
               end
             ]
           ]
@@ -199,25 +184,6 @@ describe HybridPlatformsConductor::HpcPlugins::PlatformHandler::ServerlessChef d
           end
           with_cmd_runner_mocked([]) do
             platform.package(services: { 'node2' => %w[test_policy_1] }, secrets: {}, local_environment: false)
-          end
-        end
-      end
-
-      it 'packages a local node without creating a tarball' do
-        with_serverless_chef_platforms('several_nodes') do |platform, repository|
-          with_packaging_mocked(repository, policy: 'test_policy_1', tarball: false) do
-            platform.package(services: { 'local' => %w[test_policy_1] }, secrets: {}, local_environment: false)
-          end
-        end
-      end
-
-      it 'packages the missing tarball for an already packaged policy if needed' do
-        with_serverless_chef_platforms('several_nodes') do |platform, repository|
-          with_packaging_mocked(repository, policy: 'test_policy_1', tarball: false) do
-            platform.package(services: { 'local' => %w[test_policy_1] }, secrets: {}, local_environment: false)
-          end
-          with_packaging_mocked(repository, policy: 'test_policy_1', install: false, export: false) do
-            platform.package(services: { 'node1' => %w[test_policy_1] }, secrets: {}, local_environment: false)
           end
         end
       end

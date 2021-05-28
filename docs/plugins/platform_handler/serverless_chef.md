@@ -7,7 +7,9 @@ The Chef repository concepts supported by this plugin are:
 * policies,
 * data bags,
 * cookbooks,
-* knife configuration.
+* knife configuration,
+* node attributes,
+* policy attributes.
 
 The Chef repository concepts not supported by this plugin are:
 * roles,
@@ -91,7 +93,7 @@ helpers_including_recipes(
 
 | Metadata | Type | Usage
 | --- | --- | --- |
-| `local_node` | `Boolean` | If set to true, then run chef-client locally instead of deploying on a remote node |
+| `use_local_chef` | `Boolean` | If set to true, then run chef-client locally instead of deploying on a remote node |
 
 ## Used environment variables
 
@@ -101,4 +103,3 @@ helpers_including_recipes(
 ## External tools dependencies
 
 * `curl`: Used to install Chef Workstation.
-* `tar`: Used to package a policy and deploy it on a remote node.

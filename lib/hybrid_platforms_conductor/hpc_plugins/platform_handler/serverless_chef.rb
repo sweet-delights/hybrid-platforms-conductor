@@ -133,7 +133,6 @@ module HybridPlatformsConductor
             deleted_files: info[:status].nil? ? [] : info[:status][:deleted_files].sort
           }
           # Each service is packaged individually.
-          # Check which service needs a tgz to be uploaded on the node later.
           services.values.flatten.sort.uniq.each do |service|
             package_dir = "dist/#{local_environment ? 'local' : 'prod'}/#{service}"
             package_info_file = "#{@repository_path}/#{package_dir}/hpc_package.info"
@@ -154,14 +153,6 @@ module HybridPlatformsConductor
                 File.write(secrets_file, secrets.merge(id: 'hpc_secrets').to_json)
                 # Remember the package info
                 File.write(package_info_file, package_info.to_json)
-              end
-            end
-            # If a node needs this service to be uploaded, prepare the tgz unless it exists already
-            if services.any? { |node, node_services| node_services.include?(service) && !@nodes_handler.get_local_node_of(node) }
-              # Regenerate the tarball if the package info was different, or if it does not exist
-              unless File.exist?("#{@repository_path}/#{package_dir}.tgz") && current_package_info == package_info
-                package_name = File.basename(package_dir)
-                @cmd_runner.run_cmd "cd #{@repository_path}/#{File.dirname(package_dir)} && tar cvzf #{package_name}.tgz --exclude='#{File.basename(package_info_file)}' #{package_name}"
               end
             end
           end
@@ -197,9 +188,14 @@ module HybridPlatformsConductor
         # * Array< Hash<Symbol,Object> >: List of actions to be done
         def actions_to_deploy_on(node, service, use_why_run: true)
           package_dir = "#{@repository_path}/dist/#{@local_env ? 'local' : 'prod'}/#{service}"
-          if @nodes_handler.get_local_node_of(node)
+          # Generate the nodes attributes file
+          unless @cmd_runner.dry_run
+            FileUtils.mkdir_p "#{package_dir}/nodes"
+            File.write("#{package_dir}/nodes/#{node}.json", (known_nodes.include?(node) ? metadata_for(node) : {}).merge(@nodes_handler.metadata_of(node)).to_json)
+          end
+          if @nodes_handler.get_use_local_chef_of(node)
             # Just run the chef-client directly from the packaged repository
-            [{ bash: "cd #{package_dir} && sudo SSL_CERT_DIR=/etc/ssl/certs /opt/chef-workstation/bin/chef-client --local-mode#{use_why_run ? ' --why-run' : ''}" }]
+            [{ bash: "cd #{package_dir} && sudo SSL_CERT_DIR=/etc/ssl/certs /opt/chef-workstation/bin/chef-client --local-mode --json-attributes nodes/#{node}.json#{use_why_run ? ' --why-run' : ''}" }]
           else
             # Upload the package and run it from the node
             package_name = File.basename(package_dir)
@@ -216,14 +212,12 @@ module HybridPlatformsConductor
                 ]
               },
               {
-                scp: { "#{package_dir}.tgz" => './hpc_deploy' },
+                scp: { package_dir => './hpc_deploy' },
                 remote_bash: [
-                  'cd ./hpc_deploy',
-                  "tar xvzf #{package_name}.tgz",
-                  "cd #{package_name}",
-                  "#{sudo}/opt/chef/bin/chef-client --local-mode --chef-license=accept#{use_why_run ? ' --why-run' : ''}",
+                  "cd ./hpc_deploy/#{package_name}",
+                  "#{sudo}SSL_CERT_DIR=/etc/ssl/certs /opt/chef/bin/chef-client --local-mode --chef-license=accept --json-attributes nodes/#{node}.json#{use_why_run ? ' --why-run' : ''}",
                   'cd ..',
-                  "rm -rf #{package_name}.tgz #{package_name}"
+                  "#{sudo}rm -rf #{package_name}"
                 ]
               }
             ]

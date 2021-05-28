@@ -3,7 +3,7 @@
   "normal": {
     "description": "Local node",
     "image": "debian_9",
-    "local_node": true
+    "use_local_chef": true
   },
   "policy_name": "test_policy_1",
   "policy_group": "test_group"
