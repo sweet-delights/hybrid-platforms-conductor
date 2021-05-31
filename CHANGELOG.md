@@ -1,3 +1,15 @@
+# [v32.15.0](https://github.com/sweet-delights/hybrid-platforms-conductor/compare/v32.14.0...v32.15.0) (2021-05-31 14:43:32)
+
+## Global changes
+### Patches
+
+* [[Feature(platform_handler_serverless_chef)] Use user-defined cookbook hpc_test to tune chef-client runs in test environments](https://github.com/sweet-delights/hybrid-platforms-conductor/commit/2cfa010997b562a599308ceaaf62a8740ff51468)
+
+## Changes for platform_handler_serverless_chef
+### Features
+
+* [[Feature(platform_handler_serverless_chef)] Use user-defined cookbook hpc_test to tune chef-client runs in test environments](https://github.com/sweet-delights/hybrid-platforms-conductor/commit/2cfa010997b562a599308ceaaf62a8740ff51468)
+
 # [v32.14.0](https://github.com/sweet-delights/hybrid-platforms-conductor/compare/v32.13.4...v32.14.0) (2021-05-31 09:05:45)
 
 ## Global changes
