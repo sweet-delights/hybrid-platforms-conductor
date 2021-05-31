@@ -1,3 +1,15 @@
+# [v32.16.0](https://github.com/sweet-delights/hybrid-platforms-conductor/compare/v32.15.0...v32.16.0) (2021-05-31 17:55:49)
+
+## Global changes
+### Patches
+
+* [[Feature(cmd_runner)] Add option to force bash usage in run_cmd](https://github.com/sweet-delights/hybrid-platforms-conductor/commit/0711f1f33fc8f282b925726e0631ae78bf1337b5)
+
+## Changes for cmd_runner
+### Features
+
+* [[Feature(cmd_runner)] Add option to force bash usage in run_cmd](https://github.com/sweet-delights/hybrid-platforms-conductor/commit/0711f1f33fc8f282b925726e0631ae78bf1337b5)
+
 # [v32.15.0](https://github.com/sweet-delights/hybrid-platforms-conductor/compare/v32.14.0...v32.15.0) (2021-05-31 14:43:32)
 
 ## Global changes
