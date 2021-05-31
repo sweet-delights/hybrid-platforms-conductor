@@ -37,7 +37,7 @@ module HybridPlatformsConductor
         # Parameters::
         # * *bash_cmds* (String): Bash commands to execute
         def remote_bash(bash_cmds)
-          run_cmd "cd #{workspace_for(@node)} ; #{bash_cmds}"
+          run_cmd "cd #{workspace_for(@node)} ; #{bash_cmds}", force_bash: true
         end
 
         # Execute an interactive shell on the remote node

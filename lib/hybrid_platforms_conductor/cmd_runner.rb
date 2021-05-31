@@ -1,4 +1,5 @@
 require 'logger'
+require 'tempfile'
 require 'tty-command'
 require 'hybrid_platforms_conductor/logger_helpers'
 require 'hybrid_platforms_conductor/io_router'
@@ -66,6 +67,7 @@ module HybridPlatformsConductor
     #   * *timeout*: The command ended in timeout
     # * *timeout* (Integer or nil): Timeout to apply for the command to be run, or nil for no timeout [default: nil]
     # * *no_exception* (Boolean): If true, don't throw exception in case of error [default: false]
+    # * *force_bash* (Boolean): If true, then make sure command is invoked with bash instead of sh [default: false]
     # Result::
     # * Integer or Symbol: Exit status of the command, or Symbol in case of error. In case of dry-run mode the expected code is returned without executing anything.
     # * String: Standard output of the command
@@ -78,7 +80,8 @@ module HybridPlatformsConductor
       log_stderr_to_io: nil,
       expected_code: 0,
       timeout: nil,
-      no_exception: false
+      no_exception: false,
+      force_bash: false
     )
       expected_code = [expected_code] unless expected_code.is_a?(Array)
       if @dry_run
@@ -101,6 +104,14 @@ module HybridPlatformsConductor
             nil
           end
         start_time = Time.now if log_debug?
+        bash_file = nil
+        if force_bash
+          bash_file = Tempfile.new('hpc_bash')
+          bash_file.write(cmd)
+          bash_file.chmod 0700
+          bash_file.close
+          cmd = "/bin/bash -c #{bash_file.path}"
+        end
         begin
           # Make sure we keep a trace of stdout and stderr, even if it was not asked, just to use it in case of exceptions raised
           cmd_result_stdout = ''
@@ -141,6 +152,7 @@ module HybridPlatformsConductor
           cmd_stderr = "#{cmd_result_stderr.empty? ? '' : "#{cmd_result_stderr}\n"}#{$!}\n#{$!.backtrace.join("\n")}"
         ensure
           file_output.close unless file_output.nil?
+          bash_file.unlink unless bash_file.nil?
         end
         if log_debug?
           elapsed = Time.now - start_time
