@@ -1,0 +1,10 @@
+{
+  "name": "node",
+  "normal": {
+    "description": "Single test node",
+    "image": "debian_9",
+    "private_ips": ["172.16.0.1"]
+  },
+  "policy_name": "test_policy",
+  "policy_group": "test_group"
+}
