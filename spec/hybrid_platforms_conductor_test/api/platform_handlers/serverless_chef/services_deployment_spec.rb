@@ -37,7 +37,11 @@ describe HybridPlatformsConductor::HpcPlugins::PlatformHandler::ServerlessChef d
             'set -o pipefail',
             "if [ -n \"$(command -v apt)\" ]; then #{sudo}apt update && #{sudo}apt install -y curl build-essential ; else #{sudo}yum groupinstall 'Development Tools' && #{sudo}yum install -y curl ; fi",
             'mkdir -p ./hpc_deploy',
-            "curl --location https://omnitruck.chef.io/install.sh | tac | tac | #{sudo}bash -s -- -d /opt/artefacts -v 17.0 -s once"
+            'rm -rf ./hpc_deploy/tmp',
+            'mkdir -p ./hpc_deploy/tmp',
+            'curl --location https://omnitruck.chef.io/install.sh --output ./hpc_deploy/install.sh',
+            'chmod a+x ./hpc_deploy/install.sh',
+            "#{sudo}TMPDIR=./hpc_deploy/tmp ./hpc_deploy/install.sh -d /opt/artefacts -v 17.0 -s once"
           ]
         },
         {
@@ -45,9 +49,9 @@ describe HybridPlatformsConductor::HpcPlugins::PlatformHandler::ServerlessChef d
           remote_bash: [
             'set -e',
             "cd ./hpc_deploy/#{policy}",
-            "#{sudo}SSL_CERT_DIR=/etc/ssl/certs /opt/chef/bin/chef-client --local-mode --chef-license=accept --json-attributes nodes/#{node}.json#{check_mode ? ' --why-run' : ''}",
+            "#{sudo}SSL_CERT_DIR=/etc/ssl/certs /opt/chef/bin/chef-client --local-mode --chef-license accept --json-attributes nodes/#{node}.json#{check_mode ? ' --why-run' : ''}",
             'cd ..',
-            "#{sudo}rm -rf #{policy}"
+            "#{sudo}rm -rf ./hpc_deploy/#{policy}"
           ]
         }
       ]
@@ -237,7 +241,7 @@ describe HybridPlatformsConductor::HpcPlugins::PlatformHandler::ServerlessChef d
           )
           expect(platform.actions_to_deploy_on('local', 'test_policy_1', use_why_run: false)).to eq [
             {
-              bash: "cd #{repository}/dist/prod/test_policy_1 && sudo SSL_CERT_DIR=/etc/ssl/certs /opt/chef-workstation/bin/chef-client --local-mode --json-attributes nodes/local.json"
+              bash: "cd #{repository}/dist/prod/test_policy_1 && sudo SSL_CERT_DIR=/etc/ssl/certs /opt/chef-workstation/bin/chef-client --local-mode --chef-license accept --json-attributes nodes/local.json"
             }
           ]
         end

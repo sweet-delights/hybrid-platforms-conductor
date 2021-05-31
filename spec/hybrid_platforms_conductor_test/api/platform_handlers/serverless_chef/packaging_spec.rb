@@ -7,24 +7,34 @@ describe HybridPlatformsConductor::HpcPlugins::PlatformHandler::ServerlessChef d
     # Parameters::
     # * *repository* (String): Repository to be packaged
     # * *policy* (String): Expected policy to be packaged [default: 'test_policy']
+    # * *policy_file* (String): Expected policy file used [default: "policyfiles/#{policy}.rb"]
     # * *install* (Boolean): Are we expecting the chef install stage? [default: true]
     # * *export* (Boolean): Are we expecting the chef export stage? [default: true]
     # * *data_bags* (Boolean): Do we expect data bags copy? [default: false]
+    # * *env* (String): Expected environment being packaged [default: 'prod']
     # * Proc: Code called with mock in place
     def with_packaging_mocked(
       repository,
       policy: 'test_policy',
+      policy_file: "policyfiles/#{policy}.rb",
       install: true,
       export: true,
-      data_bags: false
+      data_bags: false,
+      env: 'prod'
     )
       with_cmd_runner_mocked(
         if install
           [
             [
-              "cd #{repository} && /opt/chef-workstation/bin/chef install policyfiles/#{policy}.rb",
+              "cd #{repository} && /opt/chef-workstation/bin/chef install #{policy_file}",
               proc do
-                File.write("#{repository}/policyfiles/#{policy}.lock.json", '{}')
+                # Mock the run_list stored in the lock file
+                File.write(
+                  "#{repository}/#{policy_file.gsub(/.rb$/, '.lock.json')}",
+                  {
+                    run_list: eval("[#{File.read("#{repository}/#{policy_file}").split("\n").select { |line| line =~ /^run_list.+$/ }.last.match(/^run_list(.+)$/)[1]}]").flatten
+                  }.to_json
+                )
                 [0, 'Chef install done', '']
               end
             ]
@@ -35,10 +45,10 @@ describe HybridPlatformsConductor::HpcPlugins::PlatformHandler::ServerlessChef d
         if export
           [
             [
-              /^cd #{Regexp.escape(repository)} &&\s+sudo rm -rf dist\/prod\/#{Regexp.escape(policy)} &&\s+\/opt\/chef-workstation\/bin\/chef export policyfiles\/#{Regexp.escape(policy)}.rb dist\/prod\/#{Regexp.escape(policy)}#{data_bags ? " && cp -ar data_bags/ dist/prod/#{Regexp.escape(policy)}/" : ''}$/,
+              /^cd #{Regexp.escape(repository)} &&\s+sudo rm -rf dist\/#{Regexp.escape(env)}\/#{Regexp.escape(policy)} &&\s+\/opt\/chef-workstation\/bin\/chef export #{Regexp.escape(policy_file)} dist\/#{Regexp.escape(env)}\/#{Regexp.escape(policy)}#{data_bags ? " && cp -ar data_bags/ dist/#{Regexp.escape(env)}/#{Regexp.escape(policy)}/" : ''}$/,
               proc do
-                FileUtils.mkdir_p "#{repository}/dist/prod/#{policy}"
-                FileUtils.cp_r("#{repository}/data_bags", "#{repository}/dist/prod/#{policy}/") if data_bags
+                FileUtils.mkdir_p "#{repository}/dist/#{env}/#{policy}"
+                FileUtils.cp_r("#{repository}/data_bags", "#{repository}/dist/#{env}/#{policy}/") if data_bags
                 [0, 'Chef export done', '']
               end
             ]
@@ -92,6 +102,26 @@ describe HybridPlatformsConductor::HpcPlugins::PlatformHandler::ServerlessChef d
               'id' => 'hpc_secrets',
               'secret' => 'value'
             )
+          end
+        end
+      end
+
+      it 'packages the repository for a given node and service in local mode' do
+        with_serverless_chef_platforms('1_node') do |platform, repository|
+          with_packaging_mocked(repository, policy_file: 'policyfiles/test_policy.local.rb', env: 'local') do
+            platform.package(services: { 'node' => %w[test_policy] }, secrets: {}, local_environment: true)
+            local_policy_file = "#{repository}/policyfiles/test_policy.local.lock.json"
+            expect(File.exist?(local_policy_file)).to eq true
+            expect(JSON.parse(File.read(local_policy_file))).to eq('run_list' => ['recipe[test_cookbook]'])
+          end
+        end
+      end
+
+      it 'packages the repository without resolving dependencies when the lock file already exists' do
+        with_serverless_chef_platforms('1_node') do |platform, repository|
+          File.write("#{repository}/policyfiles/test_policy.lock.json", '{}')
+          with_packaging_mocked(repository, install: false) do
+            platform.package(services: { 'node' => %w[test_policy] }, secrets: {}, local_environment: false)
           end
         end
       end
@@ -202,6 +232,55 @@ describe HybridPlatformsConductor::HpcPlugins::PlatformHandler::ServerlessChef d
               'id' => 'my_item',
               'content' => 'Bag content'
             )
+          end
+        end
+      end
+
+    end
+
+    context 'with a platform having hpc_test cookbook' do
+
+      it 'packages the repository with before_run and after_run recipes wrapping the run list' do
+        with_serverless_chef_platforms('hpc_test') do |platform, repository|
+          with_packaging_mocked(repository, policy_file: 'policyfiles/test_policy.local.rb', env: 'local') do
+            platform.package(services: { 'node' => %w[test_policy] }, secrets: {}, local_environment: true)
+            local_policy_file = "#{repository}/policyfiles/test_policy.local.lock.json"
+            expect(File.exist?(local_policy_file)).to eq true
+            expect(JSON.parse(File.read(local_policy_file))).to eq('run_list' => [
+              'hpc_test::before_run',
+              'recipe[test_cookbook]',
+              'hpc_test::after_run'
+            ])
+          end
+        end
+      end
+
+      it 'packages the repository with before_run only recipe' do
+        with_serverless_chef_platforms('hpc_test') do |platform, repository|
+          File.unlink "#{repository}/cookbooks/hpc_test/recipes/after_run.rb"
+          with_packaging_mocked(repository, policy_file: 'policyfiles/test_policy.local.rb', env: 'local') do
+            platform.package(services: { 'node' => %w[test_policy] }, secrets: {}, local_environment: true)
+            local_policy_file = "#{repository}/policyfiles/test_policy.local.lock.json"
+            expect(File.exist?(local_policy_file)).to eq true
+            expect(JSON.parse(File.read(local_policy_file))).to eq('run_list' => [
+              'hpc_test::before_run',
+              'recipe[test_cookbook]'
+            ])
+          end
+        end
+      end
+
+      it 'packages the repository with after_run only recipe' do
+        with_serverless_chef_platforms('hpc_test') do |platform, repository|
+          File.unlink "#{repository}/cookbooks/hpc_test/recipes/before_run.rb"
+          with_packaging_mocked(repository, policy_file: 'policyfiles/test_policy.local.rb', env: 'local') do
+            platform.package(services: { 'node' => %w[test_policy] }, secrets: {}, local_environment: true)
+            local_policy_file = "#{repository}/policyfiles/test_policy.local.lock.json"
+            expect(File.exist?(local_policy_file)).to eq true
+            expect(JSON.parse(File.read(local_policy_file))).to eq('run_list' => [
+              'recipe[test_cookbook]',
+              'hpc_test::after_run'
+            ])
           end
         end
       end

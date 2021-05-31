@@ -64,6 +64,12 @@ Services are being deployed by packaging the policy using [`chef install`](https
 
 Then packaged services are uploaded on the node to configured and deployment is done remotely using [Chef Infra Client in local mode](https://docs.chef.io/ctl_chef_client/#run-in-local-mode) on the remote node.
 
+## Test-wrapping cookbook `hpc_test`
+
+If you have a cookbook named `hpc_test` in your Chef repository, then this plugin will wrap any run-list run in a local environment mode (used in tests) with the recipes `hpc_test::before_run` and `hpc_test::after_run`.
+
+This way you can implement such recipes to adapt your Chef client runs to your test environment (like lack of connectivity, failing resources to be ignored...).
+
 ## Config DSL extension
 
 ### `helpers_including_recipes`

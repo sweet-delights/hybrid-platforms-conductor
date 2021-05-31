@@ -47,6 +47,28 @@ module HybridPlatformsConductor
         end
         self.extend_config_dsl_with MyDSLExtension, :init_serverless_chef
 
+        # Constructor
+        #
+        # Parameters::
+        # * *platform_type* (Symbol): Platform type
+        # * *repository_path* (String): Repository path
+        # * *logger* (Logger): Logger to be used [default: Logger.new(STDOUT)]
+        # * *logger_stderr* (Logger): Logger to be used for stderr [default: Logger.new(STDERR)]
+        # * *config* (Config): Config to be used. [default: Config.new]
+        # * *cmd_runner* (CmdRunner): Command executor to be used. [default: CmdRunner.new]
+        def initialize(
+          platform_type,
+          repository_path,
+          logger: Logger.new(STDOUT),
+          logger_stderr: Logger.new(STDERR),
+          config: Config.new,
+          cmd_runner: CmdRunner.new
+        )
+          super
+          # Mutex for getting the full recipes tree
+          @recipes_tree_mutex = Mutex.new
+        end
+
         # Setup the platform, install dependencies...
         # [API] - This method is optional.
         # [API] - @cmd_runner is accessible.
@@ -139,12 +161,25 @@ module HybridPlatformsConductor
             current_package_info = File.exist?(package_info_file) ? JSON.parse(File.read(package_info_file)).transform_keys(&:to_sym) : {}
             unless current_package_info == package_info
               Bundler.with_unbundled_env do
+                policy_file = "policyfiles/#{service}.rb"
+                if local_environment
+                  local_policy_file = "policyfiles/#{service}.local.rb"
+                  # In local mode, we always regenerate the lock file as we may modify the run list
+                  run_list = known_cookbook_paths.any? { |cookbook_path| File.exist?("#{@repository_path}/#{cookbook_path}/hpc_test/recipes/before_run.rb") } ? ['hpc_test::before_run'] : []
+                  dsl_parser = DslParser.new
+                  dsl_parser.parse("#{@repository_path}/#{policy_file}")
+                  run_list.concat dsl_parser.calls.find { |call_info| call_info[:method] == :run_list }[:args].flatten
+                  run_list << 'hpc_test::after_run' if known_cookbook_paths.any? { |cookbook_path| File.exist?("#{@repository_path}/#{cookbook_path}/hpc_test/recipes/after_run.rb") }
+                  File.write("#{@repository_path}/#{local_policy_file}", File.read("#{@repository_path}/#{policy_file}") + "\nrun_list #{run_list.map { |recipe| "'#{recipe}'" }.join(', ')}\n")
+                  policy_file = local_policy_file
+                end
+                lock_file = "#{File.dirname(policy_file)}/#{File.basename(policy_file, '.rb')}.lock.json"
                 # If the policy lock file does not exist, generate it
-                @cmd_runner.run_cmd "cd #{@repository_path} && /opt/chef-workstation/bin/chef install policyfiles/#{service}.rb" unless File.exist?("#{@repository_path}/policyfiles/#{service}.lock.json")
+                @cmd_runner.run_cmd "cd #{@repository_path} && /opt/chef-workstation/bin/chef install #{policy_file}" unless File.exist?("#{@repository_path}/#{lock_file}")
                 extra_cp_data_bags = File.exist?("#{@repository_path}/data_bags") ? " && cp -ar data_bags/ #{package_dir}/" : ''
                 @cmd_runner.run_cmd "cd #{@repository_path} && \
                   sudo rm -rf #{package_dir} && \
-                  /opt/chef-workstation/bin/chef export policyfiles/#{service}.rb #{package_dir}#{extra_cp_data_bags}"
+                  /opt/chef-workstation/bin/chef export #{policy_file} #{package_dir}#{extra_cp_data_bags}"
               end
               unless @cmd_runner.dry_run
                 # Create secrets file
@@ -193,9 +228,15 @@ module HybridPlatformsConductor
             FileUtils.mkdir_p "#{package_dir}/nodes"
             File.write("#{package_dir}/nodes/#{node}.json", (known_nodes.include?(node) ? metadata_for(node) : {}).merge(@nodes_handler.metadata_of(node)).to_json)
           end
+          client_options = [
+            '--local-mode',
+            '--chef-license', 'accept',
+            '--json-attributes', "nodes/#{node}.json"
+          ]
+          client_options << '--why-run' if use_why_run
           if @nodes_handler.get_use_local_chef_of(node)
             # Just run the chef-client directly from the packaged repository
-            [{ bash: "cd #{package_dir} && sudo SSL_CERT_DIR=/etc/ssl/certs /opt/chef-workstation/bin/chef-client --local-mode --json-attributes nodes/#{node}.json#{use_why_run ? ' --why-run' : ''}" }]
+            [{ bash: "cd #{package_dir} && sudo SSL_CERT_DIR=/etc/ssl/certs /opt/chef-workstation/bin/chef-client #{client_options.join(' ')}" }]
           else
             # Upload the package and run it from the node
             package_name = File.basename(package_dir)
@@ -211,7 +252,11 @@ module HybridPlatformsConductor
                   'set -o pipefail',
                   "if [ -n \"$(command -v apt)\" ]; then #{sudo}apt update && #{sudo}apt install -y curl build-essential ; else #{sudo}yum groupinstall 'Development Tools' && #{sudo}yum install -y curl ; fi",
                   'mkdir -p ./hpc_deploy',
-                  "curl --location https://omnitruck.chef.io/install.sh | tac | tac | #{sudo}bash -s -- -d /opt/artefacts -v #{required_chef_client_version} -s once"
+                  'rm -rf ./hpc_deploy/tmp',
+                  'mkdir -p ./hpc_deploy/tmp',
+                  'curl --location https://omnitruck.chef.io/install.sh --output ./hpc_deploy/install.sh',
+                  'chmod a+x ./hpc_deploy/install.sh',
+                  "#{sudo}TMPDIR=./hpc_deploy/tmp ./hpc_deploy/install.sh -d /opt/artefacts -v #{required_chef_client_version} -s once"
                 ]
               },
               {
@@ -219,10 +264,9 @@ module HybridPlatformsConductor
                 remote_bash: [
                   'set -e',
                   "cd ./hpc_deploy/#{package_name}",
-                  "#{sudo}SSL_CERT_DIR=/etc/ssl/certs /opt/chef/bin/chef-client --local-mode --chef-license=accept --json-attributes nodes/#{node}.json#{use_why_run ? ' --why-run' : ''}",
-                  'cd ..',
-                  "#{sudo}rm -rf #{package_name}"
-                ]
+                  "#{sudo}SSL_CERT_DIR=/etc/ssl/certs /opt/chef/bin/chef-client #{client_options.join(' ')}",
+                  'cd ..'
+                ] + (log_debug? ? [] : ["#{sudo}rm -rf ./hpc_deploy/#{package_name}"])
               }
             ]
           end
@@ -371,7 +415,7 @@ module HybridPlatformsConductor
           impacted_recipes.uniq!
           log_debug "* #{impacted_recipes.size} impacted recipes:\n#{impacted_recipes.map { |(cookbook, recipe)| "#{cookbook}::#{recipe}" }.sort.join("\n")}"
 
-          recipes_tree = RecipesTreeBuilder.new(@config, self).full_recipes_tree
+          recipes_tree = full_recipes_tree
           [
             impacted_nodes,
             (
@@ -419,6 +463,45 @@ module HybridPlatformsConductor
           @cookbook_paths
         end
 
+        # Get the run list of a given policy
+        #
+        # Parameters::
+        # * *policy* (String): Policy to get the run list from
+        # Result::
+        # * Array<[String or nil, Symbol, Symbol]>: Run list of the given policy, as [cookbook_dir, cookbook, recipe]
+        def policy_run_list(policy)
+          # Read the policy file
+          dsl_parser = DslParser.new
+          policy_file = "#{@repository_path}/policyfiles/#{policy}.rb"
+          dsl_parser.parse(policy_file)
+          run_list_call = dsl_parser.calls.find { |call_info| call_info[:method] == :run_list }
+          raise "Policy #{policy} has no run list defined in #{policy_file}" if run_list_call.nil?
+          run_list_call[:args].map { |recipe_def| decode_recipe(recipe_def) }
+        end
+
+        # Return the cookbook directory, cookbook name and recipe name from which a recipe definition is found.
+        # The following forms are handled:
+        # * cookbook
+        # * cookbook::recipe
+        # * recipe[cookbook]
+        # * recipe[cookbook::recipe]
+        #
+        # Parameters::
+        # * *recipe_def* (String): Recipe definition (cookbook or cookbook::recipe).
+        # Result::
+        # * String: The cookbook directory, or nil if unknown
+        # * Symbol: The cookbook name
+        # * Symbol: The recipe name
+        def decode_recipe(recipe_def)
+          recipe_def = $1 if recipe_def =~ /^recipe\[(.+)\]$/
+          cookbook, recipe = recipe_def.split('::').map(&:to_sym)
+          recipe = :default if recipe.nil?
+          # Find the cookbook it belongs to
+          cookbook_dir = known_cookbook_paths.find { |cookbook_path| File.exist?("#{@repository_path}/#{cookbook_path}/#{cookbook}") }
+          raise "Unknown recipe #{cookbook}::#{recipe} from cookbook #{@repository_path}/#{cookbook_dir}/#{cookbook}." if !cookbook_dir.nil? && !File.exist?("#{@repository_path}/#{cookbook_dir}/#{cookbook}/recipes/#{recipe}.rb")
+          return cookbook_dir, cookbook, recipe
+        end
+
         private
 
         # Return the JSON associated to a node
@@ -429,6 +512,18 @@ module HybridPlatformsConductor
         # * Hash: JSON object of this node
         def json_for(node)
           JSON.parse(File.read("#{@repository_path}/nodes/#{node}.json"))
+        end
+
+        # Get the full recipes tree.
+        # Keep it in a cache for performance.
+        #
+        # Result::
+        # * Hash: The recipes tree. See RecipesTreeBuilder#full_recipes_tree for the detailed signature
+        def full_recipes_tree
+          @recipes_tree_mutex.synchronize do
+            @recipes_tree = RecipesTreeBuilder.new(@config, self).full_recipes_tree unless defined?(@recipes_tree)
+          end
+          @recipes_tree
         end
 
       end

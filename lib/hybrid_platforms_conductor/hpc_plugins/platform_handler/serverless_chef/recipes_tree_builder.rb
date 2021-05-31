@@ -36,12 +36,12 @@ module HybridPlatformsConductor
           def full_recipes_tree
             @recipes_tree = {}
             @platform.deployable_services.each do |service|
-              policy_run_list(service).each do |(cookbook_dir, cookbook, recipe)|
+              @platform.policy_run_list(service).each do |(cookbook_dir, cookbook, recipe)|
                 add_recipe_in_tree(cookbook_dir, cookbook, recipe)
               end
             end
             @platform.deployable_services.each do |service|
-              policy_run_list(service).each do |(cookbook_dir, cookbook, recipe)|
+              @platform.policy_run_list(service).each do |(cookbook_dir, cookbook, recipe)|
                 mark_recipe_used_by_policy(cookbook, recipe, service)
               end
             end
@@ -49,45 +49,6 @@ module HybridPlatformsConductor
           end
 
           private
-
-          # Get the run list of a given policy
-          #
-          # Parameters::
-          # * *policy* (String): Policy to get the run list from
-          # Result::
-          # * Array<[String or nil, Symbol,Symbol]>: Run list of the given policy, as [cookbook_dir, cookbook, recipe]
-          def policy_run_list(policy)
-            # Read the policy file
-            dsl_parser = DslParser.new
-            policy_file = "#{@platform.repository_path}/policyfiles/#{policy}.rb"
-            dsl_parser.parse(policy_file)
-            run_list_call = dsl_parser.calls.find { |call_info| call_info[:method] == :run_list }
-            raise "Policy #{policy} has no run list defined in #{policy_file}" if run_list_call.nil?
-            run_list_call[:args].map { |recipe_def| decode_recipe(recipe_def) }
-          end
-
-          # Return the cookbook directory, cookbook name and recipe name from which a recipe definition is found.
-          # The following forms are handled:
-          # * cookbook
-          # * cookbook::recipe
-          # * recipe[cookbook]
-          # * recipe[cookbook::recipe]
-          #
-          # Parameters::
-          # * *recipe_def* (String): Recipe definition (cookbook or cookbook::recipe).
-          # Result::
-          # * String: The cookbook directory, or nil if unknown
-          # * Symbol: The cookbook name
-          # * Symbol: The recipe name
-          def decode_recipe(recipe_def)
-            recipe_def = $1 if recipe_def =~ /^recipe\[(.+)\]$/
-            cookbook, recipe = recipe_def.split('::').map(&:to_sym)
-            recipe = :default if recipe.nil?
-            # Find the cookbook it belongs to
-            cookbook_dir = @platform.known_cookbook_paths.find { |cookbook_path| File.exist?("#{@platform.repository_path}/#{cookbook_path}/#{cookbook}") }
-            raise "Unknown recipe #{cookbook}::#{recipe} from cookbook #{@platform.repository_path}/#{cookbook_dir}/#{cookbook}." if !cookbook_dir.nil? && !File.exist?("#{@platform.repository_path}/#{cookbook_dir}/#{cookbook}/recipes/#{recipe}.rb")
-            return cookbook_dir, cookbook, recipe
-          end
 
           # Fill the tree with a recipe and all its dependencies
           #
@@ -142,11 +103,11 @@ module HybridPlatformsConductor
             # Check for include_recipe
             used_recipes = recipe_content.
               scan(/include_recipe\s+["'](\w+(::\w+)?)["']/).
-              map { |(recipe_def, _sub_grp)| decode_recipe(recipe_def) }
+              map { |(recipe_def, _sub_grp)| @platform.decode_recipe(recipe_def) }
             # Check for some helpers we know include some recipes
             @config.known_helpers_including_recipes.each do |helper_name, used_recipes_by_helper|
               if recipe_content =~ Regexp.new(/(\W|^)#{Regexp.escape(helper_name)}(\W|$)/)
-                used_recipes.concat(used_recipes_by_helper.map { |recipe_def| decode_recipe(recipe_def) })
+                used_recipes.concat(used_recipes_by_helper.map { |recipe_def| @platform.decode_recipe(recipe_def) })
                 used_recipes.uniq!
               end
             end
