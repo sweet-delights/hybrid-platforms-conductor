@@ -1,3 +1,15 @@
+# [v32.14.0](https://github.com/sweet-delights/hybrid-platforms-conductor/compare/v32.13.4...v32.14.0) (2021-05-31 09:05:45)
+
+## Global changes
+### Patches
+
+* [[Feature(platform_handler_serverless_chef)] [#58] Add the serverless_chef platform handler](https://github.com/sweet-delights/hybrid-platforms-conductor/commit/6f84757096a802c79a18a6c9c1440b27e73decd1)
+
+## Changes for platform_handler_serverless_chef
+### Features
+
+* [[Feature(platform_handler_serverless_chef)] [#58] Add the serverless_chef platform handler](https://github.com/sweet-delights/hybrid-platforms-conductor/commit/6f84757096a802c79a18a6c9c1440b27e73decd1)
+
 # [v32.13.4](https://github.com/sweet-delights/hybrid-platforms-conductor/compare/v32.13.3...v32.13.4) (2021-05-11 14:00:47)
 
 ## Global changes
