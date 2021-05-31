@@ -31,7 +31,7 @@ module HybridPlatformsConductorTest
         end
         # We need to protect the access to this array as the mocked commands can be called by competing threads
         remaining_expected_commands_mutex = Mutex.new
-        allow(cmd_runner).to receive(:run_cmd) do |cmd, log_to_file: nil, log_to_stdout: true, log_stdout_to_io: nil, log_stderr_to_io: nil, expected_code: 0, timeout: nil, no_exception: false|
+        allow(cmd_runner).to receive(:run_cmd) do |cmd, log_to_file: nil, log_to_stdout: true, log_stdout_to_io: nil, log_stderr_to_io: nil, expected_code: 0, timeout: nil, no_exception: false, force_bash: false|
           # Check the remaining expected commands
           found_command = nil
           found_command_code = nil
