@@ -38,6 +38,17 @@ describe HybridPlatformsConductor::NodesHandler do
       end
     end
 
+    it 'returns nodes currently known metadata using generic method' do
+      with_cmdb_test_platform do
+        test_nodes_handler.metadata_of('node1', :upcase)
+        test_nodes_handler.get_double_of('node1')
+        expect(test_nodes_handler.metadata_of('node1')).to eq(
+          double: 'node1node1',
+          upcase: 'NODE1'
+        )
+      end
+    end
+
     it 'returns nodes metadata using dynamic method several times (as the method is created dynamically)' do
       with_cmdb_test_platform do
         3.times { expect(test_nodes_handler.get_upcase_of('node1')).to eq 'NODE1' }

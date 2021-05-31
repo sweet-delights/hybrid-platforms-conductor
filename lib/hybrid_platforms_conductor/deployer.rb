@@ -318,8 +318,9 @@ module HybridPlatformsConductor
           actions_executor: @actions_executor
         )
         instance.with_running_instance(stop_on_exit: true, destroy_on_exit: !reuse_instance, port: 22) do
-          # Test-provisioned nodes have SSH Session Exec capabilities
+          # Test-provisioned nodes have SSH Session Exec capabilities and are not local
           sub_executable.nodes_handler.override_metadata_of node, :ssh_session_exec, 'true'
+          sub_executable.nodes_handler.override_metadata_of node, :local_node, false
           # Test-provisioned nodes use default sudo
           sub_executable.config.sudo_procs.replace(sub_executable.config.sudo_procs.map do |sudo_proc_info|
             {

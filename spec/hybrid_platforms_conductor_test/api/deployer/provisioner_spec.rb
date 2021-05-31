@@ -84,6 +84,29 @@ describe HybridPlatformsConductor::Deployer do
       end
     end
 
+    it 'gives a new test instance ready to be used in place of the node without local node' do
+      with_test_platform(
+        {
+          nodes: {
+            'node1' => { meta: { local_node: true } },
+            'node2' => { meta: { local_node: true } }
+          }
+        }
+      ) do |repository|
+        register_plugins(:provisioner, { test_provisioner: HybridPlatformsConductorTest::TestProvisioner })
+        File.write("#{test_config.hybrid_platforms_dir}/dummy_secrets.json", '{}')
+        HybridPlatformsConductorTest::TestProvisioner.mocked_states = %i[created created running exited]
+        HybridPlatformsConductorTest::TestProvisioner.mocked_ip = '172.17.0.1'
+        expect(Socket).to receive(:tcp).with('172.17.0.1', 22, { connect_timeout: 1 }) do |&block|
+          block.call
+        end
+        test_deployer.with_test_provisioned_instance(:test_provisioner, 'node1', environment: 'hpc_testing_provisioner') do |sub_test_deployer, test_instance|
+          expect(sub_test_deployer.instance_eval { @nodes_handler.get_local_node_of('node1') }).to eq false
+          expect(sub_test_deployer.instance_eval { @nodes_handler.get_local_node_of('node2') }).to eq true
+        end
+      end
+    end
+
     it 'gives a new test instance ready to be used in place of the node without sudo specificities' do
       with_test_platform(
         {

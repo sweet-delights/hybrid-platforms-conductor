@@ -1,0 +1,10 @@
+{
+  "name": "local",
+  "normal": {
+    "description": "Local node",
+    "image": "debian_9",
+    "use_local_chef": true
+  },
+  "policy_name": "test_policy_1",
+  "policy_group": "test_group"
+}

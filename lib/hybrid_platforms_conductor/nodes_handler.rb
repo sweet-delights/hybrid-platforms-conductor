@@ -269,12 +269,16 @@ module HybridPlatformsConductor
     #
     # Parameters::
     # * *node* (String): Node
-    # * *property* (Symbol): The property name
+    # * *property* (Symbol or nil): The property name, or nil for all [default=nil]
     # Result::
-    # * Object or nil: The node's metadata value for this property, or nil if none
-    def metadata_of(node, property)
-      prefetch_metadata_of([node], property) unless @metadata.key?(node) && @metadata[node].key?(property)
-      @metadata[node][property]
+    # * Object or nil: The node's metadata value for this property, or nil if none, or a Hash of metadata if property was nil
+    def metadata_of(node, property = nil)
+      if property.nil?
+        @metadata[node] || {}
+      else
+        prefetch_metadata_of([node], property) unless @metadata.key?(node) && @metadata[node].key?(property)
+        @metadata[node][property]
+      end
     end
 
     # Override a metadata property for a given node
