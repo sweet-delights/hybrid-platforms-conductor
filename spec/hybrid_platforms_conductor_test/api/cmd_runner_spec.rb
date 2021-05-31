@@ -13,6 +13,13 @@ describe HybridPlatformsConductor::CmdRunner do
     end
   end
 
+  it 'runs a simple bash command and forces usage of bash' do
+    with_repository do |repository|
+      # Use set -o pipefail that does not work in /bin/sh
+      expect(test_cmd_runner.run_cmd "set -o pipefail ; echo TestStderr 1>&2 ; echo TestStdout", force_bash: true).to eq [0, "TestStdout\n", "TestStderr\n"]
+    end
+  end
+
   it 'runs a simple bash command and logs stdout and stderr to a file' do
     with_repository do |repository|
       test_cmd_runner.run_cmd "echo TestStderr 1>&2 ; sleep 1 ; echo TestStdout", log_to_file: "#{repository}/test_file"

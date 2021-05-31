@@ -65,17 +65,19 @@ module HybridPlatformsConductor
     #
     # Parameters::
     # * *cmd* (String): The command to be run
+    # * *force_bash* (Boolean): If true, then make sure command is invoked with bash instead of sh [default: false]
     # Result::
     # * Integer: Exit code
     # * String: Standard output
     # * String: Error output
-    def run_cmd(cmd)
+    def run_cmd(cmd, force_bash: false)
       @cmd_runner.run_cmd(
         cmd,
         timeout: @timeout,
         log_to_stdout: false,
         log_stdout_to_io: @stdout_io,
-        log_stderr_to_io: @stderr_io
+        log_stderr_to_io: @stderr_io,
+        force_bash: force_bash
       )
     end
 
