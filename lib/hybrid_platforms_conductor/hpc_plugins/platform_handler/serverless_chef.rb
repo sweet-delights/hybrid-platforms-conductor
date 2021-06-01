@@ -175,11 +175,11 @@ module HybridPlatformsConductor
                 end
                 lock_file = "#{File.dirname(policy_file)}/#{File.basename(policy_file, '.rb')}.lock.json"
                 # If the policy lock file does not exist, generate it
-                @cmd_runner.run_cmd "cd #{@repository_path} && /opt/chef-workstation/bin/chef install #{policy_file}" unless File.exist?("#{@repository_path}/#{lock_file}")
+                @cmd_runner.run_cmd "cd #{@repository_path} && /opt/chef-workstation/bin/chef install #{policy_file} --chef-license accept" unless File.exist?("#{@repository_path}/#{lock_file}")
                 extra_cp_data_bags = File.exist?("#{@repository_path}/data_bags") ? " && cp -ar data_bags/ #{package_dir}/" : ''
                 @cmd_runner.run_cmd "cd #{@repository_path} && \
                   #{@cmd_runner.root? ? '' : 'sudo '}rm -rf #{package_dir} && \
-                  /opt/chef-workstation/bin/chef export #{policy_file} #{package_dir}#{extra_cp_data_bags}"
+                  /opt/chef-workstation/bin/chef export #{policy_file} #{package_dir} --chef-license accept#{extra_cp_data_bags}"
               end
               unless @cmd_runner.dry_run
                 # Create secrets file
