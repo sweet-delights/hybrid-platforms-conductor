@@ -1,3 +1,15 @@
+# [v32.16.3](https://github.com/sweet-delights/hybrid-platforms-conductor/compare/v32.16.2...v32.16.3) (2021-06-01 11:19:50)
+
+## Global changes
+### Patches
+
+* [[Hotfix(platform_handler_serverless_chef)] Fix Chef packaging missing licenses accept](https://github.com/sweet-delights/hybrid-platforms-conductor/commit/69eafc1b23f77de65ba0dd68e5adb7fafb58157e)
+
+## Changes for platform_handler_serverless_chef
+### Patches
+
+* [[Hotfix(platform_handler_serverless_chef)] Fix Chef packaging missing licenses accept](https://github.com/sweet-delights/hybrid-platforms-conductor/commit/69eafc1b23f77de65ba0dd68e5adb7fafb58157e)
+
 # [v32.16.2](https://github.com/sweet-delights/hybrid-platforms-conductor/compare/v32.16.1...v32.16.2) (2021-06-01 09:52:22)
 
 ## Global changes
