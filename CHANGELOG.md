@@ -1,3 +1,15 @@
+# [v32.16.1](https://github.com/sweet-delights/hybrid-platforms-conductor/compare/v32.16.0...v32.16.1) (2021-06-01 09:21:47)
+
+## Global changes
+### Patches
+
+* [[Hotfix(platform_handler_serverless_chef)] Fix Chef Workstation installation step](https://github.com/sweet-delights/hybrid-platforms-conductor/commit/58320d5394fec3bca9e1d0ffaf06ade42f1fd160)
+
+## Changes for platform_handler_serverless_chef
+### Patches
+
+* [[Hotfix(platform_handler_serverless_chef)] Fix Chef Workstation installation step](https://github.com/sweet-delights/hybrid-platforms-conductor/commit/58320d5394fec3bca9e1d0ffaf06ade42f1fd160)
+
 # [v32.16.0](https://github.com/sweet-delights/hybrid-platforms-conductor/compare/v32.15.0...v32.16.0) (2021-05-31 17:55:49)
 
 ## Global changes
