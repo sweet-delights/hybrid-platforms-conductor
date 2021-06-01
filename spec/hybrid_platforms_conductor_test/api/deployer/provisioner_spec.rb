@@ -54,8 +54,8 @@ describe HybridPlatformsConductor::Deployer do
       with_test_platform(
         {
           nodes: {
-            'node1' => { meta: { host_ip: '192.168.42.1', ssh_session_exec: 'false' } },
-            'node2' => { meta: { host_ip: '192.168.42.2', ssh_session_exec: 'false' } }
+            'node1' => { meta: { host_ip: '192.168.42.1', ssh_session_exec: false } },
+            'node2' => { meta: { host_ip: '192.168.42.2', ssh_session_exec: false } }
           }
         },
         false,
@@ -75,8 +75,8 @@ describe HybridPlatformsConductor::Deployer do
           block.call
         end
         test_deployer.with_test_provisioned_instance(:test_provisioner, 'node1', environment: 'hpc_testing_provisioner') do |sub_test_deployer, test_instance|
-          expect(sub_test_deployer.instance_eval { @nodes_handler.get_ssh_session_exec_of('node1') }).to eq 'true'
-          expect(sub_test_deployer.instance_eval { @nodes_handler.get_ssh_session_exec_of('node2') }).to eq 'false'
+          expect(sub_test_deployer.instance_eval { @nodes_handler.get_ssh_session_exec_of('node1') }).to eq true
+          expect(sub_test_deployer.instance_eval { @nodes_handler.get_ssh_session_exec_of('node2') }).to eq false
           ssh_transforms = test_instance.instance_eval { @config.ssh_connection_transforms }
           expect(ssh_transforms.size).to eq 1
           expect(ssh_transforms[0][:nodes_selectors_stack]).to eq [%w[node2]]

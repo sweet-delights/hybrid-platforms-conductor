@@ -29,7 +29,7 @@ describe HybridPlatformsConductor::ActionsExecutor do
       end
 
       it 'creates an SSH master to 1 node not having Session Exec capabilities' do
-        with_test_platform(nodes: { 'node' => { meta: { host_ip: '192.168.42.42', ssh_session_exec: 'false' } } }) do
+        with_test_platform(nodes: { 'node' => { meta: { host_ip: '192.168.42.42', ssh_session_exec: false } } }) do
           with_cmd_runner_mocked(
             [
               ['which env', proc { [0, "/usr/bin/env\n", ''] }],
@@ -45,7 +45,7 @@ describe HybridPlatformsConductor::ActionsExecutor do
       end
 
       it 'can\'t create an SSH master to 1 node not having Session Exec capabilities when hpc_interactive is false' do
-        with_test_platform(nodes: { 'node' => { meta: { host_ip: '192.168.42.42', ssh_session_exec: 'false' } } }) do
+        with_test_platform(nodes: { 'node' => { meta: { host_ip: '192.168.42.42', ssh_session_exec: false } } }) do
           ENV['hpc_interactive'] = 'false'
           with_cmd_runner_mocked(
             [
@@ -69,7 +69,7 @@ describe HybridPlatformsConductor::ActionsExecutor do
       it 'fails without creating exception when creating an SSH master to 1 node not having Session Exec capabilities when hpc_interactive is false and we use no_exception' do
         with_test_platform(nodes: {
           'node1' => { meta: { host_ip: '192.168.42.1' } },
-          'node2' => { meta: { host_ip: '192.168.42.2', ssh_session_exec: 'false' } },
+          'node2' => { meta: { host_ip: '192.168.42.2', ssh_session_exec: false } },
           'node3' => { meta: { host_ip: '192.168.42.3' } }
         }) do
           ENV['hpc_interactive'] = 'false'

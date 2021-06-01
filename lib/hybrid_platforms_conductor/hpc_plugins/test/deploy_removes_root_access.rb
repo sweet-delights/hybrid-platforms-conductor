@@ -12,7 +12,7 @@ module HybridPlatformsConductor
 
         # Check my_test_plugin.rb.sample documentation for signature details.
         def test_for_node
-          unless @nodes_handler.get_root_access_allowed_of(@node) == 'true'
+          unless @nodes_handler.get_root_access_allowed_of(@node)
             @deployer.with_test_provisioned_instance(@config.tests_provisioner_id, @node, environment: 'deploy_removes_root_access', reuse_instance: log_debug?) do |deployer, instance|
               # Check that we can connect with root
               ssh_ok = false

@@ -54,7 +54,7 @@ module HybridPlatformsConductor
                 instance.stop
                 instance.with_running_instance(port: 22) do
 
-                  unless @nodes_handler.get_root_access_allowed_of(@node) == 'true'
+                  unless @nodes_handler.get_root_access_allowed_of(@node)
                     # ===== Deploy removes root access
                     # Check that we can't connect with root
                     ssh_ok = false
