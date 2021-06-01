@@ -75,9 +75,9 @@ module HybridPlatformsConductor
         def setup
           required_version = YAML.load_file("#{@repository_path}/chef_versions.yml")['workstation']
           Bundler.with_unbundled_env do
-            exit_status, stdout, _stderr = @cmd_runner.run_cmd '/opt/chef-workstation/bin/chef --version', expected_code: [0, 127]
+            exit_status, stdout, _stderr = @cmd_runner.run_cmd '/opt/chef-workstation/bin/chef --version', expected_code: [0, :command_error]
             existing_version =
-              if exit_status == 127
+              if exit_status == :command_error
                 'not installed'
               else
                 expected_match = stdout.match(/^Chef Workstation version: (.+)\.\d+$/)
