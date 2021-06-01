@@ -112,7 +112,7 @@ module HybridPlatformsConductor
         # Result::
         # * String: The Podman command
         def podman_cmd
-          @podman_cmd = @cmd_runner.root? ? 'podman' : 'sudo podman' unless defined?(@podman_cmd)
+          @podman_cmd = "#{@cmd_runner.root? ? '' : 'sudo '}podman" unless defined?(@podman_cmd)
           @podman_cmd
         end
 

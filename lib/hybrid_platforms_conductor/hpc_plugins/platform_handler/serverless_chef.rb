@@ -84,7 +84,7 @@ module HybridPlatformsConductor
                 expected_match.nil? ? 'unreadable' : expected_match[1]
               end
             log_debug "Current Chef version: #{existing_version}. Required version: #{required_version}"
-            @cmd_runner.run_cmd "curl -L https://omnitruck.chef.io/install.sh | sudo bash -s -- -P chef-workstation -v #{required_version}" unless existing_version == required_version
+            @cmd_runner.run_cmd "curl -L https://omnitruck.chef.io/install.sh | #{@cmd_runner.root? ? '' : 'sudo '}bash -s -- -P chef-workstation -v #{required_version}" unless existing_version == required_version
           end
         end
 
@@ -178,7 +178,7 @@ module HybridPlatformsConductor
                 @cmd_runner.run_cmd "cd #{@repository_path} && /opt/chef-workstation/bin/chef install #{policy_file}" unless File.exist?("#{@repository_path}/#{lock_file}")
                 extra_cp_data_bags = File.exist?("#{@repository_path}/data_bags") ? " && cp -ar data_bags/ #{package_dir}/" : ''
                 @cmd_runner.run_cmd "cd #{@repository_path} && \
-                  sudo rm -rf #{package_dir} && \
+                  #{@cmd_runner.root? ? '' : 'sudo '}rm -rf #{package_dir} && \
                   /opt/chef-workstation/bin/chef export #{policy_file} #{package_dir}#{extra_cp_data_bags}"
               end
               unless @cmd_runner.dry_run
@@ -236,7 +236,7 @@ module HybridPlatformsConductor
           client_options << '--why-run' if use_why_run
           if @nodes_handler.get_use_local_chef_of(node)
             # Just run the chef-client directly from the packaged repository
-            [{ bash: "cd #{package_dir} && sudo SSL_CERT_DIR=/etc/ssl/certs /opt/chef-workstation/bin/chef-client #{client_options.join(' ')}" }]
+            [{ bash: "cd #{package_dir} && #{@cmd_runner.root? ? '' : 'sudo '}SSL_CERT_DIR=/etc/ssl/certs /opt/chef-workstation/bin/chef-client #{client_options.join(' ')}" }]
           else
             # Upload the package and run it from the node
             package_name = File.basename(package_dir)
