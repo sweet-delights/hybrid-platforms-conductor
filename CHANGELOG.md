@@ -1,3 +1,9 @@
+# [v32.16.4](https://github.com/sweet-delights/hybrid-platforms-conductor/compare/v32.16.3...v32.16.4) (2021-06-01 13:25:19)
+
+### Patches
+
+* [[Hotfix] Fixed boolean values incorrectly used as strings](https://github.com/sweet-delights/hybrid-platforms-conductor/commit/a107f3e0fe4c1512ce7607a303fdf0753d92ddac)
+
 # [v32.16.3](https://github.com/sweet-delights/hybrid-platforms-conductor/compare/v32.16.2...v32.16.3) (2021-06-01 11:19:50)
 
 ## Global changes
