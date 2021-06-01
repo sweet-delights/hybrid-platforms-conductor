@@ -1,3 +1,15 @@
+# [v32.16.2](https://github.com/sweet-delights/hybrid-platforms-conductor/compare/v32.16.1...v32.16.2) (2021-06-01 09:52:22)
+
+## Global changes
+### Patches
+
+* [[Hotfix(platform_handler_serverless_chef)] Fix Chef Workstation bash steps when run by root](https://github.com/sweet-delights/hybrid-platforms-conductor/commit/1d99d1faa9cf66cd607eacc00205e312fd589715)
+
+## Changes for platform_handler_serverless_chef
+### Patches
+
+* [[Hotfix(platform_handler_serverless_chef)] Fix Chef Workstation bash steps when run by root](https://github.com/sweet-delights/hybrid-platforms-conductor/commit/1d99d1faa9cf66cd607eacc00205e312fd589715)
+
 # [v32.16.1](https://github.com/sweet-delights/hybrid-platforms-conductor/compare/v32.16.0...v32.16.1) (2021-06-01 09:21:47)
 
 ## Global changes
