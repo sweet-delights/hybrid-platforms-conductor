@@ -12,7 +12,7 @@ It takes the following parameters:
 * **url** (`String`): URL to the Bitbucket server
 * **project** (`String`): Project name from the Bitbucket server, storing repositories
 * **jenkins_ci_url** (`String` or `nil`): Corresponding Jenkins CI URL, or nil if none.
-* **repos** (`Array<String>` or `Symbol`): List of repository names from this project, or :all for all [default: :all]
+* **repos** (`Array<String>` or `Symbol`): List of repository names from this project, or `:all` for all [default: `:all`]
 
 Example:
 ```ruby
