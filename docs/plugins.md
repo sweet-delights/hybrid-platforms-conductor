@@ -182,6 +182,7 @@ Plugins shipped by default:
 * [`executables`](plugins/test/executables.md)
 * [`file_system_hdfs`](plugins/test/file_system_hdfs.md)
 * [`file_system`](plugins/test/file_system.md)
+* [`github_ci`](plugins/test/github_ci.md)
 * [`hostname`](plugins/test/hostname.md)
 * [`idempotence`](plugins/test/idempotence.md)
 * [`ip`](plugins/test/ip.md)

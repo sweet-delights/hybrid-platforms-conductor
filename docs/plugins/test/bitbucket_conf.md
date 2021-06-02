@@ -12,7 +12,7 @@ Define a Bitbucket installation to be targeted.
 It takes the following parameters:
 * **url** (`String`): URL to the Bitbucket server
 * **project** (`String`): Project name from the Bitbucket server, storing repositories
-* **repos** (`Array<String>` or `Symbol`): List of repository names from this project, or :all for all [default: :all]
+* **repos** (`Array<String>` or `Symbol`): List of repository names from this project, or `:all` for all [default: `:all`]
 * **checks** (`Hash<Symbol, Object>`): Checks definition to be perform on those repositories [default: {}]
   * **branch_permissions** (`Array< Hash<Symbol, Object> >`): List of branch permissions to check [optional]
     * **type** (`String`): Type of branch permissions to check. Examples of values are 'fast-forward-only', 'no-deletes', 'pull-request-only'.
