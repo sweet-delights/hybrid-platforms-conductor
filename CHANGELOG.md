@@ -1,3 +1,15 @@
+# [v32.17.0](https://github.com/sweet-delights/hybrid-platforms-conductor/compare/v32.16.4...v32.17.0) (2021-06-02 12:57:44)
+
+## Global changes
+### Patches
+
+* [[Feature(test_github_ci)] [#61] Add the github_ci test plugin to check for CI/CD of projects on Github](https://github.com/sweet-delights/hybrid-platforms-conductor/commit/a0082efe5c138ca88ca91a3c10f777f47fca5034)
+
+## Changes for test_github_ci
+### Features
+
+* [[Feature(test_github_ci)] [#61] Add the github_ci test plugin to check for CI/CD of projects on Github](https://github.com/sweet-delights/hybrid-platforms-conductor/commit/a0082efe5c138ca88ca91a3c10f777f47fca5034)
+
 # [v32.16.4](https://github.com/sweet-delights/hybrid-platforms-conductor/compare/v32.16.3...v32.16.4) (2021-06-01 13:25:19)
 
 ### Patches
