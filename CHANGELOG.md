@@ -1,3 +1,9 @@
+# [v32.17.1](https://github.com/sweet-delights/hybrid-platforms-conductor/compare/v32.17.0...v32.17.1) (2021-06-03 16:20:09)
+
+### Patches
+
+* [[Hotfix] Don't run remote nodes tests on local nodes](https://github.com/sweet-delights/hybrid-platforms-conductor/commit/fe8e34a4d74f21d4903c14b1e156b9730f4b5fee)
+
 # [v32.17.0](https://github.com/sweet-delights/hybrid-platforms-conductor/compare/v32.16.4...v32.17.0) (2021-06-02 12:57:44)
 
 ## Global changes
