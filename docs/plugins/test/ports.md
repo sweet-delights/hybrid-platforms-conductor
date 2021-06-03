@@ -39,6 +39,7 @@ check_closed_ports 25, 110
 | Metadata | Type | Usage
 | --- | --- | --- |
 | `host_ip` | `String` | Host IP address to be tested for port listening |
+| `local_node` | `Boolean` | Skip this test for nodes having this metadata set to `true` |
 
 ## Used environment variables
 

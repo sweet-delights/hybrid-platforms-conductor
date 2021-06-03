@@ -16,6 +16,7 @@ None
 
 | Metadata | Type | Usage
 | --- | --- | --- |
+| `local_node` | `Boolean` | Skip this test for nodes having this metadata set to `true` |
 | `private_ips` | `Array<String>` | List of possible private IPs the node should have |
 
 ## Used environment variables

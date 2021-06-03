@@ -1,3 +1,5 @@
+require 'hybrid_platforms_conductor/test_only_remote_node'
+
 module HybridPlatformsConductor
 
   module HpcPlugins
@@ -5,7 +7,7 @@ module HybridPlatformsConductor
     module Test
 
       # Test that the vulnerabilities Spectre and Meltdown are patched
-      class Spectre < HybridPlatformsConductor::Test
+      class Spectre < TestOnlyRemoteNode
 
         VULNERABILITIES_TO_CHECK = {
           'CVE-2017-5753' => 'Spectre Variant 1',

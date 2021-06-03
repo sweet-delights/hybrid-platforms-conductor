@@ -1,3 +1,4 @@
+require 'hybrid_platforms_conductor/test_only_remote_node'
 require 'hybrid_platforms_conductor/common_config_dsl/file_system_tests'
 
 module HybridPlatformsConductor
@@ -7,7 +8,7 @@ module HybridPlatformsConductor
     module Test
 
       # Perform various tests on a node's file system
-      class FileSystem < HybridPlatformsConductor::Test
+      class FileSystem < TestOnlyRemoteNode
 
         self.extend_config_dsl_with CommonConfigDsl::FileSystemTests, :init_file_system_tests
 

@@ -1,3 +1,5 @@
+require 'hybrid_platforms_conductor/test_only_remote_node'
+
 module HybridPlatformsConductor
 
   module HpcPlugins
@@ -5,7 +7,7 @@ module HybridPlatformsConductor
     module Test
 
       # Test that the hostname is correct
-      class Hostname < HybridPlatformsConductor::Test
+      class Hostname < TestOnlyRemoteNode
 
         # Check my_test_plugin.rb.sample documentation for signature details.
         def test_on_node

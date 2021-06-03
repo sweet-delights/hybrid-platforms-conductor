@@ -17,7 +17,7 @@ None
 
 | Metadata | Type | Usage
 | --- | --- | --- |
-| `root_access_allowed` | `String` | If set to `true`, then skip this test |
+| `root_access_allowed` | `Boolean` | If set to `true`, then skip this test |
 
 ## Used environment variables
 

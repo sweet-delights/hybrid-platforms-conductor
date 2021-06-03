@@ -37,6 +37,7 @@ check_local_users_do_not_exist %w[olduser1 olduser2]
 
 | Metadata | Type | Usage
 | --- | --- | --- |
+| `local_node` | `Boolean` | Skip this test for nodes having this metadata set to `true` |
 
 ## Used environment variables
 

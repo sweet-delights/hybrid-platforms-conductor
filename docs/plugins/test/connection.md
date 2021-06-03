@@ -16,6 +16,7 @@ None
 
 | Metadata | Type | Usage
 | --- | --- | --- |
+| `local_node` | `Boolean` | Skip this test for nodes having this metadata set to `true` |
 
 ## Used environment variables
 

@@ -54,6 +54,7 @@ None
 | Metadata | Type | Usage
 | --- | --- | --- |
 | `image` | `String` | The name of the OS image to be used. The [configuration](../../config_dsl.md) should define the image and point it to a directory containing a `oval.json` that will contain definition of OVAL files to be checked for this OS(see above). |
+| `local_node` | `Boolean` | Skip this test for nodes having this metadata set to `true` |
 
 ## Used environment variables
 

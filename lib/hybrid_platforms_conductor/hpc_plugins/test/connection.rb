@@ -1,3 +1,5 @@
+require 'hybrid_platforms_conductor/test_only_remote_node'
+
 module HybridPlatformsConductor
 
   module HpcPlugins
@@ -5,7 +7,7 @@ module HybridPlatformsConductor
     module Test
 
       # Test that the connection works by simply outputing something
-      class Connection < HybridPlatformsConductor::Test
+      class Connection < TestOnlyRemoteNode
 
         TEST_CONNECTION_STRING = 'Test connection - ok'
 

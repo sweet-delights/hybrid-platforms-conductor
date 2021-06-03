@@ -1,3 +1,5 @@
+require 'hybrid_platforms_conductor/test_only_remote_node'
+
 module HybridPlatformsConductor
 
   module HpcPlugins
@@ -5,7 +7,7 @@ module HybridPlatformsConductor
     module Test
 
       # Various tests on mounts
-      class Mounts < HybridPlatformsConductor::Test
+      class Mounts < TestOnlyRemoteNode
 
         # Config DSL extension for this test plugin
         module ConfigDslExtension

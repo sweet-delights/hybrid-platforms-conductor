@@ -1,4 +1,5 @@
 require 'nokogiri'
+require 'hybrid_platforms_conductor/test_only_remote_node'
 
 module HybridPlatformsConductor
 
@@ -17,7 +18,7 @@ module HybridPlatformsConductor
       #     Each final OVAL URL can be directly an XML file, either raw or compressed with .gz or .bz2.
       #     This is useful to follow repository links, such as jFrog or web servers serving common file systems structure storing several versions of the OVAL file.
       # * *reported_severities* (Array<String> or nil): List of severities to report, if any (use Unknown when the severity is not known), or nil for all [default: nil]
-      class Vulnerabilities < HybridPlatformsConductor::Test
+      class Vulnerabilities < TestOnlyRemoteNode
 
         # Known compression methods, per file extension, and their corresponding uncompress bash script
         KNOWN_COMPRESSIONS = {

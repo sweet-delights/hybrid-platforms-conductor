@@ -49,7 +49,7 @@ end
 
 | Metadata | Type | Usage
 | --- | --- | --- |
-| `root_access_allowed` | `String` | If set to `true`, then skip the test for `root` access being disabled after deployment |
+| `root_access_allowed` | `Boolean` | If set to `true`, then skip the test for `root` access being disabled after deployment |
 
 ## Used environment variables
 
