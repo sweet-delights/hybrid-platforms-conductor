@@ -263,6 +263,7 @@ participant PlatformHandler as Platform Handler
 participant PlatformRepo as Platform repository (ie Chef)
 participant Connector as Connector (ie SSH)
 participant Node as Provisioned node (my_node)
+participant Log as Log
 
 Deploy->>+CMDB: Get services to be deployed on my_node
 CMDB->>+PlatformHandler: Get my_node metadata from the platform
@@ -276,6 +277,8 @@ Deploy->>+Connector: Connect to my_node to execute actions
 Connector->>+Node: Execute actions through SSH to deploy my_web_app on my_node
 Node-->>-Connector: my_web_app is deployed successfully
 Connector-->>-Deploy: Close connection
+Deploy->>+Log: Save deployment logs
+Log-->>-Deploy: Deployment logs saved
 ```
 </details>
 <!-- Mermaid generator - Section end -->

@@ -69,7 +69,7 @@ module HybridPlatformsConductorTest
                   }
                 end
               end
-              actions << proc { |actions_per_nodes| expect_actions_to_upload_logs(actions_per_nodes, services.keys, sudo: sudo) }
+              actions << proc { |actions_per_nodes| expect_actions_to_upload_logs(actions_per_nodes, services.keys) }
             end
             actions
           end
@@ -109,7 +109,9 @@ module HybridPlatformsConductorTest
             additional_config: ''
           )
             platform_name = check_mode ? 'platform' : 'my_remote_platform'
-            with_test_platform(nodes_info, !check_mode, additional_config) do |repository|
+            with_test_platform(nodes_info, !check_mode, additional_config + "\nsend_logs_to :test_log") do |repository|
+              # Use the test_log log plugin
+              register_plugins(:log, { test_log: HybridPlatformsConductorTest::TestLogPlugin })
               # Mock the ServicesHandler accesses
               expect_services_to_deploy = Hash[nodes_info[:nodes].map do |node, node_info|
                 [node, node_info[:services]]

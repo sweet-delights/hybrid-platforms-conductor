@@ -21,12 +21,19 @@ module HybridPlatformsConductor
     # Extend the Config DSL
     module ConfigDSLExtension
 
+      # List of log plugins. Each info has the following properties:
+      # * *nodes_selectors_stack* (Array<Object>): Stack of nodes selectors impacted by this rule.
+      # * *log_plugins* (Array<Symbol>): List of log plugins to be used to store deployment logs.
+      # Array< Hash<Symbol, Object> >
+      attr_reader :deployment_logs
+
       # Integer: Timeout (in seconds) for packaging repositories
       attr_reader :packaging_timeout_secs
 
       # Mixin initializer
       def init_deployer_config
         @packaging_timeout_secs = 60
+        @deployment_logs = []
       end
 
       # Set the packaging timeout
@@ -35,6 +42,17 @@ module HybridPlatformsConductor
       # * *packaging_timeout_secs* (Integer): The packaging timeout, in seconds
       def packaging_timeout(packaging_timeout_secs)
         @packaging_timeout_secs = packaging_timeout_secs
+      end
+
+      # Set the deployment log plugins to be used
+      #
+      # Parameters::
+      # * *log_plugins* (Symbol or Array<Symbol>): The list of (or single) log plugins to be used
+      def send_logs_to(*log_plugins)
+        @deployment_logs << {
+          nodes_selectors_stack: current_nodes_selectors_stack,
+          log_plugins: log_plugins.flatten
+        }
       end
 
     end
@@ -94,6 +112,20 @@ module HybridPlatformsConductor
       @services_handler = services_handler
       @secrets = []
       @provisioners = Plugins.new(:provisioner, logger: @logger, logger_stderr: @logger_stderr)
+      @log_plugins = Plugins.new(
+        :log,
+        logger: @logger,
+        logger_stderr: @logger_stderr,
+        init_plugin: proc do |plugin_class|
+          plugin_class.new(
+            logger: @logger,
+            logger_stderr: @logger_stderr,
+            config: @config,
+            nodes_handler: @nodes_handler,
+            actions_executor: @actions_executor
+          )
+        end
+      )
       # Default values
       @use_why_run = false
       @timeout = nil
@@ -355,72 +387,31 @@ module HybridPlatformsConductor
     # * *nodes* (Array<String>): Nodes to get info from
     # Result::
     # * Hash<String, Hash<Symbol,Object>: The deployed info, per node name.
-    #   Properties are defined by the Deployer#save_logs method, and additionally to them the following properties can be set:
-    #   * *error* (String): Optional property set in case of error
+    #   * *error* (String): Error string in case deployment logs could not be retrieved. If set then further properties will be ignored. [optional]
+    #   * *services* (Array<String>): List of services deployed on the node
+    #   * *deployment_info* (Hash<Symbol,Object>): Deployment metadata
+    #   * *exit_status* (Integer or Symbol): Deployment exit status
+    #   * *stdout* (String): Deployment stdout
+    #   * *stderr* (String): Deployment stderr
     def deployment_info_from(*nodes)
+      nodes = nodes.flatten
       @actions_executor.max_threads = 64
-      Hash[@actions_executor.
-        execute_actions(
-          Hash[nodes.flatten.map do |node|
-            [
-              node,
-              { remote_bash: "cd /var/log/deployments && ls -t | head -1 | xargs sed '/===== STDOUT =====/q'" }
-            ]
-          end],
-          log_to_stdout: false,
-          concurrent: true,
-          timeout: 10,
-          progress_name: 'Getting deployment info'
-        ).
-        map do |node, (exit_status, stdout, stderr)|
-          # Expected format for stdout:
-          # Property1: Value1
-          # ...
-          # PropertyN: ValueN
-          # ===== STDOUT =====
-          # ...
-          deploy_info = {}
-          if exit_status.is_a?(Symbol)
-            deploy_info[:error] = "Error: #{exit_status}\n#{stderr}"
-          else
-            stdout_lines = stdout.split("\n")
-            if stdout_lines.first =~ /No such file or directory/
-              deploy_info[:error] = '/var/log/deployments missing'
-            else
-              stdout_lines.each do |line|
-                if line =~ /^([^:]+): (.+)$/
-                  key_str, value = $1, $2
-                  key = key_str.to_sym
-                  # Type-cast some values
-                  case key_str
-                  when 'date'
-                    # Date and time values
-                    # Thu Nov 23 18:43:01 UTC 2017
-                    deploy_info[key] = Time.parse(value)
-                  when 'debug'
-                    # Boolean values
-                    # Yes
-                    deploy_info[key] = (value == 'Yes')
-                  when /^diff_files_.+$/, 'services'
-                    # Array of strings
-                    # my_file.txt, other_file.txt
-                    deploy_info[key] = value.split(', ')
-                  else
-                    deploy_info[key] = value
-                  end
-                else
-                  deploy_info[:unknown_lines] = [] unless deploy_info.key?(:unknown_lines)
-                  deploy_info[:unknown_lines] << line
-                end
-              end
-            end
-          end
-          [
-            node,
-            deploy_info
-          ]
-        end
-      ]
+      read_actions_results = @actions_executor.execute_actions(
+        Hash[nodes.map do |node|
+          master_log_plugin = @log_plugins[log_plugins_for(node).first]
+          master_log_plugin.respond_to?(:actions_to_read_logs) ? [node, master_log_plugin.actions_to_read_logs(node)] : nil
+        end.compact],
+        log_to_stdout: false,
+        concurrent: true,
+        timeout: 10,
+        progress_name: 'Read deployment logs'
+      )
+      Hash[nodes.map do |node|
+        [
+          node,
+          @log_plugins[log_plugins_for(node).first].logs_for(node, *(read_actions_results[node] || [nil, nil, nil]))
+        ]
+      end]
     end
 
     # Parse stdout and stderr of a given deploy run and get the list of tasks with their status
@@ -584,47 +575,48 @@ module HybridPlatformsConductor
     # * *services* (Hash<String, Array<String>>): List of services that have been deployed, per node
     def save_logs(logs, services)
       section "Saving deployment logs for #{logs.size} nodes" do
-        Dir.mktmpdir('hybrid_platforms_conductor-logs') do |tmp_dir|
-          ssh_user = @actions_executor.connector(:ssh).ssh_user
-          @actions_executor.execute_actions(
-            Hash[logs.map do |node, (exit_status, stdout, stderr)|
-              # Create a log file to be scp with all relevant info
-              now = Time.now.utc
-              log_file = "#{tmp_dir}/#{node}_#{now.strftime('%F_%H%M%S')}_#{ssh_user}"
-              services_info = @services_handler.log_info_for(node, services[node])
-              File.write(
-                log_file,
-                services_info.merge(
-                  date: now.strftime('%F %T'),
-                  user: ssh_user,
-                  debug: log_debug? ? 'Yes' : 'No',
-                  services: services[node].join(', '),
-                  exit_status: exit_status
-                ).map { |property, value| "#{property}: #{value}" }.join("\n") +
-                  "\n===== STDOUT =====\n" +
-                  (stdout || '') +
-                  "\n===== STDERR =====\n" +
-                  (stderr || '')
-              )
-              [
-                node,
-                {
-                  remote_bash: "#{ssh_user == 'root' ? '' : "#{@nodes_handler.sudo_on(node)} "}mkdir -p /var/log/deployments",
-                  scp: {
-                    log_file => '/var/log/deployments',
-                    :sudo => ssh_user != 'root',
-                    :owner => 'root',
-                    :group => 'root'
-                  }
-                }
-              ]
-            end],
-            timeout: 10,
-            concurrent: true,
-            log_to_dir: nil
-          )
-        end
+        ssh_user = @actions_executor.connector(:ssh).ssh_user
+        @actions_executor.execute_actions(
+          Hash[logs.map do |node, (exit_status, stdout, stderr)|
+            [
+              node,
+              log_plugins_for(node).
+                map do |log_plugin|
+                  @log_plugins[log_plugin].actions_to_save_logs(
+                    node,
+                    services[node],
+                    @services_handler.log_info_for(node, services[node]).merge(
+                      date: Time.now.utc.strftime('%F %T'),
+                      user: ssh_user
+                    ),
+                    exit_status,
+                    stdout,
+                    stderr
+                  )
+                end.
+                flatten(1)
+            ]
+          end],
+          timeout: 10,
+          concurrent: true,
+          log_to_dir: nil,
+          progress_name: 'Saving logs'
+        )
       end
+    end
+
+    # Get the list of log plugins to be used for a given node
+    #
+    # Parameters::
+    # * *node* (String): The node for which log plugins are queried
+    # Result::
+    # * Array<Symbol>: The list of log plugins
+    def log_plugins_for(node)
+      node_log_plugins = @nodes_handler.select_confs_for_node(node, @config.deployment_logs).inject([]) do |log_plugins, deployment_logs_info|
+        log_plugins + deployment_logs_info[:log_plugins]
+      end
+      node_log_plugins << :remote_fs if node_log_plugins.empty?
+      node_log_plugins
     end
 
   end

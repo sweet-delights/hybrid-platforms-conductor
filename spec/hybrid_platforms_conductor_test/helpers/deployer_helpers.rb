@@ -68,69 +68,19 @@ module HybridPlatformsConductorTest
         Hash[nodes.map { |node| [node, [0, 'Release mutex successful', '']] }]
       end
 
-      # Expect a given set of actions to upload log files on a list of nodes
+      # Expect a given set of actions to upload log files on a list of nodes (using the test_log log plugin)
       #
       # Parameters::
       # * *actions* (Object): Actions
       # * *nodes* (String or Array<String>): Node (or list of nodes) that should be checked
-      # * *sudo* (String or nil): sudo supposed to be used, or nil if none [default: 'sudo -u root']
-      def expect_actions_to_upload_logs(actions, nodes, sudo: 'sudo -u root')
+      def expect_actions_to_upload_logs(actions, nodes)
         nodes = [nodes] if nodes.is_a?(String)
         expect(actions.size).to eq nodes.size
         nodes.each do |node|
           expect(actions.key?(node)).to eq true
-          expect(actions[node][:remote_bash]).to eq "#{sudo ? "#{sudo} " : ''}mkdir -p /var/log/deployments"
-          expect(actions[node][:scp].first[1]).to eq '/var/log/deployments'
-          expect(actions[node][:scp][:group]).to eq 'root'
-          expect(actions[node][:scp][:owner]).to eq 'root'
-          expect(actions[node][:scp][:sudo]).to eq (!sudo.nil?)
+          expect(actions[node]).to eq [{ bash: "echo Save test logs to #{node}" }]
         end
         Hash[nodes.map { |node| [node, [0, 'Logs uploaded', '']] }]
-      end
-
-      # Expect some logs to have the following information.
-      # Expected logs format:
-      #
-      # date: 2019-08-14 17:02:57
-      # user: muriel
-      # debug: Yes
-      # repo_name: my_remote_platform
-      # commit_id: c0d16b1b7ae286ae4a059185957e08f0ddc95517
-      # commit_message: Test commit
-      # diff_files: 
-      # ===== STDOUT =====
-      # Deploy successful
-      # ===== STDERR =====
-      #
-      # Parameters::
-      # * *logs* (String): The logs content
-      # * *stdout* (String): Expected STDOUT
-      # * *stderr* (String): Expected STDERR
-      # * *properties* (Hash<Symbol, String or Regexp>): Expected properties values, per name. Values can be exact strings or regexps.
-      def expect_logs_to_be(logs, stdout, stderr, properties)
-        lines = logs.split("\n")
-        idx_stdout = lines.index('===== STDOUT =====')
-        expect(idx_stdout).not_to eq nil
-        idx_stderr = lines.index('===== STDERR =====')
-        expect(idx_stderr).not_to eq nil
-        logs_properties = Hash[lines[0..idx_stdout - 1].map do |property_line|
-          property_fields = property_line.split(': ')
-          [
-            property_fields.first.to_sym,
-            property_fields[1..-1].join(': ')
-          ]
-        end]
-        expect(logs_properties.size).to eq properties.size
-        properties.each do |expected_property, expected_property_value|
-          expect(logs_properties.key?(expected_property)).to eq true
-          if expected_property_value.is_a?(String)
-            expect(logs_properties[expected_property]).to eq expected_property_value
-          else
-            expect(logs_properties[expected_property]).to match expected_property_value
-          end
-        end
-        expect(lines[idx_stdout + 1..idx_stderr - 1].join("\n")).to eq stdout
-        expect(lines[idx_stderr + 1..-1].join("\n")).to eq stderr
       end
 
       # Get a test Deployer
@@ -140,6 +90,43 @@ module HybridPlatformsConductorTest
       def test_deployer
         @deployer = HybridPlatformsConductor::Deployer.new logger: logger, logger_stderr: logger, config: test_config, cmd_runner: test_cmd_runner, nodes_handler: test_nodes_handler, actions_executor: test_actions_executor, services_handler: test_services_handler unless @deployer
         @deployer
+      end
+
+      # Expect the test services handler to be called to deploy a given list of services
+      #
+      # Parameters::
+      # * *services* (Hash<String, Array<String> >): List of services to be expected, per node name
+      def expect_services_handler_to_deploy(services)
+        expect(test_services_handler).to receive(:deploy_allowed?).with(
+          services: services,
+          secrets: {},
+          local_environment: false
+        ) do
+          nil
+        end
+        expect(test_services_handler).to receive(:package).with(
+          services: services,
+          secrets: {},
+          local_environment: false
+        )
+        expect(test_services_handler).to receive(:prepare_for_deploy).with(
+          services: services,
+          secrets: {},
+          local_environment: false,
+          why_run: false
+        )
+        services.each do |node, services|
+          expect(test_services_handler).to receive(:actions_to_deploy_on).with(node, services, false) do
+            [{ bash: "echo \"Deploying on #{node}\"" }]
+          end
+          expect(test_services_handler).to receive(:log_info_for).with(node, services) do
+            {
+              repo_name_0: 'platform',
+              commit_id_0: '123456',
+              commit_message_0: "Test commit for #{node}: #{services.join(', ')}"
+            }
+          end
+        end
       end
 
     end

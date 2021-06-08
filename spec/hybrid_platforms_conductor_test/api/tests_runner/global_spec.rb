@@ -5,7 +5,7 @@ describe HybridPlatformsConductor::TestsRunner do
     # Prepare the test platform with test plugins
     #
     # Parameters::
-    # * *platforms_info* (Hash): The platofrms info [default: {}]
+    # * *platforms_info* (Hash): The platforms info [default: {}]
     def with_test_platform_for_global_tests(platforms_info: {})
       with_test_platform(platforms_info) do
         register_test_plugins(test_tests_runner,

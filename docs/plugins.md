@@ -10,6 +10,7 @@ Following are all possible plugin types and the plugins shipped by default with 
   * [`action`](#action)
   * [`cmdb`](#cmdb)
   * [`connector`](#connector)
+  * [`log`](#log)
   * [`platform_handler`](#platform_handler)
   * [`provisioner`](#provisioner)
   * [`report`](#report)
@@ -78,6 +79,30 @@ Check the [sample plugin file](../lib/hybrid_platforms_conductor/hpc_plugins/con
 Plugins shipped by default:
 * [`local`](plugins/connector/local.md)
 * [`ssh`](plugins/connector/ssh.md)
+
+<a name="log"></a>
+## Logs
+
+Save deployment logs to a given medium (files, log servers...).
+
+Corresponding plugin type: `log`.
+
+These plugins give ways for the [`Deployer`](../lib/hybrid_platforms_conductor/deployer.rb) to save logs output from services deployments on nodes.
+Information that can be saved is:
+* The deployment stdout.
+* The deployment stderr.
+* The deployment exit status.
+* The list of services that have been deployed.
+* Some deployment metadata (like git commits information that have been deployed).
+
+Examples of log plugins are:
+* Remote file system: Save logs on the node's remote file system (useful for local debugging).
+* Log servers: Send logs to log servers.
+
+Check the [sample plugin file](../lib/hybrid_platforms_conductor/hpc_plugins/log/my_log_plugin.rb.sample) to know more about the API that needs to be implemented by such plugins.
+
+Plugins shipped by default:
+* [`remote_fs`](plugins/log/remote_fs.md)
 
 <a name="platform_handler"></a>
 ## Platform Handlers
