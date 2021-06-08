@@ -136,13 +136,24 @@ module HybridPlatformsConductorTest
         FileUtils.rm_rf './run_logs'
         FileUtils.rm_rf './testadmin.key.pub'
         FileUtils.rm_rf '/tmp/hpc_ssh'
+        register_plugins(
+          :log,
+          {
+            test_log: HybridPlatformsConductorTest::TestLogPlugin,
+            test_log_no_read: HybridPlatformsConductorTest::TestLogNoReadPlugin
+          },
+          replace: false
+        )
         # Make sure CMDB plugin classes loaded by test framework are not added automatically
-        register_plugins(:cmdb, {
-          config: HybridPlatformsConductor::HpcPlugins::Cmdb::Config,
-          host_ip: HybridPlatformsConductor::HpcPlugins::Cmdb::HostIp,
-          host_keys: HybridPlatformsConductor::HpcPlugins::Cmdb::HostKeys,
-          platform_handlers: HybridPlatformsConductor::HpcPlugins::Cmdb::PlatformHandlers
-        })
+        register_plugins(
+          :cmdb,
+          {
+            config: HybridPlatformsConductor::HpcPlugins::Cmdb::Config,
+            host_ip: HybridPlatformsConductor::HpcPlugins::Cmdb::HostIp,
+            host_keys: HybridPlatformsConductor::HpcPlugins::Cmdb::HostKeys,
+            platform_handlers: HybridPlatformsConductor::HpcPlugins::Cmdb::PlatformHandlers
+          }
+        )
       end
     end
 

@@ -14,13 +14,6 @@ describe HybridPlatformsConductor::Deployer do
       # * *additional_config* (String): Additional config [default = 'send_logs_to :test_log']
       def with_test_platform_for_deploy_tests(platforms_info = {}, as_git = false, additional_config = 'send_logs_to :test_log')
         with_test_platform(platforms_info, false, additional_config) do
-          register_plugins(
-            :log,
-            {
-              test_log: HybridPlatformsConductorTest::TestLogPlugin,
-              test_log_no_read: HybridPlatformsConductorTest::TestLogNoReadPlugin
-            }
-          )
           yield
         end
       end

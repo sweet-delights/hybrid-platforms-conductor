@@ -110,8 +110,6 @@ module HybridPlatformsConductorTest
           )
             platform_name = check_mode ? 'platform' : 'my_remote_platform'
             with_test_platform(nodes_info, !check_mode, additional_config + "\nsend_logs_to :test_log") do |repository|
-              # Use the test_log log plugin
-              register_plugins(:log, { test_log: HybridPlatformsConductorTest::TestLogPlugin })
               # Mock the ServicesHandler accesses
               expect_services_to_deploy = Hash[nodes_info[:nodes].map do |node, node_info|
                 [node, node_info[:services]]
