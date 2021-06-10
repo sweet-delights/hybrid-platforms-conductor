@@ -78,6 +78,8 @@ module HybridPlatformsConductorTest
           #
           # Parameters::
           # * *nodes_info* (Hash): Node info to give the platform [default: 1 node having 1 service]
+          # * *expect_services_to_deploy* (Hash<String,Array<String>>): Expected services to be deployed [default: all services from nodes_info]
+          # * *expect_deploy_allowed* (Boolean): Should we expect the call to deploy_allowed? [default: true]
           # * *expect_package* (Boolean): Should we expect packaging? [default: true]
           # * *expect_prepare_for_deploy* (Boolean): Should we expect calls to prepare for deploy? [default: true]
           # * *expect_connections_to_nodes* (Boolean): Should we expect connections to nodes? [default: true]
@@ -95,6 +97,8 @@ module HybridPlatformsConductorTest
           #     * *repository* (String): Path to the repository
           def with_platform_to_deploy(
             nodes_info: { nodes: { 'node' => { services: %w[service] } } },
+            expect_services_to_deploy: Hash[nodes_info[:nodes].map { |node, node_info| [node, node_info[:services]] }],
+            expect_deploy_allowed: true,
             expect_package: true,
             expect_prepare_for_deploy: true,
             expect_connections_to_nodes: true,
@@ -111,10 +115,7 @@ module HybridPlatformsConductorTest
             platform_name = check_mode ? 'platform' : 'my_remote_platform'
             with_test_platform(nodes_info, !check_mode, additional_config + "\nsend_logs_to :test_log") do |repository|
               # Mock the ServicesHandler accesses
-              expect_services_to_deploy = Hash[nodes_info[:nodes].map do |node, node_info|
-                [node, node_info[:services]]
-              end]
-              unless check_mode
+              if !check_mode && expect_deploy_allowed
                 expect(test_services_handler).to receive(:deploy_allowed?).with(
                   services: expect_services_to_deploy,
                   secrets: expect_secrets,
@@ -144,7 +145,7 @@ module HybridPlatformsConductorTest
               end
               test_deployer.use_why_run = true if check_mode
               if expect_connections_to_nodes
-                with_connections_mocked_on(nodes_info[:nodes].keys) do
+                with_connections_mocked_on(expect_services_to_deploy.keys) do
                   expect_actions_executor_runs(expected_actions_for_deploy_on(
                     services: expect_services_to_deploy,
                     check_mode: check_mode,
@@ -218,14 +219,7 @@ module HybridPlatformsConductorTest
 
           it 'deploys on 1 node using 1 secret' do
             with_platform_to_deploy(expect_secrets: { 'secret1' => 'password1' }) do
-              test_deployer.secrets = [{ 'secret1' => 'password1' }]
-              expect(test_deployer.deploy_on('node')).to eq('node' => expected_deploy_result)
-            end
-          end
-
-          it 'deploys on 1 node using several secrets' do
-            with_platform_to_deploy(expect_secrets: { 'secret1' => 'password1', 'secret2' => 'password2' }) do
-              test_deployer.secrets = [{ 'secret1' => 'password1' }, { 'secret2' => 'password2' }]
+              test_deployer.override_secrets('secret1' => 'password1')
               expect(test_deployer.deploy_on('node')).to eq('node' => expected_deploy_result)
             end
           end
@@ -896,6 +890,248 @@ module HybridPlatformsConductorTest
                     EOS
                   ]
                 )
+              end
+            end
+
+          end
+
+          context 'checking secrets handling' do
+
+            it 'calls secrets readers only for nodes and services to be deployed and merges their secrets' do
+              register_plugins(
+                :secrets_reader,
+                {
+                  secrets_reader1: HybridPlatformsConductorTest::TestSecretsReaderPlugin,
+                  secrets_reader2: HybridPlatformsConductorTest::TestSecretsReaderPlugin,
+                  secrets_reader3: HybridPlatformsConductorTest::TestSecretsReaderPlugin
+                }
+              )
+              with_platform_to_deploy(
+                nodes_info: {
+                  nodes: {
+                    'node1' => { services: %w[service1 service2] },
+                    'node2' => { services: %w[service2 service3] },
+                    'node3' => { services: %w[service3] },
+                    'node4' => { services: %w[service1 service3] }
+                  }
+                },
+                expect_services_to_deploy: {
+                  'node1' => %w[service1 service2],
+                  'node2' => %w[service2 service3],
+                  'node3' => %w[service3]
+                },
+                expect_secrets: {
+                  'node1' => {
+                    'service1' => {
+                      'secrets_reader1' => 'Secret value',
+                      'secrets_reader2' => 'Secret value'
+                    },
+                    'service2' => {
+                      'secrets_reader1' => 'Secret value',
+                      'secrets_reader2' => 'Secret value'
+                    }
+                  },
+                  'node2' => {
+                    'service2' => {
+                      'secrets_reader1' => 'Secret value',
+                      'secrets_reader2' => 'Secret value',
+                      'secrets_reader3' => 'Secret value'
+                    },
+                    'service3' => {
+                      'secrets_reader1' => 'Secret value',
+                      'secrets_reader2' => 'Secret value',
+                      'secrets_reader3' => 'Secret value'
+                    }
+                  },
+                  'node3' => {
+                    'service3' => {
+                      'secrets_reader1' => 'Secret value',
+                      'secrets_reader2' => 'Secret value'
+                    }
+                  }
+                },
+                additional_config: <<~EOS
+                  read_secrets_from %i[secrets_reader1 secrets_reader2]
+                  for_nodes('node2') { read_secrets_from :secrets_reader3 }
+                EOS
+              ) do
+                TestSecretsReaderPlugin.deployer = test_deployer
+                expect(test_deployer.deploy_on(%w[node1 node2 node3])).to eq(
+                  'node1' => expected_deploy_result,
+                  'node2' => expected_deploy_result,
+                  'node3' => expected_deploy_result
+                )
+                expect(HybridPlatformsConductorTest::TestSecretsReaderPlugin.calls).to eq [
+                  { instance: :secrets_reader1, node: 'node1', service: 'service1' },
+                  { instance: :secrets_reader1, node: 'node1', service: 'service2' },
+                  { instance: :secrets_reader2, node: 'node1', service: 'service1' },
+                  { instance: :secrets_reader2, node: 'node1', service: 'service2' },
+                  { instance: :secrets_reader1, node: 'node2', service: 'service2' },
+                  { instance: :secrets_reader1, node: 'node2', service: 'service3' },
+                  { instance: :secrets_reader2, node: 'node2', service: 'service2' },
+                  { instance: :secrets_reader2, node: 'node2', service: 'service3' },
+                  { instance: :secrets_reader3, node: 'node2', service: 'service2' },
+                  { instance: :secrets_reader3, node: 'node2', service: 'service3' },
+                  { instance: :secrets_reader1, node: 'node3', service: 'service3' },
+                  { instance: :secrets_reader2, node: 'node3', service: 'service3' }
+                ]
+              end
+            end
+
+            it 'merges secrets having same values' do
+              register_plugins(
+                :secrets_reader,
+                {
+                  secrets_reader1: HybridPlatformsConductorTest::TestSecretsReaderPlugin,
+                  secrets_reader2: HybridPlatformsConductorTest::TestSecretsReaderPlugin
+                }
+              )
+              with_platform_to_deploy(
+                nodes_info: {
+                  nodes: {
+                    'node1' => { services: %w[service1] },
+                    'node2' => { services: %w[service2] }
+                  }
+                },
+                expect_secrets: {
+                  'global1' => 'value1',
+                  'global2' => 'value2',
+                  'global3' => 'value3',
+                  'global4' => 'value4'
+                },
+                additional_config: <<~EOS
+                  read_secrets_from :secrets_reader1
+                  for_nodes('node2') { read_secrets_from :secrets_reader2 }
+                EOS
+              ) do
+                TestSecretsReaderPlugin.deployer = test_deployer
+                TestSecretsReaderPlugin.mocked_secrets = {
+                  'node1' => {
+                    'service1' => {
+                      secrets_reader1: {
+                        'global1' => 'value1',
+                        'global2' => 'value2'
+                      }
+                    }
+                  },
+                  'node2' => {
+                    'service2' => {
+                      secrets_reader1: {
+                        'global2' => 'value2',
+                        'global3' => 'value3'
+                      },
+                      secrets_reader2: {
+                        'global3' => 'value3',
+                        'global4' => 'value4'
+                      }
+                    }
+                  }
+                }
+                expect(test_deployer.deploy_on(%w[node1 node2])).to eq(
+                  'node1' => expected_deploy_result,
+                  'node2' => expected_deploy_result
+                )
+                expect(HybridPlatformsConductorTest::TestSecretsReaderPlugin.calls).to eq [
+                  { instance: :secrets_reader1, node: 'node1', service: 'service1' },
+                  { instance: :secrets_reader1, node: 'node2', service: 'service2' },
+                  { instance: :secrets_reader2, node: 'node2', service: 'service2' }
+                ]
+              end
+            end
+
+            it 'fails when merging secrets having different values' do
+              register_plugins(
+                :secrets_reader,
+                {
+                  secrets_reader1: HybridPlatformsConductorTest::TestSecretsReaderPlugin,
+                  secrets_reader2: HybridPlatformsConductorTest::TestSecretsReaderPlugin
+                }
+              )
+              with_platform_to_deploy(
+                nodes_info: {
+                  nodes: {
+                    'node1' => { services: %w[service1] },
+                    'node2' => { services: %w[service2] }
+                  }
+                },
+                expect_deploy_allowed: false,
+                expect_package: false,
+                expect_prepare_for_deploy: false,
+                expect_connections_to_nodes: false,
+                additional_config: <<~EOS
+                  read_secrets_from :secrets_reader1
+                  for_nodes('node2') { read_secrets_from :secrets_reader2 }
+                EOS
+              ) do
+                TestSecretsReaderPlugin.deployer = test_deployer
+                TestSecretsReaderPlugin.mocked_secrets = {
+                  'node1' => {
+                    'service1' => {
+                      secrets_reader1: {
+                        'global1' => 'value1',
+                        'global2' => 'value2'
+                      }
+                    }
+                  },
+                  'node2' => {
+                    'service2' => {
+                      secrets_reader1: {
+                        'global2' => 'value2',
+                        'global3' => {
+                          'sub_key' => 'value3'
+                        }
+                      },
+                      secrets_reader2: {
+                        'global3' => {
+                          'sub_key' => 'Other value'
+                        },
+                        'global4' => 'value4'
+                      }
+                    }
+                  }
+                }
+                expect { test_deployer.deploy_on(%w[node1 node2]) }.to raise_error 'Secret set at path global3->sub_key by secrets_reader2 for service service2 on node node2 has conflicting values (set debug for value details).'
+                expect(HybridPlatformsConductorTest::TestSecretsReaderPlugin.calls).to eq [
+                  { instance: :secrets_reader1, node: 'node1', service: 'service1' },
+                  { instance: :secrets_reader1, node: 'node2', service: 'service2' },
+                  { instance: :secrets_reader2, node: 'node2', service: 'service2' }
+                ]
+              end
+            end
+
+            it 'does not call secrets readers when secrets are overridden' do
+              register_plugins(
+                :secrets_reader,
+                {
+                  secrets_reader1: HybridPlatformsConductorTest::TestSecretsReaderPlugin,
+                  secrets_reader2: HybridPlatformsConductorTest::TestSecretsReaderPlugin,
+                  secrets_reader3: HybridPlatformsConductorTest::TestSecretsReaderPlugin
+                }
+              )
+              with_platform_to_deploy(
+                nodes_info: {
+                  nodes: {
+                    'node1' => { services: %w[service1] },
+                    'node2' => { services: %w[service2] },
+                    'node3' => { services: %w[service3] }
+                  }
+                },
+                expect_secrets: {
+                  'overridden_secrets' => 'value'
+                },
+                additional_config: <<~EOS
+                  read_secrets_from %i[secrets_reader1 secrets_reader2]
+                  for_nodes('node2') { read_secrets_from :secrets_reader3 }
+                EOS
+              ) do
+                TestSecretsReaderPlugin.deployer = test_deployer
+                test_deployer.override_secrets('overridden_secrets' => 'value')
+                expect(test_deployer.deploy_on(%w[node1 node2 node3])).to eq(
+                  'node1' => expected_deploy_result,
+                  'node2' => expected_deploy_result,
+                  'node3' => expected_deploy_result
+                )
+                expect(HybridPlatformsConductorTest::TestSecretsReaderPlugin.calls).to eq []
               end
             end
 

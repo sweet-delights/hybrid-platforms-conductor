@@ -14,6 +14,7 @@ Following are all possible plugin types and the plugins shipped by default with 
   * [`platform_handler`](#platform_handler)
   * [`provisioner`](#provisioner)
   * [`report`](#report)
+  * [`secrets_reader`](#secrets_reader)
   * [`test`](#test)
   * [`test_report`](#test_report)
 
@@ -176,6 +177,26 @@ Plugins shipped by default:
 * [`confluence`](plugins/report/confluence.md)
 * [`mediawiki`](plugins/report/mediawiki.md)
 * [`stdout`](plugins/report/stdout.md)
+
+<a name="secrets_reader"></a>
+## Secrets readers
+
+Secrets reader are responsible for fetching secrets (passwords, private keys, API tokens...) needed during deployment from various sources (command line, environment, vaults, secrets servers...).
+
+Corresponding plugin type: `secrets_reader`.
+
+These plugins add new ways to retrieve secrets used by the [`Deployer`](../lib/hybrid_platforms_conductor/deployer.rb)
+
+Examples of secrets readers are:
+* Command-line: Give secrets from a local file.
+* Vault: Get secrets from vaults (encrypted databases).
+* Secrets servers: Query secrets servers to retrieve secrets.
+
+Check the [sample plugin file](../lib/hybrid_platforms_conductor/hpc_plugins/secrets_reader/my_secrets_reader_plugin.rb.sample) to know more about the API that needs to be implemented by such plugins.
+
+Plugins shipped by default:
+* [`cli`](plugins/secrets_reader/cli.md)
+* [`thycotic`](plugins/secrets_reader/thycotic.md)
 
 <a name="test"></a>
 ## Tests

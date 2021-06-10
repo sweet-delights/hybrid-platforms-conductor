@@ -38,6 +38,7 @@ module HybridPlatformsConductor
       []
       each
       empty?
+      find
       key?
       keys
       select

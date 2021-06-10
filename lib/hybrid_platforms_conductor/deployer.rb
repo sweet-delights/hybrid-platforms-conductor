@@ -11,7 +11,6 @@ require 'hybrid_platforms_conductor/logger_helpers'
 require 'hybrid_platforms_conductor/nodes_handler'
 require 'hybrid_platforms_conductor/services_handler'
 require 'hybrid_platforms_conductor/plugins'
-require 'hybrid_platforms_conductor/thycotic'
 
 module HybridPlatformsConductor
 
@@ -27,6 +26,12 @@ module HybridPlatformsConductor
       # Array< Hash<Symbol, Object> >
       attr_reader :deployment_logs
 
+      # List of secrets reader plugins. Each info has the following properties:
+      # * *nodes_selectors_stack* (Array<Object>): Stack of nodes selectors impacted by this rule.
+      # * *secrets_readers* (Array<Symbol>): List of log plugins to be used to store deployment logs.
+      # Array< Hash<Symbol, Object> >
+      attr_reader :secrets_readers
+
       # Integer: Timeout (in seconds) for packaging repositories
       attr_reader :packaging_timeout_secs
 
@@ -34,6 +39,7 @@ module HybridPlatformsConductor
       def init_deployer_config
         @packaging_timeout_secs = 60
         @deployment_logs = []
+        @secrets_readers = []
       end
 
       # Set the packaging timeout
@@ -55,6 +61,17 @@ module HybridPlatformsConductor
         }
       end
 
+      # Set the secrets readers
+      #
+      # Parameters::
+      # * *secrets_readers* (Symbol or Array<Symbol>): The list of (or single) secrets readers plugins to be used
+      def read_secrets_from(*secrets_readers)
+        @secrets_readers << {
+          nodes_selectors_stack: current_nodes_selectors_stack,
+          secrets_readers: secrets_readers.flatten
+        }
+      end
+
     end
 
     include LoggerHelpers
@@ -72,10 +89,6 @@ module HybridPlatformsConductor
     # Concurrent execution of the deployment? [default = false]
     #   Boolean
     attr_accessor :concurrent_execution
-
-    # The list of JSON secrets
-    #   Array<Hash>
-    attr_accessor :secrets
 
     # Are we deploying in a local environment?
     #   Boolean
@@ -110,7 +123,21 @@ module HybridPlatformsConductor
       @nodes_handler = nodes_handler
       @actions_executor = actions_executor
       @services_handler = services_handler
-      @secrets = []
+      @override_secrets = nil
+      @secrets_readers = Plugins.new(
+        :secrets_reader,
+        logger: @logger,
+        logger_stderr: @logger_stderr,
+        init_plugin: proc do |plugin_class|
+          plugin_class.new(
+            logger: @logger,
+            logger_stderr: @logger_stderr,
+            config: @config,
+            cmd_runner: @cmd_runner,
+            nodes_handler: @nodes_handler
+          )
+        end
+      )
       @provisioners = Plugins.new(:provisioner, logger: @logger, logger_stderr: @logger_stderr)
       @log_plugins = Plugins.new(
         :log,
@@ -144,30 +171,6 @@ module HybridPlatformsConductor
     def options_parse(options_parser, parallel_switch: true, why_run_switch: false, timeout_options: true)
       options_parser.separator ''
       options_parser.separator 'Deployer options:'
-      options_parser.on(
-        '-e', '--secrets SECRETS_LOCATION',
-        'Specify a secrets location. Can be specified several times. Location can be:',
-        '* Local path to a JSON file',
-        '* URL of the form http[s]://<url>:<secret_id> to get a secret JSON file from a Thycotic Secret Server at the given URL.'
-      ) do |secrets_location|
-        @secrets << JSON.parse(
-          if secrets_location =~ /^(https?:\/\/.+):(\d+)$/
-            url = $1
-            secret_id = $2
-            secret = nil
-            Thycotic.with_thycotic(url, @logger, @logger_stderr) do |thycotic|
-              secret_file_item_id = thycotic.get_secret(secret_id).dig(:secret, :items, :secret_item, :id)
-              raise "Unable to fetch secret file ID #{secrets_location}" if secret_file_item_id.nil?
-              secret = thycotic.download_file_attachment_by_item_id(secret_id, secret_file_item_id)
-              raise "Unable to fetch secret file attachment from #{secrets_location}" if secret.nil?
-            end
-            secret
-          else
-            raise "Missing secret file: #{secrets_location}" unless File.exist?(secrets_location)
-            File.read(secrets_location)
-          end
-        )
-      end
       options_parser.on('-p', '--parallel', 'Execute the commands in parallel (put the standard output in files <hybrid-platforms-dir>/run_logs/*.stdout)') do
         @concurrent_execution = true
       end if parallel_switch
@@ -180,6 +183,14 @@ module HybridPlatformsConductor
       options_parser.on('--retries-on-error NBR', "Number of retries in case of non-deterministic errors (defaults to #{@nbr_retries_on_error})") do |nbr_retries|
         @nbr_retries_on_error = nbr_retries.to_i
       end
+      # Display options secrets readers might have
+      @secrets_readers.each do |secret_reader_name, secret_reader|
+        if secret_reader.respond_to?(:options_parse)
+          options_parser.separator ''
+          options_parser.separator "Secrets reader #{secret_reader_name} options:"
+          secret_reader.options_parse(options_parser)
+        end
+      end
     end
 
     # Validate that parsed parameters are valid
@@ -189,6 +200,16 @@ module HybridPlatformsConductor
 
     # String: File used as a Futex for packaging
     PACKAGING_FUTEX_FILE = "#{Dir.tmpdir}/hpc_packaging"
+
+    # Override the secrets with a given JSON.
+    # When using this method with a secrets Hash, further deployments will not query secrets readers, but will use those secrets directly.
+    # Useful to override secrets in test conditions when using dummy secrets for example.
+    #
+    # Parameters::
+    # * *secrets* (Hash or nil): Secrets to take into account in place of secrets readers, or nil to cancel a previous overriding and use secrets readers instead.
+    def override_secrets(secrets)
+      @override_secrets = secrets
+    end
 
     # Deploy on a given list of nodes selectors.
     # The workflow is the following:
@@ -209,10 +230,20 @@ module HybridPlatformsConductor
 
       # Get the secrets to be deployed
       secrets = {}
-      @secrets.each do |secret_json|
-        secrets.merge!(secret_json) do |key, value1, value2|
-          raise "Secret #{key} has conflicting values between different secret JSON files." if value1 != value2
-          value1
+      if @override_secrets
+        secrets = @override_secrets
+      else
+        services_to_deploy.each do |node, services|
+          # If there is no config for secrets, just use cli
+          (@config.secrets_readers.empty? ? [{ secrets_readers: %i[cli] }] : @nodes_handler.select_confs_for_node(node, @config.secrets_readers)).inject([]) do |secrets_readers, secrets_readers_info|
+            secrets_readers + secrets_readers_info[:secrets_readers]
+          end.sort.uniq.each do |secrets_reader|
+            services.each do |service|
+              node_secrets = @secrets_readers[secrets_reader].secrets_for(node, service)
+              conflicting_path = safe_merge(secrets, node_secrets)
+              raise "Secret set at path #{conflicting_path.join('->')} by #{secrets_reader} for service #{service} on node #{node} has conflicting values (#{log_debug? ? "#{node_secrets.dig(*conflicting_path)} != #{secrets.dig(*conflicting_path)}" : 'set debug for value details'})." unless conflicting_path.nil?
+            end
+          end
         end
       end
 
@@ -370,7 +401,7 @@ module HybridPlatformsConductor
           deployer.local_environment = true
           # Ignore secrets that might have been given: in Docker containers we always use dummy secrets
           dummy_secrets_file = "#{@config.hybrid_platforms_dir}/dummy_secrets.json"
-          deployer.secrets = File.exist?(dummy_secrets_file) ? [JSON.parse(File.read(dummy_secrets_file))] : []
+          deployer.override_secrets(File.exist?(dummy_secrets_file) ? JSON.parse(File.read(dummy_secrets_file)) : {})
           yield deployer, instance
         end
       rescue
@@ -433,6 +464,35 @@ module HybridPlatformsConductor
 
     private
 
+    # Safe-merge 2 hashes.
+    # Safe-merging is done by:
+    # * Merging values that are hashes.
+    # * Reporting errors when values conflict.
+    # When values are conflicting, the initial hash won't modify those conflicting values and will stop the merge.
+    #
+    # Parameters::
+    # * *hash* (Hash): Hash to be modified merging hash_to_merge
+    # * *hash_to_merge* (Hash): Hash to be merged into hash
+    # Result::
+    # * nil or Array<Object>: nil in case of success, or the keys path leading to a conflicting value in case of error
+    def safe_merge(hash, hash_to_merge)
+      conflicting_path = nil
+      hash_to_merge.each do |key, value_to_merge|
+        if hash.key?(key)
+          if hash[key].is_a?(Hash) && value_to_merge.is_a?(Hash)
+            sub_conflicting_path = safe_merge(hash[key], value_to_merge)
+            conflicting_path = [key] + sub_conflicting_path unless sub_conflicting_path.nil?
+          elsif hash[key] != value_to_merge
+            conflicting_path = [key]
+          end
+        else
+          hash[key] = value_to_merge
+        end
+        break unless conflicting_path.nil?
+      end
+      conflicting_path
+    end
+
     # Get the list of retriable errors a node got from deployment logs.
     # Useful to know if an error is non-deterministic (due to external and temporary factors).
     #
@@ -485,7 +545,7 @@ module HybridPlatformsConductor
         Hash[services.map do |node, node_services|
           image_id = @nodes_handler.get_image_of(node)
           sudo = (ssh_user == 'root' ? '' : "#{@nodes_handler.sudo_on(node)} ")
-          # Install My_company corporate certificates if present
+          # Install corporate certificates if present
           certificate_actions =
             if @local_environment && ENV['hpc_certificates']
               if File.exist?(ENV['hpc_certificates'])
