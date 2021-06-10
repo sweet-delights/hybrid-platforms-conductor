@@ -64,7 +64,9 @@ module HybridPlatformsConductor
     end
 
     class << self
+
       attr_reader :progress_bar_semaphore
+
     end
     # Make sure the progress bar setting is protected by a Mutex
     @progress_bar_semaphore = Mutex.new

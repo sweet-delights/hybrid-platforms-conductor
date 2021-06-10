@@ -6,9 +6,11 @@ module HybridPlatformsConductorTest
   class TestSecretsReaderPlugin < HybridPlatformsConductor::SecretsReader
 
     class << self
+
       attr_accessor :calls
       attr_accessor :deployer
       attr_accessor :mocked_secrets
+
     end
 
     # Return secrets for a given service to be deployed on a node.

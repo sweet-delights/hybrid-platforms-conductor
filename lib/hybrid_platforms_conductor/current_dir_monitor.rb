@@ -7,7 +7,9 @@ module HybridPlatformsConductor
   module CurrentDirMonitor
 
     class << self
+
       attr_reader :monitor
+
     end
 
     @monitor = Monitor.new

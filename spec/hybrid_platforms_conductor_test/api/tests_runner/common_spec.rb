@@ -175,7 +175,9 @@ describe HybridPlatformsConductor::TestsRunner do
   class SpecificPlatformHandlerTest < HybridPlatformsConductor::Test
 
     class << self
+
       attr_accessor :run
+
     end
     @run = false
 

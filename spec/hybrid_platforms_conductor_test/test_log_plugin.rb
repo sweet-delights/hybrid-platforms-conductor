@@ -4,7 +4,9 @@ module HybridPlatformsConductorTest
   class TestLogPlugin < HybridPlatformsConductor::Log
 
     class << self
+
       attr_accessor :calls
+
     end
 
     # Get actions to save logs

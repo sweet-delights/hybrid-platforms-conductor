@@ -4,9 +4,11 @@ module HybridPlatformsConductorTest
   class TestsReportPlugin < HybridPlatformsConductor::TestReport
 
     class << self
+
       # Reports (that can be compared), per report name
       # Array< Hash<Symbol, Object> >
       attr_accessor :reports
+
     end
 
     # Handle tests reports

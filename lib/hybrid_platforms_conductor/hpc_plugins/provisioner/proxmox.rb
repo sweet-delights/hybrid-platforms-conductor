@@ -68,7 +68,9 @@ module HybridPlatformsConductor
         extend_config_dsl_with PlatformsDSLProxmox, :init_proxmox
 
         class << self
+
           attr_accessor :proxmox_waiter_files_mutex
+
         end
         @proxmox_waiter_files_mutex = Mutex.new
 
@@ -555,6 +557,7 @@ module HybridPlatformsConductor
         def proxmox_test_info
           @config.proxmox_servers.first
         end
+
       end
 
     end
