@@ -217,14 +217,12 @@ module HybridPlatformsConductor
         @node_expected_failures.each do |test_name, test_expected_failures|
           test_expected_failures.each do |node, expected_failure|
             # Check that a test has been run for this expected failure
-            unless @tests_run.find do |test|
-                test.name == test_name &&
-                  (
-                    (test.node.nil? && node == '') ||
-                    (!test.node.nil? && node == test.node)
-                  )
-              end
-              error("A test named #{test_name} for node #{node} was expected to fail (#{expected_failure}), but no test has been run. Please remove it from the expected failures if this expected failure is obsolete.")
+            error("A test named #{test_name} for node #{node} was expected to fail (#{expected_failure}), but no test has been run. Please remove it from the expected failures if this expected failure is obsolete.") unless @tests_run.find do |test|
+              test.name == test_name &&
+                (
+                  (test.node.nil? && node == '') ||
+                  (!test.node.nil? && node == test.node)
+                )
             end
           end
         end

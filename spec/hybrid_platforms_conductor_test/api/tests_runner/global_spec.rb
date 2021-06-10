@@ -8,7 +8,8 @@ describe HybridPlatformsConductor::TestsRunner do
     # * *platforms_info* (Hash): The platforms info [default: {}]
     def with_test_platform_for_global_tests(platforms_info: {})
       with_test_platform(platforms_info) do
-        register_test_plugins(test_tests_runner,
+        register_test_plugins(
+          test_tests_runner,
           global_test: HybridPlatformsConductorTest::TestPlugins::Global,
           global_test_2: HybridPlatformsConductorTest::TestPlugins::Global
         )

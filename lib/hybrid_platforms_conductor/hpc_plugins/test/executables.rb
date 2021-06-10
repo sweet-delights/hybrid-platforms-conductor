@@ -42,7 +42,7 @@ module HybridPlatformsConductor
               ]
             end
           end
-        	tests.sort.each do |cmd|
+          tests.sort.each do |cmd|
             log_debug "Testing #{cmd}"
             exit_status, stdout, _stderr = @cmd_runner.run_cmd "#{cmd} 2>&1", no_exception: true, log_to_stdout: log_debug?
             assert_equal(exit_status, 0, "Command #{cmd} returned code #{exit_status}:\n#{stdout}")

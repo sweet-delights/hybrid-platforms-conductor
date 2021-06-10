@@ -2,7 +2,8 @@ describe HybridPlatformsConductor::TestsRunner do
 
   it 'executes all tests when no test is selected' do
     with_test_platform do
-      register_test_plugins(test_tests_runner,
+      register_test_plugins(
+        test_tests_runner,
         global_test: HybridPlatformsConductorTest::TestPlugins::Global,
         global_test_2: HybridPlatformsConductorTest::TestPlugins::Global
       )
@@ -13,7 +14,8 @@ describe HybridPlatformsConductor::TestsRunner do
 
   it 'executes all tests when all tests are selected' do
     with_test_platform do
-      register_test_plugins(test_tests_runner,
+      register_test_plugins(
+        test_tests_runner,
         global_test: HybridPlatformsConductorTest::TestPlugins::Global,
         global_test_2: HybridPlatformsConductorTest::TestPlugins::Global
       )

@@ -25,10 +25,12 @@ describe HybridPlatformsConductor::ActionsExecutor do
     it 'logs local Bash code' do
       with_repository 'logs' do |logs_dir|
         with_test_platform_for_action_plugins do |repository|
-          test_actions_executor.execute_actions({
-            'node' => {
-              bash: 'echo TestStdout ; sleep 1 ; echo TestStderr 1>&2'
-            } },
+          test_actions_executor.execute_actions(
+            {
+              'node' => {
+                bash: 'echo TestStdout ; sleep 1 ; echo TestStderr 1>&2'
+              }
+            },
             log_to_dir: logs_dir
           )
           expect(File.exist?("#{logs_dir}/node.stdout")).to eq true

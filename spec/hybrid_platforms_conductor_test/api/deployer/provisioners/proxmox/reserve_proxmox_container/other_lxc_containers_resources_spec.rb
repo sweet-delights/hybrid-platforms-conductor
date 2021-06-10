@@ -144,7 +144,8 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
               }
             }
           })
-          expect(call_reserve_proxmox_container(2, 1024, 4,
+          expect(call_reserve_proxmox_container(
+            2, 1024, 4,
             config: { limits: {
               nbr_vms_max: 3,
               cpu_loads_thresholds: [10, 10, 10],
@@ -168,7 +169,8 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
               }
             }
           })
-          expect(call_reserve_proxmox_container(2, 1024, 4,
+          expect(call_reserve_proxmox_container(
+            2, 1024, 4,
             config: { limits: {
               nbr_vms_max: 3,
               cpu_loads_thresholds: [10, 10, 10],

@@ -150,7 +150,8 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
               }
             }
           })
-          expect(call_reserve_proxmox_container(2, 1024, 1,
+          expect(call_reserve_proxmox_container(
+            2, 1024, 1,
             config: {
               vm_ips_list: %w[
                 192.168.0.100
@@ -293,7 +294,8 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
               }
             }
           })
-          expect(call_reserve_proxmox_container(2, 1024, 1,
+          expect(call_reserve_proxmox_container(
+            2, 1024, 1,
             config: {
               pve_nodes: nil,
               vm_ips_list: %w[
@@ -339,7 +341,8 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
               }
             }
           })
-          expect(call_reserve_proxmox_container(2, 1024, 1,
+          expect(call_reserve_proxmox_container(
+            2, 1024, 1,
             config: {
               vm_ips_list: %w[
                 192.168.0.100
@@ -389,7 +392,8 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
               }
             }
           })
-          expect(call_reserve_proxmox_container(2, 1024, 1,
+          expect(call_reserve_proxmox_container(
+            2, 1024, 1,
             config: {
               pve_nodes: nil,
               vm_ips_list: %w[
@@ -433,7 +437,8 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
               }
             }
           })
-          expect(call_reserve_proxmox_container(2, 1024, 1,
+          expect(call_reserve_proxmox_container(
+            2, 1024, 1,
             config: {
               vm_ips_list: %w[
                 192.168.0.100
@@ -485,7 +490,8 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
               }
             }
           })
-          expect(call_reserve_proxmox_container(2, 1024, 1,
+          expect(call_reserve_proxmox_container(
+            2, 1024, 1,
             config: {
               pve_nodes: nil,
               vm_ips_list: %w[
@@ -531,7 +537,8 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
               }
             }
           })
-          expect(call_reserve_proxmox_container(2, 1024, 1,
+          expect(call_reserve_proxmox_container(
+            2, 1024, 1,
             config: {
               vm_ips_list: %w[
                 192.168.0.100
@@ -588,7 +595,8 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
               }
             }
           })
-          expect(call_reserve_proxmox_container(2, 1024, 1,
+          expect(call_reserve_proxmox_container(
+            2, 1024, 1,
             config: {
               pve_nodes: nil,
               vm_ips_list: %w[

@@ -11,7 +11,8 @@ describe HybridPlatformsConductor::TestsRunner do
         'platform1' => { nodes: { 'node11' => {}, 'node12' => {}, 'node13' => {} } },
         'platform2' => { nodes: { 'node21' => {}, 'node22' => {}, 'node23' => {} }, platform_type: :test2 }
       ) do
-        register_test_plugins(test_tests_runner,
+        register_test_plugins(
+          test_tests_runner,
           node_test: HybridPlatformsConductorTest::TestPlugins::Node,
           node_test_2: HybridPlatformsConductorTest::TestPlugins::Node
         )

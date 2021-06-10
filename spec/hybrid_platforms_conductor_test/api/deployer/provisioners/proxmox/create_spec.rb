@@ -110,7 +110,8 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
 
     it 'fails to create an instance when the reserve_proxmox_container sync node ends in error' do
       with_test_proxmox_platform do |instance|
-        mock_proxmox_calls_with([
+        mock_proxmox_calls_with(
+          [
             # 1 - The info on existing containers
             mock_proxmox_to_get_nodes_info
           ],

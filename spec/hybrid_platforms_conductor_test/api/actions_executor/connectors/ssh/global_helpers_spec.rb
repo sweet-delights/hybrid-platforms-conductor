@@ -399,7 +399,7 @@ describe HybridPlatformsConductor::ActionsExecutor do
         end
       end
 
-   end
+    end
 
   end
 

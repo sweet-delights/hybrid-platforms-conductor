@@ -201,26 +201,24 @@ class ProxmoxWaiter
       vm_id_str = vm_info['vm_id'].to_s
       # Destroy the VM ID
       # Find which PVE node hosts this VM
-      unless @config['pve_nodes'].any? do |pve_node|
-          api_get("nodes/#{pve_node}/lxc").any? do |lxc_info|
-            if lxc_info['vmid'] == vm_id_str
-              # Make sure this VM is still used for the node and environment we want.
-              # It could have been deleted manually and re-affected to another node/environment automatically, and in this case we should not remove it.
-              metadata = vm_metadata(pve_node, vm_info['vm_id'])
-              if metadata[:node] == vm_info['node'] && metadata[:environment] == vm_info['environment']
-                destroy_vm_on(pve_node, vm_info['vm_id'])
-                found_pve_node = pve_node
-                true
-              else
-                log "[ #{pve_node}/#{vm_info['vm_id']} ] - This container is not hosting the node/environment to be destroyed: #{metadata[:node]}/#{metadata[:environment]} != #{vm_info['node']}/#{vm_info['environment']}"
-                false
-              end
+      log "Could not find any PVE node hosting VM #{vm_info['vm_id']}" unless @config['pve_nodes'].any? do |pve_node|
+        api_get("nodes/#{pve_node}/lxc").any? do |lxc_info|
+          if lxc_info['vmid'] == vm_id_str
+            # Make sure this VM is still used for the node and environment we want.
+            # It could have been deleted manually and re-affected to another node/environment automatically, and in this case we should not remove it.
+            metadata = vm_metadata(pve_node, vm_info['vm_id'])
+            if metadata[:node] == vm_info['node'] && metadata[:environment] == vm_info['environment']
+              destroy_vm_on(pve_node, vm_info['vm_id'])
+              found_pve_node = pve_node
+              true
             else
+              log "[ #{pve_node}/#{vm_info['vm_id']} ] - This container is not hosting the node/environment to be destroyed: #{metadata[:node]}/#{metadata[:environment]} != #{vm_info['node']}/#{vm_info['environment']}"
               false
             end
+          else
+            false
           end
         end
-        log "Could not find any PVE node hosting VM #{vm_info['vm_id']}"
       end
     end
     reserved_resource = {}

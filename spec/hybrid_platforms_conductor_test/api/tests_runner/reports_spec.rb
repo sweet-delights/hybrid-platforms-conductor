@@ -345,7 +345,8 @@ describe HybridPlatformsConductor::TestsRunner do
 
     it 'can report on several reports' do
       with_test_platforms_for_reports_test do
-        register_tests_report_plugins(test_tests_runner,
+        register_tests_report_plugins(
+          test_tests_runner,
           report1: HybridPlatformsConductorTest::TestsReportPlugin,
           report2: HybridPlatformsConductorTest::TestsReportPlugin
         )
