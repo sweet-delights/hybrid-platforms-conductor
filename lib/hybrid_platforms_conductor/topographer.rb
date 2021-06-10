@@ -111,7 +111,7 @@ module HybridPlatformsConductor
 
       # Parse plugins
       @plugins = Hash[Dir.
-        glob("#{File.dirname(__FILE__)}/topographer/plugins/*.rb").
+        glob("#{__dir__}/topographer/plugins/*.rb").
         map do |file_name|
           plugin_name = File.basename(file_name)[0..-4].to_sym
           require file_name
