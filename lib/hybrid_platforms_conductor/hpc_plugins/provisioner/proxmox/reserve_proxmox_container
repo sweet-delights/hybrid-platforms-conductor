@@ -39,7 +39,6 @@ require 'json'
 reserved_resource = nil
 
 begin
-
   # As this script is meant to be run in an SSH session, make sure we automatically flush stdout/stderr.
   # Otherwise it will wait for the script completion before dumping everything, which is annoying as we want to track when it waits for hours.
   $stdout.sync = true
