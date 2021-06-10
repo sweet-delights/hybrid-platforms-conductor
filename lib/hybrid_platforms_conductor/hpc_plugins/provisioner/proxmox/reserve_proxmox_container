@@ -110,7 +110,6 @@ begin
     end
     idx_retry += 1
   end
-
 rescue
   reserved_resource = {
     error: "Unhandled exception from reserve_proxmox_container: #{$!}\n#{$!.backtrace.join("\n")}"
