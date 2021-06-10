@@ -108,23 +108,30 @@ describe HybridPlatformsConductor::NodesHandler do
     end
 
     it 'returns host keys for the maximum hosts it can from the list' do
-      with_test_platform(nodes: {
-        'test_node1' => {},
-        'test_node2' => {},
-        'test_node3' => {},
-        'test_node4' => {}
-      }) do
+      with_test_platform(
+        nodes: {
+          'test_node1' => {},
+          'test_node2' => {},
+          'test_node3' => {},
+          'test_node4' => {}
+        }
+      ) do
         with_cmd_runner_mocked [
           ['ssh-keyscan 192.168.42.1', proc { [0, "192.168.42.1 ssh-rsa fake_host_key_1\n", ''] }],
           ['ssh-keyscan 192.168.42.2', proc { [0, '', ''] }],
           ['ssh-keyscan my_host_4.my_domain', proc { [0, "my_host_4.my_domain ssh-rsa fake_host_key_4\n", ''] }],
         ] do
-          expect(cmdb(:host_keys).get_host_keys(['test_node'], {
-            'test_node1' => { host_ip: '192.168.42.1' },
-            'test_node2' => { host_ip: '192.168.42.2' },
-            'test_node3' => {},
-            'test_node4' => { hostname: 'my_host_4.my_domain' }
-          })).to eq(
+          expect(
+            cmdb(:host_keys).get_host_keys(
+              ['test_node'],
+              {
+                'test_node1' => { host_ip: '192.168.42.1' },
+                'test_node2' => { host_ip: '192.168.42.2' },
+                'test_node3' => {},
+                'test_node4' => { hostname: 'my_host_4.my_domain' }
+              }
+            )
+          ).to eq(
             'test_node1' => ['ssh-rsa fake_host_key_1'],
             'test_node4' => ['ssh-rsa fake_host_key_4']
           )

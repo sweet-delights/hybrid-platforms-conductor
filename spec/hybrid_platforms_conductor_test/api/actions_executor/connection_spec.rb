@@ -9,12 +9,14 @@ describe HybridPlatformsConductor::ActionsExecutor do
     #   * Parameters::
     #     * *repository* (String): Repository where the platform has been setup
     def with_test_platform_for_connections
-      with_test_platform_for_executor(nodes: {
-        'node1' => {},
-        'node2' => {},
-        'node3' => {},
-        'node4' => {}
-      }) do |repository|
+      with_test_platform_for_executor(
+        nodes: {
+          'node1' => {},
+          'node2' => {},
+          'node3' => {},
+          'node4' => {}
+        }
+      ) do |repository|
         yield repository
       end
     end

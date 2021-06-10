@@ -17,12 +17,16 @@ describe HybridPlatformsConductor::ActionsExecutor do
     it 'captures stdout and stderr from action correctly' do
       with_test_platform_for_logging do
         expect(
-          test_actions_executor.execute_actions('node1' => { test_action: {
-            code: proc do |stdout, stderr|
-              stdout << 'action_stdout'
-              stderr << 'action_stderr'
-            end
-          } })
+          test_actions_executor.execute_actions(
+            'node1' => {
+              test_action: {
+                code: proc do |stdout, stderr|
+                  stdout << 'action_stdout'
+                  stderr << 'action_stderr'
+                end
+              }
+            }
+          )
         ).to eq('node1' => [0, 'action_stdout', 'action_stderr'])
       end
     end
@@ -30,13 +34,17 @@ describe HybridPlatformsConductor::ActionsExecutor do
     it 'captures stdout and stderr from action correctly even when the action is failing' do
       with_test_platform_for_logging do
         expect(
-          test_actions_executor.execute_actions('node1' => { test_action: {
-            code: proc do |stdout, stderr|
-              stdout << "action_stdout\n"
-              stderr << "action_stderr\n"
-              raise 'Failing action'
-            end
-          } })
+          test_actions_executor.execute_actions(
+            'node1' => {
+              test_action: {
+                code: proc do |stdout, stderr|
+                  stdout << "action_stdout\n"
+                  stderr << "action_stderr\n"
+                  raise 'Failing action'
+                end
+              }
+            }
+          )
         ).to eq('node1' => [:failed_action, "action_stdout\n", "action_stderr\nFailing action\n"])
       end
     end
@@ -191,56 +199,61 @@ describe HybridPlatformsConductor::ActionsExecutor do
     it 'executes several actions on several nodes and returns the corresponding stdout and stderr correctly in files' do
       with_repository('logs') do |logs_repository|
         with_test_platform_for_logging do
-          expect(test_actions_executor.execute_actions({
-            'node1' => [
-              { test_action: { code: proc do |stdout, stderr|
-                stdout << 'node1_action1_stdout '
-                stderr << 'node1_action1_stderr '
-                sleep 1
-              end } },
-              { test_action: { code: proc do |stdout, stderr|
-                stdout << 'node1_action2_stdout '
-                stderr << 'node1_action2_stderr '
-                sleep 1
-              end } },
-              { test_action: { code: proc do |stdout, stderr|
-                stdout << 'node1_action3_stdout'
-                stderr << 'node1_action3_stderr'
-              end } }
-            ],
-            'node2' => [
-              { test_action: { code: proc do |stdout, stderr|
-                stdout << 'node2_action1_stdout '
-                stderr << 'node2_action1_stderr '
-                sleep 1
-              end } },
-              { test_action: { code: proc do |stdout, stderr|
-                stdout << 'node2_action2_stdout '
-                stderr << 'node2_action2_stderr '
-                sleep 1
-              end } },
-              { test_action: { code: proc do |stdout, stderr|
-                stdout << 'node2_action3_stdout'
-                stderr << 'node2_action3_stderr'
-              end } }
-            ],
-            'node3' => [
-              { test_action: { code: proc do |stdout, stderr|
-                stdout << 'node3_action1_stdout '
-                stderr << 'node3_action1_stderr '
-                sleep 1
-              end } },
-              { test_action: { code: proc do |stdout, stderr|
-                stdout << 'node3_action2_stdout '
-                stderr << 'node3_action2_stderr '
-                sleep 1
-              end } },
-              { test_action: { code: proc do |stdout, stderr|
-                stdout << 'node3_action3_stdout'
-                stderr << 'node3_action3_stderr'
-              end } }
-            ]
-          }, log_to_dir: logs_repository)).to eq(
+          expect(
+            test_actions_executor.execute_actions(
+              {
+                'node1' => [
+                  { test_action: { code: proc do |stdout, stderr|
+                    stdout << 'node1_action1_stdout '
+                    stderr << 'node1_action1_stderr '
+                    sleep 1
+                  end } },
+                  { test_action: { code: proc do |stdout, stderr|
+                    stdout << 'node1_action2_stdout '
+                    stderr << 'node1_action2_stderr '
+                    sleep 1
+                  end } },
+                  { test_action: { code: proc do |stdout, stderr|
+                    stdout << 'node1_action3_stdout'
+                    stderr << 'node1_action3_stderr'
+                  end } }
+                ],
+                'node2' => [
+                  { test_action: { code: proc do |stdout, stderr|
+                    stdout << 'node2_action1_stdout '
+                    stderr << 'node2_action1_stderr '
+                    sleep 1
+                  end } },
+                  { test_action: { code: proc do |stdout, stderr|
+                    stdout << 'node2_action2_stdout '
+                    stderr << 'node2_action2_stderr '
+                    sleep 1
+                  end } },
+                  { test_action: { code: proc do |stdout, stderr|
+                    stdout << 'node2_action3_stdout'
+                    stderr << 'node2_action3_stderr'
+                  end } }
+                ],
+                'node3' => [
+                  { test_action: { code: proc do |stdout, stderr|
+                    stdout << 'node3_action1_stdout '
+                    stderr << 'node3_action1_stderr '
+                    sleep 1
+                  end } },
+                  { test_action: { code: proc do |stdout, stderr|
+                    stdout << 'node3_action2_stdout '
+                    stderr << 'node3_action2_stderr '
+                    sleep 1
+                  end } },
+                  { test_action: { code: proc do |stdout, stderr|
+                    stdout << 'node3_action3_stdout'
+                    stderr << 'node3_action3_stderr'
+                  end } }
+                ]
+              },
+              log_to_dir: logs_repository
+            )
+          ).to eq(
             'node1' => [0, 'node1_action1_stdout node1_action2_stdout node1_action3_stdout', 'node1_action1_stderr node1_action2_stderr node1_action3_stderr'],
             'node2' => [0, 'node2_action1_stdout node2_action2_stdout node2_action3_stdout', 'node2_action1_stderr node2_action2_stderr node2_action3_stderr'],
             'node3' => [0, 'node3_action1_stdout node3_action2_stdout node3_action3_stdout', 'node3_action1_stderr node3_action2_stderr node3_action3_stderr']

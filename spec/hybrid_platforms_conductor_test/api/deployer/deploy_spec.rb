@@ -53,10 +53,15 @@ describe HybridPlatformsConductor::Deployer do
       end
 
       it 'deploys correct logs information on several nodes' do
-        with_test_platform_for_deploy_tests({ nodes: {
-          'node1' => { services: %w[service1] },
-          'node2' => { services: %w[service2] }
-        } }, true) do
+        with_test_platform_for_deploy_tests(
+          {
+            nodes: {
+              'node1' => { services: %w[service1] },
+              'node2' => { services: %w[service2] }
+            }
+          },
+          true
+        ) do
           with_connections_mocked_on %w[node1 node2] do
             test_actions_executor.connector(:ssh).ssh_user = 'test_user'
             expect_services_handler_to_deploy(

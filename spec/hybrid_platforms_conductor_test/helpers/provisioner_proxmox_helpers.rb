@@ -337,9 +337,9 @@ module HybridPlatformsConductorTest
             expect(actions['node'][0][:scp].first[0]).to match /^.+\/hpc_plugins\/provisioner\/proxmox\/$/
             expect(actions['node'][0][:scp].first[1]).to eq '.'
             # Second action should be to create directories
-            expect(actions['node'][1]).to eq({
+            expect(actions['node'][1]).to eq(
               remote_bash: "mkdir -p ./proxmox/config\nmkdir -p ./proxmox/create"
-            })
+            )
             # Next actions should be to copy the config/create/destroy files
             expect(actions['node'][2].keys).to eq [:scp]
             expect(actions['node'][2][:scp].first[0]).to match /^.+\/create_#{Regexp.escape(expected_file_id)}\.json$/
@@ -351,7 +351,7 @@ module HybridPlatformsConductorTest
             { 'node' => [0, '', ''] }
           end,
           proc do |actions|
-            expect(actions).to eq({
+            expect(actions).to eq(
               'node' => {
                 remote_bash: {
                   commands: "#{expected_sudo ? 'sudo -u root -E ' : ''}./proxmox/reserve_proxmox_container --create ./proxmox/create/create_#{expected_file_id}.json --config ./proxmox/config/config_#{expected_file_id}.json",
@@ -362,7 +362,7 @@ module HybridPlatformsConductorTest
                   }
                 }
               }
-            })
+            )
             result =
               if error_on_create
                 { error: error_on_create }
@@ -389,9 +389,9 @@ module HybridPlatformsConductorTest
               expect(actions['node'][0][:scp].first[0]).to match /^.+\/hpc_plugins\/provisioner\/proxmox\/$/
               expect(actions['node'][0][:scp].first[1]).to eq '.'
               # Second action should be to create directories
-              expect(actions['node'][1]).to eq({
+              expect(actions['node'][1]).to eq(
                 remote_bash: "mkdir -p ./proxmox/config\nmkdir -p ./proxmox/destroy"
-              })
+              )
               # Next actions should be to copy the config/create/destroy files
               expect(actions['node'][2].keys).to eq [:scp]
               expect(actions['node'][2][:scp].first[0]).to match /^.+\/destroy_#{Regexp.escape(expected_file_id)}\.json$/
@@ -403,7 +403,7 @@ module HybridPlatformsConductorTest
               { 'node' => [0, '', ''] }
             end,
             proc do |actions|
-              expect(actions).to eq({
+              expect(actions).to eq(
                 'node' => {
                   remote_bash: {
                     commands: "#{expected_sudo ? 'sudo -u root -E ' : ''}./proxmox/reserve_proxmox_container --destroy ./proxmox/destroy/destroy_#{expected_file_id}.json --config ./proxmox/config/config_#{expected_file_id}.json",
@@ -414,7 +414,7 @@ module HybridPlatformsConductorTest
                     }
                   }
                 }
-              })
+              )
               result =
                 if error_on_destroy
                   { error: error_on_destroy }

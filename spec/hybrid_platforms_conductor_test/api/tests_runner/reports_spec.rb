@@ -12,15 +12,18 @@ describe HybridPlatformsConductor::TestsRunner do
         'platform2' => { nodes: { 'node21' => {}, 'node22' => {} } }
       ) do
         register_tests_report_plugins(test_tests_runner, report: HybridPlatformsConductorTest::TestsReportPlugin)
-        register_test_plugins(test_tests_runner, {
-          global_test: HybridPlatformsConductorTest::TestPlugins::Global,
-          platform_test: HybridPlatformsConductorTest::TestPlugins::Platform,
-          node_test: HybridPlatformsConductorTest::TestPlugins::Node,
-          node_test_2: HybridPlatformsConductorTest::TestPlugins::Node,
-          node_ssh_test: HybridPlatformsConductorTest::TestPlugins::NodeSsh,
-          node_check_test: HybridPlatformsConductorTest::TestPlugins::NodeCheck,
-          several_tests: HybridPlatformsConductorTest::TestPlugins::SeveralChecks
-        })
+        register_test_plugins(
+          test_tests_runner,
+          {
+            global_test: HybridPlatformsConductorTest::TestPlugins::Global,
+            platform_test: HybridPlatformsConductorTest::TestPlugins::Platform,
+            node_test: HybridPlatformsConductorTest::TestPlugins::Node,
+            node_test_2: HybridPlatformsConductorTest::TestPlugins::Node,
+            node_ssh_test: HybridPlatformsConductorTest::TestPlugins::NodeSsh,
+            node_check_test: HybridPlatformsConductorTest::TestPlugins::NodeCheck,
+            several_tests: HybridPlatformsConductorTest::TestPlugins::SeveralChecks
+          }
+        )
         test_tests_runner.reports = [:report]
         yield
       end

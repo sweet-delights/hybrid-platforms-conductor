@@ -50,11 +50,14 @@ module HybridPlatformsConductor
         logger: @logger,
         log: log_debug?
       )
-      @token = @client.call(:authenticate, message: {
-        username: user,
-        password: password,
-        domain: domain
-      }).to_hash.dig(:authenticate_response, :authenticate_result, :token)
+      @token = @client.call(
+        :authenticate,
+        message: {
+          username: user,
+          password: password,
+          domain: domain
+        }
+      ).to_hash.dig(:authenticate_response, :authenticate_result, :token)
       raise "Unable to get token from SOAP authentication to #{url}" if @token.nil?
     end
 
@@ -65,10 +68,13 @@ module HybridPlatformsConductor
     # Result::
     # * Hash: The corresponding API result
     def get_secret(secret_id)
-      @client.call(:get_secret, message: {
-        token: @token,
-        secretId: secret_id
-      }).to_hash.dig(:get_secret_response, :get_secret_result)
+      @client.call(
+        :get_secret,
+        message: {
+          token: @token,
+          secretId: secret_id
+        }
+      ).to_hash.dig(:get_secret_response, :get_secret_result)
     end
 
     # Get a file attached to a given secret 
@@ -79,11 +85,14 @@ module HybridPlatformsConductor
     # Result::
     # * String or nil: The file content, or nil if none
     def download_file_attachment_by_item_id(secret_id, secret_item_id)
-      file_in_base64 = @client.call(:download_file_attachment_by_item_id, message: {
-        token: @token,
-        secretId: secret_id,
-        secretItemId: secret_item_id
-      }).to_hash.dig(:download_file_attachment_by_item_id_response, :download_file_attachment_by_item_id_result, :file_attachment)
+      file_in_base64 = @client.call(
+        :download_file_attachment_by_item_id,
+        message: {
+          token: @token,
+          secretId: secret_id,
+          secretItemId: secret_item_id
+        }
+      ).to_hash.dig(:download_file_attachment_by_item_id_response, :download_file_attachment_by_item_id_result, :file_attachment)
       file_in_base64.nil? ? nil : Base64.decode64(file_in_base64)
     end
 

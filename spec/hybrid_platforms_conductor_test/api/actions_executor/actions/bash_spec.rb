@@ -4,9 +4,13 @@ describe HybridPlatformsConductor::ActionsExecutor do
 
     it 'executes local Bash code' do
       with_test_platform_for_action_plugins do |repository|
-        expect(test_actions_executor.execute_actions('node' => {
-          bash: "echo TestContent >#{repository}/test_file ; echo TestStdout ; echo TestStderr 1>&2"
-        })['node']).to eq [0, "TestStdout\n", "TestStderr\n"]
+        expect(
+          test_actions_executor.execute_actions(
+            'node' => {
+              bash: "echo TestContent >#{repository}/test_file ; echo TestStdout ; echo TestStderr 1>&2"
+            }
+          )['node']
+        ).to eq [0, "TestStdout\n", "TestStderr\n"]
         expect(File.read("#{repository}/test_file")).to eq "TestContent\n"
       end
     end

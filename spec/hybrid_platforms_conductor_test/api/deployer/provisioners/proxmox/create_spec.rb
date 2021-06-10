@@ -11,7 +11,7 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
           mock_proxmox_to_get_nodes_info
         ]
         instance.create
-        expect(@proxmox_create_options).to eq({
+        expect(@proxmox_create_options).to eq(
           'cores' => 2,
           'cpulimit' => 2,
           'description' => "===== HPC info =====\nnode: node\nenvironment: test\ndebug: false\n",
@@ -23,7 +23,7 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
           'password' => 'root_pwd',
           'rootfs' => 'local-lvm:10',
           'searchdomain' => 'my-domain.com'
-        })
+        )
       end
     end
 
@@ -54,7 +54,7 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
           expected_sudo: false
         )
         instance.create
-        expect(@proxmox_create_options).to eq({
+        expect(@proxmox_create_options).to eq(
           'cores' => 2,
           'cpulimit' => 2,
           'description' => "===== HPC info =====\nnode: node\nenvironment: test\ndebug: false\n",
@@ -66,7 +66,7 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
           'password' => 'root_pwd',
           'rootfs' => 'local-lvm:10',
           'searchdomain' => 'my-domain.com'
-        })
+        )
       end
     end
 
@@ -122,13 +122,15 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
     end
 
     it 'creates an instance using resources defined for a given node' do
-      with_test_proxmox_platform(node_metadata: {
-        deploy_resources_min: {
-          cpus: 24,
-          ram_mb: 4096,
-          disk_gb: 20
+      with_test_proxmox_platform(
+        node_metadata: {
+          deploy_resources_min: {
+            cpus: 24,
+            ram_mb: 4096,
+            disk_gb: 20
+          }
         }
-      }) do |instance|
+      ) do |instance|
         mock_proxmox_calls_with(
           [
             # 1 - The info on existing containers
@@ -136,7 +138,7 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
           ]
         )
         instance.create
-        expect(@proxmox_create_options).to eq({
+        expect(@proxmox_create_options).to eq(
           'cores' => 24,
           'cpulimit' => 24,
           'description' => "===== HPC info =====\nnode: node\nenvironment: test\ndebug: false\n",
@@ -148,7 +150,7 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
           'password' => 'root_pwd',
           'rootfs' => 'local-lvm:20',
           'searchdomain' => 'my-domain.com'
-        })
+        )
       end
     end
 

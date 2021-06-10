@@ -157,7 +157,7 @@ module HybridPlatformsConductor
                     hostname = "-#{Digest::MD5.hexdigest(hostname)[0..7]}.hpc-test.com"
                     hostname = "#{@node}.#{@environment}"[0..MAX_PROXMOX_HOSTNAME_SIZE - hostname.size - 1] + hostname
                   end
-                  @lxc_details = request_lxc_creation_for({
+                  @lxc_details = request_lxc_creation_for(
                     ostemplate: pve_template,
                     hostname: hostname.gsub('_', '-'),
                     cores: min_resources_to_deploy[:cpus],
@@ -174,7 +174,7 @@ module HybridPlatformsConductor
                       environment: #{@environment}
                       debug: #{log_debug? ? 'true' : 'false'}
                     EOS
-                  })
+                  )
                 else
                   raise "[ #{@node}/#{@environment} ] - No template found in #{proxmox_conf}"
                 end

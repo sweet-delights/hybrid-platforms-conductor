@@ -384,11 +384,15 @@ module HybridPlatformsConductorTest
           end
 
           it 'deploys on several nodes' do
-            with_platform_to_deploy(nodes_info: { nodes: {
-              'node1' => { services: %w[service1] },
-              'node2' => { services: %w[service2] },
-              'node3' => { services: %w[service3] }
-            } }) do
+            with_platform_to_deploy(
+              nodes_info: {
+                nodes: {
+                  'node1' => { services: %w[service1] },
+                  'node2' => { services: %w[service2] },
+                  'node3' => { services: %w[service3] }
+                }
+              }
+            ) do
               expect(test_deployer.deploy_on(%w[node1 node2 node3])).to eq(
                 'node1' => expected_deploy_result,
                 'node2' => expected_deploy_result,
@@ -811,12 +815,16 @@ module HybridPlatformsConductorTest
             end
 
             it 'restarts deployment for non-deterministic errors only on nodes needing it' do
-              with_platform_to_retry_deploy(nodes_info: { nodes: {
-                'node1' => { services: %w[service] },
-                'node2' => { services: %w[service] },
-                'node3' => { services: %w[service] },
-                'node4' => { services: %w[service] }
-              } }) do
+              with_platform_to_retry_deploy(
+                nodes_info: {
+                  nodes: {
+                    'node1' => { services: %w[service] },
+                    'node2' => { services: %w[service] },
+                    'node3' => { services: %w[service] },
+                    'node4' => { services: %w[service] }
+                  }
+                }
+              ) do
                 test_deployer.nbr_retries_on_error = 2
                 # Some nodes deploy successfully,
                 # others have deterministic errors,
