@@ -146,14 +146,18 @@ module HybridPlatformsConductorTest
               test_deployer.use_why_run = true if check_mode
               if expect_connections_to_nodes
                 with_connections_mocked_on(expect_services_to_deploy.keys) do
-                  expect_actions_executor_runs(expected_actions_for_deploy_on(
-                    services: expect_services_to_deploy,
-                    check_mode: check_mode,
-                    sudo: expect_sudo,
-                    additional_expected_actions: expect_additional_actions,
-                    expect_concurrent_actions: expect_concurrent_actions,
-                    expect_actions_timeout: expect_actions_timeout
-                  )) if expect_default_actions
+                  if expect_default_actions
+                    expect_actions_executor_runs(
+                      expected_actions_for_deploy_on(
+                        services: expect_services_to_deploy,
+                        check_mode: check_mode,
+                        sudo: expect_sudo,
+                        additional_expected_actions: expect_additional_actions,
+                        expect_concurrent_actions: expect_concurrent_actions,
+                        expect_actions_timeout: expect_actions_timeout
+                      )
+                    )
+                  end
                   yield repository
                 end
               else

@@ -136,28 +136,30 @@ describe HybridPlatformsConductor::ActionsExecutor do
 
     it 'executes several commands on several nodes with timeout on different actions depending on the node, in parallel' do
       with_test_platform_for_parallel_tests do
-        expect(test_actions_executor.execute_actions(
-          {
-            'node1' => [
-              { bash: 'sleep 1 && echo Node11' },
-              { bash: 'sleep 5 && echo Node12' }
-            ],
-            'node2' => [
-              { bash: 'echo Node21' },
-              { bash: 'sleep 1 && echo Node22' }
-            ],
-            'node3' => [
-              { bash: 'sleep 1 && echo Node31' },
-              { bash: 'sleep 1 && echo Node32' },
-              { bash: 'sleep 5 && echo Node33' }
-            ],
-            'node4' => [
-              { bash: 'sleep 5 && echo Node41' }
-            ]
-          },
-          timeout: 3,
-          concurrent: true
-        )).to eq(
+        expect(
+          test_actions_executor.execute_actions(
+            {
+              'node1' => [
+                { bash: 'sleep 1 && echo Node11' },
+                { bash: 'sleep 5 && echo Node12' }
+              ],
+              'node2' => [
+                { bash: 'echo Node21' },
+                { bash: 'sleep 1 && echo Node22' }
+              ],
+              'node3' => [
+                { bash: 'sleep 1 && echo Node31' },
+                { bash: 'sleep 1 && echo Node32' },
+                { bash: 'sleep 5 && echo Node33' }
+              ],
+              'node4' => [
+                { bash: 'sleep 5 && echo Node41' }
+              ]
+            },
+            timeout: 3,
+            concurrent: true
+          )
+        ).to eq(
           'node1' => [:timeout, "Node11\n", ''],
           'node2' => [0, "Node21\nNode22\n", ''],
           'node3' => [:timeout, "Node31\nNode32\n", ''],

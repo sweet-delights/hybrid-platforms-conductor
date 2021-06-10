@@ -150,17 +150,19 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
               }
             }
           })
-          expect(call_reserve_proxmox_container(
-            2, 1024, 1,
-            config: {
-              vm_ips_list: %w[
-                192.168.0.100
-                192.168.0.101
-                192.168.0.102
-                192.168.0.103
-              ]
-            }
-          )).to eq(error: 'not_enough_resources')
+          expect(
+            call_reserve_proxmox_container(
+              2, 1024, 1,
+              config: {
+                vm_ips_list: %w[
+                  192.168.0.100
+                  192.168.0.101
+                  192.168.0.102
+                  192.168.0.103
+                ]
+              }
+            )
+          ).to eq(error: 'not_enough_resources')
           expect_proxmox_actions_to_be []
         end
       end
@@ -294,19 +296,21 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
               }
             }
           })
-          expect(call_reserve_proxmox_container(
-            2, 1024, 1,
-            config: {
-              pve_nodes: nil,
-              vm_ips_list: %w[
-                192.168.0.100
-                192.168.0.101
-                192.168.0.102
-                192.168.0.103
-                192.168.0.104
-              ]
-            }
-          )).to eq(
+          expect(
+            call_reserve_proxmox_container(
+              2, 1024, 1,
+              config: {
+                pve_nodes: nil,
+                vm_ips_list: %w[
+                  192.168.0.100
+                  192.168.0.101
+                  192.168.0.102
+                  192.168.0.103
+                  192.168.0.104
+                ]
+              }
+            )
+          ).to eq(
             pve_node: 'pve_node_1',
             vm_id: 1001,
             vm_ip: '192.168.0.101'
@@ -341,16 +345,18 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
               }
             }
           })
-          expect(call_reserve_proxmox_container(
-            2, 1024, 1,
-            config: {
-              vm_ips_list: %w[
-                192.168.0.100
-                192.168.0.101
-                192.168.0.102
-              ]
-            }
-          )).to eq(
+          expect(
+            call_reserve_proxmox_container(
+              2, 1024, 1,
+              config: {
+                vm_ips_list: %w[
+                  192.168.0.100
+                  192.168.0.101
+                  192.168.0.102
+                ]
+              }
+            )
+          ).to eq(
             pve_node: 'pve_node_name',
             vm_id: 1001,
             vm_ip: '192.168.0.101'
@@ -392,17 +398,19 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
               }
             }
           })
-          expect(call_reserve_proxmox_container(
-            2, 1024, 1,
-            config: {
-              pve_nodes: nil,
-              vm_ips_list: %w[
-                192.168.0.100
-                192.168.0.101
-                192.168.0.102
-              ]
-            }
-          )).to eq(
+          expect(
+            call_reserve_proxmox_container(
+              2, 1024, 1,
+              config: {
+                pve_nodes: nil,
+                vm_ips_list: %w[
+                  192.168.0.100
+                  192.168.0.101
+                  192.168.0.102
+                ]
+              }
+            )
+          ).to eq(
             pve_node: 'pve_node_1',
             vm_id: 1001,
             vm_ip: '192.168.0.101'
@@ -437,18 +445,20 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
               }
             }
           })
-          expect(call_reserve_proxmox_container(
-            2, 1024, 1,
-            config: {
-              vm_ips_list: %w[
-                192.168.0.100
-                192.168.0.101
-                192.168.0.102
-                192.168.0.103
-              ],
-              vm_ids_range: [1000, 1002]
-            }
-          )).to eq(
+          expect(
+            call_reserve_proxmox_container(
+              2, 1024, 1,
+              config: {
+                vm_ips_list: %w[
+                  192.168.0.100
+                  192.168.0.101
+                  192.168.0.102
+                  192.168.0.103
+                ],
+                vm_ids_range: [1000, 1002]
+              }
+            )
+          ).to eq(
             pve_node: 'pve_node_name',
             vm_id: 1001,
             vm_ip: '192.168.0.101'
@@ -490,19 +500,21 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
               }
             }
           })
-          expect(call_reserve_proxmox_container(
-            2, 1024, 1,
-            config: {
-              pve_nodes: nil,
-              vm_ips_list: %w[
-                192.168.0.100
-                192.168.0.101
-                192.168.0.102
-                192.168.0.103
-              ],
-              vm_ids_range: [1000, 1002]
-            }
-          )).to eq(
+          expect(
+            call_reserve_proxmox_container(
+              2, 1024, 1,
+              config: {
+                pve_nodes: nil,
+                vm_ips_list: %w[
+                  192.168.0.100
+                  192.168.0.101
+                  192.168.0.102
+                  192.168.0.103
+                ],
+                vm_ids_range: [1000, 1002]
+              }
+            )
+          ).to eq(
             pve_node: 'pve_node_1',
             vm_id: 1001,
             vm_ip: '192.168.0.101'
@@ -537,23 +549,25 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
               }
             }
           })
-          expect(call_reserve_proxmox_container(
-            2, 1024, 1,
-            config: {
-              vm_ips_list: %w[
-                192.168.0.100
-                192.168.0.101
-                192.168.0.102
-                192.168.0.103
-              ],
-              limits: {
-                nbr_vms_max: 3,
-                cpu_loads_thresholds: [10, 10, 10],
-                ram_percent_used_max: 0.75,
-                disk_percent_used_max: 0.75
+          expect(
+            call_reserve_proxmox_container(
+              2, 1024, 1,
+              config: {
+                vm_ips_list: %w[
+                  192.168.0.100
+                  192.168.0.101
+                  192.168.0.102
+                  192.168.0.103
+                ],
+                limits: {
+                  nbr_vms_max: 3,
+                  cpu_loads_thresholds: [10, 10, 10],
+                  ram_percent_used_max: 0.75,
+                  disk_percent_used_max: 0.75
+                }
               }
-            }
-          )).to eq(
+            )
+          ).to eq(
             pve_node: 'pve_node_name',
             vm_id: 1001,
             vm_ip: '192.168.0.101'
@@ -595,24 +609,26 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
               }
             }
           })
-          expect(call_reserve_proxmox_container(
-            2, 1024, 1,
-            config: {
-              pve_nodes: nil,
-              vm_ips_list: %w[
-                192.168.0.100
-                192.168.0.101
-                192.168.0.102
-                192.168.0.103
-              ],
-              limits: {
-                nbr_vms_max: 3,
-                cpu_loads_thresholds: [10, 10, 10],
-                ram_percent_used_max: 0.75,
-                disk_percent_used_max: 0.75
+          expect(
+            call_reserve_proxmox_container(
+              2, 1024, 1,
+              config: {
+                pve_nodes: nil,
+                vm_ips_list: %w[
+                  192.168.0.100
+                  192.168.0.101
+                  192.168.0.102
+                  192.168.0.103
+                ],
+                limits: {
+                  nbr_vms_max: 3,
+                  cpu_loads_thresholds: [10, 10, 10],
+                  ram_percent_used_max: 0.75,
+                  disk_percent_used_max: 0.75
+                }
               }
-            }
-          )).to eq(
+            )
+          ).to eq(
             pve_node: 'pve_node_1',
             vm_id: 1001,
             vm_ip: '192.168.0.101'

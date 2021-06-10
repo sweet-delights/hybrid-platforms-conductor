@@ -144,15 +144,17 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
               }
             }
           })
-          expect(call_reserve_proxmox_container(
-            2, 1024, 4,
-            config: { limits: {
-              nbr_vms_max: 3,
-              cpu_loads_thresholds: [10, 10, 10],
-              ram_percent_used_max: 0.75,
-              disk_percent_used_max: 0.75
-            } }
-          )).to eq(error: 'exceeded_number_of_vms')
+          expect(
+            call_reserve_proxmox_container(
+              2, 1024, 4,
+              config: { limits: {
+                nbr_vms_max: 3,
+                cpu_loads_thresholds: [10, 10, 10],
+                ram_percent_used_max: 0.75,
+                disk_percent_used_max: 0.75
+              } }
+            )
+          ).to eq(error: 'exceeded_number_of_vms')
         end
       end
 
@@ -169,15 +171,17 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
               }
             }
           })
-          expect(call_reserve_proxmox_container(
-            2, 1024, 4,
-            config: { limits: {
-              nbr_vms_max: 3,
-              cpu_loads_thresholds: [10, 10, 10],
-              ram_percent_used_max: 0.75,
-              disk_percent_used_max: 0.75
-            } }
-          )).to eq({
+          expect(
+            call_reserve_proxmox_container(
+              2, 1024, 4,
+              config: { limits: {
+                nbr_vms_max: 3,
+                cpu_loads_thresholds: [10, 10, 10],
+                ram_percent_used_max: 0.75,
+                disk_percent_used_max: 0.75
+              } }
+            )
+          ).to eq({
             pve_node: 'pve_node_name',
             vm_id: 1002,
             vm_ip: '192.168.0.100'

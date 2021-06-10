@@ -89,11 +89,13 @@ describe HybridPlatformsConductor::ServicesHandler do
         },
         true
       ) do |repositories|
-        expect(test_services_handler.deploy_allowed?(
-          services: { 'node1' => %w[service1], 'node2' => %w[service2], 'node3' => %w[service3] },
-          secrets: {},
-          local_environment: false
-        )).to eq nil
+        expect(
+          test_services_handler.deploy_allowed?(
+            services: { 'node1' => %w[service1], 'node2' => %w[service2], 'node3' => %w[service3] },
+            secrets: {},
+            local_environment: false
+          )
+        ).to eq nil
       end
     end
 
@@ -109,11 +111,13 @@ describe HybridPlatformsConductor::ServicesHandler do
       ) do |repositories|
         checkout_non_master_on(repositories['platform2'])
         checkout_non_master_on(repositories['platform4'])
-        expect(test_services_handler.deploy_allowed?(
-          services: { 'node1' => %w[service1], 'node2' => %w[service2], 'node3' => %w[service3], 'node4' => %w[service4] },
-          secrets: {},
-          local_environment: false
-        )).to eq "The following platforms have not checked out master: #{repositories['platform2']}, #{repositories['platform4']}. Only master should be deployed in production."
+        expect(
+          test_services_handler.deploy_allowed?(
+            services: { 'node1' => %w[service1], 'node2' => %w[service2], 'node3' => %w[service3], 'node4' => %w[service4] },
+            secrets: {},
+            local_environment: false
+          )
+        ).to eq "The following platforms have not checked out master: #{repositories['platform2']}, #{repositories['platform4']}. Only master should be deployed in production."
       end
     end
 
@@ -129,11 +133,13 @@ describe HybridPlatformsConductor::ServicesHandler do
       ) do |repositories|
         checkout_non_master_on(repositories['platform2'])
         checkout_non_master_on(repositories['platform4'])
-        expect(test_services_handler.deploy_allowed?(
-          services: { 'node1' => %w[service1 service3] },
-          secrets: {},
-          local_environment: false
-        )).to eq nil
+        expect(
+          test_services_handler.deploy_allowed?(
+            services: { 'node1' => %w[service1 service3] },
+            secrets: {},
+            local_environment: false
+          )
+        ).to eq nil
       end
     end
 
