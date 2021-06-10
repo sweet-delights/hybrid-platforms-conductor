@@ -23,14 +23,14 @@ describe HybridPlatformsConductor::Deployer do
           with_connections_mocked_on ['node'] do
             test_actions_executor.connector(:ssh).ssh_user = 'test_user'
             expect_services_handler_to_deploy('node' => %w[service1 service2])
-            expect_actions_executor_runs([
+            expect_actions_executor_runs [
               # First run, we expect the mutex to be setup, and the deployment actions to be run
               proc { |actions_per_nodes| expect_actions_to_deploy_on(actions_per_nodes, 'node') },
               # Second run, we expect the mutex to be released
               proc { |actions_per_nodes| expect_actions_to_unlock(actions_per_nodes, 'node') },
               # Third run, we expect logs to be uploaded on the node
               proc { |actions_per_nodes| expect(actions_per_nodes).to eq('node' => [{ bash: 'echo Save test logs to node' }]) }
-            ])
+            ]
             expect(test_deployer.deploy_on('node')).to eq('node' => [0, 'Deploy successful', ''])
             expect(HybridPlatformsConductorTest::TestLogPlugin.calls).to eq [
               {
@@ -63,7 +63,7 @@ describe HybridPlatformsConductor::Deployer do
               'node1' => %w[service1],
               'node2' => %w[service2]
             )
-            expect_actions_executor_runs([
+            expect_actions_executor_runs [
               # First run, we expect the mutex to be setup, and the deployment actions to be run
               proc { |actions_per_nodes| expect_actions_to_deploy_on(actions_per_nodes, %w[node1 node2]) },
               # Second run, we expect the mutex to be released
@@ -75,7 +75,7 @@ describe HybridPlatformsConductor::Deployer do
                   'node2' => [{ bash: 'echo Save test logs to node2' }]
                 )
               end
-            ])
+            ]
             expect(test_deployer.deploy_on(%w[node1 node2])).to eq(
               'node1' => [0, 'Deploy successful', ''],
               'node2' => [0, 'Deploy successful', '']
@@ -119,7 +119,7 @@ describe HybridPlatformsConductor::Deployer do
           with_connections_mocked_on ['node'] do
             test_actions_executor.connector(:ssh).ssh_user = 'test_user'
             expect_services_handler_to_deploy('node' => %w[service1 service2])
-            expect_actions_executor_runs([
+            expect_actions_executor_runs [
               # First run, we expect the mutex to be setup, and the deployment actions to be run
               proc do |actions_per_nodes|
                 expect_actions_to_deploy_on(
@@ -132,7 +132,7 @@ describe HybridPlatformsConductor::Deployer do
               proc { |actions_per_nodes| expect_actions_to_unlock(actions_per_nodes, 'node') },
               # Third run, we expect logs to be uploaded on the node
               proc { |actions_per_nodes| expect(actions_per_nodes).to eq('node' => [{ bash: 'echo Save test logs to node' }]) }
-            ])
+            ]
             expect(test_deployer.deploy_on('node')).to eq('node' => [:failed_action, 'Failed deploy stdout', 'Failed deploy stderr'])
             expect(HybridPlatformsConductorTest::TestLogPlugin.calls).to eq [
               {
@@ -156,13 +156,13 @@ describe HybridPlatformsConductor::Deployer do
 
       it 'gets deployment info from log plugins' do
         with_test_platform_for_deploy_tests({ nodes: { 'node' => {} } }) do |repository|
-          expect_actions_executor_runs([
+          expect_actions_executor_runs [
             # Expect the actions to get log files
             proc do |actions_per_nodes|
               expect(actions_per_nodes).to eq('node' => [{ bash: 'echo Read logs for node' }])
               { 'node' => [42, 'Log files read stdout', 'Log files read stderr'] }
             end
-          ])
+          ]
           expect(test_deployer.deployment_info_from('node')).to eq(
             'node' => {
               deployment_info: { user: 'test_user' },

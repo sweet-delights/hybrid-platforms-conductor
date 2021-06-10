@@ -40,9 +40,12 @@ describe HybridPlatformsConductor::ServicesHandler do
         nodes: { 'node' => { services: %w[service1] } },
         deployable_services: %w[service1]
       ) do
-        expect_deploy_actions('node', %w[service1], false, [
-          { node: 'node', service: 'service1' }
-        ])
+        expect_deploy_actions(
+          'node', %w[service1], false,
+          [
+            { node: 'node', service: 'service1' }
+          ]
+        )
       end
     end
 
@@ -51,9 +54,12 @@ describe HybridPlatformsConductor::ServicesHandler do
         nodes: { 'node' => { services: %w[service1] } },
         deployable_services: %w[service1]
       ) do
-        expect_deploy_actions('node', %w[service1], true, [
-          { node: 'node', service: 'service1', check: true }
-        ])
+        expect_deploy_actions(
+          'node', %w[service1], true,
+          [
+            { node: 'node', service: 'service1', check: true }
+          ]
+        )
       end
     end
 
@@ -62,10 +68,13 @@ describe HybridPlatformsConductor::ServicesHandler do
         nodes: { 'node' => { services: %w[service1 service2] } },
         deployable_services: %w[service1 service2]
       ) do
-        expect_deploy_actions('node', %w[service1 service2], false, [
-          { node: 'node', service: 'service1' },
-          { node: 'node', service: 'service2' }
-        ])
+        expect_deploy_actions(
+          'node', %w[service1 service2], false,
+          [
+            { node: 'node', service: 'service1' },
+            { node: 'node', service: 'service2' }
+          ]
+        )
       end
     end
 
@@ -74,10 +83,13 @@ describe HybridPlatformsConductor::ServicesHandler do
         'platform1' => { nodes: { 'node' => { services: %w[service1 service2] } }, deployable_services: %w[service1] },
         'platform2' => { nodes: {}, deployable_services: %w[service2] }
       ) do
-        expect_deploy_actions('node', %w[service1 service2], false, [
-          { node: 'node', service: 'service1', platform: 'platform1' },
-          { node: 'node', service: 'service2', platform: 'platform2' }
-        ])
+        expect_deploy_actions(
+          'node', %w[service1 service2], false,
+          [
+            { node: 'node', service: 'service1', platform: 'platform1' },
+            { node: 'node', service: 'service2', platform: 'platform2' }
+          ]
+        )
       end
     end
 
@@ -87,12 +99,15 @@ describe HybridPlatformsConductor::ServicesHandler do
         'platform2' => { nodes: {}, deployable_services: %w[service2 service3] },
         'platform3' => { nodes: {}, deployable_services: %w[service4] }
       ) do
-        expect_deploy_actions('node', %w[service3 service1 service4 service2], false, [
-          { node: 'node', service: 'service3', platform: 'platform2' },
-          { node: 'node', service: 'service1', platform: 'platform1' },
-          { node: 'node', service: 'service4', platform: 'platform3' },
-          { node: 'node', service: 'service2', platform: 'platform2' }
-        ])
+        expect_deploy_actions(
+          'node', %w[service3 service1 service4 service2], false,
+          [
+            { node: 'node', service: 'service3', platform: 'platform2' },
+            { node: 'node', service: 'service1', platform: 'platform1' },
+            { node: 'node', service: 'service4', platform: 'platform3' },
+            { node: 'node', service: 'service2', platform: 'platform2' }
+          ]
+        )
       end
     end
 
@@ -101,9 +116,12 @@ describe HybridPlatformsConductor::ServicesHandler do
         nodes: { 'node' => { services: %w[service1 service2] } },
         deployable_services: %w[service1 service2]
       ) do
-        expect_deploy_actions('node', %w[service2], false, [
-          { node: 'node', service: 'service2' }
-        ])
+        expect_deploy_actions(
+          'node', %w[service2], false,
+          [
+            { node: 'node', service: 'service2' }
+          ]
+        )
       end
     end
 

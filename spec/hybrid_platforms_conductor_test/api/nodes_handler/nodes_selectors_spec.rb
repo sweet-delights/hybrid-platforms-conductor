@@ -110,20 +110,28 @@ describe HybridPlatformsConductor::NodesHandler do
 
     it 'considers nodes selector intersection in a nodes selector stack' do
       with_test_platform_for_nodes do
-        expect(test_nodes_handler.select_from_nodes_selector_stack([
-          %w[node1 node2 node3],
-          %w[node2 node3 node4]
-        ]).sort).to eq %w[node2 node3].sort
+        expect(
+          test_nodes_handler.select_from_nodes_selector_stack(
+            [
+              %w[node1 node2 node3],
+              %w[node2 node3 node4]
+            ]
+          ).sort
+        ).to eq %w[node2 node3].sort
       end
     end
 
     it 'considers nodes selector intersection between different kind of selectors in a nodes selector stack' do
       with_test_platform_for_nodes do
-        expect(test_nodes_handler.select_from_nodes_selector_stack([
-          '/node[1256]/',
-          [{ platform: 'platform2' }],
-          [{ service: 'service1' }]
-        ]).sort).to eq %w[node5].sort
+        expect(
+          test_nodes_handler.select_from_nodes_selector_stack(
+            [
+              '/node[1256]/',
+              [{ platform: 'platform2' }],
+              [{ service: 'service1' }]
+            ]
+          ).sort
+        ).to eq %w[node5].sort
       end
     end
 

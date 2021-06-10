@@ -10,9 +10,9 @@ describe HybridPlatformsConductor::NodesHandler do
         },
         true
       ) do
-        with_cmd_runner_mocked([
+        with_cmd_runner_mocked [
           [/cd .+\/platform_2 && git --no-pager diff --no-color master/, proc { [0, '', ''] }]
-        ]) do
+        ] do
           expect(test_nodes_handler.impacted_nodes_from_git_diff('platform_2')).to eq [
             %w[node21 node22].sort,
             [],
@@ -25,9 +25,9 @@ describe HybridPlatformsConductor::NodesHandler do
 
     it 'diffs from another commit if asked' do
       with_test_platform({}, true) do
-        with_cmd_runner_mocked([
+        with_cmd_runner_mocked [
           [/cd .+\/my_remote_platform && git --no-pager diff --no-color from_branch/, proc { [0, '', ''] }]
-        ]) do
+        ] do
           expect(test_nodes_handler.impacted_nodes_from_git_diff('my_remote_platform', from_commit: 'from_branch')).to eq [[], [], [], true]
         end
       end
@@ -35,9 +35,9 @@ describe HybridPlatformsConductor::NodesHandler do
 
     it 'fails when the commit id is invalid' do
       with_test_platform({}, true) do
-        with_cmd_runner_mocked([
+        with_cmd_runner_mocked [
           [/cd .+\/my_remote_platform && git --no-pager diff --no-color invalid_id/, proc { raise HybridPlatformsConductor::CmdRunner::UnexpectedExitCodeError, 'Mocked git error due to an invalid commit id' }]
-        ]) do
+        ] do
           expect { test_nodes_handler.impacted_nodes_from_git_diff('my_remote_platform', from_commit: 'invalid_id') }.to raise_error HybridPlatformsConductor::NodesHandler::GitError, 'Mocked git error due to an invalid commit id'
         end
       end
@@ -45,9 +45,9 @@ describe HybridPlatformsConductor::NodesHandler do
 
     it 'diffs to another commit if asked' do
       with_test_platform({}, true) do
-        with_cmd_runner_mocked([
+        with_cmd_runner_mocked [
           [/cd .+\/my_remote_platform && git --no-pager diff --no-color master to_branch/, proc { [0, '', ''] }]
-        ]) do
+        ] do
           expect(test_nodes_handler.impacted_nodes_from_git_diff('my_remote_platform', to_commit: 'to_branch')).to eq [[], [], [], true]
         end
       end
@@ -55,7 +55,7 @@ describe HybridPlatformsConductor::NodesHandler do
 
     it 'gives the platform handler the correct git diff result' do
       with_test_platform({}, true) do
-        with_cmd_runner_mocked([
+        with_cmd_runner_mocked [
           [/cd .+\/my_remote_platform && git --no-pager diff --no-color master/, proc do
             [
               0,
@@ -87,7 +87,7 @@ describe HybridPlatformsConductor::NodesHandler do
               ''
             ]
           end]
-        ]) do
+        ] do
           expect(test_nodes_handler.impacted_nodes_from_git_diff('my_remote_platform')).to eq [[], [], [], true]
           expect(test_platforms_handler.platform('my_remote_platform').files_diffs).to eq(
             'Gemfile' => {
@@ -136,9 +136,9 @@ describe HybridPlatformsConductor::NodesHandler do
         },
         true
       ) do
-        with_cmd_runner_mocked([
+        with_cmd_runner_mocked [
           [/cd .+\/my_remote_platform && git --no-pager diff --no-color master/, proc { [0, '', ''] }]
-        ]) do
+        ] do
           expect(test_nodes_handler.impacted_nodes_from_git_diff('my_remote_platform')).to eq [
             %w[node1 node3],
             %w[node1 node3],
@@ -164,9 +164,9 @@ describe HybridPlatformsConductor::NodesHandler do
         },
         true
       ) do
-        with_cmd_runner_mocked([
+        with_cmd_runner_mocked [
           [/cd .+\/my_remote_platform && git --no-pager diff --no-color master/, proc { [0, '', ''] }]
-        ]) do
+        ] do
           expect(test_nodes_handler.impacted_nodes_from_git_diff('my_remote_platform')).to eq [
             %w[node1 node2],
             [],
@@ -192,9 +192,9 @@ describe HybridPlatformsConductor::NodesHandler do
         },
         true
       ) do
-        with_cmd_runner_mocked([
+        with_cmd_runner_mocked [
           [/cd .+\/my_remote_platform && git --no-pager diff --no-color master/, proc { [0, '', ''] }]
-        ]) do
+        ] do
           expect(test_nodes_handler.impacted_nodes_from_git_diff('my_remote_platform')).to eq [
             %w[node1 node2 node3],
             [],
@@ -216,9 +216,9 @@ describe HybridPlatformsConductor::NodesHandler do
         },
         true
       ) do
-        with_cmd_runner_mocked([
+        with_cmd_runner_mocked [
           [/cd .+\/my_remote_platform && git --no-pager diff --no-color master/, proc { [0, '', ''] }]
-        ]) do
+        ] do
           expect(test_nodes_handler.impacted_nodes_from_git_diff('my_remote_platform')).to eq [
             %w[node1 node3],
             %w[node1 node3],
@@ -246,9 +246,9 @@ describe HybridPlatformsConductor::NodesHandler do
         },
         true
       ) do
-        with_cmd_runner_mocked([
+        with_cmd_runner_mocked [
           [/cd .+\/my_remote_platform && git --no-pager diff --no-color master/, proc { [0, '', ''] }]
-        ]) do
+        ] do
           expect(test_nodes_handler.impacted_nodes_from_git_diff('my_remote_platform')).to eq [
             %w[node1 node2 node4],
             %w[node4],
@@ -278,9 +278,9 @@ describe HybridPlatformsConductor::NodesHandler do
         },
         true
       ) do
-        with_cmd_runner_mocked([
+        with_cmd_runner_mocked [
           [/cd .+\/my_remote_platform && git --no-pager diff --no-color master/, proc { [0, '', ''] }]
-        ]) do
+        ] do
           expect(test_nodes_handler.impacted_nodes_from_git_diff('my_remote_platform')).to eq [
             %w[node1 node2 node3 node4 node5 node6],
             [],
@@ -310,9 +310,9 @@ describe HybridPlatformsConductor::NodesHandler do
         },
         true
       ) do
-        with_cmd_runner_mocked([
+        with_cmd_runner_mocked [
           [/cd .+\/my_remote_platform && git --no-pager diff --no-color master/, proc { [0, '', ''] }]
-        ]) do
+        ] do
           expect(test_nodes_handler.impacted_nodes_from_git_diff('my_remote_platform', smallest_set: true)).to eq [
             %w[node1 node2],
             [],

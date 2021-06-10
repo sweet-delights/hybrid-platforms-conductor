@@ -16,9 +16,9 @@ describe HybridPlatformsConductor::NodesHandler do
 
     it 'returns a host IP when hostname is set' do
       with_test_platform(nodes: { 'test_node' => {} }) do
-        with_cmd_runner_mocked([
+        with_cmd_runner_mocked [
           ['getent hosts my_domain.my_host', proc { [0, '192.168.42.42 my_domain.my_host', ''] }]
-        ]) do
+        ] do
           expect(cmdb(:host_ip).get_host_ip(['test_node'], { 'test_node' => { hostname: 'my_domain.my_host' } })).to eq('test_node' => '192.168.42.42')
         end
       end
@@ -26,9 +26,9 @@ describe HybridPlatformsConductor::NodesHandler do
 
     it 'does not return a host IP when getent can\'t retrieve it' do
       with_test_platform(nodes: { 'test_node' => {} }) do
-        with_cmd_runner_mocked([
+        with_cmd_runner_mocked [
           ['getent hosts my_domain.my_host', proc { [0, '', ''] }]
-        ]) do
+        ] do
           expect(cmdb(:host_ip).get_host_ip(['test_node'], { 'test_node' => { hostname: 'my_domain.my_host' } })).to eq({})
         end
       end
@@ -41,11 +41,11 @@ describe HybridPlatformsConductor::NodesHandler do
         'test_node3' => {},
         'test_node4' => {}
       }) do
-        with_cmd_runner_mocked([
+        with_cmd_runner_mocked [
           ['getent hosts my_domain.my_host1', proc { [0, '192.168.42.1 my_domain.my_host1', ''] }],
           ['getent hosts my_domain.my_host2', proc { [0, '', ''] }],
           ['getent hosts my_domain.my_host4', proc { [0, '192.168.42.4 my_domain.my_host4', ''] }],
-        ]) do
+        ] do
           expect(cmdb(:host_ip).get_host_ip(['test_node'], {
             'test_node1' => { hostname: 'my_domain.my_host1' },
             'test_node2' => { hostname: 'my_domain.my_host2' },

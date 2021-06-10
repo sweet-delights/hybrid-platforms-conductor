@@ -61,9 +61,11 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
       end
 
       it 'makes sure to remove cgroup files that are leftovers of removed containers' do
-        with_sync_node(leftovers: [
-          '/sys/fs/cgroup/memory/lxc/1003'
-        ]) do
+        with_sync_node(
+          leftovers: [
+            '/sys/fs/cgroup/memory/lxc/1003'
+          ]
+        ) do
           mock_proxmox(mocked_pve_nodes: {
             'pve_node_name' => {
               lxc_containers: {
@@ -81,9 +83,11 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
       end
 
       it 'makes sure to remove cgroup files that are leftovers of removed containers even when they are reusing the VM ID' do
-        with_sync_node(leftovers: [
-          '/sys/fs/cgroup/memory/lxc/1002'
-        ]) do
+        with_sync_node(
+          leftovers: [
+            '/sys/fs/cgroup/memory/lxc/1002'
+          ]
+        ) do
           mock_proxmox(mocked_pve_nodes: {
             'pve_node_name' => {
               lxc_containers: {
@@ -101,11 +105,13 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
       end
 
       it 'makes sure to remove cgroup files that are leftovers of removed containers when several cgroups contain files' do
-        with_sync_node(leftovers: [
-          '/sys/fs/cgroup/memory/lxc/1003',
-          '/sys/fs/cgroup/network/lxc/1003',
-          '/sys/fs/cgroup/cpu/lxc/1003'
-        ]) do
+        with_sync_node(
+          leftovers: [
+            '/sys/fs/cgroup/memory/lxc/1003',
+            '/sys/fs/cgroup/network/lxc/1003',
+            '/sys/fs/cgroup/cpu/lxc/1003'
+          ]
+        ) do
           mock_proxmox(mocked_pve_nodes: {
             'pve_node_name' => {
               lxc_containers: {

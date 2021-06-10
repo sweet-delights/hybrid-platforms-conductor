@@ -16,11 +16,13 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
 
       it 'retries errors a few times until it gets resolved' do
         with_sync_node do
-          mock_proxmox(mocked_pve_nodes: [
-            { 'pve_node_name' => { loadavg: [0.1, 11, 0.1] } },
-            { 'pve_node_name' => { loadavg: [0.1, 11, 0.1] } },
-            { 'pve_node_name' => { loadavg: [0.1, 9, 0.1] } }
-          ])
+          mock_proxmox(
+            mocked_pve_nodes: [
+              { 'pve_node_name' => { loadavg: [0.1, 11, 0.1] } },
+              { 'pve_node_name' => { loadavg: [0.1, 11, 0.1] } },
+              { 'pve_node_name' => { loadavg: [0.1, 9, 0.1] } }
+            ]
+          )
           expect(call_reserve_proxmox_container(2, 1024, 4, max_retries: 5)).to eq(
             pve_node: 'pve_node_name',
             vm_id: 1000,

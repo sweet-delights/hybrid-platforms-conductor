@@ -247,11 +247,13 @@ describe HybridPlatformsConductor::HpcPlugins::PlatformHandler::ServerlessChef d
             platform.package(services: { 'node' => %w[test_policy] }, secrets: {}, local_environment: true)
             local_policy_file = "#{repository}/policyfiles/test_policy.local.lock.json"
             expect(File.exist?(local_policy_file)).to eq true
-            expect(JSON.parse(File.read(local_policy_file))).to eq('run_list' => [
-              'hpc_test::before_run',
-              'recipe[test_cookbook]',
-              'hpc_test::after_run'
-            ])
+            expect(JSON.parse(File.read(local_policy_file))).to eq(
+              'run_list' => [
+                'hpc_test::before_run',
+                'recipe[test_cookbook]',
+                'hpc_test::after_run'
+              ]
+            )
           end
         end
       end
@@ -263,10 +265,12 @@ describe HybridPlatformsConductor::HpcPlugins::PlatformHandler::ServerlessChef d
             platform.package(services: { 'node' => %w[test_policy] }, secrets: {}, local_environment: true)
             local_policy_file = "#{repository}/policyfiles/test_policy.local.lock.json"
             expect(File.exist?(local_policy_file)).to eq true
-            expect(JSON.parse(File.read(local_policy_file))).to eq('run_list' => [
-              'hpc_test::before_run',
-              'recipe[test_cookbook]'
-            ])
+            expect(JSON.parse(File.read(local_policy_file))).to eq(
+              'run_list' => [
+                'hpc_test::before_run',
+                'recipe[test_cookbook]'
+              ]
+            )
           end
         end
       end
@@ -278,10 +282,12 @@ describe HybridPlatformsConductor::HpcPlugins::PlatformHandler::ServerlessChef d
             platform.package(services: { 'node' => %w[test_policy] }, secrets: {}, local_environment: true)
             local_policy_file = "#{repository}/policyfiles/test_policy.local.lock.json"
             expect(File.exist?(local_policy_file)).to eq true
-            expect(JSON.parse(File.read(local_policy_file))).to eq('run_list' => [
-              'recipe[test_cookbook]',
-              'hpc_test::after_run'
-            ])
+            expect(JSON.parse(File.read(local_policy_file))).to eq(
+              'run_list' => [
+                'recipe[test_cookbook]',
+                'hpc_test::after_run'
+              ]
+            )
           end
         end
       end

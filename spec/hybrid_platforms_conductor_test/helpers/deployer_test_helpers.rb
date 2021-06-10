@@ -518,24 +518,26 @@ module HybridPlatformsConductorTest
                   [1, "Error: This is a stdout non-deterministic error\nDeploy failed\n", ''],
                   [0, 'Deploy ok', '']
                 ]
-                expect(test_deployer.deploy_on('node')).to eq('node' => [
-                  0,
-                  <<~EOS,
-                    Error: This is a stdout non-deterministic error
-                    Deploy failed
+                expect(test_deployer.deploy_on('node')).to eq(
+                  'node' => [
+                    0,
+                    <<~EOS,
+                      Error: This is a stdout non-deterministic error
+                      Deploy failed
 
-                    Deployment exit status code: 1
-                    !!! Retry deployment due to non-deterministic error (0 remaining attempts)...
-                    Deploy ok
-                  EOS
-                  <<~EOS
-                    !!! 1 retriable errors detected in this deployment:
-                    * stdout non-deterministic error
+                      Deployment exit status code: 1
+                      !!! Retry deployment due to non-deterministic error (0 remaining attempts)...
+                      Deploy ok
+                    EOS
+                    <<~EOS
+                      !!! 1 retriable errors detected in this deployment:
+                      * stdout non-deterministic error
 
-                    !!! Retry deployment due to non-deterministic error (0 remaining attempts)...
+                      !!! Retry deployment due to non-deterministic error (0 remaining attempts)...
 
-                  EOS
-                ])
+                    EOS
+                  ]
+                )
               end
             end
 
@@ -546,24 +548,26 @@ module HybridPlatformsConductorTest
                   [1, "Error: This is a stdout regexp error 42\nDeploy failed\n", ''],
                   [0, 'Deploy ok', '']
                 ]
-                expect(test_deployer.deploy_on('node')).to eq('node' => [
-                  0,
-                  <<~EOS,
-                    Error: This is a stdout regexp error 42
-                    Deploy failed
+                expect(test_deployer.deploy_on('node')).to eq(
+                  'node' => [
+                    0,
+                    <<~EOS,
+                      Error: This is a stdout regexp error 42
+                      Deploy failed
 
-                    Deployment exit status code: 1
-                    !!! Retry deployment due to non-deterministic error (0 remaining attempts)...
-                    Deploy ok
-                  EOS
-                  <<~EOS
-                    !!! 1 retriable errors detected in this deployment:
-                    * /stdout regexp error \\d+/ matched 'stdout regexp error 42'
+                      Deployment exit status code: 1
+                      !!! Retry deployment due to non-deterministic error (0 remaining attempts)...
+                      Deploy ok
+                    EOS
+                    <<~EOS
+                      !!! 1 retriable errors detected in this deployment:
+                      * /stdout regexp error \\d+/ matched 'stdout regexp error 42'
 
-                    !!! Retry deployment due to non-deterministic error (0 remaining attempts)...
+                      !!! Retry deployment due to non-deterministic error (0 remaining attempts)...
 
-                  EOS
-                ])
+                    EOS
+                  ]
+                )
               end
             end
 
@@ -574,24 +578,26 @@ module HybridPlatformsConductorTest
                   [1, '', "Error: This is a stderr non-deterministic error\nDeploy failed\n"],
                   [0, 'Deploy ok', '']
                 ]
-                expect(test_deployer.deploy_on('node')).to eq('node' => [
-                  0,
-                  <<~EOS,
+                expect(test_deployer.deploy_on('node')).to eq(
+                  'node' => [
+                    0,
+                    <<~EOS,
 
-                    Deployment exit status code: 1
-                    !!! Retry deployment due to non-deterministic error (0 remaining attempts)...
-                    Deploy ok
-                  EOS
-                  <<~EOS
-                    Error: This is a stderr non-deterministic error
-                    Deploy failed
-                    !!! 1 retriable errors detected in this deployment:
-                    * stderr non-deterministic error
+                      Deployment exit status code: 1
+                      !!! Retry deployment due to non-deterministic error (0 remaining attempts)...
+                      Deploy ok
+                    EOS
+                    <<~EOS
+                      Error: This is a stderr non-deterministic error
+                      Deploy failed
+                      !!! 1 retriable errors detected in this deployment:
+                      * stderr non-deterministic error
 
-                    !!! Retry deployment due to non-deterministic error (0 remaining attempts)...
+                      !!! Retry deployment due to non-deterministic error (0 remaining attempts)...
 
-                  EOS
-                ])
+                    EOS
+                  ]
+                )
               end
             end
 
@@ -602,24 +608,26 @@ module HybridPlatformsConductorTest
                   [1, '', "Error: This is a stderr regexp error 42\nDeploy failed\n"],
                   [0, 'Deploy ok', '']
                 ]
-                expect(test_deployer.deploy_on('node')).to eq('node' => [
-                  0,
-                  <<~EOS,
+                expect(test_deployer.deploy_on('node')).to eq(
+                  'node' => [
+                    0,
+                    <<~EOS,
 
-                    Deployment exit status code: 1
-                    !!! Retry deployment due to non-deterministic error (0 remaining attempts)...
-                    Deploy ok
-                  EOS
-                  <<~EOS
-                    Error: This is a stderr regexp error 42
-                    Deploy failed
-                    !!! 1 retriable errors detected in this deployment:
-                    * /stderr regexp error \\d+/ matched 'stderr regexp error 42'
+                      Deployment exit status code: 1
+                      !!! Retry deployment due to non-deterministic error (0 remaining attempts)...
+                      Deploy ok
+                    EOS
+                    <<~EOS
+                      Error: This is a stderr regexp error 42
+                      Deploy failed
+                      !!! 1 retriable errors detected in this deployment:
+                      * /stderr regexp error \\d+/ matched 'stderr regexp error 42'
 
-                    !!! Retry deployment due to non-deterministic error (0 remaining attempts)...
+                      !!! Retry deployment due to non-deterministic error (0 remaining attempts)...
 
-                  EOS
-                ])
+                    EOS
+                  ]
+                )
               end
             end
 
@@ -631,33 +639,35 @@ module HybridPlatformsConductorTest
                   [1, "Error: This is a stdout non-deterministic error 2\nDeploy failed", ''],
                   [0, 'Deploy ok', '']
                 ]
-                expect(test_deployer.deploy_on('node')).to eq('node' => [
-                  0,
-                  <<~EOS,
-                    Error: This is a stdout non-deterministic error 1
-                    Deploy failed
-                    Deployment exit status code: 1
-                    !!! Retry deployment due to non-deterministic error (4 remaining attempts)...
-                    Error: This is a stdout non-deterministic error 2
-                    Deploy failed
+                expect(test_deployer.deploy_on('node')).to eq(
+                  'node' => [
+                    0,
+                    <<~EOS,
+                      Error: This is a stdout non-deterministic error 1
+                      Deploy failed
+                      Deployment exit status code: 1
+                      !!! Retry deployment due to non-deterministic error (4 remaining attempts)...
+                      Error: This is a stdout non-deterministic error 2
+                      Deploy failed
 
-                    Deployment exit status code: 1
-                    !!! Retry deployment due to non-deterministic error (3 remaining attempts)...
-                    Deploy ok
-                  EOS
-                  <<~EOS
-                    !!! 1 retriable errors detected in this deployment:
-                    * stdout non-deterministic error
+                      Deployment exit status code: 1
+                      !!! Retry deployment due to non-deterministic error (3 remaining attempts)...
+                      Deploy ok
+                    EOS
+                    <<~EOS
+                      !!! 1 retriable errors detected in this deployment:
+                      * stdout non-deterministic error
 
-                    !!! Retry deployment due to non-deterministic error (4 remaining attempts)...
-                    !!! 1 retriable errors detected in this deployment:
-                    * stdout non-deterministic error
+                      !!! Retry deployment due to non-deterministic error (4 remaining attempts)...
+                      !!! 1 retriable errors detected in this deployment:
+                      * stdout non-deterministic error
 
 
-                    !!! Retry deployment due to non-deterministic error (3 remaining attempts)...
+                      !!! Retry deployment due to non-deterministic error (3 remaining attempts)...
 
-                  EOS
-                ])
+                    EOS
+                  ]
+                )
               end
             end
 
@@ -669,34 +679,36 @@ module HybridPlatformsConductorTest
                   [1, "Error: This is a stdout non-deterministic error 2\nDeploy failed", ''],
                   [1, "Error: This is a stdout deterministic error 3\nDeploy failed", '']
                 ]
-                expect(test_deployer.deploy_on('node')).to eq('node' => [
-                  1,
-                  <<~EOS,
-                    Error: This is a stdout non-deterministic error 1
-                    Deploy failed
-                    Deployment exit status code: 1
-                    !!! Retry deployment due to non-deterministic error (4 remaining attempts)...
-                    Error: This is a stdout non-deterministic error 2
-                    Deploy failed
+                expect(test_deployer.deploy_on('node')).to eq(
+                  'node' => [
+                    1,
+                    <<~EOS,
+                      Error: This is a stdout non-deterministic error 1
+                      Deploy failed
+                      Deployment exit status code: 1
+                      !!! Retry deployment due to non-deterministic error (4 remaining attempts)...
+                      Error: This is a stdout non-deterministic error 2
+                      Deploy failed
 
-                    Deployment exit status code: 1
-                    !!! Retry deployment due to non-deterministic error (3 remaining attempts)...
-                    Error: This is a stdout deterministic error 3
-                    Deploy failed
-                  EOS
-                  <<~EOS
-                    !!! 1 retriable errors detected in this deployment:
-                    * stdout non-deterministic error
+                      Deployment exit status code: 1
+                      !!! Retry deployment due to non-deterministic error (3 remaining attempts)...
+                      Error: This is a stdout deterministic error 3
+                      Deploy failed
+                    EOS
+                    <<~EOS
+                      !!! 1 retriable errors detected in this deployment:
+                      * stdout non-deterministic error
 
-                    !!! Retry deployment due to non-deterministic error (4 remaining attempts)...
-                    !!! 1 retriable errors detected in this deployment:
-                    * stdout non-deterministic error
+                      !!! Retry deployment due to non-deterministic error (4 remaining attempts)...
+                      !!! 1 retriable errors detected in this deployment:
+                      * stdout non-deterministic error
 
 
-                    !!! Retry deployment due to non-deterministic error (3 remaining attempts)...
+                      !!! Retry deployment due to non-deterministic error (3 remaining attempts)...
 
-                  EOS
-                ])
+                    EOS
+                  ]
+                )
               end
             end
 
@@ -706,14 +718,16 @@ module HybridPlatformsConductorTest
                 mock_deploys_with [
                   [1, "Error: This is a stdout deterministic error\nDeploy failed\n", '']
                 ]
-                expect(test_deployer.deploy_on('node')).to eq('node' => [
-                  1,
-                  <<~EOS,
-                    Error: This is a stdout deterministic error
-                    Deploy failed
-                  EOS
-                  ''
-                ])
+                expect(test_deployer.deploy_on('node')).to eq(
+                  'node' => [
+                    1,
+                    <<~EOS,
+                      Error: This is a stdout deterministic error
+                      Deploy failed
+                    EOS
+                    ''
+                  ]
+                )
               end
             end
 
@@ -723,14 +737,16 @@ module HybridPlatformsConductorTest
                 mock_deploys_with [
                   [0, "Error: This is a stdout non-deterministic error\nDeploy failed\n", '']
                 ]
-                expect(test_deployer.deploy_on('node')).to eq('node' => [
-                  0,
-                  <<~EOS,
-                    Error: This is a stdout non-deterministic error
-                    Deploy failed
-                  EOS
-                  ''
-                ])
+                expect(test_deployer.deploy_on('node')).to eq(
+                  'node' => [
+                    0,
+                    <<~EOS,
+                      Error: This is a stdout non-deterministic error
+                      Deploy failed
+                    EOS
+                    ''
+                  ]
+                )
               end
             end
 
@@ -740,14 +756,16 @@ module HybridPlatformsConductorTest
                 mock_deploys_with [
                   [1, "Error: This is a stdout non-deterministic error\nDeploy failed\n", '']
                 ]
-                expect(test_deployer.deploy_on('node')).to eq('node' => [
-                  1,
-                  <<~EOS,
-                    Error: This is a stdout non-deterministic error
-                    Deploy failed
-                  EOS
-                  ''
-                ])
+                expect(test_deployer.deploy_on('node')).to eq(
+                  'node' => [
+                    1,
+                    <<~EOS,
+                      Error: This is a stdout non-deterministic error
+                      Deploy failed
+                    EOS
+                    ''
+                  ]
+                )
               end
             end
 
@@ -759,34 +777,36 @@ module HybridPlatformsConductorTest
                   [1, "Error: This is a stdout non-deterministic error 2\nDeploy failed", ''],
                   [1, "Error: This is a stdout non-deterministic error 3\nDeploy failed", '']
                 ]
-                expect(test_deployer.deploy_on('node')).to eq('node' => [
-                  1,
-                  <<~EOS,
-                    Error: This is a stdout non-deterministic error 1
-                    Deploy failed
-                    Deployment exit status code: 1
-                    !!! Retry deployment due to non-deterministic error (1 remaining attempts)...
-                    Error: This is a stdout non-deterministic error 2
-                    Deploy failed
+                expect(test_deployer.deploy_on('node')).to eq(
+                  'node' => [
+                    1,
+                    <<~EOS,
+                      Error: This is a stdout non-deterministic error 1
+                      Deploy failed
+                      Deployment exit status code: 1
+                      !!! Retry deployment due to non-deterministic error (1 remaining attempts)...
+                      Error: This is a stdout non-deterministic error 2
+                      Deploy failed
 
-                    Deployment exit status code: 1
-                    !!! Retry deployment due to non-deterministic error (0 remaining attempts)...
-                    Error: This is a stdout non-deterministic error 3
-                    Deploy failed
-                  EOS
-                  <<~EOS
-                    !!! 1 retriable errors detected in this deployment:
-                    * stdout non-deterministic error
+                      Deployment exit status code: 1
+                      !!! Retry deployment due to non-deterministic error (0 remaining attempts)...
+                      Error: This is a stdout non-deterministic error 3
+                      Deploy failed
+                    EOS
+                    <<~EOS
+                      !!! 1 retriable errors detected in this deployment:
+                      * stdout non-deterministic error
 
-                    !!! Retry deployment due to non-deterministic error (1 remaining attempts)...
-                    !!! 1 retriable errors detected in this deployment:
-                    * stdout non-deterministic error
+                      !!! Retry deployment due to non-deterministic error (1 remaining attempts)...
+                      !!! 1 retriable errors detected in this deployment:
+                      * stdout non-deterministic error
 
 
-                    !!! Retry deployment due to non-deterministic error (0 remaining attempts)...
+                      !!! Retry deployment due to non-deterministic error (0 remaining attempts)...
 
-                  EOS
-                ])
+                    EOS
+                  ]
+                )
               end
             end
 

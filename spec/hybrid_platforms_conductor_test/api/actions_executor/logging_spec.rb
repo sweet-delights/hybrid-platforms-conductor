@@ -74,34 +74,38 @@ describe HybridPlatformsConductor::ActionsExecutor do
       with_test_platform_for_logging do
         expect(
           test_actions_executor.execute_actions('node1' => { test_action: { run_cmd: 'echo action_stdout && >&2 echo action_stderr && exit 1' } })
-        ).to eq('node1' => [
-          :failed_command,
-          "action_stdout\n",
-          "action_stderr\nCommand 'echo action_stdout && >&2 echo action_stderr && exit 1' returned error code 1 (expected 0).\n"
-        ])
+        ).to eq(
+          'node1' => [
+            :failed_command,
+            "action_stdout\n",
+            "action_stderr\nCommand 'echo action_stdout && >&2 echo action_stderr && exit 1' returned error code 1 (expected 0).\n"
+          ]
+        )
       end
     end
 
     it 'captures stdout and stderr sequentially from several actions' do
       with_test_platform_for_logging do
         expect(
-          test_actions_executor.execute_actions('node1' => [
-            { test_action: {
-              code: proc do |stdout, stderr|
-                stdout << 'action1_stdout '
-                stderr << 'action1_stderr '
-              end
-            } },
-            { test_action: {
-              run_cmd: 'echo action2_stdout && >&2 echo action2_stderr'
-            } },
-            { test_action: {
-              code: proc do |stdout, stderr|
-                stdout << 'action3_stdout'
-                stderr << 'action3_stderr'
-              end
-            } }
-          ])
+          test_actions_executor.execute_actions(
+            'node1' => [
+              { test_action: {
+                code: proc do |stdout, stderr|
+                  stdout << 'action1_stdout '
+                  stderr << 'action1_stderr '
+                end
+              } },
+              { test_action: {
+                run_cmd: 'echo action2_stdout && >&2 echo action2_stderr'
+              } },
+              { test_action: {
+                code: proc do |stdout, stderr|
+                  stdout << 'action3_stdout'
+                  stderr << 'action3_stderr'
+                end
+              } }
+            ]
+          )
         ).to eq('node1' => [0, "action1_stdout action2_stdout\naction3_stdout", "action1_stderr action2_stderr\naction3_stderr"])
       end
     end

@@ -40,11 +40,13 @@ describe HybridPlatformsConductor::ActionsExecutor do
 
     it 'executes several actions on 1 node' do
       with_test_platform_for_actions do
-        test_actions_executor.execute_actions('node1' => [
-          { test_action: 'Action 1 executed' },
-          { test_action: 'Action 2 executed' },
-          { test_action: 'Action 3 executed' }
-        ])
+        test_actions_executor.execute_actions(
+          'node1' => [
+            { test_action: 'Action 1 executed' },
+            { test_action: 'Action 2 executed' },
+            { test_action: 'Action 3 executed' }
+          ]
+        )
         expect(action_executions).to eq [
           { node: 'node1', message: 'Action 1 executed' },
           { node: 'node1', message: 'Action 2 executed' },
@@ -71,19 +73,23 @@ describe HybridPlatformsConductor::ActionsExecutor do
     it 'executes several actions of different types' do
       with_test_platform_for_actions do
         actions_executed = []
-        expect(test_actions_executor.execute_actions('node1' => [
-          { ruby: proc do |stdout, stderr|
-            stdout << 'action1_stdout '
-            stderr << 'action1_stderr '
-            actions_executed << 'action1'
-          end },
-          { bash: 'echo action2_stdout' },
-          { ruby: proc do |stdout, stderr|
-            stdout << 'action3_stdout'
-            stderr << 'action3_stderr'
-            actions_executed << 'action3'
-          end }
-        ])).to eq('node1' => [0, "action1_stdout action2_stdout\naction3_stdout", 'action1_stderr action3_stderr'])
+        expect(
+          test_actions_executor.execute_actions(
+            'node1' => [
+              { ruby: proc do |stdout, stderr|
+                stdout << 'action1_stdout '
+                stderr << 'action1_stderr '
+                actions_executed << 'action1'
+              end },
+              { bash: 'echo action2_stdout' },
+              { ruby: proc do |stdout, stderr|
+                stdout << 'action3_stdout'
+                stderr << 'action3_stderr'
+                actions_executed << 'action3'
+              end }
+            ]
+          )
+        ).to eq('node1' => [0, "action1_stdout action2_stdout\naction3_stdout", 'action1_stderr action3_stderr'])
         expect(actions_executed).to eq %w[action1 action3]
       end
     end

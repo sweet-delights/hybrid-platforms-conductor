@@ -19,7 +19,7 @@ describe HybridPlatformsConductor::Deployer do
           with_connections_mocked_on ['node'] do
             test_actions_executor.connector(:ssh).ssh_user = 'test_user'
             expect_services_handler_to_deploy('node' => %w[service1 service2])
-            expect_actions_executor_runs([
+            expect_actions_executor_runs [
               # First run, we expect the mutex to be setup, and the deployment actions to be run
               proc do |actions_per_nodes|
                 expect_actions_to_deploy_on(
@@ -65,7 +65,7 @@ describe HybridPlatformsConductor::Deployer do
                 # Check temporary log file gets deleted for security reasons
                 expect(File.exist?(tmp_log_file)).to eq false
               end
-            ])
+            ]
             expect(test_deployer.deploy_on('node')).to eq('node' => [0, 'Deploy successful stdout', 'Deploy successful stderr'])
           end
         end
@@ -76,7 +76,7 @@ describe HybridPlatformsConductor::Deployer do
           with_connections_mocked_on ['node'] do
             test_actions_executor.connector(:ssh).ssh_user = 'root'
             expect_services_handler_to_deploy('node' => %w[service1 service2])
-            expect_actions_executor_runs([
+            expect_actions_executor_runs [
               # First run, we expect the mutex to be setup, and the deployment actions to be run
               proc do |actions_per_nodes|
                 expect_actions_to_deploy_on(
@@ -123,7 +123,7 @@ describe HybridPlatformsConductor::Deployer do
                 # Check temporary log file gets deleted for security reasons
                 expect(File.exist?(tmp_log_file)).to eq false
               end
-            ])
+            ]
             expect(test_deployer.deploy_on('node')).to eq('node' => [0, 'Deploy successful stdout', 'Deploy successful stderr'])
           end
         end
@@ -131,7 +131,7 @@ describe HybridPlatformsConductor::Deployer do
 
       it 'reads logs' do
         with_test_platform_for_remote_fs do
-          expect_actions_executor_runs([
+          expect_actions_executor_runs [
             # Expect the actions to get log files
             proc do |actions_per_nodes|
               expect(actions_per_nodes).to eq('node' => [{ remote_bash: 'sudo -u root cat /var/log/deployments/`sudo -u root ls -t /var/log/deployments/ | head -1`' }])
@@ -151,7 +151,7 @@ describe HybridPlatformsConductor::Deployer do
                 Deploy successful stderr
               EOS
             end
-          ])
+          ]
           expect(test_deployer.deployment_info_from('node')).to eq(
             'node' => {
               deployment_info: {
@@ -175,7 +175,7 @@ describe HybridPlatformsConductor::Deployer do
       it 'reads logs using root' do
         with_test_platform_for_remote_fs do
           test_actions_executor.connector(:ssh).ssh_user = 'root'
-          expect_actions_executor_runs([
+          expect_actions_executor_runs [
             # Expect the actions to get log files
             proc do |actions_per_nodes|
               expect(actions_per_nodes).to eq('node' => [{ remote_bash: 'cat /var/log/deployments/`ls -t /var/log/deployments/ | head -1`' }])
@@ -195,7 +195,7 @@ describe HybridPlatformsConductor::Deployer do
                 Deploy successful stderr
               EOS
             end
-          ])
+          ]
           expect(test_deployer.deployment_info_from('node')).to eq(
             'node' => {
               deployment_info: {

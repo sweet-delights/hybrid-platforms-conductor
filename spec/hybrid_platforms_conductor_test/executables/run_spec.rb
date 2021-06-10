@@ -109,12 +109,14 @@ describe 'run executable' do
       commands_file_2 = "#{repository}/commands2.txt"
       File.write(commands_file_1, "echo Hello4\necho Hello5\n")
       expect_actions_executor_runs([proc do |actions, timeout: nil, concurrent: false, log_to_dir: 'run_logs', log_to_stdout: true|
-        expect(actions).to eq(['node1'] => [{ remote_bash: [
-          { file: commands_file_1 },
-          'echo Hello3',
-          { file: commands_file_2 },
-          'echo Hello6'
-        ] }])
+        expect(actions).to eq(
+          ['node1'] => [{ remote_bash: [
+            { file: commands_file_1 },
+            'echo Hello3',
+            { file: commands_file_2 },
+            'echo Hello6'
+          ] }]
+        )
         test_actions_executor.stdout_device << "Hello1\nHello2\nHello3\nHello4\nHello5\nHello6\n"
         { 'node1' => [0, "Hello1\nHello2\nHello3\nHello4\nHello5\nHello6\n", ''] }
       end])
