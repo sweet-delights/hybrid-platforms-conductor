@@ -134,32 +134,32 @@ describe HybridPlatformsConductor::NodesHandler do
     end
   end
 
-    it 'computes the correct sudo for different nodes' do
-      with_test_platform(
-        {
-          nodes: {
-            'node1' => {},
-            'node2' => {},
-            'node3' => {}
-          }
-        },
-        false,
-        '
-          for_nodes(%w[node1 node2]) do
-            sudo_for { |user| "alt_sudo1 -p #{user}" }
-          end
-          for_nodes(\'node2\') do
-            sudo_for { |user| "alt_sudo2 -q #{user}" }
-          end
-        '
-      ) do
-        expect(test_nodes_handler.sudo_on('node1')).to eq 'alt_sudo1 -p root'
-        expect(test_nodes_handler.sudo_on('node1', 'test_user')).to eq 'alt_sudo1 -p test_user'
-        expect(test_nodes_handler.sudo_on('node2')).to eq 'alt_sudo2 -q root'
-        expect(test_nodes_handler.sudo_on('node2', 'test_user')).to eq 'alt_sudo2 -q test_user'
-        expect(test_nodes_handler.sudo_on('node3')).to eq 'sudo -u root'
-        expect(test_nodes_handler.sudo_on('node3', 'test_user')).to eq 'sudo -u test_user'
-      end
+  it 'computes the correct sudo for different nodes' do
+    with_test_platform(
+      {
+        nodes: {
+          'node1' => {},
+          'node2' => {},
+          'node3' => {}
+        }
+      },
+      false,
+      '
+        for_nodes(%w[node1 node2]) do
+          sudo_for { |user| "alt_sudo1 -p #{user}" }
+        end
+        for_nodes(\'node2\') do
+          sudo_for { |user| "alt_sudo2 -q #{user}" }
+        end
+      '
+    ) do
+      expect(test_nodes_handler.sudo_on('node1')).to eq 'alt_sudo1 -p root'
+      expect(test_nodes_handler.sudo_on('node1', 'test_user')).to eq 'alt_sudo1 -p test_user'
+      expect(test_nodes_handler.sudo_on('node2')).to eq 'alt_sudo2 -q root'
+      expect(test_nodes_handler.sudo_on('node2', 'test_user')).to eq 'alt_sudo2 -q test_user'
+      expect(test_nodes_handler.sudo_on('node3')).to eq 'sudo -u root'
+      expect(test_nodes_handler.sudo_on('node3', 'test_user')).to eq 'sudo -u test_user'
     end
+  end
 
 end
