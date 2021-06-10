@@ -108,7 +108,6 @@ module HybridPlatformsConductor
               ]
             end
           end)
-
         end
 
       end

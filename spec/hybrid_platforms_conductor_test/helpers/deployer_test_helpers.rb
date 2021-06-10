@@ -1138,7 +1138,6 @@ module HybridPlatformsConductorTest
           end
 
         end
-
       end
 
     end
