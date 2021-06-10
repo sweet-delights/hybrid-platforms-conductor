@@ -35,6 +35,7 @@ module HybridPlatformsConductor
     # Directory of the definition of the platforms
     #   String
     attr_reader :hybrid_platforms_dir
+
     expose :hybrid_platforms_dir
 
     # List of expected failures info. Each info has the following properties:
