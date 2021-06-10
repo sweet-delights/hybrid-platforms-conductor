@@ -435,10 +435,10 @@ module HybridPlatformsConductorTest
 
           it 'fails when packaging timeout has been reached while taking the futex' do
             with_platform_to_deploy(
-                additional_config: 'packaging_timeout 1',
-                expect_package: false,
-                expect_prepare_for_deploy: false,
-                expect_connections_to_nodes: false
+              additional_config: 'packaging_timeout 1',
+              expect_package: false,
+              expect_prepare_for_deploy: false,
+              expect_connections_to_nodes: false
             ) do
               # Simulate another process taking the packaging futex
               futex_file = HybridPlatformsConductor::Deployer.const_get(:PACKAGING_FUTEX_FILE)

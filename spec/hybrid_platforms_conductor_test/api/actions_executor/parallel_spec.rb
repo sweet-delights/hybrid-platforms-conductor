@@ -158,10 +158,10 @@ describe HybridPlatformsConductor::ActionsExecutor do
           timeout: 3,
           concurrent: true
         )).to eq(
-         'node1' => [:timeout, "Node11\n", ''],
-         'node2' => [0, "Node21\nNode22\n", ''],
-         'node3' => [:timeout, "Node31\nNode32\n", ''],
-         'node4' => [:timeout, '', '']
+          'node1' => [:timeout, "Node11\n", ''],
+          'node2' => [0, "Node21\nNode22\n", ''],
+          'node3' => [:timeout, "Node31\nNode32\n", ''],
+          'node4' => [:timeout, '', '']
         )
       end
     end

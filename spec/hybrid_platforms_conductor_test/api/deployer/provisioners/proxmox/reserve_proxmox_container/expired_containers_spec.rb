@@ -699,7 +699,8 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
 
       it 'does not expire a VM that is stopped for some time even when it is not used for debug purposes' do
         with_sync_node do
-          mock_proxmox(mocked_pve_nodes: [{
+          mock_proxmox(
+            mocked_pve_nodes: [{
               # 2 seconds separate each run.
               # Make sure the third and later runs mock the container as running instead of stopped
               'pve_node_name' => {
@@ -746,7 +747,8 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
         with_sync_node do
           creation_date_1 = (Time.now - 20).utc
           creation_date_2 = (Time.now - 10).utc
-          mock_proxmox(mocked_pve_nodes: [{
+          mock_proxmox(
+            mocked_pve_nodes: [{
               # 2 seconds separate each run.
               # Make sure the third and later runs mock the container as another one, still stopped
               'pve_node_name' => {
