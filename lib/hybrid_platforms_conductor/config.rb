@@ -116,6 +116,7 @@ module HybridPlatformsConductor
     # * *dir* (String): Directory containing the Dockerfile defining the image
     def os_image(image, dir)
       raise "OS image #{image} already defined to #{@os_images[image]}" if @os_images.key?(image)
+
       @os_images[image] = dir
     end
     expose :os_image

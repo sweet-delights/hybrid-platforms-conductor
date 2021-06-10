@@ -133,11 +133,13 @@ module HybridPlatformsConductor
         # Register all known nodes for this platform
         platform.known_nodes.each do |node|
           raise "Can't register #{node} to platform #{platform.repository_path}, as it is already defined in platform #{@nodes_platform[node].repository_path}." if @nodes_platform.key?(node)
+
           @nodes_platform[node] = platform
         end
         # Register all known nodes lists
         platform.known_nodes_lists.each do |nodes_list|
           raise "Can't register nodes list #{nodes_list} to platform #{platform.repository_path}, as it is already defined in platform #{@nodes_list_platform[nodes_list].repository_path}." if @nodes_list_platform.key?(nodes_list)
+
           @nodes_list_platform[nodes_list] = platform
         end if platform.respond_to?(:known_nodes_lists)
       end
@@ -221,6 +223,7 @@ module HybridPlatformsConductor
         platform_name, from_commit, to_commit, flags = nodes_git_impact.split(':')
         flags = (flags || '').split(',')
         raise "Invalid platform in --nodes-git-impact: #{platform_name}. Possible values are: #{platform_names.join(', ')}." unless platform_names.include?(platform_name)
+
         nodes_selector = { platform: platform_name }
         nodes_selector[:from_commit] = from_commit if from_commit && !from_commit.empty?
         nodes_selector[:to_commit] = to_commit if to_commit && !to_commit.empty?
@@ -383,6 +386,7 @@ module HybridPlatformsConductor
               log_debug "#{cmdb_log_header} Query property #{property} for #{nodes_to_query.size} nodes (#{nodes_to_query[0..7].join(', ')}...) => Found metadata for #{metadata_from_cmdb.size} nodes."
               updated_metadata.merge!(metadata_from_cmdb) do |node, existing_value, new_value|
                 raise "#{cmdb_log_header} Returned a conflicting value for metadata #{property} of node #{node}: #{new_value} whereas the value was already set to #{existing_value}" if !existing_value.nil? && new_value != existing_value
+
                 new_value
               end
             end
@@ -426,6 +430,7 @@ module HybridPlatformsConductor
       nodes_selectors = nodes_selectors.flatten
       # 1. Check for the presence of all
       return known_nodes if nodes_selectors.any? { |nodes_selector| nodes_selector.is_a?(Hash) && nodes_selector.key?(:all) && nodes_selector[:all] }
+
       # 2. Expand the nodes lists, platforms and services contents
       string_nodes = []
       nodes_selectors.each do |nodes_selector|
@@ -435,6 +440,7 @@ module HybridPlatformsConductor
           if nodes_selector.key?(:list)
             platform = @nodes_list_platform[nodes_selector[:list]]
             raise "Unknown nodes list: #{nodes_selector[:list]}" if platform.nil?
+
             string_nodes.concat(platform.nodes_selectors_from_nodes_list(nodes_selector[:list]))
           end
           string_nodes.concat(@platforms_handler.platform(nodes_selector[:platform]).known_nodes) if nodes_selector.key?(:platform)
@@ -513,6 +519,7 @@ module HybridPlatformsConductor
     def impacted_nodes_from_git_diff(platform_name, from_commit: 'master', to_commit: nil, smallest_set: false)
       platform = @platforms_handler.platform(platform_name)
       raise "Unkown platform #{platform_name}. Possible platforms are #{@platforms_handler.known_platforms.map(&:name).sort.join(', ')}" if platform.nil?
+
       begin
         _exit_status, stdout, _stderr = @cmd_runner.run_cmd "cd #{platform.repository_path} && git --no-pager diff --no-color #{from_commit} #{to_commit.nil? ? '' : to_commit}", log_to_stdout: log_debug?
       rescue CmdRunner::UnexpectedExitCodeError
@@ -628,8 +635,10 @@ module HybridPlatformsConductor
           cmdb_masters_info[:cmdb_masters].each do |cmdb, properties|
             properties.each do |property|
               raise "Property #{property} have conflicting CMDB masters for #{node} declared in the configuration: #{cmdb_masters_cache[property].class.name} and #{@cmdbs[cmdb].class.name}" if cmdb_masters_cache.key?(property) && cmdb_masters_cache[property] != @cmdbs[cmdb]
+
               log_debug "CMDB master for #{node} / #{property}: #{cmdb}"
               raise "CMDB #{cmdb} is configured as a master for property #{property} on node #{node} but it does not implement the needed API to retrieve it" unless (@cmdbs_per_property[property] || []).include?(@cmdbs[cmdb]) || @cmdbs_others.include?(@cmdbs[cmdb])
+
               cmdb_masters_cache[property] = @cmdbs[cmdb]
             end
           end

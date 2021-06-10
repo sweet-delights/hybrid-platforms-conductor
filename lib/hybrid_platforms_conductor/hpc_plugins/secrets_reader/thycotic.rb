@@ -65,13 +65,16 @@ module HybridPlatformsConductor
               HybridPlatformsConductor::Thycotic.with_thycotic(thycotic_secrets_info[:thycotic_url], @logger, @logger_stderr) do |thycotic|
                 secret_file_item_id = thycotic.get_secret(thycotic_secrets_info[:secret_id]).dig(:secret, :items, :secret_item, :id)
                 raise "Unable to fetch secret file ID #{thycotic_secrets_info[:secret_id]} from #{thycotic_secrets_info[:thycotic_url]}" if secret_file_item_id.nil?
+
                 secret = thycotic.download_file_attachment_by_item_id(thycotic_secrets_info[:secret_id], secret_file_item_id)
                 raise "Unable to fetch secret file attachment from secret ID #{thycotic_secrets_info[:secret_id]} from #{thycotic_secrets_info[:thycotic_url]}" if secret.nil?
+
                 @secrets[server_id] = JSON.parse(secret)
               end
             end
             secrets.merge!(@secrets[server_id]) do |key, value1, value2|
               raise "Thycotic secret #{key} served by #{thycotic_secrets_info[:thycotic_url]} from secret ID #{thycotic_secrets_info[:secret_id]} has conflicting values between different secrets." if value1 != value2
+
               value1
             end
           end

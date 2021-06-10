@@ -30,6 +30,7 @@ module HybridPlatformsConductorTest
       def test_on_platform
         platform_name = @platform.name
         raise 'Failing test' if Platform.fail_for.include? platform_name
+
         sleep_time = Platform.sleeps.dig(@name, platform_name)
         sleep sleep_time unless sleep_time.nil?
         Platform.runs << [@name, platform_name]

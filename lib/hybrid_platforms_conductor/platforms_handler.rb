@@ -57,6 +57,7 @@ module HybridPlatformsConductor
           )
           # Check that this platform has unique name
           raise "Platform name #{platform_handler.name} is declared several times." if @platform_handlers.values.flatten.any? { |known_platform| known_platform.name == platform_handler.name }
+
           @platform_handlers[platform_type] = [] unless @platform_handlers.key?(platform_type)
           @platform_handlers[platform_type] << platform_handler
         end

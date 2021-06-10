@@ -46,6 +46,7 @@ module HybridPlatformsConductor
                   pools[:processing] << element unless element.nil?
                 end
                 break if element.nil?
+
                 begin
                   yield element
                 ensure
@@ -76,6 +77,7 @@ module HybridPlatformsConductor
               progress_bar.title = "Queue: #{nbr_to_process} - Processing: #{nbr_processing} - Done: #{nbr_processed} - Total: #{nbr_total}"
               progress_bar.progress = nbr_processed
               break if nbr_processed == nbr_total
+
               sleep 0.5
             end
           end

@@ -641,6 +641,7 @@ class ProxmoxWaiter
   # * *task* (String): The task ID
   def wait_for_proxmox_task(pve_node, task)
     raise "Invalid task: #{task}" if task[0..3] == 'NOK:'
+
     while task_status(pve_node, task) == 'running'
       log "[ #{pve_node} ] - Wait for Proxmox task #{task} to complete..."
       sleep 1
@@ -675,6 +676,7 @@ class ProxmoxWaiter
         @gets_cache[path] = @proxmox.get(path)
         break unless @gets_cache[path].is_a?(String) && @gets_cache[path] =~ /^NOK: error code = 5\d\d$/
         raise "Proxmox API get #{path} returns #{@gets_cache[path]} continuously (tried #{idx_try + 1} times)" if idx_try >= @config['api_max_retries']
+
         idx_try += 1
         # We have to reauthenticate: error 500 raised by Proxmox are often due to token being invalidated wrongly
         # TODO: Provide a way to do it properly in the official gem

@@ -168,6 +168,7 @@ module HybridPlatformsConductor
         format_str, file_name = output.split(':')
         format = format_str.to_sym
         raise "Unknown format: #{format}." unless available_plugins.include?(format)
+
         @outputs << [format, file_name]
       end
       options_parser.on('-T', '--to HOSTS_OPTIONS', 'Specify options for the set of nodes to get to (enclose them with ""). Default: all nodes. HOSTS_OPTIONS follows the following:', *to_hosts_opts_parser.to_s.split("\n")[3..-1]) do |hosts_options|
@@ -293,6 +294,7 @@ module HybridPlatformsConductor
       loop do
         empty_clusters = @nodes_graph.keys.select { |node_name| @nodes_graph[node_name][:type] == :cluster && @nodes_graph[node_name][:includes].empty? }
         break if empty_clusters.empty?
+
         filter_out_nodes(empty_clusters)
       end
     end
@@ -573,6 +575,7 @@ module HybridPlatformsConductor
             if ips
               ips.each do |ip|
                 raise "Conflict: #{ip} is already associated to #{@known_ips[ip]}. Cannot associate it to #{node}." if @known_ips.key?(ip)
+
                 @known_ips[ip] = node
               end
             end

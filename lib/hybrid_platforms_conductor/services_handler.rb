@@ -166,6 +166,7 @@ module HybridPlatformsConductor
       services.map do |service|
         platform = @platforms_handler.known_platforms.find { |platform| platform.deployable_services.include?(service) }
         raise "No platform is able to deploy the service #{service}" if platform.nil?
+
         # Add some markers in stdout and stderr so that parsing services-oriented deployment output is easier
         deploy_marker = "===== [ #{node} / #{service} ] - HPC Service #{why_run ? 'Check' : 'Deploy' } ====="
         [{
@@ -236,6 +237,7 @@ module HybridPlatformsConductor
         log_warn "Mismatch in deployment logs between stdout and stderr: stdout deployed mode is #{stdout_mode}, stderr deployed mode is #{stderr_mode}" unless stdout_mode == stderr_mode
         platform = @platforms_handler.known_platforms.find { |platform| platform.deployable_services.include?(stdout_service) }
         raise "No platform is able to deploy the service #{stdout_service}" if platform.nil?
+
         {
           node: stdout_node,
           service: stdout_service,

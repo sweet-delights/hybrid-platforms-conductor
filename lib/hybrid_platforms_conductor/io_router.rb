@@ -30,6 +30,7 @@ module HybridPlatformsConductor
     # Start routing messages asynchronously
     def start
       raise 'IO router is already started. Can\'t start it again.' unless @reading_thread.nil?
+
       @end_read = false
       # Create a thread to handle routes asynchronously
       @reading_thread = Thread.new do
@@ -53,6 +54,7 @@ module HybridPlatformsConductor
             end
           end
           break if need_to_stop && !data_found
+
           sleep 0.1
         end
       end
@@ -61,6 +63,7 @@ module HybridPlatformsConductor
     # Stop routing messages asynchronously
     def stop
       raise 'IO router is not started. Can\'t stop it.' if @reading_thread.nil?
+
       @end_read = true
       @reading_thread.join
     end

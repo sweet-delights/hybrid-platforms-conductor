@@ -118,6 +118,7 @@ module HybridPlatformsConductor
                           node_info.sort.each do |property, value|
                             unless value.nil?
                               raise "Missing translation of key: #{property}. Please edit TRANSLATIONS[:#{locale_code}]." unless locale.key?(property)
+
                               formatted_value =
                                 if value.is_a?(Array)
                                   "\n#{value.map { |item| "::* #{item}" }.join("\n")}"

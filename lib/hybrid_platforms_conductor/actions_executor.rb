@@ -124,6 +124,7 @@ module HybridPlatformsConductor
           nodes_actions_set.each do |action_type, action_info|
             raise 'Cannot have concurrent executions for interactive sessions' if concurrent && action_type == :interactive && action_info
             raise "Unknown action type #{action_type}" unless @action_plugins.key?(action_type)
+
             action = @action_plugins[action_type].new(
               logger: @logger,
               logger_stderr: @logger_stderr,
@@ -196,6 +197,7 @@ module HybridPlatformsConductor
       @connector_plugins.each do |connector_name, connector|
         nodes_without_connectors = nodes_needing_connectors.select { |_node, selected_connector| selected_connector.nil? }.keys
         break if nodes_without_connectors.empty?
+
         (connector.connectable_nodes_from(nodes_without_connectors) & nodes_without_connectors).each do |node|
           nodes_needing_connectors[node] = connector if nodes_needing_connectors[node].nil?
         end

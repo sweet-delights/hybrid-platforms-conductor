@@ -70,6 +70,7 @@ module HybridPlatformsConductor
     # * *nodes_selectors* (Array<Object>): List of nodes selectors to produce report for
     def produce_report_for(nodes_selectors)
       raise "Unknown locale for format #{@format}: #{@locale}" unless @reports_plugins[@format].supported_locales.include? @locale
+
       @reports_plugins[@format].new(
         logger: @logger,
         logger_stderr: @logger_stderr,

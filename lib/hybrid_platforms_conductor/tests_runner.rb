@@ -146,6 +146,7 @@ module HybridPlatformsConductor
       @reports.sort!
       unknown_tests = @tests - @tests_plugins.keys
       raise "Unknown test names: #{unknown_tests.join(', ')}" unless unknown_tests.empty?
+
       @nodes = @nodes_handler.select_nodes(nodes_selectors).uniq.sort
 
       # Resolve the expected failures from the config.

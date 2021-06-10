@@ -109,6 +109,7 @@ module HybridPlatformsConductor
           http_response = URI.open(api_url, http_basic_authentication: [@bitbucket_user_name, @bitbucket_password])
         rescue
           raise if retries == 0
+
           log_warn "Got error #{$!} on #{@bitbucket_user_name}@#{api_url}. Will retry #{retries} times..."
           retries -= 1
           sleep 1

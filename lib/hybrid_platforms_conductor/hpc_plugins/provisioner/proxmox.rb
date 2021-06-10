@@ -110,6 +110,7 @@ module HybridPlatformsConductor
                           end
                         end
                         raise "[ #{@node}/#{@environment} ] - Unable to get IP back from LXC container nodes/#{node_info['node']}/lxc/#{vm_id}/config" if ip_found.nil?
+
                         @lxc_details = {
                           pve_node: node_info['node'],
                           vm_id: vm_id,
@@ -274,6 +275,7 @@ module HybridPlatformsConductor
         def with_proxmox
           url = proxmox_test_info[:api_url]
           raise 'No Proxmox server defined' if url.nil?
+
           Credentials.with_credentials_for(:proxmox, @logger, @logger_stderr, url: url) do |user, password|
             log_debug "[ #{@node}/#{@environment} ] - Connect to Proxmox #{url}"
             proxmox_logs = StringIO.new
@@ -314,8 +316,10 @@ module HybridPlatformsConductor
           loop do
             response = proxmox.get(path)
             break if !(response.is_a?(String)) || !(response =~ /^NOK: error code = 5\d\d$/)
+
             log_warn "[ #{@node}/#{@environment} ] - Proxmox API call get #{path} returned error #{response} (attempt ##{idx_try}/#{proxmox_test_info[:api_max_retries]})"
             raise "[ #{@node}/#{@environment} ] - Proxmox API call get #{path} returns #{response} continuously (tried #{idx_try + 1} times)" if idx_try >= proxmox_test_info[:api_max_retries]
+
             idx_try += 1
             # We have to reauthenticate: error 500 raised by Proxmox are often due to token being invalidated wrongly
             proxmox.reauthenticate
@@ -342,6 +346,7 @@ module HybridPlatformsConductor
               log_warn "[ #{@node}/#{@environment} ] - Proxmox API call #{http_method} nodes/#{pve_node}/#{sub_path} #{args} returned error #{task} (attempt ##{idx_try}/#{proxmox_test_info[:api_max_retries]})"
               task = nil
               break if idx_try >= proxmox_test_info[:api_max_retries]
+
               idx_try += 1
               # We have to reauthenticate: error 500 raised by Proxmox are often due to token being invalidated wrongly
               proxmox.reauthenticate
@@ -363,10 +368,12 @@ module HybridPlatformsConductor
         # * *task* (String): The task ID
         def wait_for_proxmox_task(proxmox, pve_node, task)
           raise "Invalid task: #{task}" if task[0..3] == 'NOK:'
+
           status = nil
           loop do
             status = task_status(proxmox, pve_node, task)
             break unless status == 'running'
+
             log_debug "[ #{@node}/#{@environment} ] - Wait for Proxmox task #{task} to complete..."
             sleep 1
           end

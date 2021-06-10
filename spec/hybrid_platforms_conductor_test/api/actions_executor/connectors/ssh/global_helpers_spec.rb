@@ -35,6 +35,7 @@ describe HybridPlatformsConductor::ActionsExecutor do
         begin_marker = node.nil? ? /^Host \*$/ : /^# #{Regexp.escape(node)} - .+$/
         start_idx = ssh_config_lines.index { |line| line =~ begin_marker }
         return nil if start_idx.nil?
+
         end_markers = [
           /^\# \w+ - .+$/,
           /^\#+$/

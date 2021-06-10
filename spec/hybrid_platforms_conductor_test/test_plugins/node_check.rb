@@ -29,6 +29,7 @@ module HybridPlatformsConductorTest
       # Check my_test_plugin.rb.sample documentation for signature details.
       def test_on_check_node(stdout, stderr, exit_status)
         raise 'Failing test' if NodeCheck.fail_for.include? @node
+
         NodeCheck.runs << [@name, @node, stdout, stderr, exit_status]
       end
 

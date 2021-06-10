@@ -59,6 +59,7 @@ module HybridPlatformsConductor
           # * *ssh_def_erb* (String): Corresponding SSH ERB configuration
           def gateway(gateway_conf, ssh_def_erb)
             raise "Gateway #{gateway_conf} already defined to #{@gateways[gateway_conf]}" if @gateways.key?(gateway_conf)
+
             @gateways[gateway_conf] = ssh_def_erb
           end
 
@@ -185,6 +186,7 @@ module HybridPlatformsConductor
         # [API] - @nodes_handler can be used
         def validate_params
           raise 'No SSH user name specified. Please use --ssh-user option or hpc_ssh_user environment variable to set it.' if @ssh_user.nil? || @ssh_user.empty?
+
           known_gateways = @config.known_gateways
           raise "Unknown gateway configuration provided: #{@ssh_gateways_conf}. Possible values are: #{known_gateways.join(', ')}." if !@ssh_gateways_conf.nil? && !known_gateways.include?(@ssh_gateways_conf)
         end
@@ -700,6 +702,7 @@ module HybridPlatformsConductor
             ssh_exec_file = "#{platforms_ssh_dir}/ssh"
             known_hosts_file = "#{platforms_ssh_dir}/known_hosts"
             raise 'sshpass is not installed. Can\'t use automatic passwords handling without it. Please install it.' if !@passwords.empty? && !ssh_pass_installed?
+
             File.open(ssh_exec_file, 'w+', 0700) do |file|
               file.puts "#!#{env_system_path} bash"
               # TODO: Make a mechanism that uses sshpass and the correct password only for the correct hostname (this requires parsing ssh parameters $*).
@@ -775,6 +778,7 @@ module HybridPlatformsConductor
             connection, connection_user, gateway, gateway_user = transform_info[:transform].call(node, connection, connection_user, gateway, gateway_user)
           end
           raise NotConnectableError, "No connection possible to #{node}" if connection.nil? && !no_exception
+
           [connection, connection_user, gateway, gateway_user]
         end
 

@@ -242,6 +242,7 @@ module HybridPlatformsConductor
             package_name = File.basename(package_dir)
             chef_versions_file = "#{@repository_path}/chef_versions.yml"
             raise "Missing file #{chef_versions_file} specifying the Chef Infra Client version to be deployed" unless File.exist?(chef_versions_file)
+
             required_chef_client_version = YAML.load_file(chef_versions_file)['client']
             sudo = (@actions_executor.connector(:ssh).ssh_user == 'root' ? '' : "#{@nodes_handler.sudo_on(node)} ")
             [
@@ -476,6 +477,7 @@ module HybridPlatformsConductor
           dsl_parser.parse(policy_file)
           run_list_call = dsl_parser.calls.find { |call_info| call_info[:method] == :run_list }
           raise "Policy #{policy} has no run list defined in #{policy_file}" if run_list_call.nil?
+
           run_list_call[:args].map { |recipe_def| decode_recipe(recipe_def) }
         end
 
@@ -499,6 +501,7 @@ module HybridPlatformsConductor
           # Find the cookbook it belongs to
           cookbook_dir = known_cookbook_paths.find { |cookbook_path| File.exist?("#{@repository_path}/#{cookbook_path}/#{cookbook}") }
           raise "Unknown recipe #{cookbook}::#{recipe} from cookbook #{@repository_path}/#{cookbook_dir}/#{cookbook}." if !cookbook_dir.nil? && !File.exist?("#{@repository_path}/#{cookbook_dir}/#{cookbook}/recipes/#{recipe}.rb")
+
           return cookbook_dir, cookbook, recipe
         end
 

@@ -38,6 +38,7 @@ module HybridPlatformsConductorTest
           remaining_expected_commands_mutex.synchronize do
             remaining_expected_commands.delete_if do |(expected_command, command_code, _options)|
               break unless found_command.nil?
+
               if (expected_command.is_a?(String) && expected_command == cmd) || (expected_command.is_a?(Regexp) && cmd =~ expected_command)
                 found_command = expected_command
                 found_command_code = command_code

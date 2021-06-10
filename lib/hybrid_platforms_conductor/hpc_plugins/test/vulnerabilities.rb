@@ -50,6 +50,7 @@ module HybridPlatformsConductor
                   loop do
                     current_url = "#{current_url}#{current_url.end_with?('/') ? '' : '/'}#{Nokogiri::HTML.parse(URI.open(current_url)).css('a').last['href']}"
                     break if current_url.end_with?('.xml') || KNOWN_COMPRESSIONS.keys.any? { |file_ext| current_url.end_with?(".#{file_ext}") }
+
                     log_debug "Follow last link to #{current_url}"
                   end
                   current_url

@@ -95,6 +95,7 @@ module HybridPlatformsConductor
               end]) do |path, rule_info_1, rule_info_2|
                 # Just check that configuration is not inconsistent
                 raise "Inconsistent rule for #{file_system_type} file system checks in configuration for #{node}: #{path} is marked as being both #{rule_info_1[:state]} and #{rule_info_2[:state]}" if rule_info_1[:state] != rule_info_2[:state]
+
                 rule_info_2
               end
             else
