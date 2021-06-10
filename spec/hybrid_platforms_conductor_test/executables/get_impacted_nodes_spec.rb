@@ -30,17 +30,17 @@ describe 'get_impacted_nodes executable' do
       exit_code, stdout, stderr = run 'get_impacted_nodes', '--platform', 'platform'
       expect(exit_code).to eq 0
       expect(stdout).to eq <<~EOS
-       
-       * 1 impacted services:
-       service2
-       
-       * 1 impacted nodes (directly):
-       node1
-       
-       * 2 impacted nodes (total):
-       node1
-       node2
-
+        
+        * 1 impacted services:
+        service2
+        
+        * 1 impacted nodes (directly):
+        node1
+        
+        * 2 impacted nodes (total):
+        node1
+        node2
+        
       EOS
       expect(stderr).to eq ''
     end
@@ -57,18 +57,18 @@ describe 'get_impacted_nodes executable' do
       exit_code, stdout, stderr = run 'get_impacted_nodes', '--platform', 'platform'
       expect(exit_code).to eq 0
       expect(stdout).to eq <<~EOS
-       * Potentially all nodes of this platform are impacted.
-       
-       * 1 impacted services:
-       service2
-       
-       * 1 impacted nodes (directly):
-       node1
-       
-       * 2 impacted nodes (total):
-       node1
-       node2
-
+        * Potentially all nodes of this platform are impacted.
+        
+        * 1 impacted services:
+        service2
+        
+        * 1 impacted nodes (directly):
+        node1
+        
+        * 2 impacted nodes (total):
+        node1
+        node2
+        
       EOS
       expect(stderr).to eq ''
     end
@@ -85,17 +85,17 @@ describe 'get_impacted_nodes executable' do
       exit_code, stdout, stderr = run 'get_impacted_nodes', '--platform', 'platform', '--from-commit', 'from_commit'
       expect(exit_code).to eq 0
       expect(stdout).to eq <<~EOS
-       
-       * 1 impacted services:
-       service2
-       
-       * 1 impacted nodes (directly):
-       node1
-       
-       * 2 impacted nodes (total):
-       node1
-       node2
-
+        
+        * 1 impacted services:
+        service2
+        
+        * 1 impacted nodes (directly):
+        node1
+        
+        * 2 impacted nodes (total):
+        node1
+        node2
+        
       EOS
       expect(stderr).to eq ''
     end
@@ -112,17 +112,17 @@ describe 'get_impacted_nodes executable' do
       exit_code, stdout, stderr = run 'get_impacted_nodes', '--platform', 'platform', '--to-commit', 'to_commit'
       expect(exit_code).to eq 0
       expect(stdout).to eq <<~EOS
-       
-       * 1 impacted services:
-       service2
-       
-       * 1 impacted nodes (directly):
-       node1
-       
-       * 2 impacted nodes (total):
-       node1
-       node2
-
+        
+        * 1 impacted services:
+        service2
+        
+        * 1 impacted nodes (directly):
+        node1
+        
+        * 2 impacted nodes (total):
+        node1
+        node2
+        
       EOS
       expect(stderr).to eq ''
     end
@@ -139,17 +139,17 @@ describe 'get_impacted_nodes executable' do
       exit_code, stdout, stderr = run 'get_impacted_nodes', '--platform', 'platform', '--smallest-test-sample'
       expect(exit_code).to eq 0
       expect(stdout).to eq <<~EOS
-       
-       * 1 impacted services:
-       service2
-       
-       * 1 impacted nodes (directly):
-       node1
-       
-       * 2 impacted nodes (total smallest set):
-       node1
-       node2
-
+        
+        * 1 impacted services:
+        service2
+        
+        * 1 impacted nodes (directly):
+        node1
+        
+        * 2 impacted nodes (total smallest set):
+        node1
+        node2
+        
       EOS
       expect(stderr).to eq ''
     end
