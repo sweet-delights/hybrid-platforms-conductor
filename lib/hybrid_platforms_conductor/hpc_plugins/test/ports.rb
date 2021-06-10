@@ -21,7 +21,7 @@ module HybridPlatformsConductor
           # Array< Hash<Symbol, Object> >
           attr_reader :ports_rules
 
-          # Initialize the DSL 
+          # Initialize the DSL
           def init_ports_test
             @ports_rules = []
           end

@@ -6,7 +6,7 @@ module HybridPlatformsConductor
 
     module Bitbucket
 
-      # Initialize the DSL 
+      # Initialize the DSL
       def init_bitbucket
         # List of Bitbucket repositories definitions
         # Array< Hash<Symbol, Object> >

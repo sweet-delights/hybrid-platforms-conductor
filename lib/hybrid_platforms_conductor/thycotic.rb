@@ -77,7 +77,7 @@ module HybridPlatformsConductor
       ).to_hash.dig(:get_secret_response, :get_secret_result)
     end
 
-    # Get a file attached to a given secret 
+    # Get a file attached to a given secret
     #
     # Parameters::
     # * *secret_id* (Object): The secret ID

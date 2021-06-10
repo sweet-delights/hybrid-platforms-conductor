@@ -24,7 +24,7 @@ module HybridPlatformsConductor
           # Array< Hash<Symbol, Object> >
           attr_reader :users_that_should_be_present
 
-          # Initialize the DSL 
+          # Initialize the DSL
           def init_local_users_test
             @users_that_should_be_absent = []
             @users_that_should_be_present = []

@@ -18,7 +18,7 @@ module HybridPlatformsConductor
           # Array< Hash<Symbol, Object> >
           attr_reader :ignored_orphan_files_paths
 
-          # Initialize the DSL 
+          # Initialize the DSL
           def init_orphan_files_test
             # List of paths to ignore info. Each info has the following properties:
             # * *nodes_selectors_stack* (Array<Object>): Stack of nodes selectors impacted by this rule

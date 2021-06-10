@@ -24,7 +24,7 @@ module HybridPlatformsConductor
           # Array< Hash<Symbol, Object> >
           attr_reader :mount_rules_that_should_be_present
 
-          # Initialize the DSL 
+          # Initialize the DSL
           def init_mounts_test
             @mount_rules_that_should_be_absent = []
             @mount_rules_that_should_be_present = []

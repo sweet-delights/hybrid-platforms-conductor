@@ -7,7 +7,7 @@ module HybridPlatformsConductor
 
     module Github
 
-      # Initialize the DSL 
+      # Initialize the DSL
       def init_github
         # List of Github repositories definitions
         # Array< Hash<Symbol, Object> >

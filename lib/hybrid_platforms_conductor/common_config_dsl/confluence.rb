@@ -4,7 +4,7 @@ module HybridPlatformsConductor
 
     module Confluence
 
-      # Initialize the DSL 
+      # Initialize the DSL
       def init_confluence
         # Confluence configuration (can be nil if none)
         # Hash<Symbol, Object> or nil. See #confluence_info to know details.

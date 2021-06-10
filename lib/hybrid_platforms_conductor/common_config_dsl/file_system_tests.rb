@@ -19,7 +19,7 @@ module HybridPlatformsConductor
       # Array< Hash<Symbol, Object> >
       attr_reader :fs_paths_rules
 
-      # Initialize the DSL 
+      # Initialize the DSL
       def init_file_system_tests
         @fs_paths_rules = []
         @context = {
@@ -49,7 +49,7 @@ module HybridPlatformsConductor
           paths: paths.flatten,
           nodes_selectors_stack: current_nodes_selectors_stack,
           context: @context.clone,
-          state: :present              
+          state: :present
         }
       end
 
