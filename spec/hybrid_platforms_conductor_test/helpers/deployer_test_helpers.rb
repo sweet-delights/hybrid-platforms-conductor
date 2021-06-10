@@ -237,7 +237,7 @@ module HybridPlatformsConductorTest
                   { remote_bash: 'sudo -u root apt update && sudo -u root apt install -y ca-certificates' },
                   {
                     remote_bash: 'sudo -u root update-ca-certificates',
-                    scp:  {
+                    scp: {
                       certs_dir => '/usr/local/share/ca-certificates',
                       :sudo => true
                     }
@@ -261,7 +261,7 @@ module HybridPlatformsConductorTest
                   { remote_bash: 'other_sudo --user root apt update && other_sudo --user root apt install -y ca-certificates' },
                   {
                     remote_bash: 'other_sudo --user root update-ca-certificates',
-                    scp:  {
+                    scp: {
                       certs_dir => '/usr/local/share/ca-certificates',
                       :sudo => true
                     }
@@ -295,7 +295,7 @@ module HybridPlatformsConductorTest
                   { remote_bash: 'apt update && apt install -y ca-certificates' },
                   {
                     remote_bash: 'update-ca-certificates',
-                    scp:  {
+                    scp: {
                       certs_dir => '/usr/local/share/ca-certificates',
                       :sudo => false
                     }
