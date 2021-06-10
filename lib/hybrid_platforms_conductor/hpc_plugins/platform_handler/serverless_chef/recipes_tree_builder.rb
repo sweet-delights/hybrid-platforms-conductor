@@ -171,7 +171,7 @@ module HybridPlatformsConductor
               @known_library_methods = {}
               for_each_cookbook do |cookbook, cookbook_dir|
                 if File.exist?("#{cookbook_dir}/libraries")
-                  found_methods =  Dir.glob("#{cookbook_dir}/libraries/*.rb").
+                  found_methods = Dir.glob("#{cookbook_dir}/libraries/*.rb").
                       map { |lib_file| File.read(lib_file).scan(/\bdef\s+(\w+)\b/).map { |(method_name)| method_name } }.
                       flatten - INVALID_LIBRARY_METHODS
                   @known_library_methods[cookbook] = found_methods unless found_methods.empty?
