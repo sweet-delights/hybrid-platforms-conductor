@@ -5,7 +5,7 @@ describe HybridPlatformsConductor::TestsRunner do
     context 'checking confluence' do
 
       it 'returns Confluence info' do
-        with_repository do |repository|
+        with_repository do
           platforms = <<~EOS
             confluence(
               url: 'https://my_confluence.my_domain.com',

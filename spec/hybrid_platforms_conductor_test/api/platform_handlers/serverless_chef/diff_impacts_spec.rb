@@ -3,7 +3,7 @@ describe HybridPlatformsConductor::HpcPlugins::PlatformHandler::ServerlessChef d
   context 'checking files diff impacts' do
 
     it 'returns no impact for no diffs' do
-      with_serverless_chef_platforms('recipes') do |platform, repository|
+      with_serverless_chef_platforms('recipes') do |platform|
         expect(platform.impacts_from({})).to eq [
           [],
           [],
@@ -13,7 +13,7 @@ describe HybridPlatformsConductor::HpcPlugins::PlatformHandler::ServerlessChef d
     end
 
     it 'ignores files with no impact' do
-      with_serverless_chef_platforms('recipes') do |platform, repository|
+      with_serverless_chef_platforms('recipes') do |platform|
         expect(platform.impacts_from('cookbooks/test_cookbook_1/README.md' => {})).to eq [
           [],
           [],
@@ -23,7 +23,7 @@ describe HybridPlatformsConductor::HpcPlugins::PlatformHandler::ServerlessChef d
     end
 
     it 'returns all nodes impact for global files' do
-      with_serverless_chef_platforms('recipes') do |platform, repository|
+      with_serverless_chef_platforms('recipes') do |platform|
         expect(platform.impacts_from('global.rb' => {})).to eq [
           [],
           [],
@@ -33,7 +33,7 @@ describe HybridPlatformsConductor::HpcPlugins::PlatformHandler::ServerlessChef d
     end
 
     it 'returns direct impacted nodes' do
-      with_serverless_chef_platforms('recipes') do |platform, repository|
+      with_serverless_chef_platforms('recipes') do |platform|
         expect(platform.impacts_from('nodes/node1.json' => {})).to eq [
           %w[node1],
           [],
@@ -43,7 +43,7 @@ describe HybridPlatformsConductor::HpcPlugins::PlatformHandler::ServerlessChef d
     end
 
     it 'returns direct impacted nodes with strange characters' do
-      with_serverless_chef_platforms('recipes') do |platform, repository|
+      with_serverless_chef_platforms('recipes') do |platform|
         expect(platform.impacts_from('nodes/node-v45.env_@user.json' => {})).to eq [
           ['node-v45.env_@user'],
           [],
@@ -53,7 +53,7 @@ describe HybridPlatformsConductor::HpcPlugins::PlatformHandler::ServerlessChef d
     end
 
     it 'returns impacted service due to a change in its recipes' do
-      with_serverless_chef_platforms('recipes') do |platform, repository|
+      with_serverless_chef_platforms('recipes') do |platform|
         expect(platform.impacts_from('cookbooks/test_cookbook_1/recipes/default.rb' => {})).to eq [
           [],
           %w[test_policy_1],
@@ -63,7 +63,7 @@ describe HybridPlatformsConductor::HpcPlugins::PlatformHandler::ServerlessChef d
     end
 
     it 'returns impacted service due to a change in its attributes' do
-      with_serverless_chef_platforms('recipes') do |platform, repository|
+      with_serverless_chef_platforms('recipes') do |platform|
         expect(platform.impacts_from('cookbooks/test_cookbook_1/attributes/default.rb' => {})).to eq [
           [],
           %w[test_policy_1],
@@ -88,7 +88,7 @@ describe HybridPlatformsConductor::HpcPlugins::PlatformHandler::ServerlessChef d
     end
 
     it 'does not return impacted service due to a change in a non included template' do
-      with_serverless_chef_platforms('recipes') do |platform, repository|
+      with_serverless_chef_platforms('recipes') do |platform|
         expect(platform.impacts_from('cookbooks/test_cookbook_1/templates/default/test_template.erb' => {})).to eq [
           [],
           [],
@@ -113,7 +113,7 @@ describe HybridPlatformsConductor::HpcPlugins::PlatformHandler::ServerlessChef d
     end
 
     it 'does not return impacted service due to a change in a non included file' do
-      with_serverless_chef_platforms('recipes') do |platform, repository|
+      with_serverless_chef_platforms('recipes') do |platform|
         expect(platform.impacts_from('cookbooks/test_cookbook_1/files/default/test_file' => {})).to eq [
           [],
           [],
@@ -136,7 +136,7 @@ describe HybridPlatformsConductor::HpcPlugins::PlatformHandler::ServerlessChef d
     end
 
     it 'does not return impacted service due to a resource not being used in a recipe' do
-      with_serverless_chef_platforms('recipes') do |platform, repository|
+      with_serverless_chef_platforms('recipes') do |platform|
         expect(platform.impacts_from('cookbooks/test_cookbook_2/resources/my_resource.rb' => {})).to eq [
           [],
           [],
@@ -190,7 +190,7 @@ describe HybridPlatformsConductor::HpcPlugins::PlatformHandler::ServerlessChef d
     end
 
     it 'does not return impacted service due to a library helper not being used in a recipe' do
-      with_serverless_chef_platforms('recipes') do |platform, repository|
+      with_serverless_chef_platforms('recipes') do |platform|
         expect(platform.impacts_from('cookbooks/test_cookbook_2/libraries/default.rb' => {})).to eq [
           [],
           [],

@@ -320,7 +320,7 @@ module HybridPlatformsConductor
               remaining_nodes_to_deploy = retriable_nodes.keys
             end
             # Merge deployment results
-            results.merge!(last_deploy_results) do |node, (exit_status_1, stdout_1, stderr_1), (exit_status_2, stdout_2, stderr_2)|
+            results.merge!(last_deploy_results) do |_node, (exit_status_1, stdout_1, stderr_1), (exit_status_2, stdout_2, stderr_2)|
               [
                 exit_status_2,
                 <<~EOS,

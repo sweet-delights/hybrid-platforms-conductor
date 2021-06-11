@@ -16,7 +16,7 @@ describe HybridPlatformsConductor::ActionsExecutor do
     end
 
     it 'executes local Bash code with timeout' do
-      with_test_platform_for_action_plugins do |repository|
+      with_test_platform_for_action_plugins do
         expect(test_actions_executor.execute_actions(
           { 'node' => {
             bash: 'sleep 2 ; echo ShouldNotReach'
@@ -28,7 +28,7 @@ describe HybridPlatformsConductor::ActionsExecutor do
 
     it 'logs local Bash code' do
       with_repository 'logs' do |logs_dir|
-        with_test_platform_for_action_plugins do |repository|
+        with_test_platform_for_action_plugins do
           test_actions_executor.execute_actions(
             {
               'node' => {

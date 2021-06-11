@@ -18,8 +18,8 @@ module HybridPlatformsConductorTest
         stderr_file = "#{Dir.tmpdir}/hpc_test/run.stderr"
         File.open(stdout_file, 'w') { |f| f.truncate(0) }
         File.open(stderr_file, 'w') { |f| f.truncate(0) }
-        logger_stdout = Logger.new(stdout_file, level: :info)
-        logger_stderr = Logger.new(stderr_file, level: :info)
+        test_logger_stdout = Logger.new(stdout_file, level: :info)
+        test_logger_stderr = Logger.new(stderr_file, level: :info)
         # Mock the Executable creation to redirect stdout and stderr correctly
         expect(HybridPlatformsConductor::Executable).to receive(:new).once.and_wrap_original do |original_method,
           check_options: true,
@@ -27,8 +27,8 @@ module HybridPlatformsConductorTest
           parallel_options: true,
           timeout_options: true,
           deploy_options: true,
-          original_logger: Logger.new(STDOUT, level: :info),
-          original_logger_stderr: Logger.new(STDERR, level: :info),
+          _logger: Logger.new(STDOUT, level: :info),
+          _logger_stderr: Logger.new(STDERR, level: :info),
           &opts_block|
           original_method.call(
             check_options: check_options,
@@ -36,8 +36,8 @@ module HybridPlatformsConductorTest
             parallel_options: parallel_options,
             timeout_options: timeout_options,
             deploy_options: deploy_options,
-            logger: logger_stdout,
-            logger_stderr: logger_stderr,
+            logger: test_logger_stdout,
+            logger_stderr: test_logger_stderr,
             &opts_block
           )
         end

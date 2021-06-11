@@ -18,7 +18,7 @@ describe HybridPlatformsConductor::ActionsExecutor do
           expected_cmds: [
             [
               /.+\/ssh hpc\.node \/bin\/bash <<'HPC_EOF'\nbash_cmd.bash\nHPC_EOF/,
-              proc do |cmd, log_to_file: nil, log_to_stdout: true, log_stdout_to_io: nil, log_stderr_to_io: nil, expected_code: 0, timeout: nil, no_exception: false|
+              proc do |_cmd, log_to_file: nil, log_to_stdout: true, log_stdout_to_io: nil, log_stderr_to_io: nil, expected_code: 0, timeout: nil, no_exception: false|
                 expect(timeout).to eq 5
                 [0, '', '']
               end
@@ -57,7 +57,7 @@ describe HybridPlatformsConductor::ActionsExecutor do
           expected_cmds: [
             [
               /cd \/path\/to && tar\s+--create\s+--gzip\s+--file -\s+src.file \| \/.+\/ssh\s+hpc\.node\s+"tar\s+--extract\s+--gunzip\s+--file -\s+--directory \/remote_path\/to\/dst.dir\s+--owner root\s+"/,
-              proc do |cmd, log_to_file: nil, log_to_stdout: true, log_stdout_to_io: nil, log_stderr_to_io: nil, expected_code: 0, timeout: nil, no_exception: false|
+              proc do |_cmd, log_to_file: nil, log_to_stdout: true, log_stdout_to_io: nil, log_stderr_to_io: nil, expected_code: 0, timeout: nil, no_exception: false|
                 expect(timeout).to eq 5
                 [0, '', '']
               end

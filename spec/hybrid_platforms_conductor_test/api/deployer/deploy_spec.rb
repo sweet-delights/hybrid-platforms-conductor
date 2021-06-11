@@ -160,7 +160,7 @@ describe HybridPlatformsConductor::Deployer do
       end
 
       it 'gets deployment info from log plugins' do
-        with_test_platform_for_deploy_tests({ nodes: { 'node' => {} } }) do |repository|
+        with_test_platform_for_deploy_tests({ nodes: { 'node' => {} } }) do
           expect_actions_executor_runs [
             # Expect the actions to get log files
             proc do |actions_per_nodes|
@@ -194,7 +194,7 @@ describe HybridPlatformsConductor::Deployer do
       end
 
       it 'gets deployment info from log plugins not having actions_to_read_logs' do
-        with_test_platform_for_deploy_tests({ nodes: { 'node' => {} } }, false, 'send_logs_to :test_log_no_read') do |repository|
+        with_test_platform_for_deploy_tests({ nodes: { 'node' => {} } }, false, 'send_logs_to :test_log_no_read') do
           expect(test_deployer.deployment_info_from('node')).to eq(
             'node' => {
               deployment_info: { user: 'test_user' },

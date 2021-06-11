@@ -8,7 +8,7 @@ describe HybridPlatformsConductor::Deployer do
     it 'gives a new test instance ready to be used in place of the node' do
       with_test_platform(
         nodes: { 'node' => { meta: { host_ip: '192.168.42.42' } } }
-      ) do |repository|
+      ) do
         register_plugins(:provisioner, { test_provisioner: HybridPlatformsConductorTest::TestProvisioner })
         File.write("#{test_config.hybrid_platforms_dir}/dummy_secrets.json", '{}')
         HybridPlatformsConductorTest::TestProvisioner.mocked_states = %i[created created running exited]
@@ -30,7 +30,7 @@ describe HybridPlatformsConductor::Deployer do
     it 'gives a new test instance ready to be used in place of the node, using the timeout given by the provisioner' do
       with_test_platform(
         nodes: { 'node' => { meta: { host_ip: '192.168.42.42' } } }
-      ) do |repository|
+      ) do
         register_plugins(:provisioner, { test_provisioner: HybridPlatformsConductorTest::TestProvisioner })
         File.write("#{test_config.hybrid_platforms_dir}/dummy_secrets.json", '{}')
         HybridPlatformsConductorTest::TestProvisioner.mocked_states = %i[created created running exited]
@@ -66,7 +66,7 @@ describe HybridPlatformsConductor::Deployer do
             end
           end
         '
-      ) do |repository|
+      ) do
         register_plugins(:provisioner, { test_provisioner: HybridPlatformsConductorTest::TestProvisioner })
         File.write("#{test_config.hybrid_platforms_dir}/dummy_secrets.json", '{}')
         HybridPlatformsConductorTest::TestProvisioner.mocked_states = %i[created created running exited]
@@ -92,7 +92,7 @@ describe HybridPlatformsConductor::Deployer do
             'node2' => { meta: { local_node: true } }
           }
         }
-      ) do |repository|
+      ) do
         register_plugins(:provisioner, { test_provisioner: HybridPlatformsConductorTest::TestProvisioner })
         File.write("#{test_config.hybrid_platforms_dir}/dummy_secrets.json", '{}')
         HybridPlatformsConductorTest::TestProvisioner.mocked_states = %i[created created running exited]
@@ -100,7 +100,7 @@ describe HybridPlatformsConductor::Deployer do
         expect(Socket).to receive(:tcp).with('172.17.0.1', 22, { connect_timeout: 1 }) do |&block|
           block.call
         end
-        test_deployer.with_test_provisioned_instance(:test_provisioner, 'node1', environment: 'hpc_testing_provisioner') do |sub_test_deployer, test_instance|
+        test_deployer.with_test_provisioned_instance(:test_provisioner, 'node1', environment: 'hpc_testing_provisioner') do |sub_test_deployer|
           expect(sub_test_deployer.instance_eval { @nodes_handler.get_local_node_of('node1') }).to eq false
           expect(sub_test_deployer.instance_eval { @nodes_handler.get_local_node_of('node2') }).to eq true
         end
@@ -121,7 +121,7 @@ describe HybridPlatformsConductor::Deployer do
             sudo_for { |user| "other_sudo --user #{user}" }
           end
         '
-      ) do |repository|
+      ) do
         register_plugins(:provisioner, { test_provisioner: HybridPlatformsConductorTest::TestProvisioner })
         File.write("#{test_config.hybrid_platforms_dir}/dummy_secrets.json", '{}')
         HybridPlatformsConductorTest::TestProvisioner.mocked_states = %i[created created running exited]
@@ -129,7 +129,7 @@ describe HybridPlatformsConductor::Deployer do
         expect(Socket).to receive(:tcp).with('172.17.0.1', 22, { connect_timeout: 1 }) do |&block|
           block.call
         end
-        test_deployer.with_test_provisioned_instance(:test_provisioner, 'node1', environment: 'hpc_testing_provisioner') do |sub_test_deployer, test_instance|
+        test_deployer.with_test_provisioned_instance(:test_provisioner, 'node1', environment: 'hpc_testing_provisioner') do |_sub_test_deployer, test_instance|
           sudo_procs = test_instance.instance_eval { @config.sudo_procs }
           expect(sudo_procs.size).to eq 1
           expect(sudo_procs[0][:nodes_selectors_stack]).to eq [%w[node2]]
@@ -140,7 +140,7 @@ describe HybridPlatformsConductor::Deployer do
     it 'does not destroy instances when asked to reuse' do
       with_test_platform(
         nodes: { 'node' => { meta: { host_ip: '192.168.42.42' } } }
-      ) do |repository|
+      ) do
         register_plugins(:provisioner, { test_provisioner: HybridPlatformsConductorTest::TestProvisioner })
         File.write("#{test_config.hybrid_platforms_dir}/dummy_secrets.json", '{}')
         HybridPlatformsConductorTest::TestProvisioner.mocked_states = %i[created created running exited]
@@ -162,7 +162,7 @@ describe HybridPlatformsConductor::Deployer do
     it 'reuses running instances when asked to reuse' do
       with_test_platform(
         nodes: { 'node' => { meta: { host_ip: '192.168.42.42' } } }
-      ) do |repository|
+      ) do
         register_plugins(:provisioner, { test_provisioner: HybridPlatformsConductorTest::TestProvisioner })
         File.write("#{test_config.hybrid_platforms_dir}/dummy_secrets.json", '{}')
         HybridPlatformsConductorTest::TestProvisioner.mocked_states = %i[running running running exited]
@@ -184,7 +184,7 @@ describe HybridPlatformsConductor::Deployer do
     it 'fails when the provisioner can\'t start' do
       with_test_platform(
         nodes: { 'node' => { meta: { host_ip: '192.168.42.42' } } }
-      ) do |repository|
+      ) do
         register_plugins(:provisioner, { test_provisioner: HybridPlatformsConductorTest::TestProvisioner })
         File.write("#{test_config.hybrid_platforms_dir}/dummy_secrets.json", '{}')
         HybridPlatformsConductorTest::TestProvisioner.mocked_states = %i[created created created exited exited]
@@ -198,12 +198,12 @@ describe HybridPlatformsConductor::Deployer do
     it 'fails when the provisioner can\'t have its SSH port opened' do
       with_test_platform(
         nodes: { 'node' => { meta: { host_ip: '192.168.42.42' } } }
-      ) do |repository|
+      ) do
         register_plugins(:provisioner, { test_provisioner: HybridPlatformsConductorTest::TestProvisioner })
         File.write("#{test_config.hybrid_platforms_dir}/dummy_secrets.json", '{}')
         HybridPlatformsConductorTest::TestProvisioner.mocked_states = %i[created created running exited]
         HybridPlatformsConductorTest::TestProvisioner.mocked_ip = '172.17.0.1'
-        expect(Socket).to receive(:tcp).with('172.17.0.1', 22, { connect_timeout: 1 }) do |&block|
+        expect(Socket).to receive(:tcp).with('172.17.0.1', 22, { connect_timeout: 1 }) do
           raise Errno::ETIMEDOUT, 'Timeout while reading from port 22'
         end
         expect do

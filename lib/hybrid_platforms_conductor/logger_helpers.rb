@@ -107,7 +107,7 @@ module HybridPlatformsConductor
     # Set loggers to the desired format
     def set_loggers_format
       [@logger, @logger_stderr].each do |logger|
-        logger.formatter = proc do |severity, datetime, progname, msg|
+        logger.formatter = proc do |severity, _datetime, progname, msg|
           # If the message already has control characters, don't colorize it
           keep_original_color = msg.include? "\u001b"
           message = "[#{Time.now.utc.strftime('%F %T')} (PID #{$$} / TID #{Thread.current.object_id})] #{severity.rjust(5)} - [ #{progname} ] - "

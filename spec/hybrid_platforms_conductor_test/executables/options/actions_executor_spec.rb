@@ -14,7 +14,7 @@ describe 'executables\' Actions Executor options' do
 
   it 'drives the maximum number of threads' do
     with_test_platform_for_actions_executor_options do
-      expect_actions_executor_runs([proc do |actions, timeout: nil, concurrent: false, log_to_dir: 'run_logs', log_to_stdout: true|
+      expect_actions_executor_runs([proc do
         expect(test_actions_executor.max_threads).to eq 5
         {}
       end])

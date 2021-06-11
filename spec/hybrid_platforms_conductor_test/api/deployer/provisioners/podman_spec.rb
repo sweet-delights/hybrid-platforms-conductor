@@ -163,7 +163,7 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Podman do
   end
 
   it 'gets the status of a missing instance' do
-    with_test_podman_platform do |instance, repository|
+    with_test_podman_platform do |instance|
       expect(instance.state).to eq :missing
     end
   end

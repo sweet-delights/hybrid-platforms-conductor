@@ -5,7 +5,7 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
   context 'checking Config DSL extensions' do
 
     it 'declares proxmox configuratin in Config DSL' do
-      with_repository do |repository|
+      with_repository do
         platforms = <<~EOS
           proxmox(
             api_url: 'https://my-proxmox.my-domain.com:8006',

@@ -27,7 +27,7 @@ module HybridPlatformsConductorTest
     # * Hash: The secrets
     def secrets_for(node, service)
       # Get the name by looking into the plugins' map
-      plugin_name, _plugin = TestSecretsReaderPlugin.deployer.instance_variable_get(:@secrets_readers).find { |plugin_name, plugin| plugin == self }
+      plugin_name, _plugin = TestSecretsReaderPlugin.deployer.instance_variable_get(:@secrets_readers).find { |_plugin_name, plugin| plugin == self }
       TestSecretsReaderPlugin.calls << {
         instance: plugin_name,
         node: node,

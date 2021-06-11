@@ -5,7 +5,7 @@ describe HybridPlatformsConductor::TestsRunner do
     context 'checking github_ci' do
 
       it 'iterates over defined Github repos' do
-        with_repository do |repository|
+        with_repository do
           platforms = <<~EOS
             github_repos(
               url: 'https://my_gh.my_domain.com',

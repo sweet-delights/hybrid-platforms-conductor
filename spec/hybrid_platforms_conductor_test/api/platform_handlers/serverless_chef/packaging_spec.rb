@@ -65,7 +65,7 @@ describe HybridPlatformsConductor::HpcPlugins::PlatformHandler::ServerlessChef d
     context 'with an empty platform' do
 
       it 'packages the repository doing nothing' do
-        with_serverless_chef_platforms('empty') do |platform, repository|
+        with_serverless_chef_platforms('empty') do |platform|
           with_cmd_runner_mocked([]) do
             platform.package(services: {}, secrets: {}, local_environment: false)
           end

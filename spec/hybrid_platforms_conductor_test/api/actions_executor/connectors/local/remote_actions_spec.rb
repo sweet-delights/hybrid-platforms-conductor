@@ -62,7 +62,7 @@ describe HybridPlatformsConductor::ActionsExecutor do
           expected_cmds: [
             [
               'cd /tmp/hpc_local_workspaces/node ; bash_cmd.bash',
-              proc do |cmd, log_to_file: nil, log_to_stdout: true, log_stdout_to_io: nil, log_stderr_to_io: nil, expected_code: 0, timeout: nil, no_exception: false|
+              proc do |_cmd, log_to_file: nil, log_to_stdout: true, log_stdout_to_io: nil, log_stderr_to_io: nil, expected_code: 0, timeout: nil, no_exception: false|
                 expect(timeout).to eq 5
                 [0, '', '']
               end

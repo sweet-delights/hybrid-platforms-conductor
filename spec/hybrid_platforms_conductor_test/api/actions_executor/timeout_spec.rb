@@ -38,7 +38,7 @@ describe HybridPlatformsConductor::ActionsExecutor do
     it 'executes an action that fails because of timeout' do
       with_test_platform_for_timeouts_tests do
         expect(test_actions_executor.execute_actions(
-          { 'node' => { test_action: { code: proc do |_stdout, _stderr, action|
+          { 'node' => { test_action: { code: proc do
             raise HybridPlatformsConductor::CmdRunner::TimeoutError
           end } } },
           timeout: 1
@@ -49,7 +49,7 @@ describe HybridPlatformsConductor::ActionsExecutor do
     it 'executes an action that fails because of timeout and outputs data before' do
       with_test_platform_for_timeouts_tests do
         expect(test_actions_executor.execute_actions(
-          { 'node' => { test_action: { code: proc do |stdout, _stderr, action|
+          { 'node' => { test_action: { code: proc do |stdout|
             stdout << 'Hello'
             raise HybridPlatformsConductor::CmdRunner::TimeoutError
           end } } },
@@ -66,7 +66,7 @@ describe HybridPlatformsConductor::ActionsExecutor do
               sleep 1
               stdout << 'Hello'
             end } },
-            { test_action: { code: proc do |stdout, _stderr, action|
+            { test_action: { code: proc do
               raise HybridPlatformsConductor::CmdRunner::TimeoutError
             end } }
           ] },
@@ -79,15 +79,15 @@ describe HybridPlatformsConductor::ActionsExecutor do
       with_test_platform_for_timeouts_tests do
         expect(test_actions_executor.execute_actions(
           { 'node' => [
-            { test_action: { code: proc do |stdout, _stderr, action|
+            { test_action: { code: proc do |_stdout, _stderr, action|
               expect(action.timeout).to eq 5
               sleep 1
             end } },
-            { test_action: { code: proc do |stdout, _stderr, action|
+            { test_action: { code: proc do |_stdout, _stderr, action|
               expect(action.timeout).to be_between(3.8, 4)
               sleep 1
             end } },
-            { test_action: { code: proc do |stdout, _stderr, action|
+            { test_action: { code: proc do |_stdout, _stderr, action|
               expect(action.timeout).to be_between(2.8, 3)
             end } }
           ] },

@@ -13,7 +13,7 @@ describe 'executables\' Deployer options' do
   end
 
   it 'uses parallel mode' do
-    with_test_platform_for_deployer_options do |repository|
+    with_test_platform_for_deployer_options do
       expect(test_deployer).to receive(:deploy_on).with(['node']) do
         expect(test_deployer.concurrent_execution).to eq true
         {}
@@ -25,7 +25,7 @@ describe 'executables\' Deployer options' do
   end
 
   it 'uses why-run' do
-    with_test_platform_for_deployer_options do |repository|
+    with_test_platform_for_deployer_options do
       expect(test_deployer).to receive(:deploy_on).with(['node']) do
         expect(test_deployer.use_why_run).to eq true
         {}
@@ -37,7 +37,7 @@ describe 'executables\' Deployer options' do
   end
 
   it 'uses timeout with why-run' do
-    with_test_platform_for_deployer_options do |repository|
+    with_test_platform_for_deployer_options do
       expect(test_deployer).to receive(:deploy_on).with(['node']) do
         expect(test_deployer.timeout).to eq 5
         {}
@@ -49,13 +49,13 @@ describe 'executables\' Deployer options' do
   end
 
   it 'fails to use timeout without why-run' do
-    with_test_platform_for_deployer_options do |repository|
+    with_test_platform_for_deployer_options do
       expect { run 'deploy', '--node', 'node', '--timeout', '5' }.to raise_error(RuntimeError, 'Can\'t have a timeout unless why-run mode. Please don\'t use --timeout without --why-run.')
     end
   end
 
   it 'uses retries on errors' do
-    with_test_platform_for_deployer_options do |repository|
+    with_test_platform_for_deployer_options do
       expect(test_deployer).to receive(:deploy_on).with(['node']) do
         expect(test_deployer.nbr_retries_on_error).to eq 42
         {}

@@ -56,7 +56,7 @@ module HybridPlatformsConductorTest
       # * *expected_nodes* (Array<String>): List of nodes that should have masters created
       # * Proc: Code called with the Actions Executor mocked
       def with_connections_mocked_on(expected_nodes)
-        expect(test_actions_executor).to receive(:with_connections_prepared_to) do |nodes, no_exception: false, &client_code|
+        expect(test_actions_executor).to receive(:with_connections_prepared_to) do |nodes, _no_exception: false, &client_code|
           expect(nodes.sort).to eq expected_nodes.sort
           client_code.call Hash[nodes.map { |node| [node, test_actions_executor.connector(:test_connector)] }]
         end
@@ -69,7 +69,7 @@ module HybridPlatformsConductorTest
       # * *expected_runs* (Array<Proc>): List of mocking codes that should be run. Each Proc has the same signature as ActionsExecutor#execute_actions
       def expect_actions_executor_runs(expected_runs)
         idx_actions_executor_run = 0
-        expect(test_actions_executor).to receive(:execute_actions).exactly(expected_runs.size).times do |actions_per_nodes, timeout: nil, concurrent: false, log_to_dir: 'run_logs', log_to_stdout: true, progress_name: 'Executing actions'|
+        expect(test_actions_executor).to receive(:execute_actions).exactly(expected_runs.size).times do |actions_per_nodes, timeout: nil, concurrent: false, log_to_dir: 'run_logs', log_to_stdout: true, _progress_name: 'Executing actions'|
           logger.debug "[ Mocked ActionsExecutor ] - Run actions: #{actions_per_nodes}"
           result =
             if idx_actions_executor_run >= expected_runs.size

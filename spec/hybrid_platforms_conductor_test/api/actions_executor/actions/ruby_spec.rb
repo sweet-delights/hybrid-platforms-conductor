@@ -8,7 +8,7 @@ describe HybridPlatformsConductor::ActionsExecutor do
         expect(
           test_actions_executor.execute_actions(
             'node' => {
-              ruby: proc do |stdout, stderr, action|
+              ruby: proc do |stdout, stderr|
                 stdout << 'TestStdout'
                 stderr << 'TestStderr'
                 executed = true
@@ -27,7 +27,7 @@ describe HybridPlatformsConductor::ActionsExecutor do
         expect(
           test_actions_executor.execute_actions(
             { 'node' => {
-              ruby: proc do |stdout, stderr, action|
+              ruby: proc do |stdout, _stderr|
                 sleep 2
                 stdout << 'ShouldNotReach'
                 executed = true
@@ -45,7 +45,7 @@ describe HybridPlatformsConductor::ActionsExecutor do
         with_test_platform_for_action_plugins do
           test_actions_executor.execute_actions(
             { 'node' => {
-              ruby: proc do |stdout, stderr, action|
+              ruby: proc do |stdout, stderr|
                 stdout << "TestStdout\n"
                 stderr << "TestStderr\n"
               end
@@ -84,7 +84,7 @@ describe HybridPlatformsConductor::ActionsExecutor do
           test_actions_executor.execute_actions(
             'node' => {
               ruby: {
-                code: proc do |stdout, stderr, action, connector|
+                code: proc do |stdout, stderr, _action, connector|
                   expect(connector.is_a?(HybridPlatformsConductorTest::TestConnector)).to eq true
                   stdout << 'TestStdout'
                   stderr << 'TestStderr'
@@ -106,7 +106,7 @@ describe HybridPlatformsConductor::ActionsExecutor do
           test_actions_executor.execute_actions(
             'node' => {
               ruby: {
-                code: proc do |stdout, stderr, action, connector|
+                code: proc do |stdout, stderr, _action, connector|
                   expect(connector).to be_nil
                   stdout << 'TestStdout'
                   stderr << 'TestStderr'

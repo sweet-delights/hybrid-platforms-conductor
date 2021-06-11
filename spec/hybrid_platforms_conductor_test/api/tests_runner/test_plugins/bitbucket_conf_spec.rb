@@ -5,7 +5,7 @@ describe HybridPlatformsConductor::TestsRunner do
     context 'checking bitbucket_conf' do
 
       it 'iterates over defined Bitbucket repos' do
-        with_repository do |repository|
+        with_repository do
           platforms = <<~EOS
             bitbucket_repos(
               url: 'https://my_bb1.my_domain.com',

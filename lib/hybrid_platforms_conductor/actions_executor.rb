@@ -194,7 +194,7 @@ module HybridPlatformsConductor
     def with_connections_prepared_to(nodes, no_exception: false)
       # Make sure every node needing connectors finds a connector
       nodes_needing_connectors = Hash[nodes.map { |node| [node, nil] }]
-      @connector_plugins.each do |connector_name, connector|
+      @connector_plugins.values.each do |connector|
         nodes_without_connectors = nodes_needing_connectors.select { |_node, selected_connector| selected_connector.nil? }.keys
         break if nodes_without_connectors.empty?
 

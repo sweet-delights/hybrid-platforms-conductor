@@ -37,7 +37,7 @@ module HybridPlatformsConductorTest
           )
             actions = [
               # First run, we expect the mutex to be setup, and the deployment actions to be run
-              proc do |actions_per_nodes, timeout: nil, concurrent: false, log_to_dir: 'run_logs', log_to_stdout: true|
+              proc do |actions_per_nodes, timeout: nil, concurrent: false, log_to_dir: 'run_logs', _log_to_stdout: true|
                 expect(timeout).to eq expect_actions_timeout
                 expect(concurrent).to eq expect_concurrent_actions
                 expect(log_to_dir).to eq 'run_logs'

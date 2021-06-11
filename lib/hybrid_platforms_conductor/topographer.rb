@@ -407,7 +407,7 @@ module HybridPlatformsConductor
       # Delete references to the nodes to be replaced
       @nodes_graph.delete_if { |node_name, _node_info| nodes_to_be_replaced.include?(node_name) }
       # Change any connection or inclusions using nodes to be replaced
-      @nodes_graph.each do |node_name, node_info|
+      @nodes_graph.values.each do |node_info|
         node_info[:includes] = node_info[:includes].map { |included_node_name| nodes_to_be_replaced.include?(included_node_name) ? replacement_node : included_node_name }.uniq
         new_connections = {}
         node_info[:connections].each do |connected_node_name, labels|

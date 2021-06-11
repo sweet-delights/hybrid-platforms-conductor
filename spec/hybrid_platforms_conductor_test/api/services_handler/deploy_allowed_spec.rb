@@ -88,7 +88,7 @@ describe HybridPlatformsConductor::ServicesHandler do
           'platform3' => { nodes: { 'node3' => { services: %w[service3] } }, deployable_services: %w[service3] }
         },
         true
-      ) do |repositories|
+      ) do
         expect(
           test_services_handler.deploy_allowed?(
             services: { 'node1' => %w[service1], 'node2' => %w[service2], 'node3' => %w[service3] },

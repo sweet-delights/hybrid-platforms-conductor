@@ -14,7 +14,7 @@ describe 'run executable' do
 
   it 'executes a single command on a node' do
     with_test_platform_for_run do
-      expect_actions_executor_runs([proc do |actions, timeout: nil, concurrent: false, log_to_dir: 'run_logs', log_to_stdout: true|
+      expect_actions_executor_runs([proc do |actions|
         expect(actions).to eq(['node1'] => [{ remote_bash: ['echo Hello'] }])
         test_actions_executor.stdout_device << "Hello\n"
         { 'node1' => [0, "Hello\n", ''] }
@@ -30,7 +30,7 @@ describe 'run executable' do
     with_test_platform_for_run do |repository|
       commands_file = "#{repository}/commands.txt"
       File.write(commands_file, "echo Hello1\necho Hello2\n")
-      expect_actions_executor_runs([proc do |actions, timeout: nil, concurrent: false, log_to_dir: 'run_logs', log_to_stdout: true|
+      expect_actions_executor_runs([proc do |actions|
         expect(actions).to eq(['node1'] => [{ remote_bash: [{ file: commands_file }] }])
         test_actions_executor.stdout_device << "Hello1\nHello2\n"
         { 'node1' => [0, "Hello1\nHello2\n", ''] }
@@ -60,7 +60,7 @@ describe 'run executable' do
 
   it 'executes a single command on a node and captures stderr correctly' do
     with_test_platform_for_run do
-      expect_actions_executor_runs([proc do |actions, timeout: nil, concurrent: false, log_to_dir: 'run_logs', log_to_stdout: true|
+      expect_actions_executor_runs([proc do |actions|
         expect(actions).to eq(['node1'] => [{ remote_bash: ['echo Hello 2>&1'] }])
         test_actions_executor.stderr_device << "Hello\n"
         { 'node1' => [0, '', "Hello\n"] }
@@ -89,7 +89,7 @@ describe 'run executable' do
 
   it 'executes several commands' do
     with_test_platform_for_run do
-      expect_actions_executor_runs([proc do |actions, timeout: nil, concurrent: false, log_to_dir: 'run_logs', log_to_stdout: true|
+      expect_actions_executor_runs([proc do |actions|
         expect(actions).to eq(['node1'] => [{ remote_bash: ['echo Hello1', 'echo Hello2'] }])
         test_actions_executor.stdout_device << "Hello1\nHello2\n"
         { 'node1' => [0, "Hello1\nHello2\n", ''] }
@@ -108,7 +108,7 @@ describe 'run executable' do
       File.write(commands_file_1, "echo Hello1\necho Hello2\n")
       commands_file_2 = "#{repository}/commands2.txt"
       File.write(commands_file_1, "echo Hello4\necho Hello5\n")
-      expect_actions_executor_runs([proc do |actions, timeout: nil, concurrent: false, log_to_dir: 'run_logs', log_to_stdout: true|
+      expect_actions_executor_runs([proc do |actions|
         expect(actions).to eq(
           ['node1'] => [{ remote_bash: [
             { file: commands_file_1 },
@@ -149,7 +149,7 @@ describe 'run executable' do
 
   it 'executes an interactive session on a node' do
     with_test_platform_for_run do
-      expect_actions_executor_runs([proc do |actions, timeout: nil, concurrent: false, log_to_dir: 'run_logs', log_to_stdout: true|
+      expect_actions_executor_runs([proc do |actions|
         expect(actions).to eq(['node1'] => [{ interactive: true }])
         { 'node1' => [0, '', ''] }
       end])

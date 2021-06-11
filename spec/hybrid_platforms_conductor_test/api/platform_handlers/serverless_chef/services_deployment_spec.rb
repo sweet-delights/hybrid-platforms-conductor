@@ -60,7 +60,7 @@ describe HybridPlatformsConductor::HpcPlugins::PlatformHandler::ServerlessChef d
     context 'with an empty platform' do
 
       it 'prepares for deploy' do
-        with_serverless_chef_platforms('empty') do |platform, repository|
+        with_serverless_chef_platforms('empty') do |platform|
           platform.prepare_for_deploy(
             services: {},
             secrets: {},
@@ -71,7 +71,7 @@ describe HybridPlatformsConductor::HpcPlugins::PlatformHandler::ServerlessChef d
       end
 
       it 'prepares for deploy in why-run mode' do
-        with_serverless_chef_platforms('empty') do |platform, repository|
+        with_serverless_chef_platforms('empty') do |platform|
           platform.prepare_for_deploy(
             services: {},
             secrets: {},
@@ -82,7 +82,7 @@ describe HybridPlatformsConductor::HpcPlugins::PlatformHandler::ServerlessChef d
       end
 
       it 'prepares for deploy in local mode' do
-        with_serverless_chef_platforms('empty') do |platform, repository|
+        with_serverless_chef_platforms('empty') do |platform|
           platform.prepare_for_deploy(
             services: {},
             secrets: {},

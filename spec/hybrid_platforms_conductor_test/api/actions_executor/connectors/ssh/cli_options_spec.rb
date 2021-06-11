@@ -34,7 +34,7 @@ describe HybridPlatformsConductor::ActionsExecutor do
 
       it 'selects the correct gateway user' do
         with_test_platform_for_cli do
-          expect_actions_executor_runs [proc do |actions, timeout: nil, concurrent: false, log_to_dir: 'run_logs', log_to_stdout: true|
+          expect_actions_executor_runs [proc do
             expect(test_connector.ssh_gateway_user).to eq 'another_user'
             {}
           end]
@@ -47,7 +47,7 @@ describe HybridPlatformsConductor::ActionsExecutor do
 
       it 'selects the correct gateway conf' do
         with_test_platform_for_cli do
-          expect_actions_executor_runs [proc do |actions, timeout: nil, concurrent: false, log_to_dir: 'run_logs', log_to_stdout: true|
+          expect_actions_executor_runs [proc do
             expect(test_connector.ssh_gateways_conf).to eq :test_gateway2
             {}
           end]
@@ -60,7 +60,7 @@ describe HybridPlatformsConductor::ActionsExecutor do
 
       it 'does not use the SSH control master' do
         with_test_platform_for_cli do
-          expect_actions_executor_runs [proc do |actions, timeout: nil, concurrent: false, log_to_dir: 'run_logs', log_to_stdout: true|
+          expect_actions_executor_runs [proc do
             expect(test_connector.ssh_use_control_master).to eq false
             {}
           end]
@@ -73,7 +73,7 @@ describe HybridPlatformsConductor::ActionsExecutor do
 
       it 'does not use strict host key checking' do
         with_test_platform_for_cli do
-          expect_actions_executor_runs [proc do |actions, timeout: nil, concurrent: false, log_to_dir: 'run_logs', log_to_stdout: true|
+          expect_actions_executor_runs [proc do
             expect(test_connector.ssh_strict_host_key_checking).to eq false
             {}
           end]
@@ -86,7 +86,7 @@ describe HybridPlatformsConductor::ActionsExecutor do
 
       it 'uses a different SSH user name' do
         with_test_platform_for_cli do
-          expect_actions_executor_runs [proc do |actions, timeout: nil, concurrent: false, log_to_dir: 'run_logs', log_to_stdout: true|
+          expect_actions_executor_runs [proc do
             expect(test_connector.ssh_user).to eq 'ssh_new_user'
             {}
           end]
@@ -111,7 +111,7 @@ describe HybridPlatformsConductor::ActionsExecutor do
 
       it 'expects passwords to be input' do
         with_test_platform_for_cli do
-          expect_actions_executor_runs [proc do |actions, timeout: nil, concurrent: false, log_to_dir: 'run_logs', log_to_stdout: true|
+          expect_actions_executor_runs [proc do
             expect(test_connector.auth_password).to eq true
             {}
           end]

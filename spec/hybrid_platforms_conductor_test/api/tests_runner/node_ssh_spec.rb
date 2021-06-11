@@ -212,7 +212,7 @@ describe HybridPlatformsConductor::TestsRunner do
         ssh_executions = []
         HybridPlatformsConductorTest::TestPlugins::NodeSsh.node_tests = { node_ssh_test: {
           'node11' => { 'test_node11.sh' => proc { |stdout, stderr, exit_code| ssh_executions << ['node11', stdout, stderr, exit_code] } },
-          'node12' => { 'test_node12.sh' => proc { |stdout, stderr, exit_code| raise 'Failure on this node' } },
+          'node12' => { 'test_node12.sh' => proc { raise 'Failure on this node' } },
           'node21' => { 'test_node21.sh' => proc { |stdout, stderr, exit_code| ssh_executions << ['node21', stdout, stderr, exit_code] } },
           'node22' => { 'test_node22.sh' => proc { |stdout, stderr, exit_code| ssh_executions << ['node22', stdout, stderr, exit_code] } }
         }}

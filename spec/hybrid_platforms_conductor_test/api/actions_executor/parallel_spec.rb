@@ -56,21 +56,21 @@ describe HybridPlatformsConductor::ActionsExecutor do
             {
               'node1' => [
                 {
-                  test_action: { code: proc do |stdout, stderr|
+                  test_action: { code: proc do |stdout|
                     sleep 1
                     stdout << 'node1_action1 '
                     actions_executed << 'node1_action1'
                   end }
                 },
                 {
-                  test_action: { code: proc do |stdout, stderr|
+                  test_action: { code: proc do |stdout|
                     sleep 5
                     stdout << 'node1_action2 '
                     actions_executed << 'node1_action2'
                   end }
                 },
                 {
-                  test_action: { code: proc do |stdout, stderr|
+                  test_action: { code: proc do |stdout|
                     sleep 2
                     stdout << 'node1_action3'
                     actions_executed << 'node1_action3'
@@ -79,20 +79,20 @@ describe HybridPlatformsConductor::ActionsExecutor do
               ],
               'node2' => [
                 {
-                  test_action: { code: proc do |stdout, stderr|
+                  test_action: { code: proc do |stdout|
                     stdout << 'node2_action1 '
                     actions_executed << 'node2_action1'
                   end }
                 },
                 {
-                  test_action: { code: proc do |stdout, stderr|
+                  test_action: { code: proc do |stdout|
                     sleep 2
                     stdout << 'node2_action2 '
                     actions_executed << 'node2_action2'
                   end }
                 },
                 {
-                  test_action: { code: proc do |stdout, stderr|
+                  test_action: { code: proc do |stdout|
                     sleep 3
                     stdout << 'node2_action3'
                     actions_executed << 'node2_action3'
@@ -101,21 +101,21 @@ describe HybridPlatformsConductor::ActionsExecutor do
               ],
               'node3' => [
                 {
-                  test_action: { code: proc do |stdout, stderr|
+                  test_action: { code: proc do |stdout|
                     sleep 3
                     stdout << 'node3_action1 '
                     actions_executed << 'node3_action1'
                   end }
                 },
                 {
-                  test_action: { code: proc do |stdout, stderr|
+                  test_action: { code: proc do |stdout|
                     sleep 1
                     stdout << 'node3_action2 '
                     actions_executed << 'node3_action2'
                   end }
                 },
                 {
-                  test_action: { code: proc do |stdout, stderr|
+                  test_action: { code: proc do |stdout|
                     sleep 3
                     stdout << 'node3_action3'
                     actions_executed << 'node3_action3'
