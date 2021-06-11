@@ -89,7 +89,7 @@ module HybridPlatformsConductor
               log_to_stdout: log_debug?,
               no_exception: true
             )
-            if exit_status == 0
+            if exit_status.zero?
               found_keys = []
               stdout.split("\n").each do |line|
                 unless line =~ /^# .*$/

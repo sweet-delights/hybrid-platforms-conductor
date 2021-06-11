@@ -488,7 +488,7 @@ module HybridPlatformsConductor
                 stdout_lines = cmd_stdout.split("\n")
                 # Last line of stdout is the return code
                 return_code = stdout_lines.empty? ? :command_cant_run : Integer(stdout_lines.last)
-                test.error "Command '#{cmd}' returned error code #{return_code}", "----- STDOUT:\n#{stdout_lines[0..-2].join("\n")}\n----- STDERR:\n#{cmd_stderr}" unless return_code == 0
+                test.error "Command '#{cmd}' returned error code #{return_code}", "----- STDOUT:\n#{stdout_lines[0..-2].join("\n")}\n----- STDERR:\n#{cmd_stderr}" unless return_code.zero?
                 test_info[:validator].call(stdout_lines[0..-2], cmd_stderr.split("\n"), return_code)
               end
             end
@@ -552,7 +552,7 @@ module HybridPlatformsConductor
           elsif stdout.is_a?(Symbol)
             test.error "Check-node run failed: #{stdout}."
           else
-            test.error "Check-node returned error code #{exit_status}" unless exit_status == 0
+            test.error "Check-node returned error code #{exit_status}" unless exit_status.zero?
             begin
               test.test_on_check_node(stdout, stderr, exit_status)
             rescue

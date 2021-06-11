@@ -41,7 +41,7 @@ module HybridPlatformsConductor
             raise "Unknown type of source IO: #{src_io}" unless src_io.is_a?(Queue)
 
             queue_size = src_io.size
-            next unless queue_size > 0
+            next unless queue_size.positive?
 
             # There is data to be read from src_io
             data_found = true

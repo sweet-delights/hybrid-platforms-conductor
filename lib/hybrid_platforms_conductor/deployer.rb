@@ -294,13 +294,13 @@ module HybridPlatformsConductor
           remaining_nodes_to_deploy = services_to_deploy.keys
           while nbr_retries >= 0 && !remaining_nodes_to_deploy.empty?
             last_deploy_results = deploy(services_to_deploy.slice(*remaining_nodes_to_deploy))
-            if nbr_retries > 0
+            if nbr_retries.positive?
               # Check if we need to retry deployment on some nodes
               # Only parse the last deployment attempt logs
               retriable_nodes = remaining_nodes_to_deploy.
                   map do |node|
                     exit_status, stdout, stderr = last_deploy_results[node]
-                    if exit_status == 0
+                    if exit_status.zero?
                       nil
                     else
                       retriable_errors = retriable_errors_from(node, exit_status, stdout, stderr)

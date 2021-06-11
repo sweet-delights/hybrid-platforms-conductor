@@ -46,7 +46,7 @@ module HybridPlatformsConductor
               deployer.nbr_retries_on_error = 3
               exit_status, _stdout, _stderr = deployer.deploy_on(@node)[@node]
               assert_equal exit_status, 0, "Deploy from scratch returned error code #{exit_status}", log_debug? ? nil : deployer.stdouts_to_s
-              if exit_status == 0
+              if exit_status.zero?
                 # As it's possible sshd has to be restarted because of a change in its conf, restart the container.
                 # Otherwise you'll get the following error upon reconnection:
                 #   System is booting up. See pam_nologin(8)

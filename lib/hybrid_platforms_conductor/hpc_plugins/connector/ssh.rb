@@ -422,7 +422,7 @@ module HybridPlatformsConductor
           cache_filled = defined?(@ssh_pass_installed)
           unless cache_filled
             exit_code, _stdout, _stderr = @cmd_runner.run_cmd 'sshpass -V', log_to_stdout: log_debug?, no_exception: true
-            @ssh_pass_installed = (exit_code == 0)
+            @ssh_pass_installed = exit_code.zero?
           end
           @ssh_pass_installed
         end
@@ -540,7 +540,7 @@ module HybridPlatformsConductor
                         idx_try = 0
                         loop do
                           exit_status, _stdout, stderr = @cmd_runner.run_cmd ssh_control_master_start_cmd, log_to_stdout: log_debug?, no_exception: true, timeout: timeout
-                          break if exit_status == 0
+                          break if exit_status.zero?
 
                           if stderr =~ /System is booting up/
                             if idx_try == MAX_RETRIES_FOR_BOOT
@@ -559,7 +559,7 @@ module HybridPlatformsConductor
                           end
                         end
                       end
-                      if exit_status == 0
+                      if exit_status.zero?
                         log_debug "[ ControlMaster - #{ssh_url} ] - ControlMaster created"
                         working_master = true
                       else
@@ -575,7 +575,7 @@ module HybridPlatformsConductor
                       rescue CmdRunner::UnexpectedExitCodeError
                         raise ActionsExecutor::ConnectionError, "Error while checking SSH Control Master with #{ssh_control_master_check_cmd}"
                       end
-                      if exit_status == 0
+                      if exit_status.zero?
                         log_debug "[ ControlMaster - #{ssh_url} ] - ControlMaster checked ok"
                         working_master = true
                       else

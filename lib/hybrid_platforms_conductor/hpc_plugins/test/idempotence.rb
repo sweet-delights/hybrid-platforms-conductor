@@ -21,7 +21,7 @@ module HybridPlatformsConductor
             # First deploy as root
             deployer.nbr_retries_on_error = 3
             exit_status, _stdout, _stderr = deployer.deploy_on(@node)[@node]
-            if exit_status == 0
+            if exit_status.zero?
               # As it's possible sshd has to be restarted because of a change in its conf, restart the container.
               # Otherwise you'll get the following error upon reconnection:
               #   System is booting up. See pam_nologin(8)

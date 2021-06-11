@@ -284,7 +284,7 @@ class ProxmoxWaiter
             # We disappeared from the queue!
             log '[ Futex queue ] - !!! Somebody removed use from the queue. Add our PID back.'
             write_access_queue(queue_futex_file, access_queue + [pid])
-          elsif idx == 0
+          elsif idx.zero?
             # Access granted
             log '[ Futex queue ] - Exclusive access granted'
             write_access_queue(queue_futex_file, access_queue[1..-1])
