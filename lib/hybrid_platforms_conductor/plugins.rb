@@ -80,7 +80,7 @@ module HybridPlatformsConductor
         Dir.glob("#{gem_specs.full_gem_path}/lib/**/*.rb").each do |file|
           next unless file =~ files_regexp
 
-          require_name = $1
+          require_name = Regexp.last_match(1)
           log_debug "[ #{@plugins_type} ] - Require from #{gem_name} file #{require_name}"
           require require_name
         end

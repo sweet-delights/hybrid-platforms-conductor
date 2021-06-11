@@ -295,8 +295,8 @@ module HybridPlatformsConductor
             case line.gsub(/\e\[[^\x40-\x7E]*[\x40-\x7E]/, '').strip
             when /^\* (\w+\[[^\]]+\]) action (.+)$/
               # New task
-              task_name = $1
-              task_action = $2
+              task_name = Regexp.last_match(1)
+              task_action = Regexp.last_match(2)
               current_task = {
                 name: task_name,
                 action: task_action,
@@ -305,7 +305,7 @@ module HybridPlatformsConductor
               tasks << current_task
             when /^- (.+)$/
               # Diff on the current task
-              diff_description = $1
+              diff_description = Regexp.last_match(1)
               unless current_task.nil?
                 current_task[:diffs] = '' unless current_task.key?(:diffs)
                 current_task[:diffs] << "#{diff_description}\n"
@@ -336,14 +336,14 @@ module HybridPlatformsConductor
           impacted_global = false
           files_diffs.keys.sort.each do |impacted_file|
             if impacted_file =~ /^policyfiles\/([^\/]+)\.rb$/
-              log_debug "[#{impacted_file}] - Impacted service: #{$1}"
-              impacted_services << $1
+              log_debug "[#{impacted_file}] - Impacted service: #{Regexp.last_match(1)}"
+              impacted_services << Regexp.last_match(1)
             elsif impacted_file =~ /^policyfiles\/([^\/]+)\.lock.json$/
-              log_debug "[#{impacted_file}] - Impacted service: #{$1}"
-              impacted_services << $1
+              log_debug "[#{impacted_file}] - Impacted service: #{Regexp.last_match(1)}"
+              impacted_services << Regexp.last_match(1)
             elsif impacted_file =~ /^nodes\/([^\/]+)\.json/
-              log_debug "[#{impacted_file}] - Impacted node: #{$1}"
-              impacted_nodes << $1
+              log_debug "[#{impacted_file}] - Impacted node: #{Regexp.last_match(1)}"
+              impacted_nodes << Regexp.last_match(1)
             else
               cookbook_path = known_cookbook_paths.find { |cookbooks_path| impacted_file =~ /^#{Regexp.escape(cookbooks_path)}\/.+$/ }
               if cookbook_path.nil?
@@ -362,7 +362,7 @@ module HybridPlatformsConductor
                 end
                 case file_path
                 when /recipes\/(.+)\.rb/
-                  register.call('direct', $1)
+                  register.call('direct', Regexp.last_match(1))
                 when /attributes\/.+\.rb/, 'metadata.rb'
                   # Consider all recipes are impacted
                   Dir.glob("#{@repository_path}/#{cookbook_path}/#{cookbook}/recipes/*.rb") do |recipe_path|
@@ -370,14 +370,14 @@ module HybridPlatformsConductor
                   end
                 when /(templates|files)\/(.+)/
                   # Find recipes using this file name
-                  included_file = File.basename($2)
+                  included_file = File.basename(Regexp.last_match(2))
                   template_regexp = /["']#{Regexp.escape(included_file)}["']/
                   Dir.glob("#{@repository_path}/#{cookbook_path}/#{cookbook}/recipes/*.rb") do |recipe_path|
                     register.call("included file #{included_file}", File.basename(recipe_path, '.rb')) if File.read(recipe_path) =~ template_regexp
                   end
                 when /resources\/(.+)/
                   # Find any recipe using this resource
-                  included_resource = "#{cookbook}_#{File.basename($1, '.rb')}"
+                  included_resource = "#{cookbook}_#{File.basename(Regexp.last_match(1), '.rb')}"
                   resource_regexp = /(\W|^)#{Regexp.escape(included_resource)}(\W|$)/
                   known_cookbook_paths.each do |cookbooks_path|
                     Dir.glob("#{@repository_path}/#{cookbooks_path}/**/recipes/*.rb") do |recipe_path|
@@ -496,7 +496,7 @@ module HybridPlatformsConductor
         # * Symbol: The cookbook name
         # * Symbol: The recipe name
         def decode_recipe(recipe_def)
-          recipe_def = $1 if recipe_def =~ /^recipe\[(.+)\]$/
+          recipe_def = Regexp.last_match(1) if recipe_def =~ /^recipe\[(.+)\]$/
           cookbook, recipe = recipe_def.split('::').map(&:to_sym)
           recipe = :default if recipe.nil?
           # Find the cookbook it belongs to

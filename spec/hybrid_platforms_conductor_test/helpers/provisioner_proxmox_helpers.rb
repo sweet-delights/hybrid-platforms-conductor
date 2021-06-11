@@ -555,7 +555,7 @@ module HybridPlatformsConductorTest
                 when 'nodes'
                   pve_nodes.keys.map { |pve_node_name| { 'node' => pve_node_name } }
                 when /^nodes\/([^\/]+)\/status$/
-                  pve_node_name = $1
+                  pve_node_name = Regexp.last_match(1)
                   {
                     'loadavg' => pve_nodes[pve_node_name][:loadavg].map(&:to_s),
                     'memory' => {
@@ -563,7 +563,7 @@ module HybridPlatformsConductorTest
                     }
                   }
                 when /^nodes\/([^\/]+)\/storage$/
-                  pve_node_name = $1
+                  pve_node_name = Regexp.last_match(1)
                   [
                     {
                       'storage' => 'local-lvm',
@@ -571,7 +571,7 @@ module HybridPlatformsConductorTest
                     }
                   ]
                 when /^nodes\/([^\/]+)\/lxc$/
-                  pve_node_name = $1
+                  pve_node_name = Regexp.last_match(1)
                   if pve_nodes[pve_node_name][:error_strings].nil? || pve_nodes[pve_node_name][:error_strings].empty?
                     pve_nodes[pve_node_name][:lxc_containers].map do |vm_id, vm_info|
                       {
@@ -585,8 +585,8 @@ module HybridPlatformsConductorTest
                     pve_nodes[pve_node_name][:error_strings].shift
                   end
                 when /^nodes\/([^\/]+)\/lxc\/([^\/]+)\/config$/
-                  pve_node_name = $1
-                  vmid = $2
+                  pve_node_name = Regexp.last_match(1)
+                  vmid = Regexp.last_match(2)
                   {
                     'net0' => "ip=#{pve_nodes[pve_node_name][:lxc_containers][Integer(vmid)][:ip]}/32",
                     'description' => <<~EO_DESCRIPTION
@@ -598,8 +598,8 @@ module HybridPlatformsConductorTest
                     EO_DESCRIPTION
                   }
                 when /^nodes\/([^\/]+)\/lxc\/([^\/]+)\/status\/current$/
-                  pve_node_name = $1
-                  vmid = $2
+                  pve_node_name = Regexp.last_match(1)
+                  vmid = Regexp.last_match(2)
                   {
                     'status' => pve_nodes[pve_node_name][:lxc_containers][Integer(vmid)][:status]
                   }
@@ -617,11 +617,11 @@ module HybridPlatformsConductorTest
                 @proxmox_actions << [:post, path, args].compact
                 case path
                 when /^nodes\/([^\/]+)\/lxc$/
-                  pve_node_name = $1
+                  pve_node_name = Regexp.last_match(1)
                   "UPID:#{pve_node_name}:0000A504:6DEABF24:5F44669B:create::root@pam:"
                 when /^nodes\/([^\/]+)\/lxc\/([^\/]+)\/status\/stop$/
-                  pve_node_name = $1
-                  vmid = $2
+                  pve_node_name = Regexp.last_match(1)
+                  vmid = Regexp.last_match(2)
                   "UPID:#{pve_node_name}:0000A504:6DEABF24:5F44669B:stop_#{vmid}::root@pam:"
                 else
                   raise "Unknown Proxmox API post call: #{path}. Please adapt the test framework."
@@ -632,8 +632,8 @@ module HybridPlatformsConductorTest
                 @proxmox_actions << [:delete, path]
                 case path
                 when /^nodes\/([^\/]+)\/lxc\/([^\/]+)$/
-                  pve_node_name = $1
-                  vmid = $2
+                  pve_node_name = Regexp.last_match(1)
+                  vmid = Regexp.last_match(2)
                   # Make sure we delete the mocked information as well
                   pve_nodes[pve_node_name][:lxc_containers].delete(Integer(vmid))
                   "UPID:#{pve_node_name}:0000A504:6DEABF24:5F44669B:destroy_#{vmid}::root@pam:"
@@ -667,7 +667,7 @@ module HybridPlatformsConductorTest
             when '/sys/fs/cgroup/*/lxc/*'
               block.nil? ? remaining_leftovers : remaining_leftovers.each(&block)
             when /^\/sys\/fs\/cgroup\/\*\/lxc\/(.+)$/
-              vm_id_str = $1
+              vm_id_str = Regexp.last_match(1)
               file_pattern = /^\/sys\/fs\/cgroup\/.+\/lxc\/#{Regexp.escape(vm_id_str)}$/
               matched_files = remaining_leftovers.select { |file| file =~ file_pattern }
               block.nil? ? matched_files : matched_files.each(&block)

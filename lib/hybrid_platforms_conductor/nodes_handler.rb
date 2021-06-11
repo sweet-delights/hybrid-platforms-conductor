@@ -113,7 +113,7 @@ module HybridPlatformsConductor
           cmdb.methods.each do |method|
             next unless method.to_s =~ /^get_(.*)$/
 
-            property = $1.to_sym
+            property = Regexp.last_match(1).to_sym
             @cmdbs_per_property[property] = [] unless @cmdbs_per_property.key?(property)
             @cmdbs_per_property[property] << cmdb
           end
@@ -334,7 +334,7 @@ module HybridPlatformsConductor
     # * *block* (Proc): Code block given to the call
     def method_missing(method, *args, &block)
       if method.to_s =~ /^get_(.*)_of$/
-        property = $1.to_sym
+        property = Regexp.last_match(1).to_sym
         # Define the method so that we don't go trough method_missing next time (more efficient).
         define_property_method_for(property)
         # Then call it
@@ -469,7 +469,7 @@ module HybridPlatformsConductor
       real_nodes = []
       string_nodes.each do |node|
         if node =~ /^\/(.+)\/$/
-          node_regexp = Regexp.new($1)
+          node_regexp = Regexp.new(Regexp.last_match(1))
           real_nodes.concat(known_nodes.select { |known_node| known_node[node_regexp] })
         else
           real_nodes << node
@@ -533,7 +533,7 @@ module HybridPlatformsConductor
         case line
         when /^diff --git a\/(.+) b\/(.+)$/
           # A new file diff
-          from, to = $1, $2
+          from, to = Regexp.last_match(1), Regexp.last_match(2)
           current_file_diff = {
             diff: ''
           }

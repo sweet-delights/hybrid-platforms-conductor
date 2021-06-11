@@ -37,7 +37,7 @@ module HybridPlatformsConductor
                     if stdout[status_idx].nil?
                       error "Unable to find vulnerability status for #{id}"
                     else
-                      status = $1.strip
+                      status = Regexp.last_match(1).strip
                       error "Status for #{name}: #{status}" if status != 'NOT VULNERABLE'
                     end
                   end
