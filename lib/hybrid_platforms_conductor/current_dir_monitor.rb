@@ -1,5 +1,6 @@
 require 'monitor'
 
+# Decorate methods changing the process' current directory with a mutex to ensure they have an exclusive access
 module HybridPlatformsConductor
 
   # Implement a global monitor to protect accesses to the current directory.

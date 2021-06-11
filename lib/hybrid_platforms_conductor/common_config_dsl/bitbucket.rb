@@ -4,6 +4,7 @@ module HybridPlatformsConductor
 
   module CommonConfigDsl
 
+    # Add common Bitbucket config DSL to declare known Bitbucket repositories
     module Bitbucket
 
       # Initialize the DSL

@@ -14,6 +14,7 @@ module HybridPlatformsConductor
         class NotConnectableError < RuntimeError
         end
 
+        # Config DSL extension
         module PlatformsDslSsh
 
           # List of SSH connection transformations:

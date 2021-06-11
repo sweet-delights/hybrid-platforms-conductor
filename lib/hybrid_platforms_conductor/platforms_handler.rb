@@ -6,6 +6,7 @@ module HybridPlatformsConductor
   # Provide an API to access information given by Platform Handlers
   class PlatformsHandler
 
+    # Add some config DSL
     module ConfigDSLExtension
 
       # List of platforms repository directories, per platform type

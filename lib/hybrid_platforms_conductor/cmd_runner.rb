@@ -6,6 +6,7 @@ require 'hybrid_platforms_conductor/io_router'
 
 module HybridPlatformsConductor
 
+  # API to execute local commands, with IO control over files, stdout, timeouts, exceptions.
   class CmdRunner
 
     class UnexpectedExitCodeError < StandardError

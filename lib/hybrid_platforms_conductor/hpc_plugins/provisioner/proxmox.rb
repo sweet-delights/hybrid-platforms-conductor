@@ -8,6 +8,7 @@ module HybridPlatformsConductor
 
   module HpcPlugins
 
+    # Patch proxmox lib
     module Provisioner
 
       # Monkey patch some Proxmox methods

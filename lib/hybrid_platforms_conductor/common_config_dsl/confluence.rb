@@ -2,6 +2,7 @@ module HybridPlatformsConductor
 
   module CommonConfigDsl
 
+    # Add common Confluence config DSL to declare known Confluence installations
     module Confluence
 
       # Initialize the DSL

@@ -5,6 +5,7 @@ module HybridPlatformsConductor
 
   module CommonConfigDsl
 
+    # Add common Github config DSL to declare known Github repositories
     module Github
 
       # Initialize the DSL
