@@ -61,7 +61,7 @@ module HybridPlatformsConductor
     # Parameters::
     # * *logger* (Logger): Logger to be used [default = Logger.new(STDOUT)]
     # * *logger_stderr* (Logger): Logger to be used for stderr [default = Logger.new(STDERR)]
-    def initialize(logger: Logger.new(STDOUT), logger_stderr: Logger.new(STDERR))
+    def initialize(logger: Logger.new($stdout), logger_stderr: Logger.new($stderr))
       init_loggers(logger, logger_stderr)
       @hybrid_platforms_dir = File.expand_path(ENV['hpc_platforms'].nil? ? '.' : ENV['hpc_platforms'])
       # Stack of the nodes selectors scopes

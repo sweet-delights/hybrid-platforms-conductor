@@ -109,8 +109,8 @@ module HybridPlatformsConductor
     # * *actions_executor* (ActionsExecutor): Actions Executor to be used. [default: ActionsExecutor.new]
     # * *services_handler* (ServicesHandler): Services Handler to be used. [default: ServicesHandler.new]
     def initialize(
-      logger: Logger.new(STDOUT),
-      logger_stderr: Logger.new(STDERR),
+      logger: Logger.new($stdout),
+      logger_stderr: Logger.new($stderr),
       config: Config.new,
       cmd_runner: CmdRunner.new,
       nodes_handler: NodesHandler.new,

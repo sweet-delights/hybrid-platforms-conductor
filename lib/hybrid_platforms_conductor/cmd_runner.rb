@@ -34,7 +34,7 @@ module HybridPlatformsConductor
     # Parameters::
     # * *logger* (Logger): Logger to be used [default = Logger.new(STDOUT)]
     # * *logger_stderr* (Logger): Logger to be used for stderr [default = Logger.new(STDERR)]
-    def initialize(logger: Logger.new(STDOUT), logger_stderr: Logger.new(STDERR))
+    def initialize(logger: Logger.new($stdout), logger_stderr: Logger.new($stderr))
       init_loggers(logger, logger_stderr)
       @dry_run = false
     end

@@ -78,7 +78,7 @@ module HybridPlatformsConductor
     # * *config* (Hash<Symbol,Object>): Some configuration parameters that can override defaults. [default = {}] Here are the possible keys:
     #   * *json_files_dir* (String): Directory from which JSON files are taken. [default = nodes_json]
     #   * *connections_max_level* (Integer or nil): Number maximal of recursive passes to get hostname connections (nil means no limit). [default = nil]
-    def initialize(logger: Logger.new(STDOUT), logger_stderr: Logger.new(STDERR), nodes_handler: NodesHandler.new, json_dumper: JsonDumper.new, config: {})
+    def initialize(logger: Logger.new($stdout), logger_stderr: Logger.new($stderr), nodes_handler: NodesHandler.new, json_dumper: JsonDumper.new, config: {})
       init_loggers(logger, logger_stderr)
       @nodes_handler = nodes_handler
       @json_dumper = json_dumper

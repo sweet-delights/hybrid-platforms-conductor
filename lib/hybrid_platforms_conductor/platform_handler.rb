@@ -69,8 +69,8 @@ module HybridPlatformsConductor
     def initialize(
       platform_type,
       repository_path,
-      logger: Logger.new(STDOUT),
-      logger_stderr: Logger.new(STDERR),
+      logger: Logger.new($stdout),
+      logger_stderr: Logger.new($stderr),
       config: Config.new,
       cmd_runner: CmdRunner.new
     )

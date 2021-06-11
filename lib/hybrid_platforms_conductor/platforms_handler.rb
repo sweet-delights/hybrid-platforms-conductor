@@ -33,8 +33,8 @@ module HybridPlatformsConductor
     # * *config* (Config): Config to be used. [default: Config.new]
     # * *cmd_runner* (CmdRunner): Command executor to be used. [default: CmdRunner.new]
     def initialize(
-      logger: Logger.new(STDOUT),
-      logger_stderr: Logger.new(STDERR),
+      logger: Logger.new($stdout),
+      logger_stderr: Logger.new($stderr),
       config: Config.new,
       cmd_runner: CmdRunner.new
     )

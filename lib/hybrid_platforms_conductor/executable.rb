@@ -43,8 +43,8 @@ module HybridPlatformsConductor
       parallel_options: true,
       timeout_options: true,
       deploy_options: true,
-      logger: Logger.new(STDOUT, level: :info),
-      logger_stderr: Logger.new(STDERR, level: :info),
+      logger: Logger.new($stdout, level: :info),
+      logger_stderr: Logger.new($stderr, level: :info),
       &opts_block
     )
       init_loggers(logger, logger_stderr)

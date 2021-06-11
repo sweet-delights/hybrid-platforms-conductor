@@ -22,7 +22,7 @@ module HybridPlatformsConductor
     # * *parse_gems* (Boolean): Do we parse plugins from gems? [default: true]
     # * *logger* (Logger): Logger to be used [default = Logger.new(STDOUT)]
     # * *logger_stderr* (Logger): Logger to be used for stderr [default = Logger.new(STDERR)]
-    def initialize(plugins_type, init_plugin: nil, parse_gems: true, logger: Logger.new(STDOUT), logger_stderr: Logger.new(STDERR))
+    def initialize(plugins_type, init_plugin: nil, parse_gems: true, logger: Logger.new($stdout), logger_stderr: Logger.new($stderr))
       init_loggers(logger, logger_stderr)
       @plugins_type = plugins_type
       @init_plugin = init_plugin

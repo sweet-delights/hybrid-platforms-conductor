@@ -34,7 +34,7 @@ module HybridPlatformsConductor
     # * *confluence_password* (String): Confluence password to be used when querying the API
     # * *logger* (Logger): Logger to be used [default = Logger.new(STDOUT)]
     # * *logger_stderr* (Logger): Logger to be used for stderr [default = Logger.new(STDERR)]
-    def initialize(confluence_url, confluence_user_name, confluence_password, logger: Logger.new(STDOUT), logger_stderr: Logger.new(STDERR))
+    def initialize(confluence_url, confluence_user_name, confluence_password, logger: Logger.new($stdout), logger_stderr: Logger.new($stderr))
       init_loggers(logger, logger_stderr)
       @confluence_url = confluence_url
       @confluence_user_name = confluence_user_name

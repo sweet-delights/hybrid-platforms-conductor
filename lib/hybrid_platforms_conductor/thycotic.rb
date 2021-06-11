@@ -39,8 +39,8 @@ module HybridPlatformsConductor
       user,
       password,
       domain: ENV['hpc_domain_for_thycotic'],
-      logger: Logger.new(STDOUT),
-      logger_stderr: Logger.new(STDERR)
+      logger: Logger.new($stdout),
+      logger_stderr: Logger.new($stderr)
     )
       init_loggers(logger, logger_stderr)
       # Get a token to this SOAP API

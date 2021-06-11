@@ -22,8 +22,8 @@ module HybridPlatformsConductor
     def initialize(
       node,
       environment: 'production',
-      logger: Logger.new(STDOUT),
-      logger_stderr: Logger.new(STDERR),
+      logger: Logger.new($stdout),
+      logger_stderr: Logger.new($stderr),
       config: Config.new,
       cmd_runner: CmdRunner.new,
       nodes_handler: NodesHandler.new,

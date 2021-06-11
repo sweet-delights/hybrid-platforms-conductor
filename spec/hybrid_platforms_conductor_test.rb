@@ -170,7 +170,7 @@ module HybridPlatformsConductorTest
     # * Logger: The logger to be used
     def logger
       if ENV['TEST_DEBUG'] == '1'
-        logger = Logger.new(STDOUT)
+        logger = Logger.new($stdout)
         logger.level = Logger::DEBUG
         logger
       else

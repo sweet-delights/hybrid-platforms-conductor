@@ -27,8 +27,8 @@ module HybridPlatformsConductorTest
           parallel_options: true,
           timeout_options: true,
           deploy_options: true,
-          _logger: Logger.new(STDOUT, level: :info),
-          _logger_stderr: Logger.new(STDERR, level: :info),
+          _logger: Logger.new($stdout, level: :info),
+          _logger_stderr: Logger.new($stderr, level: :info),
           &opts_block|
           original_method.call(
             check_options: check_options,

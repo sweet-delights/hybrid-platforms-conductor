@@ -42,7 +42,7 @@ module HybridPlatformsConductor
     # * *url* (String or nil): The URL for which we want the credentials, or nil if not associated to a URL [default: nil]
     # * *logger* (Logger): Logger to be used [default = Logger.new(STDOUT)]
     # * *logger_stderr* (Logger): Logger to be used for stderr [default = Logger.new(STDERR)]
-    def initialize(id, url: nil, logger: Logger.new(STDOUT), logger_stderr: Logger.new(STDERR))
+    def initialize(id, url: nil, logger: Logger.new($stdout), logger_stderr: Logger.new($stderr))
       init_loggers(logger, logger_stderr)
       @id = id
       @url = url
