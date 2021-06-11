@@ -169,7 +169,7 @@ module HybridPlatformsConductor
           next_grouped_errors = group_errors(grouped_tests, *group_criterias[1..-1], filter: filter)
           groups[first_group] = next_grouped_errors unless next_grouped_errors.empty?
         end
-        Hash[groups.sort]
+        groups.sort.to_h
       end
     end
 
@@ -184,7 +184,7 @@ module HybridPlatformsConductor
     #   * *tested_nodes_in_error_as_expected* (Array<String>): Tested nodes in error in the list that are part of the expected failures
     def nodes_by_nodes_list
       no_list_nodes = @nodes_handler.known_nodes
-      Hash[(
+      (
         @nodes_handler.known_nodes_lists.sort.map do |nodes_list|
           nodes_from_list = @nodes_handler.nodes_from_list(nodes_list, ignore_unknowns: true)
           no_list_nodes -= nodes_from_list
@@ -203,7 +203,7 @@ module HybridPlatformsConductor
             tested_nodes_in_error_as_expected: list_nodes & group_errors(node_tests, :node, filter: :only_as_expected).keys
           }
         ]
-      end]
+      end.to_h
     end
 
     # Flatten a tree hash.

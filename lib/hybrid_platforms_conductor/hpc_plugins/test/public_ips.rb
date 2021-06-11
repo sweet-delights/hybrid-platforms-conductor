@@ -11,10 +11,10 @@ module HybridPlatformsConductor
         def test
           # Get a map of public IPs per node
           @nodes_handler.prefetch_metadata_of @nodes_handler.known_nodes, :public_ips
-          public_ips = Hash[@nodes_handler.
+          public_ips = @nodes_handler.
             known_nodes.
-            map { |node| [node, @nodes_handler.get_public_ips_of(node) || []] }
-          ]
+            map { |node| [node, @nodes_handler.get_public_ips_of(node) || []] }.
+            to_h
 
           # Check there are no duplicates
           nodes_per_public_ip = {}

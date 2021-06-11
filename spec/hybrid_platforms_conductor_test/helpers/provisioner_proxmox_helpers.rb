@@ -515,8 +515,8 @@ module HybridPlatformsConductorTest
         mock_proxmox_calls_with(
           mocked_pve_nodes.map do |pve_nodes|
             # Complete pve_nodes with default values
-            pve_nodes = Hash[pve_nodes.map do |pve_node_name, pve_node_info|
-              pve_node_info[:lxc_containers] = Hash[(pve_node_info.key?(:lxc_containers) ? pve_node_info[:lxc_containers] : {}).map do |vm_id, vm_info|
+            pve_nodes = pve_nodes.map do |pve_node_name, pve_node_info|
+              pve_node_info[:lxc_containers] = (pve_node_info.key?(:lxc_containers) ? pve_node_info[:lxc_containers] : {}).map do |vm_id, vm_info|
                 [
                   vm_id,
                   {
@@ -531,7 +531,7 @@ module HybridPlatformsConductorTest
                     environment: 'test_env'
                   }.merge(vm_info)
                 ]
-              end]
+              end.to_h
               [
                 pve_node_name,
                 {
@@ -540,7 +540,7 @@ module HybridPlatformsConductorTest
                   storage_total: 100 * 1024 * 1024 * 1024
                 }.merge(pve_node_info)
               ]
-            end]
+            end.to_h
             proc do |url, pve_node, user, password, realm, options|
               expect(url).to eq 'https://my-proxmox.my-domain.com:8006/api2/json/'
               expect(pve_node).to eq 'my-proxmox'

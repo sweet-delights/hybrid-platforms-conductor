@@ -96,7 +96,7 @@ module HybridPlatformsConductorTest
           #     * *repository* (String): Path to the repository
           def with_platform_to_deploy(
             nodes_info: { nodes: { 'node' => { services: %w[service] } } },
-            expect_services_to_deploy: Hash[nodes_info[:nodes].map { |node, node_info| [node, node_info[:services]] }],
+            expect_services_to_deploy: nodes_info[:nodes].map { |node, node_info| [node, node_info[:services]] }.to_h,
             expect_deploy_allowed: true,
             expect_package: true,
             expect_prepare_for_deploy: true,
@@ -505,7 +505,7 @@ module HybridPlatformsConductorTest
               expect_actions_executor_runs(statuses.map do |status|
                 status = { 'node' => status } if status.is_a?(Array)
                 expected_actions_for_deploy_on(
-                  services: Hash[status.keys.map { |node| [node, %w[service]] }],
+                  services: status.keys.map { |node| [node, %w[service]] }.to_h,
                   mocked_deploy_result: status
                 )
               end.flatten)

@@ -95,7 +95,7 @@ module HybridPlatformsConductor
         @instantiated_components[component] = HybridPlatformsConductor.const_get(component.to_s.split('_').collect(&:capitalize).join.to_sym).new(
           logger: @logger,
           logger_stderr: @logger_stderr,
-          **Hash[dependencies.map { |dependency| [dependency, send(dependency)] }]
+          **dependencies.map { |dependency| [dependency, send(dependency)] }.to_h
         ) unless @instantiated_components.key?(component)
         @instantiated_components[component]
       end

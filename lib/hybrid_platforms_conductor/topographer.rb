@@ -110,7 +110,7 @@ module HybridPlatformsConductor
       @skip_run = false
 
       # Parse plugins
-      @plugins = Hash[Dir.
+      @plugins = Dir.
         glob("#{__dir__}/topographer/plugins/*.rb").
         map do |file_name|
           plugin_name = File.basename(file_name)[0..-4].to_sym
@@ -119,7 +119,8 @@ module HybridPlatformsConductor
             plugin_name,
             Topographer::Plugins.const_get(plugin_name.to_s.split('_').collect(&:capitalize).join.to_sym)
           ]
-        end]
+        end.
+        to_h
 
       @ips_to_host = known_ips.clone
 
@@ -131,11 +132,11 @@ module HybridPlatformsConductor
       ]
       @nodes_handler.prefetch_metadata_of @nodes_handler.known_nodes, metadata_properties
       @nodes_handler.known_nodes.each do |hostname|
-        @node_metadata[hostname] = Hash[metadata_properties.map { |property| [property, @nodes_handler.metadata_of(hostname, property)] }]
+        @node_metadata[hostname] = metadata_properties.map { |property| [property, @nodes_handler.metadata_of(hostname, property)] }.to_h
       end
 
       # Small cache of hostnames used a lot to parse JSON
-      @known_nodes = Hash[@nodes_handler.known_nodes.map { |hostname| [hostname, nil] }]
+      @known_nodes = @nodes_handler.known_nodes.map { |hostname| [hostname, nil] }.to_h
       # Cache of objects being used a lot in parsing for performance
       @non_word_regexp = /\W+/
       @ip_regexp = /(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})(\/(\d{1,2})|[^\d\/]|$)/
@@ -596,7 +597,7 @@ module HybridPlatformsConductor
       @ips_mask[ip_def] = {} unless @ips_mask.key?(ip_def)
       unless @ips_mask[ip_def].key?(ip_mask)
         # For performance, keep a cache of all the IPAddress::IPv4 objects
-        @ip_v4_cache = Hash[known_ips.keys.map { |ip, _node| [ip, IPAddress::IPv4.new(ip)] }] unless defined?(@ip_v4_cache)
+        @ip_v4_cache = known_ips.keys.map { |ip, _node| [ip, IPAddress::IPv4.new(ip)] }.to_h unless defined?(@ip_v4_cache)
         ip_range = IPAddress::IPv4.new("#{ip_def}/#{ip_mask}")
         @ips_mask[ip_def][ip_mask] = @ip_v4_cache.select { |_ip, ipv4| ip_range.include?(ipv4) }.keys
       end

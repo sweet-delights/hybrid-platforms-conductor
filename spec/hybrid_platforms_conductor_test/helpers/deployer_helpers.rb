@@ -40,7 +40,7 @@ module HybridPlatformsConductorTest
       # * Hash<String, [Integer or Symbol, String, String] >: Expected result of those expected actions
       def expect_actions_to_deploy_on(actions, nodes, check: false, sudo: 'sudo -u root', expected_actions: [], mocked_result: nil)
         nodes = [nodes] if nodes.is_a?(String)
-        mocked_result = Hash[nodes.map { |node| [node, [0, "#{check ? 'Check' : 'Deploy'} successful", '']] }] if mocked_result.nil?
+        mocked_result = nodes.map { |node| [node, [0, "#{check ? 'Check' : 'Deploy'} successful", '']] }.to_h if mocked_result.nil?
         expect(actions.size).to eq nodes.size
         nodes.each do |node|
           expect(actions.key?(node)).to eq true
@@ -65,7 +65,7 @@ module HybridPlatformsConductorTest
           expect(actions.key?(node)).to eq true
           expect_action_to_unlock_node(actions[node], node, sudo: sudo)
         end
-        Hash[nodes.map { |node| [node, [0, 'Release mutex successful', '']] }]
+        nodes.map { |node| [node, [0, 'Release mutex successful', '']] }.to_h
       end
 
       # Expect a given set of actions to upload log files on a list of nodes (using the test_log log plugin)
@@ -80,7 +80,7 @@ module HybridPlatformsConductorTest
           expect(actions.key?(node)).to eq true
           expect(actions[node]).to eq [{ bash: "echo Save test logs to #{node}" }]
         end
-        Hash[nodes.map { |node| [node, [0, 'Logs uploaded', '']] }]
+        nodes.map { |node| [node, [0, 'Logs uploaded', '']] }.to_h
       end
 
       # Get a test Deployer

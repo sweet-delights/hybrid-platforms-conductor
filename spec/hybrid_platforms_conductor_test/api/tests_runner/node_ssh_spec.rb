@@ -41,7 +41,7 @@ describe HybridPlatformsConductor::TestsRunner do
           'echo "$?"'
         ]
       end
-      Hash[node_suffixes.map do |node_suffix|
+      node_suffixes.map do |node_suffix|
         [
           "node#{node_suffix}",
           [
@@ -57,7 +57,7 @@ describe HybridPlatformsConductor::TestsRunner do
             EO_STDERR
           ]
         ]
-      end]
+      end.to_h
     end
 
     it 'executes SSH node tests once per node with the correct command' do
@@ -131,7 +131,7 @@ describe HybridPlatformsConductor::TestsRunner do
               'echo "$?"'
             ]
           end
-          Hash[node_suffixes.map do |node_suffix|
+          node_suffixes.map do |node_suffix|
             [
               "node#{node_suffix}",
               [
@@ -152,7 +152,7 @@ describe HybridPlatformsConductor::TestsRunner do
                 EO_STDERR
               ]
             ]
-          end]
+          end.to_h
         end])
         test_tests_runner.tests = [:node_ssh_test, :node_ssh_test_2]
         ssh_executions = []

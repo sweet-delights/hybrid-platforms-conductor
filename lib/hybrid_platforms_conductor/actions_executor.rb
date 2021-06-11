@@ -145,7 +145,7 @@ module HybridPlatformsConductor
           actions_per_node[node].concat(resolved_nodes_actions)
         end
       end
-      result = Hash[actions_per_node.keys.map { |node| [node, nil] }]
+      result = actions_per_node.keys.map { |node| [node, nil] }.to_h
       with_connections_prepared_to(nodes_needing_connectors, no_exception: true) do |connected_nodes|
         missing_nodes = []
         connected_nodes.each do |node, connector|
@@ -159,7 +159,7 @@ module HybridPlatformsConductor
         # Prepare the result (stdout or nil per node)
         unless accessible_nodes.empty?
           # If we run in parallel then clone the connectors, so that each node has its own instance for thread-safe code.
-          connected_nodes = Hash[connected_nodes.map { |node, connector| [node, connector.clone] }] if concurrent
+          connected_nodes = connected_nodes.map { |node, connector| [node, connector.clone] }.to_h if concurrent
           @nodes_handler.for_each_node_in(
             accessible_nodes,
             parallel: concurrent,
@@ -193,7 +193,7 @@ module HybridPlatformsConductor
     #     * *connected_nodes* (Hash<String, Connector or Symbol>): Prepared connectors (or Symbol in case of failure with no_exception), per node name
     def with_connections_prepared_to(nodes, no_exception: false)
       # Make sure every node needing connectors finds a connector
-      nodes_needing_connectors = Hash[nodes.map { |node| [node, nil] }]
+      nodes_needing_connectors = nodes.map { |node| [node, nil] }.to_h
       @connector_plugins.values.each do |connector|
         nodes_without_connectors = nodes_needing_connectors.select { |_node, selected_connector| selected_connector.nil? }.keys
         break if nodes_without_connectors.empty?
@@ -215,12 +215,12 @@ module HybridPlatformsConductor
         if connector_name.nil?
           # All plugins have been prepared.
           # Call our client code.
-          yield Hash[nodes_needing_connectors.map do |node, selected_connector|
+          yield nodes_needing_connectors.map do |node, selected_connector|
             [
               node,
               selected_connector.nil? ? :no_connector : selected_connector
             ]
-          end]
+          end.to_h
         else
           connector = @connector_plugins[connector_name]
           selected_nodes = nodes_needing_connectors.select { |_node, selected_connector| selected_connector == connector }.keys

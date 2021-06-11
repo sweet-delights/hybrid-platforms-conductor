@@ -8,12 +8,12 @@ possible_string_sorts = %i[
   node
   user
 ]
-possible_sorts = Hash[possible_string_sorts.map do |property_name|
+possible_sorts = possible_string_sorts.map do |property_name|
   [
     property_name,
     proc { |node, deploy_info| [deploy_info.key?(:error) || !deploy_info.key?(property_name) ? '' : deploy_info[property_name], node] }
   ]
-end]
+end.to_h
 
 sort_by = :node
 sort_desc = false
@@ -32,8 +32,7 @@ deployer = executable.deployer
 executable.parse_options!
 raise "Unknown sort name: #{sort_by}. Should be one of #{possible_sorts.keys.join(', ')}." unless possible_sorts.key?(sort_by)
 
-sorted_deploy_info = Hash[
-  deployer.deployment_info_from(nodes_handler.select_nodes(executable.selected_nodes.empty? ? [{ all: true }] : executable.selected_nodes)).
+sorted_deploy_info = deployer.deployment_info_from(nodes_handler.select_nodes(executable.selected_nodes.empty? ? [{ all: true }] : executable.selected_nodes)).
     map do |node, deploy_info|
       decorated_deploy_info = deploy_info.merge(node: node)
       if deploy_info.key?(:deployment_info)
@@ -42,8 +41,7 @@ sorted_deploy_info = Hash[
       end
       decorated_deploy_info[:services] = deploy_info[:services].join(', ') if deploy_info.key?(:services)
       [node, decorated_deploy_info]
-    end
-].sort_by(&possible_sorts[sort_by])
+    end.to_h.sort_by(&possible_sorts[sort_by])
 sorted_deploy_info.reverse! if sort_desc
 info_displayed = {
   node: 'Node',

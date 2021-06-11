@@ -11,10 +11,10 @@ module HybridPlatformsConductor
         def test
           # Get a map of VEIDs per node
           @nodes_handler.prefetch_metadata_of @nodes_handler.known_nodes, :veid
-          veids = Hash[@nodes_handler.
+          veids = @nodes_handler.
             known_nodes.
-            map { |node| [node, @nodes_handler.get_veid_of(node) ? @nodes_handler.get_veid_of(node).to_i : nil] }
-          ]
+            map { |node| [node, @nodes_handler.get_veid_of(node) ? @nodes_handler.get_veid_of(node).to_i : nil] }.
+            to_h
 
           # Check there are no duplicates
           veids.group_by { |_node, veid| veid }.each do |veid, nodes|

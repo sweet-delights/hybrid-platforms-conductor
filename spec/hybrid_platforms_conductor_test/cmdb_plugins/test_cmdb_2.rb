@@ -27,7 +27,7 @@ module HybridPlatformsConductorTest
       def get_nothing(nodes, metadata)
         record_call(:get_nothing, nodes, metadata)
         # Here we return something to test that if the first one fails we have the second CMDB
-        Hash[nodes.map { |node| [node, "#{node} has nothing"] }]
+        nodes.map { |node| [node, "#{node} has nothing"] }.to_h
       end
 
       # Get a specific property for a given set of nodes.
@@ -42,7 +42,7 @@ module HybridPlatformsConductorTest
       #     Nodes for which the property can't be fetched can be ommitted.
       def get_same_comment(nodes, metadata)
         record_call(:get_same_comment, nodes, metadata)
-        Hash[nodes.map { |node| [node, "Comment for #{node}"] }]
+        nodes.map { |node| [node, "Comment for #{node}"] }.to_h
       end
 
       # Get a specific property for a given set of nodes.
@@ -57,7 +57,7 @@ module HybridPlatformsConductorTest
       #     Nodes for which the property can't be fetched can be ommitted.
       def get_different_comment(nodes, metadata)
         record_call(:get_different_comment, nodes, metadata)
-        Hash[nodes.map { |node| [node, 'Comment from test_cmdb_2'] }]
+        nodes.map { |node| [node, 'Comment from test_cmdb_2'] }.to_h
       end
 
       # Get a specific property for a given set of nodes.
@@ -72,7 +72,7 @@ module HybridPlatformsConductorTest
       #     Nodes for which the property can't be fetched can be ommitted.
       def get_different_comment_2(nodes, metadata)
         record_call(:get_different_comment_2, nodes, metadata)
-        Hash[nodes.map { |node| [node, 'Comment2 from test_cmdb_2'] }]
+        nodes.map { |node| [node, 'Comment2 from test_cmdb_2'] }.to_h
       end
 
       # Register a call to be checked by the tests later

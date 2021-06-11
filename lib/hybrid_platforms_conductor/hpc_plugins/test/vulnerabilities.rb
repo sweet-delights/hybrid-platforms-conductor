@@ -58,7 +58,7 @@ module HybridPlatformsConductor
               )
               # TODO: Access the user correctly when the user notion will be moved out of the ssh connector
               sudo = @deployer.instance_variable_get(:@actions_executor).connector(:ssh).ssh_user == 'root' ? '' : "#{@nodes_handler.sudo_on(@node)} "
-              Hash[urls.map do |url|
+              urls.map do |url|
                 # 1. Get the OVAL file on the node to be tested (uncompress it if needed)
                 # 2. Make sure oscap is installed
                 # 3. Generate the report for this OVAL file using oscap
@@ -144,7 +144,7 @@ module HybridPlatformsConductor
                     timeout: 240
                   }
                 ]
-              end]
+              end.to_h
             else
               error "No OVAL file defined for image #{image} at #{oval_file}"
               {}

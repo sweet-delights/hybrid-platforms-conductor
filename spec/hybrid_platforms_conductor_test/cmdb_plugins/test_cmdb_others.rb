@@ -30,7 +30,7 @@ module HybridPlatformsConductorTest
       #     Nodes for which the property can't be fetched can be ommitted.
       def get_others(nodes, metadata)
         record_call(:get_others, nodes, metadata)
-        Hash[nodes.map do |node|
+        nodes.map do |node|
           [
             node,
             {
@@ -39,7 +39,7 @@ module HybridPlatformsConductorTest
               nothing: "#{node} has another nothing"
             }
           ]
-        end]
+        end.to_h
       end
 
       # Register a call to be checked by the tests later

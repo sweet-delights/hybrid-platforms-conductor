@@ -593,7 +593,7 @@ module HybridPlatformsConductor
                 end
               else
                 # We have not created any ControlMaster, but still consider the nodes to be ready to connect
-                user_locks = Hash[nodes.map { |node| [node, nil]} ]
+                user_locks = nodes.map { |node| [node, nil] }.to_h
               end
               yield user_locks.keys
             ensure

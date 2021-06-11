@@ -232,7 +232,7 @@ describe HybridPlatformsConductor::TestsRunner do
               'echo "$?"'
             ]
           end
-          Hash[node_suffixes.map do |node_suffix|
+          node_suffixes.map do |node_suffix|
             [
               "node#{node_suffix}",
               [
@@ -248,7 +248,7 @@ describe HybridPlatformsConductor::TestsRunner do
                 EO_STDERR
               ]
             ]
-          end]
+          end.to_h
         end])
         # Run everything
         test_tests_runner.tests = [:several_tests]

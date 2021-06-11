@@ -58,7 +58,7 @@ module HybridPlatformsConductorTest
       def with_connections_mocked_on(expected_nodes)
         expect(test_actions_executor).to receive(:with_connections_prepared_to) do |nodes, no_exception: false, &client_code|
           expect(nodes.sort).to eq expected_nodes.sort
-          client_code.call Hash[nodes.map { |node| [node, test_actions_executor.connector(:test_connector)] }]
+          client_code.call nodes.map { |node| [node, test_actions_executor.connector(:test_connector)] }.to_h
         end
         yield
       end

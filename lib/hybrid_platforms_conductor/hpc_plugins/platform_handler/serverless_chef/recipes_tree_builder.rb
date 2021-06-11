@@ -201,7 +201,7 @@ module HybridPlatformsConductor
           # Result::
           # * Hash<Symbol, String>: List of cookbook directories, per cookbook name
           def cookbooks_in(cookbook_type)
-            Hash[Dir.glob("#{@platform.repository_path}/#{cookbook_type}/*").map { |dir| [File.basename(dir).to_sym, dir] }.sort]
+            Dir.glob("#{@platform.repository_path}/#{cookbook_type}/*").map { |dir| [File.basename(dir).to_sym, dir] }.sort.to_h
           end
 
           # Mark a recipe (and its included recipes) as used by a policy

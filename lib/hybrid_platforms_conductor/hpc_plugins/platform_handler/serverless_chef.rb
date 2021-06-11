@@ -146,11 +146,10 @@ module HybridPlatformsConductor
               if info[:status].nil?
                 {}
               else
-                Hash[
-                  (info[:status][:added_files] + info[:status][:changed_files] + info[:status][:untracked_files]).
-                    sort.
-                    map { |f| [f, File.mtime("#{@repository_path}/#{f}").strftime('%F %T')] }
-                ]
+                (info[:status][:added_files] + info[:status][:changed_files] + info[:status][:untracked_files]).
+                  sort.
+                  map { |f| [f, File.mtime("#{@repository_path}/#{f}").strftime('%F %T')] }.
+                  to_h
               end,
             deleted_files: info[:status].nil? ? [] : info[:status][:deleted_files].sort
           }

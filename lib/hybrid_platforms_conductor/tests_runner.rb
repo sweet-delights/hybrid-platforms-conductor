@@ -434,7 +434,7 @@ module HybridPlatformsConductor
           )
           # Run commands on nodes, in grouped way to avoid too many connections, per node
           # Hash< String, Array<String> >
-          @test_cmds = Hash[@cmds_to_run.map do |node, cmds_list|
+          @test_cmds = @cmds_to_run.map do |node, cmds_list|
             [
               node,
               {
@@ -448,7 +448,7 @@ module HybridPlatformsConductor
                 end.flatten
               }
             ]
-          end]
+          end.to_h
           section "Run test commands on #{@test_cmds.keys.size} connected nodes (timeout to #{timeout} secs)" do
             start_time = Time.now
             @actions_executor.max_threads = @max_threads_connection_on_nodes
@@ -524,14 +524,14 @@ module HybridPlatformsConductor
           nodes_to_test = selected_tests.map { |test| test.node }.uniq.sort
           @outputs =
             if @skip_run
-              Hash[nodes_to_test.map do |node|
+              nodes_to_test.map do |node|
                 run_log_file_name = "#{@config.hybrid_platforms_dir}/run_logs/#{node}.stdout"
                 [
                   node,
                   # TODO: Find a way to also save stderr and the status code
                   [0, File.exists?(run_log_file_name) ? File.read(run_log_file_name) : nil, '']
                 ]
-              end]
+              end.to_h
             else
               # Why-run deploy on all nodes
               @deployer.concurrent_execution = !log_debug?
