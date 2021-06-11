@@ -11,7 +11,7 @@ module HybridPlatformsConductor
       # Check that all repositories have a correct Jenkins CI configuration.
       class JenkinsCiConf < HybridPlatformsConductor::Test
 
-        self.extend_config_dsl_with CommonConfigDsl::Bitbucket, :init_bitbucket
+        extend_config_dsl_with CommonConfigDsl::Bitbucket, :init_bitbucket
 
         # Check my_test_plugin.rb.sample documentation for signature details.
         def test

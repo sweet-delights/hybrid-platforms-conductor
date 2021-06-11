@@ -10,7 +10,7 @@ module HybridPlatformsConductor
       # Perform various tests on a node's file system
       class FileSystem < TestOnlyRemoteNode
 
-        self.extend_config_dsl_with CommonConfigDsl::FileSystemTests, :init_file_system_tests
+        extend_config_dsl_with CommonConfigDsl::FileSystemTests, :init_file_system_tests
 
         # Check my_test_plugin.rb.sample documentation for signature details.
         def test_on_node

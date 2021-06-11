@@ -12,7 +12,7 @@ module HybridPlatformsConductor
       # Report tests results on a generated Confluence page
       class Confluence < HybridPlatformsConductor::TestReport
 
-        self.extend_config_dsl_with CommonConfigDsl::Confluence, :init_confluence
+        extend_config_dsl_with CommonConfigDsl::Confluence, :init_confluence
 
         # Maximum errors to be reported by item
         MAX_ERROR_ITEMS_DISPLAYED = 10

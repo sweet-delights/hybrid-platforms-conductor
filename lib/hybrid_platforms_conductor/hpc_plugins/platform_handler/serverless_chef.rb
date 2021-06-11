@@ -45,7 +45,7 @@ module HybridPlatformsConductor
           end
 
         end
-        self.extend_config_dsl_with MyDSLExtension, :init_serverless_chef
+        extend_config_dsl_with MyDSLExtension, :init_serverless_chef
 
         # Constructor
         #

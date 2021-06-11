@@ -3,6 +3,9 @@ require 'tempfile'
 require 'tty-command'
 require 'hybrid_platforms_conductor/logger_helpers'
 require 'hybrid_platforms_conductor/io_router'
+require 'hybrid_platforms_conductor/core_extensions/symbol/zero'
+
+Symbol.include HybridPlatformsConductor::CoreExtensions::Symbol::Zero
 
 module HybridPlatformsConductor
 

@@ -58,7 +58,7 @@ module HybridPlatformsConductor
 
         end
 
-        self.extend_config_dsl_with ConfigDslExtension, :init_mounts_test
+        extend_config_dsl_with ConfigDslExtension, :init_mounts_test
 
         # Check my_test_plugin.rb.sample documentation for signature details.
         def test_on_node

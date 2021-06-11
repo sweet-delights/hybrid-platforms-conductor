@@ -12,7 +12,7 @@ module HybridPlatformsConductor
       # Export in the Mediawiki format
       class Confluence < HybridPlatformsConductor::Report
 
-        self.extend_config_dsl_with CommonConfigDsl::Confluence, :init_confluence
+        extend_config_dsl_with CommonConfigDsl::Confluence, :init_confluence
 
         # Give the list of supported locales by this report generator
         # [API] - This method is mandatory.

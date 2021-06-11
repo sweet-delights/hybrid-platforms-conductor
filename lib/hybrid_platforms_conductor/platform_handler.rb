@@ -78,7 +78,7 @@ module HybridPlatformsConductor
       @platform_type = platform_type
       @repository_path = repository_path
       @cmd_runner = cmd_runner
-      self.init if self.respond_to?(:init)
+      init if respond_to?(:init)
     end
 
     # Return the name of the platform

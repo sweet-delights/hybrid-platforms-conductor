@@ -11,7 +11,7 @@ module HybridPlatformsConductor
       # Check that all repositories have a successful master branch on a Jenkins CI
       class JenkinsCiMastersOk < HybridPlatformsConductor::Test
 
-        self.extend_config_dsl_with CommonConfigDsl::Bitbucket, :init_bitbucket
+        extend_config_dsl_with CommonConfigDsl::Bitbucket, :init_bitbucket
 
         SUCCESS_STATUSES = [
           # Add nil as the status of a currently running job (which is always the case for hybrid-platforms) is null

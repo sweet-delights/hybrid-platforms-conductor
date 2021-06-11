@@ -9,7 +9,7 @@ module HybridPlatformsConductor
       # Check that all repositories have a successful Github CI
       class GithubCi < HybridPlatformsConductor::Test
 
-        self.extend_config_dsl_with CommonConfigDsl::Github, :init_github
+        extend_config_dsl_with CommonConfigDsl::Github, :init_github
 
         # Check my_test_plugin.rb.sample documentation for signature details.
         def test

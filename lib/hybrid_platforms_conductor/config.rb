@@ -95,7 +95,7 @@ module HybridPlatformsConductor
       end
       # Call initializers if needed
       Config.mixin_initializers.each do |mixin_init_method|
-        self.send(mixin_init_method)
+        send(mixin_init_method)
       end
       include_config_from "#{@hybrid_platforms_dir}/hpc_config.rb"
     end
@@ -106,7 +106,7 @@ module HybridPlatformsConductor
     # * *dsl_file* (String): Path to the DSL file
     def include_config_from(dsl_file)
       log_debug "Include config from #{dsl_file}"
-      self.evaluate_file(dsl_file)
+      evaluate_file(dsl_file)
     end
     expose :include_config_from
 

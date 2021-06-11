@@ -193,7 +193,7 @@ module HybridPlatformsConductor
           ['No list', no_list_nodes],
           ['All', @nodes_handler.known_nodes]
         ]
-      ).transform_values do |list_nodes|
+      ).to_h.transform_values do |list_nodes|
         {
           nodes: list_nodes,
           tested_nodes: list_nodes & @tested_nodes,

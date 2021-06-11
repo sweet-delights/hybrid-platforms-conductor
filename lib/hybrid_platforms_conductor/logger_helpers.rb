@@ -284,8 +284,8 @@ module HybridPlatformsConductor
         yield progress_bar
       ensure
         LoggerHelpers.progress_bar_semaphore.synchronize do
-          self.stdout_device.flush
-          self.stderr_device.flush
+          stdout_device.flush
+          stderr_device.flush
           self.stdout_device = previous_stdout_device unless previous_stdout_device.nil?
           self.stderr_device = previous_stderr_device unless previous_stderr_device.nil?
         end
@@ -300,8 +300,8 @@ module HybridPlatformsConductor
     def stdouts_to_s
       messages = []
       {
-        'STDOUT' => self.stdout_device,
-        'STDERR' => self.stderr_device
+        'STDOUT' => stdout_device,
+        'STDERR' => stderr_device
       }.each do |name, device|
         if device.is_a?(File)
           if File.exist?(device.path)

@@ -27,7 +27,7 @@ module HybridPlatformsConductor
         result = nil
         CurrentDirMonitor.monitor.synchronize do
           # puts "TID #{Thread.current.object_id} from #{caller[2]} - Current dir monitor taken from #{Dir.pwd}"
-          result = self.send(original_method_name, *args, &block)
+          result = send(original_method_name, *args, &block)
           # puts "TID #{Thread.current.object_id} from #{caller[2]} - Current dir monitor released back to #{Dir.pwd}"
         end
         result

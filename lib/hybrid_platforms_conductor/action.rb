@@ -27,7 +27,7 @@ module HybridPlatformsConductor
       @cmd_runner = cmd_runner
       @actions_executor = actions_executor
       @action_info = action_info
-      setup(@action_info) if self.respond_to?(:setup)
+      setup(@action_info) if respond_to?(:setup)
     end
 
     # Do we need a connector to execute this action on a node?

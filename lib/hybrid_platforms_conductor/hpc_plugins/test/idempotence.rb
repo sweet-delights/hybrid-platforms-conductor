@@ -13,7 +13,7 @@ module HybridPlatformsConductor
       # Don't forget to add the testadmin private key in your SSH agent if you run this test locally.
       class Idempotence < TestByService
 
-        self.extend_config_dsl_with CommonConfigDsl::IdempotenceTests, :init_idempotence_tests
+        extend_config_dsl_with CommonConfigDsl::IdempotenceTests, :init_idempotence_tests
 
         # Check my_test_plugin.rb.sample documentation for signature details.
         def test_for_node

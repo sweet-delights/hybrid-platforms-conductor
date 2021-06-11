@@ -40,7 +40,7 @@ module HybridPlatformsConductor
 
         end
 
-        self.extend_config_dsl_with ConfigDslExtension, :init_orphan_files_test
+        extend_config_dsl_with ConfigDslExtension, :init_orphan_files_test
 
         # List of directories to always ignore
         DIRECTORIES_TO_ALWAYS_IGNORE = [

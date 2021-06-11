@@ -80,7 +80,7 @@ module HybridPlatformsConductor
           # Result::
           # * String: The corresponding SSH configuration
           def ssh_for_gateway(gateway_conf, variables = {})
-            erb_context = self.clone
+            erb_context = clone
             def erb_context.private_binding
               binding
             end
@@ -91,7 +91,7 @@ module HybridPlatformsConductor
           end
 
         end
-        self.extend_config_dsl_with PlatformsDslSsh, :init_ssh
+        extend_config_dsl_with PlatformsDslSsh, :init_ssh
 
         # Name of the gateway user to be used. [default: ENV['hpc_ssh_gateway_user'] or ubradm]
         #   String
@@ -689,7 +689,7 @@ module HybridPlatformsConductor
         # * *nodes* (Array<String>): List of nodes for which we need the config to be created [default: @nodes_handler.known_nodes ]
         # * Proc: Code called with the given ssh executable to be used to get TI config
         def with_platforms_ssh(nodes: @nodes_handler.known_nodes)
-          platforms_ssh_dir = Dir.mktmpdir("platforms_ssh_#{self.object_id}", @tmp_dir)
+          platforms_ssh_dir = Dir.mktmpdir("platforms_ssh_#{object_id}", @tmp_dir)
           log_debug "Generate temporary SSH configuration in #{platforms_ssh_dir} for #{nodes.size} nodes..."
           begin
             ssh_conf_file = "#{platforms_ssh_dir}/ssh_config"

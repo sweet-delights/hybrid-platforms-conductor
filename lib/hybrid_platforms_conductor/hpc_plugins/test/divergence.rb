@@ -10,7 +10,7 @@ module HybridPlatformsConductor
       # Test that the node has not diverged since last deployment
       class Divergence < HybridPlatformsConductor::Test
 
-        self.extend_config_dsl_with CommonConfigDsl::IdempotenceTests, :init_idempotence_tests
+        extend_config_dsl_with CommonConfigDsl::IdempotenceTests, :init_idempotence_tests
 
         # Check my_test_plugin.rb.sample documentation for signature details.
         def test_on_check_node(stdout, stderr, _exit_status)
