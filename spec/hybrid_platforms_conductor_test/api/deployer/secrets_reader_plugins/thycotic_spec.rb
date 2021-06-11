@@ -104,12 +104,12 @@ describe HybridPlatformsConductor::Deployer do
 
       it 'gets secrets from a Thycotic Secret Server' do
         with_test_platform_for_thycotic_test(
-          <<~EOS
+          <<~EOConfig
             secrets_from_thycotic(
               thycotic_url: 'https://my_thycotic.domain.com/SecretServer',
               secret_id: 1107
             )
-          EOS
+          EOConfig
         ) do
           mock_thycotic_file_download_on('https://my_thycotic.domain.com/SecretServer', 1107, '{ "secret_name": "secret_value" }')
           expect(test_services_handler).to receive(:package).with(
@@ -122,12 +122,12 @@ describe HybridPlatformsConductor::Deployer do
       end
 
       it 'gets secrets from a Thycotic Secret Server for several nodes' do
-        additional_config = <<~EOS
+        additional_config = <<~EOConfig
           secrets_from_thycotic(
             thycotic_url: 'https://my_thycotic.domain.com/SecretServer',
             secret_id: 1107
           )
-        EOS
+        EOConfig
         with_test_platform_for_thycotic_test(
           additional_config,
           platform_info: {
@@ -147,12 +147,12 @@ describe HybridPlatformsConductor::Deployer do
 
       it 'gets secrets from a Thycotic Secret Server using env variables' do
         with_test_platform_for_thycotic_test(
-          <<~EOS
+          <<~EOConfig
             secrets_from_thycotic(
               thycotic_url: 'https://my_thycotic.domain.com/SecretServer',
               secret_id: 1107
             )
-          EOS
+          EOConfig
         ) do
           mock_thycotic_file_download_on(
             'https://my_thycotic.domain.com/SecretServer',
@@ -173,7 +173,7 @@ describe HybridPlatformsConductor::Deployer do
       end
 
       it 'gets secrets from several Thycotic Secret Servers' do
-        additional_config = <<~EOS
+        additional_config = <<~EOConfig
           secrets_from_thycotic(
             thycotic_url: 'https://my_thycotic1.domain.com/SecretServer',
             secret_id: 110701
@@ -184,7 +184,7 @@ describe HybridPlatformsConductor::Deployer do
               secret_id: 110702
             )
           end
-        EOS
+        EOConfig
         with_test_platform_for_thycotic_test(
           additional_config,
           platform_info: {
@@ -205,7 +205,7 @@ describe HybridPlatformsConductor::Deployer do
 
       it 'merges secrets from several Thycotic Secret Servers' do
         with_test_platform_for_thycotic_test(
-          <<~EOS
+          <<~EOConfig
             secrets_from_thycotic(
               thycotic_url: 'https://my_thycotic1.domain.com/SecretServer',
               secret_id: 110701
@@ -216,7 +216,7 @@ describe HybridPlatformsConductor::Deployer do
                 secret_id: 110702
               )
             end
-          EOS
+          EOConfig
         ) do
           mock_thycotic_file_download_on('https://my_thycotic1.domain.com/SecretServer', 110701, '{ "secret1": "value1", "secret2": "value2" }')
           mock_thycotic_file_download_on('https://my_thycotic2.domain.com/SecretServer', 110702, '{ "secret2": "value2", "secret3": "value3" }')
@@ -231,7 +231,7 @@ describe HybridPlatformsConductor::Deployer do
 
       it 'fails in case of secrets conflicts from several Thycotic Secret Servers' do
         with_test_platform_for_thycotic_test(
-          <<~EOS
+          <<~EOConfig
             secrets_from_thycotic(
               thycotic_url: 'https://my_thycotic1.domain.com/SecretServer',
               secret_id: 110701
@@ -242,7 +242,7 @@ describe HybridPlatformsConductor::Deployer do
                 secret_id: 110702
               )
             end
-          EOS
+          EOConfig
         ) do
           mock_thycotic_file_download_on('https://my_thycotic1.domain.com/SecretServer', 110701, '{ "secret1": "value1", "secret2": "value2" }')
           mock_thycotic_file_download_on('https://my_thycotic2.domain.com/SecretServer', 110702, '{ "secret2": "other_value", "secret3": "value3" }')
@@ -252,12 +252,12 @@ describe HybridPlatformsConductor::Deployer do
 
       it 'fails to get secrets from a missing Thycotic Secret Server' do
         with_test_platform_for_thycotic_test(
-          <<~EOS
+          <<~EOConfig
             secrets_from_thycotic(
               thycotic_url: 'https://my_thycotic.domain.com/SecretServer',
               secret_id: 1107
             )
-          EOS
+          EOConfig
         ) do
           mock_thycotic_file_download_on('https://my_thycotic.domain.com/SecretServer', 1107, nil)
           expect { test_deployer.deploy_on(%w[node]) }.to raise_error 'Unable to fetch secret file ID 1107 from https://my_thycotic.domain.com/SecretServer'

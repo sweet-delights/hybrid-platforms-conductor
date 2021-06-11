@@ -313,7 +313,7 @@ module HybridPlatformsConductor
               run_cmd "scp -S #{ssh_exec} #{from} #{ssh_url}:#{to}"
             end
           else
-            run_cmd <<~EOS
+            run_cmd <<~EOBash
               cd #{File.dirname(from)} && \
               tar \
                 --create \
@@ -331,7 +331,7 @@ module HybridPlatformsConductor
                   --directory #{to} \
                   --owner root \
                 \"
-            EOS
+            EOBash
           end
         end
 
@@ -360,7 +360,7 @@ module HybridPlatformsConductor
         # Result::
         # * String: The SSH config
         def ssh_config(ssh_exec: 'ssh', known_hosts_file: nil, nodes: @nodes_handler.known_nodes)
-          config_content = <<~EOS
+          config_content = <<~EOSshConfig
             ############
             # GATEWAYS #
             ############
@@ -371,7 +371,7 @@ module HybridPlatformsConductor
             # ENDPOINTS #
             #############
 
-          EOS
+          EOSshConfig
 
           # Add each node
           # Query for the metadata of all nodes at once
@@ -395,7 +395,7 @@ module HybridPlatformsConductor
             config_content << "\n"
           end
           # Add global definitions at the end of the SSH config, as they might be overriden by previous ones, and first match wins.
-          config_content << <<~EOS
+          config_content << <<~EOSshConfig
             ###########
             # GLOBALS #
             ###########
@@ -408,7 +408,7 @@ module HybridPlatformsConductor
               #{known_hosts_file.nil? ? '' : "UserKnownHostsFile #{known_hosts_file}"}
               #{@ssh_strict_host_key_checking ? '' : 'StrictHostKeyChecking no'}
 
-          EOS
+          EOSshConfig
           config_content
         end
 

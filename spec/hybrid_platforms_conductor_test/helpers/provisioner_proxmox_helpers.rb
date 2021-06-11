@@ -373,10 +373,10 @@ module HybridPlatformsConductorTest
                   vm_ip: '192.168.0.100'
                 }
               end
-            { 'node' => [0, <<~EOS, ''] }
+            { 'node' => [0, <<~EOStdout, ''] }
               ===== JSON =====
               #{JSON.pretty_generate(result)}
-            EOS
+            EOStdout
           end
         ]
         if destroy_vm
@@ -425,10 +425,10 @@ module HybridPlatformsConductorTest
                     vm_ip: '192.168.0.100'
                   }
                 end
-              { 'node' => [0, <<~EOS, ''] }
+              { 'node' => [0, <<~EOStdout, ''] }
                 ===== JSON =====
                 #{JSON.pretty_generate(result)}
-              EOS
+              EOStdout
             end
           ]
         end
@@ -589,13 +589,13 @@ module HybridPlatformsConductorTest
                   vmid = $2
                   {
                     'net0' => "ip=#{pve_nodes[pve_node_name][:lxc_containers][Integer(vmid)][:ip]}/32",
-                    'description' => <<~EOS
+                    'description' => <<~EODescription
                       ===== HPC info =====
                       node: #{pve_nodes[pve_node_name][:lxc_containers][Integer(vmid)][:node]}
                       environment: #{pve_nodes[pve_node_name][:lxc_containers][Integer(vmid)][:environment]}
                       debug: #{pve_nodes[pve_node_name][:lxc_containers][Integer(vmid)][:debug] ? 'true' : 'false'}
                       creation_date: #{pve_nodes[pve_node_name][:lxc_containers][Integer(vmid)][:creation_date].strftime('%FT%T')}
-                    EOS
+                    EODescription
                   }
                 when /^nodes\/([^\/]+)\/lxc\/([^\/]+)\/status\/current$/
                   pve_node_name = $1
@@ -837,13 +837,13 @@ module HybridPlatformsConductorTest
       # Parameters::
       # * *expected_proxmox_actions* (Array<Array>): Expected Proxmox actions
       def expect_proxmox_actions_to_be(expected_proxmox_actions)
-        expect(@proxmox_actions.size).to eq(expected_proxmox_actions.size), <<~EOS
+        expect(@proxmox_actions.size).to eq(expected_proxmox_actions.size), <<~EOErrorMessage
           Expected #{expected_proxmox_actions.size} Proxmox actions, but got #{@proxmox_actions.size} instead:
           ----- Received:
           #{@proxmox_actions.map(&:inspect).join("\n")}
           ----- Expected:
           #{expected_proxmox_actions.map(&:inspect).join("\n")}
-        EOS
+        EOErrorMessage
         @proxmox_actions.zip(expected_proxmox_actions).each do |proxmox_action, expected_proxmox_action|
           expect(proxmox_action.size).to eq expected_proxmox_action.size
           expect(proxmox_action[0..1]).to eq expected_proxmox_action[0..1]

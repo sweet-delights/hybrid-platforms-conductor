@@ -12,10 +12,10 @@ describe HybridPlatformsConductor::Deployer do
       with_test_platforms(
         { nodes: { 'node1' => {}, 'node2' => {} } },
         false,
-        <<~EOS
+        <<~EOConfig
           send_logs_to %i[log_plugin_1 log_plugin_2]
           for_nodes('node2') { send_logs_to :log_plugin_3 }
-        EOS
+        EOConfig
       ) do
         expect(test_config.deployment_logs).to eq [
           {
@@ -34,10 +34,10 @@ describe HybridPlatformsConductor::Deployer do
       with_test_platforms(
         { nodes: { 'node1' => {}, 'node2' => {} } },
         false,
-        <<~EOS
+        <<~EOConfig
           read_secrets_from %i[secrets_reader_plugin_1 secrets_reader_plugin_2]
           for_nodes('node2') { read_secrets_from :secrets_reader_plugin_3 }
-        EOS
+        EOConfig
       ) do
         expect(test_config.secrets_readers).to eq [
           {

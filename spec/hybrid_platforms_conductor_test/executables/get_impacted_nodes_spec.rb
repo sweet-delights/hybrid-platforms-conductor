@@ -29,7 +29,7 @@ describe 'get_impacted_nodes executable' do
       ) { [%w[node1 node2], %w[node1], %w[service2], false] }
       exit_code, stdout, stderr = run 'get_impacted_nodes', '--platform', 'platform'
       expect(exit_code).to eq 0
-      expect(stdout).to eq <<~EOS
+      expect(stdout).to eq <<~EOStdout
         
         * 1 impacted services:
         service2
@@ -41,7 +41,7 @@ describe 'get_impacted_nodes executable' do
         node1
         node2
         
-      EOS
+      EOStdout
       expect(stderr).to eq ''
     end
   end
@@ -56,7 +56,7 @@ describe 'get_impacted_nodes executable' do
       ) { [%w[node1 node2], %w[node1], %w[service2], true] }
       exit_code, stdout, stderr = run 'get_impacted_nodes', '--platform', 'platform'
       expect(exit_code).to eq 0
-      expect(stdout).to eq <<~EOS
+      expect(stdout).to eq <<~EOStdout
         * Potentially all nodes of this platform are impacted.
         
         * 1 impacted services:
@@ -69,7 +69,7 @@ describe 'get_impacted_nodes executable' do
         node1
         node2
         
-      EOS
+      EOStdout
       expect(stderr).to eq ''
     end
   end
@@ -84,7 +84,7 @@ describe 'get_impacted_nodes executable' do
       ) { [%w[node1 node2], %w[node1], %w[service2], false] }
       exit_code, stdout, stderr = run 'get_impacted_nodes', '--platform', 'platform', '--from-commit', 'from_commit'
       expect(exit_code).to eq 0
-      expect(stdout).to eq <<~EOS
+      expect(stdout).to eq <<~EOStdout
         
         * 1 impacted services:
         service2
@@ -96,7 +96,7 @@ describe 'get_impacted_nodes executable' do
         node1
         node2
         
-      EOS
+      EOStdout
       expect(stderr).to eq ''
     end
   end
@@ -111,7 +111,7 @@ describe 'get_impacted_nodes executable' do
       ) { [%w[node1 node2], %w[node1], %w[service2], false] }
       exit_code, stdout, stderr = run 'get_impacted_nodes', '--platform', 'platform', '--to-commit', 'to_commit'
       expect(exit_code).to eq 0
-      expect(stdout).to eq <<~EOS
+      expect(stdout).to eq <<~EOStdout
         
         * 1 impacted services:
         service2
@@ -123,7 +123,7 @@ describe 'get_impacted_nodes executable' do
         node1
         node2
         
-      EOS
+      EOStdout
       expect(stderr).to eq ''
     end
   end
@@ -138,7 +138,7 @@ describe 'get_impacted_nodes executable' do
       ) { [%w[node1 node2], %w[node1], %w[service2], false] }
       exit_code, stdout, stderr = run 'get_impacted_nodes', '--platform', 'platform', '--smallest-test-sample'
       expect(exit_code).to eq 0
-      expect(stdout).to eq <<~EOS
+      expect(stdout).to eq <<~EOStdout
         
         * 1 impacted services:
         service2
@@ -150,7 +150,7 @@ describe 'get_impacted_nodes executable' do
         node1
         node2
         
-      EOS
+      EOStdout
       expect(stderr).to eq ''
     end
   end

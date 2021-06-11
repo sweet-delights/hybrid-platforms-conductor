@@ -49,11 +49,11 @@ describe 'nodes_to_deploy executable' do
       expect(test_nodes_handler).to receive(:impacted_nodes_from_git_diff).with('platform', from_commit: 'abcdef2', to_commit: 'master') { [%w[node1 node2], [], [], false] }
       exit_code, stdout, stderr = run 'nodes_to_deploy'
       expect(exit_code).to eq 0
-      expect(stdout).to eq <<~EOS
+      expect(stdout).to eq <<~EOStdout
         ===== Nodes to deploy =====
         node1
         node2
-      EOS
+      EOStdout
       expect(stderr).to match(/\[ node1 \] - No deployment schedule defined./)
       expect(stderr).to match(/\[ node2 \] - No deployment schedule defined./)
     end
@@ -79,10 +79,10 @@ describe 'nodes_to_deploy executable' do
       expect(test_nodes_handler).to receive(:impacted_nodes_from_git_diff).with('platform', from_commit: 'abcdef2', to_commit: 'master') { [%w[node1 node2], [], [], false] }
       exit_code, stdout, stderr = run 'nodes_to_deploy', '--node', 'node2'
       expect(exit_code).to eq 0
-      expect(stdout).to eq <<~EOS
+      expect(stdout).to eq <<~EOStdout
         ===== Nodes to deploy =====
         node2
-      EOS
+      EOStdout
       expect(stderr).not_to match(/\[ node1 \] - No deployment schedule defined./)
       expect(stderr).to match(/\[ node2 \] - No deployment schedule defined./)
     end
@@ -120,10 +120,10 @@ describe 'nodes_to_deploy executable' do
       expect(test_nodes_handler).to receive(:impacted_nodes_from_git_diff).with('platform', from_commit: 'abcdef2', to_commit: 'master') { [%w[], [], [], false] }
       exit_code, stdout = run 'nodes_to_deploy'
       expect(exit_code).to eq 0
-      expect(stdout).to eq <<~EOS
+      expect(stdout).to eq <<~EOStdout
         ===== Nodes to deploy =====
         node1
-      EOS
+      EOStdout
     end
   end
 
@@ -154,10 +154,10 @@ describe 'nodes_to_deploy executable' do
       expect(test_nodes_handler).to receive(:impacted_nodes_from_git_diff).with('platform', from_commit: 'abcdef2', to_commit: 'master') { [%w[], [], [], false] }
       exit_code, stdout = run 'nodes_to_deploy'
       expect(exit_code).to eq 0
-      expect(stdout).to eq <<~EOS
+      expect(stdout).to eq <<~EOStdout
         ===== Nodes to deploy =====
         node1
-      EOS
+      EOStdout
     end
   end
 
@@ -195,10 +195,10 @@ describe 'nodes_to_deploy executable' do
       expect(test_nodes_handler).to receive(:impacted_nodes_from_git_diff).with('platform', from_commit: 'abcdef2', to_commit: 'master') { [%w[], [], [], false] }
       exit_code, stdout = run 'nodes_to_deploy'
       expect(exit_code).to eq 0
-      expect(stdout).to eq <<~EOS
+      expect(stdout).to eq <<~EOStdout
         ===== Nodes to deploy =====
         node1
-      EOS
+      EOStdout
     end
   end
 
@@ -206,11 +206,11 @@ describe 'nodes_to_deploy executable' do
     with_test_platform_for_nodes_to_deploy do
       exit_code, stdout = run 'nodes_to_deploy', '--ignore-deployed-info'
       expect(exit_code).to eq 0
-      expect(stdout).to eq <<~EOS
+      expect(stdout).to eq <<~EOStdout
         ===== Nodes to deploy =====
         node1
         node2
-      EOS
+      EOStdout
     end
   end
 
@@ -237,10 +237,10 @@ describe 'nodes_to_deploy executable' do
       expect(test_nodes_handler).to receive(:impacted_nodes_from_git_diff).with('platform', from_commit: 'abcdef2', to_commit: 'master') { [%w[node1 node2], [], [], false] }
       exit_code, stdout, stderr = run 'nodes_to_deploy'
       expect(exit_code).to eq 0
-      expect(stdout).to eq <<~EOS
+      expect(stdout).to eq <<~EOStdout
         ===== Nodes to deploy =====
         node2
-      EOS
+      EOStdout
       expect(stderr).to eq ''
     end
   end
@@ -269,10 +269,10 @@ describe 'nodes_to_deploy executable' do
       # 90 seconds before now, the schedule should match only node1
       exit_code, stdout, stderr = run 'nodes_to_deploy', '--deployment-time', (Time.now.utc - 90).strftime('%F %T')
       expect(exit_code).to eq 0
-      expect(stdout).to eq <<~EOS
+      expect(stdout).to eq <<~EOStdout
         ===== Nodes to deploy =====
         node1
-      EOS
+      EOStdout
       expect(stderr).to eq ''
     end
   end
@@ -312,11 +312,11 @@ describe 'nodes_to_deploy executable' do
       expect(test_nodes_handler).to receive(:impacted_nodes_from_git_diff).with('platform', from_commit: 'abcdef2', to_commit: 'master') { [%w[node1 node2], [], [], false] }
       exit_code, stdout, stderr = run 'nodes_to_deploy', '--ignore-schedule'
       expect(exit_code).to eq 0
-      expect(stdout).to eq <<~EOS
+      expect(stdout).to eq <<~EOStdout
         ===== Nodes to deploy =====
         node1
         node2
-      EOS
+      EOStdout
       expect(stderr).to eq ''
     end
   end
@@ -356,11 +356,11 @@ describe 'nodes_to_deploy executable' do
       expect(test_nodes_handler).to receive(:impacted_nodes_from_git_diff).with('platform2', from_commit: 'abcdef2', to_commit: 'master') { [%w[node2], [], [], false] }
       exit_code, stdout = run 'nodes_to_deploy'
       expect(exit_code).to eq 0
-      expect(stdout).to eq <<~EOS
+      expect(stdout).to eq <<~EOStdout
         ===== Nodes to deploy =====
         node1
         node2
-      EOS
+      EOStdout
     end
   end
 
@@ -406,11 +406,11 @@ describe 'nodes_to_deploy executable' do
       expect(test_nodes_handler).to receive(:impacted_nodes_from_git_diff).with('platform3', from_commit: '2345678', to_commit: 'master') { [%w[node2], [], [], false] }
       exit_code, stdout = run 'nodes_to_deploy'
       expect(exit_code).to eq 0
-      expect(stdout).to eq <<~EOS
+      expect(stdout).to eq <<~EOStdout
         ===== Nodes to deploy =====
         node1
         node2
-      EOS
+      EOStdout
     end
   end
 
@@ -454,11 +454,11 @@ describe 'nodes_to_deploy executable' do
       expect(test_nodes_handler).to receive(:impacted_nodes_from_git_diff).with('platform2', from_commit: 'abcdef2', to_commit: 'master') { [%w[node2], [], [], false] }
       exit_code, stdout = run 'nodes_to_deploy'
       expect(exit_code).to eq 0
-      expect(stdout).to eq <<~EOS
+      expect(stdout).to eq <<~EOStdout
         ===== Nodes to deploy =====
         node1
         node2
-      EOS
+      EOStdout
     end
   end
 

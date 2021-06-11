@@ -37,7 +37,7 @@ module HybridPlatformsConductor
             {
               ruby: proc do
                 FileUtils.mkdir_p File.dirname(log_file)
-                File.write(log_file, <<~EOS)
+                File.write(log_file, <<~EODeploymentLog)
                   #{
                     deployment_info.merge(
                       debug: log_debug? ? 'Yes' : 'No',
@@ -49,7 +49,7 @@ module HybridPlatformsConductor
                   #{stdout}
                   #{MARKER_STDERR}
                   #{stderr}
-                EOS
+                EODeploymentLog
               end,
               remote_bash: "#{sudo_prefix}mkdir -p /var/log/deployments && #{sudo_prefix}chmod 600 /var/log/deployments"
             },

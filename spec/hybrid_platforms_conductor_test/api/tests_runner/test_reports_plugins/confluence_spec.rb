@@ -6,12 +6,12 @@ describe HybridPlatformsConductor::TestsRunner do
 
       it 'returns Confluence info' do
         with_repository do
-          platforms = <<~EOS
+          platforms = <<~EOConfig
             confluence(
               url: 'https://my_confluence.my_domain.com',
               inventory_report_page_id: '123456'
             )
-          EOS
+          EOConfig
           with_platforms platforms do
             expect(test_config.confluence_info).to eq(
               url: 'https://my_confluence.my_domain.com',

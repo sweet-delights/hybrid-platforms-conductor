@@ -46,14 +46,14 @@ describe 'last_deploys executable' do
       end
       exit_code, stdout, stderr = run 'last_deploys'
       expect(exit_code).to eq 0
-      expect(stdout).to eq(<<~EOS)
+      expect(stdout).to eq <<~EOStdout
         +-------+-------------------------+-------------+--------------------+-------+
         | Node  | Date                    | Admin       | Services           | Error |
         +-------+-------------------------+-------------+--------------------+-------+
         | node1 | 2019-08-21 10:12:15 UTC | admin_user1 | service1           |       |
         | node2 | 2019-08-22 10:12:15 UTC | admin_user2 | service1, service2 |       |
         +-------+-------------------------+-------------+--------------------+-------+
-      EOS
+      EOStdout
       expect(stderr).to eq ''
     end
   end
@@ -92,14 +92,14 @@ describe 'last_deploys executable' do
       end
       exit_code, stdout, stderr = run 'last_deploys', '--sort-by', 'user'
       expect(exit_code).to eq 0
-      expect(stdout).to eq(<<~EOS)
+      expect(stdout).to eq <<~EOStdout
         +-------+-------------------------+-------------+--------------------+-------+
         | Node  | Date                    | Admin       | Services           | Error |
         +-------+-------------------------+-------------+--------------------+-------+
         | node2 | 2019-08-22 10:12:15 UTC | admin_user1 | service1, service2 |       |
         | node1 | 2019-08-21 10:12:15 UTC | admin_user2 | service1           |       |
         +-------+-------------------------+-------------+--------------------+-------+
-      EOS
+      EOStdout
       expect(stderr).to eq ''
     end
   end
@@ -138,14 +138,14 @@ describe 'last_deploys executable' do
       end
       exit_code, stdout, stderr = run 'last_deploys', '--sort-by', 'user_desc'
       expect(exit_code).to eq 0
-      expect(stdout).to eq(<<~EOS)
+      expect(stdout).to eq <<~EOStdout
         +-------+-------------------------+-------------+--------------------+-------+
         | Node  | Date                    | Admin       | Services           | Error |
         +-------+-------------------------+-------------+--------------------+-------+
         | node1 | 2019-08-21 10:12:15 UTC | admin_user2 | service1           |       |
         | node2 | 2019-08-22 10:12:15 UTC | admin_user1 | service1, service2 |       |
         +-------+-------------------------+-------------+--------------------+-------+
-      EOS
+      EOStdout
       expect(stderr).to eq ''
     end
   end
@@ -171,13 +171,13 @@ describe 'last_deploys executable' do
       end
       exit_code, stdout, stderr = run 'last_deploys', '--node', 'node1'
       expect(exit_code).to eq 0
-      expect(stdout).to eq(<<~EOS)
+      expect(stdout).to eq <<~EOStdout
         +-------+-------------------------+-------------+----------+-------+
         | Node  | Date                    | Admin       | Services | Error |
         +-------+-------------------------+-------------+----------+-------+
         | node1 | 2019-08-21 10:12:15 UTC | admin_user1 | service1 |       |
         +-------+-------------------------+-------------+----------+-------+
-      EOS
+      EOStdout
       expect(stderr).to eq ''
     end
   end
@@ -206,14 +206,14 @@ describe 'last_deploys executable' do
       end
       exit_code, stdout, stderr = run 'last_deploys', '--sort-by', 'user_desc'
       expect(exit_code).to eq 0
-      expect(stdout).to eq(<<~EOS)
+      expect(stdout).to eq <<~EOStdout
         +-------+-------------------------+-------------+--------------------+--------------------------+
         | Node  | Date                    | Admin       | Services           | Error                    |
         +-------+-------------------------+-------------+--------------------+--------------------------+
         | node2 | 2019-08-22 10:12:15 UTC | admin_user2 | service1, service2 |                          |
         | node1 |                         |             |                    | Error while getting logs |
         +-------+-------------------------+-------------+--------------------+--------------------------+
-      EOS
+      EOStdout
       expect(stderr).to eq ''
     end
   end

@@ -74,11 +74,11 @@ describe HybridPlatformsConductor::HpcPlugins::PlatformHandler::ServerlessChef d
 
     it 'returns impacted service due to a change in an included template' do
       with_serverless_chef_platforms('recipes') do |platform, repository|
-        File.write("#{repository}/cookbooks/test_cookbook_1/recipes/default.rb", <<~EOS)
+        File.write("#{repository}/cookbooks/test_cookbook_1/recipes/default.rb", <<~EORecipe)
           template '/home/file' do
             source 'test_template.erb'
           end
-        EOS
+        EORecipe
         expect(platform.impacts_from('cookbooks/test_cookbook_1/templates/default/test_template.erb' => {})).to eq [
           [],
           %w[test_policy_1],
@@ -99,11 +99,11 @@ describe HybridPlatformsConductor::HpcPlugins::PlatformHandler::ServerlessChef d
 
     it 'returns impacted service due to a change in an included file' do
       with_serverless_chef_platforms('recipes') do |platform, repository|
-        File.write("#{repository}/cookbooks/test_cookbook_1/recipes/default.rb", <<~EOS)
+        File.write("#{repository}/cookbooks/test_cookbook_1/recipes/default.rb", <<~EORecipe)
           file '/home/file' do
             source 'test_file'
           end
-        EOS
+        EORecipe
         expect(platform.impacts_from('cookbooks/test_cookbook_1/files/default/test_file' => {})).to eq [
           [],
           %w[test_policy_1],
@@ -124,9 +124,9 @@ describe HybridPlatformsConductor::HpcPlugins::PlatformHandler::ServerlessChef d
 
     it 'returns impacted service due to a resource usage in a recipe' do
       with_serverless_chef_platforms('recipes') do |platform, repository|
-        File.write("#{repository}/cookbooks/test_cookbook_1/recipes/default.rb", <<~EOS)
+        File.write("#{repository}/cookbooks/test_cookbook_1/recipes/default.rb", <<~EORecipe)
           test_cookbook_2_my_resource
-        EOS
+        EORecipe
         expect(platform.impacts_from('cookbooks/test_cookbook_2/resources/my_resource.rb' => {})).to eq [
           [],
           %w[test_policy_1],
@@ -147,9 +147,9 @@ describe HybridPlatformsConductor::HpcPlugins::PlatformHandler::ServerlessChef d
 
     it 'returns impacted service due to a library helper usage in a recipe' do
       with_serverless_chef_platforms('recipes') do |platform, repository|
-        File.write("#{repository}/cookbooks/test_cookbook_1/recipes/default.rb", <<~EOS)
+        File.write("#{repository}/cookbooks/test_cookbook_1/recipes/default.rb", <<~EORecipe)
           a = my_library_helper(42)
-        EOS
+        EORecipe
         expect(platform.impacts_from('cookbooks/test_cookbook_2/libraries/default.rb' => {})).to eq [
           [],
           %w[test_policy_1],
@@ -160,9 +160,9 @@ describe HybridPlatformsConductor::HpcPlugins::PlatformHandler::ServerlessChef d
 
     it 'ignored impacted service from an unknown helper' do
       with_serverless_chef_platforms('recipes') do |platform, repository|
-        File.write("#{repository}/cookbooks/test_cookbook_1/recipes/default.rb", <<~EOS)
+        File.write("#{repository}/cookbooks/test_cookbook_1/recipes/default.rb", <<~EORecipe)
           a = unknown_helper(42)
-        EOS
+        EORecipe
         expect(platform.impacts_from('cookbooks/test_cookbook_2/recipes/default.rb' => {})).to eq [
           [],
           %w[test_policy_2],
@@ -174,13 +174,13 @@ describe HybridPlatformsConductor::HpcPlugins::PlatformHandler::ServerlessChef d
     it 'returns impacted service due to an unknown library helper usage that has been configured' do
       with_serverless_chef_platforms(
         'recipes',
-        additional_config: <<~EOS
+        additional_config: <<~EOConfig
           helpers_including_recipes(unknown_helper: ['test_cookbook_2'])
-        EOS
+        EOConfig
       ) do |platform, repository|
-        File.write("#{repository}/cookbooks/test_cookbook_1/recipes/default.rb", <<~EOS)
+        File.write("#{repository}/cookbooks/test_cookbook_1/recipes/default.rb", <<~EORecipe)
           a = unknown_helper(42)
-        EOS
+        EORecipe
         expect(platform.impacts_from('cookbooks/test_cookbook_2/recipes/default.rb' => {})).to eq [
           [],
           %w[test_policy_1 test_policy_2],
@@ -201,9 +201,9 @@ describe HybridPlatformsConductor::HpcPlugins::PlatformHandler::ServerlessChef d
 
     it 'returns impacted service due to a usage of another cookbook\'s default recipe' do
       with_serverless_chef_platforms('recipes') do |platform, repository|
-        File.write("#{repository}/cookbooks/test_cookbook_1/recipes/default.rb", <<~EOS)
+        File.write("#{repository}/cookbooks/test_cookbook_1/recipes/default.rb", <<~EORecipe)
           include_recipe 'test_cookbook_2'
-        EOS
+        EORecipe
         expect(platform.impacts_from('cookbooks/test_cookbook_2/recipes/default.rb' => {})).to eq [
           [],
           %w[test_policy_1 test_policy_2],
@@ -214,9 +214,9 @@ describe HybridPlatformsConductor::HpcPlugins::PlatformHandler::ServerlessChef d
 
     it 'returns impacted service due to a usage of another cookbook\'s recipe' do
       with_serverless_chef_platforms('recipes') do |platform, repository|
-        File.write("#{repository}/cookbooks/test_cookbook_1/recipes/default.rb", <<~EOS)
+        File.write("#{repository}/cookbooks/test_cookbook_1/recipes/default.rb", <<~EORecipe)
           include_recipe 'test_cookbook_2::other_recipe'
-        EOS
+        EORecipe
         expect(platform.impacts_from('cookbooks/test_cookbook_2/recipes/other_recipe.rb' => {})).to eq [
           [],
           %w[test_policy_1],
@@ -227,9 +227,9 @@ describe HybridPlatformsConductor::HpcPlugins::PlatformHandler::ServerlessChef d
 
     it 'ignores cookbooks from cookbook paths that are not configured' do
       with_serverless_chef_platforms('several_cookbooks') do |platform, repository|
-        File.write("#{repository}/cookbooks/test_cookbook_1/recipes/default.rb", <<~EOS)
+        File.write("#{repository}/cookbooks/test_cookbook_1/recipes/default.rb", <<~EORecipe)
           include_recipe 'test_cookbook_2'
-        EOS
+        EORecipe
         expect(platform.impacts_from('other_cookbooks/test_cookbook_2/recipes/default.rb' => {})).to eq [
           [],
           %w[],
@@ -240,9 +240,9 @@ describe HybridPlatformsConductor::HpcPlugins::PlatformHandler::ServerlessChef d
 
     it 'considers cookbooks from non-standard cookbook paths that are configured' do
       with_serverless_chef_platforms('several_cookbooks') do |platform, repository|
-        File.write("#{repository}/cookbooks/test_cookbook_1/recipes/default.rb", <<~EOS)
+        File.write("#{repository}/cookbooks/test_cookbook_1/recipes/default.rb", <<~EORecipe)
           include_recipe 'test_cookbook_2'
-        EOS
+        EORecipe
         ENV['hpc_test_cookbooks_path'] = 'other_cookbooks'
         expect(platform.impacts_from('other_cookbooks/test_cookbook_2/recipes/default.rb' => {})).to eq [
           [],
@@ -257,9 +257,9 @@ describe HybridPlatformsConductor::HpcPlugins::PlatformHandler::ServerlessChef d
         FileUtils.mkdir_p("#{other_repo}/cookbooks/test_cookbook_2/recipes")
         File.write("#{other_repo}/cookbooks/test_cookbook_2/recipes/default.rb", '')
         with_serverless_chef_platforms('several_cookbooks') do |platform, repository|
-          File.write("#{repository}/cookbooks/test_cookbook_1/recipes/default.rb", <<~EOS)
+          File.write("#{repository}/cookbooks/test_cookbook_1/recipes/default.rb", <<~EORecipe)
             include_recipe 'test_cookbook_2'
-          EOS
+          EORecipe
           ENV['hpc_test_cookbooks_path'] = "#{other_repo}:other_cookbooks"
           expect(platform.impacts_from('unknown_cookbooks/test_cookbook_2/recipes/default.rb' => {})).to eq [
             [],

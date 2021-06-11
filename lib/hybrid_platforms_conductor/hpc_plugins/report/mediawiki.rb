@@ -71,12 +71,12 @@ module HybridPlatformsConductor
           output = ''
           locale = TRANSLATIONS[locale_code]
 
-          output << <<~EOS
+          output << <<~EOMediawiki
             Back to the [[Hadoop]] / [[Impala]] / [[XAE_Network_Topology]] portal pages
 
             This page has been generated using <code>./bin/report --format mediawiki</code> on #{Time.now.utc.strftime('%F %T')} UTC.
 
-          EOS
+          EOMediawiki
 
           # Get all confs
           # Use the translations' keys to know all properties we want to display
@@ -140,7 +140,7 @@ module HybridPlatformsConductor
                 end
             end
 
-          output << <<~EOS
+          output << <<~EOMediawiki
             Back to the [[Hadoop]] / [[Impala]] / [[XAE_Network_Topology]] portal pages
 
             [[Category:My Project]]
@@ -151,7 +151,7 @@ module HybridPlatformsConductor
             [[Category:Server]]
             [[Category:Configuration]]
             [[Category:Chef]]
-          EOS
+          EOMediawiki
 
           out output
         end

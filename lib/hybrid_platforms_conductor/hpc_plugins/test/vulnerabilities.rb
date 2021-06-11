@@ -74,7 +74,7 @@ module HybridPlatformsConductor
                     local_oval_file = File.basename(local_oval_file, file_ending)
                   end
                 end
-                cmds = <<~EOS
+                cmds = <<~EOBash
                   set -e
                   #{
                     case image
@@ -86,7 +86,7 @@ module HybridPlatformsConductor
                       # On Debian 10 we have to compile it from sources, as the packaged official version has core dumps.
                       # cf https://www.mail-archive.com/debian-bugs-dist@lists.debian.org/msg1688223.html
                       # TODO: Remove this Debian 10 specificity when the official libopenscap8 will be corrected
-                      <<~EOS2
+                      <<~EOBash2
                         if [ ! -x "$(command -v oscap)" ] || [ "$(oscap --version | head -n 1 | awk '{print $6}')" != "1.3.4" ]; then
                           rm -rf openscap
                           git clone --recurse-submodules https://github.com/OpenSCAP/openscap.git
@@ -98,7 +98,7 @@ module HybridPlatformsConductor
                           #{sudo}make install
                         fi
                         #{sudo}apt install -y wget #{packages_to_install.join(' ')}
-                      EOS2
+                      EOBash2
                     else
                       raise "Non supported image: #{image}. Please adapt this test's code."
                     end
@@ -112,7 +112,7 @@ module HybridPlatformsConductor
                   echo "===== RESULTS ====="
                   cat "#{local_oval_file}.results.xml"
                   cd ..
-                EOS
+                EOBash
                 [
                   cmds,
                   {

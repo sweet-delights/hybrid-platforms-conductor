@@ -51,24 +51,24 @@ describe HybridPlatformsConductor::ActionsExecutor do
       it 'generates a global configuration with user from hpc_ssh_user environment variable' do
         with_test_platform do
           ENV['hpc_ssh_user'] = 'test_user'
-          expect(ssh_config_for(nil)).to eq <<~EOS
+          expect(ssh_config_for(nil)).to eq <<~EOSshConfig
             Host *
               User test_user
               ControlPath #{Dir.tmpdir}/hpc_ssh/hpc_ssh_mux_%h_%p_%r
               PubkeyAcceptedKeyTypes +ssh-dss
-          EOS
+          EOSshConfig
         end
       end
 
       it 'generates a global configuration with user from USER environment variable' do
         with_test_platform do
           ENV['USER'] = 'test_user'
-          expect(ssh_config_for(nil)).to eq <<~EOS
+          expect(ssh_config_for(nil)).to eq <<~EOSshConfig
             Host *
               User test_user
               ControlPath #{Dir.tmpdir}/hpc_ssh/hpc_ssh_mux_%h_%p_%r
               PubkeyAcceptedKeyTypes +ssh-dss
-          EOS
+          EOSshConfig
         end
       end
 
@@ -84,12 +84,12 @@ describe HybridPlatformsConductor::ActionsExecutor do
                 ['whoami', proc { [0, 'test_whoami_user', ''] }]
               ]
             ) do
-              expect(ssh_config_for(nil)).to eq <<~EOS
+              expect(ssh_config_for(nil)).to eq <<~EOSshConfig
                 Host *
                   User test_whoami_user
                   ControlPath #{Dir.tmpdir}/hpc_ssh/hpc_ssh_mux_%h_%p_%r
                   PubkeyAcceptedKeyTypes +ssh-dss
-              EOS
+              EOSshConfig
             end
           ensure
             ENV['USER'] = original_user
@@ -100,25 +100,25 @@ describe HybridPlatformsConductor::ActionsExecutor do
       it 'generates a global configuration with user from setting' do
         with_test_platform do
           test_connector.ssh_user = 'test_user'
-          expect(ssh_config_for(nil)).to eq <<~EOS
+          expect(ssh_config_for(nil)).to eq <<~EOSshConfig
             Host *
               User test_user
               ControlPath #{Dir.tmpdir}/hpc_ssh/hpc_ssh_mux_%h_%p_%r
               PubkeyAcceptedKeyTypes +ssh-dss
-          EOS
+          EOSshConfig
         end
       end
 
       it 'generates a global configuration with known hosts file' do
         with_test_platform do
           test_connector.ssh_user = 'test_user'
-          expect(ssh_config_for(nil, known_hosts_file: '/path/to/known_hosts')).to eq <<~EOS
+          expect(ssh_config_for(nil, known_hosts_file: '/path/to/known_hosts')).to eq <<~EOSshConfig
             Host *
               User test_user
               ControlPath #{Dir.tmpdir}/hpc_ssh/hpc_ssh_mux_%h_%p_%r
               PubkeyAcceptedKeyTypes +ssh-dss
               UserKnownHostsFile /path/to/known_hosts
-          EOS
+          EOSshConfig
         end
       end
 
@@ -126,13 +126,13 @@ describe HybridPlatformsConductor::ActionsExecutor do
         with_test_platform do
           test_connector.ssh_user = 'test_user'
           test_connector.ssh_strict_host_key_checking = false
-          expect(ssh_config_for(nil)).to eq <<~EOS
+          expect(ssh_config_for(nil)).to eq <<~EOSshConfig
             Host *
               User test_user
               ControlPath #{Dir.tmpdir}/hpc_ssh/hpc_ssh_mux_%h_%p_%r
               PubkeyAcceptedKeyTypes +ssh-dss
               StrictHostKeyChecking no
-          EOS
+          EOSshConfig
         end
       end
 
@@ -166,10 +166,10 @@ describe HybridPlatformsConductor::ActionsExecutor do
 
       it 'generates a simple config for a node with host_ip' do
         with_test_platform(nodes: { 'node' => { meta: { host_ip: '192.168.42.42' } } }) do
-          expect(ssh_config_for('node')).to eq <<~EOS
+          expect(ssh_config_for('node')).to eq <<~EOSshConfig
             Host hpc.node
               Hostname 192.168.42.42
-          EOS
+          EOSshConfig
         end
       end
 
@@ -181,18 +181,18 @@ describe HybridPlatformsConductor::ActionsExecutor do
             'node3' => { meta: { host_ip: '192.168.42.3' } }
           }
         ) do
-          expect(ssh_config_for('node1')).to eq <<~EOS
+          expect(ssh_config_for('node1')).to eq <<~EOSshConfig
             Host hpc.node1
               Hostname 192.168.42.1
-          EOS
-          expect(ssh_config_for('node2')).to eq <<~EOS
+          EOSshConfig
+          expect(ssh_config_for('node2')).to eq <<~EOSshConfig
             Host hpc.node2
               Hostname 192.168.42.2
-          EOS
-          expect(ssh_config_for('node3')).to eq <<~EOS
+          EOSshConfig
+          expect(ssh_config_for('node3')).to eq <<~EOSshConfig
             Host hpc.node3
               Hostname 192.168.42.3
-          EOS
+          EOSshConfig
         end
       end
 
@@ -204,15 +204,15 @@ describe HybridPlatformsConductor::ActionsExecutor do
             'node3' => { meta: { host_ip: '192.168.42.3' } }
           }
         ) do
-          expect(ssh_config_for('node1')).to eq <<~EOS
+          expect(ssh_config_for('node1')).to eq <<~EOSshConfig
             Host hpc.node1
               Hostname 192.168.42.1
-          EOS
+          EOSshConfig
           expect(ssh_config_for('node2')).to eq "\n"
-          expect(ssh_config_for('node3')).to eq <<~EOS
+          expect(ssh_config_for('node3')).to eq <<~EOSshConfig
             Host hpc.node3
               Hostname 192.168.42.3
-          EOS
+          EOSshConfig
         end
       end
 
@@ -224,100 +224,100 @@ describe HybridPlatformsConductor::ActionsExecutor do
             'node3' => { meta: { host_ip: '192.168.42.3' } }
           }
         ) do
-          expect(ssh_config_for('node1', nodes: %w[node1 node3])).to eq <<~EOS
+          expect(ssh_config_for('node1', nodes: %w[node1 node3])).to eq <<~EOSshConfig
             Host hpc.node1
               Hostname 192.168.42.1
-          EOS
+          EOSshConfig
           expect(ssh_config_for('node2', nodes: %w[node1 node3])).to eq nil
         end
       end
 
       it 'generates an alias if the node has a hostname' do
         with_test_platform(nodes: { 'node' => { meta: { host_ip: '192.168.42.42', hostname: 'my_hostname.my_domain' } } }) do
-          expect(ssh_config_for('node')).to eq <<~EOS
+          expect(ssh_config_for('node')).to eq <<~EOSshConfig
             Host hpc.node my_hostname.my_domain
               Hostname 192.168.42.42
-          EOS
+          EOSshConfig
         end
       end
 
       it 'generates aliases if the node has private ips' do
         with_test_platform(nodes: { 'node' => { meta: { host_ip: '192.168.42.42', private_ips: ['192.168.42.1', '192.168.42.2'] } } }) do
-          expect(ssh_config_for('node')).to eq <<~EOS
+          expect(ssh_config_for('node')).to eq <<~EOSshConfig
             Host hpc.node hpc.192.168.42.1 hpc.192.168.42.2
               Hostname 192.168.42.42
-          EOS
+          EOSshConfig
         end
       end
 
       it 'generates a simple config for a node with hostname' do
         with_test_platform(nodes: { 'node' => { meta: { hostname: 'my_hostname.my_domain' } } }) do
-          expect(ssh_config_for('node')).to eq <<~EOS
+          expect(ssh_config_for('node')).to eq <<~EOSshConfig
             Host hpc.node my_hostname.my_domain
               Hostname my_hostname.my_domain
-          EOS
+          EOSshConfig
         end
       end
 
       it 'generates a simple config for a node with private_ips' do
         with_test_platform(nodes: { 'node' => { meta: { private_ips: ['192.168.42.1', '192.168.42.2'] } } }) do
-          expect(ssh_config_for('node')).to eq <<~EOS
+          expect(ssh_config_for('node')).to eq <<~EOSshConfig
             Host hpc.node hpc.192.168.42.1 hpc.192.168.42.2
               Hostname 192.168.42.1
-          EOS
+          EOSshConfig
         end
       end
 
       it 'uses node forced gateway information' do
         with_test_platform(nodes: { 'node' => { meta: { host_ip: '192.168.42.42', gateway: 'test_gateway', gateway_user: 'test_gateway_user' } } }) do
-          expect(ssh_config_for('node')).to eq <<~EOS
+          expect(ssh_config_for('node')).to eq <<~EOSshConfig
             Host hpc.node
               Hostname 192.168.42.42
               ProxyCommand ssh -q -W %h:%p test_gateway_user@test_gateway
-          EOS
+          EOSshConfig
         end
       end
 
       it 'uses node default gateway information and user from environment' do
         with_test_platform(nodes: { 'node' => { meta: { host_ip: '192.168.42.42', gateway: 'test_gateway' } } }) do
           ENV['hpc_ssh_gateway_user'] = 'test_gateway_user'
-          expect(ssh_config_for('node')).to eq <<~EOS
+          expect(ssh_config_for('node')).to eq <<~EOSshConfig
             Host hpc.node
               Hostname 192.168.42.42
               ProxyCommand ssh -q -W %h:%p test_gateway_user@test_gateway
-          EOS
+          EOSshConfig
         end
       end
 
       it 'uses node default gateway information and user from setting' do
         with_test_platform(nodes: { 'node' => { meta: { host_ip: '192.168.42.42', gateway: 'test_gateway' } } }) do
           test_connector.ssh_gateway_user = 'test_gateway_user'
-          expect(ssh_config_for('node')).to eq <<~EOS
+          expect(ssh_config_for('node')).to eq <<~EOSshConfig
             Host hpc.node
               Hostname 192.168.42.42
               ProxyCommand ssh -q -W %h:%p test_gateway_user@test_gateway
-          EOS
+          EOSshConfig
         end
       end
 
       it 'uses node forced gateway information with a different ssh executable' do
         with_test_platform(nodes: { 'node' => { meta: { host_ip: '192.168.42.42', gateway: 'test_gateway', gateway_user: 'test_gateway_user' } } }) do
-          expect(ssh_config_for('node', ssh_exec: 'new_ssh')).to eq <<~EOS
+          expect(ssh_config_for('node', ssh_exec: 'new_ssh')).to eq <<~EOSshConfig
             Host hpc.node
               Hostname 192.168.42.42
               ProxyCommand new_ssh -q -W %h:%p test_gateway_user@test_gateway
-          EOS
+          EOSshConfig
         end
       end
 
       it 'uses node default gateway information with a different ssh executable' do
         with_test_platform(nodes: { 'node' => { meta: { host_ip: '192.168.42.42', gateway: 'test_gateway' } } }) do
           test_connector.ssh_gateway_user = 'test_gateway_user'
-          expect(ssh_config_for('node', ssh_exec: 'new_ssh')).to eq <<~EOS
+          expect(ssh_config_for('node', ssh_exec: 'new_ssh')).to eq <<~EOSshConfig
             Host hpc.node
               Hostname 192.168.42.42
               ProxyCommand new_ssh -q -W %h:%p test_gateway_user@test_gateway
-          EOS
+          EOSshConfig
         end
       end
 
@@ -342,35 +342,35 @@ describe HybridPlatformsConductor::ActionsExecutor do
             end
           ') do
           test_connector.ssh_user = 'test_user'
-          expect(ssh_config_for('node1')).to eq <<~EOS
+          expect(ssh_config_for('node1')).to eq <<~EOSshConfig
             Host hpc.node1
               Hostname 192.168.42.1_node1_13_node1_1
               User "test_user_node1_13_node1_1"
               ProxyCommand ssh -q -W %h:%p test_gateway1_user_node1_13_node1_1@test_gateway1_node1_13_node1_1
-          EOS
-          expect(ssh_config_for('node2')).to eq <<~EOS
+          EOSshConfig
+          expect(ssh_config_for('node2')).to eq <<~EOSshConfig
             Host hpc.node2
               Hostname 192.168.42.2
               ProxyCommand ssh -q -W %h:%p test_gateway2_user@test_gateway2
-          EOS
-          expect(ssh_config_for('node3')).to eq <<~EOS
+          EOSshConfig
+          expect(ssh_config_for('node3')).to eq <<~EOSshConfig
             Host hpc.node3
               Hostname 192.168.42.3_node3_13
               User "test_user_node3_13"
               ProxyCommand ssh -q -W %h:%p test_gateway3_user_node3_13@test_gateway3_node3_13
-          EOS
+          EOSshConfig
         end
       end
 
       it 'generates a config compatible for passwords authentication' do
         with_test_platform(nodes: { 'node' => { meta: { host_ip: '192.168.42.42' } } }) do
           test_connector.passwords['node'] = 'PaSsWoRd'
-          expect(ssh_config_for('node')).to eq <<~EOS
+          expect(ssh_config_for('node')).to eq <<~EOSshConfig
             Host hpc.node
               Hostname 192.168.42.42
               PreferredAuthentications password
               PubkeyAuthentication no
-          EOS
+          EOSshConfig
         end
       end
 
@@ -385,26 +385,26 @@ describe HybridPlatformsConductor::ActionsExecutor do
         ) do
           test_connector.passwords['node1'] = 'PaSsWoRd1'
           test_connector.passwords['node3'] = 'PaSsWoRd3'
-          expect(ssh_config_for('node1')).to eq <<~EOS
+          expect(ssh_config_for('node1')).to eq <<~EOSshConfig
             Host hpc.node1
               Hostname 192.168.42.1
               PreferredAuthentications password
               PubkeyAuthentication no
-          EOS
-          expect(ssh_config_for('node2')).to eq <<~EOS
+          EOSshConfig
+          expect(ssh_config_for('node2')).to eq <<~EOSshConfig
             Host hpc.node2
               Hostname 192.168.42.2
-          EOS
-          expect(ssh_config_for('node3')).to eq <<~EOS
+          EOSshConfig
+          expect(ssh_config_for('node3')).to eq <<~EOSshConfig
             Host hpc.node3
               Hostname 192.168.42.3
               PreferredAuthentications password
               PubkeyAuthentication no
-          EOS
-          expect(ssh_config_for('node4')).to eq <<~EOS
+          EOSshConfig
+          expect(ssh_config_for('node4')).to eq <<~EOSshConfig
             Host hpc.node4
               Hostname 192.168.42.4
-          EOS
+          EOSshConfig
         end
       end
 
