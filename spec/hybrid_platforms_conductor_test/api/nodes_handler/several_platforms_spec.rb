@@ -45,7 +45,7 @@ describe HybridPlatformsConductor::NodesHandler do
           'node2' => { services: ['service2'] }
         } },
         'platform2' => { nodes: {
-          'node3' => { services: ['service1', 'service4'] },
+          'node3' => { services: %w[service1 service4] },
           'node4' => { services: ['service3'] }
         } }
       ) do

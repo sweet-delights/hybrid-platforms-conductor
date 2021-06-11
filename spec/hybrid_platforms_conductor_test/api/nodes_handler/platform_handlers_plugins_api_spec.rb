@@ -28,7 +28,7 @@ describe HybridPlatformsConductor::NodesHandler do
         nodes: {
           'node10' => { services: ['test_service'] },
           'node11' => { services: ['test_service_2'] },
-          'node20' => { services: ['test_service_3', 'test_service'] },
+          'node20' => { services: %w[test_service_3 test_service] },
           'node21' => { services: ['test_service_2'] }
         },
         nodes_lists: { 'test_nodes_list' => ['/node1.+/', { service: 'test_service' }] }

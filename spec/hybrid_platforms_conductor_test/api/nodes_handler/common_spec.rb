@@ -15,7 +15,7 @@ describe HybridPlatformsConductor::NodesHandler do
   it 'iterates over defined nodes sequentially' do
     with_test_platform(nodes: { 'node1' => {}, 'node2' => {}, 'node3' => {}, 'node4' => {} }) do
       nodes_iterated = []
-      test_nodes_handler.for_each_node_in(['node2', 'node3', 'node4']) do |node|
+      test_nodes_handler.for_each_node_in(%w[node2 node3 node4]) do |node|
         nodes_iterated << node
       end
       expect(nodes_iterated.sort).to eq %w[node2 node3 node4].sort
@@ -25,7 +25,7 @@ describe HybridPlatformsConductor::NodesHandler do
   it 'iterates over defined nodes in parallel' do
     with_test_platform(nodes: { 'node1' => {}, 'node2' => {}, 'node3' => {}, 'node4' => {} }) do
       nodes_iterated = []
-      test_nodes_handler.for_each_node_in(['node2', 'node3', 'node4'], parallel: true) do |node|
+      test_nodes_handler.for_each_node_in(%w[node2 node3 node4], parallel: true) do |node|
         sleep(
           case node
           when 'node2'
@@ -48,7 +48,7 @@ describe HybridPlatformsConductor::NodesHandler do
       # Make sure we exit the test case even if the error is not handled correctly by using a timeout
       Timeout.timeout(5) do
         expect do
-          test_nodes_handler.for_each_node_in(['node2', 'node3', 'node4'], parallel: true) do |node|
+          test_nodes_handler.for_each_node_in(%w[node2 node3 node4], parallel: true) do |node|
             case node
             when 'node2'
               sleep 2

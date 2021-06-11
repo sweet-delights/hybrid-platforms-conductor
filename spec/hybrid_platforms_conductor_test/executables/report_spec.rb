@@ -40,7 +40,7 @@ describe 'report executable' do
             image: 'debian_10',
             description: 'A great server'
           },
-          services: ['node_service1', 'node_service2']
+          services: %w[node_service1 node_service2]
         }
       }
     ) do

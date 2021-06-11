@@ -76,7 +76,7 @@ describe HybridPlatformsConductor::PlatformHandler do
         git = Git.open(repository)
         FileUtils.touch("#{repository}/test_file_1")
         FileUtils.touch("#{repository}/test_file_2")
-        git.add(['test_file_1', 'test_file_2'])
+        git.add(%w[test_file_1 test_file_2])
         git.commit('Test commit')
         # Make some diffs
         FileUtils.touch("#{repository}/new_file")

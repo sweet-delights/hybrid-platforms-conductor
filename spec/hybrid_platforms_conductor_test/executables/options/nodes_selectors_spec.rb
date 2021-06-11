@@ -12,10 +12,10 @@ describe 'executables\' nodes selection options' do
         'platform_1' => {
           nodes: {
             'node11' => { services: ['service1'] },
-            'node12' => { services: ['service3', 'service1'] },
+            'node12' => { services: %w[service3 service1] },
             'node13' => { services: ['service2'] }
           },
-          nodes_lists: { 'my_list' => ['node11', 'node13'] }
+          nodes_lists: { 'my_list' => %w[node11 node13] }
         },
         'platform_2' => {
           nodes: {

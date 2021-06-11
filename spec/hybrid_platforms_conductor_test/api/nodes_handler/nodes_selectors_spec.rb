@@ -13,7 +13,7 @@ describe HybridPlatformsConductor::NodesHandler do
           nodes_lists: { 'nodeslist1' => %w[node1 node3], 'nodeslist2' => ['/node[12]/'] }
         },
         'platform2' => {
-          nodes: { 'node4' => {}, 'node5' => { services: ['service3', 'service1'] }, 'node6' => {} }
+          nodes: { 'node4' => {}, 'node5' => { services: %w[service3 service1] }, 'node6' => {} }
         },
         &block
       )
@@ -49,7 +49,7 @@ describe HybridPlatformsConductor::NodesHandler do
 
     it 'ignore unknown nodes when asked' do
       with_test_platform_for_nodes do
-        expect(test_nodes_handler.select_nodes(['node1', 'node7'], ignore_unknowns: true).sort).to eq %w[node1 node7].sort
+        expect(test_nodes_handler.select_nodes(%w[node1 node7], ignore_unknowns: true).sort).to eq %w[node1 node7].sort
       end
     end
 

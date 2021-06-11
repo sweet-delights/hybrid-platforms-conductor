@@ -41,13 +41,13 @@ describe 'executables\' Nodes Handler options' do
               }
             }
           },
-          nodes_lists: { 'my_list' => ['node11', 'node13'] }
+          nodes_lists: { 'my_list' => %w[node11 node13] }
         },
         'platform_2' => {
           nodes: {
             'node21' => {
               meta: { host_ip: '192.168.42.21' },
-              services: ['service2', 'service3']
+              services: %w[service2 service3]
             },
             'node22' => {
               meta: { host_ip: '192.168.42.22' },

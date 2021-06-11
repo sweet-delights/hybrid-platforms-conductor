@@ -68,12 +68,12 @@ describe HybridPlatformsConductor::ActionsExecutor do
         ) do
           expect(test_config.ssh_connection_transforms.size).to eq 2
           expect(test_config.ssh_connection_transforms[0][:nodes_selectors_stack]).to eq [%w[node1 node3]]
-          expect(test_config.ssh_connection_transforms[0][:transform].call('node1', 'test_host', 'test_user', 'test_gateway', 'test_gateway_user')).to eq [
-            'test_host_node1_13', 'test_user_node1_13', 'test_gateway_node1_13', 'test_gateway_user_node1_13'
+          expect(test_config.ssh_connection_transforms[0][:transform].call('node1', 'test_host', 'test_user', 'test_gateway', 'test_gateway_user')).to eq %w[
+            test_host_node1_13 test_user_node1_13 test_gateway_node1_13 test_gateway_user_node1_13
           ]
           expect(test_config.ssh_connection_transforms[1][:nodes_selectors_stack]).to eq ['node1']
-          expect(test_config.ssh_connection_transforms[1][:transform].call('node1', 'test_host', 'test_user', 'test_gateway', 'test_gateway_user')).to eq [
-            'test_host_node1_1', 'test_user_node1_1', 'test_gateway_node1_1', 'test_gateway_user_node1_1'
+          expect(test_config.ssh_connection_transforms[1][:transform].call('node1', 'test_host', 'test_user', 'test_gateway', 'test_gateway_user')).to eq %w[
+            test_host_node1_1 test_user_node1_1 test_gateway_node1_1 test_gateway_user_node1_1
           ]
         end
       end
