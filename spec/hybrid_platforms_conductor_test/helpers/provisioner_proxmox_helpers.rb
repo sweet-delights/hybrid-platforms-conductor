@@ -112,7 +112,7 @@ module HybridPlatformsConductorTest
             idx_try += 1
             idx_try <= nbr_api_errors ? 'NOK: error code = 500' : nodes_info
           end
-          extra_expects.call(proxmox) unless extra_expects.nil?
+          extra_expects&.call(proxmox)
           proxmox
         end
       end

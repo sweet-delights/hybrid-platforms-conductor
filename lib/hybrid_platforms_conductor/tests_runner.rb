@@ -335,7 +335,7 @@ module HybridPlatformsConductor
       return if tests_to_run.empty?
 
       section "Run #{tests_to_run.size} #{title}" do
-        tests_preparation.call(tests_to_run) unless tests_preparation.nil?
+        tests_preparation&.call(tests_to_run)
         for_each_element_in(
           tests_to_run,
           parallel: !log_debug? && nbr_threads_max > 1,

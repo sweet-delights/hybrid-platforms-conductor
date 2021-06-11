@@ -119,7 +119,7 @@ module HybridPlatformsConductor
           out opts
           exit 0
         end
-        @opts_block.call(opts) if @opts_block
+        @opts_block&.call(opts)
         nodes_handler.options_parse(opts) if nodes_handler_instantiated?
         nodes_handler.options_parse_nodes_selectors(opts, @selected_nodes) if @nodes_selection_options
         cmd_runner.options_parse(opts) if cmd_runner_instantiated?

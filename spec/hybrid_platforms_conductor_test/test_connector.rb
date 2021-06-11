@@ -102,7 +102,7 @@ module HybridPlatformsConductorTest
     # * *bash_cmds* (String): Bash commands to execute
     def remote_bash(bash_cmds)
       @calls << [:remote_bash, bash_cmds]
-      @remote_bash_code.call(@stdout_io, @stderr_io, self) unless @remote_bash_code.nil?
+      @remote_bash_code&.call(@stdout_io, @stderr_io, self)
     end
 
     # Execute an interactive shell on the remote node
@@ -140,7 +140,7 @@ module HybridPlatformsConductorTest
       extra_opts[:owner] = owner if owner
       extra_opts[:group] = group if group
       @calls << [:remote_copy, from, to] + (extra_opts.empty? ? [] : [extra_opts])
-      @remote_copy_code.call(@stdout_io, @stderr_io, self) unless @remote_copy_code.nil?
+      @remote_copy_code&.call(@stdout_io, @stderr_io, self)
     end
 
     # Integer: The current desired timeout

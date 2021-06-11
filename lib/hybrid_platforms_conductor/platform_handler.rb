@@ -39,7 +39,7 @@ module HybridPlatformsConductor
           end
         @platform_dirs[platform_type] = [] unless @platform_dirs.key?(platform_type)
         @platform_dirs[platform_type] << repository_path
-        platform_config_code.call(repository_path) unless platform_config_code.nil?
+        platform_config_code&.call(repository_path)
       end
       # Register this new mixin in the Config DSL
       extend_config_dsl_with(mixin)

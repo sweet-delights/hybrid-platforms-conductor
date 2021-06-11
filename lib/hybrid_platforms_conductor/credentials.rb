@@ -54,7 +54,7 @@ module HybridPlatformsConductor
     # Provide a helper to clear password from memory for security.
     # To be used when the client knows it won't use the password anymore.
     def clear_password
-      @password.replace('gotyou!' * 100) unless @password.nil?
+      @password&.replace('gotyou!' * 100)
       GC.start
     end
 

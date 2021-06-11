@@ -53,7 +53,7 @@ module HybridPlatformsConductor
       @timeout = timeout
       @stdout_io = stdout_io
       @stderr_io = stderr_io
-      @connector.prepare_for(@node, @timeout, @stdout_io, @stderr_io) if @connector
+      @connector&.prepare_for(@node, @timeout, @stdout_io, @stderr_io)
     end
 
     private

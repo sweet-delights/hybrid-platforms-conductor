@@ -154,8 +154,8 @@ module HybridPlatformsConductor
           cmd_stdout = cmd_result_stdout
           cmd_stderr = "#{cmd_result_stderr.empty? ? '' : "#{cmd_result_stderr}\n"}#{$!}\n#{$!.backtrace.join("\n")}"
         ensure
-          file_output.close unless file_output.nil?
-          bash_file.unlink unless bash_file.nil?
+          file_output&.close
+          bash_file&.unlink
         end
         if log_debug?
           elapsed = Time.now - start_time
