@@ -38,10 +38,10 @@ describe HybridPlatformsConductor::NodesHandler do
       with_test_platform(nodes: { 'test_node' => {} }) do
         with_cmd_runner_mocked [
           ['ssh-keyscan 192.168.42.42', proc do
-            [0, <<~EOStdout, '']
+            [0, <<~EO_STDOUT, '']
               192.168.42.42 ssh-rsa fake_host_key_rsa
               192.168.42.42 ssh-ed25519 fake_host_key_ed25519
-            EOStdout
+            EO_STDOUT
           end]
         ] do
           expect(cmdb(:host_keys).get_host_keys(['test_node'], { 'test_node' => { host_ip: '192.168.42.42' } })).to eq('test_node' => [
@@ -56,13 +56,13 @@ describe HybridPlatformsConductor::NodesHandler do
       with_test_platform(nodes: { 'test_node' => {} }) do
         with_cmd_runner_mocked [
           ['ssh-keyscan 192.168.42.42', proc do
-            [0, <<~EOStdout, '']
+            [0, <<~EO_STDOUT, '']
               # That's a comment
               192.168.42.42 ssh-rsa fake_host_key_rsa
               # And another one
               192.168.42.42 ssh-ed25519 fake_host_key_ed25519
               # Woot third!
-            EOStdout
+            EO_STDOUT
           end]
         ] do
           expect(cmdb(:host_keys).get_host_keys(['test_node'], { 'test_node' => { host_ip: '192.168.42.42' } })).to eq(
@@ -79,11 +79,11 @@ describe HybridPlatformsConductor::NodesHandler do
       with_test_platform(nodes: { 'test_node' => {} }) do
         with_cmd_runner_mocked [
           ['ssh-keyscan 192.168.42.42', proc do
-            [0, <<~EOStdout, '']
+            [0, <<~EO_STDOUT, '']
               192.168.42.42 ssh-dsa fake_host_key_dsa
               192.168.42.42 ssh-rsa fake_host_key_rsa
               192.168.42.42 ssh-ed25519 fake_host_key_ed25519
-            EOStdout
+            EO_STDOUT
           end]
         ] do
           expect(cmdb(:host_keys).get_host_keys(['test_node'], { 'test_node' => { host_ip: '192.168.42.42' } })).to eq(

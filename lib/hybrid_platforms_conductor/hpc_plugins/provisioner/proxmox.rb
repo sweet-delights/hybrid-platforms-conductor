@@ -168,12 +168,12 @@ module HybridPlatformsConductor
                     searchdomain: vm_config[:vm_search_domain],
                     net0: "name=eth0,bridge=vmbr0,gw=#{vm_config[:vm_gateway]}",
                     password: 'root_pwd',
-                    description: <<~EODescription
+                    description: <<~EO_DESCRIPTION
                       ===== HPC info =====
                       node: #{@node}
                       environment: #{@environment}
                       debug: #{log_debug? ? 'true' : 'false'}
-                    EODescription
+                    EO_DESCRIPTION
                   )
                 else
                   raise "[ #{@node}/#{@environment} ] - No template found in #{proxmox_conf}"

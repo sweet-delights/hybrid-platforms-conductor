@@ -468,7 +468,7 @@ module HybridPlatformsConductor
             if exit_status.is_a?(Symbol)
               test.error "Error while executing tests: #{exit_status}: #{stderr}"
             else
-              log_debug <<~EOLog
+              log_debug <<~EO_LOG
                 ----- Commands for #{test.node}:
                 #{@test_cmds[test.node][:remote_bash].join("\n")}
                 ----- STDOUT:
@@ -476,7 +476,7 @@ module HybridPlatformsConductor
                 ----- STDERR:
                 #{stderr}
                 -----
-              EOLog
+              EO_LOG
               # Skip the first section, as it can contain SSH banners
               cmd_stdouts = stdout.split("#{CMD_SEPARATOR}\n")[1..-1]
               cmd_stdouts = [] if cmd_stdouts.nil?

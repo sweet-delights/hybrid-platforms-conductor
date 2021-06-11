@@ -137,7 +137,7 @@ describe HybridPlatformsConductor::Deployer do
             # Expect the actions to get log files
             proc do |actions_per_nodes|
               expect(actions_per_nodes).to eq('node' => [{ remote_bash: 'sudo -u root cat /var/log/deployments/`sudo -u root ls -t /var/log/deployments/ | head -1`' }])
-              { 'node' => [0, <<~EOStdout, ''] }
+              { 'node' => [0, <<~EO_STDOUT, ''] }
                 repo_name_0: platform
                 commit_id_0: 123456
                 commit_message_0: Test commit for node: service1, service2
@@ -151,7 +151,7 @@ describe HybridPlatformsConductor::Deployer do
                 Deploy successful stdout
                 ===== STDERR =====
                 Deploy successful stderr
-              EOStdout
+              EO_STDOUT
             end
           ]
           expect(test_deployer.deployment_info_from('node')).to eq(
@@ -181,7 +181,7 @@ describe HybridPlatformsConductor::Deployer do
             # Expect the actions to get log files
             proc do |actions_per_nodes|
               expect(actions_per_nodes).to eq('node' => [{ remote_bash: 'cat /var/log/deployments/`ls -t /var/log/deployments/ | head -1`' }])
-              { 'node' => [0, <<~EOStdout, ''] }
+              { 'node' => [0, <<~EO_STDOUT, ''] }
                 repo_name_0: platform
                 commit_id_0: 123456
                 commit_message_0: Test commit for node: service1, service2
@@ -195,7 +195,7 @@ describe HybridPlatformsConductor::Deployer do
                 Deploy successful stdout
                 ===== STDERR =====
                 Deploy successful stderr
-              EOStdout
+              EO_STDOUT
             end
           ]
           expect(test_deployer.deployment_info_from('node')).to eq(

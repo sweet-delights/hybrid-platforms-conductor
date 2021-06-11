@@ -59,7 +59,7 @@ describe HybridPlatformsConductor::NodesHandler do
           [/cd .+\/my_remote_platform && git --no-pager diff --no-color master/, proc do
             [
               0,
-              <<~EOStdout,
+              <<~EO_STDOUT,
                 diff --git a/Gemfile b/Gemfile
                 index d65e2a6..cb9a38e 100644
                 --- a/Gemfile
@@ -83,7 +83,7 @@ describe HybridPlatformsConductor::NodesHandler do
                 +        '--nodes-git-impact GIT_IMPACT',
                          nodes_selectors << node
                        end
-              EOStdout
+              EO_STDOUT
               ''
             ]
           end]
@@ -91,7 +91,7 @@ describe HybridPlatformsConductor::NodesHandler do
           expect(test_nodes_handler.impacted_nodes_from_git_diff('my_remote_platform')).to eq [[], [], [], true]
           expect(test_platforms_handler.platform('my_remote_platform').files_diffs).to eq(
             'Gemfile' => {
-              diff: <<~EOStdout.strip
+              diff: <<~EO_STDOUT.strip
                 index d65e2a6..cb9a38e 100644
                 --- a/Gemfile
                 +++ b/Gemfile
@@ -102,11 +102,11 @@ describe HybridPlatformsConductor::NodesHandler do
                 +
                 +gem 'byebug'
                 \ No newline at end of file
-              EOStdout
+              EO_STDOUT
             },
             'lib/hybrid_platforms_conductor/nodes_handler.rb' => {
               moved_to: 'lib/stale/hybrid_platforms_conductor/nodes_handler.rb',
-              diff: <<~EOStdout.strip
+              diff: <<~EO_STDOUT.strip
                 index e8e1778..69a84bd 100644
                 --- a/lib/hybrid_platforms_conductor/nodes_handler.rb
                 +++ b/lib/hybrid_platforms_conductor/nodes_handler.rb
@@ -118,7 +118,7 @@ describe HybridPlatformsConductor::NodesHandler do
                 +        '--nodes-git-impact GIT_IMPACT',
                          nodes_selectors << node
                        end
-              EOStdout
+              EO_STDOUT
             }
           )
         end

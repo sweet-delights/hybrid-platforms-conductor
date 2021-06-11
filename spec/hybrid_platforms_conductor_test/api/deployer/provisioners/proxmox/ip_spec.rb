@@ -38,11 +38,11 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
                 expect(proxmox).to receive(:get).with('nodes/pve_node_name/lxc/1042/config') do
                   {
                     'net0' => 'ip=192.168.42.101/32',
-                    'description' => <<~EODescription
+                    'description' => <<~EO_DESCRIPTION
                       ===== HPC info =====
                       node: node
                       environment: test
-                    EODescription
+                    EO_DESCRIPTION
                   }
                 end
               end

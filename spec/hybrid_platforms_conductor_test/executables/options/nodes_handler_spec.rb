@@ -69,7 +69,7 @@ describe 'executables\' Nodes Handler options' do
       ] do
         exit_code, stdout, stderr = run 'run', '--show-nodes'
         expect(exit_code).to eq 0
-        expect(stdout).to eq <<~EOStdout
+        expect(stdout).to eq <<~EO_STDOUT
           * Known platforms:
           platform_1 - Type: test - Location: /tmp/hpc_test/platform_1
           platform_2 - Type: test - Location: /tmp/hpc_test/platform_2
@@ -102,7 +102,7 @@ describe 'executables\' Nodes Handler options' do
           node21 (192.168.42.21) - service2, service3 - 
           node22 (192.168.42.22) - service1 - 
 
-        EOStdout
+        EO_STDOUT
         expect(stderr).to eq ''
       end
     end

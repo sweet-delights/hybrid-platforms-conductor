@@ -522,21 +522,21 @@ module HybridPlatformsConductorTest
                 expect(test_deployer.deploy_on('node')).to eq(
                   'node' => [
                     0,
-                    <<~EOStdout,
+                    <<~EO_STDOUT,
                       Error: This is a stdout non-deterministic error
                       Deploy failed
 
                       Deployment exit status code: 1
                       !!! Retry deployment due to non-deterministic error (0 remaining attempts)...
                       Deploy ok
-                    EOStdout
-                    <<~EOStderr
+                    EO_STDOUT
+                    <<~EO_STDERR
                       !!! 1 retriable errors detected in this deployment:
                       * stdout non-deterministic error
 
                       !!! Retry deployment due to non-deterministic error (0 remaining attempts)...
 
-                    EOStderr
+                    EO_STDERR
                   ]
                 )
               end
@@ -552,21 +552,21 @@ module HybridPlatformsConductorTest
                 expect(test_deployer.deploy_on('node')).to eq(
                   'node' => [
                     0,
-                    <<~EOStdout,
+                    <<~EO_STDOUT,
                       Error: This is a stdout regexp error 42
                       Deploy failed
 
                       Deployment exit status code: 1
                       !!! Retry deployment due to non-deterministic error (0 remaining attempts)...
                       Deploy ok
-                    EOStdout
-                    <<~EOStderr
+                    EO_STDOUT
+                    <<~EO_STDERR
                       !!! 1 retriable errors detected in this deployment:
                       * /stdout regexp error \\d+/ matched 'stdout regexp error 42'
 
                       !!! Retry deployment due to non-deterministic error (0 remaining attempts)...
 
-                    EOStderr
+                    EO_STDERR
                   ]
                 )
               end
@@ -582,13 +582,13 @@ module HybridPlatformsConductorTest
                 expect(test_deployer.deploy_on('node')).to eq(
                   'node' => [
                     0,
-                    <<~EOStdout,
+                    <<~EO_STDOUT,
 
                       Deployment exit status code: 1
                       !!! Retry deployment due to non-deterministic error (0 remaining attempts)...
                       Deploy ok
-                    EOStdout
-                    <<~EOStderr
+                    EO_STDOUT
+                    <<~EO_STDERR
                       Error: This is a stderr non-deterministic error
                       Deploy failed
                       !!! 1 retriable errors detected in this deployment:
@@ -596,7 +596,7 @@ module HybridPlatformsConductorTest
 
                       !!! Retry deployment due to non-deterministic error (0 remaining attempts)...
 
-                    EOStderr
+                    EO_STDERR
                   ]
                 )
               end
@@ -612,13 +612,13 @@ module HybridPlatformsConductorTest
                 expect(test_deployer.deploy_on('node')).to eq(
                   'node' => [
                     0,
-                    <<~EOStdout,
+                    <<~EO_STDOUT,
 
                       Deployment exit status code: 1
                       !!! Retry deployment due to non-deterministic error (0 remaining attempts)...
                       Deploy ok
-                    EOStdout
-                    <<~EOStderr
+                    EO_STDOUT
+                    <<~EO_STDERR
                       Error: This is a stderr regexp error 42
                       Deploy failed
                       !!! 1 retriable errors detected in this deployment:
@@ -626,7 +626,7 @@ module HybridPlatformsConductorTest
 
                       !!! Retry deployment due to non-deterministic error (0 remaining attempts)...
 
-                    EOStderr
+                    EO_STDERR
                   ]
                 )
               end
@@ -643,7 +643,7 @@ module HybridPlatformsConductorTest
                 expect(test_deployer.deploy_on('node')).to eq(
                   'node' => [
                     0,
-                    <<~EOStdout,
+                    <<~EO_STDOUT,
                       Error: This is a stdout non-deterministic error 1
                       Deploy failed
                       Deployment exit status code: 1
@@ -654,8 +654,8 @@ module HybridPlatformsConductorTest
                       Deployment exit status code: 1
                       !!! Retry deployment due to non-deterministic error (3 remaining attempts)...
                       Deploy ok
-                    EOStdout
-                    <<~EOStderr
+                    EO_STDOUT
+                    <<~EO_STDERR
                       !!! 1 retriable errors detected in this deployment:
                       * stdout non-deterministic error
 
@@ -666,7 +666,7 @@ module HybridPlatformsConductorTest
 
                       !!! Retry deployment due to non-deterministic error (3 remaining attempts)...
 
-                    EOStderr
+                    EO_STDERR
                   ]
                 )
               end
@@ -683,7 +683,7 @@ module HybridPlatformsConductorTest
                 expect(test_deployer.deploy_on('node')).to eq(
                   'node' => [
                     1,
-                    <<~EOStdout,
+                    <<~EO_STDOUT,
                       Error: This is a stdout non-deterministic error 1
                       Deploy failed
                       Deployment exit status code: 1
@@ -695,8 +695,8 @@ module HybridPlatformsConductorTest
                       !!! Retry deployment due to non-deterministic error (3 remaining attempts)...
                       Error: This is a stdout deterministic error 3
                       Deploy failed
-                    EOStdout
-                    <<~EOStderr
+                    EO_STDOUT
+                    <<~EO_STDERR
                       !!! 1 retriable errors detected in this deployment:
                       * stdout non-deterministic error
 
@@ -707,7 +707,7 @@ module HybridPlatformsConductorTest
 
                       !!! Retry deployment due to non-deterministic error (3 remaining attempts)...
 
-                    EOStderr
+                    EO_STDERR
                   ]
                 )
               end
@@ -722,10 +722,10 @@ module HybridPlatformsConductorTest
                 expect(test_deployer.deploy_on('node')).to eq(
                   'node' => [
                     1,
-                    <<~EOStdout,
+                    <<~EO_STDOUT,
                       Error: This is a stdout deterministic error
                       Deploy failed
-                    EOStdout
+                    EO_STDOUT
                     ''
                   ]
                 )
@@ -741,10 +741,10 @@ module HybridPlatformsConductorTest
                 expect(test_deployer.deploy_on('node')).to eq(
                   'node' => [
                     0,
-                    <<~EOStdout,
+                    <<~EO_STDOUT,
                       Error: This is a stdout non-deterministic error
                       Deploy failed
-                    EOStdout
+                    EO_STDOUT
                     ''
                   ]
                 )
@@ -760,10 +760,10 @@ module HybridPlatformsConductorTest
                 expect(test_deployer.deploy_on('node')).to eq(
                   'node' => [
                     1,
-                    <<~EOStdout,
+                    <<~EO_STDOUT,
                       Error: This is a stdout non-deterministic error
                       Deploy failed
-                    EOStdout
+                    EO_STDOUT
                     ''
                   ]
                 )
@@ -781,7 +781,7 @@ module HybridPlatformsConductorTest
                 expect(test_deployer.deploy_on('node')).to eq(
                   'node' => [
                     1,
-                    <<~EOStdout,
+                    <<~EO_STDOUT,
                       Error: This is a stdout non-deterministic error 1
                       Deploy failed
                       Deployment exit status code: 1
@@ -793,8 +793,8 @@ module HybridPlatformsConductorTest
                       !!! Retry deployment due to non-deterministic error (0 remaining attempts)...
                       Error: This is a stdout non-deterministic error 3
                       Deploy failed
-                    EOStdout
-                    <<~EOStderr
+                    EO_STDOUT
+                    <<~EO_STDERR
                       !!! 1 retriable errors detected in this deployment:
                       * stdout non-deterministic error
 
@@ -805,7 +805,7 @@ module HybridPlatformsConductorTest
 
                       !!! Retry deployment due to non-deterministic error (0 remaining attempts)...
 
-                    EOStderr
+                    EO_STDERR
                   ]
                 )
               end
@@ -846,21 +846,21 @@ module HybridPlatformsConductorTest
                 expect(test_deployer.deploy_on(%w[node1 node2 node3 node4])).to eq(
                   'node1' => [
                     0,
-                    <<~EOStdout,
+                    <<~EO_STDOUT,
                       Error: This is a stdout non-deterministic error
                       [node1] Deploy failed
 
                       Deployment exit status code: 1
                       !!! Retry deployment due to non-deterministic error (1 remaining attempts)...
                       [node1] Deploy ok
-                    EOStdout
-                    <<~EOStderr
+                    EO_STDOUT
+                    <<~EO_STDERR
                       !!! 1 retriable errors detected in this deployment:
                       * stdout non-deterministic error
 
                       !!! Retry deployment due to non-deterministic error (1 remaining attempts)...
 
-                    EOStderr
+                    EO_STDERR
                   ],
                   'node2' => [
                     0,
@@ -869,7 +869,7 @@ module HybridPlatformsConductorTest
                   ],
                   'node3' => [
                     1,
-                    <<~EOStdout,
+                    <<~EO_STDOUT,
                       Error: This is a stdout non-deterministic error
                       [node3] Deploy failed
 
@@ -878,18 +878,18 @@ module HybridPlatformsConductorTest
                       Error: This is a stdout deterministic error
                       [node3] Deploy failed
 
-                    EOStdout
-                    <<~EOStderr
+                    EO_STDOUT
+                    <<~EO_STDERR
                       !!! 1 retriable errors detected in this deployment:
                       * stdout non-deterministic error
 
                       !!! Retry deployment due to non-deterministic error (1 remaining attempts)...
 
-                    EOStderr
+                    EO_STDERR
                   ],
                   'node4' => [
                     1,
-                    <<~EOStdout,
+                    <<~EO_STDOUT,
                       Error: This is a stdout non-deterministic error
                       [node4] Deploy failed
 
@@ -904,8 +904,8 @@ module HybridPlatformsConductorTest
                       Error: This is a stdout non-deterministic error
                       [node4] Deploy failed
 
-                    EOStdout
-                    <<~EOStderr
+                    EO_STDOUT
+                    <<~EO_STDERR
                       !!! 1 retriable errors detected in this deployment:
                       * stdout non-deterministic error
 
@@ -916,7 +916,7 @@ module HybridPlatformsConductorTest
 
                       !!! Retry deployment due to non-deterministic error (0 remaining attempts)...
 
-                    EOStderr
+                    EO_STDERR
                   ]
                 )
               end
@@ -979,10 +979,10 @@ module HybridPlatformsConductorTest
                     }
                   }
                 },
-                additional_config: <<~EOConfig
+                additional_config: <<~EO_CONFIG
                   read_secrets_from %i[secrets_reader1 secrets_reader2]
                   for_nodes('node2') { read_secrets_from :secrets_reader3 }
-                EOConfig
+                EO_CONFIG
               ) do
                 TestSecretsReaderPlugin.deployer = test_deployer
                 expect(test_deployer.deploy_on(%w[node1 node2 node3])).to eq(
@@ -1028,10 +1028,10 @@ module HybridPlatformsConductorTest
                   'global3' => 'value3',
                   'global4' => 'value4'
                 },
-                additional_config: <<~EOConfig
+                additional_config: <<~EO_CONFIG
                   read_secrets_from :secrets_reader1
                   for_nodes('node2') { read_secrets_from :secrets_reader2 }
-                EOConfig
+                EO_CONFIG
               ) do
                 TestSecretsReaderPlugin.deployer = test_deployer
                 TestSecretsReaderPlugin.mocked_secrets = {
@@ -1087,10 +1087,10 @@ module HybridPlatformsConductorTest
                 expect_package: false,
                 expect_prepare_for_deploy: false,
                 expect_connections_to_nodes: false,
-                additional_config: <<~EOConfig
+                additional_config: <<~EO_CONFIG
                   read_secrets_from :secrets_reader1
                   for_nodes('node2') { read_secrets_from :secrets_reader2 }
-                EOConfig
+                EO_CONFIG
               ) do
                 TestSecretsReaderPlugin.deployer = test_deployer
                 TestSecretsReaderPlugin.mocked_secrets = {
@@ -1148,10 +1148,10 @@ module HybridPlatformsConductorTest
                 expect_secrets: {
                   'overridden_secrets' => 'value'
                 },
-                additional_config: <<~EOConfig
+                additional_config: <<~EO_CONFIG
                   read_secrets_from %i[secrets_reader1 secrets_reader2]
                   for_nodes('node2') { read_secrets_from :secrets_reader3 }
-                EOConfig
+                EO_CONFIG
               ) do
                 TestSecretsReaderPlugin.deployer = test_deployer
                 test_deployer.override_secrets('overridden_secrets' => 'value')

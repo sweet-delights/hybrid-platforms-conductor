@@ -4,7 +4,7 @@ describe HybridPlatformsConductor::HpcPlugins::PlatformHandler::ServerlessChef d
 
     it 'parses a deployment output properly' do
       with_serverless_chef_platforms('empty') do |platform|
-        stdout = <<~EOStdout
+        stdout = <<~EO_STDOUT
           Starting Chef Client, version 14.14.29
           resolving cookbooks for run list: ["policy_xae_websql::xae"]
           Synchronizing Cookbooks:
@@ -36,7 +36,7 @@ describe HybridPlatformsConductor::HpcPlugins::PlatformHandler::ServerlessChef d
           Running handlers:
           Running handlers complete
           Chef Client finished, 16/300 resources updated in 27 seconds
-        EOStdout
+        EO_STDOUT
         expect(platform.parse_deploy_output(stdout, '')). to eq [
           {
             action: 'update',
@@ -67,10 +67,10 @@ describe HybridPlatformsConductor::HpcPlugins::PlatformHandler::ServerlessChef d
           },
           {
             action: 'create',
-            diffs: <<~EOStdout,
+            diffs: <<~EO_STDOUT,
               create new file /opt/chef_cache/xaecalcite_0.2.4-1_amd64.deb
               update content in file /opt/chef_cache/xaecalcite_0.2.4-1_amd64.deb from none to 39b0ca
-            EOStdout
+            EO_STDOUT
             name: 'remote_file[/opt/chef_cache/xaecalcite_0.2.4-1_amd64.deb]',
             status: :changed
           },

@@ -311,10 +311,10 @@ module HybridPlatformsConductor
                   compact
               ]
               unless retriable_nodes.empty?
-                log_warn <<~EOLog.strip
+                log_warn <<~EO_LOG.strip
                   Retry deployment for #{retriable_nodes.size} nodes as they got non-deterministic errors (#{nbr_retries} retries remaining):
                   #{retriable_nodes.map { |node, retriable_errors| "  * #{node}:\n#{retriable_errors.map { |error| "    - #{error}" }.join("\n")}" }.join("\n")}
-                EOLog
+                EO_LOG
               end
               remaining_nodes_to_deploy = retriable_nodes.keys
             end
@@ -322,17 +322,17 @@ module HybridPlatformsConductor
             results.merge!(last_deploy_results) do |_node, (exit_status_1, stdout_1, stderr_1), (exit_status_2, stdout_2, stderr_2)|
               [
                 exit_status_2,
-                <<~EOStdout,
+                <<~EO_STDOUT,
                   #{stdout_1}
                   Deployment exit status code: #{exit_status_1}
                   !!! Retry deployment due to non-deterministic error (#{nbr_retries} remaining attempts)...
                   #{stdout_2}
-                EOStdout
-                <<~EOStderr
+                EO_STDOUT
+                <<~EO_STDERR
                   #{stderr_1}
                   !!! Retry deployment due to non-deterministic error (#{nbr_retries} remaining attempts)...
                   #{stderr_2}
-                EOStderr
+                EO_STDERR
               ]
             end
             nbr_retries -= 1
