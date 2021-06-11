@@ -930,9 +930,9 @@ module HybridPlatformsConductorTest
               register_plugins(
                 :secrets_reader,
                 {
-                  secrets_reader1: HybridPlatformsConductorTest::TestSecretsReaderPlugin,
-                  secrets_reader2: HybridPlatformsConductorTest::TestSecretsReaderPlugin,
-                  secrets_reader3: HybridPlatformsConductorTest::TestSecretsReaderPlugin
+                  secrets_reader_1: HybridPlatformsConductorTest::TestSecretsReaderPlugin,
+                  secrets_reader_2: HybridPlatformsConductorTest::TestSecretsReaderPlugin,
+                  secrets_reader_3: HybridPlatformsConductorTest::TestSecretsReaderPlugin
                 }
               )
               with_platform_to_deploy(
@@ -952,36 +952,36 @@ module HybridPlatformsConductorTest
                 expect_secrets: {
                   'node1' => {
                     'service1' => {
-                      'secrets_reader1' => 'Secret value',
-                      'secrets_reader2' => 'Secret value'
+                      'secrets_reader_1' => 'Secret value',
+                      'secrets_reader_2' => 'Secret value'
                     },
                     'service2' => {
-                      'secrets_reader1' => 'Secret value',
-                      'secrets_reader2' => 'Secret value'
+                      'secrets_reader_1' => 'Secret value',
+                      'secrets_reader_2' => 'Secret value'
                     }
                   },
                   'node2' => {
                     'service2' => {
-                      'secrets_reader1' => 'Secret value',
-                      'secrets_reader2' => 'Secret value',
-                      'secrets_reader3' => 'Secret value'
+                      'secrets_reader_1' => 'Secret value',
+                      'secrets_reader_2' => 'Secret value',
+                      'secrets_reader_3' => 'Secret value'
                     },
                     'service3' => {
-                      'secrets_reader1' => 'Secret value',
-                      'secrets_reader2' => 'Secret value',
-                      'secrets_reader3' => 'Secret value'
+                      'secrets_reader_1' => 'Secret value',
+                      'secrets_reader_2' => 'Secret value',
+                      'secrets_reader_3' => 'Secret value'
                     }
                   },
                   'node3' => {
                     'service3' => {
-                      'secrets_reader1' => 'Secret value',
-                      'secrets_reader2' => 'Secret value'
+                      'secrets_reader_1' => 'Secret value',
+                      'secrets_reader_2' => 'Secret value'
                     }
                   }
                 },
                 additional_config: <<~EO_CONFIG
-                  read_secrets_from %i[secrets_reader1 secrets_reader2]
-                  for_nodes('node2') { read_secrets_from :secrets_reader3 }
+                  read_secrets_from %i[secrets_reader_1 secrets_reader_2]
+                  for_nodes('node2') { read_secrets_from :secrets_reader_3 }
                 EO_CONFIG
               ) do
                 TestSecretsReaderPlugin.deployer = test_deployer
@@ -991,18 +991,18 @@ module HybridPlatformsConductorTest
                   'node3' => expected_deploy_result
                 )
                 expect(HybridPlatformsConductorTest::TestSecretsReaderPlugin.calls).to eq [
-                  { instance: :secrets_reader1, node: 'node1', service: 'service1' },
-                  { instance: :secrets_reader1, node: 'node1', service: 'service2' },
-                  { instance: :secrets_reader2, node: 'node1', service: 'service1' },
-                  { instance: :secrets_reader2, node: 'node1', service: 'service2' },
-                  { instance: :secrets_reader1, node: 'node2', service: 'service2' },
-                  { instance: :secrets_reader1, node: 'node2', service: 'service3' },
-                  { instance: :secrets_reader2, node: 'node2', service: 'service2' },
-                  { instance: :secrets_reader2, node: 'node2', service: 'service3' },
-                  { instance: :secrets_reader3, node: 'node2', service: 'service2' },
-                  { instance: :secrets_reader3, node: 'node2', service: 'service3' },
-                  { instance: :secrets_reader1, node: 'node3', service: 'service3' },
-                  { instance: :secrets_reader2, node: 'node3', service: 'service3' }
+                  { instance: :secrets_reader_1, node: 'node1', service: 'service1' },
+                  { instance: :secrets_reader_1, node: 'node1', service: 'service2' },
+                  { instance: :secrets_reader_2, node: 'node1', service: 'service1' },
+                  { instance: :secrets_reader_2, node: 'node1', service: 'service2' },
+                  { instance: :secrets_reader_1, node: 'node2', service: 'service2' },
+                  { instance: :secrets_reader_1, node: 'node2', service: 'service3' },
+                  { instance: :secrets_reader_2, node: 'node2', service: 'service2' },
+                  { instance: :secrets_reader_2, node: 'node2', service: 'service3' },
+                  { instance: :secrets_reader_3, node: 'node2', service: 'service2' },
+                  { instance: :secrets_reader_3, node: 'node2', service: 'service3' },
+                  { instance: :secrets_reader_1, node: 'node3', service: 'service3' },
+                  { instance: :secrets_reader_2, node: 'node3', service: 'service3' }
                 ]
               end
             end
@@ -1011,8 +1011,8 @@ module HybridPlatformsConductorTest
               register_plugins(
                 :secrets_reader,
                 {
-                  secrets_reader1: HybridPlatformsConductorTest::TestSecretsReaderPlugin,
-                  secrets_reader2: HybridPlatformsConductorTest::TestSecretsReaderPlugin
+                  secrets_reader_1: HybridPlatformsConductorTest::TestSecretsReaderPlugin,
+                  secrets_reader_2: HybridPlatformsConductorTest::TestSecretsReaderPlugin
                 }
               )
               with_platform_to_deploy(
@@ -1029,15 +1029,15 @@ module HybridPlatformsConductorTest
                   'global4' => 'value4'
                 },
                 additional_config: <<~EO_CONFIG
-                  read_secrets_from :secrets_reader1
-                  for_nodes('node2') { read_secrets_from :secrets_reader2 }
+                  read_secrets_from :secrets_reader_1
+                  for_nodes('node2') { read_secrets_from :secrets_reader_2 }
                 EO_CONFIG
               ) do
                 TestSecretsReaderPlugin.deployer = test_deployer
                 TestSecretsReaderPlugin.mocked_secrets = {
                   'node1' => {
                     'service1' => {
-                      secrets_reader1: {
+                      secrets_reader_1: {
                         'global1' => 'value1',
                         'global2' => 'value2'
                       }
@@ -1045,11 +1045,11 @@ module HybridPlatformsConductorTest
                   },
                   'node2' => {
                     'service2' => {
-                      secrets_reader1: {
+                      secrets_reader_1: {
                         'global2' => 'value2',
                         'global3' => 'value3'
                       },
-                      secrets_reader2: {
+                      secrets_reader_2: {
                         'global3' => 'value3',
                         'global4' => 'value4'
                       }
@@ -1061,9 +1061,9 @@ module HybridPlatformsConductorTest
                   'node2' => expected_deploy_result
                 )
                 expect(HybridPlatformsConductorTest::TestSecretsReaderPlugin.calls).to eq [
-                  { instance: :secrets_reader1, node: 'node1', service: 'service1' },
-                  { instance: :secrets_reader1, node: 'node2', service: 'service2' },
-                  { instance: :secrets_reader2, node: 'node2', service: 'service2' }
+                  { instance: :secrets_reader_1, node: 'node1', service: 'service1' },
+                  { instance: :secrets_reader_1, node: 'node2', service: 'service2' },
+                  { instance: :secrets_reader_2, node: 'node2', service: 'service2' }
                 ]
               end
             end
@@ -1072,8 +1072,8 @@ module HybridPlatformsConductorTest
               register_plugins(
                 :secrets_reader,
                 {
-                  secrets_reader1: HybridPlatformsConductorTest::TestSecretsReaderPlugin,
-                  secrets_reader2: HybridPlatformsConductorTest::TestSecretsReaderPlugin
+                  secrets_reader_1: HybridPlatformsConductorTest::TestSecretsReaderPlugin,
+                  secrets_reader_2: HybridPlatformsConductorTest::TestSecretsReaderPlugin
                 }
               )
               with_platform_to_deploy(
@@ -1088,15 +1088,15 @@ module HybridPlatformsConductorTest
                 expect_prepare_for_deploy: false,
                 expect_connections_to_nodes: false,
                 additional_config: <<~EO_CONFIG
-                  read_secrets_from :secrets_reader1
-                  for_nodes('node2') { read_secrets_from :secrets_reader2 }
+                  read_secrets_from :secrets_reader_1
+                  for_nodes('node2') { read_secrets_from :secrets_reader_2 }
                 EO_CONFIG
               ) do
                 TestSecretsReaderPlugin.deployer = test_deployer
                 TestSecretsReaderPlugin.mocked_secrets = {
                   'node1' => {
                     'service1' => {
-                      secrets_reader1: {
+                      secrets_reader_1: {
                         'global1' => 'value1',
                         'global2' => 'value2'
                       }
@@ -1104,13 +1104,13 @@ module HybridPlatformsConductorTest
                   },
                   'node2' => {
                     'service2' => {
-                      secrets_reader1: {
+                      secrets_reader_1: {
                         'global2' => 'value2',
                         'global3' => {
                           'sub_key' => 'value3'
                         }
                       },
-                      secrets_reader2: {
+                      secrets_reader_2: {
                         'global3' => {
                           'sub_key' => 'Other value'
                         },
@@ -1119,11 +1119,11 @@ module HybridPlatformsConductorTest
                     }
                   }
                 }
-                expect { test_deployer.deploy_on(%w[node1 node2]) }.to raise_error 'Secret set at path global3->sub_key by secrets_reader2 for service service2 on node node2 has conflicting values (set debug for value details).'
+                expect { test_deployer.deploy_on(%w[node1 node2]) }.to raise_error 'Secret set at path global3->sub_key by secrets_reader_2 for service service2 on node node2 has conflicting values (set debug for value details).'
                 expect(HybridPlatformsConductorTest::TestSecretsReaderPlugin.calls).to eq [
-                  { instance: :secrets_reader1, node: 'node1', service: 'service1' },
-                  { instance: :secrets_reader1, node: 'node2', service: 'service2' },
-                  { instance: :secrets_reader2, node: 'node2', service: 'service2' }
+                  { instance: :secrets_reader_1, node: 'node1', service: 'service1' },
+                  { instance: :secrets_reader_1, node: 'node2', service: 'service2' },
+                  { instance: :secrets_reader_2, node: 'node2', service: 'service2' }
                 ]
               end
             end
@@ -1132,9 +1132,9 @@ module HybridPlatformsConductorTest
               register_plugins(
                 :secrets_reader,
                 {
-                  secrets_reader1: HybridPlatformsConductorTest::TestSecretsReaderPlugin,
-                  secrets_reader2: HybridPlatformsConductorTest::TestSecretsReaderPlugin,
-                  secrets_reader3: HybridPlatformsConductorTest::TestSecretsReaderPlugin
+                  secrets_reader_1: HybridPlatformsConductorTest::TestSecretsReaderPlugin,
+                  secrets_reader_2: HybridPlatformsConductorTest::TestSecretsReaderPlugin,
+                  secrets_reader_3: HybridPlatformsConductorTest::TestSecretsReaderPlugin
                 }
               )
               with_platform_to_deploy(
@@ -1149,8 +1149,8 @@ module HybridPlatformsConductorTest
                   'overridden_secrets' => 'value'
                 },
                 additional_config: <<~EO_CONFIG
-                  read_secrets_from %i[secrets_reader1 secrets_reader2]
-                  for_nodes('node2') { read_secrets_from :secrets_reader3 }
+                  read_secrets_from %i[secrets_reader_1 secrets_reader_2]
+                  for_nodes('node2') { read_secrets_from :secrets_reader_3 }
                 EO_CONFIG
               ) do
                 TestSecretsReaderPlugin.deployer = test_deployer

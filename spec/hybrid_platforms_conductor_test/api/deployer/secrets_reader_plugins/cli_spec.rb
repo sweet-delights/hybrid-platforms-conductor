@@ -38,16 +38,16 @@ describe HybridPlatformsConductor::Deployer do
 
       it 'gets secrets from several files' do
         with_test_platform_for_cli_test do |repository|
-          secrets_file1 = "#{repository}/my_secrets1.json"
-          File.write(secrets_file1, '{ "secret1": "value1" }')
-          secrets_file2 = "#{repository}/my_secrets2.json"
-          File.write(secrets_file2, '{ "secret2": "value2" }')
+          secrets_file_1 = "#{repository}/my_secrets1.json"
+          File.write(secrets_file_1, '{ "secret1": "value1" }')
+          secrets_file_2 = "#{repository}/my_secrets2.json"
+          File.write(secrets_file_2, '{ "secret2": "value2" }')
           expect(test_services_handler).to receive(:package).with(
             services: { 'node' => %w[service] },
             secrets: { 'secret1' => 'value1', 'secret2' => 'value2' },
             local_environment: false
           ) { raise 'Abort as testing secrets is enough' }
-          expect { run 'deploy', '--node', 'node', '--secrets', secrets_file1, '--secrets', secrets_file2 }.to raise_error 'Abort as testing secrets is enough'
+          expect { run 'deploy', '--node', 'node', '--secrets', secrets_file_1, '--secrets', secrets_file_2 }.to raise_error 'Abort as testing secrets is enough'
         end
       end
 

@@ -390,7 +390,7 @@ module HybridPlatformsConductor
                   end
                 when /libraries\/(.+)/
                   # Find any recipe using methods from this library
-                  lib_methods_regexps = File.read("#{@repository_path}/#{impacted_file}").scan(/(\W|^)def\s+(\w+)(\W|$)/).map { |_grp1, method_name, _grp2| /(\W|^)#{Regexp.escape(method_name)}(\W|$)/ }
+                  lib_methods_regexps = File.read("#{@repository_path}/#{impacted_file}").scan(/(\W|^)def\s+(\w+)(\W|$)/).map { |_grp_1, method_name, _grp_2| /(\W|^)#{Regexp.escape(method_name)}(\W|$)/ }
                   known_cookbook_paths.each do |cookbooks_path|
                     Dir.glob("#{@repository_path}/#{cookbooks_path}/**/recipes/*.rb") do |recipe_path|
                       file_content = File.read(recipe_path)

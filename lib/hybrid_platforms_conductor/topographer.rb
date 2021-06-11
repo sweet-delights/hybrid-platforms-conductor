@@ -274,7 +274,7 @@ module HybridPlatformsConductor
         # Then collapse this one
         collapsed_connections = {}
         included_nodes.each do |included_node_name|
-          collapsed_connections.merge!(@nodes_graph[included_node_name][:connections]) { |_connected_node, labels1, labels2| (labels1 + labels2).uniq }
+          collapsed_connections.merge!(@nodes_graph[included_node_name][:connections]) { |_connected_node, labels_1, labels_2| (labels_1 + labels_2).uniq }
         end
         @nodes_graph[node_name_to_collapse][:connections] = collapsed_connections
         @nodes_graph[node_name_to_collapse][:includes] = []
@@ -449,10 +449,10 @@ module HybridPlatformsConductor
         else
           # We have conflicting clusters to resolve
           cluster_1, cluster_2 = conflicting_clusters
-          c1_belongs_to_c2 = @nodes_graph[cluster_1][:includes].all? { |cluster_1_node_name| @nodes_graph[cluster_2][:includes_proc].call(cluster_1_node_name) }
-          c2_belongs_to_c1 = @nodes_graph[cluster_2][:includes].all? { |cluster_2_node_name| @nodes_graph[cluster_1][:includes_proc].call(cluster_2_node_name) }
-          if c1_belongs_to_c2
-            if c2_belongs_to_c1
+          cluster_1_belongs_to_cluster_2 = @nodes_graph[cluster_1][:includes].all? { |cluster_1_node_name| @nodes_graph[cluster_2][:includes_proc].call(cluster_1_node_name) }
+          cluster_2_belongs_to_cluster_1 = @nodes_graph[cluster_2][:includes].all? { |cluster_2_node_name| @nodes_graph[cluster_1][:includes_proc].call(cluster_2_node_name) }
+          if cluster_1_belongs_to_cluster_2
+            if cluster_2_belongs_to_cluster_1
               # Both clusters have the same nodes
               if @nodes_graph[cluster_1][:includes_proc].call(cluster_2)
                 @nodes_graph[cluster_2][:includes] = (@nodes_graph[cluster_1][:includes] + @nodes_graph[cluster_2][:includes]).uniq
@@ -465,7 +465,7 @@ module HybridPlatformsConductor
               # All nodes of cluster_1 belong to cluster_2, but some nodes of cluster_2 don't belong to cluster_1
               @nodes_graph[cluster_2][:includes] = @nodes_graph[cluster_2][:includes] - @nodes_graph[cluster_1][:includes] + [cluster_1]
             end
-          elsif c2_belongs_to_c1
+          elsif cluster_2_belongs_to_cluster_1
             # All nodes of cluster_2 belong to cluster_1, but some nodes of cluster_1 don't belong to cluster_2
             @nodes_graph[cluster_1][:includes] = @nodes_graph[cluster_1][:includes] - @nodes_graph[cluster_2][:includes] + [cluster_2]
           else
@@ -477,7 +477,7 @@ module HybridPlatformsConductor
             @nodes_graph[new_cluster_name] = {
               type: :cluster,
               includes: (@nodes_graph[cluster_1][:includes] + @nodes_graph[cluster_2][:includes]).uniq,
-              connections: @nodes_graph[cluster_1][:connections].merge!(@nodes_graph[cluster_2][:connections]) { |_connected_node, labels1, labels2| (labels1 + labels2).uniq },
+              connections: @nodes_graph[cluster_1][:connections].merge!(@nodes_graph[cluster_2][:connections]) { |_connected_node, labels_1, labels_2| (labels_1 + labels_2).uniq },
               includes_proc: proc do |hostname|
                 includes_proc_1.call(hostname) || includes_proc_2.call(hostname)
               end
@@ -602,7 +602,7 @@ module HybridPlatformsConductor
         # For performance, keep a cache of all the IPAddress::IPv4 objects
         @ip_v4_cache = Hash[known_ips.keys.map { |ip, _node| [ip, IPAddress::IPv4.new(ip)] }] unless defined?(@ip_v4_cache)
         ip_range = IPAddress::IPv4.new("#{ip_def}/#{ip_mask}")
-        @ips_mask[ip_def][ip_mask] = @ip_v4_cache.select { |_ip, ip_v4| ip_range.include?(ip_v4) }.keys
+        @ips_mask[ip_def][ip_mask] = @ip_v4_cache.select { |_ip, ipv4| ip_range.include?(ipv4) }.keys
       end
       @ips_mask[ip_def][ip_mask]
     end
@@ -822,13 +822,13 @@ module HybridPlatformsConductor
         end
       elsif json.is_a?(Array)
         json.each do |sub_json|
-          nodes.merge!(connections_from_json(sub_json, current_ref)) { |_node_name, refs1, refs2| (refs1 + refs2).uniq }
+          nodes.merge!(connections_from_json(sub_json, current_ref)) { |_node_name, refs_1, refs_2| (refs_1 + refs_2).uniq }
         end
       elsif json.is_a?(Hash)
         json.each do |sub_json_1, sub_json_2|
-          nodes.merge!(connections_from_json(sub_json_1, current_ref)) { |_node_name, refs1, refs2| (refs1 + refs2).uniq }
+          nodes.merge!(connections_from_json(sub_json_1, current_ref)) { |_node_name, refs_1, refs_2| (refs_1 + refs_2).uniq }
           key_is_str = sub_json_1.is_a?(String)
-          nodes.merge!(connections_from_json(sub_json_2, key_is_str ? (current_ref.nil? ? sub_json_1 : "#{current_ref}/#{sub_json_1}") : current_ref)) { |_hostname, refs1, refs2| (refs1 + refs2).uniq } if !key_is_str || !@config[:ignore_any_json_keys].include?(sub_json_1)
+          nodes.merge!(connections_from_json(sub_json_2, key_is_str ? (current_ref.nil? ? sub_json_1 : "#{current_ref}/#{sub_json_1}") : current_ref)) { |_hostname, refs_1, refs_2| (refs_1 + refs_2).uniq } if !key_is_str || !@config[:ignore_any_json_keys].include?(sub_json_1)
         end
       end
       nodes

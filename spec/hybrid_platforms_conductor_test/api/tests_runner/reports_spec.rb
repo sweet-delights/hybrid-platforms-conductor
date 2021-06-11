@@ -350,10 +350,10 @@ describe HybridPlatformsConductor::TestsRunner do
       with_test_platforms_for_reports_test do
         register_tests_report_plugins(
           test_tests_runner,
-          report1: HybridPlatformsConductorTest::TestsReportPlugin,
-          report2: HybridPlatformsConductorTest::TestsReportPlugin
+          report_1: HybridPlatformsConductorTest::TestsReportPlugin,
+          report_2: HybridPlatformsConductorTest::TestsReportPlugin
         )
-        test_tests_runner.reports = %i[report1 report2]
+        test_tests_runner.reports = %i[report_1 report_2]
         test_tests_runner.tests = [:global_test]
         test_tests_runner.run_tests [{ all: true }]
         expect(HybridPlatformsConductorTest::TestsReportPlugin.reports.size).to eq 2

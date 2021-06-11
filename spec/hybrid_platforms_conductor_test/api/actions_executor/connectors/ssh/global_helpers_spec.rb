@@ -137,29 +137,29 @@ describe HybridPlatformsConductor::ActionsExecutor do
       end
 
       it 'includes the gateway definition from environment' do
-        with_test_platform({}, false, 'gateway :gateway1, \'Host my_gateway\'') do
-          ENV['hpc_ssh_gateways_conf'] = 'gateway1'
+        with_test_platform({}, false, 'gateway :gateway_1, \'Host my_gateway\'') do
+          ENV['hpc_ssh_gateways_conf'] = 'gateway_1'
           expect(test_connector.ssh_config).to match(/^Host my_gateway$/)
         end
       end
 
       it 'includes the gateway definition from setting' do
-        with_test_platform({}, false, 'gateway :gateway1, \'Host my_gateway\'') do
-          test_connector.ssh_gateways_conf = :gateway1
+        with_test_platform({}, false, 'gateway :gateway_1, \'Host my_gateway\'') do
+          test_connector.ssh_gateways_conf = :gateway_1
           expect(test_connector.ssh_config).to match(/^Host my_gateway$/)
         end
       end
 
       it 'includes the gateway definition with a different ssh executable' do
-        with_test_platform({}, false, 'gateway :gateway1, \'Host my_gateway_<%= @ssh_exec %>\'') do
-          test_connector.ssh_gateways_conf = :gateway1
+        with_test_platform({}, false, 'gateway :gateway_1, \'Host my_gateway_<%= @ssh_exec %>\'') do
+          test_connector.ssh_gateways_conf = :gateway_1
           expect(test_connector.ssh_config(ssh_exec: 'new_ssh')).to match(/^Host my_gateway_new_ssh$/)
         end
       end
 
       it 'does not include the gateway definition if it is not selected' do
-        with_test_platform({}, false, 'gateway :gateway2, \'Host my_gateway\'') do
-          test_connector.ssh_gateways_conf = :gateway1
+        with_test_platform({}, false, 'gateway :gateway_2, \'Host my_gateway\'') do
+          test_connector.ssh_gateways_conf = :gateway_1
           expect(test_connector.ssh_config).not_to match(/^Host my_gateway$/)
         end
       end
@@ -324,8 +324,8 @@ describe HybridPlatformsConductor::ActionsExecutor do
       it 'uses node transformed SSH connection' do
         with_test_platform(
           { nodes: {
-            'node1' => { meta: { host_ip: '192.168.42.1', gateway: 'test_gateway1', gateway_user: 'test_gateway1_user' } },
-            'node2' => { meta: { host_ip: '192.168.42.2', gateway: 'test_gateway2', gateway_user: 'test_gateway2_user' } },
+            'node1' => { meta: { host_ip: '192.168.42.1', gateway: 'test_gateway_1', gateway_user: 'test_gateway_1_user' } },
+            'node2' => { meta: { host_ip: '192.168.42.2', gateway: 'test_gateway_2', gateway_user: 'test_gateway_2_user' } },
             'node3' => { meta: { host_ip: '192.168.42.3', gateway: 'test_gateway3', gateway_user: 'test_gateway3_user' } }
           } },
           false,
@@ -346,12 +346,12 @@ describe HybridPlatformsConductor::ActionsExecutor do
             Host hpc.node1
               Hostname 192.168.42.1_node1_13_node1_1
               User "test_user_node1_13_node1_1"
-              ProxyCommand ssh -q -W %h:%p test_gateway1_user_node1_13_node1_1@test_gateway1_node1_13_node1_1
+              ProxyCommand ssh -q -W %h:%p test_gateway_1_user_node1_13_node1_1@test_gateway_1_node1_13_node1_1
           EO_SSH_CONFIG
           expect(ssh_config_for('node2')).to eq <<~EO_SSH_CONFIG
             Host hpc.node2
               Hostname 192.168.42.2
-              ProxyCommand ssh -q -W %h:%p test_gateway2_user@test_gateway2
+              ProxyCommand ssh -q -W %h:%p test_gateway_2_user@test_gateway_2
           EO_SSH_CONFIG
           expect(ssh_config_for('node3')).to eq <<~EO_SSH_CONFIG
             Host hpc.node3

@@ -14,27 +14,27 @@ describe HybridPlatformsConductor::NodesHandler do
         false,
         '
           master_cmdbs(
-            test_cmdb: :property1,
-            test_cmdb2: :property2
+            test_cmdb: :property_1,
+            test_cmdb_2: :property_2
           )
           for_nodes(\'node2\') do
-            master_cmdbs(test_cmdb: :property3)
+            master_cmdbs(test_cmdb: :property_3)
           end
         '
       ) do
-        register_test_cmdb(%i[test_cmdb test_cmdb2])
+        register_test_cmdb(%i[test_cmdb test_cmdb_2])
         expect(test_config.cmdb_masters).to eq [
           {
             nodes_selectors_stack: [],
             cmdb_masters: {
-              test_cmdb: [:property1],
-              test_cmdb2: [:property2]
+              test_cmdb: [:property_1],
+              test_cmdb_2: [:property_2]
             }
           },
           {
             nodes_selectors_stack: ['node2'],
             cmdb_masters: {
-              test_cmdb: [:property3]
+              test_cmdb: [:property_3]
             }
           }
         ]

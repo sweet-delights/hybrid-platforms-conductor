@@ -9,7 +9,7 @@ describe HybridPlatformsConductor::TestsRunner do
     def with_test_platform_for_node_check_tests
       with_test_platforms(
         'platform1' => { nodes: { 'node11' => {}, 'node12' => {} } },
-        'platform2' => { nodes: { 'node21' => {}, 'node22' => {} }, platform_type: :test2 }
+        'platform2' => { nodes: { 'node21' => {}, 'node22' => {} }, platform_type: :test_2 }
       ) do
         register_test_plugins(
           test_tests_runner,

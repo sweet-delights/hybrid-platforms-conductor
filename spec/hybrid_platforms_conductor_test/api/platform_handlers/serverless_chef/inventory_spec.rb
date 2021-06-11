@@ -38,10 +38,10 @@ describe HybridPlatformsConductor::HpcPlugins::PlatformHandler::ServerlessChef d
             description: 'Single test node',
             image: 'debian_9',
             private_ips: ['172.16.0.1'],
-            property1: {
-              'property11' => 'value11'
+            property_1: {
+              'property_11' => 'value11'
             },
-            property2: 'value2'
+            property_2: 'value2'
           )
         end
       end

@@ -143,8 +143,8 @@ module HybridPlatformsConductorTest
       # Result::
       # * Hash<String, Object>: The corresponding property, per required node.
       #     Nodes for which the property can't be fetched can be ommitted.
-      def get_different_comment2(nodes, metadata)
-        record_call(:get_different_comment2, nodes, metadata)
+      def get_different_comment_2(nodes, metadata)
+        record_call(:get_different_comment_2, nodes, metadata)
         Hash[nodes.map { |node| [node, 'Comment2 from test_cmdb'] }]
       end
 

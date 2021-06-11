@@ -91,7 +91,7 @@ module HybridPlatformsConductor
         # * inherit from the base plugin class,
         # * have no descendants
         if !klass.name.nil? && klass < ancestor_class && ObjectSpace.each_object(Class).all? { |other_klass| other_klass.name.nil? || !(other_klass < klass) }
-          plugin_id = klass.name.split('::').last.gsub(/([a-z\d])([A-Z])/, '\1_\2').downcase.to_sym
+          plugin_id = klass.name.split('::').last.gsub(/([a-z\d])([A-Z\d])/, '\1_\2').downcase.to_sym
           self[plugin_id] = klass
         end
       end

@@ -145,7 +145,7 @@ describe HybridPlatformsConductor::Plugins do
         expect(my_test_gem_spec).to receive(:full_gem_path) { '__gem_full_path__' }
         expect(Dir).to receive(:glob).with('__gem_full_path__/lib/**/*.rb') do
           [
-            '__gem_full_path__/lib/my_test_gem/hpc_plugins/test_plugin_type/test_plugin_id1.rb'
+            '__gem_full_path__/lib/my_test_gem/hpc_plugins/test_plugin_type/test_plugin_id_1.rb'
           ]
         end
         {
@@ -156,8 +156,8 @@ describe HybridPlatformsConductor::Plugins do
       $LOAD_PATH.unshift "#{__dir__}/../mocked_lib"
       begin
         plugins = HybridPlatformsConductor::Plugins.new(:test_plugin_type, logger: logger, logger_stderr: logger)
-        expect(plugins.keys).to eq [:test_plugin_id1]
-        expect(plugins[:test_plugin_id1]).to eq HybridPlatformsConductorTest::MockedLib::MyTestGem::HpcPlugins::TestPluginType::TestPluginId1
+        expect(plugins.keys).to eq [:test_plugin_id_1]
+        expect(plugins[:test_plugin_id_1]).to eq HybridPlatformsConductorTest::MockedLib::MyTestGem::HpcPlugins::TestPluginType::TestPluginId1
       ensure
         $LOAD_PATH.shift
       end
@@ -172,16 +172,16 @@ describe HybridPlatformsConductor::Plugins do
         expect(my_test_gem_spec).to receive(:full_gem_path) { '__gem_full_path__' }
         expect(Dir).to receive(:glob).with('__gem_full_path__/lib/**/*.rb') do
           [
-            '__gem_full_path__/lib/my_test_gem/hpc_plugins/test_plugin_type/test_plugin_id1.rb',
-            '__gem_full_path__/lib/my_test_gem/hpc_plugins/test_plugin_type/test_plugin_id2.rb'
+            '__gem_full_path__/lib/my_test_gem/hpc_plugins/test_plugin_type/test_plugin_id_1.rb',
+            '__gem_full_path__/lib/my_test_gem/hpc_plugins/test_plugin_type/test_plugin_id_2.rb'
           ]
         end
         my_test_gem2_spec = double('Test gemspec for gem my_test_gem2')
         expect(my_test_gem2_spec).to receive(:full_gem_path) { '__gem2_full_path__' }
         expect(Dir).to receive(:glob).with('__gem2_full_path__/lib/**/*.rb') do
           [
-            '__gem2_full_path__/lib/my_test_gem2/sub_dir/hpc_plugins/test_plugin_type/test_plugin_id3.rb',
-            '__gem2_full_path__/lib/my_test_gem2/sub_dir/hpc_plugins/test_plugin_type2/test_plugin_id4.rb'
+            '__gem2_full_path__/lib/my_test_gem2/sub_dir/hpc_plugins/test_plugin_type/test_plugin_id_3.rb',
+            '__gem2_full_path__/lib/my_test_gem2/sub_dir/hpc_plugins/test_plugin_type_2/test_plugin_id_4.rb'
           ]
         end
         {
@@ -193,13 +193,13 @@ describe HybridPlatformsConductor::Plugins do
       $LOAD_PATH.unshift "#{__dir__}/../mocked_lib"
       begin
         plugins = HybridPlatformsConductor::Plugins.new(:test_plugin_type, logger: logger, logger_stderr: logger)
-        expect(plugins.keys.sort).to eq %i[test_plugin_id1 test_plugin_id2 test_plugin_id3].sort
-        expect(plugins[:test_plugin_id1]).to eq HybridPlatformsConductorTest::MockedLib::MyTestGem::HpcPlugins::TestPluginType::TestPluginId1
-        expect(plugins[:test_plugin_id2]).to eq HybridPlatformsConductorTest::MockedLib::MyTestGem::HpcPlugins::TestPluginType::TestPluginId2
-        expect(plugins[:test_plugin_id3]).to eq HybridPlatformsConductorTest::MockedLib::MyTestGem2::SubDir::HpcPlugins::TestPluginType::TestPluginId3
-        plugins2 = HybridPlatformsConductor::Plugins.new(:test_plugin_type2, logger: logger, logger_stderr: logger)
-        expect(plugins2.keys).to eq [:test_plugin_id4]
-        expect(plugins2[:test_plugin_id4]).to eq HybridPlatformsConductorTest::MockedLib::MyTestGem2::SubDir::HpcPlugins::TestPluginType2::TestPluginId4
+        expect(plugins.keys.sort).to eq %i[test_plugin_id_1 test_plugin_id_2 test_plugin_id_3].sort
+        expect(plugins[:test_plugin_id_1]).to eq HybridPlatformsConductorTest::MockedLib::MyTestGem::HpcPlugins::TestPluginType::TestPluginId1
+        expect(plugins[:test_plugin_id_2]).to eq HybridPlatformsConductorTest::MockedLib::MyTestGem::HpcPlugins::TestPluginType::TestPluginId2
+        expect(plugins[:test_plugin_id_3]).to eq HybridPlatformsConductorTest::MockedLib::MyTestGem2::SubDir::HpcPlugins::TestPluginType::TestPluginId3
+        plugins_2 = HybridPlatformsConductor::Plugins.new(:test_plugin_type_2, logger: logger, logger_stderr: logger)
+        expect(plugins_2.keys).to eq [:test_plugin_id_4]
+        expect(plugins_2[:test_plugin_id_4]).to eq HybridPlatformsConductorTest::MockedLib::MyTestGem2::SubDir::HpcPlugins::TestPluginType2::TestPluginId4
       ensure
         $LOAD_PATH.shift
       end

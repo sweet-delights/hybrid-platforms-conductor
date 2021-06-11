@@ -6,8 +6,8 @@ describe HybridPlatformsConductor::ActionsExecutor do
 
       it 'returns 1 defined gateway' do
         with_repository do
-          with_platforms 'gateway :gateway1, \'\'' do
-            expect(test_config.known_gateways).to eq [:gateway1]
+          with_platforms 'gateway :gateway_1, \'\'' do
+            expect(test_config.known_gateways).to eq [:gateway_1]
           end
         end
       end
@@ -18,16 +18,16 @@ describe HybridPlatformsConductor::ActionsExecutor do
             Hostname mygateway.com
         '
         with_repository do
-          with_platforms "gateway :gateway1, '#{ssh_gateway}'" do
-            expect(test_config.ssh_for_gateway(:gateway1)).to eq ssh_gateway
+          with_platforms "gateway :gateway_1, '#{ssh_gateway}'" do
+            expect(test_config.ssh_for_gateway(:gateway_1)).to eq ssh_gateway
           end
         end
       end
 
       it 'returns 1 defined gateway with its content and replacing ERB template correctly' do
         with_repository do
-          with_platforms 'gateway :gateway1, \'Host gateway_<%= @user %>\'' do
-            expect(test_config.ssh_for_gateway(:gateway1, user: 'test_user')).to eq 'Host gateway_test_user'
+          with_platforms 'gateway :gateway_1, \'Host gateway_<%= @user %>\'' do
+            expect(test_config.ssh_for_gateway(:gateway_1, user: 'test_user')).to eq 'Host gateway_test_user'
           end
         end
       end
@@ -35,10 +35,10 @@ describe HybridPlatformsConductor::ActionsExecutor do
       it 'returns several defined gateways' do
         with_repository do
           with_platforms '
-            gateway :gateway1, \'\'
-            gateway :gateway2, \'\'
+            gateway :gateway_1, \'\'
+            gateway :gateway_2, \'\'
           ' do
-            expect(test_config.known_gateways.sort).to eq %i[gateway1 gateway2].sort
+            expect(test_config.known_gateways.sort).to eq %i[gateway_1 gateway_2].sort
           end
         end
       end

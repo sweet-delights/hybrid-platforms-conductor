@@ -85,7 +85,7 @@ module HybridPlatformsConductor
     # Result::
     # * String or nil: The file content, or nil if none
     def download_file_attachment_by_item_id(secret_id, secret_item_id)
-      file_in_base64 = @client.call(
+      encoded_file = @client.call(
         :download_file_attachment_by_item_id,
         message: {
           token: @token,
@@ -93,7 +93,7 @@ module HybridPlatformsConductor
           secretItemId: secret_item_id
         }
       ).to_hash.dig(:download_file_attachment_by_item_id_response, :download_file_attachment_by_item_id_result, :file_attachment)
-      file_in_base64.nil? ? nil : Base64.decode64(file_in_base64)
+      encoded_file.nil? ? nil : Base64.decode64(encoded_file)
     end
 
   end

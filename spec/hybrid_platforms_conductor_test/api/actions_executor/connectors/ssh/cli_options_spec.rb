@@ -16,7 +16,7 @@ describe HybridPlatformsConductor::ActionsExecutor do
           false,
           "
             gateway :test_gateway, 'Host test_gateway'
-            gateway :test_gateway2, 'Host test_gateway2'
+            gateway :test_gateway_2, 'Host test_gateway_2'
           "
         ) do |repository|
           ENV['hpc_ssh_gateways_conf'] = 'test_gateway'
@@ -48,10 +48,10 @@ describe HybridPlatformsConductor::ActionsExecutor do
       it 'selects the correct gateway conf' do
         with_test_platform_for_cli do
           expect_actions_executor_runs [proc do
-            expect(test_connector.ssh_gateways_conf).to eq :test_gateway2
+            expect(test_connector.ssh_gateways_conf).to eq :test_gateway_2
             {}
           end]
-          exit_code, stdout, stderr = run 'run', '--node', 'node', '--command', 'echo Hello', '--ssh-gateways-conf', 'test_gateway2'
+          exit_code, stdout, stderr = run 'run', '--node', 'node', '--command', 'echo Hello', '--ssh-gateways-conf', 'test_gateway_2'
           expect(exit_code).to eq 0
           expect(stdout).to eq ''
           expect(stderr).to eq ''

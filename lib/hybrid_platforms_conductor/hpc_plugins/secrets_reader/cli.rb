@@ -58,10 +58,10 @@ module HybridPlatformsConductor
             @secrets_files.each do |secrets_file|
               raise "Missing secrets file: #{secrets_file}" unless File.exist?(secrets_file)
 
-              @secrets.merge!(JSON.parse(File.read(secrets_file))) do |key, value1, value2|
-                raise "Secret #{key} has conflicting values between different secret JSON files." if value1 != value2
+              @secrets.merge!(JSON.parse(File.read(secrets_file))) do |key, value_1, value_2|
+                raise "Secret #{key} has conflicting values between different secret JSON files." if value_1 != value_2
 
-                value1
+                value_1
               end
             end
           end

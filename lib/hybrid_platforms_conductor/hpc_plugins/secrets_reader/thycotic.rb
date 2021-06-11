@@ -72,10 +72,10 @@ module HybridPlatformsConductor
                 @secrets[server_id] = JSON.parse(secret)
               end
             end
-            secrets.merge!(@secrets[server_id]) do |key, value1, value2|
-              raise "Thycotic secret #{key} served by #{thycotic_secrets_info[:thycotic_url]} from secret ID #{thycotic_secrets_info[:secret_id]} has conflicting values between different secrets." if value1 != value2
+            secrets.merge!(@secrets[server_id]) do |key, value_1, value_2|
+              raise "Thycotic secret #{key} served by #{thycotic_secrets_info[:thycotic_url]} from secret ID #{thycotic_secrets_info[:secret_id]} has conflicting values between different secrets." if value_1 != value_2
 
-              value1
+              value_1
             end
           end
           secrets

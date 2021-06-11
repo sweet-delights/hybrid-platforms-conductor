@@ -127,8 +127,8 @@ describe HybridPlatformsConductor::HpcPlugins::PlatformHandler::ServerlessChef d
             'image' => 'debian_9',
             'new_metadata' => 'new_value',
             'private_ips' => ['172.16.0.1'],
-            'property1' => { 'property11' => 'value11' },
-            'property2' => 'value2',
+            'property_1' => { 'property_11' => 'value11' },
+            'property_2' => 'value2',
           )
         end
       end
@@ -253,15 +253,15 @@ describe HybridPlatformsConductor::HpcPlugins::PlatformHandler::ServerlessChef d
 
       it 'deploys a service on a node belonging to another platform' do
         with_serverless_chef_platforms({ 'p1' => '1_node', 'p2' => 'several_nodes' }) do |repositories|
-          platform_p1, repository_p1 = repositories.find { |platform, _repository| platform.name == 'p1' }
-          mock_package(repository_p1)
-          platform_p1.prepare_for_deploy(
+          platform_1, repository_1 = repositories.find { |platform, _repository| platform.name == 'p1' }
+          mock_package(repository_1)
+          platform_1.prepare_for_deploy(
             services: { 'node2' => %w[test_policy_1] },
             secrets: {},
             local_environment: false,
             why_run: false
           )
-          expect(platform_p1.actions_to_deploy_on('node2', 'test_policy_1', use_why_run: false)).to eq expected_actions_to_deploy_chef(repository_p1, policy: 'test_policy_1', node: 'node2')
+          expect(platform_1.actions_to_deploy_on('node2', 'test_policy_1', use_why_run: false)).to eq expected_actions_to_deploy_chef(repository_1, policy: 'test_policy_1', node: 'node2')
         end
       end
 
