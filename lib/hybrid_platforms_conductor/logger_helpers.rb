@@ -73,9 +73,9 @@ module HybridPlatformsConductor
 
     # Sorted list of levels and their corresponding modifiers.
     LEVELS_MODIFIERS = {
-      fatal: [:red, :bold],
-      error: [:red, :bold],
-      warn: [:yellow, :bold],
+      fatal: %i[red bold],
+      error: %i[red bold],
+      warn: %i[yellow bold],
       info: [:white],
       debug: [:white],
       unknown: [:white]

@@ -27,7 +27,7 @@ describe HybridPlatformsConductor::TestsRunner do
 
     it 'executes several global tests' do
       with_test_platform_for_global_tests do
-        test_tests_runner.tests = [:global_test, :global_test_2]
+        test_tests_runner.tests = %i[global_test global_test_2]
         expect(test_tests_runner.run_tests([])).to eq 0
         expect(HybridPlatformsConductorTest::TestPlugins::Global.nbr_runs).to eq 2
       end

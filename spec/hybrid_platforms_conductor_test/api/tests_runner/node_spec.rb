@@ -48,7 +48,7 @@ describe HybridPlatformsConductor::TestsRunner do
 
     it 'executes several node tests' do
       with_test_platform_for_node_tests do
-        test_tests_runner.tests = [:node_test, :node_test_2]
+        test_tests_runner.tests = %i[node_test node_test_2]
         expect(test_tests_runner.run_tests([{ all: true }])).to eq 0
         expect(HybridPlatformsConductorTest::TestPlugins::Node.runs.sort).to eq [
           [:node_test, 'node11'],

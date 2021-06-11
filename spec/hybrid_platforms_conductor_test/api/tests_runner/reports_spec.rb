@@ -282,7 +282,7 @@ describe HybridPlatformsConductor::TestsRunner do
 
     it 'groups errors correctly by their attributes' do
       with_test_platforms_for_reports_test do
-        test_tests_runner.tests = [:node_test, :node_test_2]
+        test_tests_runner.tests = %i[node_test node_test_2]
         HybridPlatformsConductorTest::TestPlugins::Node.fail_for = {
           node_test: %w[node12 node22],
           node_test_2: %w[node21 node22]

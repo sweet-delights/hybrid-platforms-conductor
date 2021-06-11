@@ -154,7 +154,7 @@ describe HybridPlatformsConductor::TestsRunner do
             ]
           end.to_h
         end])
-        test_tests_runner.tests = [:node_ssh_test, :node_ssh_test_2]
+        test_tests_runner.tests = %i[node_ssh_test node_ssh_test_2]
         ssh_executions = []
         HybridPlatformsConductorTest::TestPlugins::NodeSsh.node_tests = {
           node_ssh_test: {

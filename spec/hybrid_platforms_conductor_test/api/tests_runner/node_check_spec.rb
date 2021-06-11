@@ -62,7 +62,7 @@ describe HybridPlatformsConductor::TestsRunner do
 
     it 'executes check node tests once per node even if there are several tests using check reports' do
       with_test_platform_for_node_check_tests do
-        test_tests_runner.tests = [:node_check_test, :node_check_test_2]
+        test_tests_runner.tests = %i[node_check_test node_check_test_2]
         expect(test_deployer).to receive(:deploy_on).with(%w[node11 node12 node21 node22]).once do
           expect(test_deployer.use_why_run).to eq true
           {
