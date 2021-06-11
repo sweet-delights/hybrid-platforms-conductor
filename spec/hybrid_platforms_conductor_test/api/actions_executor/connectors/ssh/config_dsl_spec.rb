@@ -50,7 +50,7 @@ describe HybridPlatformsConductor::ActionsExecutor do
               'node1' => {},
               'node2' => {},
               'node3' => {}
-            },
+            }
           },
           false,
           '

@@ -53,7 +53,7 @@ describe HybridPlatformsConductor::ServicesHandler do
         {
           'platform1' => { nodes: { 'node' => { services: %w[service1 service2 service3] } }, deployable_services: %w[service1] },
           'platform2' => { nodes: {}, deployable_services: %w[service2] },
-          'platform3' => { nodes: {}, deployable_services: %w[service3] },
+          'platform3' => { nodes: {}, deployable_services: %w[service3] }
         },
         true
       ) do |repositories|
@@ -79,7 +79,7 @@ describe HybridPlatformsConductor::ServicesHandler do
         {
           'platform1' => { nodes: { 'node' => { services: %w[service1 service2 service3] } }, deployable_services: %w[service1] },
           'platform2' => { nodes: {}, deployable_services: %w[service2] },
-          'platform3' => { nodes: {}, deployable_services: %w[service3] },
+          'platform3' => { nodes: {}, deployable_services: %w[service3] }
         },
         true
       ) do |repositories|

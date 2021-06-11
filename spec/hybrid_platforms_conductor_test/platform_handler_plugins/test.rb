@@ -202,7 +202,7 @@ module HybridPlatformsConductorTest
       def platform_info
         {
           nodes: {},
-          nodes_lists: {},
+          nodes_lists: {}
         }.merge(HybridPlatformsConductorTest::PlatformHandlerPlugins::Test.platforms_info[name])
       end
 

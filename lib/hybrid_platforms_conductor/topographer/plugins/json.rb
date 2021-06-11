@@ -18,13 +18,13 @@ module HybridPlatformsConductor
           # Build the JSON
           json = {
             nodes: [],
-            links: [],
+            links: []
           }
           @topographer.nodes_graph.sort.each do |node_name, node_info|
             node_json = {
               id: node_name,
               description: "#{@topographer.title_for(node_name)} - #{@topographer.description_for(node_name)}",
-              group: group_for(node_name),
+              group: group_for(node_name)
             }
             node_json[:includes] = node_info[:includes] if @topographer.is_node_cluster?(node_name)
             json[:nodes] << node_json

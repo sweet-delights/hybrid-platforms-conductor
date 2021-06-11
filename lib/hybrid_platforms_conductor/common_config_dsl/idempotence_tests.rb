@@ -38,7 +38,7 @@ module HybridPlatformsConductor
       def ignore_idempotence_tasks(tasks_to_ignore)
         @ignored_idempotence_tasks << {
           ignored_tasks: tasks_to_ignore,
-          nodes_selectors_stack: current_nodes_selectors_stack,
+          nodes_selectors_stack: current_nodes_selectors_stack
         }
       end
 
@@ -49,7 +49,7 @@ module HybridPlatformsConductor
       def ignore_divergent_tasks(tasks_to_ignore)
         @ignored_divergent_tasks << {
           ignored_tasks: tasks_to_ignore,
-          nodes_selectors_stack: current_nodes_selectors_stack,
+          nodes_selectors_stack: current_nodes_selectors_stack
         }
       end
 
