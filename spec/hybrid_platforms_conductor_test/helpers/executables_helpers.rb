@@ -53,7 +53,7 @@ module HybridPlatformsConductorTest
           HybridPlatformsConductor::TestsRunner => test_tests_runner
         }
         # Make sure the tested components use the same loggers as the executable.
-        components_to_mock.values.each do |component|
+        components_to_mock.each_value do |component|
           component.stdout_device = stdout_file
           component.stderr_device = stderr_file
         end

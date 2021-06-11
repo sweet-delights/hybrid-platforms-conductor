@@ -15,7 +15,7 @@ module HybridPlatformsConductorTest
       #     * *repositories* (Hash<String,String>): Path to the repositories, per repository name
       def with_repositories(names = [], as_git: false)
         repositories = names.map { |name| [name, "#{Dir.tmpdir}/hpc_test/#{name}"] }.to_h
-        repositories.values.each do |dir|
+        repositories.each_value do |dir|
           FileUtils.rm_rf dir
           FileUtils.mkdir_p dir
           if as_git
@@ -31,7 +31,7 @@ module HybridPlatformsConductorTest
         begin
           yield repositories
         ensure
-          repositories.values.each do |dir|
+          repositories.each_value do |dir|
             FileUtils.rm_rf dir
           end
         end

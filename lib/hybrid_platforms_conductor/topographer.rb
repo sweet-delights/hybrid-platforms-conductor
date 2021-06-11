@@ -302,7 +302,7 @@ module HybridPlatformsConductor
 
     # Define clusters of ips with 24 bits ranges.
     def define_clusters_ip_24
-      @nodes_graph.keys.each do |node_name|
+      @nodes_graph.each_key do |node_name|
         if @nodes_graph[node_name][:type] == :node && !@node_metadata[node_name][:private_ips].nil? && !@node_metadata[node_name][:private_ips].empty?
           ip_24 = "#{@node_metadata[node_name][:private_ips].first.split('.')[0..2].join('.')}.0/24"
           @nodes_graph[ip_24] = ip_range_graph_info(ip_24) unless @nodes_graph.key?(ip_24)
@@ -408,7 +408,7 @@ module HybridPlatformsConductor
       # Delete references to the nodes to be replaced
       @nodes_graph.delete_if { |node_name, _node_info| nodes_to_be_replaced.include?(node_name) }
       # Change any connection or inclusions using nodes to be replaced
-      @nodes_graph.values.each do |node_info|
+      @nodes_graph.each_value do |node_info|
         node_info[:includes] = node_info[:includes].map { |included_node_name| nodes_to_be_replaced.include?(included_node_name) ? replacement_node : included_node_name }.uniq
         new_connections = {}
         node_info[:connections].each do |connected_node_name, labels|
@@ -848,7 +848,7 @@ module HybridPlatformsConductor
       sub_max_level = max_level.nil? ? nil : max_level - 1
       return if sub_max_level == -1
 
-      @nodes_graph[hostname][:connections].keys.each do |connected_hostname|
+      @nodes_graph[hostname][:connections].each_key do |connected_hostname|
         parse_connections_for(connected_hostname, sub_max_level)
       end
     end

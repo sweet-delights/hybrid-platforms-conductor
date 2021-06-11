@@ -23,7 +23,7 @@ module HybridPlatformsConductor
             # First write the definition of all nodes
             # Find all nodes belonging to no cluster
             orphan_nodes = @topographer.nodes_graph.keys
-            @topographer.nodes_graph.values.each do |node_info|
+            @topographer.nodes_graph.each_value do |node_info|
               orphan_nodes -= node_info[:includes]
             end
             orphan_nodes.sort.each do |node_name|

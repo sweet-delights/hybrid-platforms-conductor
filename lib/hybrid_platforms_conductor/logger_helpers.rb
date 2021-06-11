@@ -84,7 +84,7 @@ module HybridPlatformsConductor
     # List of levels that will output on stderr
     LEVELS_TO_STDERR = %i[warn error fatal]
 
-    LEVELS_MODIFIERS.keys.each do |level|
+    LEVELS_MODIFIERS.each_key do |level|
       define_method("log_#{level}") do |message|
         (LEVELS_TO_STDERR.include?(level) ? @logger_stderr : @logger).send(
           level,
