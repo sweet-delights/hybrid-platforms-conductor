@@ -335,24 +335,24 @@ module HybridPlatformsConductor
           impacted_recipes = []
           impacted_global = false
           files_diffs.keys.sort.each do |impacted_file|
-            if impacted_file =~ /^policyfiles\/([^\/]+)\.rb$/
+            if impacted_file =~ %r{^policyfiles/([^/]+)\.rb$}
               log_debug "[#{impacted_file}] - Impacted service: #{Regexp.last_match(1)}"
               impacted_services << Regexp.last_match(1)
-            elsif impacted_file =~ /^policyfiles\/([^\/]+)\.lock.json$/
+            elsif impacted_file =~ %r{^policyfiles/([^/]+)\.lock.json$}
               log_debug "[#{impacted_file}] - Impacted service: #{Regexp.last_match(1)}"
               impacted_services << Regexp.last_match(1)
-            elsif impacted_file =~ /^nodes\/([^\/]+)\.json/
+            elsif impacted_file =~ %r{^nodes/([^/]+)\.json}
               log_debug "[#{impacted_file}] - Impacted node: #{Regexp.last_match(1)}"
               impacted_nodes << Regexp.last_match(1)
             else
-              cookbook_path = known_cookbook_paths.find { |cookbooks_path| impacted_file =~ /^#{Regexp.escape(cookbooks_path)}\/.+$/ }
+              cookbook_path = known_cookbook_paths.find { |cookbooks_path| impacted_file =~ %r{^#{Regexp.escape(cookbooks_path)}/.+$} }
               if cookbook_path.nil?
                 # Global file
                 log_debug "[#{impacted_file}] - Global file impacted"
                 impacted_global = true
               else
                 # File belonging to a cookbook
-                file_cookbook_name, file_path = impacted_file.match(/^#{cookbook_path}\/(\w+)\/(.+)$/)[1..2]
+                file_cookbook_name, file_path = impacted_file.match(%r{^#{cookbook_path}/(\w+)/(.+)$})[1..2]
                 cookbook = file_cookbook_name.to_sym
                 # Small helper to register a recipe
                 register = proc do |source, recipe_name, cookbook_name: cookbook|
@@ -361,33 +361,33 @@ module HybridPlatformsConductor
                   impacted_recipes << [cookbook_name, recipe_name.to_sym]
                 end
                 case file_path
-                when /recipes\/(.+)\.rb/
+                when %r{recipes/(.+)\.rb}
                   register.call('direct', Regexp.last_match(1))
-                when /attributes\/.+\.rb/, 'metadata.rb'
+                when %r{attributes/.+\.rb}, 'metadata.rb'
                   # Consider all recipes are impacted
                   Dir.glob("#{@repository_path}/#{cookbook_path}/#{cookbook}/recipes/*.rb") do |recipe_path|
                     register.call('attributes', File.basename(recipe_path, '.rb'))
                   end
-                when /(templates|files)\/(.+)/
+                when %r{(templates|files)/(.+)}
                   # Find recipes using this file name
                   included_file = File.basename(Regexp.last_match(2))
                   template_regexp = /["']#{Regexp.escape(included_file)}["']/
                   Dir.glob("#{@repository_path}/#{cookbook_path}/#{cookbook}/recipes/*.rb") do |recipe_path|
                     register.call("included file #{included_file}", File.basename(recipe_path, '.rb')) if File.read(recipe_path) =~ template_regexp
                   end
-                when /resources\/(.+)/
+                when %r{resources/(.+)}
                   # Find any recipe using this resource
                   included_resource = "#{cookbook}_#{File.basename(Regexp.last_match(1), '.rb')}"
                   resource_regexp = /(\W|^)#{Regexp.escape(included_resource)}(\W|$)/
                   known_cookbook_paths.each do |cookbooks_path|
                     Dir.glob("#{@repository_path}/#{cookbooks_path}/**/recipes/*.rb") do |recipe_path|
                       if File.read(recipe_path) =~ resource_regexp
-                        cookbook_name, recipe_name = recipe_path.match(/#{cookbooks_path}\/(\w+)\/recipes\/(\w+)\.rb/)[1..2]
+                        cookbook_name, recipe_name = recipe_path.match(%r{#{cookbooks_path}/(\w+)/recipes/(\w+)\.rb})[1..2]
                         register.call("included resource #{included_resource}", recipe_name, cookbook_name: cookbook_name)
                       end
                     end
                   end
-                when /libraries\/(.+)/
+                when %r{libraries/(.+)}
                   # Find any recipe using methods from this library
                   lib_methods_regexps = File.read("#{@repository_path}/#{impacted_file}").scan(/(\W|^)def\s+(\w+)(\W|$)/).map { |_grp_1, method_name, _grp_2| /(\W|^)#{Regexp.escape(method_name)}(\W|$)/ }
                   known_cookbook_paths.each do |cookbooks_path|
@@ -395,7 +395,7 @@ module HybridPlatformsConductor
                       file_content = File.read(recipe_path)
                       found_lib_regexp = lib_methods_regexps.find { |regexp| file_content =~ regexp }
                       unless found_lib_regexp.nil?
-                        cookbook_name, recipe_name = recipe_path.match(/#{cookbooks_path}\/(\w+)\/recipes\/(\w+)\.rb/)[1..2]
+                        cookbook_name, recipe_name = recipe_path.match(%r{#{cookbooks_path}/(\w+)/recipes/(\w+)\.rb})[1..2]
                         register.call("included library helper #{found_lib_regexp.source[6..-7]}", recipe_name, cookbook_name: cookbook_name)
                       end
                     end

@@ -81,7 +81,7 @@ module HybridPlatformsConductor
             head_commit_id = git.log.first.sha
             git.branches.all? do |branch|
               branch.gcommit.objectish.include?(' -> ') || (
-                !(branch.full == 'master' || branch.full =~ /^remotes\/.+\/master$/) || branch.gcommit.sha != head_commit_id
+                !(branch.full == 'master' || branch.full =~ %r{^remotes/.+/master$}) || branch.gcommit.sha != head_commit_id
               )
             end
           end
@@ -211,7 +211,7 @@ module HybridPlatformsConductor
     end
 
     # Regexp: The marker regexp used to separate services deployment
-    MARKER_REGEXP = /^===== \[ (.+?) \/ (.+?) \] - HPC Service (\w+) ===== Begin$(.+?)^===== \[ \1 \/ \2 \] - HPC Service \3 ===== End$/m
+    MARKER_REGEXP = %r{^===== \[ (.+?) / (.+?) \] - HPC Service (\w+) ===== Begin$(.+?)^===== \[ \1 / \2 \] - HPC Service \3 ===== End$}m
 
     # Parse stdout and stderr of a given deploy run and get the list of tasks with their status, organized per service and node deployed.
     #

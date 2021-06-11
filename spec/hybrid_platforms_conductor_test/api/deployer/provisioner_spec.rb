@@ -191,7 +191,7 @@ describe HybridPlatformsConductor::Deployer do
         expect do
           test_deployer.with_test_provisioned_instance(:test_provisioner, 'node', environment: 'hpc_testing_provisioner') do |sub_test_deployer, test_instance|
           end
-        end.to raise_error(/\[ node\/#{Regexp.escape(`whoami`.strip)}_hpc_testing_provisioner_\d+_\d+_\w+ \] - Instance fails to be in a state among \(running\) with timeout 1\. Currently in state exited/)
+        end.to raise_error(%r{\[ node/#{Regexp.escape(`whoami`.strip)}_hpc_testing_provisioner_\d+_\d+_\w+ \] - Instance fails to be in a state among \(running\) with timeout 1\. Currently in state exited})
       end
     end
 
@@ -209,7 +209,7 @@ describe HybridPlatformsConductor::Deployer do
         expect do
           test_deployer.with_test_provisioned_instance(:test_provisioner, 'node', environment: 'hpc_testing_provisioner') do |sub_test_deployer, test_instance|
           end
-        end.to raise_error(/\[ node\/#{Regexp.escape(`whoami`.strip)}_hpc_testing_provisioner_\d+_\d+_\w+ \] - Instance fails to have port 22 opened with timeout 1\./)
+        end.to raise_error(%r{\[ node/#{Regexp.escape(`whoami`.strip)}_hpc_testing_provisioner_\d+_\d+_\w+ \] - Instance fails to have port 22 opened with timeout 1\.})
       end
     end
 

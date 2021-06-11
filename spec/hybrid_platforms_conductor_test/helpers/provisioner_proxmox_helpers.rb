@@ -334,7 +334,7 @@ module HybridPlatformsConductorTest
             expect(actions['node'].size).to eq 4
             # First action should be to copy the reserve_proxmox_container code
             expect(actions['node'][0].keys).to eq [:scp]
-            expect(actions['node'][0][:scp].first[0]).to match(/^.+\/hpc_plugins\/provisioner\/proxmox\/$/)
+            expect(actions['node'][0][:scp].first[0]).to match(%r{^.+/hpc_plugins/provisioner/proxmox/$})
             expect(actions['node'][0][:scp].first[1]).to eq '.'
             # Second action should be to create directories
             expect(actions['node'][1]).to eq(
@@ -342,10 +342,10 @@ module HybridPlatformsConductorTest
             )
             # Next actions should be to copy the config/create/destroy files
             expect(actions['node'][2].keys).to eq [:scp]
-            expect(actions['node'][2][:scp].first[0]).to match(/^.+\/create_#{Regexp.escape(expected_file_id)}\.json$/)
+            expect(actions['node'][2][:scp].first[0]).to match(%r{^.+/create_#{Regexp.escape(expected_file_id)}\.json$})
             expect(actions['node'][2][:scp].first[1]).to eq './proxmox/create'
             expect(actions['node'][3].keys).to eq [:scp]
-            expect(actions['node'][3][:scp].first[0]).to match(/^.+\/config_#{Regexp.escape(expected_file_id)}\.json$/)
+            expect(actions['node'][3][:scp].first[0]).to match(%r{^.+/config_#{Regexp.escape(expected_file_id)}\.json$})
             expect(actions['node'][3][:scp].first[1]).to eq './proxmox/config'
             @proxmox_create_options = JSON.parse(File.read(actions['node'][2][:scp].first[0]))
             { 'node' => [0, '', ''] }
@@ -386,7 +386,7 @@ module HybridPlatformsConductorTest
               expect(actions['node'].size).to eq 4
               # First action should be to copy the reserve_proxmox_container code
               expect(actions['node'][0].keys).to eq [:scp]
-              expect(actions['node'][0][:scp].first[0]).to match(/^.+\/hpc_plugins\/provisioner\/proxmox\/$/)
+              expect(actions['node'][0][:scp].first[0]).to match(%r{^.+/hpc_plugins/provisioner/proxmox/$})
               expect(actions['node'][0][:scp].first[1]).to eq '.'
               # Second action should be to create directories
               expect(actions['node'][1]).to eq(
@@ -394,10 +394,10 @@ module HybridPlatformsConductorTest
               )
               # Next actions should be to copy the config/create/destroy files
               expect(actions['node'][2].keys).to eq [:scp]
-              expect(actions['node'][2][:scp].first[0]).to match(/^.+\/destroy_#{Regexp.escape(expected_file_id)}\.json$/)
+              expect(actions['node'][2][:scp].first[0]).to match(%r{^.+/destroy_#{Regexp.escape(expected_file_id)}\.json$})
               expect(actions['node'][2][:scp].first[1]).to eq './proxmox/destroy'
               expect(actions['node'][3].keys).to eq [:scp]
-              expect(actions['node'][3][:scp].first[0]).to match(/^.+\/config_#{Regexp.escape(expected_file_id)}\.json$/)
+              expect(actions['node'][3][:scp].first[0]).to match(%r{^.+/config_#{Regexp.escape(expected_file_id)}\.json$})
               expect(actions['node'][3][:scp].first[1]).to eq './proxmox/config'
               @proxmox_destroy_options = JSON.parse(File.read(actions['node'][2][:scp].first[0]))
               { 'node' => [0, '', ''] }
@@ -554,7 +554,7 @@ module HybridPlatformsConductorTest
                 case path
                 when 'nodes'
                   pve_nodes.keys.map { |pve_node_name| { 'node' => pve_node_name } }
-                when /^nodes\/([^\/]+)\/status$/
+                when %r{^nodes/([^/]+)/status$}
                   pve_node_name = Regexp.last_match(1)
                   {
                     'loadavg' => pve_nodes[pve_node_name][:loadavg].map(&:to_s),
@@ -562,7 +562,7 @@ module HybridPlatformsConductorTest
                       'total' => pve_nodes[pve_node_name][:memory_total]
                     }
                   }
-                when /^nodes\/([^\/]+)\/storage$/
+                when %r{^nodes/([^/]+)/storage$}
                   pve_node_name = Regexp.last_match(1)
                   [
                     {
@@ -570,7 +570,7 @@ module HybridPlatformsConductorTest
                       'total' => pve_nodes[pve_node_name][:storage_total]
                     }
                   ]
-                when /^nodes\/([^\/]+)\/lxc$/
+                when %r{^nodes/([^/]+)/lxc$}
                   pve_node_name = Regexp.last_match(1)
                   if pve_nodes[pve_node_name][:error_strings].nil? || pve_nodes[pve_node_name][:error_strings].empty?
                     pve_nodes[pve_node_name][:lxc_containers].map do |vm_id, vm_info|
@@ -584,7 +584,7 @@ module HybridPlatformsConductorTest
                   else
                     pve_nodes[pve_node_name][:error_strings].shift
                   end
-                when /^nodes\/([^\/]+)\/lxc\/([^\/]+)\/config$/
+                when %r{^nodes/([^/]+)/lxc/([^/]+)/config$}
                   pve_node_name = Regexp.last_match(1)
                   vmid = Regexp.last_match(2)
                   {
@@ -597,13 +597,13 @@ module HybridPlatformsConductorTest
                       creation_date: #{pve_nodes[pve_node_name][:lxc_containers][Integer(vmid)][:creation_date].strftime('%FT%T')}
                     EO_DESCRIPTION
                   }
-                when /^nodes\/([^\/]+)\/lxc\/([^\/]+)\/status\/current$/
+                when %r{^nodes/([^/]+)/lxc/([^/]+)/status/current$}
                   pve_node_name = Regexp.last_match(1)
                   vmid = Regexp.last_match(2)
                   {
                     'status' => pve_nodes[pve_node_name][:lxc_containers][Integer(vmid)][:status]
                   }
-                when /^nodes\/[^\/]+\/tasks\/[^\/]+\/status$/
+                when %r{^nodes/[^/]+/tasks/[^/]+/status$}
                   # Mock tasks completion
                   {
                     'status' => 'OK'
@@ -616,10 +616,10 @@ module HybridPlatformsConductorTest
               allow(proxmox).to receive(:post) do |path, args|
                 @proxmox_actions << [:post, path, args].compact
                 case path
-                when /^nodes\/([^\/]+)\/lxc$/
+                when %r{^nodes/([^/]+)/lxc$}
                   pve_node_name = Regexp.last_match(1)
                   "UPID:#{pve_node_name}:0000A504:6DEABF24:5F44669B:create::root@pam:"
-                when /^nodes\/([^\/]+)\/lxc\/([^\/]+)\/status\/stop$/
+                when %r{^nodes/([^/]+)/lxc/([^/]+)/status/stop$}
                   pve_node_name = Regexp.last_match(1)
                   vmid = Regexp.last_match(2)
                   "UPID:#{pve_node_name}:0000A504:6DEABF24:5F44669B:stop_#{vmid}::root@pam:"
@@ -631,7 +631,7 @@ module HybridPlatformsConductorTest
               allow(proxmox).to receive(:delete) do |path|
                 @proxmox_actions << [:delete, path]
                 case path
-                when /^nodes\/([^\/]+)\/lxc\/([^\/]+)$/
+                when %r{^nodes/([^/]+)/lxc/([^/]+)$}
                   pve_node_name = Regexp.last_match(1)
                   vmid = Regexp.last_match(2)
                   # Make sure we delete the mocked information as well
@@ -666,9 +666,9 @@ module HybridPlatformsConductorTest
             case dir
             when '/sys/fs/cgroup/*/lxc/*'
               block.nil? ? remaining_leftovers : remaining_leftovers.each(&block)
-            when /^\/sys\/fs\/cgroup\/\*\/lxc\/(.+)$/
+            when %r{^/sys/fs/cgroup/\*/lxc/(.+)$}
               vm_id_str = Regexp.last_match(1)
-              file_pattern = /^\/sys\/fs\/cgroup\/.+\/lxc\/#{Regexp.escape(vm_id_str)}$/
+              file_pattern = %r{^/sys/fs/cgroup/.+/lxc/#{Regexp.escape(vm_id_str)}$}
               matched_files = remaining_leftovers.select { |file| file =~ file_pattern }
               block.nil? ? matched_files : matched_files.each(&block)
             else

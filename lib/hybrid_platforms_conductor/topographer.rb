@@ -139,7 +139,7 @@ module HybridPlatformsConductor
       @known_nodes = @nodes_handler.known_nodes.map { |hostname| [hostname, nil] }.to_h
       # Cache of objects being used a lot in parsing for performance
       @non_word_regexp = /\W+/
-      @ip_regexp = /(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})(\/(\d{1,2})|[^\d\/]|$)/
+      @ip_regexp = %r{(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})(/(\d{1,2})|[^\d/]|$)}
       # Cache of ignored IPs
       @ips_ignored = {}
     end

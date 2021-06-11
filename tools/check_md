@@ -34,7 +34,7 @@ def parse_md(file)
   puts "Parsing #{file}..."
   content = File.read(file)
   @info[file] = {
-    anchors: content.scan(/<a name="([^"]*)"><\/a>/).map { |(anchor)| anchor },
+    anchors: content.scan(%r{<a name="([^"]*)"></a>}).map { |(anchor)| anchor },
     links: content.scan(/\[[^\]]*\]\(([^\)]*)\)/).map { |(link)| link }
   }
   # Parse linked files

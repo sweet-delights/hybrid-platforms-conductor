@@ -47,7 +47,7 @@ describe HybridPlatformsConductor::HpcPlugins::PlatformHandler::ServerlessChef d
           [
             ['whoami', proc { [0, 'test_user', ''] }, { optional: true }],
             [
-              /^cd #{Regexp.escape(repository)} &&\s+sudo rm -rf dist\/#{Regexp.escape(env)}\/#{Regexp.escape(policy)} &&\s+\/opt\/chef-workstation\/bin\/chef export #{Regexp.escape(policy_file)} dist\/#{Regexp.escape(env)}\/#{Regexp.escape(policy)} --chef-license accept#{data_bags ? " && cp -ar data_bags/ dist/#{Regexp.escape(env)}/#{Regexp.escape(policy)}/" : ''}$/,
+              %r{^cd #{Regexp.escape(repository)} &&\s+sudo rm -rf dist/#{Regexp.escape(env)}/#{Regexp.escape(policy)} &&\s+/opt/chef-workstation/bin/chef export #{Regexp.escape(policy_file)} dist/#{Regexp.escape(env)}/#{Regexp.escape(policy)} --chef-license accept#{data_bags ? " && cp -ar data_bags/ dist/#{Regexp.escape(env)}/#{Regexp.escape(policy)}/" : ''}$},
               proc do
                 FileUtils.mkdir_p "#{repository}/dist/#{env}/#{policy}"
                 FileUtils.cp_r("#{repository}/data_bags", "#{repository}/dist/#{env}/#{policy}/") if data_bags

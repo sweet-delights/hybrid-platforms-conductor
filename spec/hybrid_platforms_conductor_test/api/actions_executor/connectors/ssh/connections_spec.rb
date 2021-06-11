@@ -192,7 +192,7 @@ describe HybridPlatformsConductor::ActionsExecutor do
             )
           ) do
             test_connector.ssh_user = 'test_user'
-            expect { test_connector.with_connection_to(%w[node1 node2 node3]) }.to raise_error(/^Error while starting SSH Control Master with .+\/ssh -o BatchMode=yes -o ControlMaster=yes -o ControlPersist=yes hpc.node2 true: Can't connect to 192.168.42.2$/)
+            expect { test_connector.with_connection_to(%w[node1 node2 node3]) }.to raise_error(%r{^Error while starting SSH Control Master with .+/ssh -o BatchMode=yes -o ControlMaster=yes -o ControlPersist=yes hpc.node2 true: Can't connect to 192.168.42.2$})
           end
         end
       end
@@ -540,7 +540,7 @@ describe HybridPlatformsConductor::ActionsExecutor do
               ['ssh -V 2>&1', proc { [0, "OpenSSH_7.4p1 Debian-10+deb9u7, OpenSSL 1.0.2u  20 Dec 2019\n", ''] }],
             ] +
               [[
-                /^.+\/ssh -o BatchMode=yes -o ControlMaster=yes -o ControlPersist=yes hpc\.node true$/,
+                %r{^.+/ssh -o BatchMode=yes -o ControlMaster=yes -o ControlPersist=yes hpc\.node true$},
                 proc do
                   nbr_boot_messages += 1
                   [255, '', "System is booting up. See pam_nologin(8)\nAuthentication failed.\n"]

@@ -53,7 +53,7 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
           mock_proxmox(mocked_pve_nodes: [{ 'pve_node_name' => { error_strings: ['NOK: error code = 500'] * 5 } }])
           result = call_reserve_proxmox_container(2, 1024, 4, config: { api_max_retries: 4 })
           expect(result[:error]).not_to eq nil
-          expect(result[:error]).to match(/Unhandled exception from reserve_proxmox_container: Proxmox API get nodes\/pve_node_name\/lxc returns NOK: error code = 500 continuously \(tried 5 times\)/)
+          expect(result[:error]).to match(%r{Unhandled exception from reserve_proxmox_container: Proxmox API get nodes/pve_node_name/lxc returns NOK: error code = 500 continuously \(tried 5 times\)})
           expect_proxmox_actions_to_be [
             [:create_ticket],
             [:create_ticket],

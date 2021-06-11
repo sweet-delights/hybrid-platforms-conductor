@@ -115,7 +115,7 @@ module HybridPlatformsConductor
             recipe_content.
               scan(/source\s+(["'])(.+?)\1/).
               each do |(_sub_grp, source)|
-                sources << source unless source =~ /^https?:\/\//
+                sources << source unless source =~ %r{^https?://}
               end
             erb_sources = sources.select { |source| File.extname(source).downcase == '.erb' }
             non_erb_sources = sources - erb_sources

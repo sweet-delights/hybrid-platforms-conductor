@@ -468,7 +468,7 @@ module HybridPlatformsConductor
       # 3. Expand the Regexps
       real_nodes = []
       string_nodes.each do |node|
-        if node =~ /^\/(.+)\/$/
+        if node =~ %r{^/(.+)/$}
           node_regexp = Regexp.new(Regexp.last_match(1))
           real_nodes.concat(known_nodes.select { |known_node| known_node[node_regexp] })
         else
@@ -531,7 +531,7 @@ module HybridPlatformsConductor
       current_file_diff = nil
       stdout.split("\n").each do |line|
         case line
-        when /^diff --git a\/(.+) b\/(.+)$/
+        when %r{^diff --git a/(.+) b/(.+)$}
           # A new file diff
           from, to = Regexp.last_match(1), Regexp.last_match(2)
           current_file_diff = {

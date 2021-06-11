@@ -564,7 +564,7 @@ class ProxmoxWaiter
       destroy_vm_on(pve_node, vm_id) if is_vm_expired?(pve_node, vm_id)
     end
     # Invalidate the API cache for anything related to this PVE node
-    pve_node_paths_regexp = /^nodes\/#{Regexp.escape(pve_node)}\/.+$/
+    pve_node_paths_regexp = %r{^nodes/#{Regexp.escape(pve_node)}/.+$}
     @gets_cache.delete_if { |path, _result| path =~ pve_node_paths_regexp }
   end
 
