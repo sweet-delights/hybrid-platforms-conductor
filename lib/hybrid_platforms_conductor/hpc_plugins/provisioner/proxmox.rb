@@ -128,64 +128,58 @@ module HybridPlatformsConductor
               end
             end
           end
-          unless @lxc_details
-            # We couldn't find an existing LXC container for this node/environment.
-            # We have to create one.
-            # Get the image name for this node
-            image = @nodes_handler.get_image_of(@node).to_sym
-            # Find if we have such an image registered
-            if @config.known_os_images.include?(image)
-              proxmox_conf = "#{@config.os_image_dir(image)}/proxmox.json"
-              if File.exist?(proxmox_conf)
-                pve_template = JSON.parse(File.read(proxmox_conf)).dig 'template'
-                if pve_template
-                  # Query the inventory to know about minimum resources needed to deploy the node.
-                  # Provide default values if they are not part of the metadata.
-                  min_resources_to_deploy = {
-                    cpus: 2,
-                    ram_mb: 1024,
-                    disk_gb: 10
-                  }.merge(@nodes_handler.get_deploy_resources_min_of(@node) || {})
-                  # Create the Proxmox container from the sync node.
-                  vm_config = proxmox_test_info[:vm_config]
-                  # Hostname in Proxmox is capped at 65 chars.
-                  # Make sure we don't get over it, but still use a unique one.
-                  hostname = "#{@node}.#{@environment}.hpc-test.com"
-                  if hostname.size > MAX_PROXMOX_HOSTNAME_SIZE
-                    # Truncate it, but add a unique ID in it.
-                    # In the end the hostname looks like:
-                    # <truncated_node_environment>.<unique_id>.hpc-test.com
-                    hostname = "-#{Digest::MD5.hexdigest(hostname)[0..7]}.hpc-test.com"
-                    hostname = "#{@node}.#{@environment}"[0..MAX_PROXMOX_HOSTNAME_SIZE - hostname.size - 1] + hostname
-                  end
-                  @lxc_details = request_lxc_creation_for(
-                    ostemplate: pve_template,
-                    hostname: hostname.gsub('_', '-'),
-                    cores: min_resources_to_deploy[:cpus],
-                    cpulimit: min_resources_to_deploy[:cpus],
-                    memory: min_resources_to_deploy[:ram_mb],
-                    rootfs: "local-lvm:#{min_resources_to_deploy[:disk_gb]}",
-                    nameserver: vm_config[:vm_dns_servers].join(' '),
-                    searchdomain: vm_config[:vm_search_domain],
-                    net0: "name=eth0,bridge=vmbr0,gw=#{vm_config[:vm_gateway]}",
-                    password: 'root_pwd',
-                    description: <<~EO_DESCRIPTION
-                      ===== HPC info =====
-                      node: #{@node}
-                      environment: #{@environment}
-                      debug: #{log_debug? ? 'true' : 'false'}
-                    EO_DESCRIPTION
-                  )
-                else
-                  raise "[ #{@node}/#{@environment} ] - No template found in #{proxmox_conf}"
-                end
-              else
-                raise "[ #{@node}/#{@environment} ] - No Proxmox configuration found at #{proxmox_conf}"
-              end
-            else
-              raise "[ #{@node}/#{@environment} ] - Unknown OS image #{image} defined for node #{@node}"
-            end
+          return if @lxc_details
+
+          # We couldn't find an existing LXC container for this node/environment.
+          # We have to create one.
+          # Get the image name for this node
+          image = @nodes_handler.get_image_of(@node).to_sym
+          # Find if we have such an image registered
+          raise "[ #{@node}/#{@environment} ] - Unknown OS image #{image} defined for node #{@node}" unless @config.known_os_images.include?(image)
+
+          proxmox_conf = "#{@config.os_image_dir(image)}/proxmox.json"
+          raise "[ #{@node}/#{@environment} ] - No Proxmox configuration found at #{proxmox_conf}" unless File.exist?(proxmox_conf)
+
+          pve_template = JSON.parse(File.read(proxmox_conf)).dig 'template'
+          raise "[ #{@node}/#{@environment} ] - No template found in #{proxmox_conf}" unless pve_template
+
+          # Query the inventory to know about minimum resources needed to deploy the node.
+          # Provide default values if they are not part of the metadata.
+          min_resources_to_deploy = {
+            cpus: 2,
+            ram_mb: 1024,
+            disk_gb: 10
+          }.merge(@nodes_handler.get_deploy_resources_min_of(@node) || {})
+          # Create the Proxmox container from the sync node.
+          vm_config = proxmox_test_info[:vm_config]
+          # Hostname in Proxmox is capped at 65 chars.
+          # Make sure we don't get over it, but still use a unique one.
+          hostname = "#{@node}.#{@environment}.hpc-test.com"
+          if hostname.size > MAX_PROXMOX_HOSTNAME_SIZE
+            # Truncate it, but add a unique ID in it.
+            # In the end the hostname looks like:
+            # <truncated_node_environment>.<unique_id>.hpc-test.com
+            hostname = "-#{Digest::MD5.hexdigest(hostname)[0..7]}.hpc-test.com"
+            hostname = "#{@node}.#{@environment}"[0..MAX_PROXMOX_HOSTNAME_SIZE - hostname.size - 1] + hostname
           end
+          @lxc_details = request_lxc_creation_for(
+            ostemplate: pve_template,
+            hostname: hostname.gsub('_', '-'),
+            cores: min_resources_to_deploy[:cpus],
+            cpulimit: min_resources_to_deploy[:cpus],
+            memory: min_resources_to_deploy[:ram_mb],
+            rootfs: "local-lvm:#{min_resources_to_deploy[:disk_gb]}",
+            nameserver: vm_config[:vm_dns_servers].join(' '),
+            searchdomain: vm_config[:vm_search_domain],
+            net0: "name=eth0,bridge=vmbr0,gw=#{vm_config[:vm_gateway]}",
+            password: 'root_pwd',
+            description: <<~EO_DESCRIPTION
+              ===== HPC info =====
+              node: #{@node}
+              environment: #{@environment}
+              debug: #{log_debug? ? 'true' : 'false'}
+            EO_DESCRIPTION
+          )
         end
 
         # Start an instance
@@ -356,11 +350,9 @@ module HybridPlatformsConductor
               sleep proxmox_test_info[:api_wait_between_retries_secs] + rand(5)
             end
           end
-          if task.nil?
-            raise "[ #{@node}/#{@environment} ] - Proxmox API call #{http_method} nodes/#{pve_node}/#{sub_path} #{args} is constantly failing. Giving up."
-          else
-            wait_for_proxmox_task(proxmox, pve_node, task)
-          end
+          raise "[ #{@node}/#{@environment} ] - Proxmox API call #{http_method} nodes/#{pve_node}/#{sub_path} #{args} is constantly failing. Giving up." if task.nil?
+            
+          wait_for_proxmox_task(proxmox, pve_node, task)
         end
 
         # Wait for a given Proxmox task completion
@@ -380,11 +372,9 @@ module HybridPlatformsConductor
             log_debug "[ #{@node}/#{@environment} ] - Wait for Proxmox task #{task} to complete..."
             sleep 1
           end
-          if status.split(':').last == 'OK'
-            log_debug "[ #{@node}/#{@environment} ] - Proxmox task #{task} completed."
-          else
-            raise "[ #{@node}/#{@environment} ] - Proxmox task #{task} completed with status #{status}"
-          end
+          raise "[ #{@node}/#{@environment} ] - Proxmox task #{task} completed with status #{status}" unless status.split(':').last == 'OK'
+          
+          log_debug "[ #{@node}/#{@environment} ] - Proxmox task #{task} completed."
         end
 
         # Get task status

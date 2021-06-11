@@ -332,38 +332,38 @@ module HybridPlatformsConductor
           []
         end
       end.flatten
-      unless tests_to_run.empty?
-        section "Run #{tests_to_run.size} #{title}" do
-          tests_preparation.call(tests_to_run) unless tests_preparation.nil?
-          for_each_element_in(
-            tests_to_run,
-            parallel: !log_debug? && nbr_threads_max > 1,
-            nbr_threads_max: nbr_threads_max,
-            progress: "Run #{title}"
-          ) do |test|
-            test_category =
-              if test.platform.nil? && test.node.nil?
-                'Global'
-              elsif test.node.nil?
-                "Platform #{test.platform.name}"
-              elsif test.platform.nil?
-                "Node #{test.node}"
-              else
-                "Platform #{test.platform.name} / Node #{test.node}"
-              end
-            out "[ #{Time.now.utc.strftime('%F %T')} ] - [ #{test_category} ] - [ #{test.name} ] - Start test..."
-            begin_time = Time.now
-            begin
-              test_execution.call(test)
-            rescue
-              test.error "Uncaught exception during test: #{$!}", $!.backtrace.join("\n")
+      return if tests_to_run.empty?
+
+      section "Run #{tests_to_run.size} #{title}" do
+        tests_preparation.call(tests_to_run) unless tests_preparation.nil?
+        for_each_element_in(
+          tests_to_run,
+          parallel: !log_debug? && nbr_threads_max > 1,
+          nbr_threads_max: nbr_threads_max,
+          progress: "Run #{title}"
+        ) do |test|
+          test_category =
+            if test.platform.nil? && test.node.nil?
+              'Global'
+            elsif test.node.nil?
+              "Platform #{test.platform.name}"
+            elsif test.platform.nil?
+              "Node #{test.node}"
+            else
+              "Platform #{test.platform.name} / Node #{test.node}"
             end
-            end_time = Time.now
-            test.executed
-            out "[ #{Time.now.utc.strftime('%F %T')} ] - [ #{test_category} ] - [ #{test.name} ] - Test finished in #{end_time - begin_time} seconds."
+          out "[ #{Time.now.utc.strftime('%F %T')} ] - [ #{test_category} ] - [ #{test.name} ] - Start test..."
+          begin_time = Time.now
+          begin
+            test_execution.call(test)
+          rescue
+            test.error "Uncaught exception during test: #{$!}", $!.backtrace.join("\n")
           end
-          @tests_run.concat(tests_to_run)
+          end_time = Time.now
+          test.executed
+          out "[ #{Time.now.utc.strftime('%F %T')} ] - [ #{test_category} ] - [ #{test.name} ] - Test finished in #{end_time - begin_time} seconds."
         end
+        @tests_run.concat(tests_to_run)
       end
     end
 

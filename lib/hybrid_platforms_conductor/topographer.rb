@@ -199,11 +199,11 @@ module HybridPlatformsConductor
 
     # Generate the JSON files to be used
     def json_files
-      unless @skip_run
-        @json_dumper.dump_dir = @config[:json_files_dir]
-        # Generate all the jsons, even if 1 hostname is given, as it might be useful for the rest of the graph.
-        @json_dumper.dump_json_for(@nodes_handler.known_nodes)
-      end
+      return if @skip_run
+
+      @json_dumper.dump_dir = @config[:json_files_dir]
+      # Generate all the jsons, even if 1 hostname is given, as it might be useful for the rest of the graph.
+      @json_dumper.dump_json_for(@nodes_handler.known_nodes)
     end
 
     # Dump the graph in the desired outputs
@@ -444,46 +444,44 @@ module HybridPlatformsConductor
           end
           break unless conflicting_clusters.nil?
         end
-        if conflicting_clusters.nil?
-          break
-        else
-          # We have conflicting clusters to resolve
-          cluster_1, cluster_2 = conflicting_clusters
-          cluster_1_belongs_to_cluster_2 = @nodes_graph[cluster_1][:includes].all? { |cluster_1_node_name| @nodes_graph[cluster_2][:includes_proc].call(cluster_1_node_name) }
-          cluster_2_belongs_to_cluster_1 = @nodes_graph[cluster_2][:includes].all? { |cluster_2_node_name| @nodes_graph[cluster_1][:includes_proc].call(cluster_2_node_name) }
-          if cluster_1_belongs_to_cluster_2
-            if cluster_2_belongs_to_cluster_1
-              # Both clusters have the same nodes
-              if @nodes_graph[cluster_1][:includes_proc].call(cluster_2)
-                @nodes_graph[cluster_2][:includes] = (@nodes_graph[cluster_1][:includes] + @nodes_graph[cluster_2][:includes]).uniq
-                @nodes_graph[cluster_1][:includes] = [cluster_2]
-              else
-                @nodes_graph[cluster_1][:includes] = (@nodes_graph[cluster_1][:includes] + @nodes_graph[cluster_2][:includes]).uniq
-                @nodes_graph[cluster_2][:includes] = [cluster_1]
-              end
+        break if conflicting_clusters.nil?
+
+        # We have conflicting clusters to resolve
+        cluster_1, cluster_2 = conflicting_clusters
+        cluster_1_belongs_to_cluster_2 = @nodes_graph[cluster_1][:includes].all? { |cluster_1_node_name| @nodes_graph[cluster_2][:includes_proc].call(cluster_1_node_name) }
+        cluster_2_belongs_to_cluster_1 = @nodes_graph[cluster_2][:includes].all? { |cluster_2_node_name| @nodes_graph[cluster_1][:includes_proc].call(cluster_2_node_name) }
+        if cluster_1_belongs_to_cluster_2
+          if cluster_2_belongs_to_cluster_1
+            # Both clusters have the same nodes
+            if @nodes_graph[cluster_1][:includes_proc].call(cluster_2)
+              @nodes_graph[cluster_2][:includes] = (@nodes_graph[cluster_1][:includes] + @nodes_graph[cluster_2][:includes]).uniq
+              @nodes_graph[cluster_1][:includes] = [cluster_2]
             else
-              # All nodes of cluster_1 belong to cluster_2, but some nodes of cluster_2 don't belong to cluster_1
-              @nodes_graph[cluster_2][:includes] = @nodes_graph[cluster_2][:includes] - @nodes_graph[cluster_1][:includes] + [cluster_1]
+              @nodes_graph[cluster_1][:includes] = (@nodes_graph[cluster_1][:includes] + @nodes_graph[cluster_2][:includes]).uniq
+              @nodes_graph[cluster_2][:includes] = [cluster_1]
             end
-          elsif cluster_2_belongs_to_cluster_1
-            # All nodes of cluster_2 belong to cluster_1, but some nodes of cluster_1 don't belong to cluster_2
-            @nodes_graph[cluster_1][:includes] = @nodes_graph[cluster_1][:includes] - @nodes_graph[cluster_2][:includes] + [cluster_2]
           else
-            # cluster_1 and cluster_2 have to be merged
-            new_cluster_name = "#{cluster_1}_&_#{cluster_2}"
-            # Store thos proc in those variables as the cluster_1 and cluster_2 references are going to be removed
-            includes_proc_1 = @nodes_graph[cluster_1][:includes_proc]
-            includes_proc_2 = @nodes_graph[cluster_2][:includes_proc]
-            @nodes_graph[new_cluster_name] = {
-              type: :cluster,
-              includes: (@nodes_graph[cluster_1][:includes] + @nodes_graph[cluster_2][:includes]).uniq,
-              connections: @nodes_graph[cluster_1][:connections].merge!(@nodes_graph[cluster_2][:connections]) { |_connected_node, labels_1, labels_2| (labels_1 + labels_2).uniq },
-              includes_proc: proc do |hostname|
-                includes_proc_1.call(hostname) || includes_proc_2.call(hostname)
-              end
-            }
-            replace_nodes([cluster_1, cluster_2], new_cluster_name)
+            # All nodes of cluster_1 belong to cluster_2, but some nodes of cluster_2 don't belong to cluster_1
+            @nodes_graph[cluster_2][:includes] = @nodes_graph[cluster_2][:includes] - @nodes_graph[cluster_1][:includes] + [cluster_1]
           end
+        elsif cluster_2_belongs_to_cluster_1
+          # All nodes of cluster_2 belong to cluster_1, but some nodes of cluster_1 don't belong to cluster_2
+          @nodes_graph[cluster_1][:includes] = @nodes_graph[cluster_1][:includes] - @nodes_graph[cluster_2][:includes] + [cluster_2]
+        else
+          # cluster_1 and cluster_2 have to be merged
+          new_cluster_name = "#{cluster_1}_&_#{cluster_2}"
+          # Store thos proc in those variables as the cluster_1 and cluster_2 references are going to be removed
+          includes_proc_1 = @nodes_graph[cluster_1][:includes_proc]
+          includes_proc_2 = @nodes_graph[cluster_2][:includes_proc]
+          @nodes_graph[new_cluster_name] = {
+            type: :cluster,
+            includes: (@nodes_graph[cluster_1][:includes] + @nodes_graph[cluster_2][:includes]).uniq,
+            connections: @nodes_graph[cluster_1][:connections].merge!(@nodes_graph[cluster_2][:connections]) { |_connected_node, labels_1, labels_2| (labels_1 + labels_2).uniq },
+            includes_proc: proc do |hostname|
+              includes_proc_1.call(hostname) || includes_proc_2.call(hostname)
+            end
+          }
+          replace_nodes([cluster_1, cluster_2], new_cluster_name)
         end
       end
     end
@@ -514,11 +512,9 @@ module HybridPlatformsConductor
     # * *file_name* (String): File name to output to.
     # * *output_format* (Symbol): Output format to use (should be part of the plugins).
     def write_graph(file_name, output_format)
-      if @plugins.key?(output_format)
-        @plugins[output_format].new(self).write_graph(file_name)
-      else
-        raise "Unknown topographer plugin #{output_format}"
-      end
+      raise "Unknown topographer plugin #{output_format}" unless @plugins.key?(output_format)
+
+      @plugins[output_format].new(self).write_graph(file_name)
     end
 
     # Get the title of a given node
@@ -840,19 +836,19 @@ module HybridPlatformsConductor
     # * *hostname* (String): Hostname to parse for connections.
     # * *max_level* (Integer): Maximum level of recursive passes (nil for no limit).
     def parse_connections_for(hostname, max_level)
-      unless @nodes_graph.key?(hostname)
-        @nodes_graph[hostname] = {
-          type: :node,
-          connections: connections_from_json(node_json_for(hostname)),
-          includes: []
-        }
-        @nodes_graph[hostname][:ipv4] = IPAddress::IPv4.new(@node_metadata[hostname][:private_ips].first) if !@node_metadata[hostname][:private_ips].nil? && !@node_metadata[hostname][:private_ips].empty?
-        sub_max_level = max_level.nil? ? nil : max_level - 1
-        if sub_max_level != -1
-          @nodes_graph[hostname][:connections].keys.each do |connected_hostname|
-            parse_connections_for(connected_hostname, sub_max_level)
-          end
-        end
+      return if @nodes_graph.key?(hostname)
+
+      @nodes_graph[hostname] = {
+        type: :node,
+        connections: connections_from_json(node_json_for(hostname)),
+        includes: []
+      }
+      @nodes_graph[hostname][:ipv4] = IPAddress::IPv4.new(@node_metadata[hostname][:private_ips].first) if !@node_metadata[hostname][:private_ips].nil? && !@node_metadata[hostname][:private_ips].empty?
+      sub_max_level = max_level.nil? ? nil : max_level - 1
+      return if sub_max_level == -1
+
+      @nodes_graph[hostname][:connections].keys.each do |connected_hostname|
+        parse_connections_for(connected_hostname, sub_max_level)
       end
     end
 

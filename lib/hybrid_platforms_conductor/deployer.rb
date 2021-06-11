@@ -545,45 +545,43 @@ module HybridPlatformsConductor
           # Install corporate certificates if present
           certificate_actions =
             if @local_environment && ENV['hpc_certificates']
-              if File.exist?(ENV['hpc_certificates'])
-                log_debug "Deploy certificates from #{ENV['hpc_certificates']}"
-                case image_id
-                when 'debian_9', 'debian_10'
-                  [
-                    {
-                      remote_bash: "#{sudo}apt update && #{sudo}apt install -y ca-certificates"
+              raise "Missing path referenced by the hpc_certificates environment variable: #{ENV['hpc_certificates']}" unless File.exist?(ENV['hpc_certificates'])
+
+              log_debug "Deploy certificates from #{ENV['hpc_certificates']}"
+              case image_id
+              when 'debian_9', 'debian_10'
+                [
+                  {
+                    remote_bash: "#{sudo}apt update && #{sudo}apt install -y ca-certificates"
+                  },
+                  {
+                    scp: {
+                      ENV['hpc_certificates'] => '/usr/local/share/ca-certificates',
+                      :sudo => ssh_user != 'root'
                     },
-                    {
-                      scp: {
-                        ENV['hpc_certificates'] => '/usr/local/share/ca-certificates',
-                        :sudo => ssh_user != 'root'
-                      },
-                      remote_bash: "#{sudo}update-ca-certificates"
-                    }
-                  ]
-                when 'centos_7'
-                  [
-                    {
-                      remote_bash: "#{sudo}yum install -y ca-certificates"
-                    },
-                    {
-                      scp: Hash[Dir.glob("#{ENV['hpc_certificates']}/*.crt").map do |cert_file|
-                        [
-                          cert_file,
-                          '/etc/pki/ca-trust/source/anchors'
-                        ]
-                      end].merge(sudo: ssh_user != 'root'),
-                      remote_bash: [
-                        "#{sudo}update-ca-trust enable",
-                        "#{sudo}update-ca-trust extract"
+                    remote_bash: "#{sudo}update-ca-certificates"
+                  }
+                ]
+              when 'centos_7'
+                [
+                  {
+                    remote_bash: "#{sudo}yum install -y ca-certificates"
+                  },
+                  {
+                    scp: Hash[Dir.glob("#{ENV['hpc_certificates']}/*.crt").map do |cert_file|
+                      [
+                        cert_file,
+                        '/etc/pki/ca-trust/source/anchors'
                       ]
-                    }
-                  ]
-                else
-                  raise "Unknown image ID for node #{node}: #{image_id}. Check metadata for this node."
-                end
+                    end].merge(sudo: ssh_user != 'root'),
+                    remote_bash: [
+                      "#{sudo}update-ca-trust enable",
+                      "#{sudo}update-ca-trust extract"
+                    ]
+                  }
+                ]
               else
-                raise "Missing path referenced by the hpc_certificates environment variable: #{ENV['hpc_certificates']}"
+                raise "Unknown image ID for node #{node}: #{image_id}. Check metadata for this node."
               end
             else
               []

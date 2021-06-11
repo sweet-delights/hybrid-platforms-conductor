@@ -58,25 +58,25 @@ module HybridPlatformsConductor
           # * *recipe* (Symbol): The recipe name
           def add_recipe_in_tree(cookbook_dir, cookbook, recipe)
             @recipes_tree[cookbook] = {} unless @recipes_tree.key?(cookbook)
-            unless @recipes_tree[cookbook].key?(recipe)
-              recipe_info =
-                if cookbook_dir.nil?
-                  # This recipe comes from an external cookbook, we won't get into it.
-                  {
-                    included_recipes: [],
-                    used_templates: [],
-                    used_files: [],
-                    used_cookbooks: []
-                  }
-                else
-                  recipe_usage(cookbook_dir, cookbook, recipe)
-                end
-              @recipes_tree[cookbook][recipe] = recipe_info.merge(
-                used_by_policies: []
-              )
-              recipe_info[:included_recipes].each do |(sub_cookbook_dir, sub_cookbook, sub_recipe)|
-                add_recipe_in_tree(sub_cookbook_dir, sub_cookbook, sub_recipe)
+            return if @recipes_tree[cookbook].key?(recipe)
+
+            recipe_info =
+              if cookbook_dir.nil?
+                # This recipe comes from an external cookbook, we won't get into it.
+                {
+                  included_recipes: [],
+                  used_templates: [],
+                  used_files: [],
+                  used_cookbooks: []
+                }
+              else
+                recipe_usage(cookbook_dir, cookbook, recipe)
               end
+            @recipes_tree[cookbook][recipe] = recipe_info.merge(
+              used_by_policies: []
+            )
+            recipe_info[:included_recipes].each do |(sub_cookbook_dir, sub_cookbook, sub_recipe)|
+              add_recipe_in_tree(sub_cookbook_dir, sub_cookbook, sub_recipe)
             end
           end
 
@@ -211,11 +211,11 @@ module HybridPlatformsConductor
           # * *recipe* (Symbol): The recipe
           # * *used_by_policy* (String): The policy using this recipe
           def mark_recipe_used_by_policy(cookbook, recipe, used_by_policy)
-            unless @recipes_tree[cookbook][recipe][:used_by_policies].include?(used_by_policy)
-              @recipes_tree[cookbook][recipe][:used_by_policies] << used_by_policy
-              @recipes_tree[cookbook][recipe][:included_recipes].each do |(_sub_cookbook_dir, sub_cookbook, sub_recipe)|
-                mark_recipe_used_by_policy(sub_cookbook, sub_recipe, used_by_policy)
-              end
+            return if @recipes_tree[cookbook][recipe][:used_by_policies].include?(used_by_policy)
+
+            @recipes_tree[cookbook][recipe][:used_by_policies] << used_by_policy
+            @recipes_tree[cookbook][recipe][:included_recipes].each do |(_sub_cookbook_dir, sub_cookbook, sub_recipe)|
+              mark_recipe_used_by_policy(sub_cookbook, sub_recipe, used_by_policy)
             end
           end
 

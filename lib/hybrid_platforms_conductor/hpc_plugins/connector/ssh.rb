@@ -519,12 +519,10 @@ module HybridPlatformsConductor
                         # We'll do that using another terminal spawned in the background.
                         if ENV['hpc_interactive'] == 'false'
                           error = "Can't spawn interactive ControlMaster to #{node} in non-interactive mode. You may want to change the hpc_interactive env variable."
-                          if no_exception
-                            log_error error
-                            exit_status = :non_interactive
-                          else
-                            raise error
-                          end
+                          raise error unless no_exception
+
+                          log_error error
+                          exit_status = :non_interactive
                         else
                           Thread.new do
                             log_debug "[ ControlMaster - #{ssh_url} ] - Spawn interactive ControlMaster in separate terminal"
@@ -542,15 +540,13 @@ module HybridPlatformsConductor
                         idx_try = 0
                         loop do
                           exit_status, _stdout, stderr = @cmd_runner.run_cmd ssh_control_master_start_cmd, log_to_stdout: log_debug?, no_exception: true, timeout: timeout
-                          if exit_status == 0
-                            break
-                          elsif stderr =~ /System is booting up/
+                          break if exit_status == 0
+
+                          if stderr =~ /System is booting up/
                             if idx_try == MAX_RETRIES_FOR_BOOT
-                              if no_exception
-                                break
-                              else
-                                raise ActionsExecutor::ConnectionError, "Tried #{idx_try} times to create SSH Control Master with #{ssh_control_master_start_cmd} but system says it's booting up."
-                              end
+                              break if no_exception
+
+                              raise ActionsExecutor::ConnectionError, "Tried #{idx_try} times to create SSH Control Master with #{ssh_control_master_start_cmd} but system says it's booting up."
                             end
                             # Wait a bit and try again
                             idx_try += 1

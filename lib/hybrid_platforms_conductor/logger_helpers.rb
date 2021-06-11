@@ -55,10 +55,10 @@ module HybridPlatformsConductor
 
       # Make sure if the current line is not flushed we still do it
       def flush
-        unless @current_line.nil?
-          @stream << @current_line
-          @current_line = nil
-        end
+        return if @current_line.nil?
+
+        @stream << @current_line
+        @current_line = nil
       end
 
     end

@@ -758,11 +758,9 @@ module HybridPlatformsConductorTest
         $stdout = StringIO.new unless logger.debug?
         begin
           load "#{@repository}/proxmox/reserve_proxmox_container"
-          if logger.debug?
-            raise 'This test can\'t run in debug mode.'
-          else
-            @stdout = $stdout.string
-          end
+          raise 'This test can\'t run in debug mode.' if logger.debug?
+            
+          @stdout = $stdout.string
         ensure
           ARGV.replace old_argv
           $stdout = old_stdout

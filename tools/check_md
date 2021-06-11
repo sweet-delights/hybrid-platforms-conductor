@@ -29,22 +29,22 @@ end
 # Parameters::
 # * *file* (String): Markdown file to be parsed
 def parse_md(file)
-  unless @info.key?(file)
-    puts "Parsing #{file}..."
-    content = File.read(file)
-    @info[file] = {
-      anchors: content.scan(/<a name="([^"]*)"><\/a>/).map { |(anchor)| anchor },
-      links: content.scan(/\[[^\]]*\]\(([^\)]*)\)/).map { |(link)| link }
-    }
-    # Parse linked files
-    @info[file][:links].each do |link|
-      puts "Found #{file} => #{link}"
-    end
-    @info[file][:links].each do |link|
-      unless link.start_with?('http')
-        linked_file = link_to_file(link, file)
-        parse_md(linked_file) if File.exist?(linked_file) && linked_file.end_with?('.md')
-      end
+  return if @info.key?(file)
+
+  puts "Parsing #{file}..."
+  content = File.read(file)
+  @info[file] = {
+    anchors: content.scan(/<a name="([^"]*)"><\/a>/).map { |(anchor)| anchor },
+    links: content.scan(/\[[^\]]*\]\(([^\)]*)\)/).map { |(link)| link }
+  }
+  # Parse linked files
+  @info[file][:links].each do |link|
+    puts "Found #{file} => #{link}"
+  end
+  @info[file][:links].each do |link|
+    unless link.start_with?('http')
+      linked_file = link_to_file(link, file)
+      parse_md(linked_file) if File.exist?(linked_file) && linked_file.end_with?('.md')
     end
   end
 end
