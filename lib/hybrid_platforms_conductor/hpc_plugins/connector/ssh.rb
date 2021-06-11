@@ -80,13 +80,13 @@ module HybridPlatformsConductor
           # * String: The corresponding SSH configuration
           def ssh_for_gateway(gateway_conf, variables = {})
             erb_context = self.clone
-            def erb_context.get_binding
+            def erb_context.private_binding
               binding
             end
             variables.each do |var_name, var_value|
               erb_context.instance_variable_set("@#{var_name}".to_sym, var_value)
             end
-            ERB.new(@gateways[gateway_conf]).result(erb_context.get_binding)
+            ERB.new(@gateways[gateway_conf]).result(erb_context.private_binding)
           end
 
         end

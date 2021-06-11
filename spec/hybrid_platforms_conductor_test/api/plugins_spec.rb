@@ -44,7 +44,7 @@ module HybridPlatformsConductorTest
       #
       # Parameters::
       # * *value* (Integer): Value to be set
-      def set_my_property(value)
+      def config_my_property(value)
         @my_property = value * 2
       end
 
@@ -69,7 +69,7 @@ module HybridPlatformsConductorTest
       #
       # Parameters::
       # * *value* (Integer): Value to be set
-      def set_my_other_property(value)
+      def config_my_other_property(value)
         @my_other_property += value
       end
 
@@ -218,7 +218,7 @@ describe HybridPlatformsConductor::Plugins do
     with_repository('platform') do |repository|
       with_platforms("
         test_platform path: '#{repository}'
-        set_my_property 42
+        config_my_property 42
       ") do
         register_platform_handlers test: HybridPlatformsConductorTest::PlatformHandlerPlugins::Test
         self.test_platforms_info = { 'platform' => {} }
@@ -231,7 +231,7 @@ describe HybridPlatformsConductor::Plugins do
     with_repository('platform') do |repository|
       with_platforms("
         test_platform path: '#{repository}'
-        set_my_other_property 66
+        config_my_other_property 66
       ") do
         register_platform_handlers test: HybridPlatformsConductorTest::PlatformHandlerPlugins::Test
         self.test_platforms_info = { 'platform' => {} }

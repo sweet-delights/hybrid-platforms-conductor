@@ -21,6 +21,8 @@ module HybridPlatformsConductor
             @nodes_metadata = []
           end
 
+          # As this is used in a DSL, keep the method as a setter using set_, otherwise it will be confused with simple variables if used like metadata =
+          # rubocop:disable Naming/AccessorMethodName
           # Set metadata associated to the nodes
           #
           # Parameters::
@@ -31,6 +33,7 @@ module HybridPlatformsConductor
               nodes_selectors_stack: current_nodes_selectors_stack
             }
           end
+          # rubocop:enable Naming/AccessorMethodName
 
         end
 

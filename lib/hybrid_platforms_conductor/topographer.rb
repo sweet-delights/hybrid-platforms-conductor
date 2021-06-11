@@ -198,7 +198,7 @@ module HybridPlatformsConductor
     end
 
     # Generate the JSON files to be used
-    def get_json_files
+    def json_files
       unless @skip_run
         @json_dumper.dump_dir = @config[:json_files_dir]
         # Generate all the jsons, even if 1 hostname is given, as it might be useful for the rest of the graph.
