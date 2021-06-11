@@ -12,7 +12,7 @@ module HybridPlatformsConductorTest
       # * *sudo* (String or nil): sudo supposed to be used, or nil if none [default: 'sudo -u root']
       def expect_action_to_lock_node(action, node, sudo: 'sudo -u root')
         expect(action[:scp].size).to eq 1
-        expect(action[:scp].first[0]).to match /^.+\/mutex_dir$/
+        expect(action[:scp].first[0]).to match(/^.+\/mutex_dir$/)
         expect(action[:scp].first[1]).to eq '.'
         expect(action[:remote_bash]).to eq "while ! #{sudo ? "#{sudo} " : ''}./mutex_dir lock /tmp/hybrid_platforms_conductor_deploy_lock \"$(ps -o ppid= -p $$)\"; do echo -e 'Another deployment is running on #{node}. Waiting for it to finish to continue...' ; sleep 5 ; done"
       end

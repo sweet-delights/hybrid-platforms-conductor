@@ -42,7 +42,7 @@ describe 'executables\' common options' do
         with_test_platform_for_common_options do
           exit_code, stdout, stderr = run executable, '--help'
           expect(exit_code).to eq 0
-          expect(stdout).to match /Usage: .*#{executable}/
+          expect(stdout).to match(/Usage: .*#{Regexp.escape(executable)}/)
           expect(stderr).to eq ''
         end
       end

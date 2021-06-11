@@ -139,28 +139,28 @@ describe HybridPlatformsConductor::ActionsExecutor do
       it 'includes the gateway definition from environment' do
         with_test_platform({}, false, 'gateway :gateway1, \'Host my_gateway\'') do
           ENV['hpc_ssh_gateways_conf'] = 'gateway1'
-          expect(test_connector.ssh_config).to match /^Host my_gateway$/
+          expect(test_connector.ssh_config).to match(/^Host my_gateway$/)
         end
       end
 
       it 'includes the gateway definition from setting' do
         with_test_platform({}, false, 'gateway :gateway1, \'Host my_gateway\'') do
           test_connector.ssh_gateways_conf = :gateway1
-          expect(test_connector.ssh_config).to match /^Host my_gateway$/
+          expect(test_connector.ssh_config).to match(/^Host my_gateway$/)
         end
       end
 
       it 'includes the gateway definition with a different ssh executable' do
         with_test_platform({}, false, 'gateway :gateway1, \'Host my_gateway_<%= @ssh_exec %>\'') do
           test_connector.ssh_gateways_conf = :gateway1
-          expect(test_connector.ssh_config(ssh_exec: 'new_ssh')).to match /^Host my_gateway_new_ssh$/
+          expect(test_connector.ssh_config(ssh_exec: 'new_ssh')).to match(/^Host my_gateway_new_ssh$/)
         end
       end
 
       it 'does not include the gateway definition if it is not selected' do
         with_test_platform({}, false, 'gateway :gateway2, \'Host my_gateway\'') do
           test_connector.ssh_gateways_conf = :gateway1
-          expect(test_connector.ssh_config).not_to match /^Host my_gateway$/
+          expect(test_connector.ssh_config).not_to match(/^Host my_gateway$/)
         end
       end
 

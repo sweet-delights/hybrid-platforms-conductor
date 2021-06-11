@@ -21,7 +21,7 @@ describe 'run executable' do
       end])
       exit_code, stdout, stderr = run 'run', '--node', 'node1', '--command', 'echo Hello'
       expect(exit_code).to eq 0
-      expect(stdout).to match /Hello/
+      expect(stdout).to match(/Hello/)
       expect(stderr).to eq ''
     end
   end
@@ -37,8 +37,8 @@ describe 'run executable' do
       end])
       exit_code, stdout, stderr = run 'run', '--node', 'node1', '--command-file', commands_file
       expect(exit_code).to eq 0
-      expect(stdout).to match /Hello1/
-      expect(stdout).to match /Hello2/
+      expect(stdout).to match(/Hello1/)
+      expect(stdout).to match(/Hello2/)
       expect(stderr).to eq ''
     end
   end
@@ -53,7 +53,7 @@ describe 'run executable' do
       end])
       exit_code, stdout, stderr = run 'run', '--node', 'node1', '--command', 'echo Hello', '--timeout', '5'
       expect(exit_code).to eq 0
-      expect(stdout).to match /Hello/
+      expect(stdout).to match(/Hello/)
       expect(stderr).to eq ''
     end
   end
@@ -68,7 +68,7 @@ describe 'run executable' do
       exit_code, stdout, stderr = run 'run', '--node', 'node1', '--command', 'echo Hello 2>&1'
       expect(exit_code).to eq 0
       expect(stdout).to eq ''
-      expect(stderr).to match /Hello/
+      expect(stderr).to match(/Hello/)
     end
   end
 
@@ -82,7 +82,7 @@ describe 'run executable' do
       end])
       exit_code, stdout, stderr = run 'run', '--node', 'node1', '--node', 'node2', '--command', 'echo Hello'
       expect(exit_code).to eq 0
-      expect(stdout).to match /Hello/
+      expect(stdout).to match(/Hello/)
       expect(stderr).to eq ''
     end
   end
@@ -96,8 +96,8 @@ describe 'run executable' do
       end])
       exit_code, stdout, stderr = run 'run', '--node', 'node1', '--command', 'echo Hello1', '--command', 'echo Hello2'
       expect(exit_code).to eq 0
-      expect(stdout).to match /Hello1/
-      expect(stdout).to match /Hello2/
+      expect(stdout).to match(/Hello1/)
+      expect(stdout).to match(/Hello2/)
       expect(stderr).to eq ''
     end
   end
@@ -122,12 +122,12 @@ describe 'run executable' do
       end])
       exit_code, stdout, stderr = run 'run', '--node', 'node1', '--commands-file', commands_file_1, '--command', 'echo Hello3', '--commands-file', commands_file_2, '--command', 'echo Hello6'
       expect(exit_code).to eq 0
-      expect(stdout).to match /Hello1/
-      expect(stdout).to match /Hello2/
-      expect(stdout).to match /Hello3/
-      expect(stdout).to match /Hello4/
-      expect(stdout).to match /Hello5/
-      expect(stdout).to match /Hello6/
+      expect(stdout).to match(/Hello1/)
+      expect(stdout).to match(/Hello2/)
+      expect(stdout).to match(/Hello3/)
+      expect(stdout).to match(/Hello4/)
+      expect(stdout).to match(/Hello5/)
+      expect(stdout).to match(/Hello6/)
       expect(stderr).to eq ''
     end
   end
@@ -142,7 +142,7 @@ describe 'run executable' do
       end])
       exit_code, stdout, stderr = run 'run', '--node', 'node1', '--node', 'node2', '--command', 'echo Hello', '--parallel'
       expect(exit_code).to eq 0
-      expect(stdout).to match /Hello/
+      expect(stdout).to match(/Hello/)
       expect(stderr).to eq ''
     end
   end

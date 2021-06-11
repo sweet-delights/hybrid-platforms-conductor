@@ -334,7 +334,7 @@ module HybridPlatformsConductorTest
             expect(actions['node'].size).to eq 4
             # First action should be to copy the reserve_proxmox_container code
             expect(actions['node'][0].keys).to eq [:scp]
-            expect(actions['node'][0][:scp].first[0]).to match /^.+\/hpc_plugins\/provisioner\/proxmox\/$/
+            expect(actions['node'][0][:scp].first[0]).to match(/^.+\/hpc_plugins\/provisioner\/proxmox\/$/)
             expect(actions['node'][0][:scp].first[1]).to eq '.'
             # Second action should be to create directories
             expect(actions['node'][1]).to eq(
@@ -342,10 +342,10 @@ module HybridPlatformsConductorTest
             )
             # Next actions should be to copy the config/create/destroy files
             expect(actions['node'][2].keys).to eq [:scp]
-            expect(actions['node'][2][:scp].first[0]).to match /^.+\/create_#{Regexp.escape(expected_file_id)}\.json$/
+            expect(actions['node'][2][:scp].first[0]).to match(/^.+\/create_#{Regexp.escape(expected_file_id)}\.json$/)
             expect(actions['node'][2][:scp].first[1]).to eq './proxmox/create'
             expect(actions['node'][3].keys).to eq [:scp]
-            expect(actions['node'][3][:scp].first[0]).to match /^.+\/config_#{Regexp.escape(expected_file_id)}\.json$/
+            expect(actions['node'][3][:scp].first[0]).to match(/^.+\/config_#{Regexp.escape(expected_file_id)}\.json$/)
             expect(actions['node'][3][:scp].first[1]).to eq './proxmox/config'
             @proxmox_create_options = JSON.parse(File.read(actions['node'][2][:scp].first[0]))
             { 'node' => [0, '', ''] }
@@ -386,7 +386,7 @@ module HybridPlatformsConductorTest
               expect(actions['node'].size).to eq 4
               # First action should be to copy the reserve_proxmox_container code
               expect(actions['node'][0].keys).to eq [:scp]
-              expect(actions['node'][0][:scp].first[0]).to match /^.+\/hpc_plugins\/provisioner\/proxmox\/$/
+              expect(actions['node'][0][:scp].first[0]).to match(/^.+\/hpc_plugins\/provisioner\/proxmox\/$/)
               expect(actions['node'][0][:scp].first[1]).to eq '.'
               # Second action should be to create directories
               expect(actions['node'][1]).to eq(
@@ -394,10 +394,10 @@ module HybridPlatformsConductorTest
               )
               # Next actions should be to copy the config/create/destroy files
               expect(actions['node'][2].keys).to eq [:scp]
-              expect(actions['node'][2][:scp].first[0]).to match /^.+\/destroy_#{Regexp.escape(expected_file_id)}\.json$/
+              expect(actions['node'][2][:scp].first[0]).to match(/^.+\/destroy_#{Regexp.escape(expected_file_id)}\.json$/)
               expect(actions['node'][2][:scp].first[1]).to eq './proxmox/destroy'
               expect(actions['node'][3].keys).to eq [:scp]
-              expect(actions['node'][3][:scp].first[0]).to match /^.+\/config_#{Regexp.escape(expected_file_id)}\.json$/
+              expect(actions['node'][3][:scp].first[0]).to match(/^.+\/config_#{Regexp.escape(expected_file_id)}\.json$/)
               expect(actions['node'][3][:scp].first[1]).to eq './proxmox/config'
               @proxmox_destroy_options = JSON.parse(File.read(actions['node'][2][:scp].first[0]))
               { 'node' => [0, '', ''] }

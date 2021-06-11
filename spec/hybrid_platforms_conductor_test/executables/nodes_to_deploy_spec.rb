@@ -54,8 +54,8 @@ describe 'nodes_to_deploy executable' do
         node1
         node2
       EOS
-      expect(stderr).to match /\[ node1 \] - No deployment schedule defined./
-      expect(stderr).to match /\[ node2 \] - No deployment schedule defined./
+      expect(stderr).to match(/\[ node1 \] - No deployment schedule defined./)
+      expect(stderr).to match(/\[ node2 \] - No deployment schedule defined./)
     end
   end
 
@@ -83,8 +83,8 @@ describe 'nodes_to_deploy executable' do
         ===== Nodes to deploy =====
         node2
       EOS
-      expect(stderr).not_to match /\[ node1 \] - No deployment schedule defined./
-      expect(stderr).to match /\[ node2 \] - No deployment schedule defined./
+      expect(stderr).not_to match(/\[ node1 \] - No deployment schedule defined./)
+      expect(stderr).to match(/\[ node2 \] - No deployment schedule defined./)
     end
   end
 

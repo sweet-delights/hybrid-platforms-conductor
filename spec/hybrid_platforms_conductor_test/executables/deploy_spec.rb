@@ -21,7 +21,7 @@ describe 'deploy executable' do
       end
       exit_code, stdout, stderr = run 'deploy', '--node', 'node'
       expect(exit_code).to eq 0
-      expect(stdout).to match /Deploy ok/
+      expect(stdout).to match(/Deploy ok/)
       expect(stderr).to eq ''
     end
   end

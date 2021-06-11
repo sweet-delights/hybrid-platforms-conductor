@@ -33,7 +33,7 @@ describe HybridPlatformsConductor::ActionsExecutor do
       it 'executes interactive commands remotely' do
         with_test_platform_for_remote_testing do
           expect(test_connector).to receive(:system) do |cmd|
-            expect(cmd).to match /^.+\/ssh hpc\.node$/
+            expect(cmd).to match(/^.+\/ssh hpc\.node$/)
           end
           test_connector.remote_interactive
         end
@@ -76,7 +76,7 @@ describe HybridPlatformsConductor::ActionsExecutor do
             [
               /.+\/hpc_temp_cmds_.+\.sh$/,
               proc do |received_cmd|
-                expect(File.read(received_cmd)).to match /.+\/ssh hpc\.node \/bin\/bash <<'HPC_EOF'\n#{Regexp.escape(cmd)}\nHPC_EOF/
+                expect(File.read(received_cmd)).to match(/.+\/ssh hpc\.node \/bin\/bash <<'HPC_EOF'\n#{Regexp.escape(cmd)}\nHPC_EOF/)
                 [0, 'Bash commands executed on node', '']
               end
             ]

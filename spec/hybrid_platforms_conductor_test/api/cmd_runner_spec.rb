@@ -86,7 +86,7 @@ describe HybridPlatformsConductor::CmdRunner do
       exit_status, stdout, stderr = test_cmd_runner.run_cmd 'unknown_command', no_exception: true
       expect(exit_status).to eq :command_error
       expect(stdout).to eq ''
-      expect(stderr).to match /^No such file or directory - unknown_command.*/
+      expect(stderr).to match(/^No such file or directory - unknown_command.*/)
     end
   end
 
@@ -95,7 +95,7 @@ describe HybridPlatformsConductor::CmdRunner do
       exit_status, stdout, stderr = test_cmd_runner.run_cmd 'unknown_command', expected_code: :command_error
       expect(exit_status).to eq :command_error
       expect(stdout).to eq ''
-      expect(stderr).to match /^No such file or directory - unknown_command.*/
+      expect(stderr).to match(/^No such file or directory - unknown_command.*/)
     end
   end
 
