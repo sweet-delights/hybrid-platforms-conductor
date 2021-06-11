@@ -45,8 +45,10 @@ module HybridPlatformsConductor
       @stderr_io = stderr_io
     end
 
+    # rubocop:disable Lint/UnusedMethodArgument
     # Prepare connections to a given set of nodes.
     # Useful to prefetch metadata or open bulk connections.
+    # This method is supposed to be overridden by sub-classes (hence the rubocop exception).
     #
     # Parameters::
     # * *nodes* (Array<String>): Nodes to prepare the connection to
@@ -57,6 +59,7 @@ module HybridPlatformsConductor
     def with_connection_to(nodes, no_exception: false)
       yield nodes
     end
+    # rubocop:enable Lint/UnusedMethodArgument
 
     private
 

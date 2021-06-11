@@ -19,7 +19,6 @@ describe HybridPlatformsConductor::ActionsExecutor do
       # * *expected_stdout* (String): Expected stdout after client code execution [default: '']
       # * *expected_stderr* (String): Expected stderr after client code execution [default: '']
       # * *timeout* (Integer or nil): Timeout to prepare the connector for [default: nil]
-      # * *password* (String or nil): Password to set for the node, or nil for none [default: nil]
       # * *additional_config* (String): Additional config [default: '']
       # * Proc: Client code to execute testing
       def with_test_platform_for_remote_testing(
@@ -27,7 +26,6 @@ describe HybridPlatformsConductor::ActionsExecutor do
         expected_stdout: '',
         expected_stderr: '',
         timeout: nil,
-        password: nil,
         additional_config: ''
       )
         with_test_platform(

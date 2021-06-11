@@ -13,7 +13,7 @@ module HybridPlatformsConductor
         self.extend_config_dsl_with CommonConfigDsl::IdempotenceTests, :init_idempotence_tests
 
         # Check my_test_plugin.rb.sample documentation for signature details.
-        def test_on_check_node(stdout, stderr, exit_status)
+        def test_on_check_node(stdout, stderr, _exit_status)
           # Check that the output of the check-node returns no changes.
           ignored_tasks = @nodes_handler.select_confs_for_node(@node, @config.ignored_divergent_tasks).inject({}) do |merged_ignored_tasks, conf|
             merged_ignored_tasks.merge(conf[:ignored_tasks])

@@ -127,7 +127,7 @@ module HybridPlatformsConductor
         #     * *:changed*: The task has been changed
         #     * *:identical*: The task has not been changed
         #   * *diffs* (String): Differences, if any
-        def parse_deploy_output(stdout, stderr)
+        def parse_deploy_output(_stdout, _stderr)
           []
         end
 

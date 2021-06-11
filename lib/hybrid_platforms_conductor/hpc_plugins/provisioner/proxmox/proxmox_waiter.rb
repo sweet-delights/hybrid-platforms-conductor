@@ -370,7 +370,7 @@ class ProxmoxWaiter
   # * *disk_gb* (Integer): Wanted GB of disk
   # Result::
   # * Hash<String, [Float or nil, Float or nil]>: The set of 2 scores, per PVE node name
-  def pve_scores_for(nbr_cpus, ram_mb, disk_gb)
+  def pve_scores_for(_nbr_cpus, ram_mb, disk_gb)
     Hash[@config['pve_nodes'].map do |pve_node|
       # Get some resource usages stats from the node directly
       status_info = api_get("nodes/#{pve_node}/status")
@@ -534,7 +534,7 @@ class ProxmoxWaiter
   #   Possible error codes returned are:
   #   * *no_available_ip*: There is no available IP to be reserved
   #   * *no_available_vm_id*: There is no available VM ID to be reserved
-  def reserve_on(pve_node, nbr_cpus, ram_mb, disk_gb)
+  def reserve_on(pve_node, _nbr_cpus, _ram_mb, _disk_gb)
     # We select a new VM ID and VM IP.
     selected_vm_ip = free_ips.first
     if selected_vm_ip.nil?
@@ -669,7 +669,7 @@ class ProxmoxWaiter
   # * *path* (String): API path to query
   # Result::
   # * Object: The API response
-  def api_get(path, nbr_retries: 3, wait_between_retry_secs: 10)
+  def api_get(path)
     unless @gets_cache.key?(path)
       idx_try = 0
       loop do

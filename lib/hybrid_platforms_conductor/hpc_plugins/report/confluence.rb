@@ -29,7 +29,7 @@ module HybridPlatformsConductor
         # Parameters::
         # * *nodes* (Array<String>): List of nodes
         # * *locale_code* (Symbol): The locale code
-        def report_for(nodes, locale_code)
+        def report_for(nodes, _locale_code)
           confluence_info = @config.confluence_info
           if confluence_info
             if confluence_info[:inventory_report_page_id]

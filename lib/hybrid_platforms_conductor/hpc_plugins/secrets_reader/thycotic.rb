@@ -54,7 +54,7 @@ module HybridPlatformsConductor
         # * *service* (String): Service to be deployed
         # Result::
         # * Hash: The secrets
-        def secrets_for(node, service)
+        def secrets_for(node, _service)
           secrets = {}
           # As we are dealing with global secrets, cache the reading for performance between nodes and services.
           # Keep secrets cache grouped by URL/ID

@@ -100,7 +100,7 @@ module HybridPlatformsConductor
     # * Array<String>: The list of nodes impacted by this diff
     # * Array<String>: The list of services impacted by this diff
     # * Boolean: Are there some files that have a global impact (meaning all nodes are potentially impacted by this diff)?
-    def impacts_from(files_diffs)
+    def impacts_from(_files_diffs)
       # By default, consider all nodes of the platform are impacted by whatever diff.
       [
         [],

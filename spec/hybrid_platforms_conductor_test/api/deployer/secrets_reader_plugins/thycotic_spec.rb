@@ -12,7 +12,13 @@ describe HybridPlatformsConductor::Deployer do
       # * *additional_config* (String): Additional config
       # * *platform_info* (Hash): Platform configuration [default: 1 node having 1 service]
       # * Proc: Code called when the platform is setup
-      def with_test_platform_for_thycotic_test(additional_config = '', platform_info: { nodes: { 'node' => { services: %w[service] } } })
+      def with_test_platform_for_thycotic_test(
+        additional_config = '',
+        platform_info: {
+          nodes: { 'node' => { services: %w[service] } },
+          deployable_services: %w[service]
+        }
+      )
         with_test_platform(
           platform_info,
           false,
@@ -106,12 +112,12 @@ describe HybridPlatformsConductor::Deployer do
           EOS
         ) do
           mock_thycotic_file_download_on('https://my_thycotic.domain.com/SecretServer', 1107, '{ "secret_name": "secret_value" }')
-          expect(test_services_handler).to receive(:deploy_allowed?).with(
+          expect(test_services_handler).to receive(:package).with(
             services: { 'node' => %w[service] },
             secrets: { 'secret_name' => 'secret_value' },
             local_environment: false
-          ) { 'Abort as testing secrets is enough' }
-          expect { test_deployer.deploy_on(%w[node]) }.to raise_error 'Deployment not allowed: Abort as testing secrets is enough'
+          ) { raise 'Abort as testing secrets is enough' }
+          expect { test_deployer.deploy_on(%w[node]) }.to raise_error 'Abort as testing secrets is enough'
         end
       end
 
@@ -122,14 +128,20 @@ describe HybridPlatformsConductor::Deployer do
             secret_id: 1107
           )
         EOS
-        with_test_platform_for_thycotic_test(additional_config, platform_info: { nodes: { 'node1' => { services: %w[service1] }, 'node2' => { services: %w[service2] } } }) do
+        with_test_platform_for_thycotic_test(
+          additional_config,
+          platform_info: {
+            nodes: { 'node1' => { services: %w[service1] }, 'node2' => { services: %w[service2] } },
+            deployable_services: %w[service1 service2]
+          }
+        ) do
           mock_thycotic_file_download_on('https://my_thycotic.domain.com/SecretServer', 1107, '{ "secret_name": "secret_value" }')
-          expect(test_services_handler).to receive(:deploy_allowed?).with(
+          expect(test_services_handler).to receive(:package).with(
             services: { 'node1' => %w[service1], 'node2' => %w[service2] },
             secrets: { 'secret_name' => 'secret_value' },
             local_environment: false
-          ) { 'Abort as testing secrets is enough' }
-          expect { test_deployer.deploy_on(%w[node1 node2]) }.to raise_error 'Deployment not allowed: Abort as testing secrets is enough'
+          ) { raise 'Abort as testing secrets is enough' }
+          expect { test_deployer.deploy_on(%w[node1 node2]) }.to raise_error 'Abort as testing secrets is enough'
         end
       end
 
@@ -151,12 +163,12 @@ describe HybridPlatformsConductor::Deployer do
           )
           ENV['hpc_user_for_thycotic'] = 'thycotic_user_from_env'
           ENV['hpc_password_for_thycotic'] = 'thycotic_password_from_env'
-          expect(test_services_handler).to receive(:deploy_allowed?).with(
+          expect(test_services_handler).to receive(:package).with(
             services: { 'node' => %w[service] },
             secrets: { 'secret_name' => 'secret_value' },
             local_environment: false
-          ) { 'Abort as testing secrets is enough' }
-          expect { test_deployer.deploy_on(%w[node]) }.to raise_error 'Deployment not allowed: Abort as testing secrets is enough'
+          ) { raise 'Abort as testing secrets is enough' }
+          expect { test_deployer.deploy_on(%w[node]) }.to raise_error 'Abort as testing secrets is enough'
         end
       end
 
@@ -173,15 +185,21 @@ describe HybridPlatformsConductor::Deployer do
             )
           end
         EOS
-        with_test_platform_for_thycotic_test(additional_config, platform_info: { nodes: { 'node1' => { services: %w[service1] }, 'node2' => { services: %w[service2] } } }) do
+        with_test_platform_for_thycotic_test(
+          additional_config,
+          platform_info: {
+            nodes: { 'node1' => { services: %w[service1] }, 'node2' => { services: %w[service2] } },
+            deployable_services: %w[service1 service2]
+          }
+        ) do
           mock_thycotic_file_download_on('https://my_thycotic1.domain.com/SecretServer', 110701, '{ "secret1": "value1" }')
           mock_thycotic_file_download_on('https://my_thycotic2.domain.com/SecretServer', 110702, '{ "secret2": "value2" }')
-          expect(test_services_handler).to receive(:deploy_allowed?).with(
+          expect(test_services_handler).to receive(:package).with(
             services: { 'node1' => %w[service1], 'node2' => %w[service2] },
             secrets: { 'secret1' => 'value1', 'secret2' => 'value2' },
             local_environment: false
-          ) { 'Abort as testing secrets is enough' }
-          expect { test_deployer.deploy_on(%w[node1 node2]) }.to raise_error 'Deployment not allowed: Abort as testing secrets is enough'
+          ) { raise 'Abort as testing secrets is enough' }
+          expect { test_deployer.deploy_on(%w[node1 node2]) }.to raise_error 'Abort as testing secrets is enough'
         end
       end
 
@@ -202,12 +220,12 @@ describe HybridPlatformsConductor::Deployer do
         ) do
           mock_thycotic_file_download_on('https://my_thycotic1.domain.com/SecretServer', 110701, '{ "secret1": "value1", "secret2": "value2" }')
           mock_thycotic_file_download_on('https://my_thycotic2.domain.com/SecretServer', 110702, '{ "secret2": "value2", "secret3": "value3" }')
-          expect(test_services_handler).to receive(:deploy_allowed?).with(
+          expect(test_services_handler).to receive(:package).with(
             services: { 'node' => %w[service] },
             secrets: { 'secret1' => 'value1', 'secret2' => 'value2', 'secret3' => 'value3' },
             local_environment: false
-          ) { 'Abort as testing secrets is enough' }
-          expect { test_deployer.deploy_on(%w[node]) }.to raise_error 'Deployment not allowed: Abort as testing secrets is enough'
+          ) { raise 'Abort as testing secrets is enough' }
+          expect { test_deployer.deploy_on(%w[node]) }.to raise_error 'Abort as testing secrets is enough'
         end
       end
 

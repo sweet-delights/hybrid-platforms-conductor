@@ -39,7 +39,7 @@ module HybridPlatformsConductorTest
       end
 
       # Check my_test_plugin.rb.sample documentation for signature details.
-      def test_on_check_node(stdout, stderr, exit_status)
+      def test_on_check_node(stdout, _stderr, _exit_status)
         SeveralChecks.runs << [@name, @node, "Node check-node test: #{stdout}"]
       end
 

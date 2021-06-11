@@ -25,7 +25,7 @@ module HybridPlatformsConductor
         # Parameters::
         # * *nodes* (Array<String>): List of nodes
         # * *locale_code* (Symbol): The locale code
-        def report_for(nodes, locale_code)
+        def report_for(nodes, _locale_code)
           @nodes_handler.prefetch_metadata_of nodes, %i[hostname host_ip physical image description services]
           out(
             Terminal::Table.new(

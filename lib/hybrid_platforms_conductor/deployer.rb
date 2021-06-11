@@ -251,7 +251,6 @@ module HybridPlatformsConductor
       unless @use_why_run
         reason_for_interdiction = @services_handler.deploy_allowed?(
           services: services_to_deploy,
-          secrets: secrets,
           local_environment: @local_environment
         )
         raise "Deployment not allowed: #{reason_for_interdiction}" unless reason_for_interdiction.nil?
@@ -458,7 +457,7 @@ module HybridPlatformsConductor
     #     * *:changed*: The task has been changed
     #     * *:identical*: The task has not been changed
     #   * *diffs* (String): Differences, if any
-    def parse_deploy_output(node, stdout, stderr)
+    def parse_deploy_output(_node, stdout, stderr)
       @services_handler.parse_deploy_output(stdout, stderr).map { |deploy_info| deploy_info[:tasks] }.flatten
     end
 
@@ -503,7 +502,7 @@ module HybridPlatformsConductor
     # * *stderr* (String): Deployment stderr
     # Result::
     # * Array<String>: List of retriable errors that have been matched
-    def retriable_errors_from(node, exit_status, stdout, stderr)
+    def retriable_errors_from(node, _exit_status, stdout, stderr)
       # List of retriable errors for this node, as exact string match or regexps.
       # Array<String or Regexp>
       retriable_errors_on_stdout = []

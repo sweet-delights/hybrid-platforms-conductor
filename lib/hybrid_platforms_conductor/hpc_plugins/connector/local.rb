@@ -53,6 +53,7 @@ module HybridPlatformsConductor
           system "cd #{workspace_for(@node)} ; /bin/bash"
         end
 
+        # rubocop:disable Lint/UnusedMethodArgument
         # Copy a file to the remote node in a directory
         # [API] - This method is mandatory
         # [API] - If defined, then with_connection_to has been called before this method.
@@ -74,6 +75,7 @@ module HybridPlatformsConductor
           to = "#{workspace_for(@node)}/#{to}" unless to.start_with?('/')
           FileUtils.cp_r from, to
         end
+        # rubocop:enable Lint/UnusedMethodArgument
 
         private
 

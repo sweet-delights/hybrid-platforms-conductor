@@ -42,8 +42,7 @@ module HybridPlatformsConductor
     #
     # Parameters::
     # * *options_parser* (OptionParser): The option parser to complete
-    # * *parallel* (Boolean): Do we activate options regarding parallel execution? [default = true]
-    def options_parse(options_parser, parallel: true)
+    def options_parse(options_parser)
       options_parser.separator ''
       options_parser.separator 'Command runner options:'
       options_parser.on('-s', '--show-commands', 'Display the commands that would be run instead of running them') do

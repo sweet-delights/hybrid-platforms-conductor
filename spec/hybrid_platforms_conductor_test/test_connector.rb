@@ -45,7 +45,7 @@ module HybridPlatformsConductorTest
     #
     # Parameters::
     # * *options_parser* (OptionParser): The option parser to complete
-    def options_parse(options_parser)
+    def options_parse(_options_parser)
       @calls << [:options_parse]
     end
 

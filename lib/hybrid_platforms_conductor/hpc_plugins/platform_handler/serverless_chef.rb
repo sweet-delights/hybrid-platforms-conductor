@@ -193,6 +193,7 @@ module HybridPlatformsConductor
           end
         end
 
+        # rubocop:disable Lint/UnusedMethodArgument
         # Prepare deployments.
         # This method is called just before getting and executing the actions to be deployed.
         # It is called once per platform.
@@ -208,6 +209,7 @@ module HybridPlatformsConductor
         def prepare_for_deploy(services:, secrets:, local_environment:, why_run:)
           @local_env = local_environment
         end
+        # rubocop:enable Lint/UnusedMethodArgument
 
         # Get the list of actions to perform to deploy on a given node.
         # Those actions can be executed in parallel with other deployments on other nodes. They must be thread safe.
@@ -286,7 +288,7 @@ module HybridPlatformsConductor
         #     * *:changed*: The task has been changed
         #     * *:identical*: The task has not been changed
         #   * *diffs* (String): Differences, if any
-        def parse_deploy_output(stdout, stderr)
+        def parse_deploy_output(stdout, _stderr)
           tasks = []
           current_task = nil
           stdout.split("\n").each do |line|

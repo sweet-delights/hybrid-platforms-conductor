@@ -112,7 +112,7 @@ module HybridPlatformsConductor
         #   * *exit_status* (Integer or Symbol): Deployment exit status
         #   * *stdout* (String): Deployment stdout
         #   * *stderr* (String): Deployment stderr
-        def logs_for(node, exit_status, stdout, stderr)
+        def logs_for(_node, exit_status, stdout, stderr)
           # Expected format for stdout:
           # Property1: Value1
           # ...

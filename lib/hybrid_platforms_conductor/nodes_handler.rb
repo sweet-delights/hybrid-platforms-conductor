@@ -149,7 +149,7 @@ module HybridPlatformsConductor
     #
     # Parameters::
     # * *options_parser* (OptionParser): The option parser to complete
-    def options_parse(options_parser, parallel: true)
+    def options_parse(options_parser)
       options_parser.separator ''
       options_parser.separator 'Nodes handler options:'
       options_parser.on('-o', '--show-nodes', 'Display the list of possible nodes and exit') do

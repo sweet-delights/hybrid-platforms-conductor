@@ -23,7 +23,7 @@ module HybridPlatformsConductorTest
       # * *action* (Hash<Symbol,Object>): The action to check
       # * *node* (String): The concerned node
       # * *sudo* (String or nil): sudo supposed to be used, or nil if none [default: 'sudo -u root']
-      def expect_action_to_unlock_node(action, node, sudo: 'sudo -u root')
+      def expect_action_to_unlock_node(action, _node, sudo: 'sudo -u root')
         expect(action).to eq(remote_bash: "#{sudo ? "#{sudo} " : ''}./mutex_dir unlock /tmp/hybrid_platforms_conductor_deploy_lock")
       end
 
@@ -99,7 +99,6 @@ module HybridPlatformsConductorTest
       def expect_services_handler_to_deploy(services)
         expect(test_services_handler).to receive(:deploy_allowed?).with(
           services: services,
-          secrets: {},
           local_environment: false
         ) do
           nil

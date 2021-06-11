@@ -118,7 +118,6 @@ module HybridPlatformsConductorTest
               if !check_mode && expect_deploy_allowed
                 expect(test_services_handler).to receive(:deploy_allowed?).with(
                   services: expect_services_to_deploy,
-                  secrets: expect_secrets,
                   local_environment: expect_local_environment
                 ) do
                   nil

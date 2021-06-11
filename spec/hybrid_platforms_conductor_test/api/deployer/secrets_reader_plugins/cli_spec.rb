@@ -12,7 +12,10 @@ describe HybridPlatformsConductor::Deployer do
       #     * *repository* (String): Platform's repository
       def with_test_platform_for_cli_test
         with_test_platform(
-          { nodes: { 'node' => { services: %w[service] } } },
+          {
+            nodes: { 'node' => { services: %w[service] } },
+            deployable_services: %w[service]
+          },
           false,
           'read_secrets_from :cli'
         ) do |repository|
@@ -24,12 +27,12 @@ describe HybridPlatformsConductor::Deployer do
         with_test_platform_for_cli_test do |repository|
           secrets_file = "#{repository}/my_secrets.json"
           File.write(secrets_file, '{ "secret_name": "secret_value" }')
-          expect(test_services_handler).to receive(:deploy_allowed?).with(
+          expect(test_services_handler).to receive(:package).with(
             services: { 'node' => %w[service] },
             secrets: { 'secret_name' => 'secret_value' },
             local_environment: false
-          ) { 'Abort as testing secrets is enough' }
-          expect { run 'deploy', '--node', 'node', '--secrets', secrets_file }.to raise_error 'Deployment not allowed: Abort as testing secrets is enough'
+          ) { raise 'Abort as testing secrets is enough' }
+          expect { run 'deploy', '--node', 'node', '--secrets', secrets_file }.to raise_error 'Abort as testing secrets is enough'
         end
       end
 
@@ -39,12 +42,12 @@ describe HybridPlatformsConductor::Deployer do
           File.write(secrets_file1, '{ "secret1": "value1" }')
           secrets_file2 = "#{repository}/my_secrets2.json"
           File.write(secrets_file2, '{ "secret2": "value2" }')
-          expect(test_services_handler).to receive(:deploy_allowed?).with(
+          expect(test_services_handler).to receive(:package).with(
             services: { 'node' => %w[service] },
             secrets: { 'secret1' => 'value1', 'secret2' => 'value2' },
             local_environment: false
-          ) { 'Abort as testing secrets is enough' }
-          expect { run 'deploy', '--node', 'node', '--secrets', secrets_file1, '--secrets', secrets_file2 }.to raise_error 'Deployment not allowed: Abort as testing secrets is enough'
+          ) { raise 'Abort as testing secrets is enough' }
+          expect { run 'deploy', '--node', 'node', '--secrets', secrets_file1, '--secrets', secrets_file2 }.to raise_error 'Abort as testing secrets is enough'
         end
       end
 

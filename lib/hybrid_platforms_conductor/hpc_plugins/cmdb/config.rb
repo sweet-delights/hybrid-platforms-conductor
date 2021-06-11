@@ -55,7 +55,7 @@ module HybridPlatformsConductor
         # Result::
         # * Hash<String, Hash<Symbol,Object> >: The corresponding properties, per required node.
         #     Nodes for which the property can't be fetched can be ommitted.
-        def get_others(nodes, metadata)
+        def get_others(nodes, _metadata)
           # Keep metadata values in a cache, per node
           @cached_metadata = {} unless defined?(@cached_metadata)
           nodes.each do |node|

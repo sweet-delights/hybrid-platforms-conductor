@@ -21,7 +21,7 @@ module HybridPlatformsConductor
     #   * *thycotic* (Thyctotic): The Thyctotic instance to use.
     def self.with_thycotic(thycotic_url, logger, logger_stderr, domain: ENV['hpc_domain_for_thycotic'])
       Credentials.with_credentials_for(:thycotic, logger, logger_stderr, url: thycotic_url) do |thycotic_user, thycotic_password|
-        yield Thycotic.new(thycotic_url, thycotic_user, thycotic_password, logger: logger, logger_stderr: logger_stderr)
+        yield Thycotic.new(thycotic_url, thycotic_user, thycotic_password, domain: domain, logger: logger, logger_stderr: logger_stderr)
       end
     end
 

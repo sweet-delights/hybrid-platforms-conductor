@@ -56,13 +56,11 @@ module HybridPlatformsConductor
     #
     # Parameters::
     # * *services* (Hash< String, Array<String> >): Services to be deployed, per node
-    # * *secrets* (Hash): Secrets to be used for deployment
     # * *local_environment* (Boolean): Are we deploying to a local environment?
     # Result::
     # * String or nil: Reason for which we are not allowed to deploy, or nil if deployment is authorized
     def deploy_allowed?(
       services:,
-      secrets:,
       local_environment:
     )
       if local_environment
