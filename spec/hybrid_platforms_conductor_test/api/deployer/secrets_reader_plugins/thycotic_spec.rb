@@ -25,12 +25,12 @@ describe HybridPlatformsConductor::Deployer do
       # Mock calls being made to a Thycotic SOAP API using Savon
       #
       # Parameters::
-      # * *url* (String): Mocked URL
+      # * *thycotic_url* (String): Mocked URL
       # * *secret_id* (String): The mocked secret ID
       # * *mocked_secrets_file* (String or nil): The mocked secrets file stored in Thycotic, or nil to mock a missing secret
       # * *user* (String or nil): The user to be expected, or nil if it should be read from netrc [default: nil]
       # * *password* (String or nil): The password to be expected, or nil if it should be read from netrc [default: nil]
-      def mock_thycotic_file_download_on(url, secret_id, mocked_secrets_file, user: nil, password: nil)
+      def mock_thycotic_file_download_on(thycotic_url, secret_id, mocked_secrets_file, user: nil, password: nil)
         if user.nil?
           user = 'thycotic_user_from_netrc'
           password = 'thycotic_password_from_netrc'
@@ -43,7 +43,7 @@ describe HybridPlatformsConductor::Deployer do
         # Mock the Savon calls
         mocked_savon_client = double 'Mocked Savon client'
         expect(Savon).to receive(:client) do |params|
-          expect(params[:wsdl]).to eq "#{url}/webservices/SSWebservice.asmx?wsdl"
+          expect(params[:wsdl]).to eq "#{thycotic_url}/webservices/SSWebservice.asmx?wsdl"
           expect(params[:ssl_verify_mode]).to eq :none
           mocked_savon_client
         end

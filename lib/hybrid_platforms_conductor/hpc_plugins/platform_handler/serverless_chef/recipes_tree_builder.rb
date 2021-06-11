@@ -122,11 +122,11 @@ module HybridPlatformsConductor
             erb_sources.concat(recipe_content.scan(/template:?\s+(["'])(.+?)\1/).map { |(_sub_grp, source)| source })
             # Check for known resources and library methods
             used_cookbooks = []
-            known_resources.each do |cookbook, methods|
-              used_cookbooks << cookbook if methods.any? { |method_name| recipe_content.include?(method_name) }
+            known_resources.each do |itr_cookbook, methods|
+              used_cookbooks << itr_cookbook if methods.any? { |method_name| recipe_content.include?(method_name) }
             end
-            known_library_methods.each do |cookbook, methods|
-              used_cookbooks << cookbook if methods.any? { |method_name| recipe_content.include?(method_name) }
+            known_library_methods.each do |itr_cookbook, methods|
+              used_cookbooks << itr_cookbook if methods.any? { |method_name| recipe_content.include?(method_name) }
             end
             {
               included_recipes: used_recipes,

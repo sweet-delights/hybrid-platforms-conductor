@@ -351,8 +351,8 @@ module HybridPlatformsConductor
                 impacted_global = true
               else
                 # File belonging to a cookbook
-                cookbook_name, file_path = impacted_file.match(/^#{cookbook_path}\/(\w+)\/(.+)$/)[1..2]
-                cookbook = cookbook_name.to_sym
+                file_cookbook_name, file_path = impacted_file.match(/^#{cookbook_path}\/(\w+)\/(.+)$/)[1..2]
+                cookbook = file_cookbook_name.to_sym
                 # Small helper to register a recipe
                 register = proc do |source, recipe_name, cookbook_name: cookbook|
                   cookbook_name = cookbook_name.to_sym if cookbook_name.is_a?(String)

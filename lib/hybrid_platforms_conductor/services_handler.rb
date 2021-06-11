@@ -164,7 +164,7 @@ module HybridPlatformsConductor
     # * Array< Hash<Symbol,Object> >: List of actions to be done
     def actions_to_deploy_on(node, services, why_run)
       services.map do |service|
-        platform = @platforms_handler.known_platforms.find { |platform| platform.deployable_services.include?(service) }
+        platform = @platforms_handler.known_platforms.find { |search_platform| search_platform.deployable_services.include?(service) }
         raise "No platform is able to deploy the service #{service}" if platform.nil?
 
         # Add some markers in stdout and stderr so that parsing services-oriented deployment output is easier
@@ -235,7 +235,7 @@ module HybridPlatformsConductor
         log_warn "Mismatch in deployment logs between stdout and stderr: stdout deployed node #{stdout_node}, stderr deployed node #{stderr_node}" unless stdout_node == stderr_node
         log_warn "Mismatch in deployment logs between stdout and stderr: stdout deployed service #{stdout_service}, stderr deployed service #{stderr_service}" unless stdout_service == stderr_service
         log_warn "Mismatch in deployment logs between stdout and stderr: stdout deployed mode is #{stdout_mode}, stderr deployed mode is #{stderr_mode}" unless stdout_mode == stderr_mode
-        platform = @platforms_handler.known_platforms.find { |platform| platform.deployable_services.include?(stdout_service) }
+        platform = @platforms_handler.known_platforms.find { |search_platform| search_platform.deployable_services.include?(stdout_service) }
         raise "No platform is able to deploy the service #{stdout_service}" if platform.nil?
 
         {

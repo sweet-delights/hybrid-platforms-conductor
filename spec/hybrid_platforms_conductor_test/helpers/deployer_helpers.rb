@@ -115,15 +115,15 @@ module HybridPlatformsConductorTest
           local_environment: false,
           why_run: false
         )
-        services.each do |node, services|
-          expect(test_services_handler).to receive(:actions_to_deploy_on).with(node, services, false) do
+        services.each do |node, node_services|
+          expect(test_services_handler).to receive(:actions_to_deploy_on).with(node, node_services, false) do
             [{ bash: "echo \"Deploying on #{node}\"" }]
           end
-          expect(test_services_handler).to receive(:log_info_for).with(node, services) do
+          expect(test_services_handler).to receive(:log_info_for).with(node, node_services) do
             {
               repo_name_0: 'platform',
               commit_id_0: '123456',
-              commit_message_0: "Test commit for #{node}: #{services.join(', ')}"
+              commit_message_0: "Test commit for #{node}: #{node_services.join(', ')}"
             }
           end
         end

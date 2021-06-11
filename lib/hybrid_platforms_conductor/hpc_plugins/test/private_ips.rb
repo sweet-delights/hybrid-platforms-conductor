@@ -18,8 +18,8 @@ module HybridPlatformsConductor
 
           # Check there are no duplicates
           nodes_per_private_ip = {}
-          private_ips.each do |node, private_ips|
-            private_ips.each do |private_ip|
+          private_ips.each do |node, node_private_ips|
+            node_private_ips.each do |private_ip|
               nodes_per_private_ip[private_ip] = [] unless nodes_per_private_ip.key?(private_ip)
               nodes_per_private_ip[private_ip] << node
             end

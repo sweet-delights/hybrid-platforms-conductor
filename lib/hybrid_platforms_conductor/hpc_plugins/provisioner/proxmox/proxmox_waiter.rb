@@ -131,7 +131,7 @@ class ProxmoxWaiter
         # Select the best node, first keeping expired VMs if possible.
         # This is the index of the scores to be checked: if we can choose without recycling VMs, do it by considering score index 0.
         score_idx =
-          if pve_node_scores.all? { |_pve_node, pve_node_scores| pve_node_scores[0].nil? }
+          if pve_node_scores.all? { |_pve_node, itr_pve_node_scores| itr_pve_node_scores[0].nil? }
             # No node was available without removing expired VMs.
             # Therefore we consider only scores without expired VMs.
             log 'No PVE node has enough free resources without removing eventual expired VMs'
@@ -139,12 +139,12 @@ class ProxmoxWaiter
           else
             0
           end
-        selected_pve_node, selected_pve_node_score = pve_node_scores.inject([nil, nil]) do |(best_pve_node, best_score), (pve_node, pve_node_scores)|
-          if pve_node_scores[score_idx].nil? ||
-            (!best_score.nil? && pve_node_scores[score_idx] >= best_score)
+        selected_pve_node, selected_pve_node_score = pve_node_scores.inject([nil, nil]) do |(best_pve_node, best_score), (pve_node, itr_pve_node_scores)|
+          if itr_pve_node_scores[score_idx].nil? ||
+            (!best_score.nil? && itr_pve_node_scores[score_idx] >= best_score)
             [best_pve_node, best_score]
           else
-            [pve_node, pve_node_scores[score_idx]]
+            [pve_node, itr_pve_node_scores[score_idx]]
           end
         end
         if selected_pve_node.nil?

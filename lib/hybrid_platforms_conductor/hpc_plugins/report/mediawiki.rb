@@ -123,7 +123,7 @@ module HybridPlatformsConductor
                                 if value.is_a?(Array)
                                   "\n#{value.map { |item| "::* #{item}" }.join("\n")}"
                                 elsif value.is_a?(Hash)
-                                  "\n#{value.map { |item, value| "::* #{item}: #{value}" }.join("\n")}"
+                                  "\n#{value.map { |item, item_value| "::* #{item}: #{item_value}" }.join("\n")}"
                                 elsif value.is_a?(TrueClass)
                                   locale[:true]
                                 elsif value.is_a?(FalseClass)

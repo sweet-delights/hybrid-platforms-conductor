@@ -63,7 +63,7 @@ module HybridPlatformsConductor
               @cached_metadata[node] = @nodes_handler.
                 select_confs_for_node(node, @config.nodes_metadata).
                 map { |nodes_metadata_info| nodes_metadata_info[:metadata] }.
-                inject({}) { |merged_metadata, metadata| merged_metadata.merge(metadata) }
+                inject({}) { |merged_metadata, node_metadata| merged_metadata.merge(node_metadata) }
             end
           end
           @cached_metadata.slice(*nodes)

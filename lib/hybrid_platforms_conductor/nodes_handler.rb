@@ -633,13 +633,13 @@ module HybridPlatformsConductor
         cmdb_masters_cache = {}
         select_confs_for_node(node, @config.cmdb_masters).each do |cmdb_masters_info|
           cmdb_masters_info[:cmdb_masters].each do |cmdb, properties|
-            properties.each do |property|
-              raise "Property #{property} have conflicting CMDB masters for #{node} declared in the configuration: #{cmdb_masters_cache[property].class.name} and #{@cmdbs[cmdb].class.name}" if cmdb_masters_cache.key?(property) && cmdb_masters_cache[property] != @cmdbs[cmdb]
+            properties.each do |itr_property|
+              raise "Property #{itr_property} have conflicting CMDB masters for #{node} declared in the configuration: #{cmdb_masters_cache[itr_property].class.name} and #{@cmdbs[cmdb].class.name}" if cmdb_masters_cache.key?(itr_property) && cmdb_masters_cache[itr_property] != @cmdbs[cmdb]
 
-              log_debug "CMDB master for #{node} / #{property}: #{cmdb}"
-              raise "CMDB #{cmdb} is configured as a master for property #{property} on node #{node} but it does not implement the needed API to retrieve it" unless (@cmdbs_per_property[property] || []).include?(@cmdbs[cmdb]) || @cmdbs_others.include?(@cmdbs[cmdb])
+              log_debug "CMDB master for #{node} / #{itr_property}: #{cmdb}"
+              raise "CMDB #{cmdb} is configured as a master for property #{itr_property} on node #{node} but it does not implement the needed API to retrieve it" unless (@cmdbs_per_property[itr_property] || []).include?(@cmdbs[cmdb]) || @cmdbs_others.include?(@cmdbs[cmdb])
 
-              cmdb_masters_cache[property] = @cmdbs[cmdb]
+              cmdb_masters_cache[itr_property] = @cmdbs[cmdb]
             end
           end
         end

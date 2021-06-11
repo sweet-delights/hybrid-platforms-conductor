@@ -606,10 +606,10 @@ module HybridPlatformsConductor
               if @ssh_use_control_master
                 user_locks_mutex.synchronize do
                   user_locks.each do |node, user_id|
-                    with_lock_on_control_master_for(node, user_id: user_id) do |current_users, user_id|
+                    with_lock_on_control_master_for(node, user_id: user_id) do |current_users, current_user_id|
                       ssh_url = "hpc.#{node}"
-                      log_warn "[ ControlMaster - #{ssh_url} ] - Current process/thread was not part of the ControlMaster users anymore whereas it should have been" unless current_users.include?(user_id)
-                      remaining_users = current_users - [user_id]
+                      log_warn "[ ControlMaster - #{ssh_url} ] - Current process/thread was not part of the ControlMaster users anymore whereas it should have been" unless current_users.include?(current_user_id)
+                      remaining_users = current_users - [current_user_id]
                       if remaining_users.empty?
                         # Stop the ControlMaster
                         log_debug "[ ControlMaster - #{ssh_url} ] - Stopping ControlMaster..."
