@@ -51,7 +51,7 @@ describe HybridPlatformsConductor::Deployer do
                   repo_name_0: platform
                   commit_id_0: 123456
                   commit_message_0: Test commit for node: service1, service2
-                  date: \d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}
+                  date: \\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}
                   user: test_user
                   debug: No
                   services: service1, service2
@@ -61,6 +61,7 @@ describe HybridPlatformsConductor::Deployer do
                   ===== STDERR =====
                   Deploy successful stderr
                 EOREGEXP
+                expect(File.read(tmp_log_file)).to match file_content_regexp
                 actions_per_nodes['node'][2][:ruby].call
                 # Check temporary log file gets deleted for security reasons
                 expect(File.exist?(tmp_log_file)).to eq false
@@ -109,7 +110,7 @@ describe HybridPlatformsConductor::Deployer do
                   repo_name_0: platform
                   commit_id_0: 123456
                   commit_message_0: Test commit for node: service1, service2
-                  date: \d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}
+                  date: \\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}
                   user: root
                   debug: No
                   services: service1, service2
@@ -119,6 +120,7 @@ describe HybridPlatformsConductor::Deployer do
                   ===== STDERR =====
                   Deploy successful stderr
                 EOREGEXP
+                expect(File.read(tmp_log_file)).to match file_content_regexp
                 actions_per_nodes['node'][2][:ruby].call
                 # Check temporary log file gets deleted for security reasons
                 expect(File.exist?(tmp_log_file)).to eq false

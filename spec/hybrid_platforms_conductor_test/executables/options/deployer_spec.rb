@@ -18,7 +18,7 @@ describe 'executables\' Deployer options' do
         expect(test_deployer.concurrent_execution).to eq true
         {}
       end
-      exit_code, stdout, stderr = run 'deploy', '--node', 'node', '--parallel'
+      exit_code, _stdout, stderr = run 'deploy', '--node', 'node', '--parallel'
       expect(exit_code).to eq 0
       expect(stderr).to eq ''
     end
@@ -30,7 +30,7 @@ describe 'executables\' Deployer options' do
         expect(test_deployer.use_why_run).to eq true
         {}
       end
-      exit_code, stdout, stderr = run 'deploy', '--node', 'node', '--why-run'
+      exit_code, _stdout, stderr = run 'deploy', '--node', 'node', '--why-run'
       expect(exit_code).to eq 0
       expect(stderr).to eq ''
     end
@@ -42,7 +42,7 @@ describe 'executables\' Deployer options' do
         expect(test_deployer.timeout).to eq 5
         {}
       end
-      exit_code, stdout, stderr = run 'deploy', '--node', 'node', '--why-run', '--timeout', '5'
+      exit_code, _stdout, stderr = run 'deploy', '--node', 'node', '--why-run', '--timeout', '5'
       expect(exit_code).to eq 0
       expect(stderr).to eq ''
     end
@@ -60,7 +60,7 @@ describe 'executables\' Deployer options' do
         expect(test_deployer.nbr_retries_on_error).to eq 42
         {}
       end
-      exit_code, stdout, stderr = run 'deploy', '--node', 'node', '--retries-on-error', '42'
+      exit_code, _stdout, stderr = run 'deploy', '--node', 'node', '--retries-on-error', '42'
       expect(exit_code).to eq 0
       expect(stderr).to eq ''
     end

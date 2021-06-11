@@ -542,7 +542,6 @@ module HybridPlatformsConductor
                         ssh_control_master_start_cmd = "#{ssh_exec}#{@passwords.key?(node) || @auth_password ? '' : ' -o BatchMode=yes'} -o ControlMaster=yes -o ControlPersist=yes #{ssh_url} true"
                         idx_try = 0
                         loop do
-                          stderr = nil
                           exit_status, _stdout, stderr = @cmd_runner.run_cmd ssh_control_master_start_cmd, log_to_stdout: log_debug?, no_exception: true, timeout: timeout
                           if exit_status == 0
                             break

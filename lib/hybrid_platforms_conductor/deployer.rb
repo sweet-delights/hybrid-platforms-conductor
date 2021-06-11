@@ -533,8 +533,6 @@ module HybridPlatformsConductor
     # Result::
     # * Hash<String, [Integer or Symbol, String, String]>: Exit status code (or Symbol in case of error or dry run), standard output and error for each node.
     def deploy(services)
-      outputs = {}
-
       # Get the ssh user directly from the connector
       ssh_user = @actions_executor.connector(:ssh).ssh_user
 

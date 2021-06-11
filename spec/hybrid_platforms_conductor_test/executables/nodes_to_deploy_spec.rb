@@ -118,7 +118,7 @@ describe 'nodes_to_deploy executable' do
       end
       expect(test_nodes_handler).to receive(:impacted_nodes_from_git_diff).with('platform', from_commit: 'abcdef1', to_commit: 'master') { [%w[node1], [], [], false] }
       expect(test_nodes_handler).to receive(:impacted_nodes_from_git_diff).with('platform', from_commit: 'abcdef2', to_commit: 'master') { [%w[], [], [], false] }
-      exit_code, stdout, stderr = run 'nodes_to_deploy'
+      exit_code, stdout = run 'nodes_to_deploy'
       expect(exit_code).to eq 0
       expect(stdout).to eq <<~EOS
         ===== Nodes to deploy =====
@@ -152,7 +152,7 @@ describe 'nodes_to_deploy executable' do
         }
       end
       expect(test_nodes_handler).to receive(:impacted_nodes_from_git_diff).with('platform', from_commit: 'abcdef2', to_commit: 'master') { [%w[], [], [], false] }
-      exit_code, stdout, stderr = run 'nodes_to_deploy'
+      exit_code, stdout = run 'nodes_to_deploy'
       expect(exit_code).to eq 0
       expect(stdout).to eq <<~EOS
         ===== Nodes to deploy =====
@@ -193,7 +193,7 @@ describe 'nodes_to_deploy executable' do
         raise HybridPlatformsConductor::NodesHandler::GitError, 'Mocked git error due to an invalid commit id'
       end
       expect(test_nodes_handler).to receive(:impacted_nodes_from_git_diff).with('platform', from_commit: 'abcdef2', to_commit: 'master') { [%w[], [], [], false] }
-      exit_code, stdout, stderr = run 'nodes_to_deploy'
+      exit_code, stdout = run 'nodes_to_deploy'
       expect(exit_code).to eq 0
       expect(stdout).to eq <<~EOS
         ===== Nodes to deploy =====
@@ -204,7 +204,7 @@ describe 'nodes_to_deploy executable' do
 
   it 'ignores impacts if asked' do
     with_test_platform_for_nodes_to_deploy do
-      exit_code, stdout, stderr = run 'nodes_to_deploy', '--ignore-deployed-info'
+      exit_code, stdout = run 'nodes_to_deploy', '--ignore-deployed-info'
       expect(exit_code).to eq 0
       expect(stdout).to eq <<~EOS
         ===== Nodes to deploy =====
@@ -354,7 +354,7 @@ describe 'nodes_to_deploy executable' do
       end
       expect(test_nodes_handler).to receive(:impacted_nodes_from_git_diff).with('platform1', from_commit: 'abcdef1', to_commit: 'master') { [%w[node1], [], [], false] }
       expect(test_nodes_handler).to receive(:impacted_nodes_from_git_diff).with('platform2', from_commit: 'abcdef2', to_commit: 'master') { [%w[node2], [], [], false] }
-      exit_code, stdout, stderr = run 'nodes_to_deploy'
+      exit_code, stdout = run 'nodes_to_deploy'
       expect(exit_code).to eq 0
       expect(stdout).to eq <<~EOS
         ===== Nodes to deploy =====
@@ -404,7 +404,7 @@ describe 'nodes_to_deploy executable' do
       expect(test_nodes_handler).to receive(:impacted_nodes_from_git_diff).with('platform2', from_commit: '1234567', to_commit: 'master') { [%w[node1], [], [], false] }
       expect(test_nodes_handler).to receive(:impacted_nodes_from_git_diff).with('platform2', from_commit: 'abcdef2', to_commit: 'master') { [%w[], [], [], false] }
       expect(test_nodes_handler).to receive(:impacted_nodes_from_git_diff).with('platform3', from_commit: '2345678', to_commit: 'master') { [%w[node2], [], [], false] }
-      exit_code, stdout, stderr = run 'nodes_to_deploy'
+      exit_code, stdout = run 'nodes_to_deploy'
       expect(exit_code).to eq 0
       expect(stdout).to eq <<~EOS
         ===== Nodes to deploy =====
@@ -452,7 +452,7 @@ describe 'nodes_to_deploy executable' do
       end
       expect(test_nodes_handler).to receive(:impacted_nodes_from_git_diff).with('platform1', from_commit: 'abcdef1', to_commit: 'master') { [%w[node1], [], [], false] }
       expect(test_nodes_handler).to receive(:impacted_nodes_from_git_diff).with('platform2', from_commit: 'abcdef2', to_commit: 'master') { [%w[node2], [], [], false] }
-      exit_code, stdout, stderr = run 'nodes_to_deploy'
+      exit_code, stdout = run 'nodes_to_deploy'
       expect(exit_code).to eq 0
       expect(stdout).to eq <<~EOS
         ===== Nodes to deploy =====

@@ -12,7 +12,6 @@ module HybridPlatformsConductorTest
       # * *check_mode* (Boolean): Are we in check-mode? [default: true]
       def deploy_specs_for(check_mode: true)
         expected_deploy_result = [0, "#{check_mode ? 'Check' : 'Deploy'} successful", '']
-        platform_name = check_mode ? 'platform' : 'my_remote_platform'
 
         context "testing deployment#{check_mode ? ' in why-run mode' : ''}" do
 
@@ -37,7 +36,7 @@ module HybridPlatformsConductorTest
           )
             actions = [
               # First run, we expect the mutex to be setup, and the deployment actions to be run
-              proc do |actions_per_nodes, timeout: nil, concurrent: false, log_to_dir: 'run_logs', _log_to_stdout: true|
+              proc do |actions_per_nodes, timeout: nil, concurrent: false, log_to_dir: 'run_logs', log_to_stdout: true|
                 expect(timeout).to eq expect_actions_timeout
                 expect(concurrent).to eq expect_concurrent_actions
                 expect(log_to_dir).to eq 'run_logs'
@@ -112,7 +111,6 @@ module HybridPlatformsConductorTest
             check_mode: @check_mode,
             additional_config: ''
           )
-            platform_name = check_mode ? 'platform' : 'my_remote_platform'
             with_test_platform(nodes_info, !check_mode, additional_config + "\nsend_logs_to :test_log") do |repository|
               # Mock the ServicesHandler accesses
               if !check_mode && expect_deploy_allowed

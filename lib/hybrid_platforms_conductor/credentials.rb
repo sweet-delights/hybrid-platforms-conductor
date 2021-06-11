@@ -112,7 +112,10 @@ module HybridPlatformsConductor
                   data_string.replace('GotYou!!!' * 100)
                 end
               end
+              # We don this assignment on purpose so that GC can remove sensitive data later
+              # rubocop:disable Lint/UselessAssignment
               netrc = nil
+              # rubocop:enable Lint/UselessAssignment
             end
           end
         else

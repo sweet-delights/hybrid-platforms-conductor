@@ -603,9 +603,7 @@ module HybridPlatformsConductorTest
                   {
                     'status' => pve_nodes[pve_node_name][:lxc_containers][Integer(vmid)][:status]
                   }
-                when /^nodes\/([^\/]+)\/tasks\/([^\/]+)\/status$/
-                  pve_node_name = $1
-                  task = $2
+                when /^nodes\/[^\/]+\/tasks\/[^\/]+\/status$/
                   # Mock tasks completion
                   {
                     'status' => 'OK'

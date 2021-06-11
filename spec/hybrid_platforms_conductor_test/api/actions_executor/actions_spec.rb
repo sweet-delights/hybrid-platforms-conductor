@@ -96,7 +96,6 @@ describe HybridPlatformsConductor::ActionsExecutor do
 
     it 'executes several actions on 1 node specified using different selectors' do
       with_test_platform_for_actions do
-        actions_executed = []
         test_actions_executor.execute_actions(
           'node1' => { test_action: 'Action 1 executed' },
           '/node1/' => { test_action: 'Action 2 executed' }

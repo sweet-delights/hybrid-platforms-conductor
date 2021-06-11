@@ -391,7 +391,7 @@ class ProxmoxWaiter
           # Store the resources used by containers we can recycle in separate variables.
           expired_disk_gb_used = 0
           expired_ram_mb_used = 0
-          found_vm_ids = api_get("nodes/#{pve_node}/lxc").map do |lxc_info|
+          api_get("nodes/#{pve_node}/lxc").each do |lxc_info|
             vm_id = Integer(lxc_info['vmid'])
             # Some times the Proxmox API returns maxdisk as a String (but not always) even if it is documented as Integer here: https://pve.proxmox.com/pve-docs/api-viewer/#/nodes/{node}/lxc.
             # TODO: Remove the Integer conversion when Proxmox API will be fixed.

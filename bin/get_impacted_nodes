@@ -22,7 +22,6 @@ executable = HybridPlatformsConductor::Executable.new(nodes_selection_options: f
 end
 nodes_handler = executable.nodes_handler
 platforms_handler = executable.platforms_handler
-cmd_runner = executable.cmd_runner
 executable.parse_options!
 raise 'No platform specified. Please use --platform option' if platform.nil?
 
