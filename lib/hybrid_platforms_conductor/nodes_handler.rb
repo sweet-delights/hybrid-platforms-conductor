@@ -111,11 +111,11 @@ module HybridPlatformsConductor
           )
           @cmdbs_others << cmdb if cmdb.respond_to?(:get_others)
           cmdb.methods.each do |method|
-            if method.to_s =~ /^get_(.*)$/
-              property = $1.to_sym
-              @cmdbs_per_property[property] = [] unless @cmdbs_per_property.key?(property)
-              @cmdbs_per_property[property] << cmdb
-            end
+            next unless method.to_s =~ /^get_(.*)$/
+
+            property = $1.to_sym
+            @cmdbs_per_property[property] = [] unless @cmdbs_per_property.key?(property)
+            @cmdbs_per_property[property] << cmdb
           end
           cmdb
         end
@@ -137,12 +137,12 @@ module HybridPlatformsConductor
           @nodes_platform[node] = platform
         end
         # Register all known nodes lists
-        if platform.respond_to?(:known_nodes_lists)
-          platform.known_nodes_lists.each do |nodes_list|
-            raise "Can't register nodes list #{nodes_list} to platform #{platform.repository_path}, as it is already defined in platform #{@nodes_list_platform[nodes_list].repository_path}." if @nodes_list_platform.key?(nodes_list)
+        next unless platform.respond_to?(:known_nodes_lists)
 
-            @nodes_list_platform[nodes_list] = platform
-          end
+        platform.known_nodes_lists.each do |nodes_list|
+          raise "Can't register nodes list #{nodes_list} to platform #{platform.repository_path}, as it is already defined in platform #{@nodes_list_platform[nodes_list].repository_path}." if @nodes_list_platform.key?(nodes_list)
+
+          @nodes_list_platform[nodes_list] = platform
         end
       end
     end
@@ -357,51 +357,51 @@ module HybridPlatformsConductor
       (properties.is_a?(Symbol) ? [properties] : properties).each do |property|
         # Gather the list of nodes missing this property
         missing_nodes = nodes.select { |node| !@metadata.key?(node) || !@metadata[node].key?(property) }
-        unless missing_nodes.empty?
-          # Query the CMDBs having first the get_<property> method, then the ones having the get_others method till we have our property set for all missing nodes
-          # Metadata being retrieved by the different CMDBs, per node
-          # Hash< String, Object >
-          updated_metadata = {}
-          (
-            (@cmdbs_per_property.key?(property) ? @cmdbs_per_property[property] : []).map { |cmdb| [cmdb, property] } +
-              @cmdbs_others.map { |cmdb| [cmdb, :others] }
-          ).each do |(cmdb, cmdb_property)|
-            # If among the missing nodes some of them have some master CMDB declared for this property, filter them out unless we are dealing with their master CMDB.
-            nodes_to_query = missing_nodes.select do |node|
-              master_cmdb = cmdb_master_for(node, property)
-              master_cmdb.nil? || master_cmdb == cmdb
-            end
-            unless nodes_to_query.empty?
-              # Check first if this property depends on other ones for this cmdb
-              if cmdb.respond_to?(:property_dependencies)
-                property_deps = cmdb.property_dependencies
-                prefetch_metadata_of nodes_to_query, property_deps[property] if property_deps.key?(property)
-              end
-              # Property values, per node name
-              # Hash< String, Object >
-              metadata_from_cmdb = cmdb.send("get_#{cmdb_property}".to_sym, nodes_to_query, @metadata.slice(*nodes_to_query)).transform_values do |cmdb_result|
-                cmdb_property == :others ? cmdb_result[property] : cmdb_result
-              end.compact
-              cmdb_log_header = "[CMDB #{cmdb.class.name.split('::').last}.#{cmdb_property}] -"
-              log_debug "#{cmdb_log_header} Query property #{property} for #{nodes_to_query.size} nodes (#{nodes_to_query[0..7].join(', ')}...) => Found metadata for #{metadata_from_cmdb.size} nodes."
-              updated_metadata.merge!(metadata_from_cmdb) do |node, existing_value, new_value|
-                raise "#{cmdb_log_header} Returned a conflicting value for metadata #{property} of node #{node}: #{new_value} whereas the value was already set to #{existing_value}" if !existing_value.nil? && new_value != existing_value
+        next if missing_nodes.empty?
 
-                new_value
-              end
-            end
+        # Query the CMDBs having first the get_<property> method, then the ones having the get_others method till we have our property set for all missing nodes
+        # Metadata being retrieved by the different CMDBs, per node
+        # Hash< String, Object >
+        updated_metadata = {}
+        (
+          (@cmdbs_per_property.key?(property) ? @cmdbs_per_property[property] : []).map { |cmdb| [cmdb, property] } +
+            @cmdbs_others.map { |cmdb| [cmdb, :others] }
+        ).each do |(cmdb, cmdb_property)|
+          # If among the missing nodes some of them have some master CMDB declared for this property, filter them out unless we are dealing with their master CMDB.
+          nodes_to_query = missing_nodes.select do |node|
+            master_cmdb = cmdb_master_for(node, property)
+            master_cmdb.nil? || master_cmdb == cmdb
           end
-          # Avoid conflicts in metadata while merging and make sure this update is thread-safe
-          # As @metadata is only appending data and never deleting it, protecting the update only is enough.
-          # At worst several threads will query several times the same CMDBs to update the same data several times.
-          # If we also want to be thread-safe in this regard, we should protect the whole CMDB call with mutexes, at the granularity of the node + property bein read.
-          @metadata_mutex.synchronize do
-            missing_nodes.each do |node|
-              @metadata[node] = {} unless @metadata.key?(node)
-              # Here, explicitely store nil if nothing has been found for a node because we know there is no value to be fetched.
-              # This way we won't query again all CMDBs thanks to the cache.
-              @metadata[node][property] = updated_metadata[node]
-            end
+          next if nodes_to_query.empty?
+
+          # Check first if this property depends on other ones for this cmdb
+          if cmdb.respond_to?(:property_dependencies)
+            property_deps = cmdb.property_dependencies
+            prefetch_metadata_of nodes_to_query, property_deps[property] if property_deps.key?(property)
+          end
+          # Property values, per node name
+          # Hash< String, Object >
+          metadata_from_cmdb = cmdb.send("get_#{cmdb_property}".to_sym, nodes_to_query, @metadata.slice(*nodes_to_query)).transform_values do |cmdb_result|
+            cmdb_property == :others ? cmdb_result[property] : cmdb_result
+          end.compact
+          cmdb_log_header = "[CMDB #{cmdb.class.name.split('::').last}.#{cmdb_property}] -"
+          log_debug "#{cmdb_log_header} Query property #{property} for #{nodes_to_query.size} nodes (#{nodes_to_query[0..7].join(', ')}...) => Found metadata for #{metadata_from_cmdb.size} nodes."
+          updated_metadata.merge!(metadata_from_cmdb) do |node, existing_value, new_value|
+            raise "#{cmdb_log_header} Returned a conflicting value for metadata #{property} of node #{node}: #{new_value} whereas the value was already set to #{existing_value}" if !existing_value.nil? && new_value != existing_value
+
+            new_value
+          end
+        end
+        # Avoid conflicts in metadata while merging and make sure this update is thread-safe
+        # As @metadata is only appending data and never deleting it, protecting the update only is enough.
+        # At worst several threads will query several times the same CMDBs to update the same data several times.
+        # If we also want to be thread-safe in this regard, we should protect the whole CMDB call with mutexes, at the granularity of the node + property bein read.
+        @metadata_mutex.synchronize do
+          missing_nodes.each do |node|
+            @metadata[node] = {} unless @metadata.key?(node)
+            # Here, explicitely store nil if nothing has been found for a node because we know there is no value to be fetched.
+            # This way we won't query again all CMDBs thanks to the cache.
+            @metadata[node][property] = updated_metadata[node]
           end
         end
       end

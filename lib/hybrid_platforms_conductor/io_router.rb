@@ -41,14 +41,14 @@ module HybridPlatformsConductor
             raise "Unknown type of source IO: #{src_io}" unless src_io.is_a?(Queue)
 
             queue_size = src_io.size
-            if queue_size > 0
-              # There is data to be read from src_io
-              data_found = true
-              data_chunk_str = queue_size.times.map { src_io.pop }.join
-              dst_ios.each do |dst_io|
-                dst_io << data_chunk_str
-                dst_io.flush if dst_io.respond_to?(:flush)
-              end
+            next unless queue_size > 0
+
+            # There is data to be read from src_io
+            data_found = true
+            data_chunk_str = queue_size.times.map { src_io.pop }.join
+            dst_ios.each do |dst_io|
+              dst_io << data_chunk_str
+              dst_io.flush if dst_io.respond_to?(:flush)
             end
           end
           break if need_to_stop && !data_found

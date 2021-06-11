@@ -7,10 +7,10 @@ platforms_handler = executable.platforms_handler
 executable.parse_options!
 
 platforms_handler.known_platforms.each do |platform|
-  if platform.respond_to?(:setup)
-    executable.out "===== Setup platform #{platform.name}..."
-    platform.setup
-    executable.out "===== Platform #{platform.name} setup successfully."
-    executable.out ''
-  end
+  next unless platform.respond_to?(:setup)
+
+  executable.out "===== Setup platform #{platform.name}..."
+  platform.setup
+  executable.out "===== Platform #{platform.name} setup successfully."
+  executable.out ''
 end

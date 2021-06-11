@@ -68,11 +68,11 @@ module HybridPlatformsConductor
                 packages_to_install = []
                 KNOWN_COMPRESSIONS.each do |file_ext, compress_info|
                   file_ending = ".#{file_ext}"
-                  if local_oval_file.end_with?(file_ending)
-                    uncompress_cmds << compress_info[:cmd].call(local_oval_file)
-                    packages_to_install.concat(compress_info[:packages])
-                    local_oval_file = File.basename(local_oval_file, file_ending)
-                  end
+                  next unless local_oval_file.end_with?(file_ending)
+
+                  uncompress_cmds << compress_info[:cmd].call(local_oval_file)
+                  packages_to_install.concat(compress_info[:packages])
+                  local_oval_file = File.basename(local_oval_file, file_ending)
                 end
                 cmds = <<~EO_BASH
                   set -e
@@ -125,17 +125,17 @@ module HybridPlatformsConductor
                         results.remove_namespaces!
                         oval_definitions = results.css('oval_results oval_definitions definitions definition')
                         results.css('results system definitions definition').each do |definition_xml|
-                          if definition_xml['result'] == 'true'
-                            # Just found an OVAL item to be patched.
-                            definition_id = definition_xml['definition_id']
-                            oval_definition = oval_definitions.find { |el| el['id'] == definition_id }
-                            # We don't forcefully want to report all missing patches. Only the most important ones.
-                            severity = oval_definition.css('metadata advisory severity').text
-                            severity = 'Unknown' if severity.empty?
-                            if !oval_info.key?('reported_severities') || oval_info['reported_severities'].include?(severity)
-                              # Only consider the first line of the description, as sometimes it's very long
-                              error "Non-patched #{severity} vulnerability found: #{oval_definition.css('metadata title').text} - #{oval_definition.css('metadata description').text.split("\n").first}"
-                            end
+                          next unless definition_xml['result'] == 'true'
+
+                          # Just found an OVAL item to be patched.
+                          definition_id = definition_xml['definition_id']
+                          oval_definition = oval_definitions.find { |el| el['id'] == definition_id }
+                          # We don't forcefully want to report all missing patches. Only the most important ones.
+                          severity = oval_definition.css('metadata advisory severity').text
+                          severity = 'Unknown' if severity.empty?
+                          if !oval_info.key?('reported_severities') || oval_info['reported_severities'].include?(severity)
+                            # Only consider the first line of the description, as sometimes it's very long
+                            error "Non-patched #{severity} vulnerability found: #{oval_definition.css('metadata title').text} - #{oval_definition.css('metadata description').text.split("\n").first}"
                           end
                         end
                       end

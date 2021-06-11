@@ -712,11 +712,11 @@ module HybridPlatformsConductor
                 @nodes_handler.prefetch_metadata_of nodes, :host_keys
                 nodes.sort.each do |node|
                   host_keys = @nodes_handler.get_host_keys_of(node)
-                  if host_keys && !host_keys.empty?
-                    connection, _connection_user, _gateway, _gateway_user = connection_info_for(node)
-                    host_keys.each do |host_key|
-                      file.puts "#{connection} #{host_key}"
-                    end
+                  next unless host_keys && !host_keys.empty?
+
+                  connection, _connection_user, _gateway, _gateway_user = connection_info_for(node)
+                  host_keys.each do |host_key|
+                    file.puts "#{connection} #{host_key}"
                   end
                 end
               end

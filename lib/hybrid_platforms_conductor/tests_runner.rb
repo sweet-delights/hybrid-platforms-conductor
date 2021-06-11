@@ -74,10 +74,10 @@ module HybridPlatformsConductor
       @reports_plugins = Plugins.new(:test_report, logger: @logger, logger_stderr: @logger_stderr)
       # Register test classes from platforms
       @platforms_handler.known_platforms.each do |platform|
-        if platform.respond_to?(:tests)
-          platform.tests.each do |test_name, test_class|
-            @tests_plugins[test_name] = test_class
-          end
+        next unless platform.respond_to?(:tests)
+
+        platform.tests.each do |test_name, test_class|
+          @tests_plugins[test_name] = test_class
         end
       end
       # Do we skip running check-node?
@@ -174,11 +174,11 @@ module HybridPlatformsConductor
       @platforms_handler.known_platforms.each do |platform|
         platform_nodes = platform.known_nodes
         @node_expected_failures.each do |test_name, expected_failures_for_test|
-          if (platform_nodes - expected_failures_for_test.keys).empty?
-            # We have an expected failure for this test
-            @platform_expected_failures[test_name] = {} unless @platform_expected_failures.key?(test_name)
-            @platform_expected_failures[test_name][platform.name] = expected_failures_for_test.values.uniq.join(' + ')
-          end
+          next unless (platform_nodes - expected_failures_for_test.keys).empty?
+
+          # We have an expected failure for this test
+          @platform_expected_failures[test_name] = {} unless @platform_expected_failures.key?(test_name)
+          @platform_expected_failures[test_name][platform.name] = expected_failures_for_test.values.uniq.join(' + ')
         end
       end
 
@@ -196,20 +196,20 @@ module HybridPlatformsConductor
 
       # Check that tests that were expected to fail did not succeed.
       @tests_run.each do |test|
-        if test.executed?
-          expected_failure = test.expected_failure
-          if expected_failure
-            if test.errors.empty?
-              # Should have failed
-              error(
-                "Test #{test} was marked to fail (#{expected_failure}) but it succeeded. Please remove it from the expected failures in case the issue has been resolved.",
-                platform: test.platform,
-                node: test.node,
-                force_failure: true
-              )
-            else
-              out "Expected failure for #{test} (#{expected_failure}):\n#{test.errors.map { |error| "  - #{error}" }.join("\n")}".yellow
-            end
+        next unless test.executed?
+
+        expected_failure = test.expected_failure
+        if expected_failure
+          if test.errors.empty?
+            # Should have failed
+            error(
+              "Test #{test} was marked to fail (#{expected_failure}) but it succeeded. Please remove it from the expected failures in case the issue has been resolved.",
+              platform: test.platform,
+              node: test.node,
+              force_failure: true
+            )
+          else
+            out "Expected failure for #{test} (#{expected_failure}):\n#{test.errors.map { |error| "  - #{error}" }.join("\n")}".yellow
           end
         end
       end
@@ -481,15 +481,15 @@ module HybridPlatformsConductor
               cmd_stderrs = [] if cmd_stderrs.nil?
               @cmds_to_run[test.node].zip(cmd_stdouts, cmd_stderrs).each do |(cmd, test_info), cmd_stdout, cmd_stderr|
                 # Find the section that corresponds to this test
-                if test_info[:test] == test
-                  cmd_stdout = '' if cmd_stdout.nil?
-                  cmd_stderr = '' if cmd_stderr.nil?
-                  stdout_lines = cmd_stdout.split("\n")
-                  # Last line of stdout is the return code
-                  return_code = stdout_lines.empty? ? :command_cant_run : Integer(stdout_lines.last)
-                  test.error "Command '#{cmd}' returned error code #{return_code}", "----- STDOUT:\n#{stdout_lines[0..-2].join("\n")}\n----- STDERR:\n#{cmd_stderr}" unless return_code == 0
-                  test_info[:validator].call(stdout_lines[0..-2], cmd_stderr.split("\n"), return_code)
-                end
+                next unless test_info[:test] == test
+
+                cmd_stdout = '' if cmd_stdout.nil?
+                cmd_stderr = '' if cmd_stderr.nil?
+                stdout_lines = cmd_stdout.split("\n")
+                # Last line of stdout is the return code
+                return_code = stdout_lines.empty? ? :command_cant_run : Integer(stdout_lines.last)
+                test.error "Command '#{cmd}' returned error code #{return_code}", "----- STDOUT:\n#{stdout_lines[0..-2].join("\n")}\n----- STDERR:\n#{cmd_stderr}" unless return_code == 0
+                test_info[:validator].call(stdout_lines[0..-2], cmd_stderr.split("\n"), return_code)
               end
             end
           end

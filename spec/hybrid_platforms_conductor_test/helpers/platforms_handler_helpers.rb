@@ -18,15 +18,15 @@ module HybridPlatformsConductorTest
         repositories.each_value do |dir|
           FileUtils.rm_rf dir
           FileUtils.mkdir_p dir
-          if as_git
-            git = Git.init(dir)
-            FileUtils.touch("#{dir}/test_file")
-            git.add('test_file')
-            git.config('user.name', 'Thats Me')
-            git.config('user.email', 'email@email.com')
-            git.commit('Test commit')
-            git.add_remote('origin', "https://my_remote.com/path/to/#{File.basename(dir)}.git")
-          end
+          next unless as_git
+
+          git = Git.init(dir)
+          FileUtils.touch("#{dir}/test_file")
+          git.add('test_file')
+          git.config('user.name', 'Thats Me')
+          git.config('user.email', 'email@email.com')
+          git.commit('Test commit')
+          git.add_remote('origin', "https://my_remote.com/path/to/#{File.basename(dir)}.git")
         end
         begin
           yield repositories

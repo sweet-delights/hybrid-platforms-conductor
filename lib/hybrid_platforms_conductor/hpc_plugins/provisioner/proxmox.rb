@@ -86,46 +86,46 @@ module HybridPlatformsConductor
           @lxc_details = nil
           with_proxmox do |proxmox|
             proxmox_get(proxmox, 'nodes').each do |node_info|
-              if proxmox_test_info[:test_config][:pve_nodes].include?(node_info['node']) && node_info['status'] == 'online'
-                proxmox_get(proxmox, "nodes/#{node_info['node']}/lxc").each do |lxc_info|
-                  vm_id = Integer(lxc_info['vmid'])
-                  if vm_id.between?(*proxmox_test_info[:test_config][:vm_ids_range])
-                    # Check if the description contains our ID
-                    lxc_config = proxmox_get(proxmox, "nodes/#{node_info['node']}/lxc/#{vm_id}/config")
-                    vm_description_lines = (lxc_config['description'] || '').split("\n")
-                    hpc_marker_idx = vm_description_lines.index('===== HPC info =====')
-                    unless hpc_marker_idx.nil?
-                      # Get the HPC info associated to this VM
-                      # Hash<Symbol,String>
-                      vm_hpc_info = vm_description_lines[hpc_marker_idx + 1..-1].map do |line|
-                        property, value = line.split(': ')
-                        [property.to_sym, value]
-                      end.to_h
-                      if vm_hpc_info[:node] == @node && vm_hpc_info[:environment] == @environment
-                        # Found it
-                        # Get back the IP
-                        ip_found = nil
-                        lxc_config['net0'].split(',').each do |net_info|
-                          property, value = net_info.split('=')
-                          if property == 'ip'
-                            ip_found = value.split('/').first
-                            break
-                          end
-                        end
-                        raise "[ #{@node}/#{@environment} ] - Unable to get IP back from LXC container nodes/#{node_info['node']}/lxc/#{vm_id}/config" if ip_found.nil?
+              next unless proxmox_test_info[:test_config][:pve_nodes].include?(node_info['node']) && node_info['status'] == 'online'
 
-                        @lxc_details = {
-                          pve_node: node_info['node'],
-                          vm_id: vm_id,
-                          vm_ip: ip_found
-                        }
-                        break
-                      end
-                    end
+              proxmox_get(proxmox, "nodes/#{node_info['node']}/lxc").each do |lxc_info|
+                vm_id = Integer(lxc_info['vmid'])
+                next unless vm_id.between?(*proxmox_test_info[:test_config][:vm_ids_range])
+
+                # Check if the description contains our ID
+                lxc_config = proxmox_get(proxmox, "nodes/#{node_info['node']}/lxc/#{vm_id}/config")
+                vm_description_lines = (lxc_config['description'] || '').split("\n")
+                hpc_marker_idx = vm_description_lines.index('===== HPC info =====')
+                next if hpc_marker_idx.nil?
+
+                # Get the HPC info associated to this VM
+                # Hash<Symbol,String>
+                vm_hpc_info = vm_description_lines[hpc_marker_idx + 1..-1].map do |line|
+                  property, value = line.split(': ')
+                  [property.to_sym, value]
+                end.to_h
+                next unless vm_hpc_info[:node] == @node && vm_hpc_info[:environment] == @environment
+
+                # Found it
+                # Get back the IP
+                ip_found = nil
+                lxc_config['net0'].split(',').each do |net_info|
+                  property, value = net_info.split('=')
+                  if property == 'ip'
+                    ip_found = value.split('/').first
+                    break
                   end
                 end
-                break if @lxc_details
+                raise "[ #{@node}/#{@environment} ] - Unable to get IP back from LXC container nodes/#{node_info['node']}/lxc/#{vm_id}/config" if ip_found.nil?
+
+                @lxc_details = {
+                  pve_node: node_info['node'],
+                  vm_id: vm_id,
+                  vm_ip: ip_found
+                }
+                break
               end
+              break if @lxc_details
             end
           end
           return if @lxc_details
@@ -339,16 +339,16 @@ module HybridPlatformsConductor
           idx_try = 0
           while task.nil? do
             task = proxmox.send(http_method, "nodes/#{pve_node}/#{sub_path}", *args)
-            if task =~ /^NOK: error code = 5\d\d$/
-              log_warn "[ #{@node}/#{@environment} ] - Proxmox API call #{http_method} nodes/#{pve_node}/#{sub_path} #{args} returned error #{task} (attempt ##{idx_try}/#{proxmox_test_info[:api_max_retries]})"
-              task = nil
-              break if idx_try >= proxmox_test_info[:api_max_retries]
+            next unless task =~ /^NOK: error code = 5\d\d$/
 
-              idx_try += 1
-              # We have to reauthenticate: error 500 raised by Proxmox are often due to token being invalidated wrongly
-              proxmox.reauthenticate
-              sleep proxmox_test_info[:api_wait_between_retries_secs] + rand(5)
-            end
+            log_warn "[ #{@node}/#{@environment} ] - Proxmox API call #{http_method} nodes/#{pve_node}/#{sub_path} #{args} returned error #{task} (attempt ##{idx_try}/#{proxmox_test_info[:api_max_retries]})"
+            task = nil
+            break if idx_try >= proxmox_test_info[:api_max_retries]
+
+            idx_try += 1
+            # We have to reauthenticate: error 500 raised by Proxmox are often due to token being invalidated wrongly
+            proxmox.reauthenticate
+            sleep proxmox_test_info[:api_wait_between_retries_secs] + rand(5)
           end
           raise "[ #{@node}/#{@environment} ] - Proxmox API call #{http_method} nodes/#{pve_node}/#{sub_path} #{args} is constantly failing. Giving up." if task.nil?
             

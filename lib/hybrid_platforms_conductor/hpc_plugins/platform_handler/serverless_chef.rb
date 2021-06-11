@@ -158,37 +158,37 @@ module HybridPlatformsConductor
             package_dir = "dist/#{local_environment ? 'local' : 'prod'}/#{service}"
             package_info_file = "#{@repository_path}/#{package_dir}/hpc_package.info"
             current_package_info = File.exist?(package_info_file) ? JSON.parse(File.read(package_info_file)).transform_keys(&:to_sym) : {}
-            unless current_package_info == package_info
-              Bundler.with_unbundled_env do
-                policy_file = "policyfiles/#{service}.rb"
-                if local_environment
-                  local_policy_file = "policyfiles/#{service}.local.rb"
-                  # In local mode, we always regenerate the lock file as we may modify the run list
-                  run_list = known_cookbook_paths.any? { |cookbook_path| File.exist?("#{@repository_path}/#{cookbook_path}/hpc_test/recipes/before_run.rb") } ? ['hpc_test::before_run'] : []
-                  dsl_parser = DslParser.new
-                  dsl_parser.parse("#{@repository_path}/#{policy_file}")
-                  run_list.concat dsl_parser.calls.find { |call_info| call_info[:method] == :run_list }[:args].flatten
-                  run_list << 'hpc_test::after_run' if known_cookbook_paths.any? { |cookbook_path| File.exist?("#{@repository_path}/#{cookbook_path}/hpc_test/recipes/after_run.rb") }
-                  File.write("#{@repository_path}/#{local_policy_file}", File.read("#{@repository_path}/#{policy_file}") + "\nrun_list #{run_list.map { |recipe| "'#{recipe}'" }.join(', ')}\n")
-                  policy_file = local_policy_file
-                end
-                lock_file = "#{File.dirname(policy_file)}/#{File.basename(policy_file, '.rb')}.lock.json"
-                # If the policy lock file does not exist, generate it
-                @cmd_runner.run_cmd "cd #{@repository_path} && /opt/chef-workstation/bin/chef install #{policy_file} --chef-license accept" unless File.exist?("#{@repository_path}/#{lock_file}")
-                extra_cp_data_bags = File.exist?("#{@repository_path}/data_bags") ? " && cp -ar data_bags/ #{package_dir}/" : ''
-                @cmd_runner.run_cmd "cd #{@repository_path} && \
-                  #{@cmd_runner.root? ? '' : 'sudo '}rm -rf #{package_dir} && \
-                  /opt/chef-workstation/bin/chef export #{policy_file} #{package_dir} --chef-license accept#{extra_cp_data_bags}"
+            next if current_package_info == package_info
+
+            Bundler.with_unbundled_env do
+              policy_file = "policyfiles/#{service}.rb"
+              if local_environment
+                local_policy_file = "policyfiles/#{service}.local.rb"
+                # In local mode, we always regenerate the lock file as we may modify the run list
+                run_list = known_cookbook_paths.any? { |cookbook_path| File.exist?("#{@repository_path}/#{cookbook_path}/hpc_test/recipes/before_run.rb") } ? ['hpc_test::before_run'] : []
+                dsl_parser = DslParser.new
+                dsl_parser.parse("#{@repository_path}/#{policy_file}")
+                run_list.concat dsl_parser.calls.find { |call_info| call_info[:method] == :run_list }[:args].flatten
+                run_list << 'hpc_test::after_run' if known_cookbook_paths.any? { |cookbook_path| File.exist?("#{@repository_path}/#{cookbook_path}/hpc_test/recipes/after_run.rb") }
+                File.write("#{@repository_path}/#{local_policy_file}", File.read("#{@repository_path}/#{policy_file}") + "\nrun_list #{run_list.map { |recipe| "'#{recipe}'" }.join(', ')}\n")
+                policy_file = local_policy_file
               end
-              unless @cmd_runner.dry_run
-                # Create secrets file
-                secrets_file = "#{@repository_path}/#{package_dir}/data_bags/hpc_secrets/hpc_secrets.json"
-                FileUtils.mkdir_p(File.dirname(secrets_file))
-                File.write(secrets_file, secrets.merge(id: 'hpc_secrets').to_json)
-                # Remember the package info
-                File.write(package_info_file, package_info.to_json)
-              end
+              lock_file = "#{File.dirname(policy_file)}/#{File.basename(policy_file, '.rb')}.lock.json"
+              # If the policy lock file does not exist, generate it
+              @cmd_runner.run_cmd "cd #{@repository_path} && /opt/chef-workstation/bin/chef install #{policy_file} --chef-license accept" unless File.exist?("#{@repository_path}/#{lock_file}")
+              extra_cp_data_bags = File.exist?("#{@repository_path}/data_bags") ? " && cp -ar data_bags/ #{package_dir}/" : ''
+              @cmd_runner.run_cmd "cd #{@repository_path} && \
+                #{@cmd_runner.root? ? '' : 'sudo '}rm -rf #{package_dir} && \
+                /opt/chef-workstation/bin/chef export #{policy_file} #{package_dir} --chef-license accept#{extra_cp_data_bags}"
             end
+            next if @cmd_runner.dry_run
+
+            # Create secrets file
+            secrets_file = "#{@repository_path}/#{package_dir}/data_bags/hpc_secrets/hpc_secrets.json"
+            FileUtils.mkdir_p(File.dirname(secrets_file))
+            File.write(secrets_file, secrets.merge(id: 'hpc_secrets').to_json)
+            # Remember the package info
+            File.write(package_info_file, package_info.to_json)
           end
         end
 

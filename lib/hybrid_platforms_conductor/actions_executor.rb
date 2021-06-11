@@ -215,12 +215,12 @@ module HybridPlatformsConductor
         if connector_name.nil?
           # All plugins have been prepared.
           # Call our client code.
-          yield nodes_needing_connectors.map do |node, selected_connector|
+          yield(nodes_needing_connectors.map do |node, selected_connector|
             [
               node,
               selected_connector.nil? ? :no_connector : selected_connector
             ]
-          end.to_h
+          end.to_h)
         else
           connector = @connector_plugins[connector_name]
           selected_nodes = nodes_needing_connectors.select { |_node, selected_connector| selected_connector == connector }.keys

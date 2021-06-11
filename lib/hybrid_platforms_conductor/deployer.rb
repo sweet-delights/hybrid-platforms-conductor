@@ -191,11 +191,11 @@ module HybridPlatformsConductor
       end
       # Display options secrets readers might have
       @secrets_readers.each do |secret_reader_name, secret_reader|
-        if secret_reader.respond_to?(:options_parse)
-          options_parser.separator ''
-          options_parser.separator "Secrets reader #{secret_reader_name} options:"
-          secret_reader.options_parse(options_parser)
-        end
+        next unless secret_reader.respond_to?(:options_parse)
+
+        options_parser.separator ''
+        options_parser.separator "Secrets reader #{secret_reader_name} options:"
+        secret_reader.options_parse(options_parser)
       end
     end
 

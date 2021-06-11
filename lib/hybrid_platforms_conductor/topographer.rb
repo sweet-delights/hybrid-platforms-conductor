@@ -305,11 +305,11 @@ module HybridPlatformsConductor
     # Define clusters of ips with 24 bits ranges.
     def define_clusters_ip_24
       @nodes_graph.each_key do |node_name|
-        if @nodes_graph[node_name][:type] == :node && !@node_metadata[node_name][:private_ips].nil? && !@node_metadata[node_name][:private_ips].empty?
-          ip_24 = "#{@node_metadata[node_name][:private_ips].first.split('.')[0..2].join('.')}.0/24"
-          @nodes_graph[ip_24] = ip_range_graph_info(ip_24) unless @nodes_graph.key?(ip_24)
-          @nodes_graph[ip_24][:includes] << node_name unless @nodes_graph[ip_24][:includes].include?(node_name)
-        end
+        next unless @nodes_graph[node_name][:type] == :node && !@node_metadata[node_name][:private_ips].nil? && !@node_metadata[node_name][:private_ips].empty?
+
+        ip_24 = "#{@node_metadata[node_name][:private_ips].first.split('.')[0..2].join('.')}.0/24"
+        @nodes_graph[ip_24] = ip_range_graph_info(ip_24) unless @nodes_graph.key?(ip_24)
+        @nodes_graph[ip_24][:includes] << node_name unless @nodes_graph[ip_24][:includes].include?(node_name)
       end
     end
 
@@ -378,12 +378,12 @@ module HybridPlatformsConductor
     def filter_in_nodes(nodes_list)
       new_nodes_graph = {}
       @nodes_graph.each do |node_name, node_info|
-        if nodes_list.include?(node_name)
-          new_nodes_graph[node_name] = node_info.merge(
-            connections: node_info[:connections].select { |connected_hostname, _labels| nodes_list.include?(connected_hostname) },
-            includes: node_info[:includes] & nodes_list
-          )
-        end
+        next unless nodes_list.include?(node_name)
+
+        new_nodes_graph[node_name] = node_info.merge(
+          connections: node_info[:connections].select { |connected_hostname, _labels| nodes_list.include?(connected_hostname) },
+          includes: node_info[:includes] & nodes_list
+        )
       end
       @nodes_graph = new_nodes_graph
     end
@@ -395,12 +395,12 @@ module HybridPlatformsConductor
     def filter_out_nodes(nodes_list)
       new_nodes_graph = {}
       @nodes_graph.each do |node_name, node_info|
-        unless nodes_list.include?(node_name)
-          new_nodes_graph[node_name] = node_info.merge(
-            connections: node_info[:connections].reject { |connected_hostname, _labels| nodes_list.include?(connected_hostname) },
-            includes: node_info[:includes] - nodes_list
-          )
-        end
+        next if nodes_list.include?(node_name)
+
+        new_nodes_graph[node_name] = node_info.merge(
+          connections: node_info[:connections].reject { |connected_hostname, _labels| nodes_list.include?(connected_hostname) },
+          includes: node_info[:includes] - nodes_list
+        )
       end
       @nodes_graph = new_nodes_graph
     end
@@ -548,8 +548,6 @@ module HybridPlatformsConductor
     # Result::
     # * String: Node description, or nil if none
     def description_for(node_name)
-      require 'byebug'
-      byebug if node_name == 'xaesbghad51'
       case @nodes_graph[node_name][:type]
       when :node
         @node_metadata[node_name][:description]
@@ -575,12 +573,12 @@ module HybridPlatformsConductor
         @nodes_handler.known_nodes.each do |node|
           %i[private_ips public_ips].each do |ip_type|
             ips = @nodes_handler.metadata_of(node, ip_type)
-            if ips
-              ips.each do |ip|
-                raise "Conflict: #{ip} is already associated to #{@known_ips[ip]}. Cannot associate it to #{node}." if @known_ips.key?(ip)
+            next unless ips
 
-                @known_ips[ip] = node
-              end
+            ips.each do |ip|
+              raise "Conflict: #{ip} is already associated to #{@known_ips[ip]}. Cannot associate it to #{node}." if @known_ips.key?(ip)
+
+              @known_ips[ip] = node
             end
           end
         end
@@ -725,95 +723,95 @@ module HybridPlatformsConductor
               "#{ip_def}/#{ip_mask}"
             end
           # First check that we don't ignore this IP range
-          unless @ips_ignored.key?(ip_str)
-            connected_node_name =
-              if @nodes_graph.key?(ip_str)
-                # IP group already exists
-                ip_str
-              elsif @config[:ignore_ips].any? { |ip_regexp| ip_str =~ ip_regexp }
-                # This IP should be ignored
-                @ips_ignored[ip_str] = nil
-                nil
-              else
-                # New group to create.
-                if ip_mask <= 24
-                  # This group will include all needed ip_24 IPs.
-                  # Compute the list of 24 bits IPs that are referenced here.
-                  ip_24_list =
-                    if ip_mask == 24
-                      [ip_str]
-                    else
-                      ips_24_matching_mask(ip_def, ip_mask).reject do |ip|
-                        unless @ips_ignored.key?(ip_str)
-                          # Check if we should ignore it.
-                          @ips_ignored[ip] = nil if @config[:ignore_ips].any? { |ip_regexp| ip =~ ip_regexp }
-                        end
-                        @ips_ignored.key?(ip)
-                      end
-                    end
-                  if ip_24_list.empty?
-                    # All IPs of the group are to be ignored
-                    nil
-                  elsif ip_24_list.size == 1
-                    # Just create 1 group.
-                    ip_24 = ip_24_list.first
-                    @nodes_graph[ip_24] = ip_range_graph_info(ip_24) unless @nodes_graph.key?(ip_24)
-                    ip_24
+          next if @ips_ignored.key?(ip_str)
+
+          connected_node_name =
+            if @nodes_graph.key?(ip_str)
+              # IP group already exists
+              ip_str
+            elsif @config[:ignore_ips].any? { |ip_regexp| ip_str =~ ip_regexp }
+              # This IP should be ignored
+              @ips_ignored[ip_str] = nil
+              nil
+            else
+              # New group to create.
+              if ip_mask <= 24
+                # This group will include all needed ip_24 IPs.
+                # Compute the list of 24 bits IPs that are referenced here.
+                ip_24_list =
+                  if ip_mask == 24
+                    [ip_str]
                   else
-                    # Create all ip_24 groups.
-                    ip_24_list.each do |included_ip_24|
-                      @nodes_graph[included_ip_24] = ip_range_graph_info(included_ip_24) unless @nodes_graph.key?(included_ip_24)
+                    ips_24_matching_mask(ip_def, ip_mask).reject do |ip|
+                      unless @ips_ignored.key?(ip_str)
+                        # Check if we should ignore it.
+                        @ips_ignored[ip] = nil if @config[:ignore_ips].any? { |ip_regexp| ip =~ ip_regexp }
+                      end
+                      @ips_ignored.key?(ip)
                     end
-                    # Create a super group of it
-                    @nodes_graph[ip_str] = ip_range_graph_info(ip_str)
-                    @nodes_graph[ip_str][:includes] = ip_24_list
-                    ip_str
+                  end
+                if ip_24_list.empty?
+                  # All IPs of the group are to be ignored
+                  nil
+                elsif ip_24_list.size == 1
+                  # Just create 1 group.
+                  ip_24 = ip_24_list.first
+                  @nodes_graph[ip_24] = ip_range_graph_info(ip_24) unless @nodes_graph.key?(ip_24)
+                  ip_24
+                else
+                  # Create all ip_24 groups.
+                  ip_24_list.each do |included_ip_24|
+                    @nodes_graph[included_ip_24] = ip_range_graph_info(included_ip_24) unless @nodes_graph.key?(included_ip_24)
+                  end
+                  # Create a super group of it
+                  @nodes_graph[ip_str] = ip_range_graph_info(ip_str)
+                  @nodes_graph[ip_str][:includes] = ip_24_list
+                  ip_str
+                end
+              else
+                # This group will include all individual IP addresses.
+                ips_list =
+                  if ip_mask == 32
+                    [ip_def]
+                  else
+                    ips_matching_mask(ip_def, ip_mask).reject do |ip|
+                      unless @ips_ignored.key?(ip_str)
+                        # Check if we should ignore it.
+                        @ips_ignored[ip] = nil if @config[:ignore_ips].any? { |ip_regexp| ip =~ ip_regexp }
+                      end
+                      @ips_ignored.key?(ip)
+                    end
+                  end
+                if ips_list.empty?
+                  # All IPs of the group are to be ignored
+                  nil
+                elsif ips_list.size == 1
+                  # Just create 1 node.
+                  ip = ips_list.first
+                  if @ips_to_host.key?(ip)
+                    # Known hostname
+                    @ips_to_host[ip]
+                  else
+                    # Unknown IP that should be added.
+                    @nodes_graph[ip] = {
+                      type: :unknown,
+                      connections: {},
+                      includes: [],
+                      ipv4: IPAddress::IPv4.new(ip)
+                    }
+                    ip
                   end
                 else
-                  # This group will include all individual IP addresses.
-                  ips_list =
-                    if ip_mask == 32
-                      [ip_def]
-                    else
-                      ips_matching_mask(ip_def, ip_mask).reject do |ip|
-                        unless @ips_ignored.key?(ip_str)
-                          # Check if we should ignore it.
-                          @ips_ignored[ip] = nil if @config[:ignore_ips].any? { |ip_regexp| ip =~ ip_regexp }
-                        end
-                        @ips_ignored.key?(ip)
-                      end
-                    end
-                  if ips_list.empty?
-                    # All IPs of the group are to be ignored
-                    nil
-                  elsif ips_list.size == 1
-                    # Just create 1 node.
-                    ip = ips_list.first
-                    if @ips_to_host.key?(ip)
-                      # Known hostname
-                      @ips_to_host[ip]
-                    else
-                      # Unknown IP that should be added.
-                      @nodes_graph[ip] = {
-                        type: :unknown,
-                        connections: {},
-                        includes: [],
-                        ipv4: IPAddress::IPv4.new(ip)
-                      }
-                      ip
-                    end
-                  else
-                    # Create a super group of it
-                    @nodes_graph[ip_str] = ip_range_graph_info(ip_str)
-                    @nodes_graph[ip_str][:includes] = ips_list.map { |included_ip| @ips_to_host[included_ip] }
-                    ip_str
-                  end
+                  # Create a super group of it
+                  @nodes_graph[ip_str] = ip_range_graph_info(ip_str)
+                  @nodes_graph[ip_str][:includes] = ips_list.map { |included_ip| @ips_to_host[included_ip] }
+                  ip_str
                 end
               end
-            unless connected_node_name.nil?
-              nodes[connected_node_name] = [] unless nodes.key?(connected_node_name)
-              nodes[connected_node_name] << current_ref
             end
+          unless connected_node_name.nil?
+            nodes[connected_node_name] = [] unless nodes.key?(connected_node_name)
+            nodes[connected_node_name] << current_ref
           end
         end
         # Look for any known hostname

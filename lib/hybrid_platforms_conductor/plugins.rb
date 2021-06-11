@@ -37,6 +37,8 @@ module HybridPlatformsConductor
     def_delegators :@plugins, *%i[
       []
       each
+      each_key
+      each_value
       empty?
       find
       key?
@@ -76,11 +78,11 @@ module HybridPlatformsConductor
       Gem.loaded_specs.each do |gem_name, gem_specs|
         # Careful to not use gem_specs.files here as if your gem name contains "-" or other weird characters, files won't appear in the gemspec list.
         Dir.glob("#{gem_specs.full_gem_path}/lib/**/*.rb").each do |file|
-          if file =~ files_regexp
-            require_name = $1
-            log_debug "[ #{@plugins_type} ] - Require from #{gem_name} file #{require_name}"
-            require require_name
-          end
+          next unless file =~ files_regexp
+
+          require_name = $1
+          log_debug "[ #{@plugins_type} ] - Require from #{gem_name} file #{require_name}"
+          require require_name
         end
       end
       # Parse the registered classes to search for our plugins
@@ -90,7 +92,7 @@ module HybridPlatformsConductor
         # * have been defined by the requires (no unnamed class, as those can be created by clones when using concurrency),
         # * inherit from the base plugin class,
         # * have no descendants
-        if !klass.name.nil? && klass < ancestor_class && ObjectSpace.each_object(Class).all? { |other_klass| other_klass.name.nil? || other_klass >= klass }
+        if !klass.name.nil? && klass < ancestor_class && ObjectSpace.each_object(Class).all? { |other_klass| other_klass.name.nil? || !(other_klass < klass) }
           plugin_id = klass.name.split('::').last.gsub(/([a-z\d])([A-Z\d])/, '\1_\2').downcase.to_sym
           self[plugin_id] = klass
         end

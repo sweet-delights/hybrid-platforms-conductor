@@ -845,16 +845,16 @@ module HybridPlatformsConductorTest
         @proxmox_actions.zip(expected_proxmox_actions).each do |proxmox_action, expected_proxmox_action|
           expect(proxmox_action.size).to eq expected_proxmox_action.size
           expect(proxmox_action[0..1]).to eq expected_proxmox_action[0..1]
-          if proxmox_action.size >= 3
-            # The third argument is a Hash that might have Regexp in the expectation
-            expect(proxmox_action[2].keys.sort).to eq expected_proxmox_action[2].keys.sort
-            proxmox_action[2].each do |property, value|
-              expected_value = expected_proxmox_action[2][property]
-              if expected_value.is_a?(Regexp)
-                expect(value).to match expected_value
-              else
-                expect(value).to eq expected_value
-              end
+          next if proxmox_action.size < 3
+
+          # The third argument is a Hash that might have Regexp in the expectation
+          expect(proxmox_action[2].keys.sort).to eq expected_proxmox_action[2].keys.sort
+          proxmox_action[2].each do |property, value|
+            expected_value = expected_proxmox_action[2][property]
+            if expected_value.is_a?(Regexp)
+              expect(value).to match expected_value
+            else
+              expect(value).to eq expected_value
             end
           end
         end
