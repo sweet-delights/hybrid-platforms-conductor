@@ -58,7 +58,7 @@ begin
   config_file = "#{__dir__}/config.json"
 
   OptionParser.new do |opts|
-    opts.banner = "Usage: #{$0} [options]"
+    opts.banner = "Usage: #{$PROGRAM_NAME} [options]"
     opts.on('-c', '--create FILE', 'Create a VM with the configuration stored in a given JSON file') do |file|
       create_info = JSON.parse(File.read(file))
     end
@@ -110,7 +110,7 @@ begin
   end
 rescue
   reserved_resource = {
-    error: "Unhandled exception from reserve_proxmox_container: #{$!}\n#{$!.backtrace.join("\n")}"
+    error: "Unhandled exception from reserve_proxmox_container: #{$ERROR_INFO}\n#{$ERROR_INFO.backtrace.join("\n")}"
   }
 end
 

@@ -21,7 +21,7 @@ module HybridPlatformsConductor
             ::Docker.validate_version!
             docker_ok = true
           rescue
-            log_error "[ #{@node}/#{@environment} ] - Docker is not installed correctly. Please install it. Error: #{$!}"
+            log_error "[ #{@node}/#{@environment} ] - Docker is not installed correctly. Please install it. Error: #{$ERROR_INFO}"
           end
           docker_ok
         end
@@ -117,7 +117,7 @@ module HybridPlatformsConductor
             begin
               @container.refresh!.info['State']['Status'].to_sym
             rescue
-              log_error "[ #{@node}/#{@environment} ] - Error while reading state of Docker container: #{$!}"
+              log_error "[ #{@node}/#{@environment} ] - Error while reading state of Docker container: #{$ERROR_INFO}"
               :error
             end
           end

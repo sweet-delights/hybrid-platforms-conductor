@@ -40,7 +40,7 @@ module HybridPlatformsConductor
                     "Job #{repo_info[:jenkins_ci_url]} does not build repository named #{repo_info[:name]}"
                   )
                 rescue
-                  error "Error while checking Jenkins CI job for #{repo_info[:project]}/#{repo_info[:name]} from URL #{repo_info[:jenkins_ci_url]}: #{$!}"
+                  error "Error while checking Jenkins CI job for #{repo_info[:project]}/#{repo_info[:name]} from URL #{repo_info[:jenkins_ci_url]}: #{$ERROR_INFO}"
                 end
               end
             end

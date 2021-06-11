@@ -154,7 +154,7 @@ module HybridPlatformsConductor
           begin
             Socket.tcp(instance_ip, port, connect_timeout: remaining_timeout) { true }
           rescue Errno::ECONNREFUSED, Errno::EHOSTUNREACH, Errno::EADDRNOTAVAIL, Errno::ETIMEDOUT
-            log_warn "[ #{@node}/#{@environment} ] - Can't connect to #{instance_ip}:#{port}: #{$!}"
+            log_warn "[ #{@node}/#{@environment} ] - Can't connect to #{instance_ip}:#{port}: #{$ERROR_INFO}"
             false
           end
         sleep 1 unless port_listening

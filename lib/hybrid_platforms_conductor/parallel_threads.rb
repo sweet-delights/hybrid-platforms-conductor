@@ -57,7 +57,7 @@ module HybridPlatformsConductor
                 end
               end
             rescue
-              log_error "Unhandled exception occurred in thread #{Thread.current.object_id}: #{$!}\n#{$!.backtrace.join("\n")}"
+              log_error "Unhandled exception occurred in thread #{Thread.current.object_id}: #{$ERROR_INFO}\n#{$ERROR_INFO.backtrace.join("\n")}"
               raise
             end
           end

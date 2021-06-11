@@ -110,7 +110,7 @@ module HybridPlatformsConductor
         rescue
           raise if retries.zero?
 
-          log_warn "Got error #{$!} on #{@bitbucket_user_name}@#{api_url}. Will retry #{retries} times..."
+          log_warn "Got error #{$ERROR_INFO} on #{@bitbucket_user_name}@#{api_url}. Will retry #{retries} times..."
           retries -= 1
           sleep 1
         end

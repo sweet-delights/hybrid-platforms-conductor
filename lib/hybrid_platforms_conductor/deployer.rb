@@ -411,7 +411,7 @@ module HybridPlatformsConductor
       rescue
         # Make sure Docker logs are being output to better investigate errors if we were not already outputing them in debug mode
         stdouts = sub_executable.stdouts_to_s
-        log_error "[ #{node}/#{environment} ] - Encountered unhandled exception #{$!}\n#{$!.backtrace.join("\n")}\n-----\n#{stdouts}" unless stdouts.nil?
+        log_error "[ #{node}/#{environment} ] - Encountered unhandled exception #{$ERROR_INFO}\n#{$ERROR_INFO.backtrace.join("\n")}\n-----\n#{stdouts}" unless stdouts.nil?
         raise
       end
     end

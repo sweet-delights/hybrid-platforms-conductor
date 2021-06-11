@@ -521,7 +521,7 @@ module HybridPlatformsConductor
       begin
         _exit_status, stdout, _stderr = @cmd_runner.run_cmd "cd #{platform.repository_path} && git --no-pager diff --no-color #{from_commit} #{to_commit.nil? ? '' : to_commit}", log_to_stdout: log_debug?
       rescue CmdRunner::UnexpectedExitCodeError
-        raise GitError, $!.to_s
+        raise GitError, $ERROR_INFO.to_s
       end
       # Parse the git diff output to create a structured diff
       # Hash< String, Hash< Symbol, Object > >: List of diffs info, per file name having a diff. Diffs info have the following properties:

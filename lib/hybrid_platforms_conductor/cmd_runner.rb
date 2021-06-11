@@ -25,7 +25,7 @@ module HybridPlatformsConductor
     # Result::
     # * String: The executable prefix
     def self.executables_prefix
-      $0.include?('/') ? "#{File.dirname($0)}/" : ''
+      $PROGRAM_NAME.include?('/') ? "#{File.dirname($PROGRAM_NAME)}/" : ''
     end
 
     # Dry-run switch. When true, then commands are just printed out without being executed.
@@ -152,7 +152,7 @@ module HybridPlatformsConductor
         rescue
           exit_status = :command_error
           cmd_stdout = cmd_result_stdout
-          cmd_stderr = "#{cmd_result_stderr.empty? ? '' : "#{cmd_result_stderr}\n"}#{$!}\n#{$!.backtrace.join("\n")}"
+          cmd_stderr = "#{cmd_result_stderr.empty? ? '' : "#{cmd_result_stderr}\n"}#{$ERROR_INFO}\n#{$ERROR_INFO.backtrace.join("\n")}"
         ensure
           file_output&.close
           bash_file&.unlink

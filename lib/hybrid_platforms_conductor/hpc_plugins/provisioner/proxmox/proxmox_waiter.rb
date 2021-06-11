@@ -341,7 +341,7 @@ class ProxmoxWaiter
         # Get the list of PVE nodes by default
         @config['pve_nodes'] = nodes_info.map { |node_info| node_info['node'] } unless @config['pve_nodes']
       rescue
-        raise "Unable to connect to Proxmox API #{@config['proxmox_api_url']} with user #{@proxmox_user}: #{$!}"
+        raise "Unable to connect to Proxmox API #{@config['proxmox_api_url']} with user #{@proxmox_user}: #{$ERROR_INFO}"
       end
       @expiration_date = Time.now.utc - @config['expiration_period_secs']
       log "Consider expiration date #{@expiration_date.strftime('%F %T')}"

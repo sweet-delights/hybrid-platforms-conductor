@@ -81,7 +81,7 @@ module HybridPlatformsConductor
               status = :created if status == :configured
               status
             rescue
-              log_warn "Error while reading state of Podman container #{@container}: #{$!}"
+              log_warn "Error while reading state of Podman container #{@container}: #{$ERROR_INFO}"
               :error
             end
           end

@@ -234,7 +234,7 @@ module HybridPlatformsConductor
         begin
           @reports_plugins[report].new(@logger, @logger_stderr, @config, @nodes_handler, @nodes, @tested_platforms, @tests_run).report
         rescue
-          log_error "Uncaught exception while producing report #{report}: #{$!}\n#{$!.backtrace.join("\n")}"
+          log_error "Uncaught exception while producing report #{report}: #{$ERROR_INFO}\n#{$ERROR_INFO.backtrace.join("\n")}"
         end
       end
 
@@ -357,7 +357,7 @@ module HybridPlatformsConductor
           begin
             test_execution.call(test)
           rescue
-            test.error "Uncaught exception during test: #{$!}", $!.backtrace.join("\n")
+            test.error "Uncaught exception during test: #{$ERROR_INFO}", $ERROR_INFO.backtrace.join("\n")
           end
           end_time = Time.now
           test.executed
@@ -422,7 +422,7 @@ module HybridPlatformsConductor
                 ]
               end
             rescue
-              test.error "Uncaught exception during test preparation: #{$!}", $!.backtrace.join("\n")
+              test.error "Uncaught exception during test preparation: #{$ERROR_INFO}", $ERROR_INFO.backtrace.join("\n")
               test.executed
             end
           end
@@ -539,7 +539,7 @@ module HybridPlatformsConductor
               rescue
                 # If an exception occurred, make sure all concerned nodes are reporting the error
                 nodes_to_test.each do |node|
-                  error "Error while checking check-node output: #{$!}#{log_debug? ? "\n#{$!.backtrace.join("\n")}" : ''}", node: node
+                  error "Error while checking check-node output: #{$ERROR_INFO}#{log_debug? ? "\n#{$ERROR_INFO.backtrace.join("\n")}" : ''}", node: node
                 end
                 {}
               end
@@ -556,7 +556,7 @@ module HybridPlatformsConductor
             begin
               test.test_on_check_node(stdout, stderr, exit_status)
             rescue
-              test.error "Uncaught exception during test: #{$!}", $!.backtrace.join("\n")
+              test.error "Uncaught exception during test: #{$ERROR_INFO}", $ERROR_INFO.backtrace.join("\n")
             end
           end
         end

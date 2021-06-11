@@ -64,7 +64,7 @@ module HybridPlatformsConductorTest
         # Run the executable
         args.concat(['--debug']) if ENV['TEST_DEBUG'] == '1'
         ARGV.replace(args)
-        old_0 = $0
+        old_program_name = $PROGRAM_NAME
         $0 = executable
         begin
           exit_code = nil
@@ -72,10 +72,10 @@ module HybridPlatformsConductorTest
             load "#{__dir__}/../../../bin/#{executable}"
             exit_code = 0
           rescue SystemExit
-            exit_code = $!.status
+            exit_code = $ERROR_INFO.status
           end
         ensure
-          $0 = old_0
+          $0 = old_program_name
         end
         stdout = File.read(stdout_file)
         stderr = File.read(stderr_file)

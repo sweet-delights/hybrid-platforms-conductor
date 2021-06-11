@@ -1,3 +1,4 @@
+require 'English'
 require 'optparse'
 require 'logger'
 require 'hybrid_platforms_conductor/config'
@@ -109,7 +110,7 @@ module HybridPlatformsConductor
     # Handle common options (like logging and help).
     def parse_options!
       OptionParser.new do |opts|
-        opts.banner = "Usage: #{$0} [options]"
+        opts.banner = "Usage: #{$PROGRAM_NAME} [options]"
         opts.separator ''
         opts.separator 'Main options:'
         opts.on('-d', '--debug', 'Activate debug mode') do

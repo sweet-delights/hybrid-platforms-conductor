@@ -296,16 +296,16 @@ module HybridPlatformsConductor
           end
         rescue ConnectionError
           exit_status = :connection_error
-          stderr_queue << "#{$!}\n"
+          stderr_queue << "#{$ERROR_INFO}\n"
         rescue CmdRunner::UnexpectedExitCodeError
           exit_status = :failed_command
-          stderr_queue << "#{$!}\n"
+          stderr_queue << "#{$ERROR_INFO}\n"
         rescue CmdRunner::TimeoutError
           # Error has already been logged in stderr
           exit_status = :timeout
         rescue
-          log_error "Uncaught exception while executing actions on #{node}: #{$!}\n#{$!.backtrace.join("\n")}"
-          stderr_queue << "#{$!}\n"
+          log_error "Uncaught exception while executing actions on #{node}: #{$ERROR_INFO}\n#{$ERROR_INFO.backtrace.join("\n")}"
+          stderr_queue << "#{$ERROR_INFO}\n"
           exit_status = :failed_action
         end
       end

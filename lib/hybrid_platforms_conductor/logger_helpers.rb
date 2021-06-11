@@ -110,7 +110,7 @@ module HybridPlatformsConductor
         logger.formatter = proc do |severity, _datetime, progname, msg|
           # If the message already has control characters, don't colorize it
           keep_original_color = msg.include? "\u001b"
-          message = "[#{Time.now.utc.strftime('%F %T')} (PID #{$$} / TID #{Thread.current.object_id})] #{severity.rjust(5)} - [ #{progname} ] - "
+          message = "[#{Time.now.utc.strftime('%F %T')} (PID #{$PROCESS_ID} / TID #{Thread.current.object_id})] #{severity.rjust(5)} - [ #{progname} ] - "
           message << "#{msg}\n" unless keep_original_color
           LEVELS_MODIFIERS[severity.downcase.to_sym].each do |modifier|
             message = message.send(modifier)

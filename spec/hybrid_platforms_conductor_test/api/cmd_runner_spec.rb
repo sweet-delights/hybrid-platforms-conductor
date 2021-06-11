@@ -166,7 +166,7 @@ describe HybridPlatformsConductor::CmdRunner do
   end
 
   it 'returns the correct executable prefix' do
-    expect(HybridPlatformsConductor::CmdRunner.executables_prefix).to eq "#{File.dirname($0)}/"
+    expect(HybridPlatformsConductor::CmdRunner.executables_prefix).to eq "#{File.dirname($PROGRAM_NAME)}/"
   end
 
 end
