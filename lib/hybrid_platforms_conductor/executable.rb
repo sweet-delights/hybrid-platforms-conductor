@@ -92,11 +92,13 @@ module HybridPlatformsConductor
       # Result::
       # * Object: The corresponding component
       define_method(component) do
-        @instantiated_components[component] = HybridPlatformsConductor.const_get(component.to_s.split('_').collect(&:capitalize).join.to_sym).new(
-          logger: @logger,
-          logger_stderr: @logger_stderr,
-          **dependencies.map { |dependency| [dependency, send(dependency)] }.to_h
-        ) unless @instantiated_components.key?(component)
+        unless @instantiated_components.key?(component)
+          @instantiated_components[component] = HybridPlatformsConductor.const_get(component.to_s.split('_').collect(&:capitalize).join.to_sym).new(
+            logger: @logger,
+            logger_stderr: @logger_stderr,
+            **dependencies.map { |dependency| [dependency, send(dependency)] }.to_h
+          )
+        end
         @instantiated_components[component]
       end
 
@@ -122,12 +124,14 @@ module HybridPlatformsConductor
         nodes_handler.options_parse_nodes_selectors(opts, @selected_nodes) if @nodes_selection_options
         cmd_runner.options_parse(opts) if cmd_runner_instantiated?
         actions_executor.options_parse(opts, parallel: @parallel_options) if actions_executor_instantiated?
-        deployer.options_parse(
-          opts,
-          parallel_switch: @parallel_options,
-          timeout_options: @timeout_options,
-          why_run_switch: @check_options
-        ) if deployer_instantiated? && @deploy_options
+        if deployer_instantiated? && @deploy_options
+          deployer.options_parse(
+            opts,
+            parallel_switch: @parallel_options,
+            timeout_options: @timeout_options,
+            why_run_switch: @check_options
+          )
+        end
         json_dumper.options_parse(opts) if json_dumper_instantiated?
         reports_handler.options_parse(opts) if reports_handler_instantiated?
         tests_runner.options_parse(opts) if tests_runner_instantiated?

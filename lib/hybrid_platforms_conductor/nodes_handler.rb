@@ -137,11 +137,13 @@ module HybridPlatformsConductor
           @nodes_platform[node] = platform
         end
         # Register all known nodes lists
-        platform.known_nodes_lists.each do |nodes_list|
-          raise "Can't register nodes list #{nodes_list} to platform #{platform.repository_path}, as it is already defined in platform #{@nodes_list_platform[nodes_list].repository_path}." if @nodes_list_platform.key?(nodes_list)
+        if platform.respond_to?(:known_nodes_lists)
+          platform.known_nodes_lists.each do |nodes_list|
+            raise "Can't register nodes list #{nodes_list} to platform #{platform.repository_path}, as it is already defined in platform #{@nodes_list_platform[nodes_list].repository_path}." if @nodes_list_platform.key?(nodes_list)
 
-          @nodes_list_platform[nodes_list] = platform
-        end if platform.respond_to?(:known_nodes_lists)
+            @nodes_list_platform[nodes_list] = platform
+          end
+        end
       end
     end
 

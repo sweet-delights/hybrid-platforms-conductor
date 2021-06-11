@@ -252,12 +252,14 @@ module HybridPlatformsConductor
             parse_connections_for(hostname, @config[:connections_max_level])
           end
         end
-        @nodes_graph[nodes_list] = {
-          type: :cluster,
-          connections: {},
-          includes: [],
-          includes_proc: proc { |node_name| hosts_list.include?(node_name) }
-        } unless @nodes_graph.key?(nodes_list)
+        unless @nodes_graph.key?(nodes_list)
+          @nodes_graph[nodes_list] = {
+            type: :cluster,
+            connections: {},
+            includes: [],
+            includes_proc: proc { |node_name| hosts_list.include?(node_name) }
+          }
+        end
         @nodes_graph[nodes_list][:includes].concat(hosts_list)
         @nodes_graph[nodes_list][:includes].uniq!
       end
@@ -376,10 +378,12 @@ module HybridPlatformsConductor
     def filter_in_nodes(nodes_list)
       new_nodes_graph = {}
       @nodes_graph.each do |node_name, node_info|
-        new_nodes_graph[node_name] = node_info.merge(
-          connections: node_info[:connections].select { |connected_hostname, _labels| nodes_list.include?(connected_hostname) },
-          includes: node_info[:includes] & nodes_list
-        ) if nodes_list.include?(node_name)
+        if nodes_list.include?(node_name)
+          new_nodes_graph[node_name] = node_info.merge(
+            connections: node_info[:connections].select { |connected_hostname, _labels| nodes_list.include?(connected_hostname) },
+            includes: node_info[:includes] & nodes_list
+          )
+        end
       end
       @nodes_graph = new_nodes_graph
     end
@@ -391,10 +395,12 @@ module HybridPlatformsConductor
     def filter_out_nodes(nodes_list)
       new_nodes_graph = {}
       @nodes_graph.each do |node_name, node_info|
-        new_nodes_graph[node_name] = node_info.merge(
-          connections: node_info[:connections].reject { |connected_hostname, _labels| nodes_list.include?(connected_hostname) },
-          includes: node_info[:includes] - nodes_list
-        ) unless nodes_list.include?(node_name)
+        unless nodes_list.include?(node_name)
+          new_nodes_graph[node_name] = node_info.merge(
+            connections: node_info[:connections].reject { |connected_hostname, _labels| nodes_list.include?(connected_hostname) },
+            includes: node_info[:includes] - nodes_list
+          )
+        end
       end
       @nodes_graph = new_nodes_graph
     end

@@ -171,15 +171,21 @@ module HybridPlatformsConductor
     def options_parse(options_parser, parallel_switch: true, why_run_switch: false, timeout_options: true)
       options_parser.separator ''
       options_parser.separator 'Deployer options:'
-      options_parser.on('-p', '--parallel', 'Execute the commands in parallel (put the standard output in files <hybrid-platforms-dir>/run_logs/*.stdout)') do
-        @concurrent_execution = true
-      end if parallel_switch
-      options_parser.on('-t', '--timeout SECS', "Timeout in seconds to wait for each chef run. Only used in why-run mode. (defaults to #{@timeout.nil? ? 'no timeout' : @timeout})") do |nbr_secs|
-        @timeout = nbr_secs.to_i
-      end if timeout_options
-      options_parser.on('-W', '--why-run', 'Use the why-run mode to see what would be the result of the deploy instead of deploying it for real.') do
-        @use_why_run = true
-      end if why_run_switch
+      if parallel_switch
+        options_parser.on('-p', '--parallel', 'Execute the commands in parallel (put the standard output in files <hybrid-platforms-dir>/run_logs/*.stdout)') do
+          @concurrent_execution = true
+        end
+      end
+      if timeout_options
+        options_parser.on('-t', '--timeout SECS', "Timeout in seconds to wait for each chef run. Only used in why-run mode. (defaults to #{@timeout.nil? ? 'no timeout' : @timeout})") do |nbr_secs|
+          @timeout = nbr_secs.to_i
+        end
+      end
+      if why_run_switch
+        options_parser.on('-W', '--why-run', 'Use the why-run mode to see what would be the result of the deploy instead of deploying it for real.') do
+          @use_why_run = true
+        end
+      end
       options_parser.on('--retries-on-error NBR', "Number of retries in case of non-deterministic errors (defaults to #{@nbr_retries_on_error})") do |nbr_retries|
         @nbr_retries_on_error = nbr_retries.to_i
       end

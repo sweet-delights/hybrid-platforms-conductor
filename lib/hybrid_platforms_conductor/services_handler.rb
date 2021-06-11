@@ -143,12 +143,14 @@ module HybridPlatformsConductor
       why_run:
     )
       platforms_for(services).each do |platform, platform_services|
-        platform.prepare_for_deploy(
-          services: platform_services,
-          secrets: secrets,
-          local_environment: local_environment,
-          why_run: why_run
-        ) if platform.respond_to?(:prepare_for_deploy)
+        if platform.respond_to?(:prepare_for_deploy)
+          platform.prepare_for_deploy(
+            services: platform_services,
+            secrets: secrets,
+            local_environment: local_environment,
+            why_run: why_run
+          )
+        end
       end
     end
 
