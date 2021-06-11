@@ -3,10 +3,10 @@ describe 'executables\' Nodes Handler options' do
   # Setup a platform for tests
   #
   # Parameters::
-  # * Proc: Code called when the platform is setup
+  # * *block* (Proc): Code called when the platform is setup
   #   * Parameters::
   #     * *repository* (String): Platform's repository
-  def with_test_platform_for_nodes_handler_options
+  def with_test_platform_for_nodes_handler_options(&block)
     with_test_platforms(
       {
         'platform_1' => {
@@ -55,10 +55,9 @@ describe 'executables\' Nodes Handler options' do
             }
           }
         }
-      }
-    ) do |repository|
-      yield repository
-    end
+      },
+      &block
+    )
   end
 
   it 'displays info about nodes' do

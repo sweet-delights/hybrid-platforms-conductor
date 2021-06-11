@@ -3,13 +3,11 @@ describe 'test executable' do
   # Setup a platform for test tests
   #
   # Parameters::
-  # * Proc: Code called when the platform is setup
+  # * *block* (Proc): Code called when the platform is setup
   #   * Parameters::
   #     * *repository* (String): Platform's repository
-  def with_test_platform_for_test
-    with_test_platform({ nodes: { 'node' => {} } }) do |repository|
-      yield repository
-    end
+  def with_test_platform_for_test(&block)
+    with_test_platform({ nodes: { 'node' => {} } }, &block)
   end
 
   it 'executes a given test on a given node' do

@@ -12,7 +12,7 @@ describe HybridPlatformsConductor::HpcPlugins::PlatformHandler::ServerlessChef d
     # * *export* (Boolean): Are we expecting the chef export stage? [default: true]
     # * *data_bags* (Boolean): Do we expect data bags copy? [default: false]
     # * *env* (String): Expected environment being packaged [default: 'prod']
-    # * Proc: Code called with mock in place
+    # * *block* (Proc): Code called with mock in place
     def with_packaging_mocked(
       repository,
       policy: 'test_policy',
@@ -20,7 +20,8 @@ describe HybridPlatformsConductor::HpcPlugins::PlatformHandler::ServerlessChef d
       install: true,
       export: true,
       data_bags: false,
-      env: 'prod'
+      env: 'prod',
+      &block
     )
       with_cmd_runner_mocked(
         if install
@@ -56,10 +57,9 @@ describe HybridPlatformsConductor::HpcPlugins::PlatformHandler::ServerlessChef d
           ]
         else
           []
-        end
-      ) do
-        yield
-      end
+        end,
+        &block
+      )
     end
 
     context 'with an empty platform' do

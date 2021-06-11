@@ -3,13 +3,11 @@ describe 'executables\' Cmd Runner options' do
   # Setup a platform for tests
   #
   # Parameters::
-  # * Proc: Code called when the platform is setup
+  # * *block* (Proc): Code called when the platform is setup
   #   * Parameters::
   #     * *repository* (String): Platform's repository
-  def with_test_platform_for_cmd_runner_options
-    with_test_platform({ nodes: { 'node' => {} } }) do |repository|
-      yield repository
-    end
+  def with_test_platform_for_cmd_runner_options(&block)
+    with_test_platform({ nodes: { 'node' => {} } }, &block)
   end
 
   it 'displays commands instead of running them' do

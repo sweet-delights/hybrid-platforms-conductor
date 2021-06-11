@@ -5,13 +5,11 @@ describe HybridPlatformsConductor::ActionsExecutor do
     # Instantiate a test platform, with the test action registered in Actions Executor.
     #
     # Parameters::
-    # * Proc: Code called with the environment ready
+    # * *block* (Proc): Code called with the environment ready
     #   * Parameters::
     #     * *repository* (String): Path to the repository
-    def with_test_platform_for_actions
-      with_test_platform_for_executor(nodes: { 'node1' => {}, 'node2' => {}, 'node3' => {} }) do |repository|
-        yield repository
-      end
+    def with_test_platform_for_actions(&block)
+      with_test_platform_for_executor(nodes: { 'node1' => {}, 'node2' => {}, 'node3' => {} }, &block)
     end
 
     it 'executes a simple action on 1 node' do

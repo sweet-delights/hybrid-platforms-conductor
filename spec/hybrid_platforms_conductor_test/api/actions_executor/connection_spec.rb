@@ -5,20 +5,18 @@ describe HybridPlatformsConductor::ActionsExecutor do
     # Get a test platform to test connection, using the test_connector
     #
     # Parameters::
-    # * Proc: Code called with platform setup
+    # * *block* (Proc): Code called with platform setup
     #   * Parameters::
     #     * *repository* (String): Repository where the platform has been setup
-    def with_test_platform_for_connections
+    def with_test_platform_for_connections(&block)
       with_test_platform_for_executor(
         nodes: {
           'node1' => {},
           'node2' => {},
           'node3' => {},
           'node4' => {}
-        }
-      ) do |repository|
-        yield repository
-      end
+        }, &block
+      )
     end
 
     it 'connects on a node before executing actions needing connection' do

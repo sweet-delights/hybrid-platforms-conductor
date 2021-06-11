@@ -5,18 +5,17 @@ describe HybridPlatformsConductor::ActionsExecutor do
     # Get a test platform to test parallel runs
     #
     # Parameters::
-    # * Proc: Code called with platform setup
-    def with_test_platform_for_parallel_tests
+    # * *block* (Proc): Code called with platform setup
+    def with_test_platform_for_parallel_tests(&block)
       with_test_platform_for_executor(
         nodes: {
           'node1' => {},
           'node2' => {},
           'node3' => {},
           'node4' => {}
-        }
-      ) do
-        yield
-      end
+        },
+        &block
+      )
     end
 
     it 'executes a simple command on several nodes in parallel' do

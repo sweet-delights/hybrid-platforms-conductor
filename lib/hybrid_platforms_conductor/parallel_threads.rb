@@ -14,10 +14,10 @@ module HybridPlatformsConductor
     # * *parallel* (Boolean): Iterate in a multithreaded way? [default: false]
     # * *nbr_threads_max* (Integer or nil): Maximum number of threads to be used in case of parallel, or nil for no limit [default: nil]
     # * *progress* (String or nil): Name of a progress bar to follow the progression, or nil for no progress bar [default: 'Progress']
-    # * Proc: The code called for each node being iterated on.
+    # * *block* (Proc): The code called for each node being iterated on.
     #   * Parameters::
     #     * *element* (Object): The object
-    def for_each_element_in(list, parallel: false, nbr_threads_max: nil, progress: 'Process')
+    def for_each_element_in(list, parallel: false, nbr_threads_max: nil, progress: 'Process', &block)
       if parallel
         # Threads to wait for
         threads_to_join = []
@@ -88,9 +88,7 @@ module HybridPlatformsConductor
         end
       else
         # Execute synchronously
-        list.each do |element|
-          yield element
-        end
+        list.each(&block)
       end
     end
 

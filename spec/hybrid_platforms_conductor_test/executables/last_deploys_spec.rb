@@ -3,13 +3,11 @@ describe 'last_deploys executable' do
   # Setup a platform for last_deploys tests
   #
   # Parameters::
-  # * Proc: Code called when the platform is setup
+  # * *block* (Proc): Code called when the platform is setup
   #   * Parameters::
   #     * *repository* (String): Platform's repository
-  def with_test_platform_for_last_deploys
-    with_test_platform({ nodes: { 'node1' => {}, 'node2' => {} } }) do |repository|
-      yield repository
-    end
+  def with_test_platform_for_last_deploys(&block)
+    with_test_platform({ nodes: { 'node1' => {}, 'node2' => {} } }, &block)
   end
 
   it 'checks all nodes by default' do

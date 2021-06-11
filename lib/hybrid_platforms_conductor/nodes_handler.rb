@@ -495,13 +495,11 @@ module HybridPlatformsConductor
     # * *parallel* (Boolean): Iterate in a multithreaded way? [default: false]
     # * *nbr_threads_max* (Integer or nil): Maximum number of threads to be used in case of parallel, or nil for no limit [default: nil]
     # * *progress* (String or nil): Name of a progress bar to follow the progression, or nil for no progress bar [default: 'Processing nodes']
-    # * Proc: The code called for each node being iterated on.
+    # * *block* (Proc): The code called for each node being iterated on.
     #   * Parameters::
     #     * *node* (String): The node name
-    def for_each_node_in(nodes, parallel: false, nbr_threads_max: nil, progress: 'Processing nodes')
-      for_each_element_in(nodes.sort, parallel: parallel, nbr_threads_max: nbr_threads_max, progress: progress) do |node|
-        yield node
-      end
+    def for_each_node_in(nodes, parallel: false, nbr_threads_max: nil, progress: 'Processing nodes', &block)
+      for_each_element_in(nodes.sort, parallel: parallel, nbr_threads_max: nbr_threads_max, progress: progress, &block)
     end
 
     # Get the list of impacted nodes from a git diff on a platform

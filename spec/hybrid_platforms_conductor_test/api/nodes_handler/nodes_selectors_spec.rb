@@ -5,8 +5,8 @@ describe HybridPlatformsConductor::NodesHandler do
     # Set the test environment with a given list of nodes for our tests
     #
     # Parameters::
-    # * Proc: Code called when environment is ready
-    def with_test_platform_for_nodes
+    # * *block* (Proc): Code called when environment is ready
+    def with_test_platform_for_nodes(&block)
       with_test_platforms(
         'platform1' => {
           nodes: { 'node1' => {}, 'node2' => { services: ['service1'] }, 'node3' => { services: ['service2'] } },
@@ -14,10 +14,9 @@ describe HybridPlatformsConductor::NodesHandler do
         },
         'platform2' => {
           nodes: { 'node4' => {}, 'node5' => { services: ['service3', 'service1'] }, 'node6' => {} }
-        }
-      ) do
-        yield
-      end
+        },
+        &block
+      )
     end
 
     # List all tests of nodes selectors, and the corresponding nodes list they should be resolved into

@@ -3,10 +3,10 @@ describe 'executables\' nodes selection options' do
   # Setup a platform for tests
   #
   # Parameters::
-  # * Proc: Code called when the platform is setup
+  # * *block* (Proc): Code called when the platform is setup
   #   * Parameters::
   #     * *repository* (String): Platform's repository
-  def with_test_platform_for_nodes_selector_options
+  def with_test_platform_for_nodes_selector_options(&block)
     with_test_platforms(
       {
         'platform_1' => {
@@ -23,10 +23,9 @@ describe 'executables\' nodes selection options' do
             'node22' => { services: ['service1'] }
           }
         }
-      }
-    ) do |repository|
-      yield repository
-    end
+      },
+      &block
+    )
   end
 
   # Enumerate all command-line selectors to test, and the corresponding nodes list

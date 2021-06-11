@@ -11,21 +11,21 @@ describe HybridPlatformsConductor::Deployer do
       # Parameters::
       # * *additional_config* (String): Additional config
       # * *platform_info* (Hash): Platform configuration [default: 1 node having 1 service]
-      # * Proc: Code called when the platform is setup
+      # * *block* (Proc): Code called when the platform is setup
       def with_test_platform_for_thycotic_test(
         additional_config = '',
         platform_info: {
           nodes: { 'node' => { services: %w[service] } },
           deployable_services: %w[service]
-        }
+        },
+        &block
       )
         with_test_platform(
           platform_info,
           false,
-          "read_secrets_from :thycotic\n" + additional_config
-        ) do
-          yield
-        end
+          "read_secrets_from :thycotic\n" + additional_config,
+          &block
+        )
       end
 
       # Mock calls being made to a Thycotic SOAP API using Savon

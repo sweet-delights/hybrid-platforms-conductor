@@ -7,20 +7,19 @@ describe HybridPlatformsConductor::Deployer do
       # Setup a platform for tests
       #
       # Parameters::
-      # * Proc: Code called when the platform is setup
+      # * *block* (Proc): Code called when the platform is setup
       #   * Parameters::
       #     * *repository* (String): Platform's repository
-      def with_test_platform_for_cli_test
+      def with_test_platform_for_cli_test(&block)
         with_test_platform(
           {
             nodes: { 'node' => { services: %w[service] } },
             deployable_services: %w[service]
           },
           false,
-          'read_secrets_from :cli'
-        ) do |repository|
-          yield repository
-        end
+          'read_secrets_from :cli',
+          &block
+        )
       end
 
       it 'gets secrets from a file' do

@@ -5,19 +5,18 @@ describe HybridPlatformsConductor::ServicesHandler do
     # Setup a test platform for our services testing
     #
     # Parameters::
-    # * Proc: Code called when platform is setup
+    # * *block* (Proc): Code called when platform is setup
     #   * Parameters::
     #     * *repository* (String): Platform repository path
-    def with_test_platform_for_services_test
+    def with_test_platform_for_services_test(&block)
       with_test_platform(
         {
           nodes: { 'node1' => { services: %w[service1] }, 'node2' => {}, 'node3' => {} },
           deployable_services: %w[service1]
         },
-        true
-      ) do |repository|
-        yield repository
-      end
+        true,
+        &block
+      )
     end
 
     # Create a commit on branch and check it out

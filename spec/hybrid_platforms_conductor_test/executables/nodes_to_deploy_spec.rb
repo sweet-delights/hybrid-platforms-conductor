@@ -4,17 +4,16 @@ describe 'nodes_to_deploy executable' do
   #
   # Parameters::
   # * *additional_platforms_content* (String): Additional platforms content to be added [default = '']
-  # * Proc: Code called when the platform is setup
+  # * *block* (Proc): Code called when the platform is setup
   #   * Parameters::
   #     * *repository* (String): Platform's repository
-  def with_test_platform_for_nodes_to_deploy(additional_platforms_content: '')
+  def with_test_platform_for_nodes_to_deploy(additional_platforms_content: '', &block)
     with_test_platform(
       { nodes: { 'node1' => {}, 'node2' => {} } },
       false,
-      additional_platforms_content + "\nsend_logs_to :test_log"
-    ) do |repository|
-      yield repository
-    end
+      additional_platforms_content + "\nsend_logs_to :test_log",
+      &block
+    )
   end
 
   it 'returns all nodes by default' do

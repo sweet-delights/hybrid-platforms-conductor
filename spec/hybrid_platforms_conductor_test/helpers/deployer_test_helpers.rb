@@ -469,10 +469,10 @@ module HybridPlatformsConductorTest
             #
             # Parameters::
             # * *nodes_info* (Hash): Node info to give the platform [default: { nodes: { 'node' => {} } }]
-            # * Proc: Code called once the platform is ready for testing the deployer
+            # * *block* (Proc): Code called once the platform is ready for testing the deployer
             #   * Parameters::
             #     * *repository* (String): Path to the repository
-            def with_platform_to_retry_deploy(nodes_info: { nodes: { 'node' => { services: %w[service] } } })
+            def with_platform_to_retry_deploy(nodes_info: { nodes: { 'node' => { services: %w[service] } } }, &block)
               with_platform_to_deploy(
                 nodes_info: nodes_info,
                 expect_default_actions: false,
@@ -491,10 +491,9 @@ module HybridPlatformsConductorTest
                     /stdout regexp error \\d+/
                   ]
                 end
-                "
-              ) do |repository|
-                yield repository
-              end
+                ",
+                &block
+              )
             end
 
             # Mock a sequential list of deployments

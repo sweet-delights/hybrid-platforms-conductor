@@ -215,13 +215,11 @@ module HybridPlatformsConductor
         # Parameters::
         # * *nodes* (Array<String>): Nodes to prepare the connection to
         # * *no_exception* (Boolean): Should we still continue if some nodes have connection errors? [default: false]
-        # * Proc: Code called with the connections prepared.
+        # * *block* (Proc): Code called with the connections prepared.
         #   * Parameters::
         #     * *connected_nodes* (Array<String>): The list of connected nodes (should be equal to nodes unless no_exception == true and some nodes failed to connect)
-        def with_connection_to(nodes, no_exception: false)
-          with_ssh_master_to(nodes, no_exception: no_exception) do |connected_nodes|
-            yield connected_nodes
-          end
+        def with_connection_to(nodes, no_exception: false, &block)
+          with_ssh_master_to(nodes, no_exception: no_exception, &block)
         end
 
         # Integer: Max size for an argument that can be executed without getting through an intermediary file

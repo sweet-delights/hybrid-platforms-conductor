@@ -3,20 +3,19 @@ describe 'executables\' common options' do
   # Setup a platform for tests
   #
   # Parameters::
-  # * Proc: Code called when the platform is setup
+  # * *block* (Proc): Code called when the platform is setup
   #   * Parameters::
   #     * *repository* (String): Platform's repository
-  def with_test_platform_for_common_options
+  def with_test_platform_for_common_options(&block)
     with_test_platform(
       {
         nodes: { 'node1' => { meta: { host_ip: '192.168.42.42' }, services: ['node1_service'] } },
         deployable_services: %w[node1_service]
       },
       true,
-      'send_logs_to :test_log'
-    ) do |repository|
-      yield repository
-    end
+      'send_logs_to :test_log',
+      &block
+    )
   end
 
   # List of executables for which we test the common options, along with options to try that should do nothing

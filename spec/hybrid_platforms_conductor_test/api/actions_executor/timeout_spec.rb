@@ -5,11 +5,9 @@ describe HybridPlatformsConductor::ActionsExecutor do
     # Get a test platform to test timeouts
     #
     # Parameters::
-    # * Proc: Code called with platform setup
-    def with_test_platform_for_timeouts_tests
-      with_test_platform_for_executor(nodes: { 'node' => {} }) do
-        yield
-      end
+    # * *block* (Proc): Code called with platform setup
+    def with_test_platform_for_timeouts_tests(&block)
+      with_test_platform_for_executor(nodes: { 'node' => {} }, &block)
     end
 
     it 'executes an action without timeout' do

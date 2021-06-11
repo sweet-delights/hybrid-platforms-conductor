@@ -12,10 +12,11 @@ describe HybridPlatformsConductor::Deployer do
       # * *platforms_info* (Hash): The platforms info [default = {}]
       # * *as_git* (Boolean): As a git repository? [default = false]
       # * *additional_config* (String): Additional config [default = 'send_logs_to :test_log']
-      def with_test_platform_for_deploy_tests(platforms_info = {}, as_git = false, additional_config = 'send_logs_to :test_log')
-        with_test_platform(platforms_info, as_git, additional_config) do
-          yield
-        end
+      # * *block* (Proc): Code called with the platform setup
+      #   * Parameters::
+      #     * *repository* (String): Platform's repository
+      def with_test_platform_for_deploy_tests(platforms_info = {}, as_git = false, additional_config = 'send_logs_to :test_log', &block)
+        with_test_platform(platforms_info, as_git, additional_config, &block)
       end
 
       it 'deploys correct logs information on 1 node' do

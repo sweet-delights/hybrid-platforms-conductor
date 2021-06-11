@@ -184,15 +184,13 @@ module HybridPlatformsConductor
           # Iterate over all cookbooks
           #
           # Parameters::
-          # * Proc: Code called for each cookbook:
+          # * *block* (Proc): Code called for each cookbook:
           #   * Parameters::
           #     * *cookbook* (Symbol): Cookbook name
           #     * *cookbook_dir* (String): Cookbook directory
-          def for_each_cookbook
+          def for_each_cookbook(&block)
             @platform.known_cookbook_paths.each do |cookbook_path|
-              cookbooks_in(cookbook_path).each do |cookbook, cookbook_dir|
-                yield cookbook, cookbook_dir
-              end
+              cookbooks_in(cookbook_path).each(&block)
             end
           end
 

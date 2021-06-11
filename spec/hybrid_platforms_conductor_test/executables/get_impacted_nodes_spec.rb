@@ -3,20 +3,19 @@ describe 'get_impacted_nodes executable' do
   # Setup a platform for get_impacted_nodes tests
   #
   # Parameters::
-  # * Proc: Code called when the platform is setup
+  # * *block* (Proc): Code called when the platform is setup
   #   * Parameters::
   #     * *repository* (String): Platform's repository
-  def with_test_platform_for_get_impacted_nodes
+  def with_test_platform_for_get_impacted_nodes(&block)
     with_test_platform(
       {
         nodes: {
           'node1' => { services: %w[service1] },
           'node2' => { services: %w[service2] }
         }
-      }
-    ) do |repository|
-      yield repository
-    end
+      },
+      &block
+    )
   end
 
   it 'returns nodes impacted by a git diff' do
