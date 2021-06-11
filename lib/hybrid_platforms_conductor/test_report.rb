@@ -166,7 +166,7 @@ module HybridPlatformsConductor
         end
         groups = {}
         tests.group_by(&first_criteria).each do |first_group, grouped_tests|
-          next_grouped_errors = group_errors(grouped_tests, *group_criterias[1..-1], filter: filter)
+          next_grouped_errors = group_errors(grouped_tests, *group_criterias[1..], filter: filter)
           groups[first_group] = next_grouped_errors unless next_grouped_errors.empty?
         end
         groups.sort.to_h

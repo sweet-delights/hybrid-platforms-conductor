@@ -79,7 +79,7 @@ module HybridPlatformsConductor
         # Prerequisite: create has been called before
         # [API] - This method is mandatory
         def start
-          log_debug "[ #{@node}/#{@environment} ] - Start Docker Container #{@container.refresh!.info['Name'][1..-1]} ..."
+          log_debug "[ #{@node}/#{@environment} ] - Start Docker Container #{@container.refresh!.info['Name'][1..]} ..."
           @container.start
         end
 
@@ -87,7 +87,7 @@ module HybridPlatformsConductor
         # Prerequisite: create has been called before
         # [API] - This method is mandatory
         def stop
-          log_debug "[ #{@node}/#{@environment} ] - Stop Docker Container #{@container.refresh!.info['Name'][1..-1]} ..."
+          log_debug "[ #{@node}/#{@environment} ] - Stop Docker Container #{@container.refresh!.info['Name'][1..]} ..."
           @container.stop
         end
 
@@ -95,7 +95,7 @@ module HybridPlatformsConductor
         # Prerequisite: create has been called before
         # [API] - This method is mandatory
         def destroy
-          log_debug "[ #{@node}/#{@environment} ] - Destroy Docker Container #{@container.refresh!.info['Name'][1..-1]} ..."
+          log_debug "[ #{@node}/#{@environment} ] - Destroy Docker Container #{@container.refresh!.info['Name'][1..]} ..."
           @container.remove
           @container = nil
         end

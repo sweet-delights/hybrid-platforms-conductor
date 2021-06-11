@@ -475,9 +475,9 @@ module HybridPlatformsConductor
                 -----
               EO_LOG
               # Skip the first section, as it can contain SSH banners
-              cmd_stdouts = stdout.split("#{CMD_SEPARATOR}\n")[1..-1]
+              cmd_stdouts = stdout.split("#{CMD_SEPARATOR}\n")[1..]
               cmd_stdouts = [] if cmd_stdouts.nil?
-              cmd_stderrs = stderr.split("#{CMD_SEPARATOR}\n")[1..-1]
+              cmd_stderrs = stderr.split("#{CMD_SEPARATOR}\n")[1..]
               cmd_stderrs = [] if cmd_stderrs.nil?
               @cmds_to_run[test.node].zip(cmd_stdouts, cmd_stderrs).each do |(cmd, test_info), cmd_stdout, cmd_stderr|
                 # Find the section that corresponds to this test

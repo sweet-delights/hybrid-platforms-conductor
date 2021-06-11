@@ -121,7 +121,7 @@ module HybridPlatformsConductor
                       if idx_results.nil?
                         error 'No results given by the oscap run', stdout.join("\n")
                       else
-                        results = Nokogiri::XML(stdout[idx_results + 1..-1].join("\n"))
+                        results = Nokogiri::XML(stdout[idx_results + 1..].join("\n"))
                         results.remove_namespaces!
                         oval_definitions = results.css('oval_results oval_definitions definitions definition')
                         results.css('results system definitions definition').each do |definition_xml|

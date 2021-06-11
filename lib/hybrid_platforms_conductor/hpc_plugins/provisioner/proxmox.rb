@@ -100,7 +100,7 @@ module HybridPlatformsConductor
 
                 # Get the HPC info associated to this VM
                 # Hash<Symbol,String>
-                vm_hpc_info = vm_description_lines[hpc_marker_idx + 1..-1].map do |line|
+                vm_hpc_info = vm_description_lines[hpc_marker_idx + 1..].map do |line|
                   property, value = line.split(': ')
                   [property.to_sym, value]
                 end.to_h
@@ -447,7 +447,7 @@ module HybridPlatformsConductor
               )[proxmox_test_info[:sync_node]]
             end
             stdout_lines = stdout.split("\n")
-            result = JSON.parse(stdout_lines[stdout_lines.index('===== JSON =====') + 1..-1].join("\n")).transform_keys(&:to_sym)
+            result = JSON.parse(stdout_lines[stdout_lines.index('===== JSON =====') + 1..].join("\n")).transform_keys(&:to_sym)
             raise "[ #{@node}/#{@environment} ] - Error returned by #{cmd}: #{result[:error]}" if result.key?(:error)
           ensure
             File.unlink(config_file)

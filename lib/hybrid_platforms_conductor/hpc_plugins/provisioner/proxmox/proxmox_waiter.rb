@@ -287,7 +287,7 @@ class ProxmoxWaiter
           elsif idx.zero?
             # Access granted
             log '[ Futex queue ] - Exclusive access granted'
-            write_access_queue(queue_futex_file, access_queue[1..-1])
+            write_access_queue(queue_futex_file, access_queue[1..])
             retry_futex_queue = false
           else
             # Just check that the first PID still exists, otherwise remove it from the queue.
@@ -302,7 +302,7 @@ class ProxmoxWaiter
               end
             unless first_pid_exist
               log "[ Futex queue ] - !!! First PID #{first_pid} does not exist - remove it from the queue"
-              write_access_queue(queue_futex_file, access_queue[1..-1])
+              write_access_queue(queue_futex_file, access_queue[1..])
             end
           end
         end
@@ -503,7 +503,7 @@ class ProxmoxWaiter
     if hpc_marker_idx.nil?
       {}
     else
-      vm_description_lines[hpc_marker_idx + 1..-1].map do |line|
+      vm_description_lines[hpc_marker_idx + 1..].map do |line|
         property, value = line.split(': ')
         [property.to_sym, value]
       end.to_h

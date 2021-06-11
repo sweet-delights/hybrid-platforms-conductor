@@ -164,7 +164,7 @@ module HybridPlatformsConductor
                 deployment_info: deploy_info,
                 exit_status: exit_status =~ /^\d+$/ ? Integer(exit_status) : exit_status.to_sym,
                 stdout: stdout_lines[stdout_idx + 1..stderr_idx - 1].join("\n"),
-                stderr: stdout_lines[stderr_idx + 1..-1].join("\n")
+                stderr: stdout_lines[stderr_idx + 1..].join("\n")
               }
             end
           end

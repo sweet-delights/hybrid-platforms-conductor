@@ -225,13 +225,13 @@ module HybridPlatformsConductor
           connector = @connector_plugins[connector_name]
           selected_nodes = nodes_needing_connectors.select { |_node, selected_connector| selected_connector == connector }.keys
           if selected_nodes.empty?
-            preparation_code.call(remaining_plugins_to_prepare[1..-1])
+            preparation_code.call(remaining_plugins_to_prepare[1..])
           else
             connector.with_connection_to(selected_nodes, no_exception: no_exception) do |connected_nodes|
               (selected_nodes - connected_nodes).each do |node_in_error|
                 nodes_needing_connectors[node_in_error] = :connection_error
               end
-              preparation_code.call(remaining_plugins_to_prepare[1..-1])
+              preparation_code.call(remaining_plugins_to_prepare[1..])
             end
           end
         end

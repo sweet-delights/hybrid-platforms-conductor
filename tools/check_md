@@ -18,7 +18,7 @@ def link_to_file(link, file)
   if link_file == ''
     file
   elsif link_file.start_with?('/')
-    link_file[1..-1]
+    link_file[1..]
   else
     File.expand_path("#{File.dirname(file)}/#{link_file}").gsub("#{Dir.pwd}/", '')
   end
