@@ -58,4 +58,6 @@ Gem::Specification.new do |s|
   s.add_development_dependency 'sem_ver_components', '~> 0.0'
   # Lint checker
   s.add_development_dependency 'rubocop', '~> 1.16'
+  # Lint checker for rspec
+  s.add_development_dependency 'rubocop-rspec', '~> 2.4'
 end
