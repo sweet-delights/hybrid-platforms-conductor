@@ -111,7 +111,7 @@ module HybridPlatformsConductor
           # Compute the package ID that is unique to this packaging, so that we don't mix it with others if needed.
           package_id = {
             platform_name: platform_name,
-            services: platform_services.map { |node, node_services| [node, node_services.sort] }.to_h.sort,
+            services: platform_services.transform_values(&:sort).sort,
             secrets: secrets.sort,
             local_environment: local_environment
           }

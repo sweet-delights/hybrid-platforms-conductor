@@ -434,21 +434,18 @@ module HybridPlatformsConductor
           )
           # Run commands on nodes, in grouped way to avoid too many connections, per node
           # Hash< String, Array<String> >
-          @test_cmds = @cmds_to_run.map do |node, cmds_list|
-            [
-              node,
-              {
-                remote_bash: cmds_list.map do |(cmd, _test_info)|
-                  [
-                    "echo '#{CMD_SEPARATOR}'",
-                    ">&2 echo '#{CMD_SEPARATOR}'",
-                    cmd,
-                    "echo \"$?\""
-                  ]
-                end.flatten
-              }
-            ]
-          end.to_h
+          @test_cmds = @cmds_to_run.transform_values do |cmds_list|
+            {
+              remote_bash: cmds_list.map do |(cmd, _test_info)|
+                [
+                  "echo '#{CMD_SEPARATOR}'",
+                  ">&2 echo '#{CMD_SEPARATOR}'",
+                  cmd,
+                  "echo \"$?\""
+                ]
+              end.flatten
+            }
+          end
           section "Run test commands on #{@test_cmds.keys.size} connected nodes (timeout to #{timeout} secs)" do
             start_time = Time.now
             @actions_executor.max_threads = @max_threads_connection_on_nodes

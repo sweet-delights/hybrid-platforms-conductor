@@ -40,7 +40,7 @@ module HybridPlatformsConductor
       # * *master_cmdbs_info* (Hash< Symbol, Symbol or Array<Symbol> >): List of metadata properties (or single one) per CMDB name considered as master for those properties.
       def master_cmdbs(master_cmdbs_info)
         @cmdb_masters << {
-          cmdb_masters: master_cmdbs_info.map { |cmdb, properties| [cmdb, properties.is_a?(Array) ? properties : [properties]] }.to_h,
+          cmdb_masters: master_cmdbs_info.transform_values { |properties| properties.is_a?(Array) ? properties : [properties] },
           nodes_selectors_stack: current_nodes_selectors_stack
         }
       end
@@ -377,9 +377,9 @@ module HybridPlatformsConductor
               end
               # Property values, per node name
               # Hash< String, Object >
-              metadata_from_cmdb = cmdb.send("get_#{cmdb_property}".to_sym, nodes_to_query, @metadata.slice(*nodes_to_query)).map do |node, cmdb_result|
-                [node, cmdb_property == :others ? cmdb_result[property] : cmdb_result]
-              end.to_h.compact
+              metadata_from_cmdb = cmdb.send("get_#{cmdb_property}".to_sym, nodes_to_query, @metadata.slice(*nodes_to_query)).transform_values do |cmdb_result|
+                cmdb_property == :others ? cmdb_result[property] : cmdb_result
+              end.compact
               cmdb_log_header = "[CMDB #{cmdb.class.name.split('::').last}.#{cmdb_property}] -"
               log_debug "#{cmdb_log_header} Query property #{property} for #{nodes_to_query.size} nodes (#{nodes_to_query[0..7].join(', ')}...) => Found metadata for #{metadata_from_cmdb.size} nodes."
               updated_metadata.merge!(metadata_from_cmdb) do |node, existing_value, new_value|

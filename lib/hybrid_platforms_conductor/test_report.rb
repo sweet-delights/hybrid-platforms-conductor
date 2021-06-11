@@ -193,17 +193,14 @@ module HybridPlatformsConductor
           ['No list', no_list_nodes],
           ['All', @nodes_handler.known_nodes]
         ]
-      ).map do |list_name, list_nodes|
-        [
-          list_name,
-          {
-            nodes: list_nodes,
-            tested_nodes: list_nodes & @tested_nodes,
-            tested_nodes_in_error: list_nodes & group_errors(node_tests, :node).keys,
-            tested_nodes_in_error_as_expected: list_nodes & group_errors(node_tests, :node, filter: :only_as_expected).keys
-          }
-        ]
-      end.to_h
+      ).transform_values do |list_nodes|
+        {
+          nodes: list_nodes,
+          tested_nodes: list_nodes & @tested_nodes,
+          tested_nodes_in_error: list_nodes & group_errors(node_tests, :node).keys,
+          tested_nodes_in_error_as_expected: list_nodes & group_errors(node_tests, :node, filter: :only_as_expected).keys
+        }
+      end
     end
 
     # Flatten a tree hash.

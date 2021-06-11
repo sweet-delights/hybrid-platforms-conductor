@@ -17,12 +17,9 @@ module HybridPlatformsConductorTest
         global_tests: report_from(global_tests),
         platform_tests: report_from(platform_tests),
         node_tests: report_from(node_tests),
-        errors_per_test: group_errors(node_tests, :test_name).map do |test_name, errors|
-          [
-            test_name,
-            errors.map { |error| error.split("\n").first }
-          ]
-        end.to_h,
+        errors_per_test: group_errors(node_tests, :test_name).transform_values do |errors|
+          errors.map { |error| error.split("\n").first }
+        end,
         nodes_by_nodes_list: nodes_by_nodes_list
       }
     end

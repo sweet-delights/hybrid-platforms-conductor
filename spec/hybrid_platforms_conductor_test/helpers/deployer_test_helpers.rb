@@ -96,7 +96,7 @@ module HybridPlatformsConductorTest
           #     * *repository* (String): Path to the repository
           def with_platform_to_deploy(
             nodes_info: { nodes: { 'node' => { services: %w[service] } } },
-            expect_services_to_deploy: nodes_info[:nodes].map { |node, node_info| [node, node_info[:services]] }.to_h,
+            expect_services_to_deploy: nodes_info[:nodes].transform_values { |node_info| node_info[:services] },
             expect_deploy_allowed: true,
             expect_package: true,
             expect_prepare_for_deploy: true,
