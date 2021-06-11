@@ -87,8 +87,8 @@ module HybridPlatformsConductorTest
         end
         yield
         expect(
-          remaining_expected_commands.select do |(_expected_command, _command_code, options)|
-            !options[:optional]
+          remaining_expected_commands.reject do |(_expected_command, _command_code, options)|
+            options[:optional]
           end
         ).to eq([]), "Expected CmdRunner commands were not run:\n#{
           remaining_expected_commands.map do |(expected_command, _command_code, options)|

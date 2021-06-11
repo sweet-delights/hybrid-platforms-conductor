@@ -392,7 +392,7 @@ module HybridPlatformsConductor
       new_nodes_graph = {}
       @nodes_graph.each do |node_name, node_info|
         new_nodes_graph[node_name] = node_info.merge(
-          connections: node_info[:connections].select { |connected_hostname, _labels| !nodes_list.include?(connected_hostname) },
+          connections: node_info[:connections].reject { |connected_hostname, _labels| nodes_list.include?(connected_hostname) },
           includes: node_info[:includes] - nodes_list
         ) unless nodes_list.include?(node_name)
       end
@@ -737,12 +737,12 @@ module HybridPlatformsConductor
                     if ip_mask == 24
                       [ip_str]
                     else
-                      ips_24_matching_mask(ip_def, ip_mask).select do |ip|
+                      ips_24_matching_mask(ip_def, ip_mask).reject do |ip|
                         unless @ips_ignored.key?(ip_str)
                           # Check if we should ignore it.
                           @ips_ignored[ip] = nil if @config[:ignore_ips].any? { |ip_regexp| ip =~ ip_regexp }
                         end
-                        !@ips_ignored.key?(ip)
+                        @ips_ignored.key?(ip)
                       end
                     end
                   if ip_24_list.empty?
@@ -769,12 +769,12 @@ module HybridPlatformsConductor
                     if ip_mask == 32
                       [ip_def]
                     else
-                      ips_matching_mask(ip_def, ip_mask).select do |ip|
+                      ips_matching_mask(ip_def, ip_mask).reject do |ip|
                         unless @ips_ignored.key?(ip_str)
                           # Check if we should ignore it.
                           @ips_ignored[ip] = nil if @config[:ignore_ips].any? { |ip_regexp| ip =~ ip_regexp }
                         end
-                        !@ips_ignored.key?(ip)
+                        @ips_ignored.key?(ip)
                       end
                     end
                   if ips_list.empty?

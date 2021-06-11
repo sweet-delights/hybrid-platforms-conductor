@@ -50,7 +50,7 @@ module HybridPlatformsConductor
     # Result::
     # * Array<Test>: List of platform tests
     def platform_tests
-      @tests.select { |test| !test.platform.nil? }
+      @tests.reject { |test| test.platform.nil? }
     end
 
     # Return node tests
@@ -58,7 +58,7 @@ module HybridPlatformsConductor
     # Result::
     # * Array<Test>: List of node tests
     def node_tests
-      @tests.select { |test| !test.node.nil? }
+      @tests.reject { |test| test.node.nil? }
     end
 
     # Select tests corresponding to a given criteria
@@ -256,7 +256,7 @@ module HybridPlatformsConductor
     #     * *not_run*: All non-successful tests have not been run
     def classify_tests(tests)
       info = {
-        not_run: tests.select { |test| !test.executed? },
+        not_run: tests.reject { |test| test.executed? },
         success: tests.select { |test| test.executed? && test.errors.empty? },
         unexpected_error: tests.select { |test| test.executed? && !test.errors.empty? && test.expected_failure.nil? },
         expected_error: tests.select { |test| test.executed? && !test.errors.empty? && !test.expected_failure.nil? }

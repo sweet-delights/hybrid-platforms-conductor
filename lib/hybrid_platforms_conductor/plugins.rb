@@ -90,7 +90,7 @@ module HybridPlatformsConductor
         # * have been defined by the requires (no unnamed class, as those can be created by clones when using concurrency),
         # * inherit from the base plugin class,
         # * have no descendants
-        if !klass.name.nil? && klass < ancestor_class && ObjectSpace.each_object(Class).all? { |other_klass| other_klass.name.nil? || !(other_klass < klass) }
+        if !klass.name.nil? && klass < ancestor_class && ObjectSpace.each_object(Class).all? { |other_klass| other_klass.name.nil? || other_klass >= klass }
           plugin_id = klass.name.split('::').last.gsub(/([a-z\d])([A-Z\d])/, '\1_\2').downcase.to_sym
           self[plugin_id] = klass
         end

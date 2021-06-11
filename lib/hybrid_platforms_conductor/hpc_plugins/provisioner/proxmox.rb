@@ -312,7 +312,7 @@ module HybridPlatformsConductor
           idx_try = 0
           loop do
             response = proxmox.get(path)
-            break if !(response.is_a?(String)) || !(response =~ /^NOK: error code = 5\d\d$/)
+            break if !(response.is_a?(String)) || response !~ /^NOK: error code = 5\d\d$/
 
             log_warn "[ #{@node}/#{@environment} ] - Proxmox API call get #{path} returned error #{response} (attempt ##{idx_try}/#{proxmox_test_info[:api_max_retries]})"
             raise "[ #{@node}/#{@environment} ] - Proxmox API call get #{path} returns #{response} continuously (tried #{idx_try + 1} times)" if idx_try >= proxmox_test_info[:api_max_retries]

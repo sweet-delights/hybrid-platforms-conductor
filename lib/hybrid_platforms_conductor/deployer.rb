@@ -386,7 +386,7 @@ module HybridPlatformsConductor
           sub_executable.config.sudo_procs.replace(sub_executable.config.sudo_procs.map do |sudo_proc_info|
             {
               nodes_selectors_stack: sudo_proc_info[:nodes_selectors_stack].map do |nodes_selector|
-                @nodes_handler.select_nodes(nodes_selector).select { |selected_node| selected_node != node }
+                @nodes_handler.select_nodes(nodes_selector).reject { |selected_node| selected_node == node }
               end,
               sudo_proc: sudo_proc_info[:sudo_proc]
             }

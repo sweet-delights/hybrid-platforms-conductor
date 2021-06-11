@@ -80,7 +80,7 @@ module HybridPlatformsConductor
             @config.ssh_connection_transforms.replace(@config.ssh_connection_transforms.map do |ssh_transform_info|
               {
                 nodes_selectors_stack: ssh_transform_info[:nodes_selectors_stack].map do |nodes_selector|
-                  @nodes_handler.select_nodes(nodes_selector).select { |selected_node| selected_node != @node }
+                  @nodes_handler.select_nodes(nodes_selector).reject { |selected_node| selected_node == @node }
                 end,
                 transform: ssh_transform_info[:transform]
               }
