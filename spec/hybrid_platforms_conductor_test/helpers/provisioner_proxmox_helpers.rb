@@ -98,7 +98,7 @@ module HybridPlatformsConductorTest
           expect(password).to eq proxmox_password
           expect(realm).to eq proxmox_realm
           expect(options[:verify_ssl]).to eq false
-          proxmox = double 'Proxmox info instance'
+          proxmox = instance_double ::Proxmox::Proxmox
           # Mock initialization
           expect(proxmox).to receive(:logger=).and_return(nil)
           expect(proxmox).to receive(:logger_stderr=).and_return(nil)
@@ -138,7 +138,7 @@ module HybridPlatformsConductorTest
           expect(password).to eq proxmox_password
           expect(realm).to eq 'pam'
           expect(options[:verify_ssl]).to eq false
-          proxmox = double 'Proxmox create instance'
+          proxmox = instance_double ::Proxmox::Proxmox
           # Mock initialization
           expect(proxmox).to receive(:logger=).and_return(nil)
           expect(proxmox).to receive(:logger_stderr=).and_return(nil)
@@ -181,7 +181,7 @@ module HybridPlatformsConductorTest
           expect(password).to eq proxmox_password
           expect(realm).to eq 'pam'
           expect(options[:verify_ssl]).to eq false
-          proxmox = double 'Proxmox create instance'
+          proxmox = instance_double ::Proxmox::Proxmox
           # Mock initialization
           expect(proxmox).to receive(:logger=).and_return(nil)
           expect(proxmox).to receive(:logger_stderr=).and_return(nil)
@@ -216,7 +216,7 @@ module HybridPlatformsConductorTest
           expect(password).to eq proxmox_password
           expect(realm).to eq 'pam'
           expect(options[:verify_ssl]).to eq false
-          proxmox = double 'Proxmox create instance'
+          proxmox = instance_double ::Proxmox::Proxmox
           # Mock initialization
           expect(proxmox).to receive(:logger=).and_return(nil)
           expect(proxmox).to receive(:logger_stderr=).and_return(nil)
@@ -253,7 +253,7 @@ module HybridPlatformsConductorTest
           expect(password).to eq proxmox_password
           expect(realm).to eq 'pam'
           expect(options[:verify_ssl]).to eq false
-          proxmox = double 'Proxmox create instance'
+          proxmox = instance_double ::Proxmox::Proxmox
           # Mock initialization
           expect(proxmox).to receive(:logger=).and_return(nil)
           expect(proxmox).to receive(:logger_stderr=).and_return(nil)
@@ -527,7 +527,7 @@ module HybridPlatformsConductorTest
               expect(password).to eq proxmox_password
               expect(realm).to eq proxmox_realm
               expect(options[:verify_ssl]).to eq false
-              proxmox = double 'Proxmox create instance'
+              proxmox = instance_double ::Proxmox::Proxmox
               # Mock getting status of a container
               allow(proxmox).to receive(:get) do |path|
                 case path

@@ -47,7 +47,7 @@ describe HybridPlatformsConductor::Deployer do
           end
         end
         # Mock the Savon calls
-        mocked_savon_client = double 'Mocked Savon client'
+        mocked_savon_client = instance_double Savon::Client
         expect(Savon).to receive(:client) do |params|
           expect(params[:wsdl]).to eq "#{thycotic_url}/webservices/SSWebservice.asmx?wsdl"
           expect(params[:ssl_verify_mode]).to eq :none
