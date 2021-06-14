@@ -84,7 +84,7 @@ module HybridPlatformsConductor
 
     # Validate that parsed parameters are valid
     def validate_params
-      @connector_plugins.values.each do |connector|
+      @connector_plugins.each_value do |connector|
         connector.validate_params if connector.respond_to?(:validate_params)
       end
     end
@@ -194,7 +194,7 @@ module HybridPlatformsConductor
     def with_connections_prepared_to(nodes, no_exception: false)
       # Make sure every node needing connectors finds a connector
       nodes_needing_connectors = nodes.map { |node| [node, nil] }.to_h
-      @connector_plugins.values.each do |connector|
+      @connector_plugins.each_value do |connector|
         nodes_without_connectors = nodes_needing_connectors.select { |_node, selected_connector| selected_connector.nil? }.keys
         break if nodes_without_connectors.empty?
 
