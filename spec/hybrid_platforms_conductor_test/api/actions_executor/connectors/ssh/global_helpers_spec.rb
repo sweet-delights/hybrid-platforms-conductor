@@ -42,10 +42,12 @@ describe HybridPlatformsConductor::ActionsExecutor do
         ]
         end_idx = ssh_config_lines[start_idx + 1..-1].index { |line| end_markers.any? { |end_marker| line =~ end_marker } }
         end_idx = end_idx.nil? ? -1 : start_idx + end_idx
-        ssh_config_lines[start_idx..end_idx].select do |line|
-          stripped_line = line.strip
-          !stripped_line.empty? && stripped_line[0] != '#'
-        end.join("\n") + "\n"
+        "#{
+          ssh_config_lines[start_idx..end_idx].select do |line|
+            stripped_line = line.strip
+            !stripped_line.empty? && stripped_line[0] != '#'
+          end.join("\n")
+        }\n"
       end
 
       it 'generates a global configuration with user from hpc_ssh_user environment variable' do
