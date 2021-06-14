@@ -141,7 +141,7 @@ class ProxmoxWaiter
           end
         selected_pve_node, selected_pve_node_score = pve_node_scores.inject([nil, nil]) do |(best_pve_node, best_score), (pve_node, itr_pve_node_scores)|
           if itr_pve_node_scores[score_idx].nil? ||
-            (!best_score.nil? && itr_pve_node_scores[score_idx] >= best_score)
+              (!best_score.nil? && itr_pve_node_scores[score_idx] >= best_score)
             [best_pve_node, best_score]
           else
             [pve_node, itr_pve_node_scores[score_idx]]
@@ -417,11 +417,11 @@ class ProxmoxWaiter
           # Otherwise, store the scores, taking into account coefficients to then choose among possible PVE nodes.
           [
             if expected_ram_percent_used <= @config['limits']['ram_percent_used_max'] &&
-              expected_disk_percent_used <= @config['limits']['disk_percent_used_max']
+                expected_disk_percent_used <= @config['limits']['disk_percent_used_max']
               expected_ram_percent_used * @config['coeff_ram_consumption'] + expected_disk_percent_used * @config['coeff_disk_consumption']
             end,
             if expected_ram_percent_used_without_expired <= @config['limits']['ram_percent_used_max'] &&
-              expected_disk_percent_used_without_expired <= @config['limits']['disk_percent_used_max']
+                expected_disk_percent_used_without_expired <= @config['limits']['disk_percent_used_max']
               expected_ram_percent_used_without_expired * @config['coeff_ram_consumption'] + expected_disk_percent_used_without_expired * @config['coeff_disk_consumption']
             end
           ]
