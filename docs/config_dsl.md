@@ -13,6 +13,7 @@ This DSL can also be completed by plugins. Check [the plugins documentations](pl
   * [`hybrid_platforms_dir`](#hybrid_platforms_dir)
   * [`tests_provisioner`](#tests_provisioner)
   * [`expect_tests_to_fail`](#expect_tests_to_fail)
+  * [`send_logs_to`](#send_logs_to)
   * [`retry_deploy_for_errors_on_stdout`](#retry_deploy_for_errors_on_stdout)
   * [`retry_deploy_for_errors_on_stderr`](#retry_deploy_for_errors_on_stderr)
   * [`packaging_timeout`](#packaging_timeout)
@@ -197,6 +198,27 @@ expect_tests_to_fail :bitbucket_conf, 'Our Bitbucket server is down.'
 # Test nodes are not yet patched against Spectre variants
 for_nodes('/tst/') do
   expect_tests_to_fail :spectre, 'Test nodes are not patched yet. See ticket PRJ-455'
+end
+```
+
+<a name="send_logs_to"></a>
+## `send_logs_to`
+
+Set the list of [log plugins](plugins.md#log) to use to save logs.
+By default (if no plugins is specifically set) the [log plugin `remote_fs`](plugins/log/remote_fs.md) is being used.
+
+Takes the list of log plugin names, as symbols, as a parameter.
+
+Can be applied to subset of nodes using the [`for_nodes` DSL method](#for_nodes).
+
+Examples:
+```ruby
+# By default, everything gets logged on the nodes
+send_logs_to :remote_fs
+
+# All our production nodes also have their logs uploaded on our logs servers
+for_nodes('/prd/') do
+  send_logs_to :datadog_log_server, :loggly
 end
 ```
 

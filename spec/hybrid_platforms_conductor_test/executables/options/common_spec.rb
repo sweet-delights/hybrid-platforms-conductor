@@ -12,7 +12,8 @@ describe 'executables\' common options' do
         nodes: { 'node1' => { meta: { host_ip: '192.168.42.42' }, services: ['node1_service'] } },
         deployable_services: %w[node1_service]
       },
-      true
+      true,
+      'send_logs_to :test_log'
     ) do |repository|
       yield repository
     end

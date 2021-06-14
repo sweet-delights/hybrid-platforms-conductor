@@ -60,16 +60,16 @@ unless ignore_deploy_info
     if node_deploy_info.key?(:error)
       executable.log_warn "[ #{node} ] - Deployment in error: #{node_deploy_info[:error]}"
       true
-    elsif !node_deploy_info.key?(:exit_status) || node_deploy_info[:exit_status] != '0'
+    elsif !node_deploy_info.key?(:exit_status) || node_deploy_info[:exit_status] != 0
       executable.log_warn "[ #{node} ] - Last deployment did not end successfully: #{node_deploy_info[:exit_status]}"
       true
-    elsif node_deploy_info.key?(:repo_name_0)
+    elsif node_deploy_info[:deployment_info].key?(:repo_name_0)
       node_impacted = false
       # Loop over all possible repositories concerned by this deployment
       repo_idx = 0
-      while node_deploy_info.key?("repo_name_#{repo_idx}".to_sym) do
-        repo_name = node_deploy_info["repo_name_#{repo_idx}".to_sym]
-        commit_id = node_deploy_info["commit_id_#{repo_idx}".to_sym]
+      while node_deploy_info[:deployment_info].key?("repo_name_#{repo_idx}".to_sym) do
+        repo_name = node_deploy_info[:deployment_info]["repo_name_#{repo_idx}".to_sym]
+        commit_id = node_deploy_info[:deployment_info]["commit_id_#{repo_idx}".to_sym]
         impacted_nodes = cache_impacted_nodes.dig(repo_name, commit_id)
         if impacted_nodes.nil?
           begin

@@ -5,6 +5,7 @@ require 'hybrid_platforms_conductor/platforms_handler'
 require 'hybrid_platforms_conductor/actions_executor'
 require 'hybrid_platforms_conductor/cmd_runner'
 require 'hybrid_platforms_conductor/deployer'
+require 'hybrid_platforms_conductor/log'
 require 'hybrid_platforms_conductor/nodes_handler'
 require 'hybrid_platforms_conductor/platform_handler'
 require 'hybrid_platforms_conductor/provisioner'
@@ -43,6 +44,8 @@ require 'hybrid_platforms_conductor_test/platform_handler_plugins/test2'
 require 'hybrid_platforms_conductor_test/report_plugin'
 require 'hybrid_platforms_conductor_test/test_action'
 require 'hybrid_platforms_conductor_test/test_connector'
+require 'hybrid_platforms_conductor_test/test_log_plugin'
+require 'hybrid_platforms_conductor_test/test_log_no_read_plugin'
 require 'hybrid_platforms_conductor_test/test_plugins/global'
 require 'hybrid_platforms_conductor_test/test_plugins/node'
 require 'hybrid_platforms_conductor_test/test_plugins/node_check'
@@ -128,16 +131,29 @@ module HybridPlatformsConductorTest
         HybridPlatformsConductorTest::TestPlugins::NodeCheck.only_on_platform_types = nil
         HybridPlatformsConductorTest::TestPlugins::NodeCheck.only_on_nodes = nil
         HybridPlatformsConductorTest::TestPlugins::SeveralChecks.runs = []
+        HybridPlatformsConductorTest::TestLogPlugin.calls = []
+        HybridPlatformsConductorTest::TestLogNoReadPlugin.calls = []
         FileUtils.rm_rf './run_logs'
         FileUtils.rm_rf './testadmin.key.pub'
         FileUtils.rm_rf '/tmp/hpc_ssh'
+        register_plugins(
+          :log,
+          {
+            test_log: HybridPlatformsConductorTest::TestLogPlugin,
+            test_log_no_read: HybridPlatformsConductorTest::TestLogNoReadPlugin
+          },
+          replace: false
+        )
         # Make sure CMDB plugin classes loaded by test framework are not added automatically
-        register_plugins(:cmdb, {
-          config: HybridPlatformsConductor::HpcPlugins::Cmdb::Config,
-          host_ip: HybridPlatformsConductor::HpcPlugins::Cmdb::HostIp,
-          host_keys: HybridPlatformsConductor::HpcPlugins::Cmdb::HostKeys,
-          platform_handlers: HybridPlatformsConductor::HpcPlugins::Cmdb::PlatformHandlers
-        })
+        register_plugins(
+          :cmdb,
+          {
+            config: HybridPlatformsConductor::HpcPlugins::Cmdb::Config,
+            host_ip: HybridPlatformsConductor::HpcPlugins::Cmdb::HostIp,
+            host_keys: HybridPlatformsConductor::HpcPlugins::Cmdb::HostKeys,
+            platform_handlers: HybridPlatformsConductor::HpcPlugins::Cmdb::PlatformHandlers
+          }
+        )
       end
     end
 

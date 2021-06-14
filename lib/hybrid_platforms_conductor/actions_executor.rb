@@ -102,7 +102,14 @@ module HybridPlatformsConductor
     # * *progress_name* (String): Name to display on the progress bar [default: 'Executing actions']
     # Result::
     # * Hash<String, [Integer or Symbol, String, String]>: Exit status code (or Symbol in case of error or dry run), standard output and error for each node.
-    def execute_actions(actions_per_nodes, timeout: nil, concurrent: false, log_to_dir: "#{@config.hybrid_platforms_dir}/run_logs", log_to_stdout: true, progress_name: 'Executing actions')
+    def execute_actions(
+      actions_per_nodes,
+      timeout: nil,
+      concurrent: false,
+      log_to_dir: "#{@config.hybrid_platforms_dir}/run_logs",
+      log_to_stdout: true,
+      progress_name: 'Executing actions'
+    )
       # Keep a list of nodes that will need remote access
       nodes_needing_connectors = []
       # Compute the ordered list of actions per selected node
