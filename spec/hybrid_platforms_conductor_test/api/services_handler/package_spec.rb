@@ -60,7 +60,7 @@ describe HybridPlatformsConductor::ServicesHandler do
           secrets: {},
           local_environment: false
         )
-        HybridPlatformsConductor::ServicesHandler.new(
+        described_class.new(
           logger: logger,
           logger_stderr: logger,
           config: test_config,

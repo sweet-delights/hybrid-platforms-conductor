@@ -85,13 +85,13 @@ describe HybridPlatformsConductor::Plugins do
 
   it 'returns no plugins by default' do
     with_test_platform do
-      expect(HybridPlatformsConductor::Plugins.new(:test_plugin_type, logger: logger, logger_stderr: logger).keys).to eq []
+      expect(described_class.new(:test_plugin_type, logger: logger, logger_stderr: logger).keys).to eq []
     end
   end
 
   it 'can register a new plugin with a given class' do
     with_test_platform do
-      plugins = HybridPlatformsConductor::Plugins.new(:test_plugin_type, logger: logger, logger_stderr: logger)
+      plugins = described_class.new(:test_plugin_type, logger: logger, logger_stderr: logger)
       plugins[:new_plugin] = HybridPlatformsConductorTest::RandomClass
       expect(plugins.keys).to eq [:new_plugin]
       expect(plugins[:new_plugin]).to eq HybridPlatformsConductorTest::RandomClass
@@ -100,7 +100,7 @@ describe HybridPlatformsConductor::Plugins do
 
   it 'can register a new plugin with an initializer' do
     with_test_platform do
-      plugins = HybridPlatformsConductor::Plugins.new(
+      plugins = described_class.new(
         :test_plugin_type,
         init_plugin: proc do |plugin_class|
           plugin_class.name
@@ -116,7 +116,7 @@ describe HybridPlatformsConductor::Plugins do
 
   it 'validates a plugin class before registering it' do
     with_test_platform do
-      plugins = HybridPlatformsConductor::Plugins.new(:test_plugin_type, logger: logger, logger_stderr: logger)
+      plugins = described_class.new(:test_plugin_type, logger: logger, logger_stderr: logger)
       HybridPlatformsConductorTest::RandomClassWithValidation.validation_done = false
       HybridPlatformsConductorTest::RandomClassWithValidation.validation_result = true
       plugins[:new_plugin] = HybridPlatformsConductorTest::RandomClassWithValidation
@@ -128,7 +128,7 @@ describe HybridPlatformsConductor::Plugins do
 
   it 'does not register a plugin that fails validation' do
     with_test_platform do
-      plugins = HybridPlatformsConductor::Plugins.new(:test_plugin_type, logger: logger, logger_stderr: logger)
+      plugins = described_class.new(:test_plugin_type, logger: logger, logger_stderr: logger)
       HybridPlatformsConductorTest::RandomClassWithValidation.validation_done = false
       HybridPlatformsConductorTest::RandomClassWithValidation.validation_result = false
       plugins[:new_plugin] = HybridPlatformsConductorTest::RandomClassWithValidation
@@ -155,7 +155,7 @@ describe HybridPlatformsConductor::Plugins do
       # Alter the load path to mock an extra Rubygem
       $LOAD_PATH.unshift "#{__dir__}/../mocked_lib"
       begin
-        plugins = HybridPlatformsConductor::Plugins.new(:test_plugin_type, logger: logger, logger_stderr: logger)
+        plugins = described_class.new(:test_plugin_type, logger: logger, logger_stderr: logger)
         expect(plugins.keys).to eq [:test_plugin_id_1]
         expect(plugins[:test_plugin_id_1]).to eq HybridPlatformsConductorTest::MockedLib::MyTestGem::HpcPlugins::TestPluginType::TestPluginId1
       ensure
@@ -192,12 +192,12 @@ describe HybridPlatformsConductor::Plugins do
       # Alter the load path to mock an extra Rubygem
       $LOAD_PATH.unshift "#{__dir__}/../mocked_lib"
       begin
-        plugins = HybridPlatformsConductor::Plugins.new(:test_plugin_type, logger: logger, logger_stderr: logger)
+        plugins = described_class.new(:test_plugin_type, logger: logger, logger_stderr: logger)
         expect(plugins.keys.sort).to eq %i[test_plugin_id_1 test_plugin_id_2 test_plugin_id_3].sort
         expect(plugins[:test_plugin_id_1]).to eq HybridPlatformsConductorTest::MockedLib::MyTestGem::HpcPlugins::TestPluginType::TestPluginId1
         expect(plugins[:test_plugin_id_2]).to eq HybridPlatformsConductorTest::MockedLib::MyTestGem::HpcPlugins::TestPluginType::TestPluginId2
         expect(plugins[:test_plugin_id_3]).to eq HybridPlatformsConductorTest::MockedLib::MyTestGem2::SubDir::HpcPlugins::TestPluginType::TestPluginId3
-        plugins_2 = HybridPlatformsConductor::Plugins.new(:test_plugin_type_2, logger: logger, logger_stderr: logger)
+        plugins_2 = described_class.new(:test_plugin_type_2, logger: logger, logger_stderr: logger)
         expect(plugins_2.keys).to eq [:test_plugin_id_4]
         expect(plugins_2[:test_plugin_id_4]).to eq HybridPlatformsConductorTest::MockedLib::MyTestGem2::SubDir::HpcPlugins::TestPluginType2::TestPluginId4
       ensure
@@ -210,7 +210,7 @@ describe HybridPlatformsConductor::Plugins do
     with_test_platform do
       # Mock the discovery of Ruby gems
       expect(Gem).not_to receive(:loaded_specs)
-      expect(HybridPlatformsConductor::Plugins.new(:test_plugin_type, parse_gems: false, logger: logger, logger_stderr: logger).keys).to eq []
+      expect(described_class.new(:test_plugin_type, parse_gems: false, logger: logger, logger_stderr: logger).keys).to eq []
     end
   end
 

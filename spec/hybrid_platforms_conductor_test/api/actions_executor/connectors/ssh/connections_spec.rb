@@ -321,7 +321,7 @@ describe HybridPlatformsConductor::ActionsExecutor do
               second_config = HybridPlatformsConductor::Config.new logger: logger, logger_stderr: logger
               second_platforms_handler = HybridPlatformsConductor::PlatformsHandler.new logger: logger, logger_stderr: logger, config: second_config, cmd_runner: second_cmd_runner
               second_nodes_handler = HybridPlatformsConductor::NodesHandler.new logger: logger, logger_stderr: logger, config: second_config, cmd_runner: second_cmd_runner, platforms_handler: second_platforms_handler
-              second_actions_executor = HybridPlatformsConductor::ActionsExecutor.new logger: logger, logger_stderr: logger, config: second_config, cmd_runner: second_cmd_runner, nodes_handler: second_nodes_handler
+              second_actions_executor = described_class.new logger: logger, logger_stderr: logger, config: second_config, cmd_runner: second_cmd_runner, nodes_handler: second_nodes_handler
               second_actions_executor.connector(:ssh).ssh_user = 'test_user'
               # Wait for the first thread to create ControlMaster
               sleep 0.1 while step == 0
