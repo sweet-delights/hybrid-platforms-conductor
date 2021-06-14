@@ -1,6 +1,9 @@
 require 'hybrid_platforms_conductor/report'
 require 'time'
 
+# We use true/false as symbols on purpose for translations
+# rubocop:disable Lint/BooleanSymbol
+
 module HybridPlatformsConductor
 
   module HpcPlugins
