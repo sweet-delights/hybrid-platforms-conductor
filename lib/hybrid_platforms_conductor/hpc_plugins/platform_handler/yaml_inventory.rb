@@ -16,7 +16,7 @@ module HybridPlatformsConductor
         def init
           # This method is called when initializing a new instance of this platform handler, for a given repository.
           inv_file = "#{@repository_path}/inventory.yaml"
-          @inventory = File.exist?(inv_file) ? YAML.load(File.read(inv_file)) : {}
+          @inventory = File.exist?(inv_file) ? YAML.safe_load(File.read(inv_file)) : {}
         end
 
         # Get the list of known nodes.
