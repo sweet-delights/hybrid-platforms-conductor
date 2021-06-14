@@ -710,7 +710,8 @@ module HybridPlatformsConductor
     # * Hash<String,Array<String>>: List of references for each node.
     def connections_from_json(json, current_ref = nil)
       nodes = {}
-      if json.is_a?(String)
+      case json
+      when String
         # Look for any IP
         json.scan(@ip_regexp).each do |(ip_def, _grp_match, ip_mask_str)|
           ip_mask = ip_mask_str.nil? ? 32 : ip_mask_str.to_i
@@ -819,11 +820,11 @@ module HybridPlatformsConductor
             nodes[hostname] << current_ref
           end
         end
-      elsif json.is_a?(Array)
+      when Array
         json.each do |sub_json|
           nodes.merge!(connections_from_json(sub_json, current_ref)) { |_node_name, refs_1, refs_2| (refs_1 + refs_2).uniq }
         end
-      elsif json.is_a?(Hash)
+      when Hash
         json.each do |sub_json_1, sub_json_2|
           nodes.merge!(connections_from_json(sub_json_1, current_ref)) { |_node_name, refs_1, refs_2| (refs_1 + refs_2).uniq }
           key_is_str = sub_json_1.is_a?(String)

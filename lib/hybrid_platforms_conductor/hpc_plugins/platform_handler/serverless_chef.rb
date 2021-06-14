@@ -335,13 +335,14 @@ module HybridPlatformsConductor
           impacted_recipes = []
           impacted_global = false
           files_diffs.keys.sort.each do |impacted_file|
-            if impacted_file =~ %r{^policyfiles/([^/]+)\.rb$}
+            case impacted_file
+            when %r{^policyfiles/([^/]+)\.rb$}
               log_debug "[#{impacted_file}] - Impacted service: #{Regexp.last_match(1)}"
               impacted_services << Regexp.last_match(1)
-            elsif impacted_file =~ %r{^policyfiles/([^/]+)\.lock.json$}
+            when %r{^policyfiles/([^/]+)\.lock.json$}
               log_debug "[#{impacted_file}] - Impacted service: #{Regexp.last_match(1)}"
               impacted_services << Regexp.last_match(1)
-            elsif impacted_file =~ %r{^nodes/([^/]+)\.json}
+            when %r{^nodes/([^/]+)\.json}
               log_debug "[#{impacted_file}] - Impacted node: #{Regexp.last_match(1)}"
               impacted_nodes << Regexp.last_match(1)
             else

@@ -303,12 +303,13 @@ module HybridPlatformsConductor
         'STDOUT' => stdout_device,
         'STDERR' => stderr_device
       }.each do |name, device|
-        if device.is_a?(File)
+        case device
+        when File
           if File.exist?(device.path)
             content = File.read(device.path).strip
             messages << "----- #{name} BEGIN - #{device.path} -----\n#{content}\n----- #{name} END - #{device.path} -----" unless content.empty?
           end
-        elsif device.is_a?(StringIO)
+        when StringIO
           content = device.string
           messages << "----- #{name} BEGIN -----\n#{content}\n----- #{name} END -----" unless content.empty?
         end

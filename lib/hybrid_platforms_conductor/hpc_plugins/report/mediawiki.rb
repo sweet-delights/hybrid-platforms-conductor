@@ -124,13 +124,14 @@ module HybridPlatformsConductor
                             raise "Missing translation of key: #{property}. Please edit TRANSLATIONS[:#{locale_code}]." unless locale.key?(property)
 
                             output << ": #{locale[property]}: #{
-                              if value.is_a?(Array)
+                              case value
+                              when Array
                                 "\n#{value.map { |item| "::* #{item}" }.join("\n")}"
-                              elsif value.is_a?(Hash)
+                              when Hash
                                 "\n#{value.map { |item, item_value| "::* #{item}: #{item_value}" }.join("\n")}"
-                              elsif value.is_a?(TrueClass)
+                              when TrueClass
                                 locale[:true]
-                              elsif value.is_a?(FalseClass)
+                              when FalseClass
                                 locale[:false]
                               else
                                 value.to_str
