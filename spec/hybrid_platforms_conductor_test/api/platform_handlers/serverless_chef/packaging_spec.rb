@@ -33,7 +33,12 @@ describe HybridPlatformsConductor::HpcPlugins::PlatformHandler::ServerlessChef d
                 File.write(
                   "#{repository}/#{policy_file.gsub(/.rb$/, '.lock.json')}",
                   {
-                    run_list: eval("[#{File.read("#{repository}/#{policy_file}").split("\n").select { |line| line =~ /^run_list.+$/ }.last.match(/^run_list(.+)$/)[1]}]").flatten
+                    run_list: eval(
+                      "[#{File.read("#{repository}/#{policy_file}").split("\n").select { |line| line =~ /^run_list.+$/ }.last.match(/^run_list(.+)$/)[1]}]",
+                      binding,
+                      __FILE__,
+                      __LINE__ - 3
+                    ).flatten
                   }.to_json
                 )
                 [0, 'Chef install done', '']
