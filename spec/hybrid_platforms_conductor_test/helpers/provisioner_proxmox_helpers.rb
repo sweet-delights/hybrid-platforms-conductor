@@ -100,12 +100,8 @@ module HybridPlatformsConductorTest
           expect(options[:verify_ssl]).to eq false
           proxmox = double 'Proxmox info instance'
           # Mock initialization
-          expect(proxmox).to receive(:logger=) do
-            # Nothing
-          end
-          expect(proxmox).to receive(:logger_stderr=) do
-            # Nothing
-          end
+          expect(proxmox).to receive(:logger=).and_return(nil)
+          expect(proxmox).to receive(:logger_stderr=).and_return(nil)
           # Mock checking existing nodes
           idx_try = 0
           expect(proxmox).to receive(:get).exactly(nbr_api_errors + 1).times.with('nodes') do
@@ -144,12 +140,8 @@ module HybridPlatformsConductorTest
           expect(options[:verify_ssl]).to eq false
           proxmox = double 'Proxmox create instance'
           # Mock initialization
-          expect(proxmox).to receive(:logger=) do
-            # Nothing
-          end
-          expect(proxmox).to receive(:logger_stderr=) do
-            # Nothing
-          end
+          expect(proxmox).to receive(:logger=).and_return(nil)
+          expect(proxmox).to receive(:logger_stderr=).and_return(nil)
           # Mock start a container
           idx_try = 0
           expect(proxmox).to receive(:post).exactly(nbr_api_errors + (task_status.nil? ? 0 : 1)).times.with('nodes/pve_node_name/lxc/1024/status/start') do
@@ -191,16 +183,10 @@ module HybridPlatformsConductorTest
           expect(options[:verify_ssl]).to eq false
           proxmox = double 'Proxmox create instance'
           # Mock initialization
-          expect(proxmox).to receive(:logger=) do
-            # Nothing
-          end
-          expect(proxmox).to receive(:logger_stderr=) do
-            # Nothing
-          end
+          expect(proxmox).to receive(:logger=).and_return(nil)
+          expect(proxmox).to receive(:logger_stderr=).and_return(nil)
           # Mock start a container
-          expect(proxmox).to receive(:post).with('nodes/pve_node_name/lxc/1024/status/stop') do
-            'UPID:pve_node_name:0000A504:6DEABF24:5F44669B:stop::root@pam:'
-          end
+          expect(proxmox).to receive(:post).with('nodes/pve_node_name/lxc/1024/status/stop').and_return('UPID:pve_node_name:0000A504:6DEABF24:5F44669B:stop::root@pam:')
           # Mock checking task status
           expect(proxmox).to receive(:get).with('nodes/pve_node_name/tasks/UPID:pve_node_name:0000A504:6DEABF24:5F44669B:stop::root@pam:/status') do
             { 'status' => task_status }
@@ -232,16 +218,10 @@ module HybridPlatformsConductorTest
           expect(options[:verify_ssl]).to eq false
           proxmox = double 'Proxmox create instance'
           # Mock initialization
-          expect(proxmox).to receive(:logger=) do
-            # Nothing
-          end
-          expect(proxmox).to receive(:logger_stderr=) do
-            # Nothing
-          end
+          expect(proxmox).to receive(:logger=).and_return(nil)
+          expect(proxmox).to receive(:logger_stderr=).and_return(nil)
           # Mock start a container
-          expect(proxmox).to receive(:delete).with('nodes/pve_node_name/lxc/1024') do
-            'UPID:pve_node_name:0000A504:6DEABF24:5F44669B:destroy::root@pam:'
-          end
+          expect(proxmox).to receive(:delete).with('nodes/pve_node_name/lxc/1024').and_return('UPID:pve_node_name:0000A504:6DEABF24:5F44669B:destroy::root@pam:')
           # Mock checking task status
           expect(proxmox).to receive(:get).with('nodes/pve_node_name/tasks/UPID:pve_node_name:0000A504:6DEABF24:5F44669B:destroy::root@pam:/status') do
             { 'status' => task_status }
@@ -275,12 +255,8 @@ module HybridPlatformsConductorTest
           expect(options[:verify_ssl]).to eq false
           proxmox = double 'Proxmox create instance'
           # Mock initialization
-          expect(proxmox).to receive(:logger=) do
-            # Nothing
-          end
-          expect(proxmox).to receive(:logger_stderr=) do
-            # Nothing
-          end
+          expect(proxmox).to receive(:logger=).and_return(nil)
+          expect(proxmox).to receive(:logger_stderr=).and_return(nil)
           # Mock getting status of a container
           idx_try = 0
           expect(proxmox).to receive(:get).exactly(nbr_api_errors + (status.nil? ? 0 : 1)).times.with('nodes/pve_node_name/lxc') do

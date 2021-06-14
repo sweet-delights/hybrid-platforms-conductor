@@ -142,12 +142,10 @@ describe HybridPlatformsConductor::Plugins do
       # Mock the discovery of Ruby gems
       expect(Gem).to receive(:loaded_specs) do
         my_test_gem_spec = double('Test gemspec for gem my_test_gem')
-        expect(my_test_gem_spec).to receive(:full_gem_path) { '__gem_full_path__' }
-        expect(Dir).to receive(:glob).with('__gem_full_path__/lib/**/*.rb') do
-          [
-            '__gem_full_path__/lib/my_test_gem/hpc_plugins/test_plugin_type/test_plugin_id_1.rb'
-          ]
-        end
+        expect(my_test_gem_spec).to receive(:full_gem_path).and_return('__gem_full_path__')
+        expect(Dir).to receive(:glob).with('__gem_full_path__/lib/**/*.rb').and_return [
+          '__gem_full_path__/lib/my_test_gem/hpc_plugins/test_plugin_type/test_plugin_id_1.rb'
+        ]
         {
           'my_test_gem' => my_test_gem_spec
         }
@@ -169,21 +167,17 @@ describe HybridPlatformsConductor::Plugins do
       # Mock the discovery of Ruby gems
       expect(Gem).to receive(:loaded_specs).twice do
         my_test_gem_spec = double('Test gemspec for gem my_test_gem')
-        expect(my_test_gem_spec).to receive(:full_gem_path) { '__gem_full_path__' }
-        expect(Dir).to receive(:glob).with('__gem_full_path__/lib/**/*.rb') do
-          [
-            '__gem_full_path__/lib/my_test_gem/hpc_plugins/test_plugin_type/test_plugin_id_1.rb',
-            '__gem_full_path__/lib/my_test_gem/hpc_plugins/test_plugin_type/test_plugin_id_2.rb'
-          ]
-        end
+        expect(my_test_gem_spec).to receive(:full_gem_path).and_return('__gem_full_path__')
+        expect(Dir).to receive(:glob).with('__gem_full_path__/lib/**/*.rb').and_return [
+          '__gem_full_path__/lib/my_test_gem/hpc_plugins/test_plugin_type/test_plugin_id_1.rb',
+          '__gem_full_path__/lib/my_test_gem/hpc_plugins/test_plugin_type/test_plugin_id_2.rb'
+        ]
         my_test_gem2_spec = double('Test gemspec for gem my_test_gem2')
-        expect(my_test_gem2_spec).to receive(:full_gem_path) { '__gem2_full_path__' }
-        expect(Dir).to receive(:glob).with('__gem2_full_path__/lib/**/*.rb') do
-          [
-            '__gem2_full_path__/lib/my_test_gem2/sub_dir/hpc_plugins/test_plugin_type/test_plugin_id_3.rb',
-            '__gem2_full_path__/lib/my_test_gem2/sub_dir/hpc_plugins/test_plugin_type_2/test_plugin_id_4.rb'
-          ]
-        end
+        expect(my_test_gem2_spec).to receive(:full_gem_path).and_return('__gem2_full_path__')
+        expect(Dir).to receive(:glob).with('__gem2_full_path__/lib/**/*.rb').and_return [
+          '__gem2_full_path__/lib/my_test_gem2/sub_dir/hpc_plugins/test_plugin_type/test_plugin_id_3.rb',
+          '__gem2_full_path__/lib/my_test_gem2/sub_dir/hpc_plugins/test_plugin_type_2/test_plugin_id_4.rb'
+        ]
         {
           'my_test_gem' => my_test_gem_spec,
           'my_test_gem2' => my_test_gem2_spec

@@ -60,9 +60,7 @@ describe HybridPlatformsConductor::Deployer do
             password: password,
             domain: 'thycotic_auth_domain'
           }
-        ) do
-          { authenticate_response: { authenticate_result: { token: 'soap_token' } } }
-        end
+        ).and_return(authenticate_response: { authenticate_result: { token: 'soap_token' } })
         expect(mocked_savon_client).to receive(:call).with(
           :get_secret,
           message: {

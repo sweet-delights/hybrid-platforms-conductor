@@ -25,7 +25,7 @@ describe 'get_impacted_nodes executable' do
         from_commit: 'master',
         to_commit: nil,
         smallest_set: false
-      ) { [%w[node1 node2], %w[node1], %w[service2], false] }
+      ).and_return [%w[node1 node2], %w[node1], %w[service2], false]
       exit_code, stdout, stderr = run 'get_impacted_nodes', '--platform', 'platform'
       expect(exit_code).to eq 0
       expect(stdout).to eq <<~EO_STDOUT
@@ -52,7 +52,7 @@ describe 'get_impacted_nodes executable' do
         from_commit: 'master',
         to_commit: nil,
         smallest_set: false
-      ) { [%w[node1 node2], %w[node1], %w[service2], true] }
+      ).and_return [%w[node1 node2], %w[node1], %w[service2], true]
       exit_code, stdout, stderr = run 'get_impacted_nodes', '--platform', 'platform'
       expect(exit_code).to eq 0
       expect(stdout).to eq <<~EO_STDOUT
@@ -80,7 +80,7 @@ describe 'get_impacted_nodes executable' do
         from_commit: 'from_commit',
         to_commit: nil,
         smallest_set: false
-      ) { [%w[node1 node2], %w[node1], %w[service2], false] }
+      ).and_return [%w[node1 node2], %w[node1], %w[service2], false]
       exit_code, stdout, stderr = run 'get_impacted_nodes', '--platform', 'platform', '--from-commit', 'from_commit'
       expect(exit_code).to eq 0
       expect(stdout).to eq <<~EO_STDOUT
@@ -107,7 +107,7 @@ describe 'get_impacted_nodes executable' do
         from_commit: 'master',
         to_commit: 'to_commit',
         smallest_set: false
-      ) { [%w[node1 node2], %w[node1], %w[service2], false] }
+      ).and_return [%w[node1 node2], %w[node1], %w[service2], false]
       exit_code, stdout, stderr = run 'get_impacted_nodes', '--platform', 'platform', '--to-commit', 'to_commit'
       expect(exit_code).to eq 0
       expect(stdout).to eq <<~EO_STDOUT
@@ -134,7 +134,7 @@ describe 'get_impacted_nodes executable' do
         from_commit: 'master',
         to_commit: nil,
         smallest_set: true
-      ) { [%w[node1 node2], %w[node1], %w[service2], false] }
+      ).and_return [%w[node1 node2], %w[node1], %w[service2], false]
       exit_code, stdout, stderr = run 'get_impacted_nodes', '--platform', 'platform', '--smallest-test-sample'
       expect(exit_code).to eq 0
       expect(stdout).to eq <<~EO_STDOUT

@@ -58,7 +58,7 @@ describe 'executables\' nodes selection options' do
 
     it "resolves '#{args.join(' ')}' into #{expected_nodes.join(', ')}" do
       with_test_platform_for_nodes_selector_options do
-        expect(test_deployer).to receive(:deploy_on).with(expected_nodes) { {} }
+        expect(test_deployer).to receive(:deploy_on).with(expected_nodes).and_return({})
         exit_code, _stdout, stderr = run 'deploy', *args
         expect(exit_code).to eq 0
         expect(stderr).to eq ''

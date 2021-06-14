@@ -100,9 +100,7 @@ module HybridPlatformsConductorTest
         expect(test_services_handler).to receive(:deploy_allowed?).with(
           services: services,
           local_environment: false
-        ) do
-          nil
-        end
+        ).and_return(nil)
         expect(test_services_handler).to receive(:package).with(
           services: services,
           secrets: {},

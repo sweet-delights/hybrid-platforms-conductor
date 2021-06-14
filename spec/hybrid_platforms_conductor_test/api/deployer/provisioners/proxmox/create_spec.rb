@@ -167,23 +167,19 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
                 }
               ],
               extra_expects: proc do |proxmox|
-                expect(proxmox).to receive(:get).with('nodes/pve_node_name/lxc') do
-                  [
-                    {
-                      'vmid' => '1042'
-                    }
-                  ]
-                end
-                expect(proxmox).to receive(:get).with('nodes/pve_node_name/lxc/1042/config') do
+                expect(proxmox).to receive(:get).with('nodes/pve_node_name/lxc').and_return [
                   {
-                    'net0' => 'ip=192.168.0.101/32',
-                    'description' => <<~EO_DESCRIPTION
-                      ===== HPC info =====
-                      node: node
-                      environment: test
-                    EO_DESCRIPTION
+                    'vmid' => '1042'
                   }
-                end
+                ]
+                expect(proxmox).to receive(:get).with('nodes/pve_node_name/lxc/1042/config').and_return(
+                  'net0' => 'ip=192.168.0.101/32',
+                  'description' => <<~EO_DESCRIPTION
+                    ===== HPC info =====
+                    node: node
+                    environment: test
+                  EO_DESCRIPTION
+                )
               end
             )
           ],
@@ -239,22 +235,18 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
               }
             ],
             extra_expects: proc do |proxmox|
-              expect(proxmox).to receive(:get).with('nodes/pve_node_name/lxc') do
-                [
-                  {
-                    'vmid' => '1042'
-                  }
-                ]
-              end
-              expect(proxmox).to receive(:get).with('nodes/pve_node_name/lxc/1042/config') do
+              expect(proxmox).to receive(:get).with('nodes/pve_node_name/lxc').and_return [
                 {
-                  'description' => <<~EO_DESCRIPTION
-                    ===== HPC info =====
-                    node: node
-                    environment: other_environment
-                  EO_DESCRIPTION
+                  'vmid' => '1042'
                 }
-              end
+              ]
+              expect(proxmox).to receive(:get).with('nodes/pve_node_name/lxc/1042/config').and_return(
+                'description' => <<~EO_DESCRIPTION
+                  ===== HPC info =====
+                  node: node
+                  environment: other_environment
+                EO_DESCRIPTION
+              )
             end
           )
         ]
@@ -274,13 +266,11 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
               }
             ],
             extra_expects: proc do |proxmox|
-              expect(proxmox).to receive(:get).with('nodes/pve_node_name/lxc') do
-                [
-                  {
-                    'vmid' => '100'
-                  }
-                ]
-              end
+              expect(proxmox).to receive(:get).with('nodes/pve_node_name/lxc').and_return [
+                {
+                  'vmid' => '100'
+                }
+              ]
             end
           )
         ]

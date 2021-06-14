@@ -164,14 +164,12 @@ describe HybridPlatformsConductor::TestsRunner do
 
     it 'reports correctly a node check test' do
       with_test_platforms_for_reports_test do
-        expect(test_deployer).to receive(:deploy_on).with(%w[node11 node12 node21 node22]).once do
-          {
-            'node11' => [0, 'node11 check ok', ''],
-            'node12' => [0, 'node12 check ok', ''],
-            'node21' => [0, 'node21 check ok', ''],
-            'node22' => [0, 'node22 check ok', '']
-          }
-        end
+        expect(test_deployer).to receive(:deploy_on).with(%w[node11 node12 node21 node22]).once.and_return(
+          'node11' => [0, 'node11 check ok', ''],
+          'node12' => [0, 'node12 check ok', ''],
+          'node21' => [0, 'node21 check ok', ''],
+          'node22' => [0, 'node22 check ok', '']
+        )
         test_tests_runner.tests = [:node_check_test]
         test_tests_runner.run_tests [{ all: true }]
         expect(HybridPlatformsConductorTest::TestsReportPlugin.reports.size).to eq 1
@@ -186,14 +184,12 @@ describe HybridPlatformsConductor::TestsRunner do
 
     it 'reports correctly a node check test that is failing' do
       with_test_platforms_for_reports_test do
-        expect(test_deployer).to receive(:deploy_on).with(%w[node11 node12 node21 node22]).once do
-          {
-            'node11' => [0, 'node11 check ok', ''],
-            'node12' => [1, 'node12 check ok', 'Error for node12'],
-            'node21' => [2, 'node21 check ok', 'Error for node21'],
-            'node22' => [0, 'node22 check ok', '']
-          }
-        end
+        expect(test_deployer).to receive(:deploy_on).with(%w[node11 node12 node21 node22]).once.and_return(
+          'node11' => [0, 'node11 check ok', ''],
+          'node12' => [1, 'node12 check ok', 'Error for node12'],
+          'node21' => [2, 'node21 check ok', 'Error for node21'],
+          'node22' => [0, 'node22 check ok', '']
+        )
         test_tests_runner.tests = [:node_check_test]
         test_tests_runner.run_tests [{ all: true }]
         expect(HybridPlatformsConductorTest::TestsReportPlugin.reports.size).to eq 1

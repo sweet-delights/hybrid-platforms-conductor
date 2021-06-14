@@ -60,13 +60,11 @@ module HybridPlatformsConductorTest
             # Third run, we expect logs to be uploaded on the node (only if not check mode)
             unless check_mode
               services.each do |node, node_services|
-                expect(test_services_handler).to receive(:log_info_for).with(node, node_services) do
-                  {
-                    repo_name_0: 'platform',
-                    commit_id_0: '123456',
-                    commit_message_0: 'Test commit'
-                  }
-                end
+                expect(test_services_handler).to receive(:log_info_for).with(node, node_services).and_return(
+                  repo_name_0: 'platform',
+                  commit_id_0: '123456',
+                  commit_message_0: 'Test commit'
+                )
               end
               actions << proc { |actions_per_nodes| expect_actions_to_upload_logs(actions_per_nodes, services.keys) }
             end
@@ -117,9 +115,7 @@ module HybridPlatformsConductorTest
                 expect(test_services_handler).to receive(:deploy_allowed?).with(
                   services: expect_services_to_deploy,
                   local_environment: expect_local_environment
-                ) do
-                  nil
-                end
+                ).and_return(nil)
               end
               if expect_package
                 expect(test_services_handler).to receive(:package).with(

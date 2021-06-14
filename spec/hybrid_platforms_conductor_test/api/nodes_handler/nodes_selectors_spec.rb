@@ -60,7 +60,7 @@ describe HybridPlatformsConductor::NodesHandler do
           from_commit: 'master',
           to_commit: nil,
           smallest_set: false
-        ) { [%w[node4 node6], [], [], false] }
+        ).and_return [%w[node4 node6], [], [], false]
         expect(test_nodes_handler.select_nodes([{ git_diff: { platform: 'platform2' } }]).sort).to eq %w[node4 node6].sort
       end
     end
@@ -72,7 +72,7 @@ describe HybridPlatformsConductor::NodesHandler do
           from_commit: 'from_commit',
           to_commit: nil,
           smallest_set: false
-        ) { [%w[node4 node6], [], [], false] }
+        ).and_return [%w[node4 node6], [], [], false]
         expect(test_nodes_handler.select_nodes([{ git_diff: { platform: 'platform2', from_commit: 'from_commit' } }]).sort).to eq %w[node4 node6].sort
       end
     end
@@ -84,7 +84,7 @@ describe HybridPlatformsConductor::NodesHandler do
           from_commit: 'master',
           to_commit: 'to_commit',
           smallest_set: false
-        ) { [%w[node4 node6], [], [], false] }
+        ).and_return [%w[node4 node6], [], [], false]
         expect(test_nodes_handler.select_nodes([{ git_diff: { platform: 'platform2', to_commit: 'to_commit' } }]).sort).to eq %w[node4 node6].sort
       end
     end
@@ -96,7 +96,7 @@ describe HybridPlatformsConductor::NodesHandler do
           from_commit: 'master',
           to_commit: nil,
           smallest_set: true
-        ) { [%w[node4 node6], [], [], false] }
+        ).and_return [%w[node4 node6], [], [], false]
         expect(test_nodes_handler.select_nodes([{ git_diff: { platform: 'platform2', smallest_set: true } }]).sort).to eq %w[node4 node6].sort
       end
     end
