@@ -208,7 +208,7 @@ module HybridPlatformsConductorTest
           it 'deploys on 1 node using an alternate sudo' do
             with_platform_to_deploy(
               expect_sudo: 'other_sudo --user root',
-              additional_config: <<~EO_CONFIG,
+              additional_config: <<~EO_CONFIG
                 sudo_for { |user| "other_sudo --user \#{user}" }
               EO_CONFIG
             ) do
@@ -262,7 +262,7 @@ module HybridPlatformsConductorTest
                     }
                   }
                 ],
-                additional_config: <<~EO_CONFIG,
+                additional_config: <<~EO_CONFIG
                   sudo_for { |user| "other_sudo --user \#{user}" }
                 EO_CONFIG
               ) do
@@ -346,7 +346,7 @@ module HybridPlatformsConductorTest
                     }
                   }
                 ],
-                additional_config: <<~EO_CONFIG,
+                additional_config: <<~EO_CONFIG
                   sudo_for { |user| "other_sudo --user \#{user}" }
                 EO_CONFIG
               ) do
