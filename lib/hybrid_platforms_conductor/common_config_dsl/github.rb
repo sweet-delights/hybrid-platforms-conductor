@@ -19,10 +19,10 @@ module HybridPlatformsConductor
       # Register new Github repositories
       #
       # Parameters::
-      # * *url* (String): URL to the Github API [default: 'https://api.github.com']
       # * *user* (String): User or organization name, storing repositories
+      # * *url* (String): URL to the Github API [default: 'https://api.github.com']
       # * *repos* (Array<String> or Symbol): List of repository names from this project, or :all for all [default: :all]
-      def github_repos(url: 'https://api.github.com', user:, repos: :all)
+      def github_repos(user:, url: 'https://api.github.com', repos: :all)
         @github_repos << {
           url: url,
           user: user,
