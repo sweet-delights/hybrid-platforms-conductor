@@ -2,7 +2,7 @@ require 'hybrid_platforms_conductor/hpc_plugins/provisioner/proxmox'
 
 describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
 
-  context 'checking Config DSL extensions' do
+  context 'when checking Config DSL extensions' do
 
     it 'declares proxmox configuratin in Config DSL' do
       with_repository do

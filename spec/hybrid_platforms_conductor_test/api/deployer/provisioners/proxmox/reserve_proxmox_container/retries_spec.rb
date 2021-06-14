@@ -2,9 +2,9 @@ require 'hybrid_platforms_conductor/hpc_plugins/provisioner/proxmox'
 
 describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
 
-  context 'checking the reserve_proxmox_container sync tool' do
+  context 'when checking the reserve_proxmox_container sync tool' do
 
-    context 'checking retries mechanism' do
+    context 'when checking retries mechanism' do
 
       it 'retries a few times before ending in error' do
         with_sync_node do

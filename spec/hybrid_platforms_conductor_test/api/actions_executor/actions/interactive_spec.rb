@@ -1,6 +1,6 @@
 describe HybridPlatformsConductor::ActionsExecutor do
 
-  context 'checking actions\' plugin interactive' do
+  context 'when checking actions\' plugin interactive' do
 
     it 'executes remote interactive session' do
       with_test_platform_for_action_plugins do

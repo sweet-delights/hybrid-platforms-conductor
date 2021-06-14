@@ -1,8 +1,8 @@
 describe HybridPlatformsConductor::ActionsExecutor do
 
-  context 'checking connector plugin ssh' do
+  context 'when checking connector plugin ssh' do
 
-    context 'checking Config DSL extensions' do
+    context 'when checking Config DSL extensions' do
 
       it 'returns 1 defined gateway' do
         with_repository do

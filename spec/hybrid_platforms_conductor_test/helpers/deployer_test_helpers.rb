@@ -463,7 +463,7 @@ module HybridPlatformsConductorTest
             end
           end
 
-          context 'checking deployment retries' do
+          context 'when checking deployment retries' do
 
             # Prepare a platform ready to test deployments' retries on.
             #
@@ -923,7 +923,7 @@ module HybridPlatformsConductorTest
 
           end
 
-          context 'checking secrets handling' do
+          context 'when checking secrets handling' do
 
             it 'calls secrets readers only for nodes and services to be deployed and merges their secrets' do
               register_plugins(

@@ -1,6 +1,6 @@
 describe HybridPlatformsConductor::NodesHandler do
 
-  context 'checking nodes selection capabilities' do
+  context 'when checking nodes selection capabilities' do
 
     # Set the test environment with a given list of nodes for our tests
     #

@@ -1,6 +1,6 @@
 describe HybridPlatformsConductor::ServicesHandler do
 
-  context 'checking packaging' do
+  context 'when checking packaging' do
 
     it 'packages 1 platform' do
       with_test_platform(

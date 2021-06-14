@@ -1,6 +1,6 @@
 describe HybridPlatformsConductor::ActionsExecutor do
 
-  context 'checking actions\' plugin ruby' do
+  context 'when checking actions\' plugin ruby' do
 
     it 'executes local Ruby code' do
       with_test_platform_for_action_plugins do

@@ -3,7 +3,7 @@ require 'securerandom'
 
 describe HybridPlatformsConductor::Deployer do
 
-  context 'checking provisioning' do
+  context 'when checking provisioning' do
 
     it 'gives a new test instance ready to be used in place of the node' do
       with_test_platform(

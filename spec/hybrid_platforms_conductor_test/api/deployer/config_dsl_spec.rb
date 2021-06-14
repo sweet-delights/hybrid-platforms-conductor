@@ -1,6 +1,6 @@
 describe HybridPlatformsConductor::Deployer do
 
-  context 'checking deployer specific config DSL' do
+  context 'when checking deployer specific config DSL' do
 
     it 'declares a packaging timeout' do
       with_platforms('packaging_timeout 666') do

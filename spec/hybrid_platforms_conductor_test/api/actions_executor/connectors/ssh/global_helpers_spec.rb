@@ -1,8 +1,8 @@
 describe HybridPlatformsConductor::ActionsExecutor do
 
-  context 'checking connector plugin ssh' do
+  context 'when checking connector plugin ssh' do
 
-    context 'checking additional helpers' do
+    context 'when checking additional helpers' do
 
       # Return the connector to be tested
       #

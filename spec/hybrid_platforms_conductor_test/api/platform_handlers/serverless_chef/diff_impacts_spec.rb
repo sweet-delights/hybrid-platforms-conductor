@@ -1,6 +1,6 @@
 describe HybridPlatformsConductor::HpcPlugins::PlatformHandler::ServerlessChef do
 
-  context 'checking files diff impacts' do
+  context 'when checking files diff impacts' do
 
     it 'returns no impact for no diffs' do
       with_serverless_chef_platforms('recipes') do |platform|

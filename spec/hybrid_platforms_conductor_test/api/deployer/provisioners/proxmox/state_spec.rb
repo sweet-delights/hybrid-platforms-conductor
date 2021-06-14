@@ -2,7 +2,7 @@ require 'hybrid_platforms_conductor/hpc_plugins/provisioner/proxmox'
 
 describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
 
-  context 'checking containers state' do
+  context 'when checking containers state' do
 
     it 'gets the status of a missing instance' do
       with_test_proxmox_platform do |instance|

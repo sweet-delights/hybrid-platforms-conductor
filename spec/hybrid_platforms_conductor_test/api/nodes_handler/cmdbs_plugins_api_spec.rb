@@ -1,6 +1,6 @@
 describe HybridPlatformsConductor::NodesHandler do
 
-  context 'checking CMDB plugins\' API called by NodesHandler' do
+  context 'when checking CMDB plugins\' API called by NodesHandler' do
 
     # Get a test platform ready to test using the test CMDB
     #

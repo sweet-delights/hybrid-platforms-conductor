@@ -1,8 +1,8 @@
 describe HybridPlatformsConductor::ActionsExecutor do
 
-  context 'checking connector plugin ssh' do
+  context 'when checking connector plugin ssh' do
 
-    context 'checking command-line interface options' do
+    context 'when checking command-line interface options' do
 
       # Setup a platform for tests
       #

@@ -1,8 +1,8 @@
 describe HybridPlatformsConductor::TestsRunner do
 
-  context 'checking test reports plugins' do
+  context 'when checking test reports plugins' do
 
-    context 'checking confluence' do
+    context 'with confluence' do
 
       it 'returns Confluence info' do
         with_repository do

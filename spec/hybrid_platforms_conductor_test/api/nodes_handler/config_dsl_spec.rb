@@ -1,6 +1,6 @@
 describe HybridPlatformsConductor::NodesHandler do
 
-  context 'checking config DSL' do
+  context 'when checking config DSL' do
 
     it 'adds helpers for master cmdbs' do
       with_test_platform(

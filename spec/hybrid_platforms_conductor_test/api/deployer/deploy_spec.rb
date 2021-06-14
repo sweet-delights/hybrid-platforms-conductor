@@ -1,10 +1,10 @@
 describe HybridPlatformsConductor::Deployer do
 
-  context 'checking real deploy mode' do
+  context 'when checking real deploy mode' do
 
     deploy_specs_for(check_mode: false)
 
-    context 'checking log plugins usage' do
+    context 'when checking log plugins usage' do
 
       # Prepare the test platform with test log plugins
       #

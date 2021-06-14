@@ -2,9 +2,9 @@ require 'hybrid_platforms_conductor/hpc_plugins/provisioner/proxmox'
 
 describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
 
-  context 'checking the reserve_proxmox_container sync tool' do
+  context 'when checking the reserve_proxmox_container sync tool' do
 
-    context 'checking how VMs are being destroyed' do
+    context 'when checking how VMs are being destroyed' do
 
       it 'releases a previously reserved VM that has been reserved and is running' do
         with_sync_node do

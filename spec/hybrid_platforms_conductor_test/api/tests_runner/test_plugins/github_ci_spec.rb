@@ -1,8 +1,8 @@
 describe HybridPlatformsConductor::TestsRunner do
 
-  context 'checking test plugins' do
+  context 'when checking test plugins' do
 
-    context 'checking github_ci' do
+    context 'with github_ci' do
 
       it 'iterates over defined Github repos' do
         with_repository do

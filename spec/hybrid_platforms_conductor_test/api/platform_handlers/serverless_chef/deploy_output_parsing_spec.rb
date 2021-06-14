@@ -1,6 +1,6 @@
 describe HybridPlatformsConductor::HpcPlugins::PlatformHandler::ServerlessChef do
 
-  context 'checking how deployment output is parsed' do
+  context 'when checking how deployment output is parsed' do
 
     it 'parses a deployment output properly' do
       with_serverless_chef_platforms('empty') do |platform|

@@ -1,8 +1,8 @@
 describe HybridPlatformsConductor::ActionsExecutor do
 
-  context 'checking connector plugin ssh' do
+  context 'when checking connector plugin ssh' do
 
-    context 'checking additional helpers on prepared nodes' do
+    context 'when checking additional helpers on prepared nodes' do
 
       it 'provides an SSH executable wrapping the node\'s SSH config' do
         with_test_platform_for_remote_testing do

@@ -1,6 +1,6 @@
 describe HybridPlatformsConductor::HpcPlugins::PlatformHandler::ServerlessChef do
 
-  context 'checking services deployment' do
+  context 'when checking services deployment' do
 
     # Simulate a packaging of a given repository
     #

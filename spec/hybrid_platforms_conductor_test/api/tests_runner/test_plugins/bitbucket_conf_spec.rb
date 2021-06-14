@@ -1,8 +1,8 @@
 describe HybridPlatformsConductor::TestsRunner do
 
-  context 'checking test plugins' do
+  context 'when checking test plugins' do
 
-    context 'checking bitbucket_conf' do
+    context 'with bitbucket_conf' do
 
       it 'iterates over defined Bitbucket repos' do
         with_repository do

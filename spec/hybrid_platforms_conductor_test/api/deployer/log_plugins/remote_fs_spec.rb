@@ -1,8 +1,8 @@
 describe HybridPlatformsConductor::Deployer do
 
-  context 'checking log plugins' do
+  context 'when checking log plugins' do
 
-    context 'remote_fs' do
+    context 'with remote_fs' do
 
       # Return a test platform ready to test the remote_fs log plugin
       #

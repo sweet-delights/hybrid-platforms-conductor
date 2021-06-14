@@ -1,6 +1,6 @@
 describe HybridPlatformsConductor::ActionsExecutor do
 
-  context 'checking actions\' plugin remote_bash' do
+  context 'when checking actions\' plugin remote_bash' do
 
     it 'executes remote Bash code' do
       with_test_platform_for_action_plugins do

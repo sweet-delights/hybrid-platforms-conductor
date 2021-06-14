@@ -1,6 +1,6 @@
 describe HybridPlatformsConductor::ActionsExecutor do
 
-  context 'checking connections handling' do
+  context 'when checking connections handling' do
 
     # Get a test platform to test connection, using the test_connector
     #

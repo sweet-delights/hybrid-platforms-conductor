@@ -2,7 +2,7 @@ require 'hybrid_platforms_conductor/hpc_plugins/provisioner/proxmox'
 
 describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
 
-  context 'checking containers IP retrieval' do
+  context 'when checking containers IP retrieval' do
 
     it 'returns the IP of a newly created instance' do
       with_test_proxmox_platform do |instance|

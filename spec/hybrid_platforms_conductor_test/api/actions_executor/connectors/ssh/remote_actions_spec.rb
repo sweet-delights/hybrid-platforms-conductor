@@ -1,8 +1,8 @@
 describe HybridPlatformsConductor::ActionsExecutor do
 
-  context 'checking connector plugin ssh' do
+  context 'when checking connector plugin ssh' do
 
-    context 'checking remote actions' do
+    context 'when checking remote actions' do
 
       it 'executes bash commands remotely' do
         with_test_platform_for_remote_testing(

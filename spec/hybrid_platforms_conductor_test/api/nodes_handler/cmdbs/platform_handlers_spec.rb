@@ -1,6 +1,6 @@
 describe HybridPlatformsConductor::NodesHandler do
 
-  context 'checking CMDB plugin PlatformHandlers' do
+  context 'when checking CMDB plugin PlatformHandlers' do
 
     it 'returns metadata published by the Platform\'s handler' do
       with_test_platform(nodes: { 'test_node' => { meta: { property: 'value' } } }) do

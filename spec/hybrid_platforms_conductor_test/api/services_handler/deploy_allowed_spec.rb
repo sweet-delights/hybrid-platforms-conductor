@@ -1,6 +1,6 @@
 describe HybridPlatformsConductor::ServicesHandler do
 
-  context 'checking deployment authorization' do
+  context 'when checking deployment authorization' do
 
     # Setup a test platform for our services testing
     #

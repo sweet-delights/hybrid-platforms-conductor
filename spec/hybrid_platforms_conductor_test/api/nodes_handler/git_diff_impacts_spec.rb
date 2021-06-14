@@ -1,6 +1,6 @@
 describe HybridPlatformsConductor::NodesHandler do
 
-  context 'checking computation of impacted nodes by a git diff' do
+  context 'when checking computation of impacted nodes by a git diff' do
 
     it 'returns all the impacted platform nodes by default' do
       with_test_platforms(

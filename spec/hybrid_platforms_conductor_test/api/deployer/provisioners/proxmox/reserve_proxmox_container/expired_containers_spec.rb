@@ -2,9 +2,9 @@ require 'hybrid_platforms_conductor/hpc_plugins/provisioner/proxmox'
 
 describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
 
-  context 'checking the reserve_proxmox_container sync tool' do
+  context 'when checking the reserve_proxmox_container sync tool' do
 
-    context 'checking expiration strategy for containers' do
+    context 'when checking expiration strategy for containers' do
 
       it 'does not expire a VM when there are enough free resources on a PVE node' do
         with_sync_node do

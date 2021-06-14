@@ -1,6 +1,6 @@
 describe HybridPlatformsConductor::ServicesHandler do
 
-  context 'checking logs associated to a deployment' do
+  context 'when checking logs associated to a deployment' do
 
     it 'logs platforms info' do
       with_test_platform(

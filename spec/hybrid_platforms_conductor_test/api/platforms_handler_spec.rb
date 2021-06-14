@@ -1,6 +1,6 @@
 describe HybridPlatformsConductor::PlatformsHandler do
 
-  context 'checking config specific DSL' do
+  context 'when checking config specific DSL' do
 
     it 'returns platform directories along with platform types' do
       with_test_platforms(

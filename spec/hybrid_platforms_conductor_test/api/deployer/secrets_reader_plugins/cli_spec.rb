@@ -1,8 +1,8 @@
 describe HybridPlatformsConductor::Deployer do
 
-  context 'checking secrets_reader plugins' do
+  context 'when checking secrets_reader plugins' do
 
-    context 'cli' do
+    context 'with cli' do
 
       # Setup a platform for tests
       #

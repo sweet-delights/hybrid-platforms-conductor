@@ -2,9 +2,9 @@ require 'hybrid_platforms_conductor/hpc_plugins/provisioner/proxmox'
 
 describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
 
-  context 'checking the reserve_proxmox_container sync tool' do
+  context 'when checking the reserve_proxmox_container sync tool' do
 
-    context 'checking resources limits at the PVE node level' do
+    context 'when checking resources limits at the PVE node level' do
 
       it 'reserves a resource on an empty PVE node having enough resources' do
         with_sync_node do

@@ -1,6 +1,6 @@
 describe HybridPlatformsConductor::ActionsExecutor do
 
-  context 'checking actions handling' do
+  context 'when checking actions handling' do
 
     # Instantiate a test platform, with the test action registered in Actions Executor.
     #

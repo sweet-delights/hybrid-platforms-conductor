@@ -1,6 +1,6 @@
 describe HybridPlatformsConductor::ActionsExecutor do
 
-  context 'checking parallel runs' do
+  context 'when checking parallel runs' do
 
     # Get a test platform to test parallel runs
     #

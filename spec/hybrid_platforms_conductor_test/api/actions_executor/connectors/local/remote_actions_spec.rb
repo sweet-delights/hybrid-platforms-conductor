@@ -1,8 +1,8 @@
 describe HybridPlatformsConductor::ActionsExecutor do
 
-  context 'checking connector plugin local' do
+  context 'when checking connector plugin local' do
 
-    context 'checking remote actions' do
+    context 'when checking remote actions' do
 
       # Return the connector to be tested
       #

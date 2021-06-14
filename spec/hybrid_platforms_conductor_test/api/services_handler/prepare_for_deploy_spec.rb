@@ -1,6 +1,6 @@
 describe HybridPlatformsConductor::ServicesHandler do
 
-  context 'checking preparation for deployment' do
+  context 'when checking preparation for deployment' do
 
     it 'prepares 1 platform' do
       called = false

@@ -2,7 +2,7 @@ require 'hybrid_platforms_conductor/hpc_plugins/provisioner/proxmox'
 
 describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
 
-  context 'checking containers stop' do
+  context 'when checking containers stop' do
 
     it 'stops an instance' do
       with_test_proxmox_platform do |instance|

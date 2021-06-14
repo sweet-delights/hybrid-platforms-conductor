@@ -1,6 +1,6 @@
 describe HybridPlatformsConductor::NodesHandler do
 
-  context 'checking Platform Handlers plugins\' API called by NodesHandler' do
+  context 'when checking Platform Handlers plugins\' API called by NodesHandler' do
 
     it 'returns nodes' do
       with_test_platform(nodes: { 'node1' => {}, 'node2' => {} }) do

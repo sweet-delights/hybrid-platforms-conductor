@@ -1,6 +1,6 @@
 describe HybridPlatformsConductor::ActionsExecutor do
 
-  context 'checking actions\' plugin scp' do
+  context 'when checking actions\' plugin scp' do
 
     it 'executes remote SCP' do
       with_test_platform_for_action_plugins do

@@ -1,6 +1,6 @@
 describe HybridPlatformsConductor::ServicesHandler do
 
-  context 'checking parsing deployment outputs' do
+  context 'when checking parsing deployment outputs' do
 
     it 'parses a deployment log for a node' do
       with_test_platform(

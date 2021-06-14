@@ -1,6 +1,6 @@
 describe HybridPlatformsConductor::HpcPlugins::PlatformHandler::ServerlessChef do
 
-  context 'checking services packaging' do
+  context 'when checking services packaging' do
 
     # Expect a repository to be packaged and mock it
     #

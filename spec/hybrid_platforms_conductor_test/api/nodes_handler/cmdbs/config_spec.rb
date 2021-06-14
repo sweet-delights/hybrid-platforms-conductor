@@ -1,6 +1,6 @@
 describe HybridPlatformsConductor::NodesHandler do
 
-  context 'checking CMDB plugin Config' do
+  context 'when checking CMDB plugin Config' do
 
     it 'sets global metadata' do
       with_test_platform(

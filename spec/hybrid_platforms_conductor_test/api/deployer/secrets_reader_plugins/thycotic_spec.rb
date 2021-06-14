@@ -2,9 +2,9 @@ require 'savon'
 
 describe HybridPlatformsConductor::Deployer do
 
-  context 'checking secrets_reader plugins' do
+  context 'when checking secrets_reader plugins' do
 
-    context 'thycotic' do
+    context 'with thycotic' do
 
       # Setup a platform for tests
       #

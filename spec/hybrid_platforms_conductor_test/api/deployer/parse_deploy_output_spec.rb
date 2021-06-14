@@ -1,6 +1,6 @@
 describe HybridPlatformsConductor::Deployer do
 
-  context 'checking parsing output of deployments' do
+  context 'when checking parsing output of deployments' do
 
     it 'returns tasks of deployment logs' do
       with_test_platform do

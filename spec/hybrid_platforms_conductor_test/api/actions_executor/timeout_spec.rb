@@ -1,6 +1,6 @@
 describe HybridPlatformsConductor::ActionsExecutor do
 
-  context 'checking timeouts' do
+  context 'when checking timeouts' do
 
     # Get a test platform to test timeouts
     #

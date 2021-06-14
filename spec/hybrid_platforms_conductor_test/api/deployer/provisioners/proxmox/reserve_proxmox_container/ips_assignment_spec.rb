@@ -2,9 +2,9 @@ require 'hybrid_platforms_conductor/hpc_plugins/provisioner/proxmox'
 
 describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
 
-  context 'checking the reserve_proxmox_container sync tool' do
+  context 'when checking the reserve_proxmox_container sync tool' do
 
-    context 'checking how IPs are being assigned to containers' do
+    context 'when checking how IPs are being assigned to containers' do
 
       it 'makes sure to not use an IP already assigned to another container' do
         with_sync_node do

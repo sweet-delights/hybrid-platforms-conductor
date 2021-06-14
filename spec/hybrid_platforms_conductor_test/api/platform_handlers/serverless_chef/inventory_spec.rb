@@ -1,6 +1,6 @@
 describe HybridPlatformsConductor::HpcPlugins::PlatformHandler::ServerlessChef do
 
-  context 'checking inventory' do
+  context 'when checking inventory' do
 
     context 'with an empty platform' do
 

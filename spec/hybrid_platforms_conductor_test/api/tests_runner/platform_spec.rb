@@ -1,6 +1,6 @@
 describe HybridPlatformsConductor::TestsRunner do
 
-  context 'checking platform tests execution' do
+  context 'when checking platform tests execution' do
 
     # Prepare the test platform with test plugins
     #

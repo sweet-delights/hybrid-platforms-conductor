@@ -1,6 +1,6 @@
 describe HybridPlatformsConductor::TestsRunner do
 
-  context 'checking global tests execution' do
+  context 'when checking global tests execution' do
 
     # Prepare the test platform with test plugins
     #

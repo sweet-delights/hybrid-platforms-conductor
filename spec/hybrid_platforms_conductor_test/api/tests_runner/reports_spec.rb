@@ -1,6 +1,6 @@
 describe HybridPlatformsConductor::TestsRunner do
 
-  context 'checking reporting results of tests execution' do
+  context 'when checking reporting results of tests execution' do
 
     # Setup a tests platform for the reports testing
     #

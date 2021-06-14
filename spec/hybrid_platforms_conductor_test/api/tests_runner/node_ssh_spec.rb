@@ -1,6 +1,6 @@
 describe HybridPlatformsConductor::TestsRunner do
 
-  context 'checking connection node tests execution' do
+  context 'when checking connection node tests execution' do
 
     # Prepare the test platform with test plugins
     #

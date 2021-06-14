@@ -2,7 +2,7 @@ require 'hybrid_platforms_conductor/hpc_plugins/provisioner/proxmox'
 
 describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
 
-  context 'checking containers destroy' do
+  context 'when checking containers destroy' do
 
     it 'destroys an instance' do
       with_test_proxmox_platform do |instance|

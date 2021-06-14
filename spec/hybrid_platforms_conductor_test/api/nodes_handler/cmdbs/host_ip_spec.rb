@@ -1,6 +1,6 @@
 describe HybridPlatformsConductor::NodesHandler do
 
-  context 'checking CMDB plugin HostIp' do
+  context 'when checking CMDB plugin HostIp' do
 
     it 'makes sure to have hostname set to compute host_ip' do
       with_test_platform do

@@ -1,6 +1,6 @@
 describe HybridPlatformsConductor::ActionsExecutor do
 
-  context 'checking logging facilities' do
+  context 'when checking logging facilities' do
 
     # Instantiate a test platform, with the test action registered in Actions Executor.
     #

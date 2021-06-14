@@ -1,6 +1,6 @@
 describe HybridPlatformsConductor::NodesHandler do
 
-  context 'checking aggregations across several platforms' do
+  context 'when checking aggregations across several platforms' do
 
     it 'returns nodes' do
       with_test_platforms(

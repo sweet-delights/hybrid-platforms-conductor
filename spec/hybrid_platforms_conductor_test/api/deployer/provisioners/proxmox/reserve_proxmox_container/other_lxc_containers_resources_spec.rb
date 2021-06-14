@@ -2,9 +2,9 @@ require 'hybrid_platforms_conductor/hpc_plugins/provisioner/proxmox'
 
 describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
 
-  context 'checking the reserve_proxmox_container sync tool' do
+  context 'when checking the reserve_proxmox_container sync tool' do
 
-    context 'checking resources limits when other LXC containers are present' do
+    context 'when checking resources limits when other LXC containers are present' do
 
       it 'selects the PVE node when it has enough RAM despite existing containers' do
         with_sync_node do

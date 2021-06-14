@@ -1,8 +1,8 @@
 describe HybridPlatformsConductor::ActionsExecutor do
 
-  context 'checking connector plugin local' do
+  context 'when checking connector plugin local' do
 
-    context 'checking connectable nodes selection' do
+    context 'when checking connectable nodes selection' do
 
       # Return the connector to be tested
       #

@@ -1,6 +1,6 @@
 describe HybridPlatformsConductor::HpcPlugins::PlatformHandler::ServerlessChef do
 
-  context 'checking config DSL' do
+  context 'when checking config DSL' do
 
     it 'defines helpers that include recipes' do
       with_repository do

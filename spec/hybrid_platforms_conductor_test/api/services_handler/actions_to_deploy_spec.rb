@@ -1,6 +1,6 @@
 describe HybridPlatformsConductor::ServicesHandler do
 
-  context 'checking actions to deploy services on a node' do
+  context 'when checking actions to deploy services on a node' do
 
     # Expect actions for a deployment to match a given list
     #
