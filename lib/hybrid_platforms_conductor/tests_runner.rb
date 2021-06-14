@@ -283,6 +283,8 @@ module HybridPlatformsConductor
         name: test_name.nil? ? :global : test_name,
         platform: platform,
         node: node,
+        # Keep this else on purpose to show where global tests could have expected failures
+        # rubocop:disable Style/EmptyElse
         expected_failure: if ignore_expected_failure
                             nil
                           elsif !node.nil?
@@ -295,6 +297,7 @@ module HybridPlatformsConductor
                             # Global test
                             nil
                           end
+        # rubocop:enable Style/EmptyElse
       )
     end
 
