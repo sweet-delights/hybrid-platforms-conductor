@@ -40,8 +40,6 @@ def parse_md(file)
   # Parse linked files
   @info[file][:links].each do |link|
     puts "Found #{file} => #{link}"
-  end
-  @info[file][:links].each do |link|
     unless link.start_with?('http')
       linked_file = link_to_file(link, file)
       parse_md(linked_file) if File.exist?(linked_file) && linked_file.end_with?('.md')
@@ -63,9 +61,7 @@ errors = []
         anchor = link.split('#')[1]
         linked_file = link_to_file(link, file)
         if @info.key?(linked_file)
-          if anchor.nil?
-            '*'
-          elsif @info[linked_file][:anchors].include?(anchor)
+          if anchor.nil? || @info[linked_file][:anchors].include?(anchor)
             '*'
           else
             errors << "[#{file} -> #{link}] - Destination has no anchor named #{anchor}"
