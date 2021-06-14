@@ -133,7 +133,8 @@ module HybridPlatformsConductor
               deploy_info = {}
               stdout_lines[0..stdout_idx - 1].each do |line|
                 if line =~ /^([^:]+): (.+)$/
-                  key_str, value = Regexp.last_match(1), Regexp.last_match(2)
+                  key_str = Regexp.last_match(1)
+                  value = Regexp.last_match(2)
                   key = key_str.to_sym
                   # Type-cast some values
                   case key_str

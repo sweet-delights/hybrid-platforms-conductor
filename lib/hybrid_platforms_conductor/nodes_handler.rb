@@ -60,7 +60,8 @@ module HybridPlatformsConductor
 
     Config.extend_config_dsl_with ConfigDSLExtension, :init_nodes_handler_config
 
-    include LoggerHelpers, ParallelThreads
+    include ParallelThreads
+    include LoggerHelpers
 
     class GitError < RuntimeError
     end
@@ -533,7 +534,8 @@ module HybridPlatformsConductor
         case line
         when %r{^diff --git a/(.+) b/(.+)$}
           # A new file diff
-          from, to = Regexp.last_match(1), Regexp.last_match(2)
+          from = Regexp.last_match(1)
+          to = Regexp.last_match(2)
           current_file_diff = {
             diff: ''
           }

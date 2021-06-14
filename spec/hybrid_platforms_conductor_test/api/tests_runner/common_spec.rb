@@ -81,7 +81,10 @@ describe HybridPlatformsConductor::TestsRunner do
   end
 
   it 'fails when expected failures reference missing nodes' do
-    with_test_platform({ nodes: { 'node' => {} } }, false, '
+    with_test_platform(
+      { nodes: { 'node' => {} } },
+      false,
+      '
         for_nodes(\'missing_node\') do
           expect_tests_to_fail(:node_test, \'Expected failure\')
         end

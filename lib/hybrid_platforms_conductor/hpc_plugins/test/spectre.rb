@@ -31,9 +31,7 @@ module HybridPlatformsConductor
                   if status_idx.nil?
                     error "Unable to find vulnerability section #{id}"
                   else
-                    while !stdout[status_idx].nil? && stdout[status_idx] !~ /STATUS:[^A-Z]+([A-Z ]+)/
-                      status_idx += 1
-                    end
+                    status_idx += 1 while !stdout[status_idx].nil? && stdout[status_idx] !~ /STATUS:[^A-Z]+([A-Z ]+)/
                     if stdout[status_idx].nil?
                       error "Unable to find vulnerability status for #{id}"
                     else

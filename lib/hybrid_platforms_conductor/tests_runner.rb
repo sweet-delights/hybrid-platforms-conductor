@@ -12,7 +12,8 @@ module HybridPlatformsConductor
   # Class running tests
   class TestsRunner
 
-    include LoggerHelpers, ParallelThreads
+    include ParallelThreads
+    include LoggerHelpers
 
     # List of tests to execute [default: []]
     # Array<Symbol>
@@ -231,11 +232,9 @@ module HybridPlatformsConductor
 
       # Produce reports
       @reports.each do |report|
-        begin
-          @reports_plugins[report].new(@logger, @logger_stderr, @config, @nodes_handler, @nodes, @tested_platforms, @tests_run).report
-        rescue
-          log_error "Uncaught exception while producing report #{report}: #{$ERROR_INFO}\n#{$ERROR_INFO.backtrace.join("\n")}"
-        end
+        @reports_plugins[report].new(@logger, @logger_stderr, @config, @nodes_handler, @nodes, @tested_platforms, @tests_run).report
+      rescue
+        log_error "Uncaught exception while producing report #{report}: #{$ERROR_INFO}\n#{$ERROR_INFO.backtrace.join("\n")}"
       end
 
       out
@@ -410,21 +409,19 @@ module HybridPlatformsConductor
           # Hash< String, Array< [ String, Hash<Symbol,Object> ] > >
           @cmds_to_run = {}
           selected_tests.each do |test|
-            begin
-              test.test_on_node.each do |cmd, test_info|
-                test_info_normalized = test_info.is_a?(Hash) ? test_info.clone : { validator: test_info }
-                test_info_normalized[:timeout] = DEFAULT_CMD_TIMEOUT unless test_info_normalized.key?(:timeout)
-                test_info_normalized[:test] = test
-                @cmds_to_run[test.node] = [] unless @cmds_to_run.key?(test.node)
-                @cmds_to_run[test.node] << [
-                  cmd,
-                  test_info_normalized
-                ]
-              end
-            rescue
-              test.error "Uncaught exception during test preparation: #{$ERROR_INFO}", $ERROR_INFO.backtrace.join("\n")
-              test.executed
+            test.test_on_node.each do |cmd, test_info|
+              test_info_normalized = test_info.is_a?(Hash) ? test_info.clone : { validator: test_info }
+              test_info_normalized[:timeout] = DEFAULT_CMD_TIMEOUT unless test_info_normalized.key?(:timeout)
+              test_info_normalized[:test] = test
+              @cmds_to_run[test.node] = [] unless @cmds_to_run.key?(test.node)
+              @cmds_to_run[test.node] << [
+                cmd,
+                test_info_normalized
+              ]
             end
+          rescue
+            test.error "Uncaught exception during test preparation: #{$ERROR_INFO}", $ERROR_INFO.backtrace.join("\n")
+            test.executed
           end
           # Compute the timeout that will be applied, from the max timeout sum for every node that has tests to run
           timeout = CONNECTION_TIMEOUT + (
@@ -441,7 +438,7 @@ module HybridPlatformsConductor
                   "echo '#{CMD_SEPARATOR}'",
                   ">&2 echo '#{CMD_SEPARATOR}'",
                   cmd,
-                  "echo \"$?\""
+                  'echo "$?"'
                 ]
               end.flatten
             }
@@ -526,7 +523,7 @@ module HybridPlatformsConductor
                 [
                   node,
                   # TODO: Find a way to also save stderr and the status code
-                  [0, File.exists?(run_log_file_name) ? File.read(run_log_file_name) : nil, '']
+                  [0, File.exist?(run_log_file_name) ? File.read(run_log_file_name) : nil, '']
                 ]
               end.to_h
             else

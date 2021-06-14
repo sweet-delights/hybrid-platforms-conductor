@@ -81,7 +81,7 @@ module HybridPlatformsConductorTest
 
     # Make sure the tested components are being reset before each test case
     RSpec.configure do |config|
-      config.before(:each) do
+      config.before do
         @actions_executor = nil
         @cmd_runner = nil
         @config = nil

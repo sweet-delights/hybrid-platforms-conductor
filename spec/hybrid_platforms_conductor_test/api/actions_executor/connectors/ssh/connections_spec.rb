@@ -302,7 +302,7 @@ describe HybridPlatformsConductor::ActionsExecutor do
           # 4. Second thread releases it, hence destroying it.
           init_commands = [
             ['which env', proc { [0, "/usr/bin/env\n", ''] }],
-            ['ssh -V 2>&1', proc { [0, "OpenSSH_7.4p1 Debian-10+deb9u7, OpenSSL 1.0.2u  20 Dec 2019\n", ''] }],
+            ['ssh -V 2>&1', proc { [0, "OpenSSH_7.4p1 Debian-10+deb9u7, OpenSSL 1.0.2u  20 Dec 2019\n", ''] }]
           ]
           nodes_connections_to_mock = { 'node' => { connection: '192.168.42.42', user: 'test_user' } }
           step = 0
@@ -537,7 +537,7 @@ describe HybridPlatformsConductor::ActionsExecutor do
           with_cmd_runner_mocked(
             [
               ['which env', proc { [0, "/usr/bin/env\n", ''] }],
-              ['ssh -V 2>&1', proc { [0, "OpenSSH_7.4p1 Debian-10+deb9u7, OpenSSL 1.0.2u  20 Dec 2019\n", ''] }],
+              ['ssh -V 2>&1', proc { [0, "OpenSSH_7.4p1 Debian-10+deb9u7, OpenSSL 1.0.2u  20 Dec 2019\n", ''] }]
             ] +
               [[
                 %r{^.+/ssh -o BatchMode=yes -o ControlMaster=yes -o ControlPersist=yes hpc\.node true$},

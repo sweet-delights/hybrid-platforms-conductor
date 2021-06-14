@@ -121,4 +121,3 @@ describe HybridPlatformsConductor::ActionsExecutor do
   end
 
 end
-

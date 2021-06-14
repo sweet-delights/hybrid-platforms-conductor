@@ -16,7 +16,7 @@ describe HybridPlatformsConductor::NodesHandler do
         'platform1' => { nodes: { 'node1' => {}, 'node2' => {} } },
         'platform2' => { nodes: { 'node1' => {}, 'node4' => {} } }
       ) do
-        expect { test_nodes_handler.known_nodes }.to raise_error(RuntimeError, /Can\'t register node1/)
+        expect { test_nodes_handler.known_nodes }.to raise_error(RuntimeError, /Can't register node1/)
       end
     end
 
@@ -34,7 +34,7 @@ describe HybridPlatformsConductor::NodesHandler do
         'platform1' => { nodes_lists: { 'nodeslist1' => [] } },
         'platform2' => { nodes_lists: { 'nodeslist1' => [] } }
       ) do
-        expect { test_nodes_handler.known_nodes_lists }.to raise_error(RuntimeError, /Can\'t register nodes list nodeslist1/)
+        expect { test_nodes_handler.known_nodes_lists }.to raise_error(RuntimeError, /Can't register nodes list nodeslist1/)
       end
     end
 

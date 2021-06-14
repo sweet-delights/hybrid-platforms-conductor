@@ -17,8 +17,7 @@ module HybridPlatformsConductor
             log_debug "Checking CI for Github repository #{repo_info[:slug]}"
             last_status = client.repository_workflow_runs(repo_info[:slug])[:workflow_runs].
               select { |run| run[:head_branch] == 'master' }.
-              sort_by { |run| run[:created_at] }.
-              last[:conclusion]
+              max_by { |run| run[:created_at] }[:conclusion]
             error "Last workflow status for repository #{repo_info[:slug]} is #{last_status}" unless last_status == 'success'
           end
         end

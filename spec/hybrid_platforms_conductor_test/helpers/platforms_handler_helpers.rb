@@ -121,7 +121,7 @@ module HybridPlatformsConductorTest
       # Result::
       # * PlatformsHandler: PlatformsHandler on which we can do testing
       def test_platforms_handler
-        @platforms_handler = HybridPlatformsConductor::PlatformsHandler.new logger: logger, logger_stderr: logger, config: test_config, cmd_runner: test_cmd_runner unless @platforms_handler
+        @platforms_handler ||= HybridPlatformsConductor::PlatformsHandler.new logger: logger, logger_stderr: logger, config: test_config, cmd_runner: test_cmd_runner
         @platforms_handler
       end
 

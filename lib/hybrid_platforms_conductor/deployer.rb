@@ -3,7 +3,6 @@ require 'futex'
 require 'json'
 require 'securerandom'
 require 'time'
-require 'thread'
 require 'hybrid_platforms_conductor/actions_executor'
 require 'hybrid_platforms_conductor/cmd_runner'
 require 'hybrid_platforms_conductor/executable'
@@ -298,23 +297,23 @@ module HybridPlatformsConductor
               # Check if we need to retry deployment on some nodes
               # Only parse the last deployment attempt logs
               retriable_nodes = remaining_nodes_to_deploy.
-                  map do |node|
-                    exit_status, stdout, stderr = last_deploy_results[node]
-                    if exit_status.zero?
+                map do |node|
+                  exit_status, stdout, stderr = last_deploy_results[node]
+                  if exit_status.zero?
+                    nil
+                  else
+                    retriable_errors = retriable_errors_from(node, exit_status, stdout, stderr)
+                    if retriable_errors.empty?
                       nil
                     else
-                      retriable_errors = retriable_errors_from(node, exit_status, stdout, stderr)
-                      if retriable_errors.empty?
-                        nil
-                      else
-                        # Log the issue in the stderr of the deployment
-                        stderr << "!!! #{retriable_errors.size} retriable errors detected in this deployment:\n#{retriable_errors.map { |error| "* #{error}" }.join("\n")}\n"
-                        [node, retriable_errors]
-                      end
+                      # Log the issue in the stderr of the deployment
+                      stderr << "!!! #{retriable_errors.size} retriable errors detected in this deployment:\n#{retriable_errors.map { |error| "* #{error}" }.join("\n")}\n"
+                      [node, retriable_errors]
                     end
-                  end.
-                  compact.
-                  to_h
+                  end
+                end.
+                compact.
+                to_h
               unless retriable_nodes.empty?
                 log_warn <<~EO_LOG.strip
                   Retry deployment for #{retriable_nodes.size} nodes as they got non-deterministic errors (#{nbr_retries} retries remaining):

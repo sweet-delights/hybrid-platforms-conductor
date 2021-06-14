@@ -37,7 +37,7 @@ describe HybridPlatformsConductor::HpcPlugins::PlatformHandler::ServerlessChef d
           Running handlers complete
           Chef Client finished, 16/300 resources updated in 27 seconds
         EO_STDOUT
-        expect(platform.parse_deploy_output(stdout, '')). to eq [
+        expect(platform.parse_deploy_output(stdout, '')).to eq [
           {
             action: 'update',
             diffs: "force update new lists of packages\n",

@@ -21,7 +21,8 @@ module HybridPlatformsConductor
 
     @packaged_deployments = []
 
-    include LoggerHelpers, ParallelThreads
+    include ParallelThreads
+    include LoggerHelpers
 
     # Constructor
     #
@@ -168,7 +169,7 @@ module HybridPlatformsConductor
         raise "No platform is able to deploy the service #{service}" if platform.nil?
 
         # Add some markers in stdout and stderr so that parsing services-oriented deployment output is easier
-        deploy_marker = "===== [ #{node} / #{service} ] - HPC Service #{why_run ? 'Check' : 'Deploy' } ====="
+        deploy_marker = "===== [ #{node} / #{service} ] - HPC Service #{why_run ? 'Check' : 'Deploy'} ====="
         [{
           ruby: proc do |stdout, stderr|
             stdout << "#{deploy_marker} Begin\n"

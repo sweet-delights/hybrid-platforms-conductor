@@ -74,7 +74,7 @@ describe HybridPlatformsConductor::Deployer do
                 if mocked_secrets_file
                   { secret: { items: { secret_item: { id: '4242' } } } }
                 else
-                  { errors: { string: 'Access Denied'}, secret_error: { error_code: 'LOAD', error_message: 'Access Denied', allows_response: false } }
+                  { errors: { string: 'Access Denied' }, secret_error: { error_code: 'LOAD', error_message: 'Access Denied', allows_response: false } }
                 end
             }
           }
@@ -190,8 +190,8 @@ describe HybridPlatformsConductor::Deployer do
             deployable_services: %w[service1 service2]
           }
         ) do
-          mock_thycotic_file_download_on('https://my_thycotic1.domain.com/SecretServer', 110701, '{ "secret1": "value1" }')
-          mock_thycotic_file_download_on('https://my_thycotic2.domain.com/SecretServer', 110702, '{ "secret2": "value2" }')
+          mock_thycotic_file_download_on('https://my_thycotic1.domain.com/SecretServer', 110_701, '{ "secret1": "value1" }')
+          mock_thycotic_file_download_on('https://my_thycotic2.domain.com/SecretServer', 110_702, '{ "secret2": "value2" }')
           expect(test_services_handler).to receive(:package).with(
             services: { 'node1' => %w[service1], 'node2' => %w[service2] },
             secrets: { 'secret1' => 'value1', 'secret2' => 'value2' },
@@ -216,8 +216,8 @@ describe HybridPlatformsConductor::Deployer do
             end
           EO_CONFIG
         ) do
-          mock_thycotic_file_download_on('https://my_thycotic1.domain.com/SecretServer', 110701, '{ "secret1": "value1", "secret2": "value2" }')
-          mock_thycotic_file_download_on('https://my_thycotic2.domain.com/SecretServer', 110702, '{ "secret2": "value2", "secret3": "value3" }')
+          mock_thycotic_file_download_on('https://my_thycotic1.domain.com/SecretServer', 110_701, '{ "secret1": "value1", "secret2": "value2" }')
+          mock_thycotic_file_download_on('https://my_thycotic2.domain.com/SecretServer', 110_702, '{ "secret2": "value2", "secret3": "value3" }')
           expect(test_services_handler).to receive(:package).with(
             services: { 'node' => %w[service] },
             secrets: { 'secret1' => 'value1', 'secret2' => 'value2', 'secret3' => 'value3' },
@@ -242,8 +242,8 @@ describe HybridPlatformsConductor::Deployer do
             end
           EO_CONFIG
         ) do
-          mock_thycotic_file_download_on('https://my_thycotic1.domain.com/SecretServer', 110701, '{ "secret1": "value1", "secret2": "value2" }')
-          mock_thycotic_file_download_on('https://my_thycotic2.domain.com/SecretServer', 110702, '{ "secret2": "other_value", "secret3": "value3" }')
+          mock_thycotic_file_download_on('https://my_thycotic1.domain.com/SecretServer', 110_701, '{ "secret1": "value1", "secret2": "value2" }')
+          mock_thycotic_file_download_on('https://my_thycotic2.domain.com/SecretServer', 110_702, '{ "secret2": "other_value", "secret3": "value3" }')
           expect { test_deployer.deploy_on(%w[node]) }.to raise_error 'Thycotic secret secret2 served by https://my_thycotic2.domain.com/SecretServer from secret ID 110702 has conflicting values between different secrets.'
         end
       end

@@ -144,7 +144,7 @@ module HybridPlatformsConductor
             when :only_as_expected
               test.expected_failure ? test.errors : []
             when :only_as_non_expected
-              !test.expected_failure ? test.errors : []
+              test.expected_failure ? [] : test.errors
             else
               raise "Unknown errors filter: #{fiter}"
             end

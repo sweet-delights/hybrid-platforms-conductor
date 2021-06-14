@@ -38,7 +38,7 @@ module HybridPlatformsConductorTest
               actions_executor: test_actions_executor
             )
             if repositories.size == 1
-              yield *repositories.first
+              yield(*repositories.first)
             else
               yield repositories
             end

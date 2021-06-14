@@ -9,20 +9,20 @@ describe HybridPlatformsConductor::CmdRunner do
 
   it 'runs a simple bash command and returns exit code, stdout and stderr correctly' do
     with_repository do
-      expect(test_cmd_runner.run_cmd("echo TestStderr 1>&2 ; echo TestStdout")).to eq [0, "TestStdout\n", "TestStderr\n"]
+      expect(test_cmd_runner.run_cmd('echo TestStderr 1>&2 ; echo TestStdout')).to eq [0, "TestStdout\n", "TestStderr\n"]
     end
   end
 
   it 'runs a simple bash command and forces usage of bash' do
     with_repository do
       # Use set -o pipefail that does not work in /bin/sh
-      expect(test_cmd_runner.run_cmd("set -o pipefail ; echo TestStderr 1>&2 ; echo TestStdout", force_bash: true)).to eq [0, "TestStdout\n", "TestStderr\n"]
+      expect(test_cmd_runner.run_cmd('set -o pipefail ; echo TestStderr 1>&2 ; echo TestStdout', force_bash: true)).to eq [0, "TestStdout\n", "TestStderr\n"]
     end
   end
 
   it 'runs a simple bash command and logs stdout and stderr to a file' do
     with_repository do |repository|
-      test_cmd_runner.run_cmd "echo TestStderr 1>&2 ; sleep 1 ; echo TestStdout", log_to_file: "#{repository}/test_file"
+      test_cmd_runner.run_cmd 'echo TestStderr 1>&2 ; sleep 1 ; echo TestStdout', log_to_file: "#{repository}/test_file"
       expect(File.read("#{repository}/test_file")).to eq "TestStderr\nTestStdout\n"
     end
   end
@@ -30,7 +30,7 @@ describe HybridPlatformsConductor::CmdRunner do
   it 'runs a simple bash command and logs stdout and stderr to an existing file' do
     with_repository do |repository|
       File.write("#{repository}/test_file", "Before\n")
-      test_cmd_runner.run_cmd "echo TestStderr 1>&2 ; sleep 1 ; echo TestStdout", log_to_file: "#{repository}/test_file"
+      test_cmd_runner.run_cmd 'echo TestStderr 1>&2 ; sleep 1 ; echo TestStdout', log_to_file: "#{repository}/test_file"
       expect(File.read("#{repository}/test_file")).to eq "Before\nTestStderr\nTestStdout\n"
     end
   end
@@ -39,7 +39,7 @@ describe HybridPlatformsConductor::CmdRunner do
     with_repository do
       stdout = ''
       stderr = ''
-      test_cmd_runner.run_cmd "echo TestStderr 1>&2 ; sleep 1 ; echo TestStdout", log_stdout_to_io: stdout, log_stderr_to_io: stderr
+      test_cmd_runner.run_cmd 'echo TestStderr 1>&2 ; sleep 1 ; echo TestStdout', log_stdout_to_io: stdout, log_stderr_to_io: stderr
       expect(stdout).to eq "TestStdout\n"
       expect(stderr).to eq "TestStderr\n"
     end

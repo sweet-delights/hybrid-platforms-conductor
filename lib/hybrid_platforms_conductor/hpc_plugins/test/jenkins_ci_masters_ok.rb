@@ -29,17 +29,15 @@ module HybridPlatformsConductor
             else
               master_info_url = "#{repo_info[:jenkins_ci_url]}/job/master/api/json"
               Credentials.with_credentials_for(:jenkins_ci, @logger, @logger_stderr, url: master_info_url) do |jenkins_user, jenkins_password|
-                begin
-                  # Get the master branch info from the API
-                  master_info = JSON.parse(open(master_info_url, http_basic_authentication: [jenkins_user, jenkins_password]).read)
-                  # Get the last build's URL
-                  last_build_info_url = "#{master_info['lastBuild']['url']}/api/json"
-                  last_build_info = JSON.parse(open(last_build_info_url, http_basic_authentication: [jenkins_user, jenkins_password]).read)
-                  log_debug "Build info for #{master_info_url}:\n#{JSON.pretty_generate(last_build_info)}"
-                  error "Last build for job #{repo_info[:project]}/#{repo_info[:name]} is in status #{last_build_info['result']}: #{master_info['lastBuild']['url']}" unless SUCCESS_STATUSES.include?(last_build_info['result'])
-                rescue
-                  error "Error while checking Jenkins CI job for #{repo_info[:project]}/#{repo_info[:name]} from URL #{master_info_url}: #{$ERROR_INFO}"
-                end
+                # Get the master branch info from the API
+                master_info = JSON.parse(open(master_info_url, http_basic_authentication: [jenkins_user, jenkins_password]).read)
+                # Get the last build's URL
+                last_build_info_url = "#{master_info['lastBuild']['url']}/api/json"
+                last_build_info = JSON.parse(open(last_build_info_url, http_basic_authentication: [jenkins_user, jenkins_password]).read)
+                log_debug "Build info for #{master_info_url}:\n#{JSON.pretty_generate(last_build_info)}"
+                error "Last build for job #{repo_info[:project]}/#{repo_info[:name]} is in status #{last_build_info['result']}: #{master_info['lastBuild']['url']}" unless SUCCESS_STATUSES.include?(last_build_info['result'])
+              rescue
+                error "Error while checking Jenkins CI job for #{repo_info[:project]}/#{repo_info[:name]} from URL #{master_info_url}: #{$ERROR_INFO}"
               end
             end
           end

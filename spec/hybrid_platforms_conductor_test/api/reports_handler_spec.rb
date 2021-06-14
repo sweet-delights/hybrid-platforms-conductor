@@ -37,7 +37,7 @@ describe HybridPlatformsConductor::ReportsHandler do
   it 'fails when delivering a simple report with an unknown locale' do
     with_test_platform_for_reports_test do
       test_reports_handler.locale = :de
-      expect { test_reports_handler.produce_report_for([{ all: true }])}.to raise_error(RuntimeError, 'Unknown locale for format report: de')
+      expect { test_reports_handler.produce_report_for([{ all: true }]) }.to raise_error(RuntimeError, 'Unknown locale for format report: de')
     end
   end
 

@@ -34,7 +34,7 @@ module HybridPlatformsConductor
           image = @nodes_handler.get_image_of(@node).to_sym
           # Find if we have such an image registered
           raise "[ #{@node}/#{@environment} ] - Unknown OS image #{image} defined for node #{@node}" unless @config.known_os_images.include?(image)
-          
+
           # Build the image if it does not exist
           image_tag = "hpc_image_#{image}"
           docker_image = nil

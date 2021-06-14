@@ -89,7 +89,7 @@ module HybridPlatformsConductor
       expected_code = [expected_code] unless expected_code.is_a?(Array)
       if @dry_run
         out cmd
-        return expected_code.first, '', ''
+        [expected_code.first, '', '']
       else
         log_debug "#{timeout.nil? ? '' : "[ Timeout #{timeout} ] - "}#{cmd.light_cyan.bold}"
         exit_status = nil
@@ -103,15 +103,13 @@ module HybridPlatformsConductor
               FileUtils.mkdir_p(File.dirname(log_to_file))
               File.open(log_to_file, 'w')
             end
-          else
-            nil
           end
         start_time = Time.now if log_debug?
         bash_file = nil
         if force_bash
           bash_file = Tempfile.new('hpc_bash')
           bash_file.write(cmd)
-          bash_file.chmod 0700
+          bash_file.chmod 0o700
           bash_file.close
           cmd = "/bin/bash -c #{bash_file.path}"
         end
@@ -172,7 +170,7 @@ module HybridPlatformsConductor
             raise exit_status == :timeout ? TimeoutError : UnexpectedExitCodeError, error_title
           end
         end
-        return exit_status, cmd_stdout, cmd_stderr
+        [exit_status, cmd_stdout, cmd_stderr]
       end
     end
 

@@ -174,7 +174,7 @@ module HybridPlatformsConductorTest
             end
           end
 
-          before :each do
+          before do
             @check_mode = check_mode
           end
 
@@ -445,16 +445,14 @@ module HybridPlatformsConductorTest
               futex_file = HybridPlatformsConductor::Deployer.const_get(:PACKAGING_FUTEX_FILE)
               Futex.new(futex_file).open do
                 # Expect the error to be raised within 2 seconds (as it should timeout after 1 second)
-                begin
-                  Timeout::timeout(2) {
-                    expect { test_deployer.deploy_on('node') }.to raise_error(
-                      Futex::CantLock,
-                      /can't get exclusive access to the file #{Regexp.escape(futex_file)} because of the lock at #{Regexp.escape(futex_file)}\.lock, after 1\.\d+s of waiting/
-                    )
-                  }
-                rescue Timeout::Error
-                  raise 'The packaging timeout (set to 1 seconds) did not fire within 2 seconds. Looks like it is not working properly.'
+                Timeout.timeout(2) do
+                  expect { test_deployer.deploy_on('node') }.to raise_error(
+                    Futex::CantLock,
+                    /can't get exclusive access to the file #{Regexp.escape(futex_file)} because of the lock at #{Regexp.escape(futex_file)}\.lock, after 1\.\d+s of waiting/
+                  )
                 end
+              rescue Timeout::Error
+                raise 'The packaging timeout (set to 1 seconds) did not fire within 2 seconds. Looks like it is not working properly.'
               end
             end
           end

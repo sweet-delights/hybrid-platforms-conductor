@@ -176,7 +176,7 @@ module HybridPlatformsConductor
           options_parser.on('-w', '--password', 'If used, then expect SSH connections to ask for a password.') do
             @auth_password = true
           end
-          options_parser.on('-y', '--ssh-gateways-conf GATEWAYS_CONF', "Name of the gateways configuration to be used. Can also be set from environment variable hpc_ssh_gateways_conf.") do |gateway|
+          options_parser.on('-y', '--ssh-gateways-conf GATEWAYS_CONF', 'Name of the gateways configuration to be used. Can also be set from environment variable hpc_ssh_gateways_conf.') do |gateway|
             @ssh_gateways_conf = gateway.to_sym
           end
         end
@@ -252,7 +252,7 @@ module HybridPlatformsConductor
             temp_file = "#{Dir.tmpdir}/hpc_temp_cmds_#{Digest::MD5.hexdigest(bash_cmds)}.sh"
             File.open(temp_file, 'w+') do |file|
               file.write ssh_cmd
-              file.chmod 0700
+              file.chmod 0o700
             end
             begin
               run_cmd(temp_file)
@@ -697,7 +697,7 @@ module HybridPlatformsConductor
             known_hosts_file = "#{platforms_ssh_dir}/known_hosts"
             raise 'sshpass is not installed. Can\'t use automatic passwords handling without it. Please install it.' if !@passwords.empty? && !ssh_pass_installed?
 
-            File.open(ssh_exec_file, 'w+', 0700) do |file|
+            File.open(ssh_exec_file, 'w+', 0o700) do |file|
               file.puts "#!#{env_system_path} bash"
               # TODO: Make a mechanism that uses sshpass and the correct password only for the correct hostname (this requires parsing ssh parameters $*).
               # Current implementation is much simpler: it uses sshpass if at least 1 password is needed, and always uses the first password.
@@ -706,7 +706,7 @@ module HybridPlatformsConductor
             end
             File.write(ssh_conf_file, ssh_config(ssh_exec: ssh_exec_file, known_hosts_file: known_hosts_file, nodes: nodes))
             # Make sure all host keys are setup in the known hosts file
-            File.open(known_hosts_file, 'w+', 0700) do |file|
+            File.open(known_hosts_file, 'w+', 0o700) do |file|
               if @ssh_strict_host_key_checking
                 # In the case of an overriden connection, get host key for the overriden connection
                 @nodes_handler.prefetch_metadata_of nodes, :host_keys
@@ -760,8 +760,6 @@ module HybridPlatformsConductor
               @nodes_handler.get_private_ips_of(node).first
             elsif @nodes_handler.get_hostname_of(node)
               @nodes_handler.get_hostname_of(node)
-            else
-              nil
             end
           connection_user = @ssh_user
           gateway = @nodes_handler.get_gateway_of node

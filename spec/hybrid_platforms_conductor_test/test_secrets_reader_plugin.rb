@@ -7,9 +7,7 @@ module HybridPlatformsConductorTest
 
     class << self
 
-      attr_accessor :calls
-      attr_accessor :deployer
-      attr_accessor :mocked_secrets
+      attr_accessor :calls, :deployer, :mocked_secrets
 
     end
 

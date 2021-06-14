@@ -128,7 +128,7 @@ describe HybridPlatformsConductor::HpcPlugins::PlatformHandler::ServerlessChef d
             'new_metadata' => 'new_value',
             'private_ips' => ['172.16.0.1'],
             'property_1' => { 'property_11' => 'value11' },
-            'property_2' => 'value2',
+            'property_2' => 'value2'
           )
         end
       end

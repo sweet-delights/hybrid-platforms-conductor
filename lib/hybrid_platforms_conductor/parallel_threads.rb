@@ -1,5 +1,3 @@
-require 'thread'
-
 module HybridPlatformsConductor
 
   # Provide utilities to handle parallel threads

@@ -503,7 +503,7 @@ module HybridPlatformsConductor
           cookbook_dir = known_cookbook_paths.find { |cookbook_path| File.exist?("#{@repository_path}/#{cookbook_path}/#{cookbook}") }
           raise "Unknown recipe #{cookbook}::#{recipe} from cookbook #{@repository_path}/#{cookbook_dir}/#{cookbook}." if !cookbook_dir.nil? && !File.exist?("#{@repository_path}/#{cookbook_dir}/#{cookbook}/recipes/#{recipe}.rb")
 
-          return cookbook_dir, cookbook, recipe
+          [cookbook_dir, cookbook, recipe]
         end
 
         private

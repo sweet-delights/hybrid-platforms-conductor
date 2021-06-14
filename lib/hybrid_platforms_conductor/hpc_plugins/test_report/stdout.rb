@@ -97,14 +97,17 @@ module HybridPlatformsConductor
               table << [
                 nodes_list,
                 nodes_info[:nodes].size,
-                nodes_info[:nodes].empty? ? '' : "#{(nodes_info[:tested_nodes].size*100.0/nodes_info[:nodes].size).to_i} %",
+                nodes_info[:nodes].empty? ? '' : "#{(nodes_info[:tested_nodes].size * 100.0 / nodes_info[:nodes].size).to_i} %",
                 nodes_info[:tested_nodes].empty? ? '' : "#{((nodes_info[:tested_nodes].size - nodes_info[:tested_nodes_in_error_as_expected].size) * 100.0 / nodes_info[:tested_nodes].size).to_i} %",
                 nodes_info[:tested_nodes].empty? ? '' : "#{((nodes_info[:tested_nodes].size - nodes_info[:tested_nodes_in_error].size) * 100.0 / nodes_info[:tested_nodes].size).to_i} %",
-                nodes_info[:nodes].empty? ? '' :
+                if nodes_info[:nodes].empty?
+                  ''
+                else
                   ('=' * ((nodes_info[:tested_nodes_in_error_as_expected].size * PROGRESS_BAR_SIZE.to_f) / nodes_info[:nodes].size).round).yellow.bold +
-                  ('=' * (((nodes_info[:tested_nodes_in_error].size - nodes_info[:tested_nodes_in_error_as_expected].size).abs * PROGRESS_BAR_SIZE.to_f) / nodes_info[:nodes].size).round).red.bold +
-                  ('=' * (((nodes_info[:tested_nodes].size - nodes_info[:tested_nodes_in_error].size) * PROGRESS_BAR_SIZE.to_f) / nodes_info[:nodes].size).round).green.bold +
-                  ('=' * (((nodes_info[:nodes].size - nodes_info[:tested_nodes].size) * PROGRESS_BAR_SIZE.to_f) / nodes_info[:nodes].size).round).white.bold
+                    ('=' * (((nodes_info[:tested_nodes_in_error].size - nodes_info[:tested_nodes_in_error_as_expected].size).abs * PROGRESS_BAR_SIZE.to_f) / nodes_info[:nodes].size).round).red.bold +
+                    ('=' * (((nodes_info[:tested_nodes].size - nodes_info[:tested_nodes_in_error].size) * PROGRESS_BAR_SIZE.to_f) / nodes_info[:nodes].size).round).green.bold +
+                    ('=' * (((nodes_info[:nodes].size - nodes_info[:tested_nodes].size) * PROGRESS_BAR_SIZE.to_f) / nodes_info[:nodes].size).round).white.bold
+                end
               ]
             end
           end)

@@ -312,7 +312,7 @@ module HybridPlatformsConductor
           idx_try = 0
           loop do
             response = proxmox.get(path)
-            break if !(response.is_a?(String)) || response !~ /^NOK: error code = 5\d\d$/
+            break if !response.is_a?(String) || response !~ /^NOK: error code = 5\d\d$/
 
             log_warn "[ #{@node}/#{@environment} ] - Proxmox API call get #{path} returned error #{response} (attempt ##{idx_try}/#{proxmox_test_info[:api_max_retries]})"
             raise "[ #{@node}/#{@environment} ] - Proxmox API call get #{path} returns #{response} continuously (tried #{idx_try + 1} times)" if idx_try >= proxmox_test_info[:api_max_retries]
@@ -337,7 +337,7 @@ module HybridPlatformsConductor
         def run_proxmox_task(proxmox, http_method, pve_node, sub_path, *args)
           task = nil
           idx_try = 0
-          while task.nil? do
+          while task.nil?
             task = proxmox.send(http_method, "nodes/#{pve_node}/#{sub_path}", *args)
             next unless task =~ /^NOK: error code = 5\d\d$/
 
@@ -351,7 +351,7 @@ module HybridPlatformsConductor
             sleep proxmox_test_info[:api_wait_between_retries_secs] + rand(5)
           end
           raise "[ #{@node}/#{@environment} ] - Proxmox API call #{http_method} nodes/#{pve_node}/#{sub_path} #{args} is constantly failing. Giving up." if task.nil?
-            
+
           wait_for_proxmox_task(proxmox, pve_node, task)
         end
 
@@ -373,7 +373,7 @@ module HybridPlatformsConductor
             sleep 1
           end
           raise "[ #{@node}/#{@environment} ] - Proxmox task #{task} completed with status #{status}" unless status.split(':').last == 'OK'
-          
+
           log_debug "[ #{@node}/#{@environment} ] - Proxmox task #{task} completed."
         end
 
@@ -402,13 +402,13 @@ module HybridPlatformsConductor
           config_file = "#{Dir.tmpdir}/config_#{file_id}.json"
           File.write(
             config_file,
-            (proxmox_test_info[:test_config].merge(
+            proxmox_test_info[:test_config].merge(
               proxmox_api_url: proxmox_test_info[:api_url],
               futex_file: '/tmp/hpc_proxmox_allocations.futex',
               logs_dir: '/tmp/hpc_proxmox_waiter_logs',
               api_max_retries: proxmox_test_info[:api_max_retries],
               api_wait_between_retries_secs: proxmox_test_info[:api_wait_between_retries_secs]
-            )).to_json
+            ).to_json
           )
           result = nil
           begin

@@ -340,7 +340,8 @@ describe HybridPlatformsConductor::ActionsExecutor do
                 ["#{connection}_#{node}_1", "#{connection_user}_#{node}_1", "#{gateway}_#{node}_1", "#{gateway_user}_#{node}_1"]
               end
             end
-          ') do
+          '
+        ) do
           test_connector.ssh_user = 'test_user'
           expect(ssh_config_for('node1')).to eq <<~EO_SSH_CONFIG
             Host hpc.node1

@@ -74,7 +74,7 @@ module HybridPlatformsConductor
             out "[ #{node} ] - Error while dumping JSON. Check #{stdout_file_name}"
           else
             json_file_name = "#{@dump_dir}/#{node}.json"
-            File.write(json_file_name, stdout[dump_begin_idx+1..dump_end_idx-1].join("\n"))
+            File.write(json_file_name, stdout[dump_begin_idx + 1..dump_end_idx - 1].join("\n"))
             out "[ #{node} ] - OK. Check #{json_file_name}"
           end
         else

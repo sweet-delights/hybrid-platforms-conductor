@@ -8,7 +8,8 @@ module HybridPlatformsConductor
   # Object used to access the whole configuration
   class Config
 
-    include LoggerHelpers, Cleanroom
+    include Cleanroom
+    include LoggerHelpers
 
     class << self
 

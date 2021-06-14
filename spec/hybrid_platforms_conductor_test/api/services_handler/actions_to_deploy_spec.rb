@@ -14,25 +14,25 @@ describe HybridPlatformsConductor::ServicesHandler do
     #   * *platform* (String): Platform that should be used to deploy this service [default: 'platform']
     #   * *check* (Boolean): Should the action be deployed in check mode? [default: false]
     def expect_deploy_actions(node, services, check, expected_deploys)
-        actions = test_services_handler.actions_to_deploy_on(node, services, check)
-        expect(actions.size).to eq expected_deploys.size * 3
-        actions.each_slice(3).zip(expected_deploys) do |((marker_begin, action, marker_end), expected_deploy)|
-          # Check that we log the begin marker before deploying the service
-          expect(marker_begin.keys).to eq [:ruby]
-          stdout_begin = StringIO.new
-          stderr_begin = StringIO.new
-          marker_begin[:ruby].call(stdout_begin, stderr_begin)
-          expect(stdout_begin.string.strip).to eq "===== [ #{expected_deploy[:node]} / #{expected_deploy[:service]} ] - HPC Service #{expected_deploy[:check] ? 'Check' : 'Deploy' } ===== Begin"
-          expect(stderr_begin.string.strip).to eq "===== [ #{expected_deploy[:node]} / #{expected_deploy[:service]} ] - HPC Service #{expected_deploy[:check] ? 'Check' : 'Deploy' } ===== Begin"
-          # Check that the service is deployed according to our mocked PlatformHandler
-          expect(action).to eq(bash: "echo \"#{expected_deploy[:check] ? 'Checking' : 'Deploying'} #{expected_deploy[:service]} (#{expected_deploy[:platform] || 'platform'}) on #{expected_deploy[:node]}\"")
-          # Check that we log the end marker after deploying the service
-          stdout_end = StringIO.new
-          stderr_end = StringIO.new
-          marker_end[:ruby].call(stdout_end, stderr_end)
-          expect(stdout_end.string.strip).to eq "===== [ #{expected_deploy[:node]} / #{expected_deploy[:service]} ] - HPC Service #{expected_deploy[:check] ? 'Check' : 'Deploy' } ===== End"
-          expect(stderr_end.string.strip).to eq "===== [ #{expected_deploy[:node]} / #{expected_deploy[:service]} ] - HPC Service #{expected_deploy[:check] ? 'Check' : 'Deploy' } ===== End"
-        end
+      actions = test_services_handler.actions_to_deploy_on(node, services, check)
+      expect(actions.size).to eq expected_deploys.size * 3
+      actions.each_slice(3).zip(expected_deploys) do |((marker_begin, action, marker_end), expected_deploy)|
+        # Check that we log the begin marker before deploying the service
+        expect(marker_begin.keys).to eq [:ruby]
+        stdout_begin = StringIO.new
+        stderr_begin = StringIO.new
+        marker_begin[:ruby].call(stdout_begin, stderr_begin)
+        expect(stdout_begin.string.strip).to eq "===== [ #{expected_deploy[:node]} / #{expected_deploy[:service]} ] - HPC Service #{expected_deploy[:check] ? 'Check' : 'Deploy'} ===== Begin"
+        expect(stderr_begin.string.strip).to eq "===== [ #{expected_deploy[:node]} / #{expected_deploy[:service]} ] - HPC Service #{expected_deploy[:check] ? 'Check' : 'Deploy'} ===== Begin"
+        # Check that the service is deployed according to our mocked PlatformHandler
+        expect(action).to eq(bash: "echo \"#{expected_deploy[:check] ? 'Checking' : 'Deploying'} #{expected_deploy[:service]} (#{expected_deploy[:platform] || 'platform'}) on #{expected_deploy[:node]}\"")
+        # Check that we log the end marker after deploying the service
+        stdout_end = StringIO.new
+        stderr_end = StringIO.new
+        marker_end[:ruby].call(stdout_end, stderr_end)
+        expect(stdout_end.string.strip).to eq "===== [ #{expected_deploy[:node]} / #{expected_deploy[:service]} ] - HPC Service #{expected_deploy[:check] ? 'Check' : 'Deploy'} ===== End"
+        expect(stderr_end.string.strip).to eq "===== [ #{expected_deploy[:node]} / #{expected_deploy[:service]} ] - HPC Service #{expected_deploy[:check] ? 'Check' : 'Deploy'} ===== End"
+      end
     end
 
     it 'deploys a service' do

@@ -219,7 +219,7 @@ describe HybridPlatformsConductor::ServicesHandler do
             expect(stderr.strip).to eq "#{task_name} stderr"
             [{ name: task_name, status: status_str.to_sym }]
           end
-        },
+        }
       ) do
         stdout = <<~EOS_STDOUT
           First log lines

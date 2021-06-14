@@ -74,11 +74,11 @@ module HybridPlatformsConductor
       end
       # Display options connectors might have
       @connector_plugins.each do |connector_name, connector|
-        if connector.respond_to?(:options_parse)
-          options_parser.separator ''
-          options_parser.separator "Connector #{connector_name} options:"
-          connector.options_parse(options_parser)
-        end
+        next unless connector.respond_to?(:options_parse)
+
+        options_parser.separator ''
+        options_parser.separator "Connector #{connector_name} options:"
+        connector.options_parse(options_parser)
       end
     end
 
@@ -271,8 +271,6 @@ module HybridPlatformsConductor
         if log_to_file
           FileUtils.mkdir_p(File.dirname(log_to_file))
           File.open(log_to_file, 'w')
-        else
-          nil
         end
       stdout_queue = Queue.new
       stderr_queue = Queue.new
@@ -286,28 +284,26 @@ module HybridPlatformsConductor
           (log_to_stdout ? [@logger_stderr] : []) +
           (file_output.nil? ? [] : [file_output])
       ) do
-        begin
-          log_debug "[#{node}] - Execute #{actions.size} actions on #{node}..."
-          actions.each do |action|
-            action.prepare_for(node, connector, remaining_timeout, stdout_queue, stderr_queue)
-            start_time = Time.now
-            action.execute
-            remaining_timeout -= Time.now - start_time unless remaining_timeout.nil?
-          end
-        rescue ConnectionError
-          exit_status = :connection_error
-          stderr_queue << "#{$ERROR_INFO}\n"
-        rescue CmdRunner::UnexpectedExitCodeError
-          exit_status = :failed_command
-          stderr_queue << "#{$ERROR_INFO}\n"
-        rescue CmdRunner::TimeoutError
-          # Error has already been logged in stderr
-          exit_status = :timeout
-        rescue
-          log_error "Uncaught exception while executing actions on #{node}: #{$ERROR_INFO}\n#{$ERROR_INFO.backtrace.join("\n")}"
-          stderr_queue << "#{$ERROR_INFO}\n"
-          exit_status = :failed_action
+        log_debug "[#{node}] - Execute #{actions.size} actions on #{node}..."
+        actions.each do |action|
+          action.prepare_for(node, connector, remaining_timeout, stdout_queue, stderr_queue)
+          start_time = Time.now
+          action.execute
+          remaining_timeout -= Time.now - start_time unless remaining_timeout.nil?
         end
+      rescue ConnectionError
+        exit_status = :connection_error
+        stderr_queue << "#{$ERROR_INFO}\n"
+      rescue CmdRunner::UnexpectedExitCodeError
+        exit_status = :failed_command
+        stderr_queue << "#{$ERROR_INFO}\n"
+      rescue CmdRunner::TimeoutError
+        # Error has already been logged in stderr
+        exit_status = :timeout
+      rescue
+        log_error "Uncaught exception while executing actions on #{node}: #{$ERROR_INFO}\n#{$ERROR_INFO.backtrace.join("\n")}"
+        stderr_queue << "#{$ERROR_INFO}\n"
+        exit_status = :failed_action
       end
       [exit_status, stdout, stderr]
     end

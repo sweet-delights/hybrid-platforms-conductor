@@ -37,7 +37,7 @@ module HybridPlatformsConductor
                 link_options = {
                   label: link_label
                 }
-                f.puts "  \"#{dot_name_for_link(node_name)}\" -> \"#{dot_name_for_link(connected_node_name)}\" [ #{link_options.map { |opt, val| "#{opt}=\"#{val}\"" }.join(' ') } ];"
+                f.puts "  \"#{dot_name_for_link(node_name)}\" -> \"#{dot_name_for_link(connected_node_name)}\" [ #{link_options.map { |opt, val| "#{opt}=\"#{val}\"" }.join(' ')} ];"
               end
             end
             f.puts '}'
@@ -66,14 +66,14 @@ module HybridPlatformsConductor
               label: "#{@topographer.title_for(node_name)}#{description.nil? ? '' : "\\n#{description}"}",
               color: 'green'
             }
-            file.puts "    \"#{dot_name_for_link(node_name)}\" [ #{anchor_node_options.map { |opt, val| "#{opt}=\"#{val}\"" }.join(' ') } ];"
+            file.puts "    \"#{dot_name_for_link(node_name)}\" [ #{anchor_node_options.map { |opt, val| "#{opt}=\"#{val}\"" }.join(' ')} ];"
             @topographer.nodes_graph[node_name][:includes].sort.each do |included_node_name|
               write_node_def_gv(file, included_node_name)
             end
             file.puts '  }'
           else
             # A normal node
-            file.puts "  \"#{dot_name}\" [ #{node_options.map { |opt, val| "#{opt}=\"#{val}\"" }.join(' ') } ];"
+            file.puts "  \"#{dot_name}\" [ #{node_options.map { |opt, val| "#{opt}=\"#{val}\"" }.join(' ')} ];"
           end
         end
 

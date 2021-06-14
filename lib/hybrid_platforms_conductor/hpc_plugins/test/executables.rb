@@ -27,7 +27,7 @@ module HybridPlatformsConductor
           ).known_platforms.first
           unless example_platform.nil?
             tests.concat [
-              "#{CmdRunner.executables_prefix}get_impacted_nodes --platform #{example_platform.name} --show-commands",
+              "#{CmdRunner.executables_prefix}get_impacted_nodes --platform #{example_platform.name} --show-commands"
             ]
             example_node = example_platform.known_nodes.first
             unless example_node.nil?

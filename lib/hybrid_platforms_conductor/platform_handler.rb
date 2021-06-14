@@ -28,7 +28,7 @@ module HybridPlatformsConductor
               branch = "refs/heads/#{branch}" unless branch.include?('/')
               local_ref = "refs/remotes/origin/#{branch.split('/').last}"
               section "Cloning #{git} (#{branch} => #{local_ref}) into #{local_repository_path}" do
-                git_repo = Git.init(local_repository_path, )
+                git_repo = Git.init(local_repository_path)
                 git_repo.add_remote('origin', git).fetch(ref: "#{branch}:#{local_ref}")
                 git_repo.checkout local_ref
               end
