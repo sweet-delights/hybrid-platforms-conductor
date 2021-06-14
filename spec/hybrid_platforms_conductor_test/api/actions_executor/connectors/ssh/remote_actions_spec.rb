@@ -109,7 +109,9 @@ describe HybridPlatformsConductor::ActionsExecutor do
               proc { [0, '', ''] }
             ]
           ],
-          additional_config: 'sudo_for { |user| "other_sudo --user #{user}" }'
+          additional_config: <<~EO_CONFIG
+            sudo_for { |user| "other_sudo --user \#{user}" }
+          EO_CONFIG
         ) do
           test_connector.remote_copy('/path/to/src.file', '/remote_path/to/dst.dir', sudo: true)
         end
@@ -191,7 +193,9 @@ describe HybridPlatformsConductor::ActionsExecutor do
             ],
             [%r{^\{ cat \| .+/ssh hpc\.node -T; \} <<'HPC_EOF'\nother_sudo --user root mv \./hpc_tmp_scp/src\.file /remote_path/to/dst\.dir\nHPC_EOF$}, proc { [0, '', ''] }]
           ],
-          additional_config: 'sudo_for { |user| "other_sudo --user #{user}" }',
+          additional_config: <<~EO_CONFIG,
+            sudo_for { |user| "other_sudo --user \#{user}" }
+          EO_CONFIG
           session_exec: false
         ) do
           test_connector.remote_copy('/path/to/src.file', '/remote_path/to/dst.dir', sudo: true)

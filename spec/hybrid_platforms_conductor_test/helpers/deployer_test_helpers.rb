@@ -208,7 +208,9 @@ module HybridPlatformsConductorTest
           it 'deploys on 1 node using an alternate sudo' do
             with_platform_to_deploy(
               expect_sudo: 'other_sudo --user root',
-              additional_config: 'sudo_for { |user| "other_sudo --user #{user}" }'
+              additional_config: <<~EO_CONFIG,
+                sudo_for { |user| "other_sudo --user \#{user}" }
+              EO_CONFIG
             ) do
               expect(test_deployer.deploy_on('node')).to eq('node' => expected_deploy_result)
             end
@@ -260,7 +262,9 @@ module HybridPlatformsConductorTest
                     }
                   }
                 ],
-                additional_config: 'sudo_for { |user| "other_sudo --user #{user}" }'
+                additional_config: <<~EO_CONFIG,
+                  sudo_for { |user| "other_sudo --user \#{user}" }
+                EO_CONFIG
               ) do
                 ENV['hpc_certificates'] = certs_dir
                 test_deployer.local_environment = true
@@ -342,7 +346,9 @@ module HybridPlatformsConductorTest
                     }
                   }
                 ],
-                additional_config: 'sudo_for { |user| "other_sudo --user #{user}" }'
+                additional_config: <<~EO_CONFIG,
+                  sudo_for { |user| "other_sudo --user \#{user}" }
+                EO_CONFIG
               ) do
                 ENV['hpc_certificates'] = certs_dir
                 test_deployer.local_environment = true
