@@ -1,3 +1,15 @@
+# [v32.18.0](https://github.com/sweet-delights/hybrid-platforms-conductor/compare/v32.17.1...v32.18.0) (2021-06-14 15:01:02)
+
+## Global changes
+### Patches
+
+* [[Feature(log_remote_fs)] [#60] Add new plugins type log with a first log plugin remote_fs to extend deployment logs save functionality](https://github.com/sweet-delights/hybrid-platforms-conductor/commit/20187c6da577c932b5205204187af883140995fe)
+
+## Changes for log_remote_fs
+### Features
+
+* [[Feature(log_remote_fs)] [#60] Add new plugins type log with a first log plugin remote_fs to extend deployment logs save functionality](https://github.com/sweet-delights/hybrid-platforms-conductor/commit/20187c6da577c932b5205204187af883140995fe)
+
 # [v32.17.1](https://github.com/sweet-delights/hybrid-platforms-conductor/compare/v32.17.0...v32.17.1) (2021-06-03 16:20:09)
 
 ### Patches
