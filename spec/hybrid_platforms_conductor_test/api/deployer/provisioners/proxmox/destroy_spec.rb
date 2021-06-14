@@ -15,7 +15,7 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
         )
         instance.create
         instance.destroy
-        expect(@proxmox_destroy_options).to eq(
+        expect(proxmox_destroy_options).to eq(
           'vm_id' => 1024,
           'environment' => 'test',
           'node' => 'node'

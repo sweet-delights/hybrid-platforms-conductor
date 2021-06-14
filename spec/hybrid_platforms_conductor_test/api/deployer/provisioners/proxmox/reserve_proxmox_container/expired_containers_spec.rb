@@ -65,7 +65,7 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
               }
             ]
           ]
-          expect(Time.parse(@proxmox_actions[2][2]['description'].match(/^===== HPC info =====\nnode: test_node\nenvironment: test_env\ncreation_date: (.+)\n/)[1])).to be > creation_date
+          expect(Time.parse(proxmox_actions[2][2]['description'].match(/^===== HPC info =====\nnode: test_node\nenvironment: test_env\ncreation_date: (.+)\n/)[1])).to be > creation_date
         end
       end
 

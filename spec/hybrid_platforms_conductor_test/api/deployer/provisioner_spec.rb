@@ -75,9 +75,10 @@ describe HybridPlatformsConductor::Deployer do
           block.call
         end
         test_deployer.with_test_provisioned_instance(:test_provisioner, 'node1', environment: 'hpc_testing_provisioner') do |sub_test_deployer, test_instance|
-          expect(sub_test_deployer.instance_eval { @nodes_handler.get_ssh_session_exec_of('node1') }).to eq true
-          expect(sub_test_deployer.instance_eval { @nodes_handler.get_ssh_session_exec_of('node2') }).to eq false
-          ssh_transforms = test_instance.instance_eval { @config.ssh_connection_transforms }
+          sub_nodes_handler = sub_test_deployer.instance_variable_get(:@nodes_handler)
+          expect(sub_nodes_handler.get_ssh_session_exec_of('node1')).to eq true
+          expect(sub_nodes_handler.get_ssh_session_exec_of('node2')).to eq false
+          ssh_transforms = test_instance.instance_variable_get(:@config).ssh_connection_transforms
           expect(ssh_transforms.size).to eq 1
           expect(ssh_transforms[0][:nodes_selectors_stack]).to eq [%w[node2]]
         end
@@ -101,8 +102,9 @@ describe HybridPlatformsConductor::Deployer do
           block.call
         end
         test_deployer.with_test_provisioned_instance(:test_provisioner, 'node1', environment: 'hpc_testing_provisioner') do |sub_test_deployer|
-          expect(sub_test_deployer.instance_eval { @nodes_handler.get_local_node_of('node1') }).to eq false
-          expect(sub_test_deployer.instance_eval { @nodes_handler.get_local_node_of('node2') }).to eq true
+          sub_nodes_handler = sub_test_deployer.instance_variable_get(:@nodes_handler)
+          expect(sub_nodes_handler.get_local_node_of('node1')).to eq false
+          expect(sub_nodes_handler.get_local_node_of('node2')).to eq true
         end
       end
     end
@@ -130,7 +132,7 @@ describe HybridPlatformsConductor::Deployer do
           block.call
         end
         test_deployer.with_test_provisioned_instance(:test_provisioner, 'node1', environment: 'hpc_testing_provisioner') do |_sub_test_deployer, test_instance|
-          sudo_procs = test_instance.instance_eval { @config.sudo_procs }
+          sudo_procs = test_instance.instance_variable_get(:@config).sudo_procs
           expect(sudo_procs.size).to eq 1
           expect(sudo_procs[0][:nodes_selectors_stack]).to eq [%w[node2]]
         end

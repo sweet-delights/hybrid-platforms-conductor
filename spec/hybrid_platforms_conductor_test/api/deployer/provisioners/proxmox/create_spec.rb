@@ -11,7 +11,7 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
           mock_proxmox_to_get_nodes_info
         ]
         instance.create
-        expect(@proxmox_create_options).to eq(
+        expect(proxmox_create_options).to eq(
           'cores' => 2,
           'cpulimit' => 2,
           'description' => "===== HPC info =====\nnode: node\nenvironment: test\ndebug: false\n",
@@ -39,7 +39,7 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
           expected_file_id: 'node_really_big_environment_name_that_will_exceed_for_sure_the_limit_of_hostnames_really_big_environment_name_that_will_exceed_for_sure_the_limit_of_hostnames_really_big_environment_name_that_will_exceed_for_sure_the_limit_of_hostnam-258ca1fc'
         )
         instance.create
-        expect(@proxmox_create_options['hostname']).to eq expected_hostname
+        expect(proxmox_create_options['hostname']).to eq expected_hostname
       end
     end
 
@@ -54,7 +54,7 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
           expected_sudo: false
         )
         instance.create
-        expect(@proxmox_create_options).to eq(
+        expect(proxmox_create_options).to eq(
           'cores' => 2,
           'cpulimit' => 2,
           'description' => "===== HPC info =====\nnode: node\nenvironment: test\ndebug: false\n",
@@ -138,7 +138,7 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
           ]
         )
         instance.create
-        expect(@proxmox_create_options).to eq(
+        expect(proxmox_create_options).to eq(
           'cores' => 24,
           'cpulimit' => 24,
           'description' => "===== HPC info =====\nnode: node\nenvironment: test\ndebug: false\n",

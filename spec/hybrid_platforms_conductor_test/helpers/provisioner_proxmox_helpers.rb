@@ -307,6 +307,9 @@ module HybridPlatformsConductorTest
         end
       end
 
+      # Give access to the actions that have been called on the mocked Proxmox instances
+      attr_reader(*%i[proxmox_actions proxmox_create_options proxmox_destroy_options])
+
       # Mock a call to the reserve_proxmox_container sync node
       #
       # Parameters::
