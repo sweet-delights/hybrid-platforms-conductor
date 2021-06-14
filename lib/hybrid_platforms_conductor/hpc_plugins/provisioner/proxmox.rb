@@ -140,7 +140,7 @@ module HybridPlatformsConductor
           proxmox_conf = "#{@config.os_image_dir(image)}/proxmox.json"
           raise "[ #{@node}/#{@environment} ] - No Proxmox configuration found at #{proxmox_conf}" unless File.exist?(proxmox_conf)
 
-          pve_template = JSON.parse(File.read(proxmox_conf)).dig 'template'
+          pve_template = JSON.parse(File.read(proxmox_conf))['template']
           raise "[ #{@node}/#{@environment} ] - No template found in #{proxmox_conf}" unless pve_template
 
           # Query the inventory to know about minimum resources needed to deploy the node.

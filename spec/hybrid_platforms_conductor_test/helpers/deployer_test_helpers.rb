@@ -109,7 +109,7 @@ module HybridPlatformsConductorTest
             check_mode: @check_mode,
             additional_config: ''
           )
-            with_test_platform(nodes_info, !check_mode, additional_config + "\nsend_logs_to :test_log") do |repository|
+            with_test_platform(nodes_info, !check_mode, "#{additional_config}\nsend_logs_to :test_log") do |repository|
               # Mock the ServicesHandler accesses
               if !check_mode && expect_deploy_allowed
                 expect(test_services_handler).to receive(:deploy_allowed?).with(

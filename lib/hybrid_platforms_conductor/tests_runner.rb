@@ -193,7 +193,7 @@ module HybridPlatformsConductor
       run_tests_connection_on_nodes
       run_tests_on_check_nodes
 
-      @tested_platforms = @tests_run.map { |test| test.platform }.compact.uniq.sort
+      @tested_platforms = @tests_run.map(&:platform).compact.uniq.sort
 
       # Check that tests that were expected to fail did not succeed.
       @tests_run.each do |test|
@@ -518,7 +518,7 @@ module HybridPlatformsConductor
         :test_on_check_node,
         @nodes.map { |node| { node: node } },
         tests_preparation: proc do |selected_tests|
-          nodes_to_test = selected_tests.map { |test| test.node }.uniq.sort
+          nodes_to_test = selected_tests.map(&:node).uniq.sort
           @outputs =
             if @skip_run
               nodes_to_test.map do |node|

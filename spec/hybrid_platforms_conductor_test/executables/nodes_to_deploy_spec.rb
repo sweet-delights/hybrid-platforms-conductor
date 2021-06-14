@@ -11,7 +11,7 @@ describe 'nodes_to_deploy executable' do
     with_test_platform(
       { nodes: { 'node1' => {}, 'node2' => {} } },
       false,
-      additional_platforms_content + "\nsend_logs_to :test_log",
+      "#{additional_platforms_content}\nsend_logs_to :test_log",
       &block
     )
   end

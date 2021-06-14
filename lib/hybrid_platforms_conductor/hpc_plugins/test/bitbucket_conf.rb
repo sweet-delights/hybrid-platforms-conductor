@@ -107,12 +107,12 @@ module HybridPlatformsConductor
             mandatory_default_reviewers = repo_info.dig(*%i[checks pr_settings mandatory_default_reviewers])
             if mandatory_default_reviewers
               reviewers_found = default_reviewers.any? do |condition_info|
-                reviewers = condition_info.dig('reviewers')
+                reviewers = condition_info['reviewers']
                 condition_info.dig('sourceRefMatcher', 'id') == 'ANY_REF_MATCHER_ID' &&
                   condition_info.dig('targetRefMatcher', 'id') == 'ANY_REF_MATCHER_ID' &&
                   !reviewers.nil? &&
                   (mandatory_default_reviewers - reviewers.map { |reviewer_info| reviewer_info['name'] }).empty? &&
-                  (required_approvers.nil? || condition_info.dig('requiredApprovals') == required_approvers)
+                  (required_approvers.nil? || condition_info['requiredApprovals'] == required_approvers)
               end
               assert_equal(
                 reviewers_found,

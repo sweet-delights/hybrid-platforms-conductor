@@ -256,7 +256,7 @@ module HybridPlatformsConductor
     #     * *not_run*: All non-successful tests have not been run
     def classify_tests(tests)
       info = {
-        not_run: tests.reject { |test| test.executed? },
+        not_run: tests.reject(&:executed?),
         success: tests.select { |test| test.executed? && test.errors.empty? },
         unexpected_error: tests.select { |test| test.executed? && !test.errors.empty? && test.expected_failure.nil? },
         expected_error: tests.select { |test| test.executed? && !test.errors.empty? && !test.expected_failure.nil? }

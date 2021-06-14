@@ -34,7 +34,7 @@ module HybridPlatformsConductor
                   at('h1:contains("Evolution")').
                   search('~ structured-macro:first-of-type').
                   css('table td').
-                  map { |td_element| td_element.text }.
+                  map(&:text).
                   each_slice(2).
                   to_a.
                   map { |(time_str, value_str)| [Time.parse("#{time_str} UTC"), value_str.to_f] }

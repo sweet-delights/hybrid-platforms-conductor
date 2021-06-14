@@ -23,7 +23,7 @@ describe HybridPlatformsConductor::Deployer do
         with_test_platform(
           platform_info,
           false,
-          "read_secrets_from :thycotic\n" + additional_config,
+          "read_secrets_from :thycotic\n#{additional_config}",
           &block
         )
       end

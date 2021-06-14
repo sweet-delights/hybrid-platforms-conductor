@@ -189,7 +189,7 @@ describe HybridPlatformsConductor::HpcPlugins::PlatformHandler::ServerlessChef d
           # Wait 2 seconds so that we are sure the modified file will return a different timestamp
           sleep 2
           with_packaging_mocked(repository, install: false) do
-            File.write("#{repository}/chef_versions.yml", File.read("#{repository}/chef_versions.yml") + "\n\n")
+            File.write("#{repository}/chef_versions.yml", "#{File.read("#{repository}/chef_versions.yml")}\n\n")
             platform.package(services: { 'node' => %w[test_policy] }, secrets: {}, local_environment: false)
           end
         end

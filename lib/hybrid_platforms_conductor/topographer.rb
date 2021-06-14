@@ -158,7 +158,7 @@ module HybridPlatformsConductor
       options_parser.separator ''
       options_parser.separator 'Topographer options:'
       options_parser.on('-F', '--from HOSTS_OPTIONS', 'Specify options for the set of nodes to start from (enclose them with ""). Default: all nodes. HOSTS_OPTIONS follows the following:', *from_hosts_opts_parser.to_s.split("\n")[3..]) do |hosts_options|
-        args = hosts_options.split(' ')
+        args = hosts_options.split
         from_hosts_opts_parser.parse!(args)
         raise "Unknown --from options: #{args.join(' ')}" unless args.empty?
       end
@@ -173,7 +173,7 @@ module HybridPlatformsConductor
         @outputs << [format, file_name]
       end
       options_parser.on('-T', '--to HOSTS_OPTIONS', 'Specify options for the set of nodes to get to (enclose them with ""). Default: all nodes. HOSTS_OPTIONS follows the following:', *to_hosts_opts_parser.to_s.split("\n")[3..]) do |hosts_options|
-        args = hosts_options.split(' ')
+        args = hosts_options.split
         to_hosts_opts_parser.parse!(args)
         raise "Unknown --to options: #{args.join(' ')}" unless args.empty?
       end

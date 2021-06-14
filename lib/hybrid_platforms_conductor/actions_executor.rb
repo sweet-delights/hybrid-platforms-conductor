@@ -159,7 +159,7 @@ module HybridPlatformsConductor
         # Prepare the result (stdout or nil per node)
         unless accessible_nodes.empty?
           # If we run in parallel then clone the connectors, so that each node has its own instance for thread-safe code.
-          connected_nodes = connected_nodes.map { |node, connector| [node, connector.clone] }.to_h if concurrent
+          connected_nodes = connected_nodes.transform_values(&:clone) if concurrent
           @nodes_handler.for_each_node_in(
             accessible_nodes,
             parallel: concurrent,
@@ -215,12 +215,9 @@ module HybridPlatformsConductor
         if connector_name.nil?
           # All plugins have been prepared.
           # Call our client code.
-          yield(nodes_needing_connectors.map do |node, selected_connector|
-            [
-              node,
-              selected_connector.nil? ? :no_connector : selected_connector
-            ]
-          end.to_h)
+          yield(nodes_needing_connectors.transform_values do |selected_connector|
+            selected_connector.nil? ? :no_connector : selected_connector
+          end)
         else
           connector = @connector_plugins[connector_name]
           selected_nodes = nodes_needing_connectors.select { |_node, selected_connector| selected_connector == connector }.keys

@@ -81,9 +81,7 @@ module HybridPlatformsConductor
           end
         end
         # Wait for threads to be joined
-        threads_to_join.each do |thread|
-          thread.join
-        end
+        threads_to_join.each(&:join)
       else
         # Execute synchronously
         list.each(&block)
