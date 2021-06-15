@@ -1,3 +1,9 @@
+# [v33.0.0](https://github.com/sweet-delights/hybrid-platforms-conductor/compare/v32.18.0...v33.0.0) (2021-06-15 16:10:47)
+
+### Breaking changes
+
+* [[Breaking] Add secrets reader plugins with 2 default plugins: cli and thycotic](https://github.com/sweet-delights/hybrid-platforms-conductor/commit/2cfacebe8cfac57de40ef003877da5b99aca5b5e)
+
 # [v32.18.0](https://github.com/sweet-delights/hybrid-platforms-conductor/compare/v32.17.1...v32.18.0) (2021-06-14 15:01:02)
 
 ## Global changes
