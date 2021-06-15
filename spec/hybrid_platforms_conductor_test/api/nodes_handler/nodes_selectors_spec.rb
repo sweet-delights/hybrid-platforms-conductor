@@ -15,7 +15,7 @@ describe HybridPlatformsConductor::NodesHandler do
           },
           'platform2' => {
             nodes: { 'node4' => {}, 'node5' => { services: %w[service3 service1] }, 'node6' => {} }
-          },
+          }
         },
         &block
       )
