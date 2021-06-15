@@ -132,25 +132,22 @@ The Deployer options are used to drive a deployment (be it in why-run mode or no
 
 ```
 Deployer options:
-    -e, --secrets SECRETS_LOCATION   Specify a secrets location. Can be specified several times. Location can be:
-                                     * Local path to a JSON file
-                                     * URL of the form http[s]://<url>:<secret_id> to get a secret JSON file from a Thycotic Secret Server at the given URL.
     -p, --parallel                   Execute the commands in parallel (put the standard output in files <hybrid-platforms-dir>/run_logs/*.stdout)
     -t, --timeout SECS               Timeout in seconds to wait for each chef run. Only used in why-run mode. (defaults to no timeout)
     -W, --why-run                    Use the why-run mode to see what would be the result of the deploy instead of deploying it for real.
         --retries-on-error NBR       Number of retries in case of non-deterministic errors (defaults to 0)
+
+Secrets reader cli options:
+    -e, --secrets JSON_FILE          Specify a secrets location from a local JSON file. Can be specified several times.
 ```
 
-* `--secrets SECRETS_LOCATION`: Specify a JSON file storing secrets that can be used by the deployment process. Secrets are values that are needed for deployment but that should not be part of the platforms repositories (such as passwords, API keys, SSL certificates...).
-  The location can be:
-  * A local file path (for example /path/to/file.json).
-  * A Thycotic Secret Server URL followed by a secret id (for example https://portal.muc.msp.my_company.net/SecretServer:8845).
 * `--parallel`: Specify that the deployment process should perform concurrently on the different nodes it has to deploy to.
 * `--timeout SECS`: Specify the timeout (in seconds) to apply while deploying. This can be set only in why-run mode.
 * `--why-run`: Specify the why-run mode. The why-run mode is used to simulate a deployment on the nodes, and report what a real deployment would have changed on the node.
 * `--retries-on-error NBR`: Specify the number of retries deploys can do in case of non-deterministic errors.
   Non-deterministic errors are matched using a set of strings or regular expressions that can be configured in the `hpc_config.rb` file of any platform, using the `retry_deploy_for_errors_on_stdout` and `retry_deploy_for_errors_on_stderr` properties:
   For example:
+
 ```ruby
 retry_deploy_for_errors_on_stdout [
   'This is a raw string error that will be matched against stdout',
@@ -160,6 +157,8 @@ retry_deploy_for_errors_on_stderr [
   'This is a raw string error that will be matched against stderr'
 ]
 ```
+
+* `--secrets SECRETS_LOCATION`: Specify a JSON file storing secrets that can be used by the deployment process. Secrets are values that are needed for deployment but that should not be part of the platforms repositories (such as passwords, API keys, SSL certificates...). This option is used by the [`cli` secrets reader plugin](plugins/secrets_reader/cli.md). See [secrets reader plugins](plugins.md#secrets_reader) for more info about secrets retrieval.
 
 ## JSON dump options
 

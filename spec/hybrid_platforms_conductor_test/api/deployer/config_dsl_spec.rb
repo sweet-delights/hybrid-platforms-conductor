@@ -30,6 +30,28 @@ describe HybridPlatformsConductor::Deployer do
       end
     end
 
+    it 'declares secrets readers plugins to be used' do
+      with_test_platforms(
+        { nodes: { 'node1' => {}, 'node2' => {} } },
+        false,
+        <<~EOS
+          read_secrets_from %i[secrets_reader_plugin_1 secrets_reader_plugin_2]
+          for_nodes('node2') { read_secrets_from :secrets_reader_plugin_3 }
+        EOS
+      ) do
+        expect(test_config.secrets_readers).to eq [
+          {
+            nodes_selectors_stack: [],
+            secrets_readers: %i[secrets_reader_plugin_1 secrets_reader_plugin_2]
+          },
+          {
+            nodes_selectors_stack: %w[node2],
+            secrets_readers: %i[secrets_reader_plugin_3]
+          }
+        ]
+      end
+    end
+
   end
 
 end

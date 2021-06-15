@@ -54,12 +54,12 @@ Connector ssh options:
         --ssh-gateways-conf
 
 Deployer options:
-    -e, --secrets SECRETS_LOCATION   Specify a secrets location. Can be specified several times. Location can be:
-                                     * Local path to a JSON file
-                                     * URL of the form http[s]://<url>:<secret_id> to get a secret JSON file from a Thycotic Secret Server at the given URL.
     -t, --timeout SECS               Timeout in seconds to wait for each chef run. Only used in why-run mode. (defaults to 30)
     -W, --why-run                    Use the why-run mode to see what would be the result of the deploy instead of deploying it for real.
         --retries-on-error NBR       Number of retries in case of non-deterministic errors (defaults to 0)
+
+Secrets reader cli options:
+    -e, --secrets JSON_FILE          Specify a secrets location from a local JSON file. Can be specified several times.
 
 JSON dump options:
     -k, --skip-run                   Skip the actual gathering of dumps in run_logs. If set, the current run_logs content will be used.

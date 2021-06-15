@@ -4,6 +4,7 @@ require 'hybrid_platforms_conductor/config'
 require 'hybrid_platforms_conductor/platforms_handler'
 require 'hybrid_platforms_conductor/actions_executor'
 require 'hybrid_platforms_conductor/cmd_runner'
+require 'hybrid_platforms_conductor/credentials'
 require 'hybrid_platforms_conductor/deployer'
 require 'hybrid_platforms_conductor/log'
 require 'hybrid_platforms_conductor/nodes_handler'
@@ -53,6 +54,7 @@ require 'hybrid_platforms_conductor_test/test_plugins/node_ssh'
 require 'hybrid_platforms_conductor_test/test_plugins/platform'
 require 'hybrid_platforms_conductor_test/test_plugins/several_checks'
 require 'hybrid_platforms_conductor_test/test_provisioner'
+require 'hybrid_platforms_conductor_test/test_secrets_reader_plugin'
 require 'hybrid_platforms_conductor_test/tests_report_plugin'
 
 module HybridPlatformsConductorTest
@@ -133,6 +135,9 @@ module HybridPlatformsConductorTest
         HybridPlatformsConductorTest::TestPlugins::SeveralChecks.runs = []
         HybridPlatformsConductorTest::TestLogPlugin.calls = []
         HybridPlatformsConductorTest::TestLogNoReadPlugin.calls = []
+        HybridPlatformsConductorTest::TestSecretsReaderPlugin.calls = []
+        HybridPlatformsConductorTest::TestSecretsReaderPlugin.deployer = nil
+        HybridPlatformsConductorTest::TestSecretsReaderPlugin.mocked_secrets = {}
         FileUtils.rm_rf './run_logs'
         FileUtils.rm_rf './testadmin.key.pub'
         FileUtils.rm_rf '/tmp/hpc_ssh'

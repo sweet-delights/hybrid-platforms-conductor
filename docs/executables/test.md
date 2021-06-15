@@ -93,10 +93,10 @@ Connector ssh options:
         --ssh-gateways-conf
 
 Deployer options:
-    -e, --secrets SECRETS_LOCATION   Specify a secrets location. Can be specified several times. Location can be:
-                                     * Local path to a JSON file
-                                     * URL of the form http[s]://<url>:<secret_id> to get a secret JSON file from a Thycotic Secret Server at the given URL.
         --retries-on-error NBR       Number of retries in case of non-deterministic errors (defaults to 0)
+
+Secrets reader cli options:
+    -e, --secrets JSON_FILE          Specify a secrets location from a local JSON file. Can be specified several times.
 
 Tests runner options:
     -i, --tests-list FILE_NAME       Specify a tests file name. The file should contain a list of tests name (1 per line). Can be used several times.
