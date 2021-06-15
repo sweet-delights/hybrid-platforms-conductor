@@ -319,7 +319,7 @@ describe HybridPlatformsConductor::ActionsExecutor do
 
     it 'executes the same actions on several nodes and returns the corresponding stdout and stderr correctly in parallel and in files' do
       with_repository do |logs_repository|
-        with_test_platform(nodes: { 'node1' => {}, 'node2' => {}, 'node3' => {} }) do
+        with_test_platform({ nodes: { 'node1' => {}, 'node2' => {}, 'node3' => {} } }) do
           expect(
             test_actions_executor.execute_actions(
               {

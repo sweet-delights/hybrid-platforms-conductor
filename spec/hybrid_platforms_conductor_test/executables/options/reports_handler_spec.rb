@@ -7,7 +7,7 @@ describe 'executables\' Reports Handler options' do
   #   * Parameters::
   #     * *repository* (String): Platform's repository
   def with_test_platform_for_reports_handler_options
-    with_test_platform do |repository|
+    with_test_platform({}) do |repository|
       register_report_plugins(test_reports_handler, report_format: HybridPlatformsConductorTest::ReportPlugin)
       yield repository
     end

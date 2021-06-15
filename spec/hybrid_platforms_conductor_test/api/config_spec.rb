@@ -35,11 +35,13 @@ describe HybridPlatformsConductor::Config do
 
   it 'accesses the platform handler repositories if needed from the config' do
     with_repository do |repository|
-      with_platforms "
-        test_platform path: '#{repository}' do |repository_path|
-          os_image :image_1, \"\#{repository_path}/image_path\"
-        end
-      " do
+      with_platforms(
+        <<~EO_CONFIG
+          test_platform path: '#{repository}' do |repository_path|
+            os_image :image_1, "\#{repository_path}/image_path"
+          end
+        EO_CONFIG
+      ) do
         expect(test_config.known_os_images.sort).to eq %i[image_1].sort
         expect(test_config.os_image_dir(:image_1)).to eq "#{repository}/image_path"
       end
@@ -52,9 +54,9 @@ describe HybridPlatformsConductor::Config do
       include_config_from "#{__dir__}/my_conf_1.rb"
       include_config_from "#{__dir__}/my_conf_2.rb"
     ' do |hybrid_platforms_dir|
-      File.write("#{hybrid_platforms_dir}/my_conf_1.rb", <<~EO_CONFIG)
+      File.write("#{hybrid_platforms_dir}/my_conf_1.rb", <<~'EO_CONFIG')
         os_image :image_4, '/path/to/image_4'
-        include_config_from "\#{__dir__}/my_conf_3.rb"
+        include_config_from "#{__dir__}/my_conf_3.rb"
       EO_CONFIG
       File.write("#{hybrid_platforms_dir}/my_conf_2.rb", 'os_image :image_2, \'/path/to/image_2\'')
       File.write("#{hybrid_platforms_dir}/my_conf_3.rb", 'os_image :image_3, \'/path/to/image_3\'')

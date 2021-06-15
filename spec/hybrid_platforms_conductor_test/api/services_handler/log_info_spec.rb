@@ -3,10 +3,10 @@ describe HybridPlatformsConductor::ServicesHandler do
   context 'when checking logs associated to a deployment' do
 
     it 'logs platforms info' do
-      with_test_platform(
+      with_test_platform({
         nodes: { 'node' => { services: %w[service1] } },
         deployable_services: %w[service1]
-      ) do
+      }) do
         expect(test_services_handler.log_info_for('node', %w[service1])).to eq(
           repo_name_0: 'platform'
         )
@@ -19,7 +19,7 @@ describe HybridPlatformsConductor::ServicesHandler do
           nodes: { 'node' => { services: %w[service1] } },
           deployable_services: %w[service1]
         },
-        true
+        as_git: true
       ) do |repository|
         expect(test_services_handler.log_info_for('node', %w[service1])).to eq(
           commit_id_0: Git.open(repository).log.first.sha,
@@ -36,7 +36,7 @@ describe HybridPlatformsConductor::ServicesHandler do
           nodes: { 'node' => { services: %w[service1] } },
           deployable_services: %w[service1]
         },
-        true
+        as_git: true
       ) do |repository|
         FileUtils.touch "#{repository}/new_file"
         expect(test_services_handler.log_info_for('node', %w[service1])).to eq(
@@ -55,7 +55,7 @@ describe HybridPlatformsConductor::ServicesHandler do
           'platform2' => { nodes: {}, deployable_services: %w[service2] },
           'platform3' => { nodes: {}, deployable_services: %w[service3] }
         },
-        true
+        as_git: true
       ) do |repositories|
         expect(test_services_handler.log_info_for('node', %w[service1 service2 service3])).to eq(
           commit_id_0: Git.open(repositories['platform1']).log.first.sha,
@@ -81,7 +81,7 @@ describe HybridPlatformsConductor::ServicesHandler do
           'platform2' => { nodes: {}, deployable_services: %w[service2] },
           'platform3' => { nodes: {}, deployable_services: %w[service3] }
         },
-        true
+        as_git: true
       ) do |repositories|
         expect(test_services_handler.log_info_for('node', %w[service1 service3])).to eq(
           commit_id_0: Git.open(repositories['platform1']).log.first.sha,

@@ -6,9 +6,9 @@ describe HybridPlatformsConductor::NodesHandler do
     #
     # Parameters::
     # * *cmdbs* (Array<Symbol>): The test CMDBs to register [default: [:test_cmdb]]
-    # * *additional_platforms_content* (String): Additional configuration [default: '']
+    # * *additional_config* (String): Additional configuration [default: '']
     # * Proc: The code to be caklled for tests
-    def with_cmdb_test_platform(cmdbs: [:test_cmdb], additional_platforms_content: '')
+    def with_cmdb_test_platform(cmdbs: [:test_cmdb], additional_config: '')
       with_test_platform(
         {
           nodes: {
@@ -18,8 +18,7 @@ describe HybridPlatformsConductor::NodesHandler do
             'node4' => {}
           }
         },
-        false,
-        additional_platforms_content
+        additional_config: additional_config
       ) do
         register_test_cmdb(cmdbs)
         yield
@@ -243,7 +242,7 @@ describe HybridPlatformsConductor::NodesHandler do
     it 'does not fail when different CMDBs get a property having conflicting values but one is defined as priority' do
       with_cmdb_test_platform(
         cmdbs: %i[test_cmdb test_cmdb_2],
-        additional_platforms_content: 'master_cmdbs(test_cmdb_2: :different_comment)'
+        additional_config: 'master_cmdbs(test_cmdb_2: :different_comment)'
       ) do
         expect(test_nodes_handler.get_different_comment_of('node1')).to eq 'Comment from test_cmdb_2'
         expect(cmdb(:test_cmdb).calls).to eq nil
@@ -256,7 +255,7 @@ describe HybridPlatformsConductor::NodesHandler do
     it 'can configure different priority rules for different properties' do
       with_cmdb_test_platform(
         cmdbs: %i[test_cmdb test_cmdb_2],
-        additional_platforms_content: '
+        additional_config: '
           master_cmdbs(
             test_cmdb: :different_comment_2,
             test_cmdb_2: :different_comment
@@ -277,20 +276,20 @@ describe HybridPlatformsConductor::NodesHandler do
     it 'can configure different priority rules for different properties on different nodes' do
       with_cmdb_test_platform(
         cmdbs: %i[test_cmdb test_cmdb_2],
-        additional_platforms_content: '
-          for_nodes(\'node1\') do
+        additional_config: <<~'EO_CONFIG'
+          for_nodes('node1') do
             master_cmdbs(
               test_cmdb: :different_comment_2,
               test_cmdb_2: :different_comment
             )
           end
-          for_nodes(\'node2\') do
+          for_nodes('node2') do
             master_cmdbs(
               test_cmdb: :different_comment,
               test_cmdb_2: :different_comment_2
             )
           end
-        '
+        EO_CONFIG
       ) do
         expect(test_nodes_handler.get_different_comment_of('node1')).to eq 'Comment from test_cmdb_2'
         expect(test_nodes_handler.get_different_comment_of('node2')).to eq 'Comment from test_cmdb'
@@ -310,7 +309,7 @@ describe HybridPlatformsConductor::NodesHandler do
     it 'fails when there are conflicts in the definition of master CMDBs' do
       with_cmdb_test_platform(
         cmdbs: %i[test_cmdb test_cmdb_2],
-        additional_platforms_content: '
+        additional_config: <<~'EO_CONFIG'
           master_cmdbs(
             test_cmdb: %i[different_comment different_comment_2]
           )
@@ -318,7 +317,7 @@ describe HybridPlatformsConductor::NodesHandler do
             test_cmdb: :different_comment,
             test_cmdb_2: :different_comment_2
           )
-        '
+        EO_CONFIG
       ) do
         expect { test_nodes_handler.get_different_comment_of('node1') }.to raise_error 'Property different_comment_2 have conflicting CMDB masters for node1 declared in the configuration: HybridPlatformsConductorTest::CmdbPlugins::TestCmdb and HybridPlatformsConductorTest::CmdbPlugins::TestCmdb2'
       end
@@ -327,11 +326,11 @@ describe HybridPlatformsConductor::NodesHandler do
     it 'fails when the CMDB marked as master does not implement the property' do
       with_cmdb_test_platform(
         cmdbs: %i[test_cmdb test_cmdb_2],
-        additional_platforms_content: '
+        additional_config: <<~'EO_CONFIG'
           master_cmdbs(
             test_cmdb_2: :upcase
           )
-        '
+        EO_CONFIG
       ) do
         expect { test_nodes_handler.get_upcase_of('node1') }.to raise_error 'CMDB test_cmdb_2 is configured as a master for property upcase on node node1 but it does not implement the needed API to retrieve it'
       end

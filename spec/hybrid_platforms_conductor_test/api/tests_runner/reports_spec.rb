@@ -7,10 +7,10 @@ describe HybridPlatformsConductor::TestsRunner do
     # Parameters::
     # * Proc: Code called with the platform setup
     def with_test_platforms_for_reports_test
-      with_test_platforms(
+      with_test_platforms({
         'platform1' => { nodes: { 'node11' => {}, 'node12' => {} } },
         'platform2' => { nodes: { 'node21' => {}, 'node22' => {} } }
-      ) do
+      }) do
         register_tests_report_plugins(test_tests_runner, report: HybridPlatformsConductorTest::TestsReportPlugin)
         register_test_plugins(
           test_tests_runner,
@@ -307,12 +307,11 @@ describe HybridPlatformsConductor::TestsRunner do
             'nodes_list2' => %w[node2 node3 node4]
           }
         },
-        false,
-        '
-        for_nodes(\'node1\') do
-          expect_tests_to_fail(:node_test, \'Expected failure\')
-        end
-        '
+        additional_config: <<~'EO_CONFIG'
+          for_nodes('node1') do
+            expect_tests_to_fail(:node_test, 'Expected failure')
+          end
+        EO_CONFIG
       ) do
         register_tests_report_plugins(test_tests_runner, report: HybridPlatformsConductorTest::TestsReportPlugin)
         register_test_plugins(test_tests_runner, node_test: HybridPlatformsConductorTest::TestPlugins::Node)

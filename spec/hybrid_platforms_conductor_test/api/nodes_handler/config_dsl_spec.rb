@@ -11,16 +11,15 @@ describe HybridPlatformsConductor::NodesHandler do
             'node3' => {}
           }
         },
-        false,
-        '
+        additional_config: <<~'EO_CONFIG'
           master_cmdbs(
             test_cmdb: :property_1,
             test_cmdb_2: :property_2
           )
-          for_nodes(\'node2\') do
+          for_nodes('node2') do
             master_cmdbs(test_cmdb: :property_3)
           end
-        '
+        EO_CONFIG
       ) do
         register_test_cmdb(%i[test_cmdb test_cmdb_2])
         expect(test_config.cmdb_masters).to eq [
@@ -50,13 +49,12 @@ describe HybridPlatformsConductor::NodesHandler do
             'node3' => {}
           }
         },
-        false,
-        '
+        additional_config: <<~'EO_CONFIG'
           sudo_for { |user| "alt_sudo1 -p #{user}" }
-          for_nodes(\'node2\') do
+          for_nodes('node2') do
             sudo_for { |user| "alt_sudo2 -q #{user}" }
           end
-        '
+        EO_CONFIG
       ) do
         expect(test_config.sudo_procs.size).to eq 2
         expect(test_config.sudo_procs[0][:nodes_selectors_stack]).to eq []

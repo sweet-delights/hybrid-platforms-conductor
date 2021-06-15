@@ -1,7 +1,7 @@
 describe 'executables\' Tests Runner options' do
 
   it 'specifies a given test to execute' do
-    with_test_platform do
+    with_test_platform({}) do
       expect(test_tests_runner).to receive(:run_tests).with([]) do
         expect(test_tests_runner.tests.sort).to eq %i[my_test]
         0
@@ -14,7 +14,7 @@ describe 'executables\' Tests Runner options' do
   end
 
   it 'specifies several tests to execute' do
-    with_test_platform do
+    with_test_platform({}) do
       expect(test_tests_runner).to receive(:run_tests).with([]) do
         expect(test_tests_runner.tests.sort).to eq %i[my_test_1 my_test_2]
         0
@@ -27,7 +27,7 @@ describe 'executables\' Tests Runner options' do
   end
 
   it 'specifies a tests file to execute' do
-    with_test_platform do |repository|
+    with_test_platform({}) do |repository|
       tests_file = "#{repository}/my_tests.txt"
       File.write(tests_file, "my_test_1\n# Comment to ignore\nmy_test_2\n")
       expect(test_tests_runner).to receive(:run_tests).with([]) do
@@ -42,7 +42,7 @@ describe 'executables\' Tests Runner options' do
   end
 
   it 'specifies a mix of tests files and test names to execute' do
-    with_test_platform do |repository|
+    with_test_platform({}) do |repository|
       tests_file_1 = "#{repository}/my_tests1.txt"
       File.write(tests_file_1, "my_test_1\n# Comment to ignore\nmy_test_2\n")
       tests_file_2 = "#{repository}/my_tests2.txt"
@@ -59,7 +59,7 @@ describe 'executables\' Tests Runner options' do
   end
 
   it 'uses current run_logs instead of executing new check-nodes' do
-    with_test_platform do
+    with_test_platform({}) do
       expect(test_tests_runner).to receive(:run_tests).with([]) do
         expect(test_tests_runner.skip_run).to eq true
         0
@@ -72,7 +72,7 @@ describe 'executables\' Tests Runner options' do
   end
 
   it 'reports into a given format' do
-    with_test_platform do
+    with_test_platform({}) do
       expect(test_tests_runner).to receive(:run_tests).with([]) do
         expect(test_tests_runner.reports).to eq %i[my_report]
         0
@@ -85,7 +85,7 @@ describe 'executables\' Tests Runner options' do
   end
 
   it 'reports into several formats' do
-    with_test_platform do
+    with_test_platform({}) do
       expect(test_tests_runner).to receive(:run_tests).with([]) do
         expect(test_tests_runner.reports.sort).to eq %i[my_report_1 my_report_2].sort
         0
@@ -98,7 +98,7 @@ describe 'executables\' Tests Runner options' do
   end
 
   it 'specifies the number of max threads for connections to nodes' do
-    with_test_platform do
+    with_test_platform({}) do
       expect(test_tests_runner).to receive(:run_tests).with([]) do
         expect(test_tests_runner.max_threads_connection_on_nodes).to eq 43
         0
@@ -111,7 +111,7 @@ describe 'executables\' Tests Runner options' do
   end
 
   it 'specifies the number of max threads for node tests' do
-    with_test_platform do
+    with_test_platform({}) do
       expect(test_tests_runner).to receive(:run_tests).with([]) do
         expect(test_tests_runner.max_threads_nodes).to eq 43
         0
@@ -124,7 +124,7 @@ describe 'executables\' Tests Runner options' do
   end
 
   it 'specifies the number of max threads for platform tests' do
-    with_test_platform do
+    with_test_platform({}) do
       expect(test_tests_runner).to receive(:run_tests).with([]) do
         expect(test_tests_runner.max_threads_platforms).to eq 43
         0

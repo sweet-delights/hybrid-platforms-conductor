@@ -7,10 +7,10 @@ describe HybridPlatformsConductor::TestsRunner do
     # Parameters::
     # * Proc: Code called with the platform setup
     def with_test_platform_for_node_connection_tests
-      with_test_platforms(
+      with_test_platforms({
         'platform1' => { nodes: { 'node11' => {}, 'node12' => {} } },
         'platform2' => { nodes: { 'node21' => {}, 'node22' => {} }, platform_type: :test_2 }
-      ) do
+      }) do
         register_test_plugins(
           test_tests_runner,
           node_ssh_test: HybridPlatformsConductorTest::TestPlugins::NodeSsh,

@@ -10,8 +10,7 @@ describe 'nodes_to_deploy executable' do
   def with_test_platform_for_nodes_to_deploy(additional_platforms_content: '', &block)
     with_test_platform(
       { nodes: { 'node1' => {}, 'node2' => {} } },
-      false,
-      "#{additional_platforms_content}\nsend_logs_to :test_log",
+      additional_config: "#{additional_platforms_content}\nsend_logs_to :test_log",
       &block
     )
   end
@@ -305,10 +304,10 @@ describe 'nodes_to_deploy executable' do
   end
 
   it 'considers impacts from several repositories' do
-    with_test_platforms(
+    with_test_platforms({
       'platform1' => { nodes: { 'node1' => {}, 'node2' => {} } },
       'platform2' => { nodes: {} }
-    ) do
+    }) do
       expect(test_deployer).to receive(:deployment_info_from).with(%w[node1 node2]).and_return(
         'node1' => {
           services: %w[service1],
@@ -346,11 +345,11 @@ describe 'nodes_to_deploy executable' do
   end
 
   it 'considers impacts from several repositories for the same node as different services for different platforms might be deployed' do
-    with_test_platforms(
+    with_test_platforms({
       'platform1' => { nodes: { 'node1' => {}, 'node2' => {} } },
       'platform2' => { nodes: {} },
       'platform3' => { nodes: {} }
-    ) do
+    }) do
       expect(test_deployer).to receive(:deployment_info_from).with(%w[node1 node2]).and_return(
         'node1' => {
           services: %w[service1],
@@ -394,11 +393,11 @@ describe 'nodes_to_deploy executable' do
   end
 
   it 'considers impacts from several repositories for the same node but does not query diffs for the nodes we already know need deployment' do
-    with_test_platforms(
+    with_test_platforms({
       'platform1' => { nodes: { 'node1' => {}, 'node2' => {} } },
       'platform2' => { nodes: {} },
       'platform3' => { nodes: {} }
-    ) do
+    }) do
       expect(test_deployer).to receive(:deployment_info_from).with(%w[node1 node2]).and_return(
         'node1' => {
           services: %w[service1],

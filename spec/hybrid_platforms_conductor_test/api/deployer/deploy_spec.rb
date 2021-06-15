@@ -9,18 +9,18 @@ describe HybridPlatformsConductor::Deployer do
       # Prepare the test platform with test log plugins
       #
       # Parameters::
-      # * *platforms_info* (Hash): The platforms info [default = {}]
-      # * *as_git* (Boolean): As a git repository? [default = false]
-      # * *additional_config* (String): Additional config [default = 'send_logs_to :test_log']
+      # * *platforms_info* (Hash): The platforms info
+      # * *as_git* (Boolean): As a git repository? [default: false]
+      # * *additional_config* (String): Additional config [default: 'send_logs_to :test_log']
       # * *block* (Proc): Code called with the platform setup
       #   * Parameters::
       #     * *repository* (String): Platform's repository
-      def with_test_platform_for_deploy_tests(platforms_info = {}, as_git = false, additional_config = 'send_logs_to :test_log', &block)
-        with_test_platform(platforms_info, as_git, additional_config, &block)
+      def with_test_platform_for_deploy_tests(platforms_info, as_git: false, additional_config: 'send_logs_to :test_log', &block)
+        with_test_platform(platforms_info, as_git: as_git, additional_config: additional_config, &block)
       end
 
       it 'deploys correct logs information on 1 node' do
-        with_test_platform_for_deploy_tests({ nodes: { 'node' => { services: %w[service1 service2] } } }, true) do
+        with_test_platform_for_deploy_tests({ nodes: { 'node' => { services: %w[service1 service2] } } }, as_git: true) do
           with_connections_mocked_on ['node'] do
             test_actions_executor.connector(:ssh).ssh_user = 'test_user'
             expect_services_handler_to_deploy('node' => %w[service1 service2])
@@ -61,7 +61,7 @@ describe HybridPlatformsConductor::Deployer do
               'node2' => { services: %w[service2] }
             }
           },
-          true
+          as_git: true
         ) do
           with_connections_mocked_on %w[node1 node2] do
             test_actions_executor.connector(:ssh).ssh_user = 'test_user'
@@ -121,7 +121,7 @@ describe HybridPlatformsConductor::Deployer do
       end
 
       it 'deploys correct logs information on 1 node even when there is a failing deploy' do
-        with_test_platform_for_deploy_tests({ nodes: { 'node' => { services: %w[service1 service2] } } }, true) do
+        with_test_platform_for_deploy_tests({ nodes: { 'node' => { services: %w[service1 service2] } } }, as_git: true) do
           with_connections_mocked_on ['node'] do
             test_actions_executor.connector(:ssh).ssh_user = 'test_user'
             expect_services_handler_to_deploy('node' => %w[service1 service2])
@@ -195,7 +195,7 @@ describe HybridPlatformsConductor::Deployer do
       end
 
       it 'gets deployment info from log plugins not having actions_to_read_logs' do
-        with_test_platform_for_deploy_tests({ nodes: { 'node' => {} } }, false, 'send_logs_to :test_log_no_read') do
+        with_test_platform_for_deploy_tests({ nodes: { 'node' => {} } }, additional_config: 'send_logs_to :test_log_no_read') do
           expect(test_deployer.deployment_info_from('node')).to eq(
             'node' => {
               deployment_info: { user: 'test_user' },

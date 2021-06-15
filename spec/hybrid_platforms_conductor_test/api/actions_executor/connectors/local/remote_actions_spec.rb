@@ -30,8 +30,7 @@ describe HybridPlatformsConductor::ActionsExecutor do
       )
         with_test_platform(
           { nodes: { 'node' => { meta: { local_node: true } } } },
-          false,
-          additional_config
+          additional_config: additional_config
         ) do
           with_cmd_runner_mocked(expected_cmds) do
             test_connector.with_connection_to(['node']) do

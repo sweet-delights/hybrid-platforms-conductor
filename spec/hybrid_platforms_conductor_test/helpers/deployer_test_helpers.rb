@@ -109,7 +109,7 @@ module HybridPlatformsConductorTest
             check_mode: @check_mode,
             additional_config: ''
           )
-            with_test_platform(nodes_info, !check_mode, "#{additional_config}\nsend_logs_to :test_log") do |repository|
+            with_test_platform(nodes_info, as_git: !check_mode, additional_config: "#{additional_config}\nsend_logs_to :test_log") do |repository|
               # Mock the ServicesHandler accesses
               if !check_mode && expect_deploy_allowed
                 expect(test_services_handler).to receive(:deploy_allowed?).with(
@@ -208,8 +208,8 @@ module HybridPlatformsConductorTest
           it 'deploys on 1 node using an alternate sudo' do
             with_platform_to_deploy(
               expect_sudo: 'other_sudo --user root',
-              additional_config: <<~EO_CONFIG
-                sudo_for { |user| "other_sudo --user \#{user}" }
+              additional_config: <<~'EO_CONFIG'
+                sudo_for { |user| "other_sudo --user #{user}" }
               EO_CONFIG
             ) do
               expect(test_deployer.deploy_on('node')).to eq('node' => expected_deploy_result)
@@ -262,8 +262,8 @@ module HybridPlatformsConductorTest
                     }
                   }
                 ],
-                additional_config: <<~EO_CONFIG
-                  sudo_for { |user| "other_sudo --user \#{user}" }
+                additional_config: <<~'EO_CONFIG'
+                  sudo_for { |user| "other_sudo --user #{user}" }
                 EO_CONFIG
               ) do
                 ENV['hpc_certificates'] = certs_dir
@@ -346,8 +346,8 @@ module HybridPlatformsConductorTest
                     }
                   }
                 ],
-                additional_config: <<~EO_CONFIG
-                  sudo_for { |user| "other_sudo --user \#{user}" }
+                additional_config: <<~'EO_CONFIG'
+                  sudo_for { |user| "other_sudo --user #{user}" }
                 EO_CONFIG
               ) do
                 ENV['hpc_certificates'] = certs_dir

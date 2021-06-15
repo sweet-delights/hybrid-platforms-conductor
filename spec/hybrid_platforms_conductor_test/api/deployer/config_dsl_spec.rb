@@ -9,9 +9,7 @@ describe HybridPlatformsConductor::Deployer do
     end
 
     it 'declares log plugins to be used' do
-      with_test_platforms(
-        { nodes: { 'node1' => {}, 'node2' => {} } },
-        false,
+      with_platforms(
         <<~EO_CONFIG
           send_logs_to %i[log_plugin_1 log_plugin_2]
           for_nodes('node2') { send_logs_to :log_plugin_3 }
@@ -31,9 +29,7 @@ describe HybridPlatformsConductor::Deployer do
     end
 
     it 'declares secrets readers plugins to be used' do
-      with_test_platforms(
-        { nodes: { 'node1' => {}, 'node2' => {} } },
-        false,
+      with_platforms(
         <<~EO_CONFIG
           read_secrets_from %i[secrets_reader_plugin_1 secrets_reader_plugin_2]
           for_nodes('node2') { read_secrets_from :secrets_reader_plugin_3 }

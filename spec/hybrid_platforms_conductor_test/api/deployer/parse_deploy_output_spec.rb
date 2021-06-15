@@ -3,7 +3,7 @@ describe HybridPlatformsConductor::Deployer do
   context 'when checking parsing output of deployments' do
 
     it 'returns tasks of deployment logs' do
-      with_test_platform do
+      with_test_platform({}) do
         expect(test_services_handler).to receive(:parse_deploy_output).with('stdout', 'stderr').and_return [
           {
             node: 'node',
@@ -37,7 +37,7 @@ describe HybridPlatformsConductor::Deployer do
     end
 
     it 'returns tasks of deployment logs from several services deployments' do
-      with_test_platform do
+      with_test_platform({}) do
         expect(test_services_handler).to receive(:parse_deploy_output).with('stdout', 'stderr').and_return [
           {
             node: 'node1',

@@ -13,7 +13,7 @@ describe HybridPlatformsConductor::Deployer do
       # * *platform_info* (Hash): Platform configuration [default: 1 node having 1 service]
       # * *block* (Proc): Code called when the platform is setup
       def with_test_platform_for_thycotic_test(
-        additional_config = '',
+        additional_config,
         platform_info: {
           nodes: { 'node' => { services: %w[service] } },
           deployable_services: %w[service]
@@ -22,8 +22,7 @@ describe HybridPlatformsConductor::Deployer do
       )
         with_test_platform(
           platform_info,
-          false,
-          "read_secrets_from :thycotic\n#{additional_config}",
+          additional_config: "read_secrets_from :thycotic\n#{additional_config}",
           &block
         )
       end

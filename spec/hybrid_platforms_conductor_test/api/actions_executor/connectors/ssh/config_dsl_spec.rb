@@ -52,19 +52,18 @@ describe HybridPlatformsConductor::ActionsExecutor do
               'node3' => {}
             }
           },
-          false,
-          '
+          additional_config: <<~'EO_CONFIG'
             for_nodes(%w[node1 node3]) do
               transform_ssh_connection do |node, connection, connection_user, gateway, gateway_user|
                 ["#{connection}_#{node}_13", "#{connection_user}_#{node}_13", "#{gateway}_#{node}_13", "#{gateway_user}_#{node}_13"]
               end
             end
-            for_nodes(\'node1\') do
+            for_nodes('node1') do
               transform_ssh_connection do |node, connection, connection_user, gateway, gateway_user|
                 ["#{connection}_#{node}_1", "#{connection_user}_#{node}_1", "#{gateway}_#{node}_1", "#{gateway_user}_#{node}_1"]
               end
             end
-          '
+          EO_CONFIG
         ) do
           expect(test_config.ssh_connection_transforms.size).to eq 2
           expect(test_config.ssh_connection_transforms[0][:nodes_selectors_stack]).to eq [%w[node1 node3]]

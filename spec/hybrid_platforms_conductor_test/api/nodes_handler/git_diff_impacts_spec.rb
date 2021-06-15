@@ -8,7 +8,7 @@ describe HybridPlatformsConductor::NodesHandler do
           'platform_1' => { nodes: { 'node11' => {}, 'node12' => {} } },
           'platform_2' => { nodes: { 'node21' => {}, 'node22' => {} } }
         },
-        true
+        as_git: true
       ) do
         with_cmd_runner_mocked [
           [%r{cd .+/platform_2 && git --no-pager diff --no-color master}, proc { [0, '', ''] }]
@@ -24,7 +24,7 @@ describe HybridPlatformsConductor::NodesHandler do
     end
 
     it 'diffs from another commit if asked' do
-      with_test_platform({}, true) do
+      with_test_platform({}, as_git: true) do
         with_cmd_runner_mocked [
           [%r{cd .+/my_remote_platform && git --no-pager diff --no-color from_branch}, proc { [0, '', ''] }]
         ] do
@@ -34,7 +34,7 @@ describe HybridPlatformsConductor::NodesHandler do
     end
 
     it 'fails when the commit id is invalid' do
-      with_test_platform({}, true) do
+      with_test_platform({}, as_git: true) do
         with_cmd_runner_mocked [
           [%r{cd .+/my_remote_platform && git --no-pager diff --no-color invalid_id}, proc { raise HybridPlatformsConductor::CmdRunner::UnexpectedExitCodeError, 'Mocked git error due to an invalid commit id' }]
         ] do
@@ -44,7 +44,7 @@ describe HybridPlatformsConductor::NodesHandler do
     end
 
     it 'diffs to another commit if asked' do
-      with_test_platform({}, true) do
+      with_test_platform({}, as_git: true) do
         with_cmd_runner_mocked [
           [%r{cd .+/my_remote_platform && git --no-pager diff --no-color master to_branch}, proc { [0, '', ''] }]
         ] do
@@ -54,7 +54,7 @@ describe HybridPlatformsConductor::NodesHandler do
     end
 
     it 'gives the platform handler the correct git diff result' do
-      with_test_platform({}, true) do
+      with_test_platform({}, as_git: true) do
         with_cmd_runner_mocked [
           [%r{cd .+/my_remote_platform && git --no-pager diff --no-color master}, proc do
             [
@@ -134,7 +134,7 @@ describe HybridPlatformsConductor::NodesHandler do
             impacted_nodes: %w[node1 node3]
           }
         },
-        true
+        as_git: true
       ) do
         with_cmd_runner_mocked [
           [%r{cd .+/my_remote_platform && git --no-pager diff --no-color master}, proc { [0, '', ''] }]
@@ -162,7 +162,7 @@ describe HybridPlatformsConductor::NodesHandler do
             impacted_services: %w[service1 service3]
           }
         },
-        true
+        as_git: true
       ) do
         with_cmd_runner_mocked [
           [%r{cd .+/my_remote_platform && git --no-pager diff --no-color master}, proc { [0, '', ''] }]
@@ -190,7 +190,7 @@ describe HybridPlatformsConductor::NodesHandler do
             impacted_global: true
           }
         },
-        true
+        as_git: true
       ) do
         with_cmd_runner_mocked [
           [%r{cd .+/my_remote_platform && git --no-pager diff --no-color master}, proc { [0, '', ''] }]
@@ -214,7 +214,7 @@ describe HybridPlatformsConductor::NodesHandler do
             impacted_nodes: %w[node1 node3]
           }
         },
-        true
+        as_git: true
       ) do
         with_cmd_runner_mocked [
           [%r{cd .+/my_remote_platform && git --no-pager diff --no-color master}, proc { [0, '', ''] }]
@@ -244,7 +244,7 @@ describe HybridPlatformsConductor::NodesHandler do
             impacted_services: %w[service1 service3]
           }
         },
-        true
+        as_git: true
       ) do
         with_cmd_runner_mocked [
           [%r{cd .+/my_remote_platform && git --no-pager diff --no-color master}, proc { [0, '', ''] }]
@@ -276,7 +276,7 @@ describe HybridPlatformsConductor::NodesHandler do
             impacted_services: %w[service2 service3]
           }
         },
-        true
+        as_git: true
       ) do
         with_cmd_runner_mocked [
           [%r{cd .+/my_remote_platform && git --no-pager diff --no-color master}, proc { [0, '', ''] }]
@@ -308,7 +308,7 @@ describe HybridPlatformsConductor::NodesHandler do
             impacted_services: %w[service2 service3]
           }
         },
-        true
+        as_git: true
       ) do
         with_cmd_runner_mocked [
           [%r{cd .+/my_remote_platform && git --no-pager diff --no-color master}, proc { [0, '', ''] }]

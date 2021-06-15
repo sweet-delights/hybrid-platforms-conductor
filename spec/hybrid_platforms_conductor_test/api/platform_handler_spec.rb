@@ -1,19 +1,19 @@
 describe HybridPlatformsConductor::PlatformHandler do
 
   it 'returns the correct platform type' do
-    with_test_platform do
+    with_test_platform({}) do
       expect(test_platforms_handler.platform('platform').platform_type).to eq :test
     end
   end
 
   it 'returns the correct path' do
-    with_test_platform do
+    with_test_platform({}) do
       expect(test_platforms_handler.platform('platform').repository_path).to eq "#{Dir.tmpdir}/hpc_test/platform"
     end
   end
 
   it 'returns the correct info' do
-    with_test_platform do
+    with_test_platform({}) do
       expect(test_platforms_handler.platform('platform').info).to eq(repo_name: 'platform')
     end
   end

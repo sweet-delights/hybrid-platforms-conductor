@@ -7,13 +7,13 @@ describe HybridPlatformsConductor::NodesHandler do
   end
 
   it 'initializes with a platform having no node' do
-    with_test_platform do
+    with_test_platform({}) do
       expect(test_nodes_handler.known_nodes).to eq []
     end
   end
 
   it 'iterates over defined nodes sequentially' do
-    with_test_platform(nodes: { 'node1' => {}, 'node2' => {}, 'node3' => {}, 'node4' => {} }) do
+    with_test_platform({ nodes: { 'node1' => {}, 'node2' => {}, 'node3' => {}, 'node4' => {} } }) do
       nodes_iterated = []
       test_nodes_handler.for_each_node_in(%w[node2 node3 node4]) do |node|
         nodes_iterated << node
@@ -23,7 +23,7 @@ describe HybridPlatformsConductor::NodesHandler do
   end
 
   it 'iterates over defined nodes in parallel' do
-    with_test_platform(nodes: { 'node1' => {}, 'node2' => {}, 'node3' => {}, 'node4' => {} }) do
+    with_test_platform({ nodes: { 'node1' => {}, 'node2' => {}, 'node3' => {}, 'node4' => {} } }) do
       nodes_iterated = []
       test_nodes_handler.for_each_node_in(%w[node2 node3 node4], parallel: true) do |node|
         sleep(
@@ -43,7 +43,7 @@ describe HybridPlatformsConductor::NodesHandler do
   end
 
   it 'iterates over defined nodes in parallel and handle errors correctly' do
-    with_test_platform(nodes: { 'node1' => {}, 'node2' => {}, 'node3' => {}, 'node4' => {} }) do
+    with_test_platform({ nodes: { 'node1' => {}, 'node2' => {}, 'node3' => {}, 'node4' => {} } }) do
       nodes_iterated = []
       # Make sure we exit the test case even if the error is not handled correctly by using a timeout
       Timeout.timeout(5) do
@@ -67,10 +67,10 @@ describe HybridPlatformsConductor::NodesHandler do
   end
 
   it 'selects the correct configurations for a given node' do
-    with_test_platform(
+    with_test_platform({
       nodes: { 'node1' => {}, 'node2' => {}, 'node3' => {}, 'node4' => {} },
       nodes_lists: { 'nodeslist1' => %w[node1 node2], 'nodeslist2' => %w[node3 node4] }
-    ) do
+    }) do
       expect(
         test_nodes_handler.select_confs_for_node(
           'node2',
@@ -101,10 +101,10 @@ describe HybridPlatformsConductor::NodesHandler do
   end
 
   it 'selects the correct configurations for a given platform' do
-    with_test_platforms(
+    with_test_platforms({
       'platform1' => { nodes: { 'node11' => {}, 'node12' => {}, 'node13' => {}, 'node14' => {} } },
       'platform2' => { nodes: { 'node21' => {}, 'node22' => {}, 'node23' => {}, 'node24' => {} } }
-    ) do
+    }) do
       expect(
         test_nodes_handler.select_confs_for_platform(
           'platform2',
@@ -143,15 +143,14 @@ describe HybridPlatformsConductor::NodesHandler do
           'node3' => {}
         }
       },
-      false,
-      '
+      additional_config: <<~'EO_CONFIG'
         for_nodes(%w[node1 node2]) do
           sudo_for { |user| "alt_sudo1 -p #{user}" }
         end
-        for_nodes(\'node2\') do
+        for_nodes('node2') do
           sudo_for { |user| "alt_sudo2 -q #{user}" }
         end
-      '
+      EO_CONFIG
     ) do
       expect(test_nodes_handler.sudo_on('node1')).to eq 'alt_sudo1 -p root'
       expect(test_nodes_handler.sudo_on('node1', 'test_user')).to eq 'alt_sudo1 -p test_user'

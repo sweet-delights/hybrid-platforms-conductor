@@ -73,20 +73,22 @@ module HybridPlatformsConductorTest
       # Clean-up at the end.
       #
       # Parameters::
-      # * *platforms_info* (Hash<String,Object>): Platforms info for the test platform [default = {}]
-      # * *as_git* (Boolean): Do we initialize those repositories as Git repositories? [default = false]
-      # * *additional_platforms_content* (String): Additional platforms content to be added [default = '']
+      # * *platforms_info* (Hash<String,Object>): Platforms info for the test platform
+      # * *as_git* (Boolean): Do we initialize those repositories as Git repositories? [default: false]
+      # * *additional_config* (String): Additional config to be added [default: '']
       # * Proc: Code called with the environment ready
       #   * Parameters::
       #     * *repositories* (Hash<String,String>): Path to the repositories, per repository name
-      def with_test_platforms(platforms_info = {}, as_git = false, additional_platforms_content = '')
+      def with_test_platforms(platforms_info, as_git: false, additional_config: '')
         with_repositories(platforms_info.keys, as_git: as_git) do |repositories|
           platform_types = []
-          with_platforms(repositories.map do |platform, dir|
-            platform_type = platforms_info[platform].key?(:platform_type) ? platforms_info[platform][:platform_type] : :test
-            platform_types << platform_type unless platform_types.include?(platform_type)
-            "#{platform_type}_platform path: '#{dir}'"
-          end.join("\n") + "\n#{additional_platforms_content}") do
+          with_platforms(
+            repositories.map do |platform, dir|
+              platform_type = platforms_info[platform].key?(:platform_type) ? platforms_info[platform][:platform_type] : :test
+              platform_types << platform_type unless platform_types.include?(platform_type)
+              "#{platform_type}_platform path: '#{dir}'"
+            end.join("\n") + "\n#{additional_config}"
+          ) do
             register_platform_handlers(platform_types.map do |platform_type|
               [
                 platform_type,
@@ -103,15 +105,19 @@ module HybridPlatformsConductorTest
       # Clean-up at the end.
       #
       # Parameters::
-      # * *platform_info* (Hash<Symbol,Object>): Platform info for the test platform [default = {}]
-      # * *as_git* (Boolean): Do we initialize those repositories as Git repositories? [default = false]
-      # * *additional_platforms_content* (String): Additional platforms content to be added [default = '']
+      # * *platform_info* (Hash<Symbol,Object>): Platform info for the test platform
+      # * *as_git* (Boolean): Do we initialize those repositories as Git repositories? [default: false]
+      # * *additional_config* (String): Additional config to be added [default: '']
       # * Proc: Code called with the environment ready
       #   * Parameters::
       #     * *repository* (String): Path to the repository
-      def with_test_platform(platform_info = {}, as_git = false, additional_platforms_content = '')
+      def with_test_platform(platform_info, as_git: false, additional_config: '')
         platform_name = as_git ? 'my_remote_platform' : 'platform'
-        with_test_platforms({ platform_name => platform_info }, as_git, additional_platforms_content) do |repositories|
+        with_test_platforms(
+          { platform_name => platform_info },
+          as_git: as_git,
+          additional_config: additional_config
+        ) do |repositories|
           yield repositories[platform_name]
         end
       end

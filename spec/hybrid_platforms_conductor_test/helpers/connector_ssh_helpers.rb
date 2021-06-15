@@ -137,8 +137,7 @@ module HybridPlatformsConductorTest
       )
         with_test_platform(
           { nodes: { 'node' => { meta: { host_ip: '192.168.42.42', ssh_session_exec: session_exec } } } },
-          false,
-          additional_config
+          additional_config: additional_config
         ) do
           with_cmd_runner_mocked(
             [

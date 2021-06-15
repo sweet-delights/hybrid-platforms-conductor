@@ -4,7 +4,7 @@ describe HybridPlatformsConductor::ServicesHandler do
 
     it 'prepares 1 platform' do
       called = false
-      with_test_platform(
+      with_test_platform({
         nodes: { 'node1' => { services: %w[service1] }, 'node2' => {}, 'node3' => {} },
         deployable_services: %w[service1],
         prepare_for_deploy: proc do |services:, secrets:, local_environment:, why_run:|
@@ -14,7 +14,7 @@ describe HybridPlatformsConductor::ServicesHandler do
           expect(why_run).to eq false
           called = true
         end
-      ) do
+      }) do
         test_services_handler.prepare_for_deploy(
           services: { 'node1' => %w[service1] },
           secrets: {},
@@ -27,7 +27,7 @@ describe HybridPlatformsConductor::ServicesHandler do
 
     it 'prepares 1 platform with secrets' do
       called = false
-      with_test_platform(
+      with_test_platform({
         nodes: { 'node1' => { services: %w[service1] }, 'node2' => {}, 'node3' => {} },
         deployable_services: %w[service1],
         prepare_for_deploy: proc do |services:, secrets:, local_environment:, why_run:|
@@ -37,7 +37,7 @@ describe HybridPlatformsConductor::ServicesHandler do
           expect(why_run).to eq false
           called = true
         end
-      ) do
+      }) do
         test_services_handler.prepare_for_deploy(
           services: { 'node1' => %w[service1] },
           secrets: { 'my_secret' => 'value' },
@@ -50,7 +50,7 @@ describe HybridPlatformsConductor::ServicesHandler do
 
     it 'prepares 1 platform with local environment' do
       called = false
-      with_test_platform(
+      with_test_platform({
         nodes: { 'node1' => { services: %w[service1] }, 'node2' => {}, 'node3' => {} },
         deployable_services: %w[service1],
         prepare_for_deploy: proc do |services:, secrets:, local_environment:, why_run:|
@@ -60,7 +60,7 @@ describe HybridPlatformsConductor::ServicesHandler do
           expect(why_run).to eq false
           called = true
         end
-      ) do
+      }) do
         test_services_handler.prepare_for_deploy(
           services: { 'node1' => %w[service1] },
           secrets: {},
@@ -73,7 +73,7 @@ describe HybridPlatformsConductor::ServicesHandler do
 
     it 'prepares 1 platform in why-run mode' do
       called = false
-      with_test_platform(
+      with_test_platform({
         nodes: { 'node1' => { services: %w[service1] }, 'node2' => {}, 'node3' => {} },
         deployable_services: %w[service1],
         prepare_for_deploy: proc do |services:, secrets:, local_environment:, why_run:|
@@ -83,7 +83,7 @@ describe HybridPlatformsConductor::ServicesHandler do
           expect(why_run).to eq true
           called = true
         end
-      ) do
+      }) do
         test_services_handler.prepare_for_deploy(
           services: { 'node1' => %w[service1] },
           secrets: {},
@@ -100,7 +100,7 @@ describe HybridPlatformsConductor::ServicesHandler do
         'platform2' => false,
         'platform3' => false
       }
-      with_test_platforms(
+      with_test_platforms({
         'platform1' => {
           nodes: { 'node1' => { services: %w[service1] } },
           deployable_services: %w[service1],
@@ -134,7 +134,7 @@ describe HybridPlatformsConductor::ServicesHandler do
             called['platform3'] = true
           end
         }
-      ) do
+      }) do
         test_services_handler.prepare_for_deploy(
           services: { 'node1' => %w[service1], 'node2' => %w[service2], 'node3' => %w[service3] },
           secrets: {},
@@ -155,7 +155,7 @@ describe HybridPlatformsConductor::ServicesHandler do
         'platform2' => false,
         'platform3' => false
       }
-      with_test_platforms(
+      with_test_platforms({
         'platform1' => {
           nodes: { 'node1' => { services: %w[service1] } },
           deployable_services: %w[service1],
@@ -189,7 +189,7 @@ describe HybridPlatformsConductor::ServicesHandler do
             called['platform3'] = true
           end
         }
-      ) do
+      }) do
         test_services_handler.prepare_for_deploy(
           services: { 'node1' => %w[service1 service3] },
           secrets: {},
@@ -210,7 +210,7 @@ describe HybridPlatformsConductor::ServicesHandler do
         'platform2' => false,
         'platform3' => false
       }
-      with_test_platforms(
+      with_test_platforms({
         'platform1' => {
           nodes: { 'node' => { services: %w[service1 service2 service3 service4 service5 service6] } },
           deployable_services: %w[service1 service2],
@@ -244,7 +244,7 @@ describe HybridPlatformsConductor::ServicesHandler do
             called['platform3'] = true
           end
         }
-      ) do
+      }) do
         test_services_handler.prepare_for_deploy(
           services: { 'node' => %w[service1 service2 service3 service5 service6] },
           secrets: {},

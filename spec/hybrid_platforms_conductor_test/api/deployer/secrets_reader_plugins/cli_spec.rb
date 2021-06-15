@@ -16,8 +16,7 @@ describe HybridPlatformsConductor::Deployer do
             nodes: { 'node' => { services: %w[service] } },
             deployable_services: %w[service]
           },
-          false,
-          'read_secrets_from :cli',
+          additional_config: 'read_secrets_from :cli',
           &block
         )
       end

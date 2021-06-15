@@ -13,11 +13,10 @@ describe HybridPlatformsConductor::ActionsExecutor do
       def with_test_platform_for_cli
         with_test_platform(
           { nodes: { 'node' => {} } },
-          false,
-          "
+          additional_config: <<~EO_CONFIG
             gateway :test_gateway, 'Host test_gateway'
             gateway :test_gateway_2, 'Host test_gateway_2'
-          "
+          EO_CONFIG
         ) do |repository|
           ENV['hpc_ssh_gateways_conf'] = 'test_gateway'
           yield repository

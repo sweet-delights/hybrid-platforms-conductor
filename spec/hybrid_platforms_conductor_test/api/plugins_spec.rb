@@ -84,13 +84,13 @@ end
 describe HybridPlatformsConductor::Plugins do
 
   it 'returns no plugins by default' do
-    with_test_platform do
+    with_test_platform({}) do
       expect(described_class.new(:test_plugin_type, logger: logger, logger_stderr: logger).keys).to eq []
     end
   end
 
   it 'can register a new plugin with a given class' do
-    with_test_platform do
+    with_test_platform({}) do
       plugins = described_class.new(:test_plugin_type, logger: logger, logger_stderr: logger)
       plugins[:new_plugin] = HybridPlatformsConductorTest::RandomClass
       expect(plugins.keys).to eq [:new_plugin]
@@ -99,7 +99,7 @@ describe HybridPlatformsConductor::Plugins do
   end
 
   it 'can register a new plugin with an initializer' do
-    with_test_platform do
+    with_test_platform({}) do
       plugins = described_class.new(
         :test_plugin_type,
         init_plugin: proc do |plugin_class|
@@ -115,7 +115,7 @@ describe HybridPlatformsConductor::Plugins do
   end
 
   it 'validates a plugin class before registering it' do
-    with_test_platform do
+    with_test_platform({}) do
       plugins = described_class.new(:test_plugin_type, logger: logger, logger_stderr: logger)
       HybridPlatformsConductorTest::RandomClassWithValidation.validation_done = false
       HybridPlatformsConductorTest::RandomClassWithValidation.validation_result = true
@@ -127,7 +127,7 @@ describe HybridPlatformsConductor::Plugins do
   end
 
   it 'does not register a plugin that fails validation' do
-    with_test_platform do
+    with_test_platform({}) do
       plugins = described_class.new(:test_plugin_type, logger: logger, logger_stderr: logger)
       HybridPlatformsConductorTest::RandomClassWithValidation.validation_done = false
       HybridPlatformsConductorTest::RandomClassWithValidation.validation_result = false
@@ -138,7 +138,7 @@ describe HybridPlatformsConductor::Plugins do
   end
 
   it 'discovers automatically plugins of a given type in the hpc_plugins directory of a gem' do
-    with_test_platform do
+    with_test_platform({}) do
       # Mock the discovery of Ruby gems
       expect(Gem).to receive(:loaded_specs) do
         my_test_gem_spec = instance_double Gem::Specification
@@ -163,7 +163,7 @@ describe HybridPlatformsConductor::Plugins do
   end
 
   it 'discovers automatically several plugins of different types in the hpc_plugins directories of several gems' do
-    with_test_platform do
+    with_test_platform({}) do
       # Mock the discovery of Ruby gems
       expect(Gem).to receive(:loaded_specs).twice do
         my_test_gem_spec = instance_double Gem::Specification
@@ -201,7 +201,7 @@ describe HybridPlatformsConductor::Plugins do
   end
 
   it 'does not discover automatically plugins from gems if asked' do
-    with_test_platform do
+    with_test_platform({}) do
       # Mock the discovery of Ruby gems
       expect(Gem).not_to receive(:loaded_specs)
       expect(described_class.new(:test_plugin_type, parse_gems: false, logger: logger, logger_stderr: logger).keys).to eq []

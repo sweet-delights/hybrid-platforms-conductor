@@ -3,7 +3,7 @@ describe HybridPlatformsConductor::ServicesHandler do
   context 'when checking parsing deployment outputs' do
 
     it 'parses a deployment log for a node' do
-      with_test_platform(
+      with_test_platform({
         nodes: { 'node' => { services: %w[service1] } },
         deployable_services: %w[service1],
         parse_deploy_output: proc do |stdout, stderr|
@@ -11,7 +11,7 @@ describe HybridPlatformsConductor::ServicesHandler do
           expect(stderr.strip).to eq 'Service1 stderr'
           [{ name: 'Task1', status: :identical }]
         end
-      ) do
+      }) do
         stdout = <<~EOS_STDOUT
           First log lines
           ===== [ node / service1 ] - HPC Service Deploy ===== Begin
@@ -36,7 +36,7 @@ describe HybridPlatformsConductor::ServicesHandler do
     end
 
     it 'parses a deployment log for a node in check mode' do
-      with_test_platform(
+      with_test_platform({
         nodes: { 'node' => { services: %w[service1] } },
         deployable_services: %w[service1],
         parse_deploy_output: proc do |stdout, stderr|
@@ -44,7 +44,7 @@ describe HybridPlatformsConductor::ServicesHandler do
           expect(stderr.strip).to eq 'Service1 stderr'
           [{ name: 'Task1', status: :identical }]
         end
-      ) do
+      }) do
         stdout = <<~EOS_STDOUT
           First log lines
           ===== [ node / service1 ] - HPC Service Check ===== Begin
@@ -69,7 +69,7 @@ describe HybridPlatformsConductor::ServicesHandler do
     end
 
     it 'parses a deployment log for a node even if stderr is empty' do
-      with_test_platform(
+      with_test_platform({
         nodes: { 'node' => { services: %w[service1] } },
         deployable_services: %w[service1],
         parse_deploy_output: proc do |stdout, stderr|
@@ -77,7 +77,7 @@ describe HybridPlatformsConductor::ServicesHandler do
           expect(stderr.strip).to eq ''
           [{ name: 'Task1', status: :identical }]
         end
-      ) do
+      }) do
         stdout = <<~EOS_STDOUT
           First log lines
           ===== [ node / service1 ] - HPC Service Deploy ===== Begin
@@ -97,7 +97,7 @@ describe HybridPlatformsConductor::ServicesHandler do
     end
 
     it 'parses a deployment log for a node deploying several services' do
-      with_test_platform(
+      with_test_platform({
         nodes: { 'node' => { services: %w[service1 service2] } },
         deployable_services: %w[service1 service2],
         parse_deploy_output: proc do |stdout, stderr|
@@ -105,7 +105,7 @@ describe HybridPlatformsConductor::ServicesHandler do
           expect(stderr.strip).to eq "#{task_name} stderr"
           [{ name: task_name, status: status_str.to_sym }]
         end
-      ) do
+      }) do
         stdout = <<~EOS_STDOUT
           First log lines
           ===== [ node / service1 ] - HPC Service Deploy ===== Begin
@@ -143,7 +143,7 @@ describe HybridPlatformsConductor::ServicesHandler do
     end
 
     it 'parses a deployment log for several nodes deploying several services' do
-      with_test_platform(
+      with_test_platform({
         nodes: { 'node1' => { services: %w[service1 service2] }, 'node2' => { services: %w[service1 service2] } },
         deployable_services: %w[service1 service2],
         parse_deploy_output: proc do |stdout, stderr|
@@ -151,7 +151,7 @@ describe HybridPlatformsConductor::ServicesHandler do
           expect(stderr.strip).to eq "#{task_name} stderr"
           [{ name: task_name, status: status_str.to_sym }]
         end
-      ) do
+      }) do
         stdout = <<~EOS_STDOUT
           First log lines
           ===== [ node1 / service1 ] - HPC Service Deploy ===== Begin
@@ -201,7 +201,7 @@ describe HybridPlatformsConductor::ServicesHandler do
     end
 
     it 'parses a deployment log for several nodes deploying several services using different platforms' do
-      with_test_platforms(
+      with_test_platforms({
         'platform1' => {
           nodes: { 'node1' => { services: %w[service1 service2] }, 'node2' => { services: %w[service1 service2] } },
           deployable_services: %w[service1],
@@ -220,7 +220,7 @@ describe HybridPlatformsConductor::ServicesHandler do
             [{ name: task_name, status: status_str.to_sym }]
           end
         }
-      ) do
+      }) do
         stdout = <<~EOS_STDOUT
           First log lines
           ===== [ node1 / service1 ] - HPC Service Deploy ===== Begin

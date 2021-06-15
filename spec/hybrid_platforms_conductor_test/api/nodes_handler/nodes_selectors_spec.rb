@@ -8,12 +8,14 @@ describe HybridPlatformsConductor::NodesHandler do
     # * *block* (Proc): Code called when environment is ready
     def with_test_platform_for_nodes(&block)
       with_test_platforms(
-        'platform1' => {
-          nodes: { 'node1' => {}, 'node2' => { services: ['service1'] }, 'node3' => { services: ['service2'] } },
-          nodes_lists: { 'nodeslist1' => %w[node1 node3], 'nodeslist2' => ['/node[12]/'] }
-        },
-        'platform2' => {
-          nodes: { 'node4' => {}, 'node5' => { services: %w[service3 service1] }, 'node6' => {} }
+        {
+          'platform1' => {
+            nodes: { 'node1' => {}, 'node2' => { services: ['service1'] }, 'node3' => { services: ['service2'] } },
+            nodes_lists: { 'nodeslist1' => %w[node1 node3], 'nodeslist2' => ['/node[12]/'] }
+          },
+          'platform2' => {
+            nodes: { 'node4' => {}, 'node5' => { services: %w[service3 service1] }, 'node6' => {} }
+          },
         },
         &block
       )

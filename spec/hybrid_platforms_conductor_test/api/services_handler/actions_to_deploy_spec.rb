@@ -36,10 +36,10 @@ describe HybridPlatformsConductor::ServicesHandler do
     end
 
     it 'deploys a service' do
-      with_test_platform(
+      with_test_platform({
         nodes: { 'node' => { services: %w[service1] } },
         deployable_services: %w[service1]
-      ) do
+      }) do
         expect_deploy_actions(
           'node', %w[service1], false,
           [
@@ -50,10 +50,10 @@ describe HybridPlatformsConductor::ServicesHandler do
     end
 
     it 'deploys a service in why-run mode' do
-      with_test_platform(
+      with_test_platform({
         nodes: { 'node' => { services: %w[service1] } },
         deployable_services: %w[service1]
-      ) do
+      }) do
         expect_deploy_actions(
           'node', %w[service1], true,
           [
@@ -64,10 +64,10 @@ describe HybridPlatformsConductor::ServicesHandler do
     end
 
     it 'deploys several services' do
-      with_test_platform(
+      with_test_platform({
         nodes: { 'node' => { services: %w[service1 service2] } },
         deployable_services: %w[service1 service2]
-      ) do
+      }) do
         expect_deploy_actions(
           'node', %w[service1 service2], false,
           [
@@ -79,10 +79,10 @@ describe HybridPlatformsConductor::ServicesHandler do
     end
 
     it 'deploys several services from different platforms' do
-      with_test_platforms(
+      with_test_platforms({
         'platform1' => { nodes: { 'node' => { services: %w[service1 service2] } }, deployable_services: %w[service1] },
         'platform2' => { nodes: {}, deployable_services: %w[service2] }
-      ) do
+      }) do
         expect_deploy_actions(
           'node', %w[service1 service2], false,
           [
@@ -94,11 +94,11 @@ describe HybridPlatformsConductor::ServicesHandler do
     end
 
     it 'deploys several services from different platforms in the correct order' do
-      with_test_platforms(
+      with_test_platforms({
         'platform1' => { nodes: { 'node' => { services: %w[service1 service2 service3 service4] } }, deployable_services: %w[service1] },
         'platform2' => { nodes: {}, deployable_services: %w[service2 service3] },
         'platform3' => { nodes: {}, deployable_services: %w[service4] }
-      ) do
+      }) do
         expect_deploy_actions(
           'node', %w[service3 service1 service4 service2], false,
           [
@@ -112,10 +112,10 @@ describe HybridPlatformsConductor::ServicesHandler do
     end
 
     it 'deploys only required services' do
-      with_test_platform(
+      with_test_platform({
         nodes: { 'node' => { services: %w[service1 service2] } },
         deployable_services: %w[service1 service2]
-      ) do
+      }) do
         expect_deploy_actions(
           'node', %w[service2], false,
           [
@@ -126,10 +126,10 @@ describe HybridPlatformsConductor::ServicesHandler do
     end
 
     it 'fails if a service can\'t be deployed' do
-      with_test_platform(
+      with_test_platform({
         nodes: { 'node' => { services: %w[service1 service2] } },
         deployable_services: %w[service1]
-      ) do
+      }) do
         expect { test_services_handler.actions_to_deploy_on('node', %w[service2], false) }.to raise_error 'No platform is able to deploy the service service2'
       end
     end

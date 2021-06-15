@@ -14,7 +14,7 @@ describe HybridPlatformsConductor::ServicesHandler do
           nodes: { 'node1' => { services: %w[service1] }, 'node2' => {}, 'node3' => {} },
           deployable_services: %w[service1]
         },
-        true,
+        as_git: true,
         &block
       )
     end
@@ -46,10 +46,10 @@ describe HybridPlatformsConductor::ServicesHandler do
     end
 
     it 'allows deployment if it is not a git repository' do
-      with_test_platform(
+      with_test_platform({
         nodes: { 'node1' => { services: %w[service1] }, 'node2' => {}, 'node3' => {} },
         deployable_services: %w[service1]
-      ) do
+      }) do
         expect(test_services_handler.deploy_allowed?(services: { 'node1' => %w[service1] }, local_environment: false)).to eq nil
       end
     end
@@ -86,7 +86,7 @@ describe HybridPlatformsConductor::ServicesHandler do
           'platform2' => { nodes: { 'node2' => { services: %w[service2] } }, deployable_services: %w[service2] },
           'platform3' => { nodes: { 'node3' => { services: %w[service3] } }, deployable_services: %w[service3] }
         },
-        true
+        as_git: true
       ) do
         expect(
           test_services_handler.deploy_allowed?(
@@ -105,7 +105,7 @@ describe HybridPlatformsConductor::ServicesHandler do
           'platform3' => { nodes: { 'node3' => { services: %w[service3] } }, deployable_services: %w[service3] },
           'platform4' => { nodes: { 'node4' => { services: %w[service4] } }, deployable_services: %w[service4] }
         },
-        true
+        as_git: true
       ) do |repositories|
         checkout_non_master_on(repositories['platform2'])
         checkout_non_master_on(repositories['platform4'])
@@ -126,7 +126,7 @@ describe HybridPlatformsConductor::ServicesHandler do
           'platform3' => { nodes: { 'node3' => { services: %w[service3] } }, deployable_services: %w[service3] },
           'platform4' => { nodes: { 'node4' => { services: %w[service4] } }, deployable_services: %w[service4] }
         },
-        true
+        as_git: true
       ) do |repositories|
         checkout_non_master_on(repositories['platform2'])
         checkout_non_master_on(repositories['platform4'])

@@ -9,7 +9,7 @@ describe HybridPlatformsConductor::Deployer do
       # Parameters::
       # * *block* (Proc): Code called with platform prepared
       def with_test_platform_for_remote_fs(&block)
-        with_test_platform({ nodes: { 'node' => { services: %w[service1 service2] } } }, false, 'send_logs_to :remote_fs', &block)
+        with_test_platform({ nodes: { 'node' => { services: %w[service1 service2] } } }, additional_config: 'send_logs_to :remote_fs', &block)
       end
 
       it 'returns actions to save logs' do

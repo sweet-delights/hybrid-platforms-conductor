@@ -3,7 +3,7 @@ describe HybridPlatformsConductor::ServicesHandler do
   context 'when checking packaging' do
 
     it 'packages 1 platform' do
-      with_test_platform(
+      with_test_platform({
         nodes: { 'node1' => { services: %w[service1] }, 'node2' => {}, 'node3' => {} },
         deployable_services: %w[service1],
         package: proc do |services:, secrets:, local_environment:|
@@ -11,7 +11,7 @@ describe HybridPlatformsConductor::ServicesHandler do
           expect(secrets).to eq({})
           expect(local_environment).to eq false
         end
-      ) do
+      }) do
         test_services_handler.package(
           services: { 'node1' => %w[service1] },
           secrets: {},
@@ -22,7 +22,7 @@ describe HybridPlatformsConductor::ServicesHandler do
 
     it 'packages 1 platform only once' do
       nbr_calls = 0
-      with_test_platform(
+      with_test_platform({
         nodes: { 'node1' => { services: %w[service1] }, 'node2' => {}, 'node3' => {} },
         deployable_services: %w[service1],
         package: proc do |services:, secrets:, local_environment:|
@@ -31,7 +31,7 @@ describe HybridPlatformsConductor::ServicesHandler do
           expect(local_environment).to eq false
           nbr_calls += 1
         end
-      ) do
+      }) do
         3.times do
           test_services_handler.package(
             services: { 'node1' => %w[service1] },
@@ -45,7 +45,7 @@ describe HybridPlatformsConductor::ServicesHandler do
 
     it 'packages 1 platform only once even across different ServicesHandler instances' do
       nbr_calls = 0
-      with_test_platform(
+      with_test_platform({
         nodes: { 'node1' => { services: %w[service1] }, 'node2' => {}, 'node3' => {} },
         deployable_services: %w[service1],
         package: proc do |services:, secrets:, local_environment:|
@@ -54,7 +54,7 @@ describe HybridPlatformsConductor::ServicesHandler do
           expect(local_environment).to eq false
           nbr_calls += 1
         end
-      ) do
+      }) do
         test_services_handler.package(
           services: { 'node1' => %w[service1] },
           secrets: {},
@@ -78,7 +78,7 @@ describe HybridPlatformsConductor::ServicesHandler do
     end
 
     it 'packages 1 platform with secrets' do
-      with_test_platform(
+      with_test_platform({
         nodes: { 'node1' => { services: %w[service1] }, 'node2' => {}, 'node3' => {} },
         deployable_services: %w[service1],
         package: proc do |services:, secrets:, local_environment:|
@@ -86,7 +86,7 @@ describe HybridPlatformsConductor::ServicesHandler do
           expect(secrets).to eq('my_secret' => 'value')
           expect(local_environment).to eq false
         end
-      ) do
+      }) do
         test_services_handler.package(
           services: { 'node1' => %w[service1] },
           secrets: { 'my_secret' => 'value' },
@@ -96,7 +96,7 @@ describe HybridPlatformsConductor::ServicesHandler do
     end
 
     it 'packages 1 platform for a local environment' do
-      with_test_platform(
+      with_test_platform({
         nodes: { 'node1' => { services: %w[service1] }, 'node2' => {}, 'node3' => {} },
         deployable_services: %w[service1],
         package: proc do |services:, secrets:, local_environment:|
@@ -104,7 +104,7 @@ describe HybridPlatformsConductor::ServicesHandler do
           expect(secrets).to eq({})
           expect(local_environment).to eq true
         end
-      ) do
+      }) do
         test_services_handler.package(
           services: { 'node1' => %w[service1] },
           secrets: {},
@@ -119,7 +119,7 @@ describe HybridPlatformsConductor::ServicesHandler do
         'platform2' => 0,
         'platform3' => 0
       }
-      with_test_platforms(
+      with_test_platforms({
         'platform1' => {
           nodes: { 'node1' => { services: %w[service1] } },
           deployable_services: %w[service1],
@@ -150,7 +150,7 @@ describe HybridPlatformsConductor::ServicesHandler do
             nbr_calls['platform3'] += 1
           end
         }
-      ) do
+      }) do
         test_services_handler.package(
           services: { 'node1' => %w[service1], 'node2' => %w[service2], 'node3' => %w[service3] },
           secrets: {},
@@ -170,7 +170,7 @@ describe HybridPlatformsConductor::ServicesHandler do
         'platform2' => 0,
         'platform3' => 0
       }
-      with_test_platforms(
+      with_test_platforms({
         'platform1' => {
           nodes: { 'node1' => { services: %w[service1] } },
           deployable_services: %w[service1],
@@ -201,7 +201,7 @@ describe HybridPlatformsConductor::ServicesHandler do
             nbr_calls['platform3'] += 1
           end
         }
-      ) do
+      }) do
         test_services_handler.package(
           services: { 'node1' => %w[service1 service3] },
           secrets: {},
@@ -221,7 +221,7 @@ describe HybridPlatformsConductor::ServicesHandler do
         'platform2' => 0,
         'platform3' => 0
       }
-      with_test_platforms(
+      with_test_platforms({
         'platform1' => {
           nodes: { 'node' => { services: %w[service1 service2 service3 service4 service5 service6] } },
           deployable_services: %w[service1 service2],
@@ -252,7 +252,7 @@ describe HybridPlatformsConductor::ServicesHandler do
             nbr_calls['platform3'] += 1
           end
         }
-      ) do
+      }) do
         test_services_handler.package(
           services: { 'node' => %w[service1 service2 service3 service5 service6] },
           secrets: {},
@@ -272,7 +272,7 @@ describe HybridPlatformsConductor::ServicesHandler do
         'platform2' => 0,
         'platform3' => 0
       }
-      with_test_platforms(
+      with_test_platforms({
         'platform1' => {
           nodes: { 'node1' => { services: %w[service1] } },
           deployable_services: %w[service1],
@@ -303,7 +303,7 @@ describe HybridPlatformsConductor::ServicesHandler do
             nbr_calls['platform3'] += 1
           end
         }
-      ) do
+      }) do
         test_services_handler.package(
           services: { 'node1' => %w[service1], 'node3' => %w[service3] },
           secrets: {},
@@ -330,7 +330,7 @@ describe HybridPlatformsConductor::ServicesHandler do
     it 'packages the platforms again if secrets are different' do
       nbr_calls = 0
       expected_secrets = {}
-      with_test_platform(
+      with_test_platform({
         nodes: { 'node1' => { services: %w[service1] } },
         deployable_services: %w[service1],
         package: proc do |services:, secrets:, local_environment:|
@@ -339,7 +339,7 @@ describe HybridPlatformsConductor::ServicesHandler do
           expect(local_environment).to eq false
           nbr_calls += 1
         end
-      ) do
+      }) do
         test_services_handler.package(
           services: { 'node1' => %w[service1] },
           secrets: {},
@@ -358,7 +358,7 @@ describe HybridPlatformsConductor::ServicesHandler do
     it 'packages the platforms again if local environment is different' do
       nbr_calls = 0
       expected_local = false
-      with_test_platform(
+      with_test_platform({
         nodes: { 'node1' => { services: %w[service1] } },
         deployable_services: %w[service1],
         package: proc do |services:, secrets:, local_environment:|
@@ -367,7 +367,7 @@ describe HybridPlatformsConductor::ServicesHandler do
           expect(local_environment).to eq expected_local
           nbr_calls += 1
         end
-      ) do
+      }) do
         test_services_handler.package(
           services: { 'node1' => %w[service1] },
           secrets: {},

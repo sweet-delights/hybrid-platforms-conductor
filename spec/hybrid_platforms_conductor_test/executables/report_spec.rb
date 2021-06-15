@@ -1,7 +1,7 @@
 describe 'report executable' do
 
   it 'reports by default on all nodes' do
-    with_test_platform(nodes: { 'node1' => { services: ['node1_service'] }, 'node2' => { services: ['node2_service'] } }) do
+    with_test_platform({ nodes: { 'node1' => { services: ['node1_service'] }, 'node2' => { services: ['node2_service'] } } }) do
       exit_code, stdout, stderr = run 'report'
       expect(exit_code).to eq 0
       expect(stdout).to eq <<~EO_STDOUT
@@ -17,7 +17,7 @@ describe 'report executable' do
   end
 
   it 'reports on given nodes only' do
-    with_test_platform(nodes: { 'node1' => { services: ['node1_service'] }, 'node2' => { services: ['node2_service'] } }) do
+    with_test_platform({ nodes: { 'node1' => { services: ['node1_service'] }, 'node2' => { services: ['node2_service'] } } }) do
       exit_code, stdout, stderr = run 'report', '--node', 'node2'
       expect(exit_code).to eq 0
       expect(stdout).to eq <<~EO_STDOUT
@@ -32,7 +32,7 @@ describe 'report executable' do
   end
 
   it 'reports info from metadata' do
-    with_test_platform(
+    with_test_platform({
       nodes: {
         'node' => {
           meta: {
@@ -43,7 +43,7 @@ describe 'report executable' do
           services: %w[node_service1 node_service2]
         }
       }
-    ) do
+    }) do
       with_cmd_runner_mocked [
         ['getent hosts node.domain.com', proc { [0, '192.168.0.1 node.domain.com', ''] }]
       ] do

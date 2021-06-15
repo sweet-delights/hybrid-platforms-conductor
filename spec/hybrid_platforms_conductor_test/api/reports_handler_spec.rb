@@ -5,7 +5,7 @@ describe HybridPlatformsConductor::ReportsHandler do
   # Parameters::
   # * Proc: Code called when platform is setup
   def with_test_platform_for_reports_test
-    with_test_platform(nodes: { 'node1' => {}, 'node2' => {}, 'node3' => {} }) do
+    with_test_platform({ nodes: { 'node1' => {}, 'node2' => {}, 'node3' => {} } }) do
       register_report_plugins(test_reports_handler, report: HybridPlatformsConductorTest::ReportPlugin)
       test_reports_handler.format = :report
       yield
