@@ -55,7 +55,7 @@ describe HybridPlatformsConductor::TestsRunner do
         for_nodes('node2') do
           expect_tests_to_fail(:node_test, 'Expected failure')
         end
-        EO_CONFIG
+      EO_CONFIG
     ) do
       register_test_plugins(test_tests_runner, node_test: HybridPlatformsConductorTest::TestPlugins::Node)
       HybridPlatformsConductorTest::TestPlugins::Node.fail_for = { node_test: ['node2'] }
