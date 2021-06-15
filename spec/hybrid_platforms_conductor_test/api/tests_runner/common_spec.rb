@@ -115,10 +115,12 @@ describe HybridPlatformsConductor::TestsRunner do
   end
 
   it 'executes different tests levels if 1 plugin defines them' do
-    with_test_platforms({
-      'platform1' => { nodes: { 'node11' => {}, 'node12' => {} } },
-      'platform2' => { nodes: { 'node21' => {}, 'node22' => {} } }
-    }) do
+    with_test_platforms(
+      {
+        'platform1' => { nodes: { 'node11' => {}, 'node12' => {} } },
+        'platform2' => { nodes: { 'node21' => {}, 'node22' => {} } }
+      }
+    ) do
       register_test_plugins(test_tests_runner, several_tests: HybridPlatformsConductorTest::TestPlugins::SeveralChecks)
       # Mock the Actions Executor and Deployer expected calls
       expect(test_deployer).to receive(:deploy_on).with(%w[node11 node12 node21 node22]).once do

@@ -32,18 +32,20 @@ describe 'report executable' do
   end
 
   it 'reports info from metadata' do
-    with_test_platform({
-      nodes: {
-        'node' => {
-          meta: {
-            hostname: 'node.domain.com',
-            image: 'debian_10',
-            description: 'A great server'
-          },
-          services: %w[node_service1 node_service2]
+    with_test_platform(
+      {
+        nodes: {
+          'node' => {
+            meta: {
+              hostname: 'node.domain.com',
+              image: 'debian_10',
+              description: 'A great server'
+            },
+            services: %w[node_service1 node_service2]
+          }
         }
       }
-    }) do
+    ) do
       with_cmd_runner_mocked [
         ['getent hosts node.domain.com', proc { [0, '192.168.0.1 node.domain.com', ''] }]
       ] do

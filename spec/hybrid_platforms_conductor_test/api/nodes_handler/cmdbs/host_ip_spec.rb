@@ -35,14 +35,16 @@ describe HybridPlatformsConductor::NodesHandler do
     end
 
     it 'returns a host IPs for the maximum hosts it can from the list' do
-      with_test_platform({
-        nodes: {
-          'test_node1' => {},
-          'test_node2' => {},
-          'test_node3' => {},
-          'test_node4' => {}
+      with_test_platform(
+        {
+          nodes: {
+            'test_node1' => {},
+            'test_node2' => {},
+            'test_node3' => {},
+            'test_node4' => {}
+          }
         }
-      }) do
+      ) do
         with_cmd_runner_mocked [
           ['getent hosts my_domain.my_host1', proc { [0, '192.168.42.1 my_domain.my_host1', ''] }],
           ['getent hosts my_domain.my_host2', proc { [0, '', ''] }],

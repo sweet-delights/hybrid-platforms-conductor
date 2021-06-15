@@ -67,10 +67,12 @@ describe HybridPlatformsConductor::NodesHandler do
   end
 
   it 'selects the correct configurations for a given node' do
-    with_test_platform({
-      nodes: { 'node1' => {}, 'node2' => {}, 'node3' => {}, 'node4' => {} },
-      nodes_lists: { 'nodeslist1' => %w[node1 node2], 'nodeslist2' => %w[node3 node4] }
-    }) do
+    with_test_platform(
+      {
+        nodes: { 'node1' => {}, 'node2' => {}, 'node3' => {}, 'node4' => {} },
+        nodes_lists: { 'nodeslist1' => %w[node1 node2], 'nodeslist2' => %w[node3 node4] }
+      }
+    ) do
       expect(
         test_nodes_handler.select_confs_for_node(
           'node2',
@@ -101,10 +103,12 @@ describe HybridPlatformsConductor::NodesHandler do
   end
 
   it 'selects the correct configurations for a given platform' do
-    with_test_platforms({
-      'platform1' => { nodes: { 'node11' => {}, 'node12' => {}, 'node13' => {}, 'node14' => {} } },
-      'platform2' => { nodes: { 'node21' => {}, 'node22' => {}, 'node23' => {}, 'node24' => {} } }
-    }) do
+    with_test_platforms(
+      {
+        'platform1' => { nodes: { 'node11' => {}, 'node12' => {}, 'node13' => {}, 'node14' => {} } },
+        'platform2' => { nodes: { 'node21' => {}, 'node22' => {}, 'node23' => {}, 'node24' => {} } }
+      }
+    ) do
       expect(
         test_nodes_handler.select_confs_for_platform(
           'platform2',

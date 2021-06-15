@@ -176,13 +176,15 @@ describe HybridPlatformsConductor::ActionsExecutor do
       end
 
       it 'generates a simple config for several nodes' do
-        with_test_platform({
-          nodes: {
-            'node1' => { meta: { host_ip: '192.168.42.1' } },
-            'node2' => { meta: { host_ip: '192.168.42.2' } },
-            'node3' => { meta: { host_ip: '192.168.42.3' } }
+        with_test_platform(
+          {
+            nodes: {
+              'node1' => { meta: { host_ip: '192.168.42.1' } },
+              'node2' => { meta: { host_ip: '192.168.42.2' } },
+              'node3' => { meta: { host_ip: '192.168.42.3' } }
+            }
           }
-        }) do
+        ) do
           expect(ssh_config_for('node1')).to eq <<~EO_SSH_CONFIG
             Host hpc.node1
               Hostname 192.168.42.1
@@ -199,13 +201,15 @@ describe HybridPlatformsConductor::ActionsExecutor do
       end
 
       it 'generates a simple config for several nodes even when some of them can\'t be connected' do
-        with_test_platform({
-          nodes: {
-            'node1' => { meta: { host_ip: '192.168.42.1' } },
-            'node2' => { meta: {} },
-            'node3' => { meta: { host_ip: '192.168.42.3' } }
+        with_test_platform(
+          {
+            nodes: {
+              'node1' => { meta: { host_ip: '192.168.42.1' } },
+              'node2' => { meta: {} },
+              'node3' => { meta: { host_ip: '192.168.42.3' } }
+            }
           }
-        }) do
+        ) do
           expect(ssh_config_for('node1')).to eq <<~EO_SSH_CONFIG
             Host hpc.node1
               Hostname 192.168.42.1
@@ -219,13 +223,15 @@ describe HybridPlatformsConductor::ActionsExecutor do
       end
 
       it 'selects nodes when generating the config' do
-        with_test_platform({
-          nodes: {
-            'node1' => { meta: { host_ip: '192.168.42.1' } },
-            'node2' => { meta: { host_ip: '192.168.42.2' } },
-            'node3' => { meta: { host_ip: '192.168.42.3' } }
+        with_test_platform(
+          {
+            nodes: {
+              'node1' => { meta: { host_ip: '192.168.42.1' } },
+              'node2' => { meta: { host_ip: '192.168.42.2' } },
+              'node3' => { meta: { host_ip: '192.168.42.3' } }
+            }
           }
-        }) do
+        ) do
           expect(ssh_config_for('node1', nodes: %w[node1 node3])).to eq <<~EO_SSH_CONFIG
             Host hpc.node1
               Hostname 192.168.42.1
@@ -377,14 +383,16 @@ describe HybridPlatformsConductor::ActionsExecutor do
       end
 
       it 'generates a config compatible for passwords authentication only for marked nodes' do
-        with_test_platform({
-          nodes: {
-            'node1' => { meta: { host_ip: '192.168.42.1' } },
-            'node2' => { meta: { host_ip: '192.168.42.2' } },
-            'node3' => { meta: { host_ip: '192.168.42.3' } },
-            'node4' => { meta: { host_ip: '192.168.42.4' } }
+        with_test_platform(
+          {
+            nodes: {
+              'node1' => { meta: { host_ip: '192.168.42.1' } },
+              'node2' => { meta: { host_ip: '192.168.42.2' } },
+              'node3' => { meta: { host_ip: '192.168.42.3' } },
+              'node4' => { meta: { host_ip: '192.168.42.4' } }
+            }
           }
-        }) do
+        ) do
           test_connector.passwords['node1'] = 'PaSsWoRd1'
           test_connector.passwords['node3'] = 'PaSsWoRd3'
           expect(ssh_config_for('node1')).to eq <<~EO_SSH_CONFIG

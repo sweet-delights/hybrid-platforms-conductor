@@ -67,13 +67,15 @@ describe HybridPlatformsConductor::ActionsExecutor do
       end
 
       it 'fails without creating exception when creating an SSH master to 1 node not having Session Exec capabilities when hpc_interactive is false and we use no_exception' do
-        with_test_platform({
-          nodes: {
-            'node1' => { meta: { host_ip: '192.168.42.1' } },
-            'node2' => { meta: { host_ip: '192.168.42.2', ssh_session_exec: false } },
-            'node3' => { meta: { host_ip: '192.168.42.3' } }
+        with_test_platform(
+          {
+            nodes: {
+              'node1' => { meta: { host_ip: '192.168.42.1' } },
+              'node2' => { meta: { host_ip: '192.168.42.2', ssh_session_exec: false } },
+              'node3' => { meta: { host_ip: '192.168.42.3' } }
+            }
           }
-        }) do
+        ) do
           ENV['hpc_interactive'] = 'false'
           with_cmd_runner_mocked(
             [
@@ -99,13 +101,15 @@ describe HybridPlatformsConductor::ActionsExecutor do
       end
 
       it 'creates SSH master to several nodes' do
-        with_test_platform({
-          nodes: {
-            'node1' => { meta: { host_ip: '192.168.42.1' } },
-            'node2' => { meta: { host_ip: '192.168.42.2' } },
-            'node3' => { meta: { host_ip: '192.168.42.3' } }
+        with_test_platform(
+          {
+            nodes: {
+              'node1' => { meta: { host_ip: '192.168.42.1' } },
+              'node2' => { meta: { host_ip: '192.168.42.2' } },
+              'node3' => { meta: { host_ip: '192.168.42.3' } }
+            }
           }
-        }) do
+        ) do
           with_cmd_runner_mocked(
             [
               ['which env', proc { [0, "/usr/bin/env\n", ''] }],
@@ -163,13 +167,15 @@ describe HybridPlatformsConductor::ActionsExecutor do
       end
 
       it 'fails when an SSH master can\'t be created' do
-        with_test_platform({
-          nodes: {
-            'node1' => { meta: { host_ip: '192.168.42.1' } },
-            'node2' => { meta: { host_ip: '192.168.42.2' } },
-            'node3' => { meta: { host_ip: '192.168.42.3' } }
+        with_test_platform(
+          {
+            nodes: {
+              'node1' => { meta: { host_ip: '192.168.42.1' } },
+              'node2' => { meta: { host_ip: '192.168.42.2' } },
+              'node3' => { meta: { host_ip: '192.168.42.3' } }
+            }
           }
-        }) do
+        ) do
           with_cmd_runner_mocked(
             [
               ['which env', proc { [0, "/usr/bin/env\n", ''] }],
@@ -197,13 +203,15 @@ describe HybridPlatformsConductor::ActionsExecutor do
       end
 
       it 'fails without throwing exception when an SSH master can\'t be created and we use no_exception' do
-        with_test_platform({
-          nodes: {
-            'node1' => { meta: { host_ip: '192.168.42.1' } },
-            'node2' => { meta: { host_ip: '192.168.42.2' } },
-            'node3' => { meta: { host_ip: '192.168.42.3' } }
+        with_test_platform(
+          {
+            nodes: {
+              'node1' => { meta: { host_ip: '192.168.42.1' } },
+              'node2' => { meta: { host_ip: '192.168.42.2' } },
+              'node3' => { meta: { host_ip: '192.168.42.3' } }
+            }
           }
-        }) do
+        ) do
           with_cmd_runner_mocked(
             [
               ['which env', proc { [0, "/usr/bin/env\n", ''] }],
@@ -252,14 +260,16 @@ describe HybridPlatformsConductor::ActionsExecutor do
       end
 
       it 'reuses SSH masters already created to some nodes and create new ones if needed' do
-        with_test_platform({
-          nodes: {
-            'node1' => { meta: { host_ip: '192.168.42.1' } },
-            'node2' => { meta: { host_ip: '192.168.42.2' } },
-            'node3' => { meta: { host_ip: '192.168.42.3' } },
-            'node4' => { meta: { host_ip: '192.168.42.4' } }
+        with_test_platform(
+          {
+            nodes: {
+              'node1' => { meta: { host_ip: '192.168.42.1' } },
+              'node2' => { meta: { host_ip: '192.168.42.2' } },
+              'node3' => { meta: { host_ip: '192.168.42.3' } },
+              'node4' => { meta: { host_ip: '192.168.42.4' } }
+            }
           }
-        }) do
+        ) do
           with_cmd_runner_mocked(
             [
               ['which env', proc { [0, "/usr/bin/env\n", ''] }],

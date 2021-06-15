@@ -46,10 +46,12 @@ describe HybridPlatformsConductor::ServicesHandler do
     end
 
     it 'allows deployment if it is not a git repository' do
-      with_test_platform({
-        nodes: { 'node1' => { services: %w[service1] }, 'node2' => {}, 'node3' => {} },
-        deployable_services: %w[service1]
-      }) do
+      with_test_platform(
+        {
+          nodes: { 'node1' => { services: %w[service1] }, 'node2' => {}, 'node3' => {} },
+          deployable_services: %w[service1]
+        }
+      ) do
         expect(test_services_handler.deploy_allowed?(services: { 'node1' => %w[service1] }, local_environment: false)).to eq nil
       end
     end

@@ -3,10 +3,12 @@ describe HybridPlatformsConductor::ServicesHandler do
   context 'when checking logs associated to a deployment' do
 
     it 'logs platforms info' do
-      with_test_platform({
-        nodes: { 'node' => { services: %w[service1] } },
-        deployable_services: %w[service1]
-      }) do
+      with_test_platform(
+        {
+          nodes: { 'node' => { services: %w[service1] } },
+          deployable_services: %w[service1]
+        }
+      ) do
         expect(test_services_handler.log_info_for('node', %w[service1])).to eq(
           repo_name_0: 'platform'
         )

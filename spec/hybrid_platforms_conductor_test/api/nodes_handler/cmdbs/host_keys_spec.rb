@@ -108,14 +108,16 @@ describe HybridPlatformsConductor::NodesHandler do
     end
 
     it 'returns host keys for the maximum hosts it can from the list' do
-      with_test_platform({
-        nodes: {
-          'test_node1' => {},
-          'test_node2' => {},
-          'test_node3' => {},
-          'test_node4' => {}
+      with_test_platform(
+        {
+          nodes: {
+            'test_node1' => {},
+            'test_node2' => {},
+            'test_node3' => {},
+            'test_node4' => {}
+          }
         }
-      }) do
+      ) do
         with_cmd_runner_mocked [
           ['ssh-keyscan 192.168.42.1', proc { [0, "192.168.42.1 ssh-rsa fake_host_key_1\n", ''] }],
           ['ssh-keyscan 192.168.42.2', proc { [0, '', ''] }],

@@ -13,14 +13,16 @@ describe HybridPlatformsConductor::ActionsExecutor do
       end
 
       it 'selects connectable nodes correctly' do
-        with_test_platform({
-          nodes: {
-            'node1' => { meta: { host_ip: '192.168.42.42' } },
-            'node2' => {},
-            'node3' => { meta: { host_ip: '127.0.0.1', local_node: true } },
-            'node4' => { meta: { local_node: true } }
+        with_test_platform(
+          {
+            nodes: {
+              'node1' => { meta: { host_ip: '192.168.42.42' } },
+              'node2' => {},
+              'node3' => { meta: { host_ip: '127.0.0.1', local_node: true } },
+              'node4' => { meta: { local_node: true } }
+            }
           }
-        }) do
+        ) do
           expect(test_connector.connectable_nodes_from(%w[node1 node2 node3 node4]).sort).to eq %w[node3 node4].sort
         end
       end
