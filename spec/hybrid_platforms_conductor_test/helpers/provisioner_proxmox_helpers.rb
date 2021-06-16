@@ -745,7 +745,7 @@ module HybridPlatformsConductorTest
           $stdout = old_stdout
         end
         stdout_lines = @stdout.split("\n")
-        JSON.parse(stdout_lines[stdout_lines.index('===== JSON =====') + 1..-1].join("\n")).transform_keys(&:to_sym)
+        JSON.parse(stdout_lines[stdout_lines.index('===== JSON =====') + 1..].join("\n")).transform_keys(&:to_sym)
       end
 
       # Call the reserve_proxmox_container script and get its result as JSON.

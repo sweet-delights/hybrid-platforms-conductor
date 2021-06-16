@@ -18,7 +18,7 @@ describe 'Coding guidelines' do
                 if offenses.size == 1
                   " #{offenses.first}"
                 else
-                  "\n#{offenses.map { |offense| "  #{offense}" }.join("\n")}"
+                  " #{offenses.size} offenses:\n#{offenses.map { |offense| "  - #{offense}" }.join("\n")}"
                 end
               }"
             end.join("\n")

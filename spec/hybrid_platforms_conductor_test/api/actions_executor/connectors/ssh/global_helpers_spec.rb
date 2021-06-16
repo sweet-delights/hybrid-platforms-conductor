@@ -40,7 +40,7 @@ describe HybridPlatformsConductor::ActionsExecutor do
           /^\# \w+ - .+$/,
           /^\#+$/
         ]
-        end_idx = ssh_config_lines[start_idx + 1..-1].index { |line| end_markers.any? { |end_marker| line =~ end_marker } }
+        end_idx = ssh_config_lines[start_idx + 1..].index { |line| end_markers.any? { |end_marker| line =~ end_marker } }
         end_idx = end_idx.nil? ? -1 : start_idx + end_idx
         "#{
           ssh_config_lines[start_idx..end_idx].select do |line|

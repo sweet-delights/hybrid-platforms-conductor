@@ -35,7 +35,7 @@ module HybridPlatformsConductorTest
             node,
             {
               downcase: "_#{node}_",
-              last_3: node[-3..-1],
+              last_3: node[-3..],
               nothing: "#{node} has another nothing"
             }
           ]
