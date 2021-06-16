@@ -123,15 +123,6 @@ describe HybridPlatformsConductor::HpcPlugins::PlatformHandler::ServerlessChef d
         end
       end
 
-      it 'packages the repository without resolving dependencies when the lock file already exists' do
-        with_serverless_chef_platforms('1_node') do |platform, repository|
-          File.write("#{repository}/policyfiles/test_policy.lock.json", '{}')
-          with_packaging_mocked(repository, install: false) do
-            platform.package(services: { 'node' => %w[test_policy] }, secrets: {}, local_environment: false)
-          end
-        end
-      end
-
       it 'does not package the repository twice for the same config' do
         with_serverless_chef_platforms('1_node', as_git: true) do |platform, repository|
           with_packaging_mocked(repository) do

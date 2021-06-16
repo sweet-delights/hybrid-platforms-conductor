@@ -205,30 +205,6 @@ describe HybridPlatformsConductor::NodesHandler do
       end
     end
 
-    it 'returns the impacted nodes given by the platform handler' do
-      with_test_platforms(
-        {
-          'other_platform' => { nodes: { 'other_node_1' => {}, 'other_node_2' => {} } },
-          'my_remote_platform' => {
-            nodes: { 'node1' => {}, 'node2' => {}, 'node3' => {} },
-            impacted_nodes: %w[node1 node3]
-          }
-        },
-        as_git: true
-      ) do
-        with_cmd_runner_mocked [
-          [%r{cd .+/my_remote_platform && git --no-pager diff --no-color master}, proc { [0, '', ''] }]
-        ] do
-          expect(test_nodes_handler.impacted_nodes_from_git_diff('my_remote_platform')).to eq [
-            %w[node1 node3],
-            %w[node1 node3],
-            [],
-            false
-          ]
-        end
-      end
-    end
-
     it 'returns both impacted services and nodes given by the platform handler' do
       with_test_platforms(
         {
