@@ -347,6 +347,15 @@ module HybridPlatformsConductor
       end
     end
 
+    # Make sure we register the methods we handle in method_missing
+    #
+    # Parameters::
+    # * *name* (Symbol): The missing method name
+    # * *include_private* (Boolean): Should we include private methods in the search?
+    def respond_to_missing?(name, include_private)
+      name.to_s =~ /^get_(.*)_of$/ || super
+    end
+
     # Prefetch some metadata properties for a given list of nodes.
     # Useful for performance reasons when clients know they will need to use a lot of properties on nodes.
     # Keep a thread-safe memory cache of it.
