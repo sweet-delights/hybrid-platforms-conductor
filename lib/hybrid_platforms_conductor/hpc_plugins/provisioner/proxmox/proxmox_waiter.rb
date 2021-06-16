@@ -97,7 +97,7 @@ class ProxmoxWaiter
         clean_up_done = false
         # Check if we can remove some expired ones
         @config['pve_nodes'].each do |pve_node|
-          if api_get("nodes/#{pve_node}/lxc").any? { |lxc_info| is_vm_expired?(pve_node, Integer(lxc_info['vmid'])) }
+          if api_get("nodes/#{pve_node}/lxc").any? { |lxc_info| vm_expired?(pve_node, Integer(lxc_info['vmid'])) }
             destroy_expired_vms_on(pve_node)
             clean_up_done = true
           end
@@ -397,7 +397,7 @@ class ProxmoxWaiter
             # TODO: Remove the Integer conversion when Proxmox API will be fixed.
             lxc_disk_gb_used = Integer(lxc_info['maxdisk']) / (1024 * 1024 * 1024)
             lxc_ram_mb_used = lxc_info['maxmem'] / (1024 * 1024)
-            if is_vm_expired?(pve_node, vm_id)
+            if vm_expired?(pve_node, vm_id)
               expired_disk_gb_used += lxc_disk_gb_used
               expired_ram_mb_used += lxc_ram_mb_used
             else
@@ -441,7 +441,7 @@ class ProxmoxWaiter
   # * *vm_id* (Integer): The VM ID
   # Result::
   # * Boolean: Is the given VM expired?
-  def is_vm_expired?(pve_node, vm_id)
+  def vm_expired?(pve_node, vm_id)
     if vm_id.between?(*@config['vm_ids_range'])
       # Get its reservation date from the notes
       metadata = vm_metadata(pve_node, vm_id)
@@ -557,7 +557,7 @@ class ProxmoxWaiter
   def destroy_expired_vms_on(pve_node)
     api_get("nodes/#{pve_node}/lxc").each do |lxc_info|
       vm_id = Integer(lxc_info['vmid'])
-      destroy_vm_on(pve_node, vm_id) if is_vm_expired?(pve_node, vm_id)
+      destroy_vm_on(pve_node, vm_id) if vm_expired?(pve_node, vm_id)
     end
     # Invalidate the API cache for anything related to this PVE node
     pve_node_paths_regexp = %r{^nodes/#{Regexp.escape(pve_node)}/.+$}

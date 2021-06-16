@@ -499,7 +499,7 @@ module HybridPlatformsConductor
     # * *node_name* (String): Node name
     # Result::
     # * Boolean: Is the node represented as a cluster?
-    def is_node_cluster?(node_name)
+    def node_cluster?(node_name)
       @nodes_graph[node_name][:type] == :cluster || !@nodes_graph[node_name][:includes].empty?
     end
 
@@ -509,7 +509,7 @@ module HybridPlatformsConductor
     # * *node_name* (String): Node name
     # Result::
     # * Boolean: Is the node a physical node?
-    def is_node_physical?(node_name)
+    def node_physical?(node_name)
       @nodes_graph[node_name][:type] == :node && @node_metadata[node_name][:physical_node]
     end
 
@@ -640,7 +640,7 @@ module HybridPlatformsConductor
       ipv4 = IPAddress::IPv4.new(ip)
       includes_proc = proc do |node_name|
         if @nodes_graph[node_name][:ipv4].nil?
-          if is_node_cluster?(node_name)
+          if node_cluster?(node_name)
             # Here the node is a cluster that is not an IP range.
             @nodes_graph[node_name][:includes].all? { |included_node_name| includes_proc.call(included_node_name) }
           else

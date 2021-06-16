@@ -26,7 +26,7 @@ module HybridPlatformsConductor
               description: "#{@topographer.title_for(node_name)} - #{@topographer.description_for(node_name)}",
               group: group_for(node_name)
             }
-            node_json[:includes] = node_info[:includes] if @topographer.is_node_cluster?(node_name)
+            node_json[:includes] = node_info[:includes] if @topographer.node_cluster?(node_name)
             json[:nodes] << node_json
             node_info[:connections].each do |connected_node_name, labels|
               json[:links] << {
@@ -51,7 +51,7 @@ module HybridPlatformsConductor
         def group_for(node_name)
           case @topographer.nodes_graph[node_name][:type]
           when :node
-            if @topographer.is_node_physical?(node_name)
+            if @topographer.node_physical?(node_name)
               1
             else
               2

@@ -58,7 +58,7 @@ module HybridPlatformsConductor
             label: "#{@topographer.title_for(node_name)}#{description.nil? ? '' : "\\n#{description}"}",
             color: color_for(node_name)
           }
-          if @topographer.is_node_cluster?(node_name)
+          if @topographer.node_cluster?(node_name)
             # A cluster node
             file.puts "  subgraph \"#{dot_name}\" {\n#{node_options.map { |opt, val| "    #{opt}=\"#{val}\";\n" }.join}"
             # Always define an anchor node per cluster, as it will serve for links to and from the cluster itself.
@@ -86,7 +86,7 @@ module HybridPlatformsConductor
         def color_for(node_name)
           case @topographer.nodes_graph[node_name][:type]
           when :node
-            if @topographer.is_node_physical?(node_name)
+            if @topographer.node_physical?(node_name)
               'lightpink'
             else
               'lightblue2'
@@ -105,7 +105,7 @@ module HybridPlatformsConductor
         # Result::
         # * String: DOT node name
         def dot_name_for(node_name)
-          @topographer.is_node_cluster?(node_name) ? "cluster_#{node_name}" : node_name
+          @topographer.node_cluster?(node_name) ? "cluster_#{node_name}" : node_name
         end
 
         # Get the DOT node name used in a link for a given node
@@ -115,7 +115,7 @@ module HybridPlatformsConductor
         # Result::
         # * String: DOT node name used for links
         def dot_name_for_link(node_name)
-          @topographer.is_node_cluster?(node_name) ? "cluster_#{node_name}_anchor" : node_name
+          @topographer.node_cluster?(node_name) ? "cluster_#{node_name}_anchor" : node_name
         end
 
       end
