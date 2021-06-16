@@ -41,7 +41,7 @@ describe HybridPlatformsConductor::Deployer do
           password = 'thycotic_password_from_netrc'
           expect(HybridPlatformsConductor::Credentials).to receive(:with_credentials_for) do |id, _logger, _logger_stderr, url: nil, &client_code|
             expect(id).to eq :thycotic
-            expect(url).to eq url
+            expect(url).to eq thycotic_url
             client_code.call user, password
           end
         end

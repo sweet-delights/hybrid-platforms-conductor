@@ -167,3 +167,5 @@ module HybridPlatformsConductor
   end
 
 end
+
+# rubocop:enable Lint/BooleanSymbol

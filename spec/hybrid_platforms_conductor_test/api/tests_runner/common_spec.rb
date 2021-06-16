@@ -1,3 +1,19 @@
+# Specific test registered by the test platform handler
+class SpecificPlatformHandlerTest < HybridPlatformsConductor::Test
+
+  class << self
+
+    attr_accessor :run
+
+  end
+  @run = false
+
+  def test
+    SpecificPlatformHandlerTest.run = true
+  end
+
+end
+
 describe HybridPlatformsConductor::TestsRunner do
 
   it 'executes all tests when no test is selected' do
@@ -185,22 +201,6 @@ describe HybridPlatformsConductor::TestsRunner do
         [:several_tests, 'node22', 'Node check-node test: node22 check ok']
       ].sort
     end
-  end
-
-  # Specific test registered by the test platform handler
-  class SpecificPlatformHandlerTest < HybridPlatformsConductor::Test
-
-    class << self
-
-      attr_accessor :run
-
-    end
-    @run = false
-
-    def test
-      SpecificPlatformHandlerTest.run = true
-    end
-
   end
 
   it 'executes tests defined by a platform handler' do

@@ -30,16 +30,11 @@ describe HybridPlatformsConductor::HpcPlugins::PlatformHandler::ServerlessChef d
               "cd #{repository} && /opt/chef-workstation/bin/chef install #{policy_file} --chef-license accept",
               proc do
                 # Mock the run_list stored in the lock file
+                dsl_parser = HybridPlatformsConductor::HpcPlugins::PlatformHandler::ServerlessChef::DslParser.new
+                dsl_parser.parse("#{repository}/#{policy_file}")
                 File.write(
                   "#{repository}/#{policy_file.gsub(/.rb$/, '.lock.json')}",
-                  {
-                    run_list: eval(
-                      "[#{File.read("#{repository}/#{policy_file}").split("\n").select { |line| line =~ /^run_list.+$/ }.last.match(/^run_list(.+)$/)[1]}]",
-                      binding,
-                      __FILE__,
-                      __LINE__ - 3
-                    ).flatten
-                  }.to_json
+                  { run_list: dsl_parser.calls.find { |call| call[:method] == :run_list }[:args].flatten }.to_json
                 )
                 [0, 'Chef install done', '']
               end

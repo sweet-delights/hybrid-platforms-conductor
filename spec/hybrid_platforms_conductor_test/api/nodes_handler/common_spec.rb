@@ -27,14 +27,11 @@ describe HybridPlatformsConductor::NodesHandler do
       nodes_iterated = []
       test_nodes_handler.for_each_node_in(%w[node2 node3 node4], parallel: true) do |node|
         sleep(
-          case node
-          when 'node2'
-            2
-          when 'node3'
-            3
-          when 'node4'
-            1
-          end
+          {
+            'node2' => 2,
+            'node3' => 3,
+            'node4' => 1
+          }[node.to_sym]
         )
         nodes_iterated << node
       end

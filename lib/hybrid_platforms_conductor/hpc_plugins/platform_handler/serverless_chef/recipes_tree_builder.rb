@@ -40,11 +40,14 @@ module HybridPlatformsConductor
                 add_recipe_in_tree(cookbook_dir, cookbook, recipe)
               end
             end
+            # Make sure we don't combine those 2 loops
+            # rubocop:disable Style/CombinableLoops
             @platform.deployable_services.each do |service|
               @platform.policy_run_list(service).each do |(_cookbook_dir, cookbook, recipe)|
                 mark_recipe_used_by_policy(cookbook, recipe, service)
               end
             end
+            # rubocop:enable Style/CombinableLoops
             @recipes_tree
           end
 

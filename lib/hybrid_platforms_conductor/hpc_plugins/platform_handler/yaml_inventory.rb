@@ -95,6 +95,7 @@ module HybridPlatformsConductor
               nodes_handler: NodesHandler.new,
               cmd_runner: CmdRunner.new
             )
+              super
               init_loggers(logger, logger_stderr)
               @platform_handler = platform_handler
               @config = config

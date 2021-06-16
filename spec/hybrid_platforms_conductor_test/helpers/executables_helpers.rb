@@ -59,7 +59,7 @@ module HybridPlatformsConductorTest
         end
         # Make sure that when the executable creates components it uses ours
         components_to_mock.each do |component_class, component|
-          allow(component_class).to receive(:new).once { component }
+          allow(component_class).to(receive(:new).once { component })
         end
         # Run the executable
         args.concat(['--debug']) if ENV['TEST_DEBUG'] == '1'
