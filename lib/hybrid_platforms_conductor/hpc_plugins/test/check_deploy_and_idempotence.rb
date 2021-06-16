@@ -30,6 +30,7 @@ module HybridPlatformsConductor
                 ssh_ok = ssh.exec!('echo Works').strip == 'Works'
               end
             rescue
+              nil
             end
             assert_equal ssh_ok, true, 'Root does not have access from the empty image'
 
@@ -63,6 +64,7 @@ module HybridPlatformsConductor
                         ssh_ok = ssh.exec!('echo Works').strip == 'Works'
                       end
                     rescue
+                      nil
                     end
                     assert_equal ssh_ok, false, 'Root can still connect on the image after deployment'
                     # Even if we can connect using root, run the idempotence test

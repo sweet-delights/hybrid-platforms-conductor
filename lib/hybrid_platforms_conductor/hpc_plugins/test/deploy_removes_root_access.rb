@@ -22,6 +22,7 @@ module HybridPlatformsConductor
                 ssh_ok = ssh.exec!('echo Works').strip == 'Works'
               end
             rescue
+              nil
             end
             assert_equal ssh_ok, true, 'Root does not have access from the empty image'
             if ssh_ok
@@ -36,6 +37,7 @@ module HybridPlatformsConductor
                   ssh_ok = ssh.exec!('echo Works').strip == 'Works'
                 end
               rescue
+                nil
               end
               assert_equal ssh_ok, false, 'Root can still connect on the image after deployment'
             end
