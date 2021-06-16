@@ -285,6 +285,7 @@ module HybridPlatformsConductor
         node: node,
         # Keep this else on purpose to show where global tests could have expected failures
         # rubocop:disable Style/EmptyElse
+        # rubocop:disable Lint/DuplicateBranch
         expected_failure: if ignore_expected_failure
                             nil
                           elsif !node.nil?
@@ -297,6 +298,7 @@ module HybridPlatformsConductor
                             # Global test
                             nil
                           end
+        # rubocop:enable Lint/DuplicateBranch
         # rubocop:enable Style/EmptyElse
       )
     end

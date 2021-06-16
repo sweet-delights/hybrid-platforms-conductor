@@ -551,9 +551,7 @@ module HybridPlatformsConductor
       case @nodes_graph[node_name][:type]
       when :node
         @node_metadata[node_name][:description]
-      when :cluster
-        nil
-      when :unknown
+      when :cluster, :unknown
         nil
       end
     end
