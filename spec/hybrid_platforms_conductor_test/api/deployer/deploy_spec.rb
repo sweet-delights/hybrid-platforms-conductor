@@ -2,7 +2,9 @@ describe HybridPlatformsConductor::Deployer do
 
   context 'when checking real deploy mode' do
 
-    deploy_specs_for(check_mode: false)
+    it_behaves_like 'a deployer' do
+      let(:check_mode) { false }
+    end    
 
     context 'when checking log plugins usage' do
 
