@@ -4,7 +4,7 @@ describe HybridPlatformsConductor::Deployer do
 
     it_behaves_like 'a deployer' do
       let(:check_mode) { false }
-    end    
+    end
 
     context 'when checking log plugins usage' do
 
