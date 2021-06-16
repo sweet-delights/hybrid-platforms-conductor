@@ -49,7 +49,7 @@ module HybridPlatformsConductor
           # Parameters::
           # * *name* (Symbol): The missing method name
           # * *include_private* (Boolean): Should we include private methods in the search?
-          def respond_to_missing?(name, include_private)
+          def respond_to_missing?(_name, _include_private)
             true
           end
 
