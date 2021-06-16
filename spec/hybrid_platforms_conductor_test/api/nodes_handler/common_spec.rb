@@ -31,7 +31,7 @@ describe HybridPlatformsConductor::NodesHandler do
             'node2' => 2,
             'node3' => 3,
             'node4' => 1
-          }[node.to_sym]
+          }[node]
         )
         nodes_iterated << node
       end

@@ -34,7 +34,7 @@ describe HybridPlatformsConductor::HpcPlugins::PlatformHandler::ServerlessChef d
                 dsl_parser.parse("#{repository}/#{policy_file}")
                 File.write(
                   "#{repository}/#{policy_file.gsub(/.rb$/, '.lock.json')}",
-                  { run_list: dsl_parser.calls.find { |call| call[:method] == :run_list }[:args].flatten }.to_json
+                  { run_list: dsl_parser.calls.select { |call| call[:method] == :run_list }.last[:args].flatten }.to_json
                 )
                 [0, 'Chef install done', '']
               end
