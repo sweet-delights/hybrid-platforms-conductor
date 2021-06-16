@@ -6,8 +6,10 @@ describe HybridPlatformsConductor::ActionsExecutor do
       with_test_platform_for_action_plugins do |repository|
         expect(
           test_actions_executor.execute_actions(
-            'node' => {
-              bash: "echo TestContent >#{repository}/test_file ; echo TestStdout ; echo TestStderr 1>&2"
+            {
+              'node' => {
+                bash: "echo TestContent >#{repository}/test_file ; echo TestStdout ; echo TestStderr 1>&2"
+              }
             }
           )['node']
         ).to eq [0, "TestStdout\n", "TestStderr\n"]

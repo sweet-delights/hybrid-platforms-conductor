@@ -4,7 +4,7 @@ describe HybridPlatformsConductor::ActionsExecutor do
 
     it 'executes remote Bash code' do
       with_test_platform_for_action_plugins do
-        test_actions_executor.execute_actions('node' => { remote_bash: 'remote_bash_cmd.bash' })
+        test_actions_executor.execute_actions({ 'node' => { remote_bash: 'remote_bash_cmd.bash' } })
         expect(test_actions_executor.connector(:test_connector).calls).to eq [
           [:connectable_nodes_from, ['node']],
           [:with_connection_to, ['node'], { no_exception: true }],
@@ -32,7 +32,7 @@ describe HybridPlatformsConductor::ActionsExecutor do
 
     it 'executes remote Bash code in several lines' do
       with_test_platform_for_action_plugins do
-        test_actions_executor.execute_actions('node' => { remote_bash: ['bash_cmd1.bash', 'bash_cmd2.bash', 'bash_cmd3.bash'] })
+        test_actions_executor.execute_actions({ 'node' => { remote_bash: ['bash_cmd1.bash', 'bash_cmd2.bash', 'bash_cmd3.bash'] } })
         expect(test_actions_executor.connector(:test_connector).calls).to eq [
           [:connectable_nodes_from, ['node']],
           [:with_connection_to, ['node'], { no_exception: true }],
@@ -43,7 +43,7 @@ describe HybridPlatformsConductor::ActionsExecutor do
 
     it 'executes remote Bash code using the commands syntax' do
       with_test_platform_for_action_plugins do
-        test_actions_executor.execute_actions('node' => { remote_bash: { commands: 'bash_cmd.bash' } })
+        test_actions_executor.execute_actions({ 'node' => { remote_bash: { commands: 'bash_cmd.bash' } } })
         expect(test_actions_executor.connector(:test_connector).calls).to eq [
           [:connectable_nodes_from, ['node']],
           [:with_connection_to, ['node'], { no_exception: true }],
@@ -55,7 +55,7 @@ describe HybridPlatformsConductor::ActionsExecutor do
     it 'executes remote Bash code from a file' do
       with_test_platform_for_action_plugins do |repository|
         File.write("#{repository}/commands.txt", "bash_cmd1.bash\nbash_cmd2.bash")
-        test_actions_executor.execute_actions('node' => { remote_bash: { file: "#{repository}/commands.txt" } })
+        test_actions_executor.execute_actions({ 'node' => { remote_bash: { file: "#{repository}/commands.txt" } } })
         expect(test_actions_executor.connector(:test_connector).calls).to eq [
           [:connectable_nodes_from, ['node']],
           [:with_connection_to, ['node'], { no_exception: true }],
@@ -68,10 +68,12 @@ describe HybridPlatformsConductor::ActionsExecutor do
       with_test_platform_for_action_plugins do |repository|
         File.write("#{repository}/commands.txt", "bash_cmd3.bash\nbash_cmd4.bash")
         test_actions_executor.execute_actions(
-          'node' => { remote_bash: {
-            commands: ['bash_cmd1.bash', 'bash_cmd2.bash'],
-            file: "#{repository}/commands.txt"
-          } }
+          {
+            'node' => { remote_bash: {
+              commands: ['bash_cmd1.bash', 'bash_cmd2.bash'],
+              file: "#{repository}/commands.txt"
+            } }
+          }
         )
         expect(test_actions_executor.connector(:test_connector).calls).to eq [
           [:connectable_nodes_from, ['node']],
@@ -85,11 +87,13 @@ describe HybridPlatformsConductor::ActionsExecutor do
       with_test_platform_for_action_plugins do |repository|
         File.write("#{repository}/commands.txt", "bash_cmd3.bash\nbash_cmd4.bash")
         test_actions_executor.execute_actions(
-          'node' => { remote_bash: [
-            'bash_cmd1.bash',
-            'bash_cmd2.bash',
-            { file: "#{repository}/commands.txt" }
-          ] }
+          {
+            'node' => { remote_bash: [
+              'bash_cmd1.bash',
+              'bash_cmd2.bash',
+              { file: "#{repository}/commands.txt" }
+            ] }
+          }
         )
         expect(test_actions_executor.connector(:test_connector).calls).to eq [
           [:connectable_nodes_from, ['node']],
@@ -102,13 +106,15 @@ describe HybridPlatformsConductor::ActionsExecutor do
     it 'executes remote Bash code with environment variables set' do
       with_test_platform_for_action_plugins do
         test_actions_executor.execute_actions(
-          'node' => { remote_bash: {
-            commands: 'bash_cmd.bash',
-            env: {
-              'var1' => 'value1',
-              'var2' => 'value2'
-            }
-          } }
+          {
+            'node' => { remote_bash: {
+              commands: 'bash_cmd.bash',
+              env: {
+                'var1' => 'value1',
+                'var2' => 'value2'
+              }
+            } }
+          }
         )
         expect(test_actions_executor.connector(:test_connector).calls).to eq [
           [:connectable_nodes_from, ['node']],

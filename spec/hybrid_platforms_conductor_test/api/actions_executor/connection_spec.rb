@@ -22,7 +22,7 @@ describe HybridPlatformsConductor::ActionsExecutor do
     it 'connects on a node before executing actions needing connection' do
       with_test_platform_for_connections do
         test_actions_executor.connector(:test_connector).accept_nodes = ['node1']
-        test_actions_executor.execute_actions('node1' => { test_action: { need_connector: true } })
+        test_actions_executor.execute_actions({ 'node1' => { test_action: { need_connector: true } } })
         expect(action_executions).to eq [{ node: 'node1', message: 'Action executed' }]
         expect(test_actions_executor.connector(:test_connector).calls).to eq [
           [:connectable_nodes_from, ['node1']],
@@ -33,7 +33,7 @@ describe HybridPlatformsConductor::ActionsExecutor do
 
     it 'returns an error when no connector can connect to the needed node' do
       with_test_platform_for_connections do
-        expect(test_actions_executor.execute_actions('node1' => { test_action: { need_connector: true } })).to eq(
+        expect(test_actions_executor.execute_actions({ 'node1' => { test_action: { need_connector: true } } })).to eq(
           'node1' => [:no_connector, '', 'Unable to get a connector to node1']
         )
       end
@@ -42,7 +42,7 @@ describe HybridPlatformsConductor::ActionsExecutor do
     it 'connects on several nodes before executing actions needing connection' do
       with_test_platform_for_connections do
         test_actions_executor.connector(:test_connector).accept_nodes = %w[node1 node2 node3 node4]
-        test_actions_executor.execute_actions(%w[node1 node2 node3 node4] => { test_action: { need_connector: true } })
+        test_actions_executor.execute_actions({ %w[node1 node2 node3 node4] => { test_action: { need_connector: true } } })
         expect(action_executions).to eq [
           { node: 'node1', message: 'Action executed' },
           { node: 'node2', message: 'Action executed' },
@@ -60,7 +60,7 @@ describe HybridPlatformsConductor::ActionsExecutor do
       with_test_platform_for_connections do
         test_actions_executor.connector(:test_connector).accept_nodes = %w[node1 node2 node3 node4]
         test_actions_executor.connector(:test_connector).connected_nodes = %w[node1 node2 node4]
-        test_actions_executor.execute_actions(%w[node1 node2 node3 node4] => { test_action: { need_connector: true } })
+        test_actions_executor.execute_actions({ %w[node1 node2 node3 node4] => { test_action: { need_connector: true } } })
         expect(action_executions).to eq [
           { node: 'node1', message: 'Action executed' },
           { node: 'node2', message: 'Action executed' },
@@ -77,8 +77,10 @@ describe HybridPlatformsConductor::ActionsExecutor do
       with_test_platform_for_connections do
         test_actions_executor.connector(:test_connector).accept_nodes = %w[node1 node2 node3 node4]
         test_actions_executor.execute_actions(
-          %w[node1 node3] => { test_action: { need_connector: true } },
-          %w[node2 node4] => { test_action: { need_connector: false } }
+          {
+            %w[node1 node3] => { test_action: { need_connector: true } },
+            %w[node2 node4] => { test_action: { need_connector: false } }
+          }
         )
         expect(action_executions).to eq [
           { node: 'node1', message: 'Action executed' },
@@ -96,7 +98,7 @@ describe HybridPlatformsConductor::ActionsExecutor do
     it 'does not ask for any connection if actions don\'t need remote' do
       with_test_platform_for_connections do
         test_actions_executor.connector(:test_connector).accept_nodes = %w[node1 node2 node3 node4]
-        test_actions_executor.execute_actions(%w[node1 node2 node3 node4] => { test_action: { need_connector: false } })
+        test_actions_executor.execute_actions({ %w[node1 node2 node3 node4] => { test_action: { need_connector: false } } })
         expect(action_executions).to eq [
           { node: 'node1', message: 'Action executed' },
           { node: 'node2', message: 'Action executed' },
@@ -111,7 +113,7 @@ describe HybridPlatformsConductor::ActionsExecutor do
       with_test_platform_for_connections do
         test_actions_executor.connector(:test_connector).accept_nodes = %w[node1 node3]
         test_actions_executor.connector(:test_connector_2).accept_nodes = %w[node2 node4]
-        test_actions_executor.execute_actions(%w[node1 node2 node3 node4] => { test_action: { need_connector: true } })
+        test_actions_executor.execute_actions({ %w[node1 node2 node3 node4] => { test_action: { need_connector: true } } })
         expect(action_executions).to eq [
           { node: 'node1', message: 'Action executed' },
           { node: 'node2', message: 'Action executed' },
@@ -133,7 +135,7 @@ describe HybridPlatformsConductor::ActionsExecutor do
       with_test_platform_for_connections do
         test_actions_executor.connector(:test_connector).accept_nodes = %w[node1 node2 node3]
         test_actions_executor.connector(:test_connector_2).accept_nodes = %w[node2 node4]
-        test_actions_executor.execute_actions(%w[node1 node2 node3 node4] => { test_action: { need_connector: true } })
+        test_actions_executor.execute_actions({ %w[node1 node2 node3 node4] => { test_action: { need_connector: true } } })
         expect(action_executions).to eq [
           { node: 'node1', message: 'Action executed' },
           { node: 'node2', message: 'Action executed' },
