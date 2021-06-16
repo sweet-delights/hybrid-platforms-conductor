@@ -1,3 +1,4 @@
+require 'open-uri'
 require 'nokogiri'
 require 'hybrid_platforms_conductor/credentials'
 require 'hybrid_platforms_conductor/common_config_dsl/bitbucket'
@@ -21,7 +22,7 @@ module HybridPlatformsConductor
             else
               Credentials.with_credentials_for(:jenkins_ci, @logger, @logger_stderr, url: repo_info[:jenkins_ci_url]) do |jenkins_user, jenkins_password|
                 # Get its config
-                doc = Nokogiri::XML(open("#{repo_info[:jenkins_ci_url]}/config.xml", http_basic_authentication: [jenkins_user, jenkins_password]).read)
+                doc = Nokogiri::XML(URI.parse("#{repo_info[:jenkins_ci_url]}/config.xml").open(http_basic_authentication: [jenkins_user, jenkins_password]).read)
                 # Check that this job builds the correct Bitbucket repository
                 assert_equal(
                   doc.xpath('/org.jenkinsci.plugins.workflow.multibranch.WorkflowMultiBranchProject/sources/data/jenkins.branch.BranchSource/source/serverUrl').text,

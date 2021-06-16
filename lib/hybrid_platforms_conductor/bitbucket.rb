@@ -106,7 +106,7 @@ module HybridPlatformsConductor
       http_response = nil
       loop do
         begin
-          http_response = URI.open(api_url, http_basic_authentication: [@bitbucket_user_name, @bitbucket_password])
+          http_response = URI.parse(api_url).open(http_basic_authentication: [@bitbucket_user_name, @bitbucket_password])
         rescue
           raise if retries.zero?
 
