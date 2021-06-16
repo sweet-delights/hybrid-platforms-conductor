@@ -16,7 +16,7 @@ module HybridPlatformsConductor
     def self.inherited(subclass)
       # Make sure we define automatically a helper for such a platform
       mixin = Module.new
-      platform_type = subclass.name.split('::').last.gsub(/([a-z\d])([A-Z])/, '\1_\2').downcase.to_sym
+      platform_type = subclass.name.split('::').last.gsub(/([a-z\d])([A-Z\d])/, '\1_\2').downcase.to_sym
       mixin.define_method("#{platform_type}_platform".to_sym) do |path: nil, git: nil, branch: 'master', &platform_config_code|
         repository_path =
           if !path.nil?
@@ -28,7 +28,7 @@ module HybridPlatformsConductor
               branch = "refs/heads/#{branch}" unless branch.include?('/')
               local_ref = "refs/remotes/origin/#{branch.split('/').last}"
               section "Cloning #{git} (#{branch} => #{local_ref}) into #{local_repository_path}" do
-                git_repo = Git.init(local_repository_path, )
+                git_repo = Git.init(local_repository_path)
                 git_repo.add_remote('origin', git).fetch(ref: "#{branch}:#{local_ref}")
                 git_repo.checkout local_ref
               end
@@ -39,7 +39,7 @@ module HybridPlatformsConductor
           end
         @platform_dirs[platform_type] = [] unless @platform_dirs.key?(platform_type)
         @platform_dirs[platform_type] << repository_path
-        platform_config_code.call(repository_path) unless platform_config_code.nil?
+        platform_config_code&.call(repository_path)
       end
       # Register this new mixin in the Config DSL
       extend_config_dsl_with(mixin)
@@ -69,8 +69,8 @@ module HybridPlatformsConductor
     def initialize(
       platform_type,
       repository_path,
-      logger: Logger.new(STDOUT),
-      logger_stderr: Logger.new(STDERR),
+      logger: Logger.new($stdout),
+      logger_stderr: Logger.new($stderr),
       config: Config.new,
       cmd_runner: CmdRunner.new
     )
@@ -78,7 +78,7 @@ module HybridPlatformsConductor
       @platform_type = platform_type
       @repository_path = repository_path
       @cmd_runner = cmd_runner
-      self.init if self.respond_to?(:init)
+      init if respond_to?(:init)
     end
 
     # Return the name of the platform
@@ -100,7 +100,7 @@ module HybridPlatformsConductor
     # * Array<String>: The list of nodes impacted by this diff
     # * Array<String>: The list of services impacted by this diff
     # * Boolean: Are there some files that have a global impact (meaning all nodes are potentially impacted by this diff)?
-    def impacts_from(files_diffs)
+    def impacts_from(_files_diffs)
       # By default, consider all nodes of the platform are impacted by whatever diff.
       [
         [],

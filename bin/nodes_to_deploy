@@ -21,7 +21,7 @@ deployer = executable.deployer
 
 executable.parse_options!
 
-nodes = (nodes_handler.select_nodes(executable.selected_nodes.empty? ? [{ all: true }] : executable.selected_nodes))
+nodes = nodes_handler.select_nodes(executable.selected_nodes.empty? ? [{ all: true }] : executable.selected_nodes)
 
 unless ignore_schedule
   # Select nodes to be deployed, based first on deployment schedule
@@ -67,7 +67,7 @@ unless ignore_deploy_info
       node_impacted = false
       # Loop over all possible repositories concerned by this deployment
       repo_idx = 0
-      while node_deploy_info[:deployment_info].key?("repo_name_#{repo_idx}".to_sym) do
+      while node_deploy_info[:deployment_info].key?("repo_name_#{repo_idx}".to_sym)
         repo_name = node_deploy_info[:deployment_info]["repo_name_#{repo_idx}".to_sym]
         commit_id = node_deploy_info[:deployment_info]["commit_id_#{repo_idx}".to_sym]
         impacted_nodes = cache_impacted_nodes.dig(repo_name, commit_id)

@@ -3,9 +3,13 @@ require 'tempfile'
 require 'tty-command'
 require 'hybrid_platforms_conductor/logger_helpers'
 require 'hybrid_platforms_conductor/io_router'
+require 'hybrid_platforms_conductor/core_extensions/symbol/zero'
+
+Symbol.include HybridPlatformsConductor::CoreExtensions::Symbol::Zero
 
 module HybridPlatformsConductor
 
+  # API to execute local commands, with IO control over files, stdout, timeouts, exceptions.
   class CmdRunner
 
     class UnexpectedExitCodeError < StandardError
@@ -21,7 +25,7 @@ module HybridPlatformsConductor
     # Result::
     # * String: The executable prefix
     def self.executables_prefix
-      $0.include?('/') ? "#{File.dirname($0)}/" : ''
+      $PROGRAM_NAME.include?('/') ? "#{File.dirname($PROGRAM_NAME)}/" : ''
     end
 
     # Dry-run switch. When true, then commands are just printed out without being executed.
@@ -33,7 +37,7 @@ module HybridPlatformsConductor
     # Parameters::
     # * *logger* (Logger): Logger to be used [default = Logger.new(STDOUT)]
     # * *logger_stderr* (Logger): Logger to be used for stderr [default = Logger.new(STDERR)]
-    def initialize(logger: Logger.new(STDOUT), logger_stderr: Logger.new(STDERR))
+    def initialize(logger: Logger.new($stdout), logger_stderr: Logger.new($stderr))
       init_loggers(logger, logger_stderr)
       @dry_run = false
     end
@@ -42,8 +46,7 @@ module HybridPlatformsConductor
     #
     # Parameters::
     # * *options_parser* (OptionParser): The option parser to complete
-    # * *parallel* (Boolean): Do we activate options regarding parallel execution? [default = true]
-    def options_parse(options_parser, parallel: true)
+    def options_parse(options_parser)
       options_parser.separator ''
       options_parser.separator 'Command runner options:'
       options_parser.on('-s', '--show-commands', 'Display the commands that would be run instead of running them') do
@@ -86,7 +89,7 @@ module HybridPlatformsConductor
       expected_code = [expected_code] unless expected_code.is_a?(Array)
       if @dry_run
         out cmd
-        return expected_code.first, '', ''
+        [expected_code.first, '', '']
       else
         log_debug "#{timeout.nil? ? '' : "[ Timeout #{timeout} ] - "}#{cmd.light_cyan.bold}"
         exit_status = nil
@@ -100,15 +103,13 @@ module HybridPlatformsConductor
               FileUtils.mkdir_p(File.dirname(log_to_file))
               File.open(log_to_file, 'w')
             end
-          else
-            nil
           end
         start_time = Time.now if log_debug?
         bash_file = nil
         if force_bash
           bash_file = Tempfile.new('hpc_bash')
           bash_file.write(cmd)
-          bash_file.chmod 0700
+          bash_file.chmod 0o700
           bash_file.close
           cmd = "/bin/bash -c #{bash_file.path}"
         end
@@ -149,10 +150,10 @@ module HybridPlatformsConductor
         rescue
           exit_status = :command_error
           cmd_stdout = cmd_result_stdout
-          cmd_stderr = "#{cmd_result_stderr.empty? ? '' : "#{cmd_result_stderr}\n"}#{$!}\n#{$!.backtrace.join("\n")}"
+          cmd_stderr = "#{cmd_result_stderr.empty? ? '' : "#{cmd_result_stderr}\n"}#{$ERROR_INFO}\n#{$ERROR_INFO.backtrace.join("\n")}"
         ensure
-          file_output.close unless file_output.nil?
-          bash_file.unlink unless bash_file.nil?
+          file_output&.close
+          bash_file&.unlink
         end
         if log_debug?
           elapsed = Time.now - start_time
@@ -169,7 +170,7 @@ module HybridPlatformsConductor
             raise exit_status == :timeout ? TimeoutError : UnexpectedExitCodeError, error_title
           end
         end
-        return exit_status, cmd_stdout, cmd_stderr
+        [exit_status, cmd_stdout, cmd_stderr]
       end
     end
 

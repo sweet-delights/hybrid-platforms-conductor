@@ -3,7 +3,6 @@ require 'futex'
 require 'json'
 require 'securerandom'
 require 'time'
-require 'thread'
 require 'hybrid_platforms_conductor/actions_executor'
 require 'hybrid_platforms_conductor/cmd_runner'
 require 'hybrid_platforms_conductor/executable'
@@ -109,8 +108,8 @@ module HybridPlatformsConductor
     # * *actions_executor* (ActionsExecutor): Actions Executor to be used. [default: ActionsExecutor.new]
     # * *services_handler* (ServicesHandler): Services Handler to be used. [default: ServicesHandler.new]
     def initialize(
-      logger: Logger.new(STDOUT),
-      logger_stderr: Logger.new(STDERR),
+      logger: Logger.new($stdout),
+      logger_stderr: Logger.new($stderr),
       config: Config.new,
       cmd_runner: CmdRunner.new,
       nodes_handler: NodesHandler.new,
@@ -171,25 +170,31 @@ module HybridPlatformsConductor
     def options_parse(options_parser, parallel_switch: true, why_run_switch: false, timeout_options: true)
       options_parser.separator ''
       options_parser.separator 'Deployer options:'
-      options_parser.on('-p', '--parallel', 'Execute the commands in parallel (put the standard output in files <hybrid-platforms-dir>/run_logs/*.stdout)') do
-        @concurrent_execution = true
-      end if parallel_switch
-      options_parser.on('-t', '--timeout SECS', "Timeout in seconds to wait for each chef run. Only used in why-run mode. (defaults to #{@timeout.nil? ? 'no timeout' : @timeout})") do |nbr_secs|
-        @timeout = nbr_secs.to_i
-      end if timeout_options
-      options_parser.on('-W', '--why-run', 'Use the why-run mode to see what would be the result of the deploy instead of deploying it for real.') do
-        @use_why_run = true
-      end if why_run_switch
+      if parallel_switch
+        options_parser.on('-p', '--parallel', 'Execute the commands in parallel (put the standard output in files <hybrid-platforms-dir>/run_logs/*.stdout)') do
+          @concurrent_execution = true
+        end
+      end
+      if timeout_options
+        options_parser.on('-t', '--timeout SECS', "Timeout in seconds to wait for each chef run. Only used in why-run mode. (defaults to #{@timeout.nil? ? 'no timeout' : @timeout})") do |nbr_secs|
+          @timeout = nbr_secs.to_i
+        end
+      end
+      if why_run_switch
+        options_parser.on('-W', '--why-run', 'Use the why-run mode to see what would be the result of the deploy instead of deploying it for real.') do
+          @use_why_run = true
+        end
+      end
       options_parser.on('--retries-on-error NBR', "Number of retries in case of non-deterministic errors (defaults to #{@nbr_retries_on_error})") do |nbr_retries|
         @nbr_retries_on_error = nbr_retries.to_i
       end
       # Display options secrets readers might have
       @secrets_readers.each do |secret_reader_name, secret_reader|
-        if secret_reader.respond_to?(:options_parse)
-          options_parser.separator ''
-          options_parser.separator "Secrets reader #{secret_reader_name} options:"
-          secret_reader.options_parse(options_parser)
-        end
+        next unless secret_reader.respond_to?(:options_parse)
+
+        options_parser.separator ''
+        options_parser.separator "Secrets reader #{secret_reader_name} options:"
+        secret_reader.options_parse(options_parser)
       end
     end
 
@@ -224,9 +229,9 @@ module HybridPlatformsConductor
     def deploy_on(*nodes_selectors)
       # Get the sorted list of services to be deployed, per node
       # Hash<String, Array<String> >
-      services_to_deploy = Hash[@nodes_handler.select_nodes(nodes_selectors.flatten).map do |node|
+      services_to_deploy = @nodes_handler.select_nodes(nodes_selectors.flatten).map do |node|
         [node, @nodes_handler.get_services_of(node)]
-      end]
+      end.to_h
 
       # Get the secrets to be deployed
       secrets = {}
@@ -251,7 +256,6 @@ module HybridPlatformsConductor
       unless @use_why_run
         reason_for_interdiction = @services_handler.deploy_allowed?(
           services: services_to_deploy,
-          secrets: secrets,
           local_environment: @local_environment
         )
         raise "Deployment not allowed: #{reason_for_interdiction}" unless reason_for_interdiction.nil?
@@ -289,51 +293,50 @@ module HybridPlatformsConductor
           remaining_nodes_to_deploy = services_to_deploy.keys
           while nbr_retries >= 0 && !remaining_nodes_to_deploy.empty?
             last_deploy_results = deploy(services_to_deploy.slice(*remaining_nodes_to_deploy))
-            if nbr_retries > 0
+            if nbr_retries.positive?
               # Check if we need to retry deployment on some nodes
               # Only parse the last deployment attempt logs
-              retriable_nodes = Hash[
-                remaining_nodes_to_deploy.
-                  map do |node|
-                    exit_status, stdout, stderr = last_deploy_results[node]
-                    if exit_status == 0
+              retriable_nodes = remaining_nodes_to_deploy.
+                map do |node|
+                  exit_status, stdout, stderr = last_deploy_results[node]
+                  if exit_status.zero?
+                    nil
+                  else
+                    retriable_errors = retriable_errors_from(node, exit_status, stdout, stderr)
+                    if retriable_errors.empty?
                       nil
                     else
-                      retriable_errors = retriable_errors_from(node, exit_status, stdout, stderr)
-                      if retriable_errors.empty?
-                        nil
-                      else
-                        # Log the issue in the stderr of the deployment
-                        stderr << "!!! #{retriable_errors.size} retriable errors detected in this deployment:\n#{retriable_errors.map { |error| "* #{error}" }.join("\n")}\n"
-                        [node, retriable_errors]
-                      end
+                      # Log the issue in the stderr of the deployment
+                      stderr << "!!! #{retriable_errors.size} retriable errors detected in this deployment:\n#{retriable_errors.map { |error| "* #{error}" }.join("\n")}\n"
+                      [node, retriable_errors]
                     end
-                  end.
-                  compact
-              ]
+                  end
+                end.
+                compact.
+                to_h
               unless retriable_nodes.empty?
-                log_warn <<~EOS.strip
+                log_warn <<~EO_LOG.strip
                   Retry deployment for #{retriable_nodes.size} nodes as they got non-deterministic errors (#{nbr_retries} retries remaining):
                   #{retriable_nodes.map { |node, retriable_errors| "  * #{node}:\n#{retriable_errors.map { |error| "    - #{error}" }.join("\n")}" }.join("\n")}
-                EOS
+                EO_LOG
               end
               remaining_nodes_to_deploy = retriable_nodes.keys
             end
             # Merge deployment results
-            results.merge!(last_deploy_results) do |node, (exit_status_1, stdout_1, stderr_1), (exit_status_2, stdout_2, stderr_2)|
+            results.merge!(last_deploy_results) do |_node, (exit_status_1, stdout_1, stderr_1), (exit_status_2, stdout_2, stderr_2)|
               [
                 exit_status_2,
-                <<~EOS,
+                <<~EO_STDOUT,
                   #{stdout_1}
                   Deployment exit status code: #{exit_status_1}
                   !!! Retry deployment due to non-deterministic error (#{nbr_retries} remaining attempts)...
                   #{stdout_2}
-                EOS
-                <<~EOS
+                EO_STDOUT
+                <<~EO_STDERR
                   #{stderr_1}
                   !!! Retry deployment due to non-deterministic error (#{nbr_retries} remaining attempts)...
                   #{stderr_2}
-                EOS
+                EO_STDERR
               ]
             end
             nbr_retries -= 1
@@ -388,7 +391,7 @@ module HybridPlatformsConductor
           sub_executable.config.sudo_procs.replace(sub_executable.config.sudo_procs.map do |sudo_proc_info|
             {
               nodes_selectors_stack: sudo_proc_info[:nodes_selectors_stack].map do |nodes_selector|
-                @nodes_handler.select_nodes(nodes_selector).select { |selected_node| selected_node != node }
+                @nodes_handler.select_nodes(nodes_selector).reject { |selected_node| selected_node == node }
               end,
               sudo_proc: sudo_proc_info[:sudo_proc]
             }
@@ -407,7 +410,7 @@ module HybridPlatformsConductor
       rescue
         # Make sure Docker logs are being output to better investigate errors if we were not already outputing them in debug mode
         stdouts = sub_executable.stdouts_to_s
-        log_error "[ #{node}/#{environment} ] - Encountered unhandled exception #{$!}\n#{$!.backtrace.join("\n")}\n-----\n#{stdouts}" unless stdouts.nil?
+        log_error "[ #{node}/#{environment} ] - Encountered unhandled exception #{$ERROR_INFO}\n#{$ERROR_INFO.backtrace.join("\n")}\n-----\n#{stdouts}" unless stdouts.nil?
         raise
       end
     end
@@ -428,21 +431,21 @@ module HybridPlatformsConductor
       nodes = nodes.flatten
       @actions_executor.max_threads = 64
       read_actions_results = @actions_executor.execute_actions(
-        Hash[nodes.map do |node|
+        nodes.map do |node|
           master_log_plugin = @log_plugins[log_plugins_for(node).first]
           master_log_plugin.respond_to?(:actions_to_read_logs) ? [node, master_log_plugin.actions_to_read_logs(node)] : nil
-        end.compact],
+        end.compact.to_h,
         log_to_stdout: false,
         concurrent: true,
         timeout: 10,
         progress_name: 'Read deployment logs'
       )
-      Hash[nodes.map do |node|
+      nodes.map do |node|
         [
           node,
           @log_plugins[log_plugins_for(node).first].logs_for(node, *(read_actions_results[node] || [nil, nil, nil]))
         ]
-      end]
+      end.to_h
     end
 
     # Parse stdout and stderr of a given deploy run and get the list of tasks with their status
@@ -458,7 +461,7 @@ module HybridPlatformsConductor
     #     * *:changed*: The task has been changed
     #     * *:identical*: The task has not been changed
     #   * *diffs* (String): Differences, if any
-    def parse_deploy_output(node, stdout, stderr)
+    def parse_deploy_output(_node, stdout, stderr)
       @services_handler.parse_deploy_output(stdout, stderr).map { |deploy_info| deploy_info[:tasks] }.flatten
     end
 
@@ -503,7 +506,7 @@ module HybridPlatformsConductor
     # * *stderr* (String): Deployment stderr
     # Result::
     # * Array<String>: List of retriable errors that have been matched
-    def retriable_errors_from(node, exit_status, stdout, stderr)
+    def retriable_errors_from(node, _exit_status, stdout, stderr)
       # List of retriable errors for this node, as exact string match or regexps.
       # Array<String or Regexp>
       retriable_errors_on_stdout = []
@@ -534,59 +537,55 @@ module HybridPlatformsConductor
     # Result::
     # * Hash<String, [Integer or Symbol, String, String]>: Exit status code (or Symbol in case of error or dry run), standard output and error for each node.
     def deploy(services)
-      outputs = {}
-
       # Get the ssh user directly from the connector
       ssh_user = @actions_executor.connector(:ssh).ssh_user
 
       # Deploy for real
       @nodes_handler.prefetch_metadata_of services.keys, :image
       outputs = @actions_executor.execute_actions(
-        Hash[services.map do |node, node_services|
+        services.map do |node, node_services|
           image_id = @nodes_handler.get_image_of(node)
           sudo = (ssh_user == 'root' ? '' : "#{@nodes_handler.sudo_on(node)} ")
           # Install corporate certificates if present
           certificate_actions =
             if @local_environment && ENV['hpc_certificates']
-              if File.exist?(ENV['hpc_certificates'])
-                log_debug "Deploy certificates from #{ENV['hpc_certificates']}"
-                case image_id
-                when 'debian_9', 'debian_10'
-                  [
-                    {
-                      remote_bash: "#{sudo}apt update && #{sudo}apt install -y ca-certificates"
+              raise "Missing path referenced by the hpc_certificates environment variable: #{ENV['hpc_certificates']}" unless File.exist?(ENV['hpc_certificates'])
+
+              log_debug "Deploy certificates from #{ENV['hpc_certificates']}"
+              case image_id
+              when 'debian_9', 'debian_10'
+                [
+                  {
+                    remote_bash: "#{sudo}apt update && #{sudo}apt install -y ca-certificates"
+                  },
+                  {
+                    scp: {
+                      ENV['hpc_certificates'] => '/usr/local/share/ca-certificates',
+                      :sudo => ssh_user != 'root'
                     },
-                    {
-                      scp: {
-                        ENV['hpc_certificates'] => '/usr/local/share/ca-certificates',
-                        :sudo => ssh_user != 'root'
-                      },
-                      remote_bash: "#{sudo}update-ca-certificates"
-                    }
-                  ]
-                when 'centos_7'
-                  [
-                    {
-                      remote_bash: "#{sudo}yum install -y ca-certificates"
-                    },
-                    {
-                      scp: Hash[Dir.glob("#{ENV['hpc_certificates']}/*.crt").map do |cert_file|
-                        [
-                          cert_file,
-                          '/etc/pki/ca-trust/source/anchors'
-                        ]
-                      end].merge(sudo: ssh_user != 'root'),
-                      remote_bash: [
-                        "#{sudo}update-ca-trust enable",
-                        "#{sudo}update-ca-trust extract"
+                    remote_bash: "#{sudo}update-ca-certificates"
+                  }
+                ]
+              when 'centos_7'
+                [
+                  {
+                    remote_bash: "#{sudo}yum install -y ca-certificates"
+                  },
+                  {
+                    scp: Dir.glob("#{ENV['hpc_certificates']}/*.crt").map do |cert_file|
+                      [
+                        cert_file,
+                        '/etc/pki/ca-trust/source/anchors'
                       ]
-                    }
-                  ]
-                else
-                  raise "Unknown image ID for node #{node}: #{image_id}. Check metadata for this node."
-                end
+                    end.to_h.merge(sudo: ssh_user != 'root'),
+                    remote_bash: [
+                      "#{sudo}update-ca-trust enable",
+                      "#{sudo}update-ca-trust extract"
+                    ]
+                  }
+                ]
               else
-                raise "Missing path referenced by the hpc_certificates environment variable: #{ENV['hpc_certificates']}"
+                raise "Unknown image ID for node #{node}: #{image_id}. Check metadata for this node."
               end
             else
               []
@@ -603,19 +602,19 @@ module HybridPlatformsConductor
               certificate_actions +
               @services_handler.actions_to_deploy_on(node, node_services, @use_why_run)
           ]
-        end],
+        end.to_h,
         timeout: @timeout,
         concurrent: @concurrent_execution,
         log_to_stdout: !@concurrent_execution
       )
       # Free eventual locks
       @actions_executor.execute_actions(
-        Hash[services.keys.map do |node|
+        services.keys.map do |node|
           [
             node,
             { remote_bash: "#{ssh_user == 'root' ? '' : "#{@nodes_handler.sudo_on(node)} "}./mutex_dir unlock /tmp/hybrid_platforms_conductor_deploy_lock" }
           ]
-        end],
+        end.to_h,
         timeout: 10,
         concurrent: true,
         log_to_dir: nil
@@ -637,7 +636,7 @@ module HybridPlatformsConductor
       section "Saving deployment logs for #{logs.size} nodes" do
         ssh_user = @actions_executor.connector(:ssh).ssh_user
         @actions_executor.execute_actions(
-          Hash[logs.map do |node, (exit_status, stdout, stderr)|
+          logs.map do |node, (exit_status, stdout, stderr)|
             [
               node,
               log_plugins_for(node).
@@ -656,7 +655,7 @@ module HybridPlatformsConductor
                 end.
                 flatten(1)
             ]
-          end],
+          end.to_h,
           timeout: 10,
           concurrent: true,
           log_to_dir: nil,

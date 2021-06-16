@@ -4,9 +4,11 @@ module HybridPlatformsConductorTest
   class TestsReportPlugin < HybridPlatformsConductor::TestReport
 
     class << self
+
       # Reports (that can be compared), per report name
       # Array< Hash<Symbol, Object> >
       attr_accessor :reports
+
     end
 
     # Handle tests reports
@@ -15,12 +17,9 @@ module HybridPlatformsConductorTest
         global_tests: report_from(global_tests),
         platform_tests: report_from(platform_tests),
         node_tests: report_from(node_tests),
-        errors_per_test: Hash[group_errors(node_tests, :test_name).map do |test_name, errors|
-          [
-            test_name,
-            errors.map { |error| error.split("\n").first }
-          ]
-        end],
+        errors_per_test: group_errors(node_tests, :test_name).transform_values do |errors|
+          errors.map { |error| error.split("\n").first }
+        end,
         nodes_by_nodes_list: nodes_by_nodes_list
       }
     end

@@ -24,7 +24,7 @@ module HybridPlatformsConductor
           # Array< Hash<Symbol, Object> >
           attr_reader :mount_rules_that_should_be_present
 
-          # Initialize the DSL 
+          # Initialize the DSL
           def init_mounts_test
             @mount_rules_that_should_be_absent = []
             @mount_rules_that_should_be_present = []
@@ -58,7 +58,7 @@ module HybridPlatformsConductor
 
         end
 
-        self.extend_config_dsl_with ConfigDslExtension, :init_mounts_test
+        extend_config_dsl_with ConfigDslExtension, :init_mounts_test
 
         # Check my_test_plugin.rb.sample documentation for signature details.
         def test_on_node

@@ -97,7 +97,7 @@ class ProxmoxWaiter
         clean_up_done = false
         # Check if we can remove some expired ones
         @config['pve_nodes'].each do |pve_node|
-          if api_get("nodes/#{pve_node}/lxc").any? { |lxc_info| is_vm_expired?(pve_node, Integer(lxc_info['vmid'])) }
+          if api_get("nodes/#{pve_node}/lxc").any? { |lxc_info| vm_expired?(pve_node, Integer(lxc_info['vmid'])) }
             destroy_expired_vms_on(pve_node)
             clean_up_done = true
           end
@@ -131,7 +131,7 @@ class ProxmoxWaiter
         # Select the best node, first keeping expired VMs if possible.
         # This is the index of the scores to be checked: if we can choose without recycling VMs, do it by considering score index 0.
         score_idx =
-          if pve_node_scores.all? { |_pve_node, pve_node_scores| pve_node_scores[0].nil? }
+          if pve_node_scores.all? { |_pve_node, itr_pve_node_scores| itr_pve_node_scores[0].nil? }
             # No node was available without removing expired VMs.
             # Therefore we consider only scores without expired VMs.
             log 'No PVE node has enough free resources without removing eventual expired VMs'
@@ -139,12 +139,12 @@ class ProxmoxWaiter
           else
             0
           end
-        selected_pve_node, selected_pve_node_score = pve_node_scores.inject([nil, nil]) do |(best_pve_node, best_score), (pve_node, pve_node_scores)|
-          if pve_node_scores[score_idx].nil? ||
-            (!best_score.nil? && pve_node_scores[score_idx] >= best_score)
+        selected_pve_node, selected_pve_node_score = pve_node_scores.inject([nil, nil]) do |(best_pve_node, best_score), (pve_node, itr_pve_node_scores)|
+          if itr_pve_node_scores[score_idx].nil? ||
+              (!best_score.nil? && itr_pve_node_scores[score_idx] >= best_score)
             [best_pve_node, best_score]
           else
-            [pve_node, pve_node_scores[score_idx]]
+            [pve_node, itr_pve_node_scores[score_idx]]
           end
         end
         if selected_pve_node.nil?
@@ -201,26 +201,24 @@ class ProxmoxWaiter
       vm_id_str = vm_info['vm_id'].to_s
       # Destroy the VM ID
       # Find which PVE node hosts this VM
-      unless @config['pve_nodes'].any? do |pve_node|
-          api_get("nodes/#{pve_node}/lxc").any? do |lxc_info|
-            if lxc_info['vmid'] == vm_id_str
-              # Make sure this VM is still used for the node and environment we want.
-              # It could have been deleted manually and re-affected to another node/environment automatically, and in this case we should not remove it.
-              metadata = vm_metadata(pve_node, vm_info['vm_id'])
-              if metadata[:node] == vm_info['node'] && metadata[:environment] == vm_info['environment']
-                destroy_vm_on(pve_node, vm_info['vm_id'])
-                found_pve_node = pve_node
-                true
-              else
-                log "[ #{pve_node}/#{vm_info['vm_id']} ] - This container is not hosting the node/environment to be destroyed: #{metadata[:node]}/#{metadata[:environment]} != #{vm_info['node']}/#{vm_info['environment']}"
-                false
-              end
+      log "Could not find any PVE node hosting VM #{vm_info['vm_id']}" unless @config['pve_nodes'].any? do |pve_node|
+        api_get("nodes/#{pve_node}/lxc").any? do |lxc_info|
+          if lxc_info['vmid'] == vm_id_str
+            # Make sure this VM is still used for the node and environment we want.
+            # It could have been deleted manually and re-affected to another node/environment automatically, and in this case we should not remove it.
+            metadata = vm_metadata(pve_node, vm_info['vm_id'])
+            if metadata[:node] == vm_info['node'] && metadata[:environment] == vm_info['environment']
+              destroy_vm_on(pve_node, vm_info['vm_id'])
+              found_pve_node = pve_node
+              true
             else
+              log "[ #{pve_node}/#{vm_info['vm_id']} ] - This container is not hosting the node/environment to be destroyed: #{metadata[:node]}/#{metadata[:environment]} != #{vm_info['node']}/#{vm_info['environment']}"
               false
             end
+          else
+            false
           end
         end
-        log "Could not find any PVE node hosting VM #{vm_info['vm_id']}"
       end
     end
     reserved_resource = {}
@@ -286,10 +284,10 @@ class ProxmoxWaiter
             # We disappeared from the queue!
             log '[ Futex queue ] - !!! Somebody removed use from the queue. Add our PID back.'
             write_access_queue(queue_futex_file, access_queue + [pid])
-          elsif idx == 0
+          elsif idx.zero?
             # Access granted
             log '[ Futex queue ] - Exclusive access granted'
-            write_access_queue(queue_futex_file, access_queue[1..-1])
+            write_access_queue(queue_futex_file, access_queue[1..])
             retry_futex_queue = false
           else
             # Just check that the first PID still exists, otherwise remove it from the queue.
@@ -304,7 +302,7 @@ class ProxmoxWaiter
               end
             unless first_pid_exist
               log "[ Futex queue ] - !!! First PID #{first_pid} does not exist - remove it from the queue"
-              write_access_queue(queue_futex_file, access_queue[1..-1])
+              write_access_queue(queue_futex_file, access_queue[1..])
             end
           end
         end
@@ -343,7 +341,7 @@ class ProxmoxWaiter
         # Get the list of PVE nodes by default
         @config['pve_nodes'] = nodes_info.map { |node_info| node_info['node'] } unless @config['pve_nodes']
       rescue
-        raise "Unable to connect to Proxmox API #{@config['proxmox_api_url']} with user #{@proxmox_user}: #{$!}"
+        raise "Unable to connect to Proxmox API #{@config['proxmox_api_url']} with user #{@proxmox_user}: #{$ERROR_INFO}"
       end
       @expiration_date = Time.now.utc - @config['expiration_period_secs']
       log "Consider expiration date #{@expiration_date.strftime('%F %T')}"
@@ -372,8 +370,8 @@ class ProxmoxWaiter
   # * *disk_gb* (Integer): Wanted GB of disk
   # Result::
   # * Hash<String, [Float or nil, Float or nil]>: The set of 2 scores, per PVE node name
-  def pve_scores_for(nbr_cpus, ram_mb, disk_gb)
-    Hash[@config['pve_nodes'].map do |pve_node|
+  def pve_scores_for(_nbr_cpus, ram_mb, disk_gb)
+    @config['pve_nodes'].map do |pve_node|
       # Get some resource usages stats from the node directly
       status_info = api_get("nodes/#{pve_node}/status")
       load_average = status_info['loadavg'].map { |load_str| Float(load_str) }
@@ -393,13 +391,13 @@ class ProxmoxWaiter
           # Store the resources used by containers we can recycle in separate variables.
           expired_disk_gb_used = 0
           expired_ram_mb_used = 0
-          found_vm_ids = api_get("nodes/#{pve_node}/lxc").map do |lxc_info|
+          api_get("nodes/#{pve_node}/lxc").each do |lxc_info|
             vm_id = Integer(lxc_info['vmid'])
             # Some times the Proxmox API returns maxdisk as a String (but not always) even if it is documented as Integer here: https://pve.proxmox.com/pve-docs/api-viewer/#/nodes/{node}/lxc.
             # TODO: Remove the Integer conversion when Proxmox API will be fixed.
             lxc_disk_gb_used = Integer(lxc_info['maxdisk']) / (1024 * 1024 * 1024)
             lxc_ram_mb_used = lxc_info['maxmem'] / (1024 * 1024)
-            if is_vm_expired?(pve_node, vm_id)
+            if vm_expired?(pve_node, vm_id)
               expired_disk_gb_used += lxc_disk_gb_used
               expired_ram_mb_used += lxc_ram_mb_used
             else
@@ -419,16 +417,12 @@ class ProxmoxWaiter
           # Otherwise, store the scores, taking into account coefficients to then choose among possible PVE nodes.
           [
             if expected_ram_percent_used <= @config['limits']['ram_percent_used_max'] &&
-              expected_disk_percent_used <= @config['limits']['disk_percent_used_max']
+                expected_disk_percent_used <= @config['limits']['disk_percent_used_max']
               expected_ram_percent_used * @config['coeff_ram_consumption'] + expected_disk_percent_used * @config['coeff_disk_consumption']
-            else
-              nil
             end,
             if expected_ram_percent_used_without_expired <= @config['limits']['ram_percent_used_max'] &&
-              expected_disk_percent_used_without_expired <= @config['limits']['disk_percent_used_max']
+                expected_disk_percent_used_without_expired <= @config['limits']['disk_percent_used_max']
               expected_ram_percent_used_without_expired * @config['coeff_ram_consumption'] + expected_disk_percent_used_without_expired * @config['coeff_disk_consumption']
-            else
-              nil
             end
           ]
         else
@@ -437,7 +431,7 @@ class ProxmoxWaiter
           [nil, nil]
         end
       ]
-    end]
+    end.to_h
   end
 
   # Is a given VM expired?
@@ -447,7 +441,7 @@ class ProxmoxWaiter
   # * *vm_id* (Integer): The VM ID
   # Result::
   # * Boolean: Is the given VM expired?
-  def is_vm_expired?(pve_node, vm_id)
+  def vm_expired?(pve_node, vm_id)
     if vm_id.between?(*@config['vm_ids_range'])
       # Get its reservation date from the notes
       metadata = vm_metadata(pve_node, vm_id)
@@ -505,10 +499,10 @@ class ProxmoxWaiter
     if hpc_marker_idx.nil?
       {}
     else
-      Hash[vm_description_lines[hpc_marker_idx + 1..-1].map do |line|
+      vm_description_lines[hpc_marker_idx + 1..].map do |line|
         property, value = line.split(': ')
         [property.to_sym, value]
-      end]
+      end.to_h
     end
   end
 
@@ -536,7 +530,7 @@ class ProxmoxWaiter
   #   Possible error codes returned are:
   #   * *no_available_ip*: There is no available IP to be reserved
   #   * *no_available_vm_id*: There is no available VM ID to be reserved
-  def reserve_on(pve_node, nbr_cpus, ram_mb, disk_gb)
+  def reserve_on(pve_node, _nbr_cpus, _ram_mb, _disk_gb)
     # We select a new VM ID and VM IP.
     selected_vm_ip = free_ips.first
     if selected_vm_ip.nil?
@@ -563,10 +557,10 @@ class ProxmoxWaiter
   def destroy_expired_vms_on(pve_node)
     api_get("nodes/#{pve_node}/lxc").each do |lxc_info|
       vm_id = Integer(lxc_info['vmid'])
-      destroy_vm_on(pve_node, vm_id) if is_vm_expired?(pve_node, vm_id)
+      destroy_vm_on(pve_node, vm_id) if vm_expired?(pve_node, vm_id)
     end
     # Invalidate the API cache for anything related to this PVE node
-    pve_node_paths_regexp = /^nodes\/#{Regexp.escape(pve_node)}\/.+$/
+    pve_node_paths_regexp = %r{^nodes/#{Regexp.escape(pve_node)}/.+$}
     @gets_cache.delete_if { |path, _result| path =~ pve_node_paths_regexp }
   end
 
@@ -643,6 +637,7 @@ class ProxmoxWaiter
   # * *task* (String): The task ID
   def wait_for_proxmox_task(pve_node, task)
     raise "Invalid task: #{task}" if task[0..3] == 'NOK:'
+
     while task_status(pve_node, task) == 'running'
       log "[ #{pve_node} ] - Wait for Proxmox task #{task} to complete..."
       sleep 1
@@ -670,13 +665,14 @@ class ProxmoxWaiter
   # * *path* (String): API path to query
   # Result::
   # * Object: The API response
-  def api_get(path, nbr_retries: 3, wait_between_retry_secs: 10)
+  def api_get(path)
     unless @gets_cache.key?(path)
       idx_try = 0
       loop do
         @gets_cache[path] = @proxmox.get(path)
         break unless @gets_cache[path].is_a?(String) && @gets_cache[path] =~ /^NOK: error code = 5\d\d$/
         raise "Proxmox API get #{path} returns #{@gets_cache[path]} continuously (tried #{idx_try + 1} times)" if idx_try >= @config['api_max_retries']
+
         idx_try += 1
         # We have to reauthenticate: error 500 raised by Proxmox are often due to token being invalidated wrongly
         # TODO: Provide a way to do it properly in the official gem

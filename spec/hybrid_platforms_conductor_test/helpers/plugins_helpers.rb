@@ -18,7 +18,7 @@ module HybridPlatformsConductorTest
           # * *replace* (Boolean): Should we replace the plugins or add them?
           # Hash< Symbol, Hash<Symbol, Object> >
           @plugins_to_mock = {}
-          allow(HybridPlatformsConductor::Plugins).to receive(:new).and_wrap_original do |original_new, plugins_type, init_plugin: nil, parse_gems: true, logger: Logger.new(STDOUT), logger_stderr: Logger.new(STDERR)|
+          allow(HybridPlatformsConductor::Plugins).to receive(:new).and_wrap_original do |original_new, plugins_type, init_plugin: nil, parse_gems: true, logger: Logger.new($stdout), logger_stderr: Logger.new($stderr)|
             # If this plugin type is to be mocked, then don't parse gems and provide the mocked plugins instead
             mocked_plugins = original_new.call(
               plugins_type,

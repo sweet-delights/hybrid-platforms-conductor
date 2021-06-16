@@ -8,6 +8,7 @@ module HybridPlatformsConductor
 
   module HpcPlugins
 
+    # Patch proxmox lib
     module Provisioner
 
       # Monkey patch some Proxmox methods
@@ -68,7 +69,9 @@ module HybridPlatformsConductor
         extend_config_dsl_with PlatformsDSLProxmox, :init_proxmox
 
         class << self
+
           attr_accessor :proxmox_waiter_files_mutex
+
         end
         @proxmox_waiter_files_mutex = Mutex.new
 
@@ -83,105 +86,100 @@ module HybridPlatformsConductor
           @lxc_details = nil
           with_proxmox do |proxmox|
             proxmox_get(proxmox, 'nodes').each do |node_info|
-              if proxmox_test_info[:test_config][:pve_nodes].include?(node_info['node']) && node_info['status'] == 'online'
-                proxmox_get(proxmox, "nodes/#{node_info['node']}/lxc").each do |lxc_info|
-                  vm_id = Integer(lxc_info['vmid'])
-                  if vm_id.between?(*proxmox_test_info[:test_config][:vm_ids_range])
-                    # Check if the description contains our ID
-                    lxc_config = proxmox_get(proxmox, "nodes/#{node_info['node']}/lxc/#{vm_id}/config")
-                    vm_description_lines = (lxc_config['description'] || '').split("\n")
-                    hpc_marker_idx = vm_description_lines.index('===== HPC info =====')
-                    unless hpc_marker_idx.nil?
-                      # Get the HPC info associated to this VM
-                      # Hash<Symbol,String>
-                      vm_hpc_info = Hash[vm_description_lines[hpc_marker_idx + 1..-1].map do |line|
-                        property, value = line.split(': ')
-                        [property.to_sym, value]
-                      end]
-                      if vm_hpc_info[:node] == @node && vm_hpc_info[:environment] == @environment
-                        # Found it
-                        # Get back the IP
-                        ip_found = nil
-                        lxc_config['net0'].split(',').each do |net_info|
-                          property, value = net_info.split('=')
-                          if property == 'ip'
-                            ip_found = value.split('/').first
-                            break
-                          end
-                        end
-                        raise "[ #{@node}/#{@environment} ] - Unable to get IP back from LXC container nodes/#{node_info['node']}/lxc/#{vm_id}/config" if ip_found.nil?
-                        @lxc_details = {
-                          pve_node: node_info['node'],
-                          vm_id: vm_id,
-                          vm_ip: ip_found
-                        }
-                        break
-                      end
-                    end
+              next unless proxmox_test_info[:test_config][:pve_nodes].include?(node_info['node']) && node_info['status'] == 'online'
+
+              proxmox_get(proxmox, "nodes/#{node_info['node']}/lxc").each do |lxc_info|
+                vm_id = Integer(lxc_info['vmid'])
+                next unless vm_id.between?(*proxmox_test_info[:test_config][:vm_ids_range])
+
+                # Check if the description contains our ID
+                lxc_config = proxmox_get(proxmox, "nodes/#{node_info['node']}/lxc/#{vm_id}/config")
+                vm_description_lines = (lxc_config['description'] || '').split("\n")
+                hpc_marker_idx = vm_description_lines.index('===== HPC info =====')
+                next if hpc_marker_idx.nil?
+
+                # Get the HPC info associated to this VM
+                # Hash<Symbol,String>
+                vm_hpc_info = vm_description_lines[hpc_marker_idx + 1..].map do |line|
+                  property, value = line.split(': ')
+                  [property.to_sym, value]
+                end.to_h
+                next unless vm_hpc_info[:node] == @node && vm_hpc_info[:environment] == @environment
+
+                # Found it
+                # Get back the IP
+                ip_found = nil
+                lxc_config['net0'].split(',').each do |net_info|
+                  property, value = net_info.split('=')
+                  if property == 'ip'
+                    ip_found = value.split('/').first
+                    break
                   end
                 end
-                break if @lxc_details
+                raise "[ #{@node}/#{@environment} ] - Unable to get IP back from LXC container nodes/#{node_info['node']}/lxc/#{vm_id}/config" if ip_found.nil?
+
+                @lxc_details = {
+                  pve_node: node_info['node'],
+                  vm_id: vm_id,
+                  vm_ip: ip_found
+                }
+                break
               end
+              break if @lxc_details
             end
           end
-          unless @lxc_details
-            # We couldn't find an existing LXC container for this node/environment.
-            # We have to create one.
-            # Get the image name for this node
-            image = @nodes_handler.get_image_of(@node).to_sym
-            # Find if we have such an image registered
-            if @config.known_os_images.include?(image)
-              proxmox_conf = "#{@config.os_image_dir(image)}/proxmox.json"
-              if File.exist?(proxmox_conf)
-                pve_template = JSON.parse(File.read(proxmox_conf)).dig 'template'
-                if pve_template
-                  # Query the inventory to know about minimum resources needed to deploy the node.
-                  # Provide default values if they are not part of the metadata.
-                  min_resources_to_deploy = {
-                    cpus: 2,
-                    ram_mb: 1024,
-                    disk_gb: 10
-                  }.merge(@nodes_handler.get_deploy_resources_min_of(@node) || {})
-                  # Create the Proxmox container from the sync node.
-                  vm_config = proxmox_test_info[:vm_config]
-                  # Hostname in Proxmox is capped at 65 chars.
-                  # Make sure we don't get over it, but still use a unique one.
-                  hostname = "#{@node}.#{@environment}.hpc-test.com"
-                  if hostname.size > MAX_PROXMOX_HOSTNAME_SIZE
-                    # Truncate it, but add a unique ID in it.
-                    # In the end the hostname looks like:
-                    # <truncated_node_environment>.<unique_id>.hpc-test.com
-                    hostname = "-#{Digest::MD5.hexdigest(hostname)[0..7]}.hpc-test.com"
-                    hostname = "#{@node}.#{@environment}"[0..MAX_PROXMOX_HOSTNAME_SIZE - hostname.size - 1] + hostname
-                  end
-                  @lxc_details = request_lxc_creation_for({
-                    ostemplate: pve_template,
-                    hostname: hostname.gsub('_', '-'),
-                    cores: min_resources_to_deploy[:cpus],
-                    cpulimit: min_resources_to_deploy[:cpus],
-                    memory: min_resources_to_deploy[:ram_mb],
-                    rootfs: "local-lvm:#{min_resources_to_deploy[:disk_gb]}",
-                    nameserver: vm_config[:vm_dns_servers].join(' '),
-                    searchdomain: vm_config[:vm_search_domain],
-                    net0: "name=eth0,bridge=vmbr0,gw=#{vm_config[:vm_gateway]}",
-                    password: 'root_pwd',
-                    description: <<~EOS
-                      ===== HPC info =====
-                      node: #{@node}
-                      environment: #{@environment}
-                      debug: #{log_debug? ? 'true' : 'false'}
-                    EOS
-                  })
-                else
-                  raise "[ #{@node}/#{@environment} ] - No template found in #{proxmox_conf}"
-                end
-              else
-                raise "[ #{@node}/#{@environment} ] - No Proxmox configuration found at #{proxmox_conf}"
-              end
-            else
-              raise "[ #{@node}/#{@environment} ] - Unknown OS image #{image} defined for node #{@node}"
-            end
+          return if @lxc_details
+
+          # We couldn't find an existing LXC container for this node/environment.
+          # We have to create one.
+          # Get the image name for this node
+          image = @nodes_handler.get_image_of(@node).to_sym
+          # Find if we have such an image registered
+          raise "[ #{@node}/#{@environment} ] - Unknown OS image #{image} defined for node #{@node}" unless @config.known_os_images.include?(image)
+
+          proxmox_conf = "#{@config.os_image_dir(image)}/proxmox.json"
+          raise "[ #{@node}/#{@environment} ] - No Proxmox configuration found at #{proxmox_conf}" unless File.exist?(proxmox_conf)
+
+          pve_template = JSON.parse(File.read(proxmox_conf))['template']
+          raise "[ #{@node}/#{@environment} ] - No template found in #{proxmox_conf}" unless pve_template
+
+          # Query the inventory to know about minimum resources needed to deploy the node.
+          # Provide default values if they are not part of the metadata.
+          min_resources_to_deploy = {
+            cpus: 2,
+            ram_mb: 1024,
+            disk_gb: 10
+          }.merge(@nodes_handler.get_deploy_resources_min_of(@node) || {})
+          # Create the Proxmox container from the sync node.
+          vm_config = proxmox_test_info[:vm_config]
+          # Hostname in Proxmox is capped at 65 chars.
+          # Make sure we don't get over it, but still use a unique one.
+          hostname = "#{@node}.#{@environment}.hpc-test.com"
+          if hostname.size > MAX_PROXMOX_HOSTNAME_SIZE
+            # Truncate it, but add a unique ID in it.
+            # In the end the hostname looks like:
+            # <truncated_node_environment>.<unique_id>.hpc-test.com
+            hostname = "-#{Digest::MD5.hexdigest(hostname)[0..7]}.hpc-test.com"
+            hostname = "#{@node}.#{@environment}"[0..MAX_PROXMOX_HOSTNAME_SIZE - hostname.size - 1] + hostname
           end
+          @lxc_details = request_lxc_creation_for(
+            ostemplate: pve_template,
+            hostname: hostname.gsub('_', '-'),
+            cores: min_resources_to_deploy[:cpus],
+            cpulimit: min_resources_to_deploy[:cpus],
+            memory: min_resources_to_deploy[:ram_mb],
+            rootfs: "local-lvm:#{min_resources_to_deploy[:disk_gb]}",
+            nameserver: vm_config[:vm_dns_servers].join(' '),
+            searchdomain: vm_config[:vm_search_domain],
+            net0: "name=eth0,bridge=vmbr0,gw=#{vm_config[:vm_gateway]}",
+            password: 'root_pwd',
+            description: <<~EO_DESCRIPTION
+              ===== HPC info =====
+              node: #{@node}
+              environment: #{@environment}
+              debug: #{log_debug? ? 'true' : 'false'}
+            EO_DESCRIPTION
+          )
         end
 
         # Start an instance
@@ -274,6 +272,7 @@ module HybridPlatformsConductor
         def with_proxmox
           url = proxmox_test_info[:api_url]
           raise 'No Proxmox server defined' if url.nil?
+
           Credentials.with_credentials_for(:proxmox, @logger, @logger_stderr, url: url) do |user, password|
             log_debug "[ #{@node}/#{@environment} ] - Connect to Proxmox #{url}"
             proxmox_logs = StringIO.new
@@ -313,9 +312,11 @@ module HybridPlatformsConductor
           idx_try = 0
           loop do
             response = proxmox.get(path)
-            break if !(response.is_a?(String)) || !(response =~ /^NOK: error code = 5\d\d$/)
+            break if !response.is_a?(String) || response !~ /^NOK: error code = 5\d\d$/
+
             log_warn "[ #{@node}/#{@environment} ] - Proxmox API call get #{path} returned error #{response} (attempt ##{idx_try}/#{proxmox_test_info[:api_max_retries]})"
             raise "[ #{@node}/#{@environment} ] - Proxmox API call get #{path} returns #{response} continuously (tried #{idx_try + 1} times)" if idx_try >= proxmox_test_info[:api_max_retries]
+
             idx_try += 1
             # We have to reauthenticate: error 500 raised by Proxmox are often due to token being invalidated wrongly
             proxmox.reauthenticate
@@ -336,23 +337,22 @@ module HybridPlatformsConductor
         def run_proxmox_task(proxmox, http_method, pve_node, sub_path, *args)
           task = nil
           idx_try = 0
-          while task.nil? do
+          while task.nil?
             task = proxmox.send(http_method, "nodes/#{pve_node}/#{sub_path}", *args)
-            if task =~ /^NOK: error code = 5\d\d$/
-              log_warn "[ #{@node}/#{@environment} ] - Proxmox API call #{http_method} nodes/#{pve_node}/#{sub_path} #{args} returned error #{task} (attempt ##{idx_try}/#{proxmox_test_info[:api_max_retries]})"
-              task = nil
-              break if idx_try >= proxmox_test_info[:api_max_retries]
-              idx_try += 1
-              # We have to reauthenticate: error 500 raised by Proxmox are often due to token being invalidated wrongly
-              proxmox.reauthenticate
-              sleep proxmox_test_info[:api_wait_between_retries_secs] + rand(5)
-            end
+            next unless task =~ /^NOK: error code = 5\d\d$/
+
+            log_warn "[ #{@node}/#{@environment} ] - Proxmox API call #{http_method} nodes/#{pve_node}/#{sub_path} #{args} returned error #{task} (attempt ##{idx_try}/#{proxmox_test_info[:api_max_retries]})"
+            task = nil
+            break if idx_try >= proxmox_test_info[:api_max_retries]
+
+            idx_try += 1
+            # We have to reauthenticate: error 500 raised by Proxmox are often due to token being invalidated wrongly
+            proxmox.reauthenticate
+            sleep proxmox_test_info[:api_wait_between_retries_secs] + rand(5)
           end
-          if task.nil?
-            raise "[ #{@node}/#{@environment} ] - Proxmox API call #{http_method} nodes/#{pve_node}/#{sub_path} #{args} is constantly failing. Giving up."
-          else
-            wait_for_proxmox_task(proxmox, pve_node, task)
-          end
+          raise "[ #{@node}/#{@environment} ] - Proxmox API call #{http_method} nodes/#{pve_node}/#{sub_path} #{args} is constantly failing. Giving up." if task.nil?
+
+          wait_for_proxmox_task(proxmox, pve_node, task)
         end
 
         # Wait for a given Proxmox task completion
@@ -363,18 +363,18 @@ module HybridPlatformsConductor
         # * *task* (String): The task ID
         def wait_for_proxmox_task(proxmox, pve_node, task)
           raise "Invalid task: #{task}" if task[0..3] == 'NOK:'
+
           status = nil
           loop do
             status = task_status(proxmox, pve_node, task)
             break unless status == 'running'
+
             log_debug "[ #{@node}/#{@environment} ] - Wait for Proxmox task #{task} to complete..."
             sleep 1
           end
-          if status.split(':').last == 'OK'
-            log_debug "[ #{@node}/#{@environment} ] - Proxmox task #{task} completed."
-          else
-            raise "[ #{@node}/#{@environment} ] - Proxmox task #{task} completed with status #{status}"
-          end
+          raise "[ #{@node}/#{@environment} ] - Proxmox task #{task} completed with status #{status}" unless status.split(':').last == 'OK'
+
+          log_debug "[ #{@node}/#{@environment} ] - Proxmox task #{task} completed."
         end
 
         # Get task status
@@ -402,13 +402,13 @@ module HybridPlatformsConductor
           config_file = "#{Dir.tmpdir}/config_#{file_id}.json"
           File.write(
             config_file,
-            (proxmox_test_info[:test_config].merge(
+            proxmox_test_info[:test_config].merge(
               proxmox_api_url: proxmox_test_info[:api_url],
               futex_file: '/tmp/hpc_proxmox_allocations.futex',
               logs_dir: '/tmp/hpc_proxmox_waiter_logs',
               api_max_retries: proxmox_test_info[:api_max_retries],
               api_wait_between_retries_secs: proxmox_test_info[:api_wait_between_retries_secs]
-            )).to_json
+            ).to_json
           )
           result = nil
           begin
@@ -447,7 +447,7 @@ module HybridPlatformsConductor
               )[proxmox_test_info[:sync_node]]
             end
             stdout_lines = stdout.split("\n")
-            result = JSON.parse(stdout_lines[stdout_lines.index('===== JSON =====') + 1..-1].join("\n")).transform_keys(&:to_sym)
+            result = JSON.parse(stdout_lines[stdout_lines.index('===== JSON =====') + 1..].join("\n")).transform_keys(&:to_sym)
             raise "[ #{@node}/#{@environment} ] - Error returned by #{cmd}: #{result[:error]}" if result.key?(:error)
           ensure
             File.unlink(config_file)
@@ -548,6 +548,7 @@ module HybridPlatformsConductor
         def proxmox_test_info
           @config.proxmox_servers.first
         end
+
       end
 
     end

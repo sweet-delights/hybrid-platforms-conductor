@@ -1,19 +1,19 @@
 describe HybridPlatformsConductor::PlatformHandler do
 
   it 'returns the correct platform type' do
-    with_test_platform do
+    with_test_platform({}) do
       expect(test_platforms_handler.platform('platform').platform_type).to eq :test
     end
   end
 
   it 'returns the correct path' do
-    with_test_platform do
+    with_test_platform({}) do
       expect(test_platforms_handler.platform('platform').repository_path).to eq "#{Dir.tmpdir}/hpc_test/platform"
     end
   end
 
   it 'returns the correct info' do
-    with_test_platform do
+    with_test_platform({}) do
       expect(test_platforms_handler.platform('platform').info).to eq(repo_name: 'platform')
     end
   end
@@ -76,7 +76,7 @@ describe HybridPlatformsConductor::PlatformHandler do
         git = Git.open(repository)
         FileUtils.touch("#{repository}/test_file_1")
         FileUtils.touch("#{repository}/test_file_2")
-        git.add(['test_file_1', 'test_file_2'])
+        git.add(%w[test_file_1 test_file_2])
         git.commit('Test commit')
         # Make some diffs
         FileUtils.touch("#{repository}/new_file")

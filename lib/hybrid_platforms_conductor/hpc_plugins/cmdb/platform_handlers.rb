@@ -22,8 +22,8 @@ module HybridPlatformsConductor
         # Result::
         # * Hash<String, Object>: The corresponding property, per required node.
         #     Nodes for which the property can't be fetched can be ommitted.
-        def get_services(nodes, metadata)
-          Hash[nodes.map { |node| [node, platform_for(node).services_for(node)] }]
+        def get_services(nodes, _metadata)
+          nodes.map { |node| [node, platform_for(node).services_for(node)] }.to_h
         end
 
         # Get other properties for a given set of nodes.
@@ -41,8 +41,8 @@ module HybridPlatformsConductor
         # Result::
         # * Hash<String, Hash<Symbol,Object> >: The corresponding properties, per required node.
         #     Nodes for which the property can't be fetched can be ommitted.
-        def get_others(nodes, metadata)
-          Hash[nodes.map { |node| [node, platform_for(node).metadata_for(node)] }]
+        def get_others(nodes, _metadata)
+          nodes.map { |node| [node, platform_for(node).metadata_for(node)] }.to_h
         end
 
         private

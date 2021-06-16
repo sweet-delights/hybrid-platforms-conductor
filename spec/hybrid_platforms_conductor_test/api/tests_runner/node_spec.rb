@@ -1,6 +1,6 @@
 describe HybridPlatformsConductor::TestsRunner do
 
-  context 'checking node tests execution' do
+  context 'when checking node tests execution' do
 
     # Prepare the test platform with test plugins
     #
@@ -8,10 +8,13 @@ describe HybridPlatformsConductor::TestsRunner do
     # * Proc: Code called with the platform setup
     def with_test_platform_for_node_tests
       with_test_platforms(
-        'platform1' => { nodes: { 'node11' => {}, 'node12' => {}, 'node13' => {} } },
-        'platform2' => { nodes: { 'node21' => {}, 'node22' => {}, 'node23' => {} }, platform_type: :test2 }
+        {
+          'platform1' => { nodes: { 'node11' => {}, 'node12' => {}, 'node13' => {} } },
+          'platform2' => { nodes: { 'node21' => {}, 'node22' => {}, 'node23' => {} }, platform_type: :test_2 }
+        }
       ) do
-        register_test_plugins(test_tests_runner,
+        register_test_plugins(
+          test_tests_runner,
           node_test: HybridPlatformsConductorTest::TestPlugins::Node,
           node_test_2: HybridPlatformsConductorTest::TestPlugins::Node
         )
@@ -47,7 +50,7 @@ describe HybridPlatformsConductor::TestsRunner do
 
     it 'executes several node tests' do
       with_test_platform_for_node_tests do
-        test_tests_runner.tests = [:node_test, :node_test_2]
+        test_tests_runner.tests = %i[node_test node_test_2]
         expect(test_tests_runner.run_tests([{ all: true }])).to eq 0
         expect(HybridPlatformsConductorTest::TestPlugins::Node.runs.sort).to eq [
           [:node_test, 'node11'],

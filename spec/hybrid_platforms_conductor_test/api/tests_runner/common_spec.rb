@@ -1,8 +1,25 @@
+# Specific test registered by the test platform handler
+class SpecificPlatformHandlerTest < HybridPlatformsConductor::Test
+
+  class << self
+
+    attr_accessor :run
+
+  end
+  @run = false
+
+  def test
+    SpecificPlatformHandlerTest.run = true
+  end
+
+end
+
 describe HybridPlatformsConductor::TestsRunner do
 
   it 'executes all tests when no test is selected' do
-    with_test_platform do
-      register_test_plugins(test_tests_runner,
+    with_test_platform({}) do
+      register_test_plugins(
+        test_tests_runner,
         global_test: HybridPlatformsConductorTest::TestPlugins::Global,
         global_test_2: HybridPlatformsConductorTest::TestPlugins::Global
       )
@@ -12,8 +29,9 @@ describe HybridPlatformsConductor::TestsRunner do
   end
 
   it 'executes all tests when all tests are selected' do
-    with_test_platform do
-      register_test_plugins(test_tests_runner,
+    with_test_platform({}) do
+      register_test_plugins(
+        test_tests_runner,
         global_test: HybridPlatformsConductorTest::TestPlugins::Global,
         global_test_2: HybridPlatformsConductorTest::TestPlugins::Global
       )
@@ -24,7 +42,7 @@ describe HybridPlatformsConductor::TestsRunner do
   end
 
   it 'returns 1 when tests are failing' do
-    with_test_platform do
+    with_test_platform({}) do
       register_test_plugins(test_tests_runner, global_test: HybridPlatformsConductorTest::TestPlugins::Global)
       HybridPlatformsConductorTest::TestPlugins::Global.fail = true
       expect(test_tests_runner.run_tests([])).to eq 1
@@ -33,9 +51,12 @@ describe HybridPlatformsConductor::TestsRunner do
   end
 
   it 'returns 0 when tests are failing as expected' do
-    with_test_platform({}, false, '
-      expect_tests_to_fail(:platform_test, \'Expected failure\')
-    ') do
+    with_test_platform(
+      {},
+      additional_config: <<~'EO_CONFIG'
+        expect_tests_to_fail(:platform_test, 'Expected failure')
+      EO_CONFIG
+    ) do
       register_test_plugins(test_tests_runner, platform_test: HybridPlatformsConductorTest::TestPlugins::Platform)
       HybridPlatformsConductorTest::TestPlugins::Platform.fail_for = ['platform']
       expect(test_tests_runner.run_tests([])).to eq 0
@@ -44,11 +65,14 @@ describe HybridPlatformsConductor::TestsRunner do
   end
 
   it 'returns 0 when tests are failing as expected on a given node' do
-    with_test_platform({ nodes: { 'node1' => {}, 'node2' => {}, 'node3' => {} } }, false, '
-      for_nodes(\'node2\') do
-        expect_tests_to_fail(:node_test, \'Expected failure\')
-      end
-    ') do
+    with_test_platform(
+      { nodes: { 'node1' => {}, 'node2' => {}, 'node3' => {} } },
+      additional_config: <<~'EO_CONFIG'
+        for_nodes('node2') do
+          expect_tests_to_fail(:node_test, 'Expected failure')
+        end
+      EO_CONFIG
+    ) do
       register_test_plugins(test_tests_runner, node_test: HybridPlatformsConductorTest::TestPlugins::Node)
       HybridPlatformsConductorTest::TestPlugins::Node.fail_for = { node_test: ['node2'] }
       expect(test_tests_runner.run_tests(%w[node1 node2 node3])).to eq 0
@@ -57,9 +81,12 @@ describe HybridPlatformsConductor::TestsRunner do
   end
 
   it 'returns 1 when tests are succeeding but were expected to fail' do
-    with_test_platform({}, false, '
-      expect_tests_to_fail(:platform_test, \'Expected failure\')
-    ') do
+    with_test_platform(
+      {},
+      additional_config: <<~'EO_CONFIG'
+        expect_tests_to_fail(:platform_test, 'Expected failure')
+      EO_CONFIG
+    ) do
       register_test_plugins(test_tests_runner, platform_test: HybridPlatformsConductorTest::TestPlugins::Platform)
       expect(test_tests_runner.run_tests([])).to eq 1
       expect(HybridPlatformsConductorTest::TestPlugins::Platform.runs).to eq [[:platform_test, 'platform']]
@@ -67,11 +94,14 @@ describe HybridPlatformsConductor::TestsRunner do
   end
 
   it 'returns 1 when extra expected failures have not been tested when running all tests' do
-    with_test_platform({ nodes: { 'another_node' => {} } }, false, '
-      for_nodes(\'another_node\') do
-        expect_tests_to_fail(:platform_test, \'Expected failure\')
-      end
-    ') do
+    with_test_platform(
+      { nodes: { 'another_node' => {} } },
+      additional_config: <<~'EO_CONFIG'
+        for_nodes('another_node') do
+          expect_tests_to_fail(:platform_test, 'Expected failure')
+        end
+      EO_CONFIG
+    ) do
       register_test_plugins(test_tests_runner, platform_test: HybridPlatformsConductorTest::TestPlugins::Platform)
       expect(test_tests_runner.run_tests([])).to eq 1
       expect(HybridPlatformsConductorTest::TestPlugins::Platform.runs).to eq [[:platform_test, 'platform']]
@@ -79,11 +109,13 @@ describe HybridPlatformsConductor::TestsRunner do
   end
 
   it 'fails when expected failures reference missing nodes' do
-    with_test_platform({ nodes: { 'node' => {} } }, false, '
-        for_nodes(\'missing_node\') do
-          expect_tests_to_fail(:node_test, \'Expected failure\')
+    with_test_platform(
+      { nodes: { 'node' => {} } },
+      additional_config: <<~'EO_CONFIG'
+        for_nodes('missing_node') do
+          expect_tests_to_fail(:node_test, 'Expected failure')
         end
-      '
+      EO_CONFIG
     ) do
       register_test_plugins(test_tests_runner, node_test: HybridPlatformsConductorTest::TestPlugins::Node)
       expect { test_tests_runner.run_tests([{ all: true }]) }.to raise_error 'Unknown nodes: missing_node'
@@ -91,7 +123,7 @@ describe HybridPlatformsConductor::TestsRunner do
   end
 
   it 'fails when we ask for an unknown test' do
-    with_test_platform do
+    with_test_platform({}) do
       register_test_plugins(test_tests_runner, global_test: HybridPlatformsConductorTest::TestPlugins::Global)
       test_tests_runner.tests = [:global_test_2]
       expect { test_tests_runner.run_tests([]) }.to raise_error(RuntimeError, 'Unknown test names: global_test_2')
@@ -100,8 +132,10 @@ describe HybridPlatformsConductor::TestsRunner do
 
   it 'executes different tests levels if 1 plugin defines them' do
     with_test_platforms(
-      'platform1' => { nodes: { 'node11' => {}, 'node12' => {} } },
-      'platform2' => { nodes: { 'node21' => {}, 'node22' => {} } }
+      {
+        'platform1' => { nodes: { 'node11' => {}, 'node12' => {} } },
+        'platform2' => { nodes: { 'node21' => {}, 'node22' => {} } }
+      }
     ) do
       register_test_plugins(test_tests_runner, several_tests: HybridPlatformsConductorTest::TestPlugins::SeveralChecks)
       # Mock the Actions Executor and Deployer expected calls
@@ -128,23 +162,23 @@ describe HybridPlatformsConductor::TestsRunner do
             'echo "$?"'
           ]
         end
-        Hash[node_suffixes.map do |node_suffix|
+        node_suffixes.map do |node_suffix|
           [
             "node#{node_suffix}",
             [
               0,
-              <<~EOS,
+              <<~EO_STDOUT,
                 ===== TEST COMMAND EXECUTION ===== Separator generated by Hybrid Platforms Conductor test framework =====
                 stdout#{node_suffix}
                 0
-              EOS
-              <<~EOS
+              EO_STDOUT
+              <<~EO_STDERR
                 ===== TEST COMMAND EXECUTION ===== Separator generated by Hybrid Platforms Conductor test framework =====
                 stderr#{node_suffix}
-              EOS
+              EO_STDERR
             ]
           ]
-        end]
+        end.to_h
       end])
       # Run everything
       test_tests_runner.tests = [:several_tests]
@@ -169,22 +203,8 @@ describe HybridPlatformsConductor::TestsRunner do
     end
   end
 
-  # Specific test registered by the test platform handler
-  class SpecificPlatformHandlerTest < HybridPlatformsConductor::Test
-
-    class << self
-      attr_accessor :run
-    end
-    @run = false
-
-    def test
-      SpecificPlatformHandlerTest.run = true
-    end
-
-  end
-
   it 'executes tests defined by a platform handler' do
-    with_test_platform(tests: { specific_platform_handler_test: SpecificPlatformHandlerTest }) do
+    with_test_platform({ tests: { specific_platform_handler_test: SpecificPlatformHandlerTest } }) do
       test_tests_runner.tests = [:specific_platform_handler_test]
       expect(test_tests_runner.run_tests([])).to eq 0
       expect(SpecificPlatformHandlerTest.run).to eq true

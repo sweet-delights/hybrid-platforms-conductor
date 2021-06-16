@@ -40,7 +40,7 @@ module HybridPlatformsConductor
       # * *master_cmdbs_info* (Hash< Symbol, Symbol or Array<Symbol> >): List of metadata properties (or single one) per CMDB name considered as master for those properties.
       def master_cmdbs(master_cmdbs_info)
         @cmdb_masters << {
-          cmdb_masters: Hash[master_cmdbs_info.map { |cmdb, properties| [cmdb, properties.is_a?(Array) ? properties : [properties]] }],
+          cmdb_masters: master_cmdbs_info.transform_values { |properties| properties.is_a?(Array) ? properties : [properties] },
           nodes_selectors_stack: current_nodes_selectors_stack
         }
       end
@@ -60,7 +60,8 @@ module HybridPlatformsConductor
 
     Config.extend_config_dsl_with ConfigDSLExtension, :init_nodes_handler_config
 
-    include LoggerHelpers, ParallelThreads
+    include ParallelThreads
+    include LoggerHelpers
 
     class GitError < RuntimeError
     end
@@ -74,8 +75,8 @@ module HybridPlatformsConductor
     # * *cmd_runner* (CmdRunner): Command executor to be used. [default: CmdRunner.new]
     # * *platforms_handler* (PlatformsHandler): Platforms Handler to be used. [default: PlatformsHandler.new]
     def initialize(
-      logger: Logger.new(STDOUT),
-      logger_stderr: Logger.new(STDERR),
+      logger: Logger.new($stdout),
+      logger_stderr: Logger.new($stderr),
       config: Config.new,
       cmd_runner: CmdRunner.new,
       platforms_handler: PlatformsHandler.new
@@ -111,11 +112,11 @@ module HybridPlatformsConductor
           )
           @cmdbs_others << cmdb if cmdb.respond_to?(:get_others)
           cmdb.methods.each do |method|
-            if method.to_s =~ /^get_(.*)$/
-              property = $1.to_sym
-              @cmdbs_per_property[property] = [] unless @cmdbs_per_property.key?(property)
-              @cmdbs_per_property[property] << cmdb
-            end
+            next unless method.to_s =~ /^get_(.*)$/
+
+            property = Regexp.last_match(1).to_sym
+            @cmdbs_per_property[property] = [] unless @cmdbs_per_property.key?(property)
+            @cmdbs_per_property[property] << cmdb
           end
           cmdb
         end
@@ -133,13 +134,17 @@ module HybridPlatformsConductor
         # Register all known nodes for this platform
         platform.known_nodes.each do |node|
           raise "Can't register #{node} to platform #{platform.repository_path}, as it is already defined in platform #{@nodes_platform[node].repository_path}." if @nodes_platform.key?(node)
+
           @nodes_platform[node] = platform
         end
         # Register all known nodes lists
+        next unless platform.respond_to?(:known_nodes_lists)
+
         platform.known_nodes_lists.each do |nodes_list|
           raise "Can't register nodes list #{nodes_list} to platform #{platform.repository_path}, as it is already defined in platform #{@nodes_list_platform[nodes_list].repository_path}." if @nodes_list_platform.key?(nodes_list)
+
           @nodes_list_platform[nodes_list] = platform
-        end if platform.respond_to?(:known_nodes_lists)
+        end
       end
     end
 
@@ -147,7 +152,7 @@ module HybridPlatformsConductor
     #
     # Parameters::
     # * *options_parser* (OptionParser): The option parser to complete
-    def options_parse(options_parser, parallel: true)
+    def options_parse(options_parser)
       options_parser.separator ''
       options_parser.separator 'Nodes handler options:'
       options_parser.on('-o', '--show-nodes', 'Display the list of possible nodes and exit') do
@@ -221,6 +226,7 @@ module HybridPlatformsConductor
         platform_name, from_commit, to_commit, flags = nodes_git_impact.split(':')
         flags = (flags || '').split(',')
         raise "Invalid platform in --nodes-git-impact: #{platform_name}. Possible values are: #{platform_names.join(', ')}." unless platform_names.include?(platform_name)
+
         nodes_selector = { platform: platform_name }
         nodes_selector[:from_commit] = from_commit if from_commit && !from_commit.empty?
         nodes_selector[:to_commit] = to_commit if to_commit && !to_commit.empty?
@@ -329,7 +335,7 @@ module HybridPlatformsConductor
     # * *block* (Proc): Code block given to the call
     def method_missing(method, *args, &block)
       if method.to_s =~ /^get_(.*)_of$/
-        property = $1.to_sym
+        property = Regexp.last_match(1).to_sym
         # Define the method so that we don't go trough method_missing next time (more efficient).
         define_property_method_for(property)
         # Then call it
@@ -339,6 +345,15 @@ module HybridPlatformsConductor
         # Call original implementation of method_missing that will raise an exception.
         super
       end
+    end
+
+    # Make sure we register the methods we handle in method_missing
+    #
+    # Parameters::
+    # * *name* (Symbol): The missing method name
+    # * *include_private* (Boolean): Should we include private methods in the search?
+    def respond_to_missing?(name, include_private)
+      name.to_s =~ /^get_(.*)_of$/ || super
     end
 
     # Prefetch some metadata properties for a given list of nodes.
@@ -352,52 +367,51 @@ module HybridPlatformsConductor
       (properties.is_a?(Symbol) ? [properties] : properties).each do |property|
         # Gather the list of nodes missing this property
         missing_nodes = nodes.select { |node| !@metadata.key?(node) || !@metadata[node].key?(property) }
-        unless missing_nodes.empty?
-          # Query the CMDBs having first the get_<property> method, then the ones having the get_others method till we have our property set for all missing nodes
-          # Metadata being retrieved by the different CMDBs, per node
-          # Hash< String, Object >
-          updated_metadata = {}
-          (
-            (@cmdbs_per_property.key?(property) ? @cmdbs_per_property[property] : []).map { |cmdb| [cmdb, property] } +
-              @cmdbs_others.map { |cmdb| [cmdb, :others] }
-          ).each do |(cmdb, cmdb_property)|
-            # If among the missing nodes some of them have some master CMDB declared for this property, filter them out unless we are dealing with their master CMDB.
-            nodes_to_query = missing_nodes.select do |node|
-              master_cmdb = cmdb_master_for(node, property)
-              master_cmdb.nil? || master_cmdb == cmdb
-            end
-            unless nodes_to_query.empty?
-              # Check first if this property depends on other ones for this cmdb
-              if cmdb.respond_to?(:property_dependencies)
-                property_deps = cmdb.property_dependencies
-                prefetch_metadata_of nodes_to_query, property_deps[property] if property_deps.key?(property)
-              end
-              # Property values, per node name
-              # Hash< String, Object >
-              metadata_from_cmdb = Hash[
-                cmdb.send("get_#{cmdb_property}".to_sym, nodes_to_query, @metadata.slice(*nodes_to_query)).map do |node, cmdb_result|
-                  [node, cmdb_property == :others ? cmdb_result[property] : cmdb_result]
-                end
-              ].compact
-              cmdb_log_header = "[CMDB #{cmdb.class.name.split('::').last}.#{cmdb_property}] -"
-              log_debug "#{cmdb_log_header} Query property #{property} for #{nodes_to_query.size} nodes (#{nodes_to_query[0..7].join(', ')}...) => Found metadata for #{metadata_from_cmdb.size} nodes."
-              updated_metadata.merge!(metadata_from_cmdb) do |node, existing_value, new_value|
-                raise "#{cmdb_log_header} Returned a conflicting value for metadata #{property} of node #{node}: #{new_value} whereas the value was already set to #{existing_value}" if !existing_value.nil? && new_value != existing_value
-                new_value
-              end
-            end
+        next if missing_nodes.empty?
+
+        # Query the CMDBs having first the get_<property> method, then the ones having the get_others method till we have our property set for all missing nodes
+        # Metadata being retrieved by the different CMDBs, per node
+        # Hash< String, Object >
+        updated_metadata = {}
+        (
+          (@cmdbs_per_property.key?(property) ? @cmdbs_per_property[property] : []).map { |cmdb| [cmdb, property] } +
+            @cmdbs_others.map { |cmdb| [cmdb, :others] }
+        ).each do |(cmdb, cmdb_property)|
+          # If among the missing nodes some of them have some master CMDB declared for this property, filter them out unless we are dealing with their master CMDB.
+          nodes_to_query = missing_nodes.select do |node|
+            master_cmdb = cmdb_master_for(node, property)
+            master_cmdb.nil? || master_cmdb == cmdb
           end
-          # Avoid conflicts in metadata while merging and make sure this update is thread-safe
-          # As @metadata is only appending data and never deleting it, protecting the update only is enough.
-          # At worst several threads will query several times the same CMDBs to update the same data several times.
-          # If we also want to be thread-safe in this regard, we should protect the whole CMDB call with mutexes, at the granularity of the node + property bein read.
-          @metadata_mutex.synchronize do
-            missing_nodes.each do |node|
-              @metadata[node] = {} unless @metadata.key?(node)
-              # Here, explicitely store nil if nothing has been found for a node because we know there is no value to be fetched.
-              # This way we won't query again all CMDBs thanks to the cache.
-              @metadata[node][property] = updated_metadata[node]
-            end
+          next if nodes_to_query.empty?
+
+          # Check first if this property depends on other ones for this cmdb
+          if cmdb.respond_to?(:property_dependencies)
+            property_deps = cmdb.property_dependencies
+            prefetch_metadata_of nodes_to_query, property_deps[property] if property_deps.key?(property)
+          end
+          # Property values, per node name
+          # Hash< String, Object >
+          metadata_from_cmdb = cmdb.send("get_#{cmdb_property}".to_sym, nodes_to_query, @metadata.slice(*nodes_to_query)).transform_values do |cmdb_result|
+            cmdb_property == :others ? cmdb_result[property] : cmdb_result
+          end.compact
+          cmdb_log_header = "[CMDB #{cmdb.class.name.split('::').last}.#{cmdb_property}] -"
+          log_debug "#{cmdb_log_header} Query property #{property} for #{nodes_to_query.size} nodes (#{nodes_to_query[0..7].join(', ')}...) => Found metadata for #{metadata_from_cmdb.size} nodes."
+          updated_metadata.merge!(metadata_from_cmdb) do |node, existing_value, new_value|
+            raise "#{cmdb_log_header} Returned a conflicting value for metadata #{property} of node #{node}: #{new_value} whereas the value was already set to #{existing_value}" if !existing_value.nil? && new_value != existing_value
+
+            new_value
+          end
+        end
+        # Avoid conflicts in metadata while merging and make sure this update is thread-safe
+        # As @metadata is only appending data and never deleting it, protecting the update only is enough.
+        # At worst several threads will query several times the same CMDBs to update the same data several times.
+        # If we also want to be thread-safe in this regard, we should protect the whole CMDB call with mutexes, at the granularity of the node + property bein read.
+        @metadata_mutex.synchronize do
+          missing_nodes.each do |node|
+            @metadata[node] = {} unless @metadata.key?(node)
+            # Here, explicitely store nil if nothing has been found for a node because we know there is no value to be fetched.
+            # This way we won't query again all CMDBs thanks to the cache.
+            @metadata[node][property] = updated_metadata[node]
           end
         end
       end
@@ -426,6 +440,7 @@ module HybridPlatformsConductor
       nodes_selectors = nodes_selectors.flatten
       # 1. Check for the presence of all
       return known_nodes if nodes_selectors.any? { |nodes_selector| nodes_selector.is_a?(Hash) && nodes_selector.key?(:all) && nodes_selector[:all] }
+
       # 2. Expand the nodes lists, platforms and services contents
       string_nodes = []
       nodes_selectors.each do |nodes_selector|
@@ -435,6 +450,7 @@ module HybridPlatformsConductor
           if nodes_selector.key?(:list)
             platform = @nodes_list_platform[nodes_selector[:list]]
             raise "Unknown nodes list: #{nodes_selector[:list]}" if platform.nil?
+
             string_nodes.concat(platform.nodes_selectors_from_nodes_list(nodes_selector[:list]))
           end
           string_nodes.concat(@platforms_handler.platform(nodes_selector[:platform]).known_nodes) if nodes_selector.key?(:platform)
@@ -462,8 +478,8 @@ module HybridPlatformsConductor
       # 3. Expand the Regexps
       real_nodes = []
       string_nodes.each do |node|
-        if node =~ /^\/(.+)\/$/
-          node_regexp = Regexp.new($1)
+        if node =~ %r{^/(.+)/$}
+          node_regexp = Regexp.new(Regexp.last_match(1))
           real_nodes.concat(known_nodes.select { |known_node| known_node[node_regexp] })
         else
           real_nodes << node
@@ -489,13 +505,11 @@ module HybridPlatformsConductor
     # * *parallel* (Boolean): Iterate in a multithreaded way? [default: false]
     # * *nbr_threads_max* (Integer or nil): Maximum number of threads to be used in case of parallel, or nil for no limit [default: nil]
     # * *progress* (String or nil): Name of a progress bar to follow the progression, or nil for no progress bar [default: 'Processing nodes']
-    # * Proc: The code called for each node being iterated on.
+    # * *block* (Proc): The code called for each node being iterated on.
     #   * Parameters::
     #     * *node* (String): The node name
-    def for_each_node_in(nodes, parallel: false, nbr_threads_max: nil, progress: 'Processing nodes')
-      for_each_element_in(nodes.sort, parallel: parallel, nbr_threads_max: nbr_threads_max, progress: progress) do |node|
-        yield node
-      end
+    def for_each_node_in(nodes, parallel: false, nbr_threads_max: nil, progress: 'Processing nodes', &block)
+      for_each_element_in(nodes.sort, parallel: parallel, nbr_threads_max: nbr_threads_max, progress: progress, &block)
     end
 
     # Get the list of impacted nodes from a git diff on a platform
@@ -513,10 +527,11 @@ module HybridPlatformsConductor
     def impacted_nodes_from_git_diff(platform_name, from_commit: 'master', to_commit: nil, smallest_set: false)
       platform = @platforms_handler.platform(platform_name)
       raise "Unkown platform #{platform_name}. Possible platforms are #{@platforms_handler.known_platforms.map(&:name).sort.join(', ')}" if platform.nil?
+
       begin
         _exit_status, stdout, _stderr = @cmd_runner.run_cmd "cd #{platform.repository_path} && git --no-pager diff --no-color #{from_commit} #{to_commit.nil? ? '' : to_commit}", log_to_stdout: log_debug?
       rescue CmdRunner::UnexpectedExitCodeError
-        raise GitError, $!.to_s
+        raise GitError, $ERROR_INFO.to_s
       end
       # Parse the git diff output to create a structured diff
       # Hash< String, Hash< Symbol, Object > >: List of diffs info, per file name having a diff. Diffs info have the following properties:
@@ -526,9 +541,10 @@ module HybridPlatformsConductor
       current_file_diff = nil
       stdout.split("\n").each do |line|
         case line
-        when /^diff --git a\/(.+) b\/(.+)$/
+        when %r{^diff --git a/(.+) b/(.+)$}
           # A new file diff
-          from, to = $1, $2
+          from = Regexp.last_match(1)
+          to = Regexp.last_match(2)
           current_file_diff = {
             diff: ''
           }
@@ -626,11 +642,13 @@ module HybridPlatformsConductor
         cmdb_masters_cache = {}
         select_confs_for_node(node, @config.cmdb_masters).each do |cmdb_masters_info|
           cmdb_masters_info[:cmdb_masters].each do |cmdb, properties|
-            properties.each do |property|
-              raise "Property #{property} have conflicting CMDB masters for #{node} declared in the configuration: #{cmdb_masters_cache[property].class.name} and #{@cmdbs[cmdb].class.name}" if cmdb_masters_cache.key?(property) && cmdb_masters_cache[property] != @cmdbs[cmdb]
-              log_debug "CMDB master for #{node} / #{property}: #{cmdb}"
-              raise "CMDB #{cmdb} is configured as a master for property #{property} on node #{node} but it does not implement the needed API to retrieve it" unless (@cmdbs_per_property[property] || []).include?(@cmdbs[cmdb]) || @cmdbs_others.include?(@cmdbs[cmdb])
-              cmdb_masters_cache[property] = @cmdbs[cmdb]
+            properties.each do |itr_property|
+              raise "Property #{itr_property} have conflicting CMDB masters for #{node} declared in the configuration: #{cmdb_masters_cache[itr_property].class.name} and #{@cmdbs[cmdb].class.name}" if cmdb_masters_cache.key?(itr_property) && cmdb_masters_cache[itr_property] != @cmdbs[cmdb]
+
+              log_debug "CMDB master for #{node} / #{itr_property}: #{cmdb}"
+              raise "CMDB #{cmdb} is configured as a master for property #{itr_property} on node #{node} but it does not implement the needed API to retrieve it" unless (@cmdbs_per_property[itr_property] || []).include?(@cmdbs[cmdb]) || @cmdbs_others.include?(@cmdbs[cmdb])
+
+              cmdb_masters_cache[itr_property] = @cmdbs[cmdb]
             end
           end
         end

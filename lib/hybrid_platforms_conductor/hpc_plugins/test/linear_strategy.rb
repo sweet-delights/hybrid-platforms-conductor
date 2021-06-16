@@ -17,7 +17,7 @@ module HybridPlatformsConductor
             log_to_stdout: log_debug?
           )
           stdout.split("\n").each do |merge_commit_id|
-            _exit_status, stdout, _stderr = @cmd_runner.run_cmd(<<~EOS, log_to_stdout: log_debug?, no_exception: true, expected_code: [0, 1])
+            _exit_status, stdout, _stderr = @cmd_runner.run_cmd(<<~EO_BASH, log_to_stdout: log_debug?, no_exception: true, expected_code: [0, 1])
               cd #{@platform.repository_path} && \
               git --no-pager log \
                 $(git merge-base \
@@ -27,14 +27,14 @@ module HybridPlatformsConductor
                 --pretty=format:\"%H\" \
                 --graph \
               | grep '|'
-            EOS
-            if !stdout.empty?
-              _exit_status, stdout, _stderr = @cmd_runner.run_cmd(
-                "cd #{@platform.repository_path} && git --no-pager log #{merge_commit_id} --pretty=format:%aI",
-                log_to_stdout: log_debug?
-              )
-              error "Git history is not linear because of Merge commit #{merge_commit_id}" if Time.now - Time.parse(stdout.strip) < LOOKING_PERIOD
-            end
+            EO_BASH
+            next if stdout.empty?
+
+            _exit_status, stdout, _stderr = @cmd_runner.run_cmd(
+              "cd #{@platform.repository_path} && git --no-pager log #{merge_commit_id} --pretty=format:%aI",
+              log_to_stdout: log_debug?
+            )
+            error "Git history is not linear because of Merge commit #{merge_commit_id}" if Time.now - Time.parse(stdout.strip) < LOOKING_PERIOD
           end
         end
 

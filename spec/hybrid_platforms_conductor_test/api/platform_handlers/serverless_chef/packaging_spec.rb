@@ -1,6 +1,6 @@
 describe HybridPlatformsConductor::HpcPlugins::PlatformHandler::ServerlessChef do
 
-  context 'checking services packaging' do
+  context 'when checking services packaging' do
 
     # Expect a repository to be packaged and mock it
     #
@@ -12,7 +12,7 @@ describe HybridPlatformsConductor::HpcPlugins::PlatformHandler::ServerlessChef d
     # * *export* (Boolean): Are we expecting the chef export stage? [default: true]
     # * *data_bags* (Boolean): Do we expect data bags copy? [default: false]
     # * *env* (String): Expected environment being packaged [default: 'prod']
-    # * Proc: Code called with mock in place
+    # * *block* (Proc): Code called with mock in place
     def with_packaging_mocked(
       repository,
       policy: 'test_policy',
@@ -20,7 +20,8 @@ describe HybridPlatformsConductor::HpcPlugins::PlatformHandler::ServerlessChef d
       install: true,
       export: true,
       data_bags: false,
-      env: 'prod'
+      env: 'prod',
+      &block
     )
       with_cmd_runner_mocked(
         if install
@@ -29,11 +30,11 @@ describe HybridPlatformsConductor::HpcPlugins::PlatformHandler::ServerlessChef d
               "cd #{repository} && /opt/chef-workstation/bin/chef install #{policy_file} --chef-license accept",
               proc do
                 # Mock the run_list stored in the lock file
+                dsl_parser = HybridPlatformsConductor::HpcPlugins::PlatformHandler::ServerlessChef::DslParser.new
+                dsl_parser.parse("#{repository}/#{policy_file}")
                 File.write(
                   "#{repository}/#{policy_file.gsub(/.rb$/, '.lock.json')}",
-                  {
-                    run_list: eval("[#{File.read("#{repository}/#{policy_file}").split("\n").select { |line| line =~ /^run_list.+$/ }.last.match(/^run_list(.+)$/)[1]}]").flatten
-                  }.to_json
+                  { run_list: dsl_parser.calls.select { |call| call[:method] == :run_list }.last[:args].flatten }.to_json
                 )
                 [0, 'Chef install done', '']
               end
@@ -46,7 +47,7 @@ describe HybridPlatformsConductor::HpcPlugins::PlatformHandler::ServerlessChef d
           [
             ['whoami', proc { [0, 'test_user', ''] }, { optional: true }],
             [
-              /^cd #{Regexp.escape(repository)} &&\s+sudo rm -rf dist\/#{Regexp.escape(env)}\/#{Regexp.escape(policy)} &&\s+\/opt\/chef-workstation\/bin\/chef export #{Regexp.escape(policy_file)} dist\/#{Regexp.escape(env)}\/#{Regexp.escape(policy)} --chef-license accept#{data_bags ? " && cp -ar data_bags/ dist/#{Regexp.escape(env)}/#{Regexp.escape(policy)}/" : ''}$/,
+              %r{^cd #{Regexp.escape(repository)} &&\s+sudo rm -rf dist/#{Regexp.escape(env)}/#{Regexp.escape(policy)} &&\s+/opt/chef-workstation/bin/chef export #{Regexp.escape(policy_file)} dist/#{Regexp.escape(env)}/#{Regexp.escape(policy)} --chef-license accept#{data_bags ? " && cp -ar data_bags/ dist/#{Regexp.escape(env)}/#{Regexp.escape(policy)}/" : ''}$},
               proc do
                 FileUtils.mkdir_p "#{repository}/dist/#{env}/#{policy}"
                 FileUtils.cp_r("#{repository}/data_bags", "#{repository}/dist/#{env}/#{policy}/") if data_bags
@@ -56,16 +57,15 @@ describe HybridPlatformsConductor::HpcPlugins::PlatformHandler::ServerlessChef d
           ]
         else
           []
-        end
-      ) do
-        yield
-      end
+        end,
+        &block
+      )
     end
 
     context 'with an empty platform' do
 
       it 'packages the repository doing nothing' do
-        with_serverless_chef_platforms('empty') do |platform, repository|
+        with_serverless_chef_platforms('empty') do |platform|
           with_cmd_runner_mocked([]) do
             platform.package(services: {}, secrets: {}, local_environment: false)
           end
@@ -114,15 +114,6 @@ describe HybridPlatformsConductor::HpcPlugins::PlatformHandler::ServerlessChef d
             local_policy_file = "#{repository}/policyfiles/test_policy.local.lock.json"
             expect(File.exist?(local_policy_file)).to eq true
             expect(JSON.parse(File.read(local_policy_file))).to eq('run_list' => ['recipe[test_cookbook]'])
-          end
-        end
-      end
-
-      it 'packages the repository without resolving dependencies when the lock file already exists' do
-        with_serverless_chef_platforms('1_node') do |platform, repository|
-          File.write("#{repository}/policyfiles/test_policy.lock.json", '{}')
-          with_packaging_mocked(repository, install: false) do
-            platform.package(services: { 'node' => %w[test_policy] }, secrets: {}, local_environment: false)
           end
         end
       end
@@ -184,7 +175,7 @@ describe HybridPlatformsConductor::HpcPlugins::PlatformHandler::ServerlessChef d
           # Wait 2 seconds so that we are sure the modified file will return a different timestamp
           sleep 2
           with_packaging_mocked(repository, install: false) do
-            File.write("#{repository}/chef_versions.yml", File.read("#{repository}/chef_versions.yml") + "\n\n")
+            File.write("#{repository}/chef_versions.yml", "#{File.read("#{repository}/chef_versions.yml")}\n\n")
             platform.package(services: { 'node' => %w[test_policy] }, secrets: {}, local_environment: false)
           end
         end
@@ -247,11 +238,13 @@ describe HybridPlatformsConductor::HpcPlugins::PlatformHandler::ServerlessChef d
             platform.package(services: { 'node' => %w[test_policy] }, secrets: {}, local_environment: true)
             local_policy_file = "#{repository}/policyfiles/test_policy.local.lock.json"
             expect(File.exist?(local_policy_file)).to eq true
-            expect(JSON.parse(File.read(local_policy_file))).to eq('run_list' => [
-              'hpc_test::before_run',
-              'recipe[test_cookbook]',
-              'hpc_test::after_run'
-            ])
+            expect(JSON.parse(File.read(local_policy_file))).to eq(
+              'run_list' => [
+                'hpc_test::before_run',
+                'recipe[test_cookbook]',
+                'hpc_test::after_run'
+              ]
+            )
           end
         end
       end
@@ -263,10 +256,12 @@ describe HybridPlatformsConductor::HpcPlugins::PlatformHandler::ServerlessChef d
             platform.package(services: { 'node' => %w[test_policy] }, secrets: {}, local_environment: true)
             local_policy_file = "#{repository}/policyfiles/test_policy.local.lock.json"
             expect(File.exist?(local_policy_file)).to eq true
-            expect(JSON.parse(File.read(local_policy_file))).to eq('run_list' => [
-              'hpc_test::before_run',
-              'recipe[test_cookbook]'
-            ])
+            expect(JSON.parse(File.read(local_policy_file))).to eq(
+              'run_list' => [
+                'hpc_test::before_run',
+                'recipe[test_cookbook]'
+              ]
+            )
           end
         end
       end
@@ -278,10 +273,12 @@ describe HybridPlatformsConductor::HpcPlugins::PlatformHandler::ServerlessChef d
             platform.package(services: { 'node' => %w[test_policy] }, secrets: {}, local_environment: true)
             local_policy_file = "#{repository}/policyfiles/test_policy.local.lock.json"
             expect(File.exist?(local_policy_file)).to eq true
-            expect(JSON.parse(File.read(local_policy_file))).to eq('run_list' => [
-              'recipe[test_cookbook]',
-              'hpc_test::after_run'
-            ])
+            expect(JSON.parse(File.read(local_policy_file))).to eq(
+              'run_list' => [
+                'recipe[test_cookbook]',
+                'hpc_test::after_run'
+              ]
+            )
           end
         end
       end

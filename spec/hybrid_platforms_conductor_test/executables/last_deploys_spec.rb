@@ -3,13 +3,11 @@ describe 'last_deploys executable' do
   # Setup a platform for last_deploys tests
   #
   # Parameters::
-  # * Proc: Code called when the platform is setup
+  # * *block* (Proc): Code called when the platform is setup
   #   * Parameters::
   #     * *repository* (String): Platform's repository
-  def with_test_platform_for_last_deploys
-    with_test_platform({ nodes: { 'node1' => {}, 'node2' => {} } }) do |repository|
-      yield repository
-    end
+  def with_test_platform_for_last_deploys(&block)
+    with_test_platform({ nodes: { 'node1' => {}, 'node2' => {} } }, &block)
   end
 
   it 'checks all nodes by default' do
@@ -46,14 +44,14 @@ describe 'last_deploys executable' do
       end
       exit_code, stdout, stderr = run 'last_deploys'
       expect(exit_code).to eq 0
-      expect(stdout).to eq(<<~EOS)
+      expect(stdout).to eq <<~EO_STDOUT
         +-------+-------------------------+-------------+--------------------+-------+
         | Node  | Date                    | Admin       | Services           | Error |
         +-------+-------------------------+-------------+--------------------+-------+
         | node1 | 2019-08-21 10:12:15 UTC | admin_user1 | service1           |       |
         | node2 | 2019-08-22 10:12:15 UTC | admin_user2 | service1, service2 |       |
         +-------+-------------------------+-------------+--------------------+-------+
-      EOS
+      EO_STDOUT
       expect(stderr).to eq ''
     end
   end
@@ -92,14 +90,14 @@ describe 'last_deploys executable' do
       end
       exit_code, stdout, stderr = run 'last_deploys', '--sort-by', 'user'
       expect(exit_code).to eq 0
-      expect(stdout).to eq(<<~EOS)
+      expect(stdout).to eq <<~EO_STDOUT
         +-------+-------------------------+-------------+--------------------+-------+
         | Node  | Date                    | Admin       | Services           | Error |
         +-------+-------------------------+-------------+--------------------+-------+
         | node2 | 2019-08-22 10:12:15 UTC | admin_user1 | service1, service2 |       |
         | node1 | 2019-08-21 10:12:15 UTC | admin_user2 | service1           |       |
         +-------+-------------------------+-------------+--------------------+-------+
-      EOS
+      EO_STDOUT
       expect(stderr).to eq ''
     end
   end
@@ -138,14 +136,14 @@ describe 'last_deploys executable' do
       end
       exit_code, stdout, stderr = run 'last_deploys', '--sort-by', 'user_desc'
       expect(exit_code).to eq 0
-      expect(stdout).to eq(<<~EOS)
+      expect(stdout).to eq <<~EO_STDOUT
         +-------+-------------------------+-------------+--------------------+-------+
         | Node  | Date                    | Admin       | Services           | Error |
         +-------+-------------------------+-------------+--------------------+-------+
         | node1 | 2019-08-21 10:12:15 UTC | admin_user2 | service1           |       |
         | node2 | 2019-08-22 10:12:15 UTC | admin_user1 | service1, service2 |       |
         +-------+-------------------------+-------------+--------------------+-------+
-      EOS
+      EO_STDOUT
       expect(stderr).to eq ''
     end
   end
@@ -171,13 +169,13 @@ describe 'last_deploys executable' do
       end
       exit_code, stdout, stderr = run 'last_deploys', '--node', 'node1'
       expect(exit_code).to eq 0
-      expect(stdout).to eq(<<~EOS)
+      expect(stdout).to eq <<~EO_STDOUT
         +-------+-------------------------+-------------+----------+-------+
         | Node  | Date                    | Admin       | Services | Error |
         +-------+-------------------------+-------------+----------+-------+
         | node1 | 2019-08-21 10:12:15 UTC | admin_user1 | service1 |       |
         +-------+-------------------------+-------------+----------+-------+
-      EOS
+      EO_STDOUT
       expect(stderr).to eq ''
     end
   end
@@ -206,14 +204,14 @@ describe 'last_deploys executable' do
       end
       exit_code, stdout, stderr = run 'last_deploys', '--sort-by', 'user_desc'
       expect(exit_code).to eq 0
-      expect(stdout).to eq(<<~EOS)
+      expect(stdout).to eq <<~EO_STDOUT
         +-------+-------------------------+-------------+--------------------+--------------------------+
         | Node  | Date                    | Admin       | Services           | Error                    |
         +-------+-------------------------+-------------+--------------------+--------------------------+
         | node2 | 2019-08-22 10:12:15 UTC | admin_user2 | service1, service2 |                          |
         | node1 |                         |             |                    | Error while getting logs |
         +-------+-------------------------+-------------+--------------------+--------------------------+
-      EOS
+      EO_STDOUT
       expect(stderr).to eq ''
     end
   end

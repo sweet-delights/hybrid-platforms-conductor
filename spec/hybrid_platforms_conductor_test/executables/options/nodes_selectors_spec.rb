@@ -3,19 +3,19 @@ describe 'executables\' nodes selection options' do
   # Setup a platform for tests
   #
   # Parameters::
-  # * Proc: Code called when the platform is setup
+  # * *block* (Proc): Code called when the platform is setup
   #   * Parameters::
   #     * *repository* (String): Platform's repository
-  def with_test_platform_for_nodes_selector_options
+  def with_test_platform_for_nodes_selector_options(&block)
     with_test_platforms(
       {
         'platform_1' => {
           nodes: {
             'node11' => { services: ['service1'] },
-            'node12' => { services: ['service3', 'service1'] },
+            'node12' => { services: %w[service3 service1] },
             'node13' => { services: ['service2'] }
           },
-          nodes_lists: { 'my_list' => ['node11', 'node13'] }
+          nodes_lists: { 'my_list' => %w[node11 node13] }
         },
         'platform_2' => {
           nodes: {
@@ -23,10 +23,9 @@ describe 'executables\' nodes selection options' do
             'node22' => { services: ['service1'] }
           }
         }
-      }
-    ) do |repository|
-      yield repository
-    end
+      },
+      &block
+    )
   end
 
   # Enumerate all command-line selectors to test, and the corresponding nodes list
@@ -59,8 +58,8 @@ describe 'executables\' nodes selection options' do
 
     it "resolves '#{args.join(' ')}' into #{expected_nodes.join(', ')}" do
       with_test_platform_for_nodes_selector_options do
-        expect(test_deployer).to receive(:deploy_on).with(expected_nodes) { {} }
-        exit_code, stdout, stderr = run 'deploy', *args
+        expect(test_deployer).to receive(:deploy_on).with(expected_nodes).and_return({})
+        exit_code, _stdout, stderr = run 'deploy', *args
         expect(exit_code).to eq 0
         expect(stderr).to eq ''
       end

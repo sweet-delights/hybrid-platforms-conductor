@@ -21,7 +21,7 @@ module HybridPlatformsConductor
           # Array< Hash<Symbol, Object> >
           attr_reader :ports_rules
 
-          # Initialize the DSL 
+          # Initialize the DSL
           def init_ports_test
             @ports_rules = []
           end
@@ -52,7 +52,7 @@ module HybridPlatformsConductor
 
         end
 
-        self.extend_config_dsl_with ConfigDslExtension, :init_ports_test
+        extend_config_dsl_with ConfigDslExtension, :init_ports_test
 
         # Check my_test_plugin.rb.sample documentation for signature details.
         def test_for_node

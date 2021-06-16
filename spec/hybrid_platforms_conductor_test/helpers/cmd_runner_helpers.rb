@@ -38,6 +38,7 @@ module HybridPlatformsConductorTest
           remaining_expected_commands_mutex.synchronize do
             remaining_expected_commands.delete_if do |(expected_command, command_code, _options)|
               break unless found_command.nil?
+
               if (expected_command.is_a?(String) && expected_command == cmd) || (expected_command.is_a?(Regexp) && cmd =~ expected_command)
                 found_command = expected_command
                 found_command_code = command_code
@@ -86,8 +87,8 @@ module HybridPlatformsConductorTest
         end
         yield
         expect(
-          remaining_expected_commands.select do |(_expected_command, _command_code, options)|
-            !options[:optional]
+          remaining_expected_commands.reject do |(_expected_command, _command_code, options)|
+            options[:optional]
           end
         ).to eq([]), "Expected CmdRunner commands were not run:\n#{
           remaining_expected_commands.map do |(expected_command, _command_code, options)|
@@ -103,7 +104,7 @@ module HybridPlatformsConductorTest
       # Result::
       # * CmdRunner: CmdRunner on which we can do testing
       def test_cmd_runner
-        @cmd_runner = HybridPlatformsConductor::CmdRunner.new logger: logger, logger_stderr: logger unless @cmd_runner
+        @cmd_runner ||= HybridPlatformsConductor::CmdRunner.new logger: logger, logger_stderr: logger
         @cmd_runner
       end
 

@@ -1,12 +1,12 @@
 describe HybridPlatformsConductor::TestsRunner do
 
-  context 'checking test plugins' do
+  context 'when checking test plugins' do
 
-    context 'checking bitbucket_conf' do
+    context 'with bitbucket_conf' do
 
       it 'iterates over defined Bitbucket repos' do
-        with_repository do |repository|
-          platforms = <<~EOS
+        with_repository do
+          platforms = <<~EO_CONFIG
             bitbucket_repos(
               url: 'https://my_bb1.my_domain.com',
               project: 'PR1',
@@ -33,7 +33,7 @@ describe HybridPlatformsConductor::TestsRunner do
                 ]
               }
             )
-          EOS
+          EO_CONFIG
           with_platforms platforms do
             repos = []
             test_config.for_each_bitbucket_repo do |bitbucket, repo_info|

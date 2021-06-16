@@ -3,20 +3,19 @@ describe 'executables\' common options' do
   # Setup a platform for tests
   #
   # Parameters::
-  # * Proc: Code called when the platform is setup
+  # * *block* (Proc): Code called when the platform is setup
   #   * Parameters::
   #     * *repository* (String): Platform's repository
-  def with_test_platform_for_common_options
+  def with_test_platform_for_common_options(&block)
     with_test_platform(
       {
         nodes: { 'node1' => { meta: { host_ip: '192.168.42.42' }, services: ['node1_service'] } },
         deployable_services: %w[node1_service]
       },
-      true,
-      'send_logs_to :test_log'
-    ) do |repository|
-      yield repository
-    end
+      as_git: true,
+      additional_config: 'send_logs_to :test_log',
+      &block
+    )
   end
 
   # List of executables for which we test the common options, along with options to try that should do nothing
@@ -42,14 +41,14 @@ describe 'executables\' common options' do
         with_test_platform_for_common_options do
           exit_code, stdout, stderr = run executable, '--help'
           expect(exit_code).to eq 0
-          expect(stdout).to match /Usage: .*#{executable}/
+          expect(stdout).to match(/Usage: .*#{Regexp.escape(executable)}/)
           expect(stderr).to eq ''
         end
       end
 
       it 'accepts the debug mode switch' do
         with_test_platform_for_common_options do
-          exit_code, stdout, stderr = run executable, *(['--debug'] + default_options)
+          exit_code, _stdout, stderr = run executable, *(['--debug'] + default_options)
           expect(exit_code).to eq 0
           # Make sure to ignore the deployment markers from stderr.
           expect(stderr.gsub("===== [ node1 / node1_service ] - HPC Service Check ===== Begin\n===== [ node1 / node1_service ] - HPC Service Check ===== End\n", '')).to eq ''

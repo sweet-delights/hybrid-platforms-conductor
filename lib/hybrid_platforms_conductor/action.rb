@@ -16,8 +16,8 @@ module HybridPlatformsConductor
     # * *actions_executor* (ActionsExecutor): Actions Executor to be used. [default: ActionsExecutor.new]
     # * *action_info* (Object or nil): Action info needed to setup the action, or nil if none [default: nil]
     def initialize(
-      logger: Logger.new(STDOUT),
-      logger_stderr: Logger.new(STDERR),
+      logger: Logger.new($stdout),
+      logger_stderr: Logger.new($stderr),
       config: Config.new,
       cmd_runner: CmdRunner.new,
       actions_executor: ActionsExecutor.new,
@@ -27,7 +27,7 @@ module HybridPlatformsConductor
       @cmd_runner = cmd_runner
       @actions_executor = actions_executor
       @action_info = action_info
-      setup(@action_info) if self.respond_to?(:setup)
+      setup(@action_info) if respond_to?(:setup)
     end
 
     # Do we need a connector to execute this action on a node?
@@ -53,7 +53,7 @@ module HybridPlatformsConductor
       @timeout = timeout
       @stdout_io = stdout_io
       @stderr_io = stderr_io
-      @connector.prepare_for(@node, @timeout, @stdout_io, @stderr_io) if @connector
+      @connector&.prepare_for(@node, @timeout, @stdout_io, @stderr_io)
     end
 
     private

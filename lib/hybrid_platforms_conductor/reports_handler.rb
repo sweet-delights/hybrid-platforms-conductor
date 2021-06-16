@@ -26,8 +26,8 @@ module HybridPlatformsConductor
     # * *platforms_handler* (PlatformsHandler): Platforms handler to be used. [default = PlatformsHandler.new]
     # * *nodes_handler* (NodesHandler): Nodes handler to be used. [default = NodesHandler.new]
     def initialize(
-      logger: Logger.new(STDOUT),
-      logger_stderr: Logger.new(STDERR),
+      logger: Logger.new($stdout),
+      logger_stderr: Logger.new($stderr),
       config: Config.new,
       platforms_handler: PlatformsHandler.new,
       nodes_handler: NodesHandler.new
@@ -70,6 +70,7 @@ module HybridPlatformsConductor
     # * *nodes_selectors* (Array<Object>): List of nodes selectors to produce report for
     def produce_report_for(nodes_selectors)
       raise "Unknown locale for format #{@format}: #{@locale}" unless @reports_plugins[@format].supported_locales.include? @locale
+
       @reports_plugins[@format].new(
         logger: @logger,
         logger_stderr: @logger_stderr,

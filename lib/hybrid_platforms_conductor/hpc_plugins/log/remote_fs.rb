@@ -37,7 +37,7 @@ module HybridPlatformsConductor
             {
               ruby: proc do
                 FileUtils.mkdir_p File.dirname(log_file)
-                File.write(log_file, <<~EOS)
+                File.write(log_file, <<~EO_DEPLOYMENT_LOG)
                   #{
                     deployment_info.merge(
                       debug: log_debug? ? 'Yes' : 'No',
@@ -49,7 +49,7 @@ module HybridPlatformsConductor
                   #{stdout}
                   #{MARKER_STDERR}
                   #{stderr}
-                EOS
+                EO_DEPLOYMENT_LOG
               end,
               remote_bash: "#{sudo_prefix}mkdir -p /var/log/deployments && #{sudo_prefix}chmod 600 /var/log/deployments"
             },
@@ -112,7 +112,7 @@ module HybridPlatformsConductor
         #   * *exit_status* (Integer or Symbol): Deployment exit status
         #   * *stdout* (String): Deployment stdout
         #   * *stderr* (String): Deployment stderr
-        def logs_for(node, exit_status, stdout, stderr)
+        def logs_for(_node, exit_status, stdout, stderr)
           # Expected format for stdout:
           # Property1: Value1
           # ...
@@ -133,7 +133,8 @@ module HybridPlatformsConductor
               deploy_info = {}
               stdout_lines[0..stdout_idx - 1].each do |line|
                 if line =~ /^([^:]+): (.+)$/
-                  key_str, value = $1, $2
+                  key_str = Regexp.last_match(1)
+                  value = Regexp.last_match(2)
                   key = key_str.to_sym
                   # Type-cast some values
                   case key_str
@@ -164,7 +165,7 @@ module HybridPlatformsConductor
                 deployment_info: deploy_info,
                 exit_status: exit_status =~ /^\d+$/ ? Integer(exit_status) : exit_status.to_sym,
                 stdout: stdout_lines[stdout_idx + 1..stderr_idx - 1].join("\n"),
-                stderr: stdout_lines[stderr_idx + 1..-1].join("\n")
+                stderr: stdout_lines[stderr_idx + 1..].join("\n")
               }
             end
           end

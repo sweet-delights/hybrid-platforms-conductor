@@ -12,7 +12,7 @@ module HybridPlatformsConductor
       # Report tests results on a generated Confluence page
       class Confluence < HybridPlatformsConductor::TestReport
 
-        self.extend_config_dsl_with CommonConfigDsl::Confluence, :init_confluence
+        extend_config_dsl_with CommonConfigDsl::Confluence, :init_confluence
 
         # Maximum errors to be reported by item
         MAX_ERROR_ITEMS_DISPLAYED = 10
@@ -34,7 +34,7 @@ module HybridPlatformsConductor
                   at('h1:contains("Evolution")').
                   search('~ structured-macro:first-of-type').
                   css('table td').
-                  map { |td_element| td_element.text }.
+                  map(&:text).
                   each_slice(2).
                   to_a.
                   map { |(time_str, value_str)| [Time.parse("#{time_str} UTC"), value_str.to_f] }

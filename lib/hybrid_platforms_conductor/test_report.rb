@@ -50,7 +50,7 @@ module HybridPlatformsConductor
     # Result::
     # * Array<Test>: List of platform tests
     def platform_tests
-      @tests.select { |test| !test.platform.nil? }
+      @tests.reject { |test| test.platform.nil? }
     end
 
     # Return node tests
@@ -58,7 +58,7 @@ module HybridPlatformsConductor
     # Result::
     # * Array<Test>: List of node tests
     def node_tests
-      @tests.select { |test| !test.node.nil? }
+      @tests.reject { |test| test.node.nil? }
     end
 
     # Select tests corresponding to a given criteria
@@ -144,7 +144,7 @@ module HybridPlatformsConductor
             when :only_as_expected
               test.expected_failure ? test.errors : []
             when :only_as_non_expected
-              !test.expected_failure ? test.errors : []
+              test.expected_failure ? [] : test.errors
             else
               raise "Unknown errors filter: #{fiter}"
             end
@@ -166,10 +166,10 @@ module HybridPlatformsConductor
         end
         groups = {}
         tests.group_by(&first_criteria).each do |first_group, grouped_tests|
-          next_grouped_errors = group_errors(grouped_tests, *group_criterias[1..-1], filter: filter)
+          next_grouped_errors = group_errors(grouped_tests, *group_criterias[1..], filter: filter)
           groups[first_group] = next_grouped_errors unless next_grouped_errors.empty?
         end
-        Hash[groups.sort]
+        groups.sort.to_h
       end
     end
 
@@ -184,7 +184,7 @@ module HybridPlatformsConductor
     #   * *tested_nodes_in_error_as_expected* (Array<String>): Tested nodes in error in the list that are part of the expected failures
     def nodes_by_nodes_list
       no_list_nodes = @nodes_handler.known_nodes
-      Hash[(
+      (
         @nodes_handler.known_nodes_lists.sort.map do |nodes_list|
           nodes_from_list = @nodes_handler.nodes_from_list(nodes_list, ignore_unknowns: true)
           no_list_nodes -= nodes_from_list
@@ -193,17 +193,14 @@ module HybridPlatformsConductor
           ['No list', no_list_nodes],
           ['All', @nodes_handler.known_nodes]
         ]
-      ).map do |list_name, list_nodes|
-        [
-          list_name,
-          {
-            nodes: list_nodes,
-            tested_nodes: list_nodes & @tested_nodes,
-            tested_nodes_in_error: list_nodes & group_errors(node_tests, :node).keys,
-            tested_nodes_in_error_as_expected: list_nodes & group_errors(node_tests, :node, filter: :only_as_expected).keys
-          }
-        ]
-      end]
+      ).to_h.transform_values do |list_nodes|
+        {
+          nodes: list_nodes,
+          tested_nodes: list_nodes & @tested_nodes,
+          tested_nodes_in_error: list_nodes & group_errors(node_tests, :node).keys,
+          tested_nodes_in_error_as_expected: list_nodes & group_errors(node_tests, :node, filter: :only_as_expected).keys
+        }
+      end
     end
 
     # Flatten a tree hash.
@@ -259,7 +256,7 @@ module HybridPlatformsConductor
     #     * *not_run*: All non-successful tests have not been run
     def classify_tests(tests)
       info = {
-        not_run: tests.select { |test| !test.executed? },
+        not_run: tests.reject(&:executed?),
         success: tests.select { |test| test.executed? && test.errors.empty? },
         unexpected_error: tests.select { |test| test.executed? && !test.errors.empty? && test.expected_failure.nil? },
         expected_error: tests.select { |test| test.executed? && !test.errors.empty? && !test.expected_failure.nil? }

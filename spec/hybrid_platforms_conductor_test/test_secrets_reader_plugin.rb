@@ -6,9 +6,9 @@ module HybridPlatformsConductorTest
   class TestSecretsReaderPlugin < HybridPlatformsConductor::SecretsReader
 
     class << self
-      attr_accessor :calls
-      attr_accessor :deployer
-      attr_accessor :mocked_secrets
+
+      attr_accessor :calls, :deployer, :mocked_secrets
+
     end
 
     # Return secrets for a given service to be deployed on a node.
@@ -25,7 +25,7 @@ module HybridPlatformsConductorTest
     # * Hash: The secrets
     def secrets_for(node, service)
       # Get the name by looking into the plugins' map
-      plugin_name, _plugin = TestSecretsReaderPlugin.deployer.instance_variable_get(:@secrets_readers).find { |plugin_name, plugin| plugin == self }
+      plugin_name, _plugin = TestSecretsReaderPlugin.deployer.instance_variable_get(:@secrets_readers).find { |_plugin_name, plugin| plugin == self }
       TestSecretsReaderPlugin.calls << {
         instance: plugin_name,
         node: node,

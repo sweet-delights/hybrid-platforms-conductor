@@ -1,23 +1,24 @@
 describe HybridPlatformsConductor::NodesHandler do
 
-  context 'checking nodes selection capabilities' do
+  context 'when checking nodes selection capabilities' do
 
     # Set the test environment with a given list of nodes for our tests
     #
     # Parameters::
-    # * Proc: Code called when environment is ready
-    def with_test_platform_for_nodes
+    # * *block* (Proc): Code called when environment is ready
+    def with_test_platform_for_nodes(&block)
       with_test_platforms(
-        'platform1' => {
-          nodes: { 'node1' => {}, 'node2' => { services: ['service1'] }, 'node3' => { services: ['service2'] } },
-          nodes_lists: { 'nodeslist1' => %w[node1 node3], 'nodeslist2' => ['/node[12]/'] }
+        {
+          'platform1' => {
+            nodes: { 'node1' => {}, 'node2' => { services: ['service1'] }, 'node3' => { services: ['service2'] } },
+            nodes_lists: { 'nodeslist1' => %w[node1 node3], 'nodeslist2' => ['/node[12]/'] }
+          },
+          'platform2' => {
+            nodes: { 'node4' => {}, 'node5' => { services: %w[service3 service1] }, 'node6' => {} }
+          }
         },
-        'platform2' => {
-          nodes: { 'node4' => {}, 'node5' => { services: ['service3', 'service1'] }, 'node6' => {} }
-        }
-      ) do
-        yield
-      end
+        &block
+      )
     end
 
     # List all tests of nodes selectors, and the corresponding nodes list they should be resolved into
@@ -50,7 +51,7 @@ describe HybridPlatformsConductor::NodesHandler do
 
     it 'ignore unknown nodes when asked' do
       with_test_platform_for_nodes do
-        expect(test_nodes_handler.select_nodes(['node1', 'node7'], ignore_unknowns: true).sort).to eq %w[node1 node7].sort
+        expect(test_nodes_handler.select_nodes(%w[node1 node7], ignore_unknowns: true).sort).to eq %w[node1 node7].sort
       end
     end
 
@@ -61,7 +62,7 @@ describe HybridPlatformsConductor::NodesHandler do
           from_commit: 'master',
           to_commit: nil,
           smallest_set: false
-        ) { [%w[node4 node6], [], [], false] }
+        ).and_return [%w[node4 node6], [], [], false]
         expect(test_nodes_handler.select_nodes([{ git_diff: { platform: 'platform2' } }]).sort).to eq %w[node4 node6].sort
       end
     end
@@ -73,7 +74,7 @@ describe HybridPlatformsConductor::NodesHandler do
           from_commit: 'from_commit',
           to_commit: nil,
           smallest_set: false
-        ) { [%w[node4 node6], [], [], false] }
+        ).and_return [%w[node4 node6], [], [], false]
         expect(test_nodes_handler.select_nodes([{ git_diff: { platform: 'platform2', from_commit: 'from_commit' } }]).sort).to eq %w[node4 node6].sort
       end
     end
@@ -85,7 +86,7 @@ describe HybridPlatformsConductor::NodesHandler do
           from_commit: 'master',
           to_commit: 'to_commit',
           smallest_set: false
-        ) { [%w[node4 node6], [], [], false] }
+        ).and_return [%w[node4 node6], [], [], false]
         expect(test_nodes_handler.select_nodes([{ git_diff: { platform: 'platform2', to_commit: 'to_commit' } }]).sort).to eq %w[node4 node6].sort
       end
     end
@@ -97,7 +98,7 @@ describe HybridPlatformsConductor::NodesHandler do
           from_commit: 'master',
           to_commit: nil,
           smallest_set: true
-        ) { [%w[node4 node6], [], [], false] }
+        ).and_return [%w[node4 node6], [], [], false]
         expect(test_nodes_handler.select_nodes([{ git_diff: { platform: 'platform2', smallest_set: true } }]).sort).to eq %w[node4 node6].sort
       end
     end
@@ -110,20 +111,28 @@ describe HybridPlatformsConductor::NodesHandler do
 
     it 'considers nodes selector intersection in a nodes selector stack' do
       with_test_platform_for_nodes do
-        expect(test_nodes_handler.select_from_nodes_selector_stack([
-          %w[node1 node2 node3],
-          %w[node2 node3 node4]
-        ]).sort).to eq %w[node2 node3].sort
+        expect(
+          test_nodes_handler.select_from_nodes_selector_stack(
+            [
+              %w[node1 node2 node3],
+              %w[node2 node3 node4]
+            ]
+          ).sort
+        ).to eq %w[node2 node3].sort
       end
     end
 
     it 'considers nodes selector intersection between different kind of selectors in a nodes selector stack' do
       with_test_platform_for_nodes do
-        expect(test_nodes_handler.select_from_nodes_selector_stack([
-          '/node[1256]/',
-          [{ platform: 'platform2' }],
-          [{ service: 'service1' }]
-        ]).sort).to eq %w[node5].sort
+        expect(
+          test_nodes_handler.select_from_nodes_selector_stack(
+            [
+              '/node[1256]/',
+              [{ platform: 'platform2' }],
+              [{ service: 'service1' }]
+            ]
+          ).sort
+        ).to eq %w[node5].sort
       end
     end
 

@@ -1,17 +1,15 @@
 describe HybridPlatformsConductor::ActionsExecutor do
 
-  context 'checking actions handling' do
+  context 'when checking actions handling' do
 
     # Instantiate a test platform, with the test action registered in Actions Executor.
     #
     # Parameters::
-    # * Proc: Code called with the environment ready
+    # * *block* (Proc): Code called with the environment ready
     #   * Parameters::
     #     * *repository* (String): Path to the repository
-    def with_test_platform_for_actions
-      with_test_platform_for_executor(nodes: { 'node1' => {}, 'node2' => {}, 'node3' => {} }) do |repository|
-        yield repository
-      end
+    def with_test_platform_for_actions(&block)
+      with_test_platform_for_executor(nodes: { 'node1' => {}, 'node2' => {}, 'node3' => {} }, &block)
     end
 
     it 'executes a simple action on 1 node' do
@@ -40,11 +38,13 @@ describe HybridPlatformsConductor::ActionsExecutor do
 
     it 'executes several actions on 1 node' do
       with_test_platform_for_actions do
-        test_actions_executor.execute_actions('node1' => [
-          { test_action: 'Action 1 executed' },
-          { test_action: 'Action 2 executed' },
-          { test_action: 'Action 3 executed' }
-        ])
+        test_actions_executor.execute_actions(
+          'node1' => [
+            { test_action: 'Action 1 executed' },
+            { test_action: 'Action 2 executed' },
+            { test_action: 'Action 3 executed' }
+          ]
+        )
         expect(action_executions).to eq [
           { node: 'node1', message: 'Action 1 executed' },
           { node: 'node1', message: 'Action 2 executed' },
@@ -71,26 +71,29 @@ describe HybridPlatformsConductor::ActionsExecutor do
     it 'executes several actions of different types' do
       with_test_platform_for_actions do
         actions_executed = []
-        expect(test_actions_executor.execute_actions('node1' => [
-          { ruby: proc do |stdout, stderr|
-            stdout << 'action1_stdout '
-            stderr << 'action1_stderr '
-            actions_executed << 'action1'
-          end },
-          { bash: 'echo action2_stdout' },
-          { ruby: proc do |stdout, stderr|
-            stdout << 'action3_stdout'
-            stderr << 'action3_stderr'
-            actions_executed << 'action3'
-          end }
-        ])).to eq('node1' => [0, "action1_stdout action2_stdout\naction3_stdout", 'action1_stderr action3_stderr'])
+        expect(
+          test_actions_executor.execute_actions(
+            'node1' => [
+              { ruby: proc do |stdout, stderr|
+                stdout << 'action1_stdout '
+                stderr << 'action1_stderr '
+                actions_executed << 'action1'
+              end },
+              { bash: 'echo action2_stdout' },
+              { ruby: proc do |stdout, stderr|
+                stdout << 'action3_stdout'
+                stderr << 'action3_stderr'
+                actions_executed << 'action3'
+              end }
+            ]
+          )
+        ).to eq('node1' => [0, "action1_stdout action2_stdout\naction3_stdout", 'action1_stderr action3_stderr'])
         expect(actions_executed).to eq %w[action1 action3]
       end
     end
 
     it 'executes several actions on 1 node specified using different selectors' do
       with_test_platform_for_actions do
-        actions_executed = []
         test_actions_executor.execute_actions(
           'node1' => { test_action: 'Action 1 executed' },
           '/node1/' => { test_action: 'Action 2 executed' }
@@ -125,11 +128,13 @@ describe HybridPlatformsConductor::ActionsExecutor do
 
     it 'returns errors without failing for actions having command issues' do
       with_test_platform_for_actions do
-        expect(test_actions_executor.execute_actions(
-          'node1' => { test_action: { code: proc { |stdout| stdout << 'Action 1' } } },
-          'node2' => { test_action: { code: proc { raise HybridPlatformsConductor::CmdRunner::UnexpectedExitCodeError, 'Command returned 1' } } },
-          'node3' => { test_action: { code: proc { |stdout| stdout << 'Action 3' } } }
-        )).to eq(
+        expect(
+          test_actions_executor.execute_actions(
+            'node1' => { test_action: { code: proc { |stdout| stdout << 'Action 1' } } },
+            'node2' => { test_action: { code: proc { raise HybridPlatformsConductor::CmdRunner::UnexpectedExitCodeError, 'Command returned 1' } } },
+            'node3' => { test_action: { code: proc { |stdout| stdout << 'Action 3' } } }
+          )
+        ).to eq(
           'node1' => [0, 'Action 1', ''],
           'node2' => [:failed_command, '', "Command returned 1\n"],
           'node3' => [0, 'Action 3', '']
@@ -139,11 +144,13 @@ describe HybridPlatformsConductor::ActionsExecutor do
 
     it 'returns errors without failing for actions having timeout issues' do
       with_test_platform_for_actions do
-        expect(test_actions_executor.execute_actions(
-          'node1' => { test_action: { code: proc { |stdout| stdout << 'Action 1' } } },
-          'node2' => { test_action: { code: proc { raise HybridPlatformsConductor::CmdRunner::TimeoutError } } },
-          'node3' => { test_action: { code: proc { |stdout| stdout << 'Action 3' } } }
-        )).to eq(
+        expect(
+          test_actions_executor.execute_actions(
+            'node1' => { test_action: { code: proc { |stdout| stdout << 'Action 1' } } },
+            'node2' => { test_action: { code: proc { raise HybridPlatformsConductor::CmdRunner::TimeoutError } } },
+            'node3' => { test_action: { code: proc { |stdout| stdout << 'Action 3' } } }
+          )
+        ).to eq(
           'node1' => [0, 'Action 1', ''],
           'node2' => [:timeout, '', ''],
           'node3' => [0, 'Action 3', '']
@@ -153,11 +160,13 @@ describe HybridPlatformsConductor::ActionsExecutor do
 
     it 'returns errors without failing for actions having connection issues' do
       with_test_platform_for_actions do
-        expect(test_actions_executor.execute_actions(
-          'node1' => { test_action: { code: proc { |stdout| stdout << 'Action 1' } } },
-          'node2' => { test_action: { code: proc { raise HybridPlatformsConductor::ActionsExecutor::ConnectionError, 'Can\'t connect' } } },
-          'node3' => { test_action: { code: proc { |stdout| stdout << 'Action 3' } } }
-        )).to eq(
+        expect(
+          test_actions_executor.execute_actions(
+            'node1' => { test_action: { code: proc { |stdout| stdout << 'Action 1' } } },
+            'node2' => { test_action: { code: proc { raise HybridPlatformsConductor::ActionsExecutor::ConnectionError, 'Can\'t connect' } } },
+            'node3' => { test_action: { code: proc { |stdout| stdout << 'Action 3' } } }
+          )
+        ).to eq(
           'node1' => [0, 'Action 1', ''],
           'node2' => [:connection_error, '', "Can't connect\n"],
           'node3' => [0, 'Action 3', '']
@@ -167,11 +176,13 @@ describe HybridPlatformsConductor::ActionsExecutor do
 
     it 'returns errors without failing for actions having unhandled exceptions' do
       with_test_platform_for_actions do
-        expect(test_actions_executor.execute_actions(
-          'node1' => { test_action: { code: proc { |stdout| stdout << 'Action 1' } } },
-          'node2' => { test_action: { code: proc { raise 'Strange error' } } },
-          'node3' => { test_action: { code: proc { |stdout| stdout << 'Action 3' } } }
-        )).to eq(
+        expect(
+          test_actions_executor.execute_actions(
+            'node1' => { test_action: { code: proc { |stdout| stdout << 'Action 1' } } },
+            'node2' => { test_action: { code: proc { raise 'Strange error' } } },
+            'node3' => { test_action: { code: proc { |stdout| stdout << 'Action 3' } } }
+          )
+        ).to eq(
           'node1' => [0, 'Action 1', ''],
           'node2' => [:failed_action, '', "Strange error\n"],
           'node3' => [0, 'Action 3', '']
@@ -182,11 +193,13 @@ describe HybridPlatformsConductor::ActionsExecutor do
     it 'returns errors without failing for actions on nodes having no connectors' do
       with_test_platform_for_actions do
         test_actions_executor.connector(:test_connector).accept_nodes = %w[node1 node3]
-        expect(test_actions_executor.execute_actions(
-          'node1' => { test_action: { need_connector: true, code: proc { |stdout| stdout << 'Action 1' } } },
-          'node2' => { test_action: { need_connector: true, code: proc { |stdout| stdout << 'Action 2' } } },
-          'node3' => { test_action: { need_connector: true, code: proc { |stdout| stdout << 'Action 3' } } }
-        )).to eq(
+        expect(
+          test_actions_executor.execute_actions(
+            'node1' => { test_action: { need_connector: true, code: proc { |stdout| stdout << 'Action 1' } } },
+            'node2' => { test_action: { need_connector: true, code: proc { |stdout| stdout << 'Action 2' } } },
+            'node3' => { test_action: { need_connector: true, code: proc { |stdout| stdout << 'Action 3' } } }
+          )
+        ).to eq(
           'node1' => [0, 'Action 1', ''],
           'node2' => [:no_connector, '', 'Unable to get a connector to node2'],
           'node3' => [0, 'Action 3', '']

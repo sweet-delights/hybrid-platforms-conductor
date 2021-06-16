@@ -1,17 +1,15 @@
 describe HybridPlatformsConductor::Deployer do
 
-  context 'checking log plugins' do
+  context 'when checking log plugins' do
 
-    context 'remote_fs' do
+    context 'with remote_fs' do
 
       # Return a test platform ready to test the remote_fs log plugin
       #
       # Parameters::
-      # * Proc: Code called with platform prepared
-      def with_test_platform_for_remote_fs
-        with_test_platform({ nodes: { 'node' => { services: %w[service1 service2] } } }, false, 'send_logs_to :remote_fs') do
-          yield
-        end
+      # * *block* (Proc): Code called with platform prepared
+      def with_test_platform_for_remote_fs(&block)
+        with_test_platform({ nodes: { 'node' => { services: %w[service1 service2] } } }, additional_config: 'send_logs_to :remote_fs', &block)
       end
 
       it 'returns actions to save logs' do
@@ -19,7 +17,7 @@ describe HybridPlatformsConductor::Deployer do
           with_connections_mocked_on ['node'] do
             test_actions_executor.connector(:ssh).ssh_user = 'test_user'
             expect_services_handler_to_deploy('node' => %w[service1 service2])
-            expect_actions_executor_runs([
+            expect_actions_executor_runs [
               # First run, we expect the mutex to be setup, and the deployment actions to be run
               proc do |actions_per_nodes|
                 expect_actions_to_deploy_on(
@@ -51,7 +49,7 @@ describe HybridPlatformsConductor::Deployer do
                   repo_name_0: platform
                   commit_id_0: 123456
                   commit_message_0: Test commit for node: service1, service2
-                  date: \d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}
+                  date: \\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}
                   user: test_user
                   debug: No
                   services: service1, service2
@@ -61,11 +59,12 @@ describe HybridPlatformsConductor::Deployer do
                   ===== STDERR =====
                   Deploy successful stderr
                 EOREGEXP
+                expect(File.read(tmp_log_file)).to match file_content_regexp
                 actions_per_nodes['node'][2][:ruby].call
                 # Check temporary log file gets deleted for security reasons
                 expect(File.exist?(tmp_log_file)).to eq false
               end
-            ])
+            ]
             expect(test_deployer.deploy_on('node')).to eq('node' => [0, 'Deploy successful stdout', 'Deploy successful stderr'])
           end
         end
@@ -76,7 +75,7 @@ describe HybridPlatformsConductor::Deployer do
           with_connections_mocked_on ['node'] do
             test_actions_executor.connector(:ssh).ssh_user = 'root'
             expect_services_handler_to_deploy('node' => %w[service1 service2])
-            expect_actions_executor_runs([
+            expect_actions_executor_runs [
               # First run, we expect the mutex to be setup, and the deployment actions to be run
               proc do |actions_per_nodes|
                 expect_actions_to_deploy_on(
@@ -109,7 +108,7 @@ describe HybridPlatformsConductor::Deployer do
                   repo_name_0: platform
                   commit_id_0: 123456
                   commit_message_0: Test commit for node: service1, service2
-                  date: \d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}
+                  date: \\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}
                   user: root
                   debug: No
                   services: service1, service2
@@ -119,11 +118,12 @@ describe HybridPlatformsConductor::Deployer do
                   ===== STDERR =====
                   Deploy successful stderr
                 EOREGEXP
+                expect(File.read(tmp_log_file)).to match file_content_regexp
                 actions_per_nodes['node'][2][:ruby].call
                 # Check temporary log file gets deleted for security reasons
                 expect(File.exist?(tmp_log_file)).to eq false
               end
-            ])
+            ]
             expect(test_deployer.deploy_on('node')).to eq('node' => [0, 'Deploy successful stdout', 'Deploy successful stderr'])
           end
         end
@@ -131,11 +131,11 @@ describe HybridPlatformsConductor::Deployer do
 
       it 'reads logs' do
         with_test_platform_for_remote_fs do
-          expect_actions_executor_runs([
+          expect_actions_executor_runs [
             # Expect the actions to get log files
             proc do |actions_per_nodes|
               expect(actions_per_nodes).to eq('node' => [{ remote_bash: 'sudo -u root cat /var/log/deployments/`sudo -u root ls -t /var/log/deployments/ | head -1`' }])
-              { 'node' => [0, <<~EOS, ''] }
+              { 'node' => [0, <<~EO_STDOUT, ''] }
                 repo_name_0: platform
                 commit_id_0: 123456
                 commit_message_0: Test commit for node: service1, service2
@@ -149,9 +149,9 @@ describe HybridPlatformsConductor::Deployer do
                 Deploy successful stdout
                 ===== STDERR =====
                 Deploy successful stderr
-              EOS
+              EO_STDOUT
             end
-          ])
+          ]
           expect(test_deployer.deployment_info_from('node')).to eq(
             'node' => {
               deployment_info: {
@@ -175,11 +175,11 @@ describe HybridPlatformsConductor::Deployer do
       it 'reads logs using root' do
         with_test_platform_for_remote_fs do
           test_actions_executor.connector(:ssh).ssh_user = 'root'
-          expect_actions_executor_runs([
+          expect_actions_executor_runs [
             # Expect the actions to get log files
             proc do |actions_per_nodes|
               expect(actions_per_nodes).to eq('node' => [{ remote_bash: 'cat /var/log/deployments/`ls -t /var/log/deployments/ | head -1`' }])
-              { 'node' => [0, <<~EOS, ''] }
+              { 'node' => [0, <<~EO_STDOUT, ''] }
                 repo_name_0: platform
                 commit_id_0: 123456
                 commit_message_0: Test commit for node: service1, service2
@@ -193,9 +193,9 @@ describe HybridPlatformsConductor::Deployer do
                 Deploy successful stdout
                 ===== STDERR =====
                 Deploy successful stderr
-              EOS
+              EO_STDOUT
             end
-          ])
+          ]
           expect(test_deployer.deployment_info_from('node')).to eq(
             'node' => {
               deployment_info: {

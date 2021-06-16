@@ -39,7 +39,7 @@ module HybridPlatformsConductor
         # Result::
         # * Hash<String, Object>: The corresponding property, per required node.
         #     Nodes for which the property can't be fetched can be ommitted.
-        def get_host_keys(nodes, metadata)
+        def get_host_keys(_nodes, metadata)
           updated_metadata = {}
           # Get the list of nodes, per hostname (just in case several nodes share the same hostname)
           # Hash<String, Array<String> >
@@ -89,7 +89,7 @@ module HybridPlatformsConductor
               log_to_stdout: log_debug?,
               no_exception: true
             )
-            if exit_status == 0
+            if exit_status.zero?
               found_keys = []
               stdout.split("\n").each do |line|
                 unless line =~ /^# .*$/

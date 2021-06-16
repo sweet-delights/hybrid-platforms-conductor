@@ -1,12 +1,12 @@
 describe HybridPlatformsConductor::ActionsExecutor do
 
-  context 'checking connector plugin ssh' do
+  context 'when checking connector plugin ssh' do
 
-    context 'checking remote actions' do
+    context 'when checking remote actions' do
 
       it 'executes bash commands remotely' do
         with_test_platform_for_remote_testing(
-          expected_cmds: [[/.+\/ssh hpc\.node \/bin\/bash <<'HPC_EOF'\nbash_cmd.bash\nHPC_EOF/, proc { [0, 'Bash commands executed on node', ''] }]],
+          expected_cmds: [[%r{.+/ssh hpc\.node /bin/bash <<'HPC_EOF'\nbash_cmd.bash\nHPC_EOF}, proc { [0, 'Bash commands executed on node', ''] }]],
           expected_stdout: 'Bash commands executed on node'
         ) do
           test_connector.remote_bash('bash_cmd.bash')
@@ -17,8 +17,8 @@ describe HybridPlatformsConductor::ActionsExecutor do
         with_test_platform_for_remote_testing(
           expected_cmds: [
             [
-              /.+\/ssh hpc\.node \/bin\/bash <<'HPC_EOF'\nbash_cmd.bash\nHPC_EOF/,
-              proc do |cmd, log_to_file: nil, log_to_stdout: true, log_stdout_to_io: nil, log_stderr_to_io: nil, expected_code: 0, timeout: nil, no_exception: false|
+              %r{.+/ssh hpc\.node /bin/bash <<'HPC_EOF'\nbash_cmd.bash\nHPC_EOF},
+              proc do |_cmd, log_to_file: nil, log_to_stdout: true, log_stdout_to_io: nil, log_stderr_to_io: nil, expected_code: 0, timeout: nil, no_exception: false|
                 expect(timeout).to eq 5
                 [0, '', '']
               end
@@ -33,7 +33,7 @@ describe HybridPlatformsConductor::ActionsExecutor do
       it 'executes interactive commands remotely' do
         with_test_platform_for_remote_testing do
           expect(test_connector).to receive(:system) do |cmd|
-            expect(cmd).to match /^.+\/ssh hpc\.node$/
+            expect(cmd).to match(%r{^.+/ssh hpc\.node$})
           end
           test_connector.remote_interactive
         end
@@ -43,7 +43,7 @@ describe HybridPlatformsConductor::ActionsExecutor do
         with_test_platform_for_remote_testing(
           expected_cmds: [
             [
-              /cd \/path\/to && tar\s+--create\s+--gzip\s+--file -\s+src.file \| \/.+\/ssh\s+hpc\.node\s+"tar\s+--extract\s+--gunzip\s+--file -\s+--directory \/remote_path\/to\/dst.dir\s+--owner root\s+"/,
+              %r{cd /path/to && tar\s+--create\s+--gzip\s+--file -\s+src.file \| /.+/ssh\s+hpc\.node\s+"tar\s+--extract\s+--gunzip\s+--file -\s+--directory /remote_path/to/dst.dir\s+--owner root\s+"},
               proc { [0, '', ''] }
             ]
           ]
@@ -56,8 +56,8 @@ describe HybridPlatformsConductor::ActionsExecutor do
         with_test_platform_for_remote_testing(
           expected_cmds: [
             [
-              /cd \/path\/to && tar\s+--create\s+--gzip\s+--file -\s+src.file \| \/.+\/ssh\s+hpc\.node\s+"tar\s+--extract\s+--gunzip\s+--file -\s+--directory \/remote_path\/to\/dst.dir\s+--owner root\s+"/,
-              proc do |cmd, log_to_file: nil, log_to_stdout: true, log_stdout_to_io: nil, log_stderr_to_io: nil, expected_code: 0, timeout: nil, no_exception: false|
+              %r{cd /path/to && tar\s+--create\s+--gzip\s+--file -\s+src.file \| /.+/ssh\s+hpc\.node\s+"tar\s+--extract\s+--gunzip\s+--file -\s+--directory /remote_path/to/dst.dir\s+--owner root\s+"},
+              proc do |_cmd, log_to_file: nil, log_to_stdout: true, log_stdout_to_io: nil, log_stderr_to_io: nil, expected_code: 0, timeout: nil, no_exception: false|
                 expect(timeout).to eq 5
                 [0, '', '']
               end
@@ -74,9 +74,9 @@ describe HybridPlatformsConductor::ActionsExecutor do
         with_test_platform_for_remote_testing(
           expected_cmds: [
             [
-              /.+\/hpc_temp_cmds_.+\.sh$/,
+              %r{.+/hpc_temp_cmds_.+\.sh$},
               proc do |received_cmd|
-                expect(File.read(received_cmd)).to match /.+\/ssh hpc\.node \/bin\/bash <<'HPC_EOF'\n#{Regexp.escape(cmd)}\nHPC_EOF/
+                expect(File.read(received_cmd)).to match(%r{.+/ssh hpc\.node /bin/bash <<'HPC_EOF'\n#{Regexp.escape(cmd)}\nHPC_EOF})
                 [0, 'Bash commands executed on node', '']
               end
             ]
@@ -92,7 +92,7 @@ describe HybridPlatformsConductor::ActionsExecutor do
         with_test_platform_for_remote_testing(
           expected_cmds: [
             [
-              /cd \/path\/to && tar\s+--create\s+--gzip\s+--file -\s+src.file \| \/.+\/ssh\s+hpc\.node\s+"sudo -u root tar\s+--extract\s+--gunzip\s+--file -\s+--directory \/remote_path\/to\/dst.dir\s+--owner root\s+"/,
+              %r{cd /path/to && tar\s+--create\s+--gzip\s+--file -\s+src.file \| /.+/ssh\s+hpc\.node\s+"sudo -u root tar\s+--extract\s+--gunzip\s+--file -\s+--directory /remote_path/to/dst.dir\s+--owner root\s+"},
               proc { [0, '', ''] }
             ]
           ]
@@ -105,11 +105,13 @@ describe HybridPlatformsConductor::ActionsExecutor do
         with_test_platform_for_remote_testing(
           expected_cmds: [
             [
-              /cd \/path\/to && tar\s+--create\s+--gzip\s+--file -\s+src.file \| \/.+\/ssh\s+hpc\.node\s+"other_sudo --user root tar\s+--extract\s+--gunzip\s+--file -\s+--directory \/remote_path\/to\/dst.dir\s+--owner root\s+"/,
+              %r{cd /path/to && tar\s+--create\s+--gzip\s+--file -\s+src.file \| /.+/ssh\s+hpc\.node\s+"other_sudo --user root tar\s+--extract\s+--gunzip\s+--file -\s+--directory /remote_path/to/dst.dir\s+--owner root\s+"},
               proc { [0, '', ''] }
             ]
           ],
-          additional_config: 'sudo_for { |user| "other_sudo --user #{user}" }'
+          additional_config: <<~'EO_CONFIG'
+            sudo_for { |user| "other_sudo --user #{user}" }
+          EO_CONFIG
         ) do
           test_connector.remote_copy('/path/to/src.file', '/remote_path/to/dst.dir', sudo: true)
         end
@@ -119,7 +121,7 @@ describe HybridPlatformsConductor::ActionsExecutor do
         with_test_platform_for_remote_testing(
           expected_cmds: [
             [
-              /cd \/path\/to && tar\s+--create\s+--gzip\s+--file -\s+--owner remote_user\s+src.file \| \/.+\/ssh\s+hpc\.node\s+"tar\s+--extract\s+--gunzip\s+--file -\s+--directory \/remote_path\/to\/dst.dir\s+--owner root\s+"/,
+              %r{cd /path/to && tar\s+--create\s+--gzip\s+--file -\s+--owner remote_user\s+src.file \| /.+/ssh\s+hpc\.node\s+"tar\s+--extract\s+--gunzip\s+--file -\s+--directory /remote_path/to/dst.dir\s+--owner root\s+"},
               proc { [0, '', ''] }
             ]
           ]
@@ -132,7 +134,7 @@ describe HybridPlatformsConductor::ActionsExecutor do
         with_test_platform_for_remote_testing(
           expected_cmds: [
             [
-              /cd \/path\/to && tar\s+--create\s+--gzip\s+--file -\s+--group remote_group\s+src.file \| \/.+\/ssh\s+hpc\.node\s+"tar\s+--extract\s+--gunzip\s+--file -\s+--directory \/remote_path\/to\/dst.dir\s+--owner root\s+"/,
+              %r{cd /path/to && tar\s+--create\s+--gzip\s+--file -\s+--group remote_group\s+src.file \| /.+/ssh\s+hpc\.node\s+"tar\s+--extract\s+--gunzip\s+--file -\s+--directory /remote_path/to/dst.dir\s+--owner root\s+"},
               proc { [0, '', ''] }
             ]
           ]
@@ -143,7 +145,7 @@ describe HybridPlatformsConductor::ActionsExecutor do
 
       it 'executes bash commands remotely without Session Exec capabilities' do
         with_test_platform_for_remote_testing(
-          expected_cmds: [[/^\{ cat \| .+\/ssh hpc\.node -T; } <<'HPC_EOF'\nbash_cmd.bash\nHPC_EOF$/, proc { [0, 'Bash commands executed on node', ''] }]],
+          expected_cmds: [[%r{^\{ cat \| .+/ssh hpc\.node -T; \} <<'HPC_EOF'\nbash_cmd.bash\nHPC_EOF$}, proc { [0, 'Bash commands executed on node', ''] }]],
           expected_stdout: 'Bash commands executed on node',
           session_exec: false
         ) do
@@ -155,7 +157,7 @@ describe HybridPlatformsConductor::ActionsExecutor do
         with_test_platform_for_remote_testing(
           expected_cmds: [
             [
-              /^scp -S .+\/ssh \/path\/to\/src.file hpc\.node:\/remote_path\/to\/dst.dir$/,
+              %r{^scp -S .+/ssh /path/to/src.file hpc\.node:/remote_path/to/dst.dir$},
               proc { [0, '', ''] }
             ]
           ],
@@ -168,12 +170,12 @@ describe HybridPlatformsConductor::ActionsExecutor do
       it 'copies files remotely without Session Exec capabilities and with sudo' do
         with_test_platform_for_remote_testing(
           expected_cmds: [
-            [/^\{ cat \| .+\/ssh hpc\.node -T; } <<'HPC_EOF'\nmkdir -p hpc_tmp_scp\nHPC_EOF$/, proc { [0, '', ''] }],
+            [%r{^\{ cat \| .+/ssh hpc\.node -T; \} <<'HPC_EOF'\nmkdir -p hpc_tmp_scp\nHPC_EOF$}, proc { [0, '', ''] }],
             [
-              /^scp -S .+\/ssh \/path\/to\/src.file hpc\.node:\.\/hpc_tmp_scp$/,
+              %r{^scp -S .+/ssh /path/to/src.file hpc\.node:\./hpc_tmp_scp$},
               proc { [0, '', ''] }
             ],
-            [/^\{ cat \| .+\/ssh hpc\.node -T; } <<'HPC_EOF'\nsudo -u root mv \.\/hpc_tmp_scp\/src\.file \/remote_path\/to\/dst\.dir\nHPC_EOF$/, proc { [0, '', ''] }]
+            [%r{^\{ cat \| .+/ssh hpc\.node -T; \} <<'HPC_EOF'\nsudo -u root mv \./hpc_tmp_scp/src\.file /remote_path/to/dst\.dir\nHPC_EOF$}, proc { [0, '', ''] }]
           ],
           session_exec: false
         ) do
@@ -184,14 +186,16 @@ describe HybridPlatformsConductor::ActionsExecutor do
       it 'copies files remotely without Session Exec capabilities and with a different sudo' do
         with_test_platform_for_remote_testing(
           expected_cmds: [
-            [/^\{ cat \| .+\/ssh hpc\.node -T; } <<'HPC_EOF'\nmkdir -p hpc_tmp_scp\nHPC_EOF$/, proc { [0, '', ''] }],
+            [%r{^\{ cat \| .+/ssh hpc\.node -T; \} <<'HPC_EOF'\nmkdir -p hpc_tmp_scp\nHPC_EOF$}, proc { [0, '', ''] }],
             [
-              /^scp -S .+\/ssh \/path\/to\/src.file hpc\.node:\.\/hpc_tmp_scp$/,
+              %r{^scp -S .+/ssh /path/to/src.file hpc\.node:\./hpc_tmp_scp$},
               proc { [0, '', ''] }
             ],
-            [/^\{ cat \| .+\/ssh hpc\.node -T; } <<'HPC_EOF'\nother_sudo --user root mv \.\/hpc_tmp_scp\/src\.file \/remote_path\/to\/dst\.dir\nHPC_EOF$/, proc { [0, '', ''] }]
+            [%r{^\{ cat \| .+/ssh hpc\.node -T; \} <<'HPC_EOF'\nother_sudo --user root mv \./hpc_tmp_scp/src\.file /remote_path/to/dst\.dir\nHPC_EOF$}, proc { [0, '', ''] }]
           ],
-          additional_config: 'sudo_for { |user| "other_sudo --user #{user}" }',
+          additional_config: <<~'EO_CONFIG',
+            sudo_for { |user| "other_sudo --user #{user}" }
+          EO_CONFIG
           session_exec: false
         ) do
           test_connector.remote_copy('/path/to/src.file', '/remote_path/to/dst.dir', sudo: true)

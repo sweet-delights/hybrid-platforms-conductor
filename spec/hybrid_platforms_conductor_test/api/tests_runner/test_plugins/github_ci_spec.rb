@@ -1,12 +1,12 @@
 describe HybridPlatformsConductor::TestsRunner do
 
-  context 'checking test plugins' do
+  context 'when checking test plugins' do
 
-    context 'checking github_ci' do
+    context 'with github_ci' do
 
       it 'iterates over defined Github repos' do
-        with_repository do |repository|
-          platforms = <<~EOS
+        with_repository do
+          platforms = <<~EO_CONFIG
             github_repos(
               url: 'https://my_gh.my_domain.com',
               user: 'GH-User1',
@@ -22,7 +22,7 @@ describe HybridPlatformsConductor::TestsRunner do
                 'repo4'
               ]
             )
-          EOS
+          EO_CONFIG
           with_platforms platforms do
             repos = []
             test_config.for_each_github_repo do |github, repo_info|

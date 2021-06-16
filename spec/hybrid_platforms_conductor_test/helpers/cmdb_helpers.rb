@@ -21,12 +21,12 @@ module HybridPlatformsConductorTest
       def register_test_cmdb(cmdb_names = [:test_cmdb])
         register_plugins(
           :cmdb,
-          Hash[cmdb_names.map do |plugin_id|
+          cmdb_names.map do |plugin_id|
             [
               plugin_id,
               HybridPlatformsConductorTest::CmdbPlugins.const_get(plugin_id.to_s.split('_').collect(&:capitalize).join.to_sym)
             ]
-          end]
+          end.to_h
         )
       end
 

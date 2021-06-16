@@ -6,6 +6,7 @@ module HybridPlatformsConductor
   # Provide an API to access information given by Platform Handlers
   class PlatformsHandler
 
+    # Add some config DSL
     module ConfigDSLExtension
 
       # List of platforms repository directories, per platform type
@@ -32,8 +33,8 @@ module HybridPlatformsConductor
     # * *config* (Config): Config to be used. [default: Config.new]
     # * *cmd_runner* (CmdRunner): Command executor to be used. [default: CmdRunner.new]
     def initialize(
-      logger: Logger.new(STDOUT),
-      logger_stderr: Logger.new(STDERR),
+      logger: Logger.new($stdout),
+      logger_stderr: Logger.new($stderr),
       config: Config.new,
       cmd_runner: CmdRunner.new
     )
@@ -57,6 +58,7 @@ module HybridPlatformsConductor
           )
           # Check that this platform has unique name
           raise "Platform name #{platform_handler.name} is declared several times." if @platform_handlers.values.flatten.any? { |known_platform| known_platform.name == platform_handler.name }
+
           @platform_handlers[platform_type] = [] unless @platform_handlers.key?(platform_type)
           @platform_handlers[platform_type] << platform_handler
         end
@@ -78,7 +80,7 @@ module HybridPlatformsConductor
     # Result::
     # * Array<PlatformHandler>: List of platform handlers
     def known_platforms(platform_type: nil)
-      (platform_type.nil? ? @platform_handlers.keys : [platform_type]).map { |platform_type| (@platform_handlers[platform_type] || []) }.flatten
+      (platform_type.nil? ? @platform_handlers.keys : [platform_type]).map { |search_platform_type| (@platform_handlers[search_platform_type] || []) }.flatten
     end
 
     # Return the platform handler for a given platform name

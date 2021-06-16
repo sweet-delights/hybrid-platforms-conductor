@@ -13,7 +13,7 @@ module HybridPlatformsConductor
       # Don't forget to add the testadmin private key in your SSH agent if you run this test locally.
       class Idempotence < TestByService
 
-        self.extend_config_dsl_with CommonConfigDsl::IdempotenceTests, :init_idempotence_tests
+        extend_config_dsl_with CommonConfigDsl::IdempotenceTests, :init_idempotence_tests
 
         # Check my_test_plugin.rb.sample documentation for signature details.
         def test_for_node
@@ -21,7 +21,7 @@ module HybridPlatformsConductor
             # First deploy as root
             deployer.nbr_retries_on_error = 3
             exit_status, _stdout, _stderr = deployer.deploy_on(@node)[@node]
-            if exit_status == 0
+            if exit_status.zero?
               # As it's possible sshd has to be restarted because of a change in its conf, restart the container.
               # Otherwise you'll get the following error upon reconnection:
               #   System is booting up. See pam_nologin(8)

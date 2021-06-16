@@ -22,7 +22,7 @@ module HybridPlatformsConductor
     # * *parse_gems* (Boolean): Do we parse plugins from gems? [default: true]
     # * *logger* (Logger): Logger to be used [default = Logger.new(STDOUT)]
     # * *logger_stderr* (Logger): Logger to be used for stderr [default = Logger.new(STDERR)]
-    def initialize(plugins_type, init_plugin: nil, parse_gems: true, logger: Logger.new(STDOUT), logger_stderr: Logger.new(STDERR))
+    def initialize(plugins_type, init_plugin: nil, parse_gems: true, logger: Logger.new($stdout), logger_stderr: Logger.new($stderr))
       init_loggers(logger, logger_stderr)
       @plugins_type = plugins_type
       @init_plugin = init_plugin
@@ -37,6 +37,8 @@ module HybridPlatformsConductor
     def_delegators :@plugins, *%i[
       []
       each
+      each_key
+      each_value
       empty?
       find
       key?
@@ -72,15 +74,15 @@ module HybridPlatformsConductor
     # Register plugins by parsing gems
     def register_plugins_from_gems
       # Require all possible files that could define such a plugin, from all gems
-      files_regexp = /lib\/(.*hpc_plugins\/#{Regexp.escape(@plugins_type.to_s)}\/[^\/]+)\.rb$/
+      files_regexp = %r{lib/(.*hpc_plugins/#{Regexp.escape(@plugins_type.to_s)}/[^/]+)\.rb$}
       Gem.loaded_specs.each do |gem_name, gem_specs|
         # Careful to not use gem_specs.files here as if your gem name contains "-" or other weird characters, files won't appear in the gemspec list.
         Dir.glob("#{gem_specs.full_gem_path}/lib/**/*.rb").each do |file|
-          if file =~ files_regexp
-            require_name = $1
-            log_debug "[ #{@plugins_type} ] - Require from #{gem_name} file #{require_name}"
-            require require_name
-          end
+          next unless file =~ files_regexp
+
+          require_name = Regexp.last_match(1)
+          log_debug "[ #{@plugins_type} ] - Require from #{gem_name} file #{require_name}"
+          require require_name
         end
       end
       # Parse the registered classes to search for our plugins
@@ -90,10 +92,13 @@ module HybridPlatformsConductor
         # * have been defined by the requires (no unnamed class, as those can be created by clones when using concurrency),
         # * inherit from the base plugin class,
         # * have no descendants
+        # Careful: !(class_1 < class_2) != (class_1 >= class_2), so disable the cop here for inversions.
+        # rubocop:disable Style/InverseMethods
         if !klass.name.nil? && klass < ancestor_class && ObjectSpace.each_object(Class).all? { |other_klass| other_klass.name.nil? || !(other_klass < klass) }
-          plugin_id = klass.name.split('::').last.gsub(/([a-z\d])([A-Z])/, '\1_\2').downcase.to_sym
+          plugin_id = klass.name.split('::').last.gsub(/([a-z\d])([A-Z\d])/, '\1_\2').downcase.to_sym
           self[plugin_id] = klass
         end
+        # rubocop:enable Style/InverseMethods
       end
     end
 

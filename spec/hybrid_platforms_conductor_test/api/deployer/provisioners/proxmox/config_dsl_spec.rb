@@ -2,11 +2,11 @@ require 'hybrid_platforms_conductor/hpc_plugins/provisioner/proxmox'
 
 describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
 
-  context 'checking Config DSL extensions' do
+  context 'when checking Config DSL extensions' do
 
     it 'declares proxmox configuratin in Config DSL' do
-      with_repository do |repository|
-        platforms = <<~EOS
+      with_repository do
+        platforms = <<~EO_CONFIG
           proxmox(
             api_url: 'https://my-proxmox.my-domain.com:8006',
             sync_node: 'test_node',
@@ -60,7 +60,7 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
             },
             default_timeout: 666
           )
-        EOS
+        EO_CONFIG
         with_platforms platforms do
           expect(test_config.proxmox_servers).to eq [
             {

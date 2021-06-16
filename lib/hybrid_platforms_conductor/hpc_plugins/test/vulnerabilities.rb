@@ -48,8 +48,9 @@ module HybridPlatformsConductor
                   # Follow the last link recursively until we find a .xml or compressed file
                   current_url = artifactory_url
                   loop do
-                    current_url = "#{current_url}#{current_url.end_with?('/') ? '' : '/'}#{Nokogiri::HTML.parse(URI.open(current_url)).css('a').last['href']}"
+                    current_url = "#{current_url}#{current_url.end_with?('/') ? '' : '/'}#{Nokogiri::HTML.parse(URI.parse(current_url).open).css('a').last['href']}"
                     break if current_url.end_with?('.xml') || KNOWN_COMPRESSIONS.keys.any? { |file_ext| current_url.end_with?(".#{file_ext}") }
+
                     log_debug "Follow last link to #{current_url}"
                   end
                   current_url
@@ -57,7 +58,7 @@ module HybridPlatformsConductor
               )
               # TODO: Access the user correctly when the user notion will be moved out of the ssh connector
               sudo = @deployer.instance_variable_get(:@actions_executor).connector(:ssh).ssh_user == 'root' ? '' : "#{@nodes_handler.sudo_on(@node)} "
-              Hash[urls.map do |url|
+              urls.map do |url|
                 # 1. Get the OVAL file on the node to be tested (uncompress it if needed)
                 # 2. Make sure oscap is installed
                 # 3. Generate the report for this OVAL file using oscap
@@ -67,13 +68,13 @@ module HybridPlatformsConductor
                 packages_to_install = []
                 KNOWN_COMPRESSIONS.each do |file_ext, compress_info|
                   file_ending = ".#{file_ext}"
-                  if local_oval_file.end_with?(file_ending)
-                    uncompress_cmds << compress_info[:cmd].call(local_oval_file)
-                    packages_to_install.concat(compress_info[:packages])
-                    local_oval_file = File.basename(local_oval_file, file_ending)
-                  end
+                  next unless local_oval_file.end_with?(file_ending)
+
+                  uncompress_cmds << compress_info[:cmd].call(local_oval_file)
+                  packages_to_install.concat(compress_info[:packages])
+                  local_oval_file = File.basename(local_oval_file, file_ending)
                 end
-                cmds = <<~EOS
+                cmds = <<~EO_BASH
                   set -e
                   #{
                     case image
@@ -85,7 +86,7 @@ module HybridPlatformsConductor
                       # On Debian 10 we have to compile it from sources, as the packaged official version has core dumps.
                       # cf https://www.mail-archive.com/debian-bugs-dist@lists.debian.org/msg1688223.html
                       # TODO: Remove this Debian 10 specificity when the official libopenscap8 will be corrected
-                      <<~EOS2
+                      <<~EO_BASH2
                         if [ ! -x "$(command -v oscap)" ] || [ "$(oscap --version | head -n 1 | awk '{print $6}')" != "1.3.4" ]; then
                           rm -rf openscap
                           git clone --recurse-submodules https://github.com/OpenSCAP/openscap.git
@@ -97,7 +98,7 @@ module HybridPlatformsConductor
                           #{sudo}make install
                         fi
                         #{sudo}apt install -y wget #{packages_to_install.join(' ')}
-                      EOS2
+                      EO_BASH2
                     else
                       raise "Non supported image: #{image}. Please adapt this test's code."
                     end
@@ -111,7 +112,7 @@ module HybridPlatformsConductor
                   echo "===== RESULTS ====="
                   cat "#{local_oval_file}.results.xml"
                   cd ..
-                EOS
+                EO_BASH
                 [
                   cmds,
                   {
@@ -120,21 +121,21 @@ module HybridPlatformsConductor
                       if idx_results.nil?
                         error 'No results given by the oscap run', stdout.join("\n")
                       else
-                        results = Nokogiri::XML(stdout[idx_results + 1..-1].join("\n"))
+                        results = Nokogiri::XML(stdout[idx_results + 1..].join("\n"))
                         results.remove_namespaces!
                         oval_definitions = results.css('oval_results oval_definitions definitions definition')
                         results.css('results system definitions definition').each do |definition_xml|
-                          if definition_xml['result'] == 'true'
-                            # Just found an OVAL item to be patched.
-                            definition_id = definition_xml['definition_id']
-                            oval_definition = oval_definitions.find { |el| el['id'] == definition_id }
-                            # We don't forcefully want to report all missing patches. Only the most important ones.
-                            severity = oval_definition.css('metadata advisory severity').text
-                            severity = 'Unknown' if severity.empty?
-                            if !oval_info.key?('reported_severities') || oval_info['reported_severities'].include?(severity)
-                              # Only consider the first line of the description, as sometimes it's very long
-                              error "Non-patched #{severity} vulnerability found: #{oval_definition.css('metadata title').text} - #{oval_definition.css('metadata description').text.split("\n").first}"
-                            end
+                          next unless definition_xml['result'] == 'true'
+
+                          # Just found an OVAL item to be patched.
+                          definition_id = definition_xml['definition_id']
+                          oval_definition = oval_definitions.find { |el| el['id'] == definition_id }
+                          # We don't forcefully want to report all missing patches. Only the most important ones.
+                          severity = oval_definition.css('metadata advisory severity').text
+                          severity = 'Unknown' if severity.empty?
+                          if !oval_info.key?('reported_severities') || oval_info['reported_severities'].include?(severity)
+                            # Only consider the first line of the description, as sometimes it's very long
+                            error "Non-patched #{severity} vulnerability found: #{oval_definition.css('metadata title').text} - #{oval_definition.css('metadata description').text.split("\n").first}"
                           end
                         end
                       end
@@ -143,7 +144,7 @@ module HybridPlatformsConductor
                     timeout: 240
                   }
                 ]
-              end]
+              end.to_h
             else
               error "No OVAL file defined for image #{image} at #{oval_file}"
               {}

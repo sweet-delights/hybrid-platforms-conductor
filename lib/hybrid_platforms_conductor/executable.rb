@@ -1,3 +1,4 @@
+require 'English'
 require 'optparse'
 require 'logger'
 require 'hybrid_platforms_conductor/config'
@@ -43,8 +44,8 @@ module HybridPlatformsConductor
       parallel_options: true,
       timeout_options: true,
       deploy_options: true,
-      logger: Logger.new(STDOUT, level: :info),
-      logger_stderr: Logger.new(STDERR, level: :info),
+      logger: Logger.new($stdout, level: :info),
+      logger_stderr: Logger.new($stderr, level: :info),
       &opts_block
     )
       init_loggers(logger, logger_stderr)
@@ -92,11 +93,13 @@ module HybridPlatformsConductor
       # Result::
       # * Object: The corresponding component
       define_method(component) do
-        @instantiated_components[component] = HybridPlatformsConductor.const_get(component.to_s.split('_').collect(&:capitalize).join.to_sym).new(
-          logger: @logger,
-          logger_stderr: @logger_stderr,
-          **Hash[dependencies.map { |dependency| [dependency, send(dependency)] }]
-        ) unless @instantiated_components.key?(component)
+        unless @instantiated_components.key?(component)
+          @instantiated_components[component] = HybridPlatformsConductor.const_get(component.to_s.split('_').collect(&:capitalize).join.to_sym).new(
+            logger: @logger,
+            logger_stderr: @logger_stderr,
+            **dependencies.map { |dependency| [dependency, send(dependency)] }.to_h
+          )
+        end
         @instantiated_components[component]
       end
 
@@ -107,7 +110,7 @@ module HybridPlatformsConductor
     # Handle common options (like logging and help).
     def parse_options!
       OptionParser.new do |opts|
-        opts.banner = "Usage: #{$0} [options]"
+        opts.banner = "Usage: #{$PROGRAM_NAME} [options]"
         opts.separator ''
         opts.separator 'Main options:'
         opts.on('-d', '--debug', 'Activate debug mode') do
@@ -117,17 +120,19 @@ module HybridPlatformsConductor
           out opts
           exit 0
         end
-        @opts_block.call(opts) if @opts_block
+        @opts_block&.call(opts)
         nodes_handler.options_parse(opts) if nodes_handler_instantiated?
         nodes_handler.options_parse_nodes_selectors(opts, @selected_nodes) if @nodes_selection_options
         cmd_runner.options_parse(opts) if cmd_runner_instantiated?
         actions_executor.options_parse(opts, parallel: @parallel_options) if actions_executor_instantiated?
-        deployer.options_parse(
-          opts,
-          parallel_switch: @parallel_options,
-          timeout_options: @timeout_options,
-          why_run_switch: @check_options
-        ) if deployer_instantiated? && @deploy_options
+        if deployer_instantiated? && @deploy_options
+          deployer.options_parse(
+            opts,
+            parallel_switch: @parallel_options,
+            timeout_options: @timeout_options,
+            why_run_switch: @check_options
+          )
+        end
         json_dumper.options_parse(opts) if json_dumper_instantiated?
         reports_handler.options_parse(opts) if reports_handler_instantiated?
         tests_runner.options_parse(opts) if tests_runner_instantiated?

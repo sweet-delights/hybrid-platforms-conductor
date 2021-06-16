@@ -1,5 +1,6 @@
 require 'monitor'
 
+# Decorate methods changing the process' current directory with a mutex to ensure they have an exclusive access
 module HybridPlatformsConductor
 
   # Implement a global monitor to protect accesses to the current directory.
@@ -7,7 +8,9 @@ module HybridPlatformsConductor
   module CurrentDirMonitor
 
     class << self
+
       attr_reader :monitor
+
     end
 
     @monitor = Monitor.new
@@ -24,7 +27,7 @@ module HybridPlatformsConductor
         result = nil
         CurrentDirMonitor.monitor.synchronize do
           # puts "TID #{Thread.current.object_id} from #{caller[2]} - Current dir monitor taken from #{Dir.pwd}"
-          result = self.send(original_method_name, *args, &block)
+          result = send(original_method_name, *args, &block)
           # puts "TID #{Thread.current.object_id} from #{caller[2]} - Current dir monitor released back to #{Dir.pwd}"
         end
         result

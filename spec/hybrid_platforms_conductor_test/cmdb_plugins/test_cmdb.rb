@@ -40,7 +40,7 @@ module HybridPlatformsConductorTest
       #     Nodes for which the property can't be fetched can be ommitted.
       def get_upcase(nodes, metadata)
         record_call(:get_upcase, nodes, metadata)
-        Hash[nodes.map { |node| [node, node.upcase] }]
+        nodes.map { |node| [node, node.upcase] }.to_h
       end
 
       # Get a specific property for a given set of nodes.
@@ -55,7 +55,7 @@ module HybridPlatformsConductorTest
       #     Nodes for which the property can't be fetched can be ommitted.
       def get_double(nodes, metadata)
         record_call(:get_double, nodes, metadata)
-        Hash[nodes.map { |node| [node, node * 2] }]
+        nodes.map { |node| [node, node * 2] }.to_h
       end
 
       # Get a specific property for a given set of nodes.
@@ -70,7 +70,7 @@ module HybridPlatformsConductorTest
       #     Nodes for which the property can't be fetched can be ommitted.
       def get_reversed_double(nodes, metadata)
         record_call(:get_reversed_double, nodes, metadata)
-        Hash[nodes.map { |node| [node, metadata[node][:double].reverse] }]
+        nodes.map { |node| [node, metadata[node][:double].reverse] }.to_h
       end
 
       # Get a specific property for a given set of nodes.
@@ -85,7 +85,7 @@ module HybridPlatformsConductorTest
       #     Nodes for which the property can't be fetched can be ommitted.
       def get_reversed_downcase(nodes, metadata)
         record_call(:get_reversed_downcase, nodes, metadata)
-        Hash[nodes.map { |node| [node, metadata[node][:downcase] ? metadata[node][:downcase].reverse : 'UNKNOWN'] }]
+        nodes.map { |node| [node, metadata[node][:downcase] ? metadata[node][:downcase].reverse : 'UNKNOWN'] }.to_h
       end
 
       # Get a specific property for a given set of nodes.
@@ -115,7 +115,7 @@ module HybridPlatformsConductorTest
       #     Nodes for which the property can't be fetched can be ommitted.
       def get_same_comment(nodes, metadata)
         record_call(:get_same_comment, nodes, metadata)
-        Hash[nodes.map { |node| [node, "Comment for #{node}"] }]
+        nodes.map { |node| [node, "Comment for #{node}"] }.to_h
       end
 
       # Get a specific property for a given set of nodes.
@@ -130,7 +130,7 @@ module HybridPlatformsConductorTest
       #     Nodes for which the property can't be fetched can be ommitted.
       def get_different_comment(nodes, metadata)
         record_call(:get_different_comment, nodes, metadata)
-        Hash[nodes.map { |node| [node, 'Comment from test_cmdb'] }]
+        nodes.map { |node| [node, 'Comment from test_cmdb'] }.to_h
       end
 
       # Get a specific property for a given set of nodes.
@@ -143,9 +143,9 @@ module HybridPlatformsConductorTest
       # Result::
       # * Hash<String, Object>: The corresponding property, per required node.
       #     Nodes for which the property can't be fetched can be ommitted.
-      def get_different_comment2(nodes, metadata)
-        record_call(:get_different_comment2, nodes, metadata)
-        Hash[nodes.map { |node| [node, 'Comment2 from test_cmdb'] }]
+      def get_different_comment_2(nodes, metadata)
+        record_call(:get_different_comment_2, nodes, metadata)
+        nodes.map { |node| [node, 'Comment2 from test_cmdb'] }.to_h
       end
 
       # Register a call to be checked by the tests later

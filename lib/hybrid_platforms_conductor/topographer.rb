@@ -78,7 +78,7 @@ module HybridPlatformsConductor
     # * *config* (Hash<Symbol,Object>): Some configuration parameters that can override defaults. [default = {}] Here are the possible keys:
     #   * *json_files_dir* (String): Directory from which JSON files are taken. [default = nodes_json]
     #   * *connections_max_level* (Integer or nil): Number maximal of recursive passes to get hostname connections (nil means no limit). [default = nil]
-    def initialize(logger: Logger.new(STDOUT), logger_stderr: Logger.new(STDERR), nodes_handler: NodesHandler.new, json_dumper: JsonDumper.new, config: {})
+    def initialize(logger: Logger.new($stdout), logger_stderr: Logger.new($stderr), nodes_handler: NodesHandler.new, json_dumper: JsonDumper.new, config: {})
       init_loggers(logger, logger_stderr)
       @nodes_handler = nodes_handler
       @json_dumper = json_dumper
@@ -110,8 +110,8 @@ module HybridPlatformsConductor
       @skip_run = false
 
       # Parse plugins
-      @plugins = Hash[Dir.
-        glob("#{File.dirname(__FILE__)}/topographer/plugins/*.rb").
+      @plugins = Dir.
+        glob("#{__dir__}/topographer/plugins/*.rb").
         map do |file_name|
           plugin_name = File.basename(file_name)[0..-4].to_sym
           require file_name
@@ -119,7 +119,8 @@ module HybridPlatformsConductor
             plugin_name,
             Topographer::Plugins.const_get(plugin_name.to_s.split('_').collect(&:capitalize).join.to_sym)
           ]
-        end]
+        end.
+        to_h
 
       @ips_to_host = known_ips.clone
 
@@ -131,14 +132,14 @@ module HybridPlatformsConductor
       ]
       @nodes_handler.prefetch_metadata_of @nodes_handler.known_nodes, metadata_properties
       @nodes_handler.known_nodes.each do |hostname|
-        @node_metadata[hostname] = Hash[metadata_properties.map { |property| [property, @nodes_handler.metadata_of(hostname, property)] }]
+        @node_metadata[hostname] = metadata_properties.map { |property| [property, @nodes_handler.metadata_of(hostname, property)] }.to_h
       end
 
       # Small cache of hostnames used a lot to parse JSON
-      @known_nodes = Hash[@nodes_handler.known_nodes.map { |hostname| [hostname, nil] }]
+      @known_nodes = @nodes_handler.known_nodes.map { |hostname| [hostname, nil] }.to_h
       # Cache of objects being used a lot in parsing for performance
       @non_word_regexp = /\W+/
-      @ip_regexp = /(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})(\/(\d{1,2})|[^\d\/]|$)/
+      @ip_regexp = %r{(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})(/(\d{1,2})|[^\d/]|$)}
       # Cache of ignored IPs
       @ips_ignored = {}
     end
@@ -156,8 +157,8 @@ module HybridPlatformsConductor
       end
       options_parser.separator ''
       options_parser.separator 'Topographer options:'
-      options_parser.on('-F', '--from HOSTS_OPTIONS', 'Specify options for the set of nodes to start from (enclose them with ""). Default: all nodes. HOSTS_OPTIONS follows the following:', *from_hosts_opts_parser.to_s.split("\n")[3..-1]) do |hosts_options|
-        args = hosts_options.split(' ')
+      options_parser.on('-F', '--from HOSTS_OPTIONS', 'Specify options for the set of nodes to start from (enclose them with ""). Default: all nodes. HOSTS_OPTIONS follows the following:', *from_hosts_opts_parser.to_s.split("\n")[3..]) do |hosts_options|
+        args = hosts_options.split
         from_hosts_opts_parser.parse!(args)
         raise "Unknown --from options: #{args.join(' ')}" unless args.empty?
       end
@@ -168,10 +169,11 @@ module HybridPlatformsConductor
         format_str, file_name = output.split(':')
         format = format_str.to_sym
         raise "Unknown format: #{format}." unless available_plugins.include?(format)
+
         @outputs << [format, file_name]
       end
-      options_parser.on('-T', '--to HOSTS_OPTIONS', 'Specify options for the set of nodes to get to (enclose them with ""). Default: all nodes. HOSTS_OPTIONS follows the following:', *to_hosts_opts_parser.to_s.split("\n")[3..-1]) do |hosts_options|
-        args = hosts_options.split(' ')
+      options_parser.on('-T', '--to HOSTS_OPTIONS', 'Specify options for the set of nodes to get to (enclose them with ""). Default: all nodes. HOSTS_OPTIONS follows the following:', *to_hosts_opts_parser.to_s.split("\n")[3..]) do |hosts_options|
+        args = hosts_options.split
         to_hosts_opts_parser.parse!(args)
         raise "Unknown --to options: #{args.join(' ')}" unless args.empty?
       end
@@ -197,12 +199,12 @@ module HybridPlatformsConductor
     end
 
     # Generate the JSON files to be used
-    def get_json_files
-      unless @skip_run
-        @json_dumper.dump_dir = @config[:json_files_dir]
-        # Generate all the jsons, even if 1 hostname is given, as it might be useful for the rest of the graph.
-        @json_dumper.dump_json_for(@nodes_handler.known_nodes)
-      end
+    def json_files
+      return if @skip_run
+
+      @json_dumper.dump_dir = @config[:json_files_dir]
+      # Generate all the jsons, even if 1 hostname is given, as it might be useful for the rest of the graph.
+      @json_dumper.dump_json_for(@nodes_handler.known_nodes)
     end
 
     # Dump the graph in the desired outputs
@@ -250,12 +252,14 @@ module HybridPlatformsConductor
             parse_connections_for(hostname, @config[:connections_max_level])
           end
         end
-        @nodes_graph[nodes_list] = {
-          type: :cluster,
-          connections: {},
-          includes: [],
-          includes_proc: proc { |node_name| hosts_list.include?(node_name) }
-        } unless @nodes_graph.key?(nodes_list)
+        unless @nodes_graph.key?(nodes_list)
+          @nodes_graph[nodes_list] = {
+            type: :cluster,
+            connections: {},
+            includes: [],
+            includes_proc: proc { |node_name| hosts_list.include?(node_name) }
+          }
+        end
         @nodes_graph[nodes_list][:includes].concat(hosts_list)
         @nodes_graph[nodes_list][:includes].uniq!
       end
@@ -273,7 +277,7 @@ module HybridPlatformsConductor
         # Then collapse this one
         collapsed_connections = {}
         included_nodes.each do |included_node_name|
-          collapsed_connections.merge!(@nodes_graph[included_node_name][:connections]) { |_connected_node, labels1, labels2| (labels1 + labels2).uniq }
+          collapsed_connections.merge!(@nodes_graph[included_node_name][:connections]) { |_connected_node, labels_1, labels_2| (labels_1 + labels_2).uniq }
         end
         @nodes_graph[node_name_to_collapse][:connections] = collapsed_connections
         @nodes_graph[node_name_to_collapse][:includes] = []
@@ -293,18 +297,19 @@ module HybridPlatformsConductor
       loop do
         empty_clusters = @nodes_graph.keys.select { |node_name| @nodes_graph[node_name][:type] == :cluster && @nodes_graph[node_name][:includes].empty? }
         break if empty_clusters.empty?
+
         filter_out_nodes(empty_clusters)
       end
     end
 
     # Define clusters of ips with 24 bits ranges.
     def define_clusters_ip_24
-      @nodes_graph.keys.each do |node_name|
-        if @nodes_graph[node_name][:type] == :node && !@node_metadata[node_name][:private_ips].nil? && !@node_metadata[node_name][:private_ips].empty?
-          ip_24 = "#{@node_metadata[node_name][:private_ips].first.split('.')[0..2].join('.')}.0/24"
-          @nodes_graph[ip_24] = ip_range_graph_info(ip_24) unless @nodes_graph.key?(ip_24)
-          @nodes_graph[ip_24][:includes] << node_name unless @nodes_graph[ip_24][:includes].include?(node_name)
-        end
+      @nodes_graph.each_key do |node_name|
+        next unless @nodes_graph[node_name][:type] == :node && !@node_metadata[node_name][:private_ips].nil? && !@node_metadata[node_name][:private_ips].empty?
+
+        ip_24 = "#{@node_metadata[node_name][:private_ips].first.split('.')[0..2].join('.')}.0/24"
+        @nodes_graph[ip_24] = ip_range_graph_info(ip_24) unless @nodes_graph.key?(ip_24)
+        @nodes_graph[ip_24][:includes] << node_name unless @nodes_graph[ip_24][:includes].include?(node_name)
       end
     end
 
@@ -373,10 +378,12 @@ module HybridPlatformsConductor
     def filter_in_nodes(nodes_list)
       new_nodes_graph = {}
       @nodes_graph.each do |node_name, node_info|
+        next unless nodes_list.include?(node_name)
+
         new_nodes_graph[node_name] = node_info.merge(
           connections: node_info[:connections].select { |connected_hostname, _labels| nodes_list.include?(connected_hostname) },
           includes: node_info[:includes] & nodes_list
-        ) if nodes_list.include?(node_name)
+        )
       end
       @nodes_graph = new_nodes_graph
     end
@@ -388,10 +395,12 @@ module HybridPlatformsConductor
     def filter_out_nodes(nodes_list)
       new_nodes_graph = {}
       @nodes_graph.each do |node_name, node_info|
+        next if nodes_list.include?(node_name)
+
         new_nodes_graph[node_name] = node_info.merge(
-          connections: node_info[:connections].select { |connected_hostname, _labels| !nodes_list.include?(connected_hostname) },
+          connections: node_info[:connections].reject { |connected_hostname, _labels| nodes_list.include?(connected_hostname) },
           includes: node_info[:includes] - nodes_list
-        ) unless nodes_list.include?(node_name)
+        )
       end
       @nodes_graph = new_nodes_graph
     end
@@ -405,7 +414,7 @@ module HybridPlatformsConductor
       # Delete references to the nodes to be replaced
       @nodes_graph.delete_if { |node_name, _node_info| nodes_to_be_replaced.include?(node_name) }
       # Change any connection or inclusions using nodes to be replaced
-      @nodes_graph.each do |node_name, node_info|
+      @nodes_graph.each_value do |node_info|
         node_info[:includes] = node_info[:includes].map { |included_node_name| nodes_to_be_replaced.include?(included_node_name) ? replacement_node : included_node_name }.uniq
         new_connections = {}
         node_info[:connections].each do |connected_node_name, labels|
@@ -442,46 +451,44 @@ module HybridPlatformsConductor
           end
           break unless conflicting_clusters.nil?
         end
-        if conflicting_clusters.nil?
-          break
-        else
-          # We have conflicting clusters to resolve
-          cluster_1, cluster_2 = conflicting_clusters
-          c1_belongs_to_c2 = @nodes_graph[cluster_1][:includes].all? { |cluster_1_node_name| @nodes_graph[cluster_2][:includes_proc].call(cluster_1_node_name) }
-          c2_belongs_to_c1 = @nodes_graph[cluster_2][:includes].all? { |cluster_2_node_name| @nodes_graph[cluster_1][:includes_proc].call(cluster_2_node_name) }
-          if c1_belongs_to_c2
-            if c2_belongs_to_c1
-              # Both clusters have the same nodes
-              if @nodes_graph[cluster_1][:includes_proc].call(cluster_2)
-                @nodes_graph[cluster_2][:includes] = (@nodes_graph[cluster_1][:includes] + @nodes_graph[cluster_2][:includes]).uniq
-                @nodes_graph[cluster_1][:includes] = [cluster_2]
-              else
-                @nodes_graph[cluster_1][:includes] = (@nodes_graph[cluster_1][:includes] + @nodes_graph[cluster_2][:includes]).uniq
-                @nodes_graph[cluster_2][:includes] = [cluster_1]
-              end
+        break if conflicting_clusters.nil?
+
+        # We have conflicting clusters to resolve
+        cluster_1, cluster_2 = conflicting_clusters
+        cluster_1_belongs_to_cluster_2 = @nodes_graph[cluster_1][:includes].all? { |cluster_1_node_name| @nodes_graph[cluster_2][:includes_proc].call(cluster_1_node_name) }
+        cluster_2_belongs_to_cluster_1 = @nodes_graph[cluster_2][:includes].all? { |cluster_2_node_name| @nodes_graph[cluster_1][:includes_proc].call(cluster_2_node_name) }
+        if cluster_1_belongs_to_cluster_2
+          if cluster_2_belongs_to_cluster_1
+            # Both clusters have the same nodes
+            if @nodes_graph[cluster_1][:includes_proc].call(cluster_2)
+              @nodes_graph[cluster_2][:includes] = (@nodes_graph[cluster_1][:includes] + @nodes_graph[cluster_2][:includes]).uniq
+              @nodes_graph[cluster_1][:includes] = [cluster_2]
             else
-              # All nodes of cluster_1 belong to cluster_2, but some nodes of cluster_2 don't belong to cluster_1
-              @nodes_graph[cluster_2][:includes] = @nodes_graph[cluster_2][:includes] - @nodes_graph[cluster_1][:includes] + [cluster_1]
+              @nodes_graph[cluster_1][:includes] = (@nodes_graph[cluster_1][:includes] + @nodes_graph[cluster_2][:includes]).uniq
+              @nodes_graph[cluster_2][:includes] = [cluster_1]
             end
-          elsif c2_belongs_to_c1
-            # All nodes of cluster_2 belong to cluster_1, but some nodes of cluster_1 don't belong to cluster_2
-            @nodes_graph[cluster_1][:includes] = @nodes_graph[cluster_1][:includes] - @nodes_graph[cluster_2][:includes] + [cluster_2]
           else
-            # cluster_1 and cluster_2 have to be merged
-            new_cluster_name = "#{cluster_1}_&_#{cluster_2}"
-            # Store thos proc in those variables as the cluster_1 and cluster_2 references are going to be removed
-            includes_proc_1 = @nodes_graph[cluster_1][:includes_proc]
-            includes_proc_2 = @nodes_graph[cluster_2][:includes_proc]
-            @nodes_graph[new_cluster_name] = {
-              type: :cluster,
-              includes: (@nodes_graph[cluster_1][:includes] + @nodes_graph[cluster_2][:includes]).uniq,
-              connections: @nodes_graph[cluster_1][:connections].merge!(@nodes_graph[cluster_2][:connections]) { |_connected_node, labels1, labels2| (labels1 + labels2).uniq },
-              includes_proc: proc do |hostname|
-                includes_proc_1.call(hostname) || includes_proc_2.call(hostname)
-              end
-            }
-            replace_nodes([cluster_1, cluster_2], new_cluster_name)
+            # All nodes of cluster_1 belong to cluster_2, but some nodes of cluster_2 don't belong to cluster_1
+            @nodes_graph[cluster_2][:includes] = @nodes_graph[cluster_2][:includes] - @nodes_graph[cluster_1][:includes] + [cluster_1]
           end
+        elsif cluster_2_belongs_to_cluster_1
+          # All nodes of cluster_2 belong to cluster_1, but some nodes of cluster_1 don't belong to cluster_2
+          @nodes_graph[cluster_1][:includes] = @nodes_graph[cluster_1][:includes] - @nodes_graph[cluster_2][:includes] + [cluster_2]
+        else
+          # cluster_1 and cluster_2 have to be merged
+          new_cluster_name = "#{cluster_1}_&_#{cluster_2}"
+          # Store thos proc in those variables as the cluster_1 and cluster_2 references are going to be removed
+          includes_proc_1 = @nodes_graph[cluster_1][:includes_proc]
+          includes_proc_2 = @nodes_graph[cluster_2][:includes_proc]
+          @nodes_graph[new_cluster_name] = {
+            type: :cluster,
+            includes: (@nodes_graph[cluster_1][:includes] + @nodes_graph[cluster_2][:includes]).uniq,
+            connections: @nodes_graph[cluster_1][:connections].merge!(@nodes_graph[cluster_2][:connections]) { |_connected_node, labels_1, labels_2| (labels_1 + labels_2).uniq },
+            includes_proc: proc do |hostname|
+              includes_proc_1.call(hostname) || includes_proc_2.call(hostname)
+            end
+          }
+          replace_nodes([cluster_1, cluster_2], new_cluster_name)
         end
       end
     end
@@ -492,7 +499,7 @@ module HybridPlatformsConductor
     # * *node_name* (String): Node name
     # Result::
     # * Boolean: Is the node represented as a cluster?
-    def is_node_cluster?(node_name)
+    def node_cluster?(node_name)
       @nodes_graph[node_name][:type] == :cluster || !@nodes_graph[node_name][:includes].empty?
     end
 
@@ -502,7 +509,7 @@ module HybridPlatformsConductor
     # * *node_name* (String): Node name
     # Result::
     # * Boolean: Is the node a physical node?
-    def is_node_physical?(node_name)
+    def node_physical?(node_name)
       @nodes_graph[node_name][:type] == :node && @node_metadata[node_name][:physical_node]
     end
 
@@ -512,11 +519,9 @@ module HybridPlatformsConductor
     # * *file_name* (String): File name to output to.
     # * *output_format* (Symbol): Output format to use (should be part of the plugins).
     def write_graph(file_name, output_format)
-      if @plugins.key?(output_format)
-        @plugins[output_format].new(self).write_graph(file_name)
-      else
-        raise "Unknown topographer plugin #{output_format}"
-      end
+      raise "Unknown topographer plugin #{output_format}" unless @plugins.key?(output_format)
+
+      @plugins[output_format].new(self).write_graph(file_name)
     end
 
     # Get the title of a given node
@@ -543,14 +548,10 @@ module HybridPlatformsConductor
     # Result::
     # * String: Node description, or nil if none
     def description_for(node_name)
-      require 'byebug'
-      byebug if node_name == 'xaesbghad51'
       case @nodes_graph[node_name][:type]
       when :node
         @node_metadata[node_name][:description]
-      when :cluster
-        nil
-      when :unknown
+      when :cluster, :unknown
         nil
       end
     end
@@ -570,11 +571,12 @@ module HybridPlatformsConductor
         @nodes_handler.known_nodes.each do |node|
           %i[private_ips public_ips].each do |ip_type|
             ips = @nodes_handler.metadata_of(node, ip_type)
-            if ips
-              ips.each do |ip|
-                raise "Conflict: #{ip} is already associated to #{@known_ips[ip]}. Cannot associate it to #{node}." if @known_ips.key?(ip)
-                @known_ips[ip] = node
-              end
+            next unless ips
+
+            ips.each do |ip|
+              raise "Conflict: #{ip} is already associated to #{@known_ips[ip]}. Cannot associate it to #{node}." if @known_ips.key?(ip)
+
+              @known_ips[ip] = node
             end
           end
         end
@@ -597,9 +599,9 @@ module HybridPlatformsConductor
       @ips_mask[ip_def] = {} unless @ips_mask.key?(ip_def)
       unless @ips_mask[ip_def].key?(ip_mask)
         # For performance, keep a cache of all the IPAddress::IPv4 objects
-        @ip_v4_cache = Hash[known_ips.keys.map { |ip, _node| [ip, IPAddress::IPv4.new(ip)] }] unless defined?(@ip_v4_cache)
+        @ip_v4_cache = known_ips.keys.map { |ip, _node| [ip, IPAddress::IPv4.new(ip)] }.to_h unless defined?(@ip_v4_cache)
         ip_range = IPAddress::IPv4.new("#{ip_def}/#{ip_mask}")
-        @ips_mask[ip_def][ip_mask] = @ip_v4_cache.select { |_ip, ip_v4| ip_range.include?(ip_v4) }.keys
+        @ips_mask[ip_def][ip_mask] = @ip_v4_cache.select { |_ip, ipv4| ip_range.include?(ipv4) }.keys
       end
       @ips_mask[ip_def][ip_mask]
     end
@@ -638,7 +640,7 @@ module HybridPlatformsConductor
       ipv4 = IPAddress::IPv4.new(ip)
       includes_proc = proc do |node_name|
         if @nodes_graph[node_name][:ipv4].nil?
-          if is_node_cluster?(node_name)
+          if node_cluster?(node_name)
             # Here the node is a cluster that is not an IP range.
             @nodes_graph[node_name][:includes].all? { |included_node_name| includes_proc.call(included_node_name) }
           else
@@ -706,7 +708,8 @@ module HybridPlatformsConductor
     # * Hash<String,Array<String>>: List of references for each node.
     def connections_from_json(json, current_ref = nil)
       nodes = {}
-      if json.is_a?(String)
+      case json
+      when String
         # Look for any IP
         json.scan(@ip_regexp).each do |(ip_def, _grp_match, ip_mask_str)|
           ip_mask = ip_mask_str.nil? ? 32 : ip_mask_str.to_i
@@ -719,95 +722,93 @@ module HybridPlatformsConductor
               "#{ip_def}/#{ip_mask}"
             end
           # First check that we don't ignore this IP range
-          unless @ips_ignored.key?(ip_str)
-            connected_node_name =
-              if @nodes_graph.key?(ip_str)
-                # IP group already exists
-                ip_str
-              elsif @config[:ignore_ips].any? { |ip_regexp| ip_str =~ ip_regexp }
-                # This IP should be ignored
-                @ips_ignored[ip_str] = nil
-                nil
-              else
-                # New group to create.
-                if ip_mask <= 24
-                  # This group will include all needed ip_24 IPs.
-                  # Compute the list of 24 bits IPs that are referenced here.
-                  ip_24_list =
-                    if ip_mask == 24
-                      [ip_str]
-                    else
-                      ips_24_matching_mask(ip_def, ip_mask).select do |ip|
-                        unless @ips_ignored.key?(ip_str)
-                          # Check if we should ignore it.
-                          @ips_ignored[ip] = nil if @config[:ignore_ips].any? { |ip_regexp| ip =~ ip_regexp }
-                        end
-                        !@ips_ignored.key?(ip)
-                      end
-                    end
-                  if ip_24_list.empty?
-                    # All IPs of the group are to be ignored
-                    nil
-                  elsif ip_24_list.size == 1
-                    # Just create 1 group.
-                    ip_24 = ip_24_list.first
-                    @nodes_graph[ip_24] = ip_range_graph_info(ip_24) unless @nodes_graph.key?(ip_24)
-                    ip_24
-                  else
-                    # Create all ip_24 groups.
-                    ip_24_list.each do |included_ip_24|
-                      @nodes_graph[included_ip_24] = ip_range_graph_info(included_ip_24) unless @nodes_graph.key?(included_ip_24)
-                    end
-                    # Create a super group of it
-                    @nodes_graph[ip_str] = ip_range_graph_info(ip_str)
-                    @nodes_graph[ip_str][:includes] = ip_24_list
-                    ip_str
-                  end
+          next if @ips_ignored.key?(ip_str)
+
+          connected_node_name =
+            if @nodes_graph.key?(ip_str)
+              # IP group already exists
+              ip_str
+            elsif @config[:ignore_ips].any? { |ip_regexp| ip_str =~ ip_regexp }
+              # This IP should be ignored
+              @ips_ignored[ip_str] = nil
+              nil
+            elsif ip_mask <= 24
+              # New group to create.
+              ip_24_list =
+                if ip_mask == 24
+                  [ip_str]
                 else
-                  # This group will include all individual IP addresses.
-                  ips_list =
-                    if ip_mask == 32
-                      [ip_def]
-                    else
-                      ips_matching_mask(ip_def, ip_mask).select do |ip|
-                        unless @ips_ignored.key?(ip_str)
-                          # Check if we should ignore it.
-                          @ips_ignored[ip] = nil if @config[:ignore_ips].any? { |ip_regexp| ip =~ ip_regexp }
-                        end
-                        !@ips_ignored.key?(ip)
-                      end
+                  ips_24_matching_mask(ip_def, ip_mask).reject do |ip|
+                    if !@ips_ignored.key?(ip_str) && @config[:ignore_ips].any? { |ip_regexp| ip =~ ip_regexp }
+                      # Check if we should ignore it.
+                      @ips_ignored[ip] = nil
                     end
-                  if ips_list.empty?
-                    # All IPs of the group are to be ignored
-                    nil
-                  elsif ips_list.size == 1
-                    # Just create 1 node.
-                    ip = ips_list.first
-                    if @ips_to_host.key?(ip)
-                      # Known hostname
-                      @ips_to_host[ip]
-                    else
-                      # Unknown IP that should be added.
-                      @nodes_graph[ip] = {
-                        type: :unknown,
-                        connections: {},
-                        includes: [],
-                        ipv4: IPAddress::IPv4.new(ip)
-                      }
-                      ip
-                    end
-                  else
-                    # Create a super group of it
-                    @nodes_graph[ip_str] = ip_range_graph_info(ip_str)
-                    @nodes_graph[ip_str][:includes] = ips_list.map { |included_ip| @ips_to_host[included_ip] }
-                    ip_str
+                    @ips_ignored.key?(ip)
                   end
                 end
+              if ip_24_list.empty?
+                # All IPs of the group are to be ignored
+                nil
+              elsif ip_24_list.size == 1
+                # Just create 1 group.
+                ip_24 = ip_24_list.first
+                @nodes_graph[ip_24] = ip_range_graph_info(ip_24) unless @nodes_graph.key?(ip_24)
+                ip_24
+              else
+                # Create all ip_24 groups.
+                ip_24_list.each do |included_ip_24|
+                  @nodes_graph[included_ip_24] = ip_range_graph_info(included_ip_24) unless @nodes_graph.key?(included_ip_24)
+                end
+                # Create a super group of it
+                @nodes_graph[ip_str] = ip_range_graph_info(ip_str)
+                @nodes_graph[ip_str][:includes] = ip_24_list
+                ip_str
               end
-            unless connected_node_name.nil?
-              nodes[connected_node_name] = [] unless nodes.key?(connected_node_name)
-              nodes[connected_node_name] << current_ref
+            # This group will include all needed ip_24 IPs.
+            # Compute the list of 24 bits IPs that are referenced here.
+            else
+              # This group will include all individual IP addresses.
+              ips_list =
+                if ip_mask == 32
+                  [ip_def]
+                else
+                  ips_matching_mask(ip_def, ip_mask).reject do |ip|
+                    if !@ips_ignored.key?(ip_str) && @config[:ignore_ips].any? { |ip_regexp| ip =~ ip_regexp }
+                      # Check if we should ignore it.
+                      @ips_ignored[ip] = nil
+                    end
+                    @ips_ignored.key?(ip)
+                  end
+                end
+              if ips_list.empty?
+                # All IPs of the group are to be ignored
+                nil
+              elsif ips_list.size == 1
+                # Just create 1 node.
+                ip = ips_list.first
+                if @ips_to_host.key?(ip)
+                  # Known hostname
+                  @ips_to_host[ip]
+                else
+                  # Unknown IP that should be added.
+                  @nodes_graph[ip] = {
+                    type: :unknown,
+                    connections: {},
+                    includes: [],
+                    ipv4: IPAddress::IPv4.new(ip)
+                  }
+                  ip
+                end
+              else
+                # Create a super group of it
+                @nodes_graph[ip_str] = ip_range_graph_info(ip_str)
+                @nodes_graph[ip_str][:includes] = ips_list.map { |included_ip| @ips_to_host[included_ip] }
+                ip_str
+              end
             end
+          unless connected_node_name.nil?
+            nodes[connected_node_name] = [] unless nodes.key?(connected_node_name)
+            nodes[connected_node_name] << current_ref
           end
         end
         # Look for any known hostname
@@ -817,15 +818,24 @@ module HybridPlatformsConductor
             nodes[hostname] << current_ref
           end
         end
-      elsif json.is_a?(Array)
+      when Array
         json.each do |sub_json|
-          nodes.merge!(connections_from_json(sub_json, current_ref)) { |_node_name, refs1, refs2| (refs1 + refs2).uniq }
+          nodes.merge!(connections_from_json(sub_json, current_ref)) { |_node_name, refs_1, refs_2| (refs_1 + refs_2).uniq }
         end
-      elsif json.is_a?(Hash)
+      when Hash
         json.each do |sub_json_1, sub_json_2|
-          nodes.merge!(connections_from_json(sub_json_1, current_ref)) { |_node_name, refs1, refs2| (refs1 + refs2).uniq }
+          nodes.merge!(connections_from_json(sub_json_1, current_ref)) { |_node_name, refs_1, refs_2| (refs_1 + refs_2).uniq }
           key_is_str = sub_json_1.is_a?(String)
-          nodes.merge!(connections_from_json(sub_json_2, key_is_str ? (current_ref.nil? ? sub_json_1 : "#{current_ref}/#{sub_json_1}") : current_ref)) { |_hostname, refs1, refs2| (refs1 + refs2).uniq } if !key_is_str || !@config[:ignore_any_json_keys].include?(sub_json_1)
+          nodes.merge!(
+            connections_from_json(
+              sub_json_2,
+              if key_is_str
+                current_ref.nil? ? sub_json_1 : "#{current_ref}/#{sub_json_1}"
+              else
+                current_ref
+              end
+            )
+          ) { |_hostname, refs_1, refs_2| (refs_1 + refs_2).uniq } if !key_is_str || !@config[:ignore_any_json_keys].include?(sub_json_1)
         end
       end
       nodes
@@ -837,19 +847,19 @@ module HybridPlatformsConductor
     # * *hostname* (String): Hostname to parse for connections.
     # * *max_level* (Integer): Maximum level of recursive passes (nil for no limit).
     def parse_connections_for(hostname, max_level)
-      unless @nodes_graph.key?(hostname)
-        @nodes_graph[hostname] = {
-          type: :node,
-          connections: connections_from_json(node_json_for(hostname)),
-          includes: []
-        }
-        @nodes_graph[hostname][:ipv4] = IPAddress::IPv4.new(@node_metadata[hostname][:private_ips].first) if !@node_metadata[hostname][:private_ips].nil? && !@node_metadata[hostname][:private_ips].empty?
-        sub_max_level = max_level.nil? ? nil : max_level - 1
-        if sub_max_level != -1
-          @nodes_graph[hostname][:connections].keys.each do |connected_hostname|
-            parse_connections_for(connected_hostname, sub_max_level)
-          end
-        end
+      return if @nodes_graph.key?(hostname)
+
+      @nodes_graph[hostname] = {
+        type: :node,
+        connections: connections_from_json(node_json_for(hostname)),
+        includes: []
+      }
+      @nodes_graph[hostname][:ipv4] = IPAddress::IPv4.new(@node_metadata[hostname][:private_ips].first) if !@node_metadata[hostname][:private_ips].nil? && !@node_metadata[hostname][:private_ips].empty?
+      sub_max_level = max_level.nil? ? nil : max_level - 1
+      return if sub_max_level == -1
+
+      @nodes_graph[hostname][:connections].each_key do |connected_hostname|
+        parse_connections_for(connected_hostname, sub_max_level)
       end
     end
 

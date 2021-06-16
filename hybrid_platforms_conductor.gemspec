@@ -1,15 +1,14 @@
-require 'date'
 require "#{__dir__}/lib/hybrid_platforms_conductor/version"
 
 Gem::Specification.new do |s|
   s.name = 'hybrid_platforms_conductor'
   s.version = HybridPlatformsConductor::VERSION
-  s.date = Date.today.to_s
   s.authors = ['Muriel Salvan']
   s.email = ['muriel@x-aeon.com']
   s.license = 'BSD-3-Clause'
   s.summary = 'Hybrid Platforms Conductor'
   s.description = 'Provides a complete toolset to help DevOps maintain, deploy, monitor and test multiple platforms using various technologies'
+  s.required_ruby_version = '~> 2.6'
 
   s.files = Dir['*.md'] + Dir['{bin,docs,examples,lib,spec,tools}/**/*']
   s.executables = Dir['bin/**/*'].map { |exec_name| File.basename(exec_name) }
@@ -57,4 +56,8 @@ Gem::Specification.new do |s|
   s.add_development_dependency 'rspec', '~> 3.8'
   # Automatic semantic releasing
   s.add_development_dependency 'sem_ver_components', '~> 0.0'
+  # Lint checker
+  s.add_development_dependency 'rubocop', '~> 1.16'
+  # Lint checker for rspec
+  s.add_development_dependency 'rubocop-rspec', '~> 2.4'
 end

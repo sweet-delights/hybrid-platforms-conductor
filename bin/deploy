@@ -2,7 +2,6 @@
 require 'hybrid_platforms_conductor/executable'
 
 executable = HybridPlatformsConductor::Executable.new
-actions_executor = executable.actions_executor
 deployer = executable.deployer
 
 executable.parse_options!

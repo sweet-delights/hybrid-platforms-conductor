@@ -1,6 +1,6 @@
 describe HybridPlatformsConductor::TestsRunner do
 
-  context 'checking node tests on check-node results' do
+  context 'when checking node tests on check-node results' do
 
     # Prepare the test platform with test plugins
     #
@@ -8,10 +8,13 @@ describe HybridPlatformsConductor::TestsRunner do
     # * Proc: Code called with the platform setup
     def with_test_platform_for_node_check_tests
       with_test_platforms(
-        'platform1' => { nodes: { 'node11' => {}, 'node12' => {} } },
-        'platform2' => { nodes: { 'node21' => {}, 'node22' => {} }, platform_type: :test2 }
+        {
+          'platform1' => { nodes: { 'node11' => {}, 'node12' => {} } },
+          'platform2' => { nodes: { 'node21' => {}, 'node22' => {} }, platform_type: :test_2 }
+        }
       ) do
-        register_test_plugins(test_tests_runner,
+        register_test_plugins(
+          test_tests_runner,
           node_check_test: HybridPlatformsConductorTest::TestPlugins::NodeCheck,
           node_check_test_2: HybridPlatformsConductorTest::TestPlugins::NodeCheck
         )
@@ -61,7 +64,7 @@ describe HybridPlatformsConductor::TestsRunner do
 
     it 'executes check node tests once per node even if there are several tests using check reports' do
       with_test_platform_for_node_check_tests do
-        test_tests_runner.tests = [:node_check_test, :node_check_test_2]
+        test_tests_runner.tests = %i[node_check_test node_check_test_2]
         expect(test_deployer).to receive(:deploy_on).with(%w[node11 node12 node21 node22]).once do
           expect(test_deployer.use_why_run).to eq true
           {

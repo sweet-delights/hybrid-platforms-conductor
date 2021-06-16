@@ -40,11 +40,14 @@ module HybridPlatformsConductor
                 add_recipe_in_tree(cookbook_dir, cookbook, recipe)
               end
             end
+            # Make sure we don't combine those 2 loops
+            # rubocop:disable Style/CombinableLoops
             @platform.deployable_services.each do |service|
-              @platform.policy_run_list(service).each do |(cookbook_dir, cookbook, recipe)|
+              @platform.policy_run_list(service).each do |(_cookbook_dir, cookbook, recipe)|
                 mark_recipe_used_by_policy(cookbook, recipe, service)
               end
             end
+            # rubocop:enable Style/CombinableLoops
             @recipes_tree
           end
 
@@ -58,25 +61,25 @@ module HybridPlatformsConductor
           # * *recipe* (Symbol): The recipe name
           def add_recipe_in_tree(cookbook_dir, cookbook, recipe)
             @recipes_tree[cookbook] = {} unless @recipes_tree.key?(cookbook)
-            unless @recipes_tree[cookbook].key?(recipe)
-              recipe_info =
-                if cookbook_dir.nil?
-                  # This recipe comes from an external cookbook, we won't get into it.
-                  {
-                    included_recipes: [],
-                    used_templates: [],
-                    used_files: [],
-                    used_cookbooks: []
-                  }
-                else
-                  recipe_usage(cookbook_dir, cookbook, recipe)
-                end
-              @recipes_tree[cookbook][recipe] = recipe_info.merge(
-                used_by_policies: []
-              )
-              recipe_info[:included_recipes].each do |(sub_cookbook_dir, sub_cookbook, sub_recipe)|
-                add_recipe_in_tree(sub_cookbook_dir, sub_cookbook, sub_recipe)
+            return if @recipes_tree[cookbook].key?(recipe)
+
+            recipe_info =
+              if cookbook_dir.nil?
+                # This recipe comes from an external cookbook, we won't get into it.
+                {
+                  included_recipes: [],
+                  used_templates: [],
+                  used_files: [],
+                  used_cookbooks: []
+                }
+              else
+                recipe_usage(cookbook_dir, cookbook, recipe)
               end
+            @recipes_tree[cookbook][recipe] = recipe_info.merge(
+              used_by_policies: []
+            )
+            recipe_info[:included_recipes].each do |(sub_cookbook_dir, sub_cookbook, sub_recipe)|
+              add_recipe_in_tree(sub_cookbook_dir, sub_cookbook, sub_recipe)
             end
           end
 
@@ -115,18 +118,18 @@ module HybridPlatformsConductor
             recipe_content.
               scan(/source\s+(["'])(.+?)\1/).
               each do |(_sub_grp, source)|
-                sources << source unless source =~ /^https?:\/\//
+                sources << source unless source =~ %r{^https?://}
               end
             erb_sources = sources.select { |source| File.extname(source).downcase == '.erb' }
             non_erb_sources = sources - erb_sources
             erb_sources.concat(recipe_content.scan(/template:?\s+(["'])(.+?)\1/).map { |(_sub_grp, source)| source })
             # Check for known resources and library methods
             used_cookbooks = []
-            known_resources.each do |cookbook, methods|
-              used_cookbooks << cookbook if methods.any? { |method_name| recipe_content.include?(method_name) }
+            known_resources.each do |itr_cookbook, methods|
+              used_cookbooks << itr_cookbook if methods.any? { |method_name| recipe_content.include?(method_name) }
             end
-            known_library_methods.each do |cookbook, methods|
-              used_cookbooks << cookbook if methods.any? { |method_name| recipe_content.include?(method_name) }
+            known_library_methods.each do |itr_cookbook, methods|
+              used_cookbooks << itr_cookbook if methods.any? { |method_name| recipe_content.include?(method_name) }
             end
             {
               included_recipes: used_recipes,
@@ -171,9 +174,9 @@ module HybridPlatformsConductor
               @known_library_methods = {}
               for_each_cookbook do |cookbook, cookbook_dir|
                 if File.exist?("#{cookbook_dir}/libraries")
-                  found_methods =  Dir.glob("#{cookbook_dir}/libraries/*.rb").
-                      map { |lib_file| File.read(lib_file).scan(/\bdef\s+(\w+)\b/).map { |(method_name)| method_name } }.
-                      flatten - INVALID_LIBRARY_METHODS
+                  found_methods = Dir.glob("#{cookbook_dir}/libraries/*.rb").
+                    map { |lib_file| File.read(lib_file).scan(/\bdef\s+(\w+)\b/).map { |(method_name)| method_name } }.
+                    flatten - INVALID_LIBRARY_METHODS
                   @known_library_methods[cookbook] = found_methods unless found_methods.empty?
                 end
               end
@@ -184,15 +187,13 @@ module HybridPlatformsConductor
           # Iterate over all cookbooks
           #
           # Parameters::
-          # * Proc: Code called for each cookbook:
+          # * *block* (Proc): Code called for each cookbook:
           #   * Parameters::
           #     * *cookbook* (Symbol): Cookbook name
           #     * *cookbook_dir* (String): Cookbook directory
-          def for_each_cookbook
+          def for_each_cookbook(&block)
             @platform.known_cookbook_paths.each do |cookbook_path|
-              cookbooks_in(cookbook_path).each do |cookbook, cookbook_dir|
-                yield cookbook, cookbook_dir
-              end
+              cookbooks_in(cookbook_path).each(&block)
             end
           end
 
@@ -203,7 +204,7 @@ module HybridPlatformsConductor
           # Result::
           # * Hash<Symbol, String>: List of cookbook directories, per cookbook name
           def cookbooks_in(cookbook_type)
-            Hash[Dir.glob("#{@platform.repository_path}/#{cookbook_type}/*").map { |dir| [File.basename(dir).to_sym, dir] }.sort]
+            Dir.glob("#{@platform.repository_path}/#{cookbook_type}/*").map { |dir| [File.basename(dir).to_sym, dir] }.sort.to_h
           end
 
           # Mark a recipe (and its included recipes) as used by a policy
@@ -213,11 +214,11 @@ module HybridPlatformsConductor
           # * *recipe* (Symbol): The recipe
           # * *used_by_policy* (String): The policy using this recipe
           def mark_recipe_used_by_policy(cookbook, recipe, used_by_policy)
-            unless @recipes_tree[cookbook][recipe][:used_by_policies].include?(used_by_policy)
-              @recipes_tree[cookbook][recipe][:used_by_policies] << used_by_policy
-              @recipes_tree[cookbook][recipe][:included_recipes].each do |(_sub_cookbook_dir, sub_cookbook, sub_recipe)|
-                mark_recipe_used_by_policy(sub_cookbook, sub_recipe, used_by_policy)
-              end
+            return if @recipes_tree[cookbook][recipe][:used_by_policies].include?(used_by_policy)
+
+            @recipes_tree[cookbook][recipe][:used_by_policies] << used_by_policy
+            @recipes_tree[cookbook][recipe][:included_recipes].each do |(_sub_cookbook_dir, sub_cookbook, sub_recipe)|
+              mark_recipe_used_by_policy(sub_cookbook, sub_recipe, used_by_policy)
             end
           end
 

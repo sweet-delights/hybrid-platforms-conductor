@@ -14,6 +14,7 @@ module HybridPlatformsConductor
         class NotConnectableError < RuntimeError
         end
 
+        # Config DSL extension
         module PlatformsDslSsh
 
           # List of SSH connection transformations:
@@ -59,6 +60,7 @@ module HybridPlatformsConductor
           # * *ssh_def_erb* (String): Corresponding SSH ERB configuration
           def gateway(gateway_conf, ssh_def_erb)
             raise "Gateway #{gateway_conf} already defined to #{@gateways[gateway_conf]}" if @gateways.key?(gateway_conf)
+
             @gateways[gateway_conf] = ssh_def_erb
           end
 
@@ -78,18 +80,18 @@ module HybridPlatformsConductor
           # Result::
           # * String: The corresponding SSH configuration
           def ssh_for_gateway(gateway_conf, variables = {})
-            erb_context = self.clone
-            def erb_context.get_binding
+            erb_context = clone
+            def erb_context.private_binding
               binding
             end
             variables.each do |var_name, var_value|
               erb_context.instance_variable_set("@#{var_name}".to_sym, var_value)
             end
-            ERB.new(@gateways[gateway_conf]).result(erb_context.get_binding)
+            ERB.new(@gateways[gateway_conf]).result(erb_context.private_binding)
           end
 
         end
-        self.extend_config_dsl_with PlatformsDslSsh, :init_ssh
+        extend_config_dsl_with PlatformsDslSsh, :init_ssh
 
         # Name of the gateway user to be used. [default: ENV['hpc_ssh_gateway_user'] or ubradm]
         #   String
@@ -174,7 +176,7 @@ module HybridPlatformsConductor
           options_parser.on('-w', '--password', 'If used, then expect SSH connections to ask for a password.') do
             @auth_password = true
           end
-          options_parser.on('-y', '--ssh-gateways-conf GATEWAYS_CONF', "Name of the gateways configuration to be used. Can also be set from environment variable hpc_ssh_gateways_conf.") do |gateway|
+          options_parser.on('-y', '--ssh-gateways-conf GATEWAYS_CONF', 'Name of the gateways configuration to be used. Can also be set from environment variable hpc_ssh_gateways_conf.') do |gateway|
             @ssh_gateways_conf = gateway.to_sym
           end
         end
@@ -185,6 +187,7 @@ module HybridPlatformsConductor
         # [API] - @nodes_handler can be used
         def validate_params
           raise 'No SSH user name specified. Please use --ssh-user option or hpc_ssh_user environment variable to set it.' if @ssh_user.nil? || @ssh_user.empty?
+
           known_gateways = @config.known_gateways
           raise "Unknown gateway configuration provided: #{@ssh_gateways_conf}. Possible values are: #{known_gateways.join(', ')}." if !@ssh_gateways_conf.nil? && !known_gateways.include?(@ssh_gateways_conf)
         end
@@ -212,13 +215,11 @@ module HybridPlatformsConductor
         # Parameters::
         # * *nodes* (Array<String>): Nodes to prepare the connection to
         # * *no_exception* (Boolean): Should we still continue if some nodes have connection errors? [default: false]
-        # * Proc: Code called with the connections prepared.
+        # * *block* (Proc): Code called with the connections prepared.
         #   * Parameters::
         #     * *connected_nodes* (Array<String>): The list of connected nodes (should be equal to nodes unless no_exception == true and some nodes failed to connect)
-        def with_connection_to(nodes, no_exception: false)
-          with_ssh_master_to(nodes, no_exception: no_exception) do |connected_nodes|
-            yield connected_nodes
-          end
+        def with_connection_to(nodes, no_exception: false, &block)
+          with_ssh_master_to(nodes, no_exception: no_exception, &block)
         end
 
         # Integer: Max size for an argument that can be executed without getting through an intermediary file
@@ -251,7 +252,7 @@ module HybridPlatformsConductor
             temp_file = "#{Dir.tmpdir}/hpc_temp_cmds_#{Digest::MD5.hexdigest(bash_cmds)}.sh"
             File.open(temp_file, 'w+') do |file|
               file.write ssh_cmd
-              file.chmod 0700
+              file.chmod 0o700
             end
             begin
               run_cmd(temp_file)
@@ -311,7 +312,7 @@ module HybridPlatformsConductor
               run_cmd "scp -S #{ssh_exec} #{from} #{ssh_url}:#{to}"
             end
           else
-            run_cmd <<~EOS
+            run_cmd <<~EO_BASH
               cd #{File.dirname(from)} && \
               tar \
                 --create \
@@ -329,7 +330,7 @@ module HybridPlatformsConductor
                   --directory #{to} \
                   --owner root \
                 \"
-            EOS
+            EO_BASH
           end
         end
 
@@ -358,7 +359,7 @@ module HybridPlatformsConductor
         # Result::
         # * String: The SSH config
         def ssh_config(ssh_exec: 'ssh', known_hosts_file: nil, nodes: @nodes_handler.known_nodes)
-          config_content = <<~EOS
+          config_content = <<~EO_SSH_CONFIG
             ############
             # GATEWAYS #
             ############
@@ -369,7 +370,7 @@ module HybridPlatformsConductor
             # ENDPOINTS #
             #############
 
-          EOS
+          EO_SSH_CONFIG
 
           # Add each node
           # Query for the metadata of all nodes at once
@@ -393,7 +394,7 @@ module HybridPlatformsConductor
             config_content << "\n"
           end
           # Add global definitions at the end of the SSH config, as they might be overriden by previous ones, and first match wins.
-          config_content << <<~EOS
+          config_content << <<~EO_SSH_CONFIG
             ###########
             # GLOBALS #
             ###########
@@ -406,7 +407,7 @@ module HybridPlatformsConductor
               #{known_hosts_file.nil? ? '' : "UserKnownHostsFile #{known_hosts_file}"}
               #{@ssh_strict_host_key_checking ? '' : 'StrictHostKeyChecking no'}
 
-          EOS
+          EO_SSH_CONFIG
           config_content
         end
 
@@ -421,7 +422,7 @@ module HybridPlatformsConductor
           cache_filled = defined?(@ssh_pass_installed)
           unless cache_filled
             exit_code, _stdout, _stderr = @cmd_runner.run_cmd 'sshpass -V', log_to_stdout: log_debug?, no_exception: true
-            @ssh_pass_installed = (exit_code == 0)
+            @ssh_pass_installed = exit_code.zero?
           end
           @ssh_pass_installed
         end
@@ -518,12 +519,10 @@ module HybridPlatformsConductor
                         # We'll do that using another terminal spawned in the background.
                         if ENV['hpc_interactive'] == 'false'
                           error = "Can't spawn interactive ControlMaster to #{node} in non-interactive mode. You may want to change the hpc_interactive env variable."
-                          if no_exception
-                            log_error error
-                            exit_status = :non_interactive
-                          else
-                            raise error
-                          end
+                          raise error unless no_exception
+
+                          log_error error
+                          exit_status = :non_interactive
                         else
                           Thread.new do
                             log_debug "[ ControlMaster - #{ssh_url} ] - Spawn interactive ControlMaster in separate terminal"
@@ -540,17 +539,14 @@ module HybridPlatformsConductor
                         ssh_control_master_start_cmd = "#{ssh_exec}#{@passwords.key?(node) || @auth_password ? '' : ' -o BatchMode=yes'} -o ControlMaster=yes -o ControlPersist=yes #{ssh_url} true"
                         idx_try = 0
                         loop do
-                          stderr = nil
                           exit_status, _stdout, stderr = @cmd_runner.run_cmd ssh_control_master_start_cmd, log_to_stdout: log_debug?, no_exception: true, timeout: timeout
-                          if exit_status == 0
-                            break
-                          elsif stderr =~ /System is booting up/
+                          break if exit_status.zero?
+
+                          if stderr =~ /System is booting up/
                             if idx_try == MAX_RETRIES_FOR_BOOT
-                              if no_exception
-                                break
-                              else
-                                raise ActionsExecutor::ConnectionError, "Tried #{idx_try} times to create SSH Control Master with #{ssh_control_master_start_cmd} but system says it's booting up."
-                              end
+                              break if no_exception
+
+                              raise ActionsExecutor::ConnectionError, "Tried #{idx_try} times to create SSH Control Master with #{ssh_control_master_start_cmd} but system says it's booting up."
                             end
                             # Wait a bit and try again
                             idx_try += 1
@@ -563,7 +559,7 @@ module HybridPlatformsConductor
                           end
                         end
                       end
-                      if exit_status == 0
+                      if exit_status.zero?
                         log_debug "[ ControlMaster - #{ssh_url} ] - ControlMaster created"
                         working_master = true
                       else
@@ -579,7 +575,7 @@ module HybridPlatformsConductor
                       rescue CmdRunner::UnexpectedExitCodeError
                         raise ActionsExecutor::ConnectionError, "Error while checking SSH Control Master with #{ssh_control_master_check_cmd}"
                       end
-                      if exit_status == 0
+                      if exit_status.zero?
                         log_debug "[ ControlMaster - #{ssh_url} ] - ControlMaster checked ok"
                         working_master = true
                       else
@@ -597,17 +593,17 @@ module HybridPlatformsConductor
                 end
               else
                 # We have not created any ControlMaster, but still consider the nodes to be ready to connect
-                user_locks = Hash[nodes.map { |node| [node, nil]} ]
+                user_locks = nodes.map { |node| [node, nil] }.to_h
               end
               yield user_locks.keys
             ensure
               if @ssh_use_control_master
                 user_locks_mutex.synchronize do
                   user_locks.each do |node, user_id|
-                    with_lock_on_control_master_for(node, user_id: user_id) do |current_users, user_id|
+                    with_lock_on_control_master_for(node, user_id: user_id) do |current_users, current_user_id|
                       ssh_url = "hpc.#{node}"
-                      log_warn "[ ControlMaster - #{ssh_url} ] - Current process/thread was not part of the ControlMaster users anymore whereas it should have been" unless current_users.include?(user_id)
-                      remaining_users = current_users - [user_id]
+                      log_warn "[ ControlMaster - #{ssh_url} ] - Current process/thread was not part of the ControlMaster users anymore whereas it should have been" unless current_users.include?(current_user_id)
+                      remaining_users = current_users - [current_user_id]
                       if remaining_users.empty?
                         # Stop the ControlMaster
                         log_debug "[ ControlMaster - #{ssh_url} ] - Stopping ControlMaster..."
@@ -693,14 +689,15 @@ module HybridPlatformsConductor
         # * *nodes* (Array<String>): List of nodes for which we need the config to be created [default: @nodes_handler.known_nodes ]
         # * Proc: Code called with the given ssh executable to be used to get TI config
         def with_platforms_ssh(nodes: @nodes_handler.known_nodes)
-          platforms_ssh_dir = Dir.mktmpdir("platforms_ssh_#{self.object_id}", @tmp_dir)
+          platforms_ssh_dir = Dir.mktmpdir("platforms_ssh_#{object_id}", @tmp_dir)
           log_debug "Generate temporary SSH configuration in #{platforms_ssh_dir} for #{nodes.size} nodes..."
           begin
             ssh_conf_file = "#{platforms_ssh_dir}/ssh_config"
             ssh_exec_file = "#{platforms_ssh_dir}/ssh"
             known_hosts_file = "#{platforms_ssh_dir}/known_hosts"
             raise 'sshpass is not installed. Can\'t use automatic passwords handling without it. Please install it.' if !@passwords.empty? && !ssh_pass_installed?
-            File.open(ssh_exec_file, 'w+', 0700) do |file|
+
+            File.open(ssh_exec_file, 'w+', 0o700) do |file|
               file.puts "#!#{env_system_path} bash"
               # TODO: Make a mechanism that uses sshpass and the correct password only for the correct hostname (this requires parsing ssh parameters $*).
               # Current implementation is much simpler: it uses sshpass if at least 1 password is needed, and always uses the first password.
@@ -709,17 +706,17 @@ module HybridPlatformsConductor
             end
             File.write(ssh_conf_file, ssh_config(ssh_exec: ssh_exec_file, known_hosts_file: known_hosts_file, nodes: nodes))
             # Make sure all host keys are setup in the known hosts file
-            File.open(known_hosts_file, 'w+', 0700) do |file|
+            File.open(known_hosts_file, 'w+', 0o700) do |file|
               if @ssh_strict_host_key_checking
                 # In the case of an overriden connection, get host key for the overriden connection
                 @nodes_handler.prefetch_metadata_of nodes, :host_keys
                 nodes.sort.each do |node|
                   host_keys = @nodes_handler.get_host_keys_of(node)
-                  if host_keys && !host_keys.empty?
-                    connection, _connection_user, _gateway, _gateway_user = connection_info_for(node)
-                    host_keys.each do |host_key|
-                      file.puts "#{connection} #{host_key}"
-                    end
+                  next unless host_keys && !host_keys.empty?
+
+                  connection, _connection_user, _gateway, _gateway_user = connection_info_for(node)
+                  host_keys.each do |host_key|
+                    file.puts "#{connection} #{host_key}"
                   end
                 end
               end
@@ -763,8 +760,6 @@ module HybridPlatformsConductor
               @nodes_handler.get_private_ips_of(node).first
             elsif @nodes_handler.get_hostname_of(node)
               @nodes_handler.get_hostname_of(node)
-            else
-              nil
             end
           connection_user = @ssh_user
           gateway = @nodes_handler.get_gateway_of node
@@ -775,6 +770,7 @@ module HybridPlatformsConductor
             connection, connection_user, gateway, gateway_user = transform_info[:transform].call(node, connection, connection_user, gateway, gateway_user)
           end
           raise NotConnectableError, "No connection possible to #{node}" if connection.nil? && !no_exception
+
           [connection, connection_user, gateway, gateway_user]
         end
 

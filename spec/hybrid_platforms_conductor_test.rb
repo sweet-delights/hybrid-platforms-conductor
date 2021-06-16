@@ -20,16 +20,15 @@ require 'hybrid_platforms_conductor/hpc_plugins/cmdb/host_ip'
 require 'hybrid_platforms_conductor/hpc_plugins/cmdb/host_keys'
 require 'hybrid_platforms_conductor/hpc_plugins/cmdb/platform_handlers'
 require 'hybrid_platforms_conductor_test/cmdb_plugins/test_cmdb'
-require 'hybrid_platforms_conductor_test/cmdb_plugins/test_cmdb2'
+require 'hybrid_platforms_conductor_test/cmdb_plugins/test_cmdb_2'
 require 'hybrid_platforms_conductor_test/cmdb_plugins/test_cmdb_others'
-require 'hybrid_platforms_conductor_test/cmdb_plugins/test_cmdb_others2'
+require 'hybrid_platforms_conductor_test/cmdb_plugins/test_cmdb_others_2'
 require 'hybrid_platforms_conductor_test/helpers/actions_executor_helpers'
 require 'hybrid_platforms_conductor_test/helpers/cmd_runner_helpers'
 require 'hybrid_platforms_conductor_test/helpers/cmdb_helpers'
 require 'hybrid_platforms_conductor_test/helpers/config_helpers'
 require 'hybrid_platforms_conductor_test/helpers/connector_ssh_helpers'
 require 'hybrid_platforms_conductor_test/helpers/deployer_helpers'
-require 'hybrid_platforms_conductor_test/helpers/deployer_test_helpers'
 require 'hybrid_platforms_conductor_test/helpers/executables_helpers'
 require 'hybrid_platforms_conductor_test/helpers/nodes_handler_helpers'
 require 'hybrid_platforms_conductor_test/helpers/platform_handler_helpers'
@@ -41,8 +40,9 @@ require 'hybrid_platforms_conductor_test/helpers/serverless_chef_helpers'
 require 'hybrid_platforms_conductor_test/helpers/services_handler_helpers'
 require 'hybrid_platforms_conductor_test/helpers/tests_runner_helpers'
 require 'hybrid_platforms_conductor_test/platform_handler_plugins/test'
-require 'hybrid_platforms_conductor_test/platform_handler_plugins/test2'
+require 'hybrid_platforms_conductor_test/platform_handler_plugins/test_2'
 require 'hybrid_platforms_conductor_test/report_plugin'
+require 'hybrid_platforms_conductor_test/shared_examples/deployer'
 require 'hybrid_platforms_conductor_test/test_action'
 require 'hybrid_platforms_conductor_test/test_connector'
 require 'hybrid_platforms_conductor_test/test_log_plugin'
@@ -81,7 +81,7 @@ module HybridPlatformsConductorTest
 
     # Make sure the tested components are being reset before each test case
     RSpec.configure do |config|
-      config.before(:each) do
+      config.before do
         @actions_executor = nil
         @cmd_runner = nil
         @config = nil
@@ -170,7 +170,7 @@ module HybridPlatformsConductorTest
     # * Logger: The logger to be used
     def logger
       if ENV['TEST_DEBUG'] == '1'
-        logger = Logger.new(STDOUT)
+        logger = Logger.new($stdout)
         logger.level = Logger::DEBUG
         logger
       else

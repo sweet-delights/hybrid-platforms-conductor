@@ -64,7 +64,7 @@ def gen_mermaid(file)
       markdown << line
     end
   end
-  File.write(file, markdown.map { |line| "#{line}\n" }.join) if idx_mermaid > 0
+  File.write(file, markdown.map { |line| "#{line}\n" }.join) if idx_mermaid.positive?
 end
 
 Tempfile.create('puppeteer') do |puppeteer_file|

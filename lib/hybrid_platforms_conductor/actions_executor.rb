@@ -35,7 +35,7 @@ module HybridPlatformsConductor
     # * *config* (Config): Config to be used. [default = Config.new]
     # * *cmd_runner* (CmdRunner): Command runner to be used. [default = CmdRunner.new]
     # * *nodes_handler* (NodesHandler): Nodes handler to be used. [default = NodesHandler.new]
-    def initialize(logger: Logger.new(STDOUT), logger_stderr: Logger.new(STDERR), config: Config.new, cmd_runner: CmdRunner.new, nodes_handler: NodesHandler.new)
+    def initialize(logger: Logger.new($stdout), logger_stderr: Logger.new($stderr), config: Config.new, cmd_runner: CmdRunner.new, nodes_handler: NodesHandler.new)
       init_loggers(logger, logger_stderr)
       @config = config
       @cmd_runner = cmd_runner
@@ -74,17 +74,17 @@ module HybridPlatformsConductor
       end
       # Display options connectors might have
       @connector_plugins.each do |connector_name, connector|
-        if connector.respond_to?(:options_parse)
-          options_parser.separator ''
-          options_parser.separator "Connector #{connector_name} options:"
-          connector.options_parse(options_parser)
-        end
+        next unless connector.respond_to?(:options_parse)
+
+        options_parser.separator ''
+        options_parser.separator "Connector #{connector_name} options:"
+        connector.options_parse(options_parser)
       end
     end
 
     # Validate that parsed parameters are valid
     def validate_params
-      @connector_plugins.values.each do |connector|
+      @connector_plugins.each_value do |connector|
         connector.validate_params if connector.respond_to?(:validate_params)
       end
     end
@@ -124,6 +124,7 @@ module HybridPlatformsConductor
           nodes_actions_set.each do |action_type, action_info|
             raise 'Cannot have concurrent executions for interactive sessions' if concurrent && action_type == :interactive && action_info
             raise "Unknown action type #{action_type}" unless @action_plugins.key?(action_type)
+
             action = @action_plugins[action_type].new(
               logger: @logger,
               logger_stderr: @logger_stderr,
@@ -144,7 +145,7 @@ module HybridPlatformsConductor
           actions_per_node[node].concat(resolved_nodes_actions)
         end
       end
-      result = Hash[actions_per_node.keys.map { |node| [node, nil] }]
+      result = actions_per_node.keys.map { |node| [node, nil] }.to_h
       with_connections_prepared_to(nodes_needing_connectors, no_exception: true) do |connected_nodes|
         missing_nodes = []
         connected_nodes.each do |node, connector|
@@ -158,7 +159,7 @@ module HybridPlatformsConductor
         # Prepare the result (stdout or nil per node)
         unless accessible_nodes.empty?
           # If we run in parallel then clone the connectors, so that each node has its own instance for thread-safe code.
-          connected_nodes = Hash[connected_nodes.map { |node, connector| [node, connector.clone] }] if concurrent
+          connected_nodes = connected_nodes.transform_values(&:clone) if concurrent
           @nodes_handler.for_each_node_in(
             accessible_nodes,
             parallel: concurrent,
@@ -192,10 +193,11 @@ module HybridPlatformsConductor
     #     * *connected_nodes* (Hash<String, Connector or Symbol>): Prepared connectors (or Symbol in case of failure with no_exception), per node name
     def with_connections_prepared_to(nodes, no_exception: false)
       # Make sure every node needing connectors finds a connector
-      nodes_needing_connectors = Hash[nodes.map { |node| [node, nil] }]
-      @connector_plugins.each do |connector_name, connector|
+      nodes_needing_connectors = nodes.map { |node| [node, nil] }.to_h
+      @connector_plugins.each_value do |connector|
         nodes_without_connectors = nodes_needing_connectors.select { |_node, selected_connector| selected_connector.nil? }.keys
         break if nodes_without_connectors.empty?
+
         (connector.connectable_nodes_from(nodes_without_connectors) & nodes_without_connectors).each do |node|
           nodes_needing_connectors[node] = connector if nodes_needing_connectors[node].nil?
         end
@@ -213,23 +215,20 @@ module HybridPlatformsConductor
         if connector_name.nil?
           # All plugins have been prepared.
           # Call our client code.
-          yield Hash[nodes_needing_connectors.map do |node, selected_connector|
-            [
-              node,
-              selected_connector.nil? ? :no_connector : selected_connector
-            ]
-          end]
+          yield(nodes_needing_connectors.transform_values do |selected_connector|
+            selected_connector.nil? ? :no_connector : selected_connector
+          end)
         else
           connector = @connector_plugins[connector_name]
           selected_nodes = nodes_needing_connectors.select { |_node, selected_connector| selected_connector == connector }.keys
           if selected_nodes.empty?
-            preparation_code.call(remaining_plugins_to_prepare[1..-1])
+            preparation_code.call(remaining_plugins_to_prepare[1..])
           else
             connector.with_connection_to(selected_nodes, no_exception: no_exception) do |connected_nodes|
               (selected_nodes - connected_nodes).each do |node_in_error|
                 nodes_needing_connectors[node_in_error] = :connection_error
               end
-              preparation_code.call(remaining_plugins_to_prepare[1..-1])
+              preparation_code.call(remaining_plugins_to_prepare[1..])
             end
           end
         end
@@ -269,8 +268,6 @@ module HybridPlatformsConductor
         if log_to_file
           FileUtils.mkdir_p(File.dirname(log_to_file))
           File.open(log_to_file, 'w')
-        else
-          nil
         end
       stdout_queue = Queue.new
       stderr_queue = Queue.new
@@ -284,28 +281,26 @@ module HybridPlatformsConductor
           (log_to_stdout ? [@logger_stderr] : []) +
           (file_output.nil? ? [] : [file_output])
       ) do
-        begin
-          log_debug "[#{node}] - Execute #{actions.size} actions on #{node}..."
-          actions.each do |action|
-            action.prepare_for(node, connector, remaining_timeout, stdout_queue, stderr_queue)
-            start_time = Time.now
-            action.execute
-            remaining_timeout -= Time.now - start_time unless remaining_timeout.nil?
-          end
-        rescue ConnectionError
-          exit_status = :connection_error
-          stderr_queue << "#{$!}\n"
-        rescue CmdRunner::UnexpectedExitCodeError
-          exit_status = :failed_command
-          stderr_queue << "#{$!}\n"
-        rescue CmdRunner::TimeoutError
-          # Error has already been logged in stderr
-          exit_status = :timeout
-        rescue
-          log_error "Uncaught exception while executing actions on #{node}: #{$!}\n#{$!.backtrace.join("\n")}"
-          stderr_queue << "#{$!}\n"
-          exit_status = :failed_action
+        log_debug "[#{node}] - Execute #{actions.size} actions on #{node}..."
+        actions.each do |action|
+          action.prepare_for(node, connector, remaining_timeout, stdout_queue, stderr_queue)
+          start_time = Time.now
+          action.execute
+          remaining_timeout -= Time.now - start_time unless remaining_timeout.nil?
         end
+      rescue ConnectionError
+        exit_status = :connection_error
+        stderr_queue << "#{$ERROR_INFO}\n"
+      rescue CmdRunner::UnexpectedExitCodeError
+        exit_status = :failed_command
+        stderr_queue << "#{$ERROR_INFO}\n"
+      rescue CmdRunner::TimeoutError
+        # Error has already been logged in stderr
+        exit_status = :timeout
+      rescue
+        log_error "Uncaught exception while executing actions on #{node}: #{$ERROR_INFO}\n#{$ERROR_INFO.backtrace.join("\n")}"
+        stderr_queue << "#{$ERROR_INFO}\n"
+        exit_status = :failed_action
       end
       [exit_status, stdout, stderr]
     end

@@ -22,8 +22,8 @@ module HybridPlatformsConductor
     def initialize(
       node,
       environment: 'production',
-      logger: Logger.new(STDOUT),
-      logger_stderr: Logger.new(STDERR),
+      logger: Logger.new($stdout),
+      logger_stderr: Logger.new($stderr),
       config: Config.new,
       cmd_runner: CmdRunner.new,
       nodes_handler: NodesHandler.new,
@@ -80,7 +80,7 @@ module HybridPlatformsConductor
             @config.ssh_connection_transforms.replace(@config.ssh_connection_transforms.map do |ssh_transform_info|
               {
                 nodes_selectors_stack: ssh_transform_info[:nodes_selectors_stack].map do |nodes_selector|
-                  @nodes_handler.select_nodes(nodes_selector).select { |selected_node| selected_node != @node }
+                  @nodes_handler.select_nodes(nodes_selector).reject { |selected_node| selected_node == @node }
                 end,
                 transform: ssh_transform_info[:transform]
               }
@@ -154,7 +154,7 @@ module HybridPlatformsConductor
           begin
             Socket.tcp(instance_ip, port, connect_timeout: remaining_timeout) { true }
           rescue Errno::ECONNREFUSED, Errno::EHOSTUNREACH, Errno::EADDRNOTAVAIL, Errno::ETIMEDOUT
-            log_warn "[ #{@node}/#{@environment} ] - Can't connect to #{instance_ip}:#{port}: #{$!}"
+            log_warn "[ #{@node}/#{@environment} ] - Can't connect to #{instance_ip}:#{port}: #{$ERROR_INFO}"
             false
           end
         sleep 1 unless port_listening

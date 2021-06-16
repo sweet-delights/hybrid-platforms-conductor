@@ -15,8 +15,8 @@ module HybridPlatformsConductor
     # * *cmd_runner* (CmdRunner): CmdRunner to be used. [default: CmdRunner.new]
     # * *nodes_handler* (NodesHandler): Nodes handler to be used. [default: NodesHandler.new]
     def initialize(
-      logger: Logger.new(STDOUT),
-      logger_stderr: Logger.new(STDERR),
+      logger: Logger.new($stdout),
+      logger_stderr: Logger.new($stderr),
       config: Config.new,
       cmd_runner: CmdRunner.new,
       nodes_handler: NodesHandler.new

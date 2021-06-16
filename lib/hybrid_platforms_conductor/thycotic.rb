@@ -21,7 +21,7 @@ module HybridPlatformsConductor
     #   * *thycotic* (Thyctotic): The Thyctotic instance to use.
     def self.with_thycotic(thycotic_url, logger, logger_stderr, domain: ENV['hpc_domain_for_thycotic'])
       Credentials.with_credentials_for(:thycotic, logger, logger_stderr, url: thycotic_url) do |thycotic_user, thycotic_password|
-        yield Thycotic.new(thycotic_url, thycotic_user, thycotic_password, logger: logger, logger_stderr: logger_stderr)
+        yield Thycotic.new(thycotic_url, thycotic_user, thycotic_password, domain: domain, logger: logger, logger_stderr: logger_stderr)
       end
     end
 
@@ -39,8 +39,8 @@ module HybridPlatformsConductor
       user,
       password,
       domain: ENV['hpc_domain_for_thycotic'],
-      logger: Logger.new(STDOUT),
-      logger_stderr: Logger.new(STDERR)
+      logger: Logger.new($stdout),
+      logger_stderr: Logger.new($stderr)
     )
       init_loggers(logger, logger_stderr)
       # Get a token to this SOAP API
@@ -50,11 +50,14 @@ module HybridPlatformsConductor
         logger: @logger,
         log: log_debug?
       )
-      @token = @client.call(:authenticate, message: {
-        username: user,
-        password: password,
-        domain: domain
-      }).to_hash.dig(:authenticate_response, :authenticate_result, :token)
+      @token = @client.call(
+        :authenticate,
+        message: {
+          username: user,
+          password: password,
+          domain: domain
+        }
+      ).to_hash.dig(:authenticate_response, :authenticate_result, :token)
       raise "Unable to get token from SOAP authentication to #{url}" if @token.nil?
     end
 
@@ -65,13 +68,16 @@ module HybridPlatformsConductor
     # Result::
     # * Hash: The corresponding API result
     def get_secret(secret_id)
-      @client.call(:get_secret, message: {
-        token: @token,
-        secretId: secret_id
-      }).to_hash.dig(:get_secret_response, :get_secret_result)
+      @client.call(
+        :get_secret,
+        message: {
+          token: @token,
+          secretId: secret_id
+        }
+      ).to_hash.dig(:get_secret_response, :get_secret_result)
     end
 
-    # Get a file attached to a given secret 
+    # Get a file attached to a given secret
     #
     # Parameters::
     # * *secret_id* (Object): The secret ID
@@ -79,12 +85,15 @@ module HybridPlatformsConductor
     # Result::
     # * String or nil: The file content, or nil if none
     def download_file_attachment_by_item_id(secret_id, secret_item_id)
-      file_in_base64 = @client.call(:download_file_attachment_by_item_id, message: {
-        token: @token,
-        secretId: secret_id,
-        secretItemId: secret_item_id
-      }).to_hash.dig(:download_file_attachment_by_item_id_response, :download_file_attachment_by_item_id_result, :file_attachment)
-      file_in_base64.nil? ? nil : Base64.decode64(file_in_base64)
+      encoded_file = @client.call(
+        :download_file_attachment_by_item_id,
+        message: {
+          token: @token,
+          secretId: secret_id,
+          secretItemId: secret_item_id
+        }
+      ).to_hash.dig(:download_file_attachment_by_item_id_response, :download_file_attachment_by_item_id_result, :file_attachment)
+      encoded_file.nil? ? nil : Base64.decode64(encoded_file)
     end
 
   end

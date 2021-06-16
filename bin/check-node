@@ -12,7 +12,6 @@ executable = HybridPlatformsConductor::Executable.new(
   end
 end
 nodes_handler = executable.nodes_handler
-actions_executor = executable.actions_executor
 deployer = executable.deployer
 
 executable.parse_options!

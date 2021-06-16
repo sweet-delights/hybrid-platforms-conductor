@@ -11,15 +11,15 @@ module HybridPlatformsConductor
         def test
           # Get a map of private IPs per node
           @nodes_handler.prefetch_metadata_of @nodes_handler.known_nodes, :private_ips
-          private_ips = Hash[@nodes_handler.
+          private_ips = @nodes_handler.
             known_nodes.
-            map { |node| [node, @nodes_handler.get_private_ips_of(node) || []] }
-          ]
+            map { |node| [node, @nodes_handler.get_private_ips_of(node) || []] }.
+            to_h
 
           # Check there are no duplicates
           nodes_per_private_ip = {}
-          private_ips.each do |node, private_ips|
-            private_ips.each do |private_ip|
+          private_ips.each do |node, node_private_ips|
+            node_private_ips.each do |private_ip|
               nodes_per_private_ip[private_ip] = [] unless nodes_per_private_ip.key?(private_ip)
               nodes_per_private_ip[private_ip] << node
             end

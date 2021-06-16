@@ -20,6 +20,7 @@ module HybridPlatformsConductorTest
       # Check my_test_plugin.rb.sample documentation for signature details.
       def test
         raise 'Failing test' if Global.fail
+
         Global.nbr_runs += 1
       end
 

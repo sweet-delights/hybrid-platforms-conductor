@@ -39,7 +39,6 @@ require 'json'
 reserved_resource = nil
 
 begin
-
   # As this script is meant to be run in an SSH session, make sure we automatically flush stdout/stderr.
   # Otherwise it will wait for the script completion before dumping everything, which is annoying as we want to track when it waits for hours.
   $stdout.sync = true
@@ -59,7 +58,7 @@ begin
   config_file = "#{__dir__}/config.json"
 
   OptionParser.new do |opts|
-    opts.banner = "Usage: #{$0} [options]"
+    opts.banner = "Usage: #{$PROGRAM_NAME} [options]"
     opts.on('-c', '--create FILE', 'Create a VM with the configuration stored in a given JSON file') do |file|
       create_info = JSON.parse(File.read(file))
     end
@@ -100,21 +99,18 @@ begin
         puts "[ #{Time.now.utc.strftime('%F %T')} ] - Destroy #{destroy_info} (attempt ##{idx_retry}/#{max_retries})"
         proxmox_waiter.destroy(destroy_info)
       end
-    if reserved_resource.is_a?(Symbol)
-      # We got an error (missing resources, IPs...).
-      # Try again.
-      puts "Could not perform the operation because of error: #{reserved_resource}. Waiting #{wait_time_before_retry_secs} seconds before trying again."
-      reserved_resource = { error: reserved_resource }
-      sleep wait_time_before_retry_secs
-    else
-      break
-    end
+    break unless reserved_resource.is_a?(Symbol)
+
+    # We got an error (missing resources, IPs...).
+    # Try again.
+    puts "Could not perform the operation because of error: #{reserved_resource}. Waiting #{wait_time_before_retry_secs} seconds before trying again."
+    reserved_resource = { error: reserved_resource }
+    sleep wait_time_before_retry_secs
     idx_retry += 1
   end
-
 rescue
   reserved_resource = {
-    error: "Unhandled exception from reserve_proxmox_container: #{$!}\n#{$!.backtrace.join("\n")}"
+    error: "Unhandled exception from reserve_proxmox_container: #{$ERROR_INFO}\n#{$ERROR_INFO.backtrace.join("\n")}"
   }
 end
 

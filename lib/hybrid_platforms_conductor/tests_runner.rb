@@ -12,7 +12,8 @@ module HybridPlatformsConductor
   # Class running tests
   class TestsRunner
 
-    include LoggerHelpers, ParallelThreads
+    include ParallelThreads
+    include LoggerHelpers
 
     # List of tests to execute [default: []]
     # Array<Symbol>
@@ -50,8 +51,8 @@ module HybridPlatformsConductor
     # * *actions_executor* (ActionsExecutor): Actions Executor to be used for the tests [default: ActionsExecutor.new]
     # * *deployer* (Deployer): Deployer to be used for the tests needed why-run deployments [default: Deployer.new]
     def initialize(
-      logger: Logger.new(STDOUT),
-      logger_stderr: Logger.new(STDERR),
+      logger: Logger.new($stdout),
+      logger_stderr: Logger.new($stderr),
       config: Config.new,
       cmd_runner: CmdRunner.new,
       platforms_handler: PlatformsHandler.new,
@@ -74,10 +75,10 @@ module HybridPlatformsConductor
       @reports_plugins = Plugins.new(:test_report, logger: @logger, logger_stderr: @logger_stderr)
       # Register test classes from platforms
       @platforms_handler.known_platforms.each do |platform|
-        if platform.respond_to?(:tests)
-          platform.tests.each do |test_name, test_class|
-            @tests_plugins[test_name] = test_class
-          end
+        next unless platform.respond_to?(:tests)
+
+        platform.tests.each do |test_name, test_class|
+          @tests_plugins[test_name] = test_class
         end
       end
       # Do we skip running check-node?
@@ -146,6 +147,7 @@ module HybridPlatformsConductor
       @reports.sort!
       unknown_tests = @tests - @tests_plugins.keys
       raise "Unknown test names: #{unknown_tests.join(', ')}" unless unknown_tests.empty?
+
       @nodes = @nodes_handler.select_nodes(nodes_selectors).uniq.sort
 
       # Resolve the expected failures from the config.
@@ -173,11 +175,11 @@ module HybridPlatformsConductor
       @platforms_handler.known_platforms.each do |platform|
         platform_nodes = platform.known_nodes
         @node_expected_failures.each do |test_name, expected_failures_for_test|
-          if (platform_nodes - expected_failures_for_test.keys).empty?
-            # We have an expected failure for this test
-            @platform_expected_failures[test_name] = {} unless @platform_expected_failures.key?(test_name)
-            @platform_expected_failures[test_name][platform.name] = expected_failures_for_test.values.uniq.join(' + ')
-          end
+          next unless (platform_nodes - expected_failures_for_test.keys).empty?
+
+          # We have an expected failure for this test
+          @platform_expected_failures[test_name] = {} unless @platform_expected_failures.key?(test_name)
+          @platform_expected_failures[test_name][platform.name] = expected_failures_for_test.values.uniq.join(' + ')
         end
       end
 
@@ -191,24 +193,24 @@ module HybridPlatformsConductor
       run_tests_connection_on_nodes
       run_tests_on_check_nodes
 
-      @tested_platforms = @tests_run.map { |test| test.platform }.compact.uniq.sort
+      @tested_platforms = @tests_run.map(&:platform).compact.uniq.sort
 
       # Check that tests that were expected to fail did not succeed.
       @tests_run.each do |test|
-        if test.executed?
-          expected_failure = test.expected_failure
-          if expected_failure
-            if test.errors.empty?
-              # Should have failed
-              error(
-                "Test #{test} was marked to fail (#{expected_failure}) but it succeeded. Please remove it from the expected failures in case the issue has been resolved.",
-                platform: test.platform,
-                node: test.node,
-                force_failure: true
-              )
-            else
-              out "Expected failure for #{test} (#{expected_failure}):\n#{test.errors.map { |error| "  - #{error}" }.join("\n")}".yellow
-            end
+        next unless test.executed?
+
+        expected_failure = test.expected_failure
+        if expected_failure
+          if test.errors.empty?
+            # Should have failed
+            error(
+              "Test #{test} was marked to fail (#{expected_failure}) but it succeeded. Please remove it from the expected failures in case the issue has been resolved.",
+              platform: test.platform,
+              node: test.node,
+              force_failure: true
+            )
+          else
+            out "Expected failure for #{test} (#{expected_failure}):\n#{test.errors.map { |error| "  - #{error}" }.join("\n")}".yellow
           end
         end
       end
@@ -217,14 +219,12 @@ module HybridPlatformsConductor
         @node_expected_failures.each do |test_name, test_expected_failures|
           test_expected_failures.each do |node, expected_failure|
             # Check that a test has been run for this expected failure
-            unless @tests_run.find do |test|
-                test.name == test_name &&
-                  (
-                    (test.node.nil? && node == '') ||
-                    (!test.node.nil? && node == test.node)
-                  )
-              end
-              error("A test named #{test_name} for node #{node} was expected to fail (#{expected_failure}), but no test has been run. Please remove it from the expected failures if this expected failure is obsolete.")
+            error("A test named #{test_name} for node #{node} was expected to fail (#{expected_failure}), but no test has been run. Please remove it from the expected failures if this expected failure is obsolete.") unless @tests_run.find do |test|
+              test.name == test_name &&
+                (
+                  (test.node.nil? && node == '') ||
+                  (!test.node.nil? && node == test.node)
+                )
             end
           end
         end
@@ -232,11 +232,9 @@ module HybridPlatformsConductor
 
       # Produce reports
       @reports.each do |report|
-        begin
-          @reports_plugins[report].new(@logger, @logger_stderr, @config, @nodes_handler, @nodes, @tested_platforms, @tests_run).report
-        rescue
-          log_error "Uncaught exception while producing report #{report}: #{$!}\n#{$!.backtrace.join("\n")}"
-        end
+        @reports_plugins[report].new(@logger, @logger_stderr, @config, @nodes_handler, @nodes, @tested_platforms, @tests_run).report
+      rescue
+        log_error "Uncaught exception while producing report #{report}: #{$ERROR_INFO}\n#{$ERROR_INFO.backtrace.join("\n")}"
       end
 
       out
@@ -285,6 +283,9 @@ module HybridPlatformsConductor
         name: test_name.nil? ? :global : test_name,
         platform: platform,
         node: node,
+        # Keep this else on purpose to show where global tests could have expected failures
+        # rubocop:disable Style/EmptyElse
+        # rubocop:disable Lint/DuplicateBranch
         expected_failure: if ignore_expected_failure
                             nil
                           elsif !node.nil?
@@ -297,6 +298,8 @@ module HybridPlatformsConductor
                             # Global test
                             nil
                           end
+        # rubocop:enable Lint/DuplicateBranch
+        # rubocop:enable Style/EmptyElse
       )
     end
 
@@ -333,38 +336,38 @@ module HybridPlatformsConductor
           []
         end
       end.flatten
-      unless tests_to_run.empty?
-        section "Run #{tests_to_run.size} #{title}" do
-          tests_preparation.call(tests_to_run) unless tests_preparation.nil?
-          for_each_element_in(
-            tests_to_run,
-            parallel: !log_debug? && nbr_threads_max > 1,
-            nbr_threads_max: nbr_threads_max,
-            progress: "Run #{title}"
-          ) do |test|
-            test_category =
-              if test.platform.nil? && test.node.nil?
-                'Global'
-              elsif test.node.nil?
-                "Platform #{test.platform.name}"
-              elsif test.platform.nil?
-                "Node #{test.node}"
-              else
-                "Platform #{test.platform.name} / Node #{test.node}"
-              end
-            out "[ #{Time.now.utc.strftime('%F %T')} ] - [ #{test_category} ] - [ #{test.name} ] - Start test..."
-            begin_time = Time.now
-            begin
-              test_execution.call(test)
-            rescue
-              test.error "Uncaught exception during test: #{$!}", $!.backtrace.join("\n")
+      return if tests_to_run.empty?
+
+      section "Run #{tests_to_run.size} #{title}" do
+        tests_preparation&.call(tests_to_run)
+        for_each_element_in(
+          tests_to_run,
+          parallel: !log_debug? && nbr_threads_max > 1,
+          nbr_threads_max: nbr_threads_max,
+          progress: "Run #{title}"
+        ) do |test|
+          test_category =
+            if test.platform.nil? && test.node.nil?
+              'Global'
+            elsif test.node.nil?
+              "Platform #{test.platform.name}"
+            elsif test.platform.nil?
+              "Node #{test.node}"
+            else
+              "Platform #{test.platform.name} / Node #{test.node}"
             end
-            end_time = Time.now
-            test.executed
-            out "[ #{Time.now.utc.strftime('%F %T')} ] - [ #{test_category} ] - [ #{test.name} ] - Test finished in #{end_time - begin_time} seconds."
+          out "[ #{Time.now.utc.strftime('%F %T')} ] - [ #{test_category} ] - [ #{test.name} ] - Start test..."
+          begin_time = Time.now
+          begin
+            test_execution.call(test)
+          rescue
+            test.error "Uncaught exception during test: #{$ERROR_INFO}", $ERROR_INFO.backtrace.join("\n")
           end
-          @tests_run.concat(tests_to_run)
+          end_time = Time.now
+          test.executed
+          out "[ #{Time.now.utc.strftime('%F %T')} ] - [ #{test_category} ] - [ #{test.name} ] - Test finished in #{end_time - begin_time} seconds."
         end
+        @tests_run.concat(tests_to_run)
       end
     end
 
@@ -411,21 +414,19 @@ module HybridPlatformsConductor
           # Hash< String, Array< [ String, Hash<Symbol,Object> ] > >
           @cmds_to_run = {}
           selected_tests.each do |test|
-            begin
-              test.test_on_node.each do |cmd, test_info|
-                test_info_normalized = test_info.is_a?(Hash) ? test_info.clone : { validator: test_info }
-                test_info_normalized[:timeout] = DEFAULT_CMD_TIMEOUT unless test_info_normalized.key?(:timeout)
-                test_info_normalized[:test] = test
-                @cmds_to_run[test.node] = [] unless @cmds_to_run.key?(test.node)
-                @cmds_to_run[test.node] << [
-                  cmd,
-                  test_info_normalized
-                ]
-              end
-            rescue
-              test.error "Uncaught exception during test preparation: #{$!}", $!.backtrace.join("\n")
-              test.executed
+            test.test_on_node.each do |cmd, test_info|
+              test_info_normalized = test_info.is_a?(Hash) ? test_info.clone : { validator: test_info }
+              test_info_normalized[:timeout] = DEFAULT_CMD_TIMEOUT unless test_info_normalized.key?(:timeout)
+              test_info_normalized[:test] = test
+              @cmds_to_run[test.node] = [] unless @cmds_to_run.key?(test.node)
+              @cmds_to_run[test.node] << [
+                cmd,
+                test_info_normalized
+              ]
             end
+          rescue
+            test.error "Uncaught exception during test preparation: #{$ERROR_INFO}", $ERROR_INFO.backtrace.join("\n")
+            test.executed
           end
           # Compute the timeout that will be applied, from the max timeout sum for every node that has tests to run
           timeout = CONNECTION_TIMEOUT + (
@@ -435,21 +436,18 @@ module HybridPlatformsConductor
           )
           # Run commands on nodes, in grouped way to avoid too many connections, per node
           # Hash< String, Array<String> >
-          @test_cmds = Hash[@cmds_to_run.map do |node, cmds_list|
-            [
-              node,
-              {
-                remote_bash: cmds_list.map do |(cmd, _test_info)|
-                  [
-                    "echo '#{CMD_SEPARATOR}'",
-                    ">&2 echo '#{CMD_SEPARATOR}'",
-                    cmd,
-                    "echo \"$?\""
-                  ]
-                end.flatten
-              }
-            ]
-          end]
+          @test_cmds = @cmds_to_run.transform_values do |cmds_list|
+            {
+              remote_bash: cmds_list.map do |(cmd, _test_info)|
+                [
+                  "echo '#{CMD_SEPARATOR}'",
+                  ">&2 echo '#{CMD_SEPARATOR}'",
+                  cmd,
+                  'echo "$?"'
+                ]
+              end.flatten
+            }
+          end
           section "Run test commands on #{@test_cmds.keys.size} connected nodes (timeout to #{timeout} secs)" do
             start_time = Time.now
             @actions_executor.max_threads = @max_threads_connection_on_nodes
@@ -469,7 +467,7 @@ module HybridPlatformsConductor
             if exit_status.is_a?(Symbol)
               test.error "Error while executing tests: #{exit_status}: #{stderr}"
             else
-              log_debug <<~EOS
+              log_debug <<~EO_LOG
                 ----- Commands for #{test.node}:
                 #{@test_cmds[test.node][:remote_bash].join("\n")}
                 ----- STDOUT:
@@ -477,23 +475,23 @@ module HybridPlatformsConductor
                 ----- STDERR:
                 #{stderr}
                 -----
-              EOS
+              EO_LOG
               # Skip the first section, as it can contain SSH banners
-              cmd_stdouts = stdout.split("#{CMD_SEPARATOR}\n")[1..-1]
+              cmd_stdouts = stdout.split("#{CMD_SEPARATOR}\n")[1..]
               cmd_stdouts = [] if cmd_stdouts.nil?
-              cmd_stderrs = stderr.split("#{CMD_SEPARATOR}\n")[1..-1]
+              cmd_stderrs = stderr.split("#{CMD_SEPARATOR}\n")[1..]
               cmd_stderrs = [] if cmd_stderrs.nil?
               @cmds_to_run[test.node].zip(cmd_stdouts, cmd_stderrs).each do |(cmd, test_info), cmd_stdout, cmd_stderr|
                 # Find the section that corresponds to this test
-                if test_info[:test] == test
-                  cmd_stdout = '' if cmd_stdout.nil?
-                  cmd_stderr = '' if cmd_stderr.nil?
-                  stdout_lines = cmd_stdout.split("\n")
-                  # Last line of stdout is the return code
-                  return_code = stdout_lines.empty? ? :command_cant_run : Integer(stdout_lines.last)
-                  test.error "Command '#{cmd}' returned error code #{return_code}", "----- STDOUT:\n#{stdout_lines[0..-2].join("\n")}\n----- STDERR:\n#{cmd_stderr}" unless return_code == 0
-                  test_info[:validator].call(stdout_lines[0..-2], cmd_stderr.split("\n"), return_code)
-                end
+                next unless test_info[:test] == test
+
+                cmd_stdout = '' if cmd_stdout.nil?
+                cmd_stderr = '' if cmd_stderr.nil?
+                stdout_lines = cmd_stdout.split("\n")
+                # Last line of stdout is the return code
+                return_code = stdout_lines.empty? ? :command_cant_run : Integer(stdout_lines.last)
+                test.error "Command '#{cmd}' returned error code #{return_code}", "----- STDOUT:\n#{stdout_lines[0..-2].join("\n")}\n----- STDERR:\n#{cmd_stderr}" unless return_code.zero?
+                test_info[:validator].call(stdout_lines[0..-2], cmd_stderr.split("\n"), return_code)
               end
             end
           end
@@ -522,17 +520,17 @@ module HybridPlatformsConductor
         :test_on_check_node,
         @nodes.map { |node| { node: node } },
         tests_preparation: proc do |selected_tests|
-          nodes_to_test = selected_tests.map { |test| test.node }.uniq.sort
+          nodes_to_test = selected_tests.map(&:node).uniq.sort
           @outputs =
             if @skip_run
-              Hash[nodes_to_test.map do |node|
+              nodes_to_test.map do |node|
                 run_log_file_name = "#{@config.hybrid_platforms_dir}/run_logs/#{node}.stdout"
                 [
                   node,
                   # TODO: Find a way to also save stderr and the status code
-                  [0, File.exists?(run_log_file_name) ? File.read(run_log_file_name) : nil, '']
+                  [0, File.exist?(run_log_file_name) ? File.read(run_log_file_name) : nil, '']
                 ]
-              end]
+              end.to_h
             else
               # Why-run deploy on all nodes
               @deployer.concurrent_execution = !log_debug?
@@ -543,7 +541,7 @@ module HybridPlatformsConductor
               rescue
                 # If an exception occurred, make sure all concerned nodes are reporting the error
                 nodes_to_test.each do |node|
-                  error "Error while checking check-node output: #{$!}#{log_debug? ? "\n#{$!.backtrace.join("\n")}" : ''}", node: node
+                  error "Error while checking check-node output: #{$ERROR_INFO}#{log_debug? ? "\n#{$ERROR_INFO.backtrace.join("\n")}" : ''}", node: node
                 end
                 {}
               end
@@ -556,11 +554,11 @@ module HybridPlatformsConductor
           elsif stdout.is_a?(Symbol)
             test.error "Check-node run failed: #{stdout}."
           else
-            test.error "Check-node returned error code #{exit_status}" unless exit_status == 0
+            test.error "Check-node returned error code #{exit_status}" unless exit_status.zero?
             begin
               test.test_on_check_node(stdout, stderr, exit_status)
             rescue
-              test.error "Uncaught exception during test: #{$!}", $!.backtrace.join("\n")
+              test.error "Uncaught exception during test: #{$ERROR_INFO}", $ERROR_INFO.backtrace.join("\n")
             end
           end
         end

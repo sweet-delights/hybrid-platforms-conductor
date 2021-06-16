@@ -41,30 +41,30 @@ module HybridPlatformsConductorTest
           ssh_commands_per_connection = []
           if with_strict_host_key_checking
             ip = node_connection_info[:ip] || node_connection_info[:connection]
-            ssh_commands_once.concat([
+            ssh_commands_once.concat(
               [
-                "ssh-keyscan #{ip}",
-                proc { [0, "#{ip} ssh-rsa fake_host_key_for_#{ip}", ''] }
+                [
+                  "ssh-keyscan #{ip}",
+                  proc { [0, "#{ip} ssh-rsa fake_host_key_for_#{ip}", ''] }
+                ]
               ]
-            ])
+            )
           end
           if with_control_master_create
             control_master_created = false
             ssh_commands_per_connection << [
               if with_session_exec
-                /^.+\/ssh #{with_batch_mode ? '-o BatchMode=yes ' : ''}-o ControlMaster=yes -o ControlPersist=yes hpc\.#{Regexp.escape(node)} true$/
+                %r{^.+/ssh #{with_batch_mode ? '-o BatchMode=yes ' : ''}-o ControlMaster=yes -o ControlPersist=yes hpc\.#{Regexp.escape(node)} true$}
               else
                 unless ENV['hpc_interactive'] == 'false'
                   # Mock the user hitting enter as the Control Master will be created in another thread and the main thread waits for user input.
                   expect($stdin).to receive(:gets) do
                     # We have to wait for the Control Master creation thread to actually create the Control Master before hitting Enter.
-                    while !control_master_created do
-                      sleep 0.1
-                    end
+                    sleep 0.1 until control_master_created
                     "\n"
                   end
                 end
-                /^xterm -e '.+\/ssh -o ControlMaster=yes -o ControlPersist=yes hpc\.#{Regexp.escape(node)}'$/
+                %r{^xterm -e '.+/ssh -o ControlMaster=yes -o ControlPersist=yes hpc\.#{Regexp.escape(node)}'$}
               end,
               proc do
                 control_file = test_actions_executor.connector(:ssh).send(:control_master_file, node_connection_info[:connection], '22', node_connection_info[:user])
@@ -88,13 +88,13 @@ module HybridPlatformsConductorTest
           end
           if with_control_master_check
             ssh_commands_per_connection << [
-              /^.+\/ssh -O check hpc\.#{Regexp.escape(node)}$/,
+              %r{^.+/ssh -O check hpc\.#{Regexp.escape(node)}$},
               proc { [0, '', ''] }
             ]
           end
           if with_control_master_destroy
             ssh_commands_per_connection << [
-              /^.+\/ssh -O exit hpc\.#{Regexp.escape(node)} 2>&1 \| grep -v 'Exit request sent\.'$/,
+              %r{^.+/ssh -O exit hpc\.#{Regexp.escape(node)} 2>&1 \| grep -v 'Exit request sent\.'$},
               proc do
                 # Really mock the control file deletion
                 File.unlink(test_actions_executor.connector(:ssh).send(:control_master_file, node_connection_info[:connection], '22', node_connection_info[:user]))
@@ -137,8 +137,7 @@ module HybridPlatformsConductorTest
       )
         with_test_platform(
           { nodes: { 'node' => { meta: { host_ip: '192.168.42.42', ssh_session_exec: session_exec } } } },
-          false,
-          additional_config
+          additional_config: additional_config
         ) do
           with_cmd_runner_mocked(
             [

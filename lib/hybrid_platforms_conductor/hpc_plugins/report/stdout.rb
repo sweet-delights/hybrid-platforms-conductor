@@ -25,31 +25,35 @@ module HybridPlatformsConductor
         # Parameters::
         # * *nodes* (Array<String>): List of nodes
         # * *locale_code* (Symbol): The locale code
-        def report_for(nodes, locale_code)
+        def report_for(nodes, _locale_code)
           @nodes_handler.prefetch_metadata_of nodes, %i[hostname host_ip physical image description services]
-          out(Terminal::Table.new(headings: [
-            'Node',
-            'Platform',
-            'Host name',
-            'IP',
-            'Physical?',
-            'OS',
-            'Description',
-            'Services'
-          ]) do |table|
-            nodes.sort.each do |node|
-              table << [
-                node,
-                @platforms_handler.known_platforms.find { |platform| platform.known_nodes.include?(node) }&.name,
-                @nodes_handler.get_hostname_of(node),
-                @nodes_handler.get_host_ip_of(node),
-                @nodes_handler.get_physical_of(node) ? 'Yes' : 'No',
-                @nodes_handler.get_image_of(node),
-                @nodes_handler.get_description_of(node),
-                (@nodes_handler.get_services_of(node) || []).sort.join(', ')
+          out(
+            Terminal::Table.new(
+              headings: [
+                'Node',
+                'Platform',
+                'Host name',
+                'IP',
+                'Physical?',
+                'OS',
+                'Description',
+                'Services'
               ]
+            ) do |table|
+              nodes.sort.each do |node|
+                table << [
+                  node,
+                  @platforms_handler.known_platforms.find { |platform| platform.known_nodes.include?(node) }&.name,
+                  @nodes_handler.get_hostname_of(node),
+                  @nodes_handler.get_host_ip_of(node),
+                  @nodes_handler.get_physical_of(node) ? 'Yes' : 'No',
+                  @nodes_handler.get_image_of(node),
+                  @nodes_handler.get_description_of(node),
+                  (@nodes_handler.get_services_of(node) || []).sort.join(', ')
+                ]
+              end
             end
-          end)
+          )
         end
 
       end

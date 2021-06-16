@@ -1,5 +1,3 @@
-require 'thread'
-
 module HybridPlatformsConductor
 
   # Provide utilities to handle parallel threads
@@ -14,10 +12,10 @@ module HybridPlatformsConductor
     # * *parallel* (Boolean): Iterate in a multithreaded way? [default: false]
     # * *nbr_threads_max* (Integer or nil): Maximum number of threads to be used in case of parallel, or nil for no limit [default: nil]
     # * *progress* (String or nil): Name of a progress bar to follow the progression, or nil for no progress bar [default: 'Progress']
-    # * Proc: The code called for each node being iterated on.
+    # * *block* (Proc): The code called for each node being iterated on.
     #   * Parameters::
     #     * *element* (Object): The object
-    def for_each_element_in(list, parallel: false, nbr_threads_max: nil, progress: 'Process')
+    def for_each_element_in(list, parallel: false, nbr_threads_max: nil, progress: 'Process', &block)
       if parallel
         # Threads to wait for
         threads_to_join = []
@@ -46,6 +44,7 @@ module HybridPlatformsConductor
                   pools[:processing] << element unless element.nil?
                 end
                 break if element.nil?
+
                 begin
                   yield element
                 ensure
@@ -56,7 +55,7 @@ module HybridPlatformsConductor
                 end
               end
             rescue
-              log_error "Unhandled exception occurred in thread #{Thread.current.object_id}: #{$!}\n#{$!.backtrace.join("\n")}"
+              log_error "Unhandled exception occurred in thread #{Thread.current.object_id}: #{$ERROR_INFO}\n#{$ERROR_INFO.backtrace.join("\n")}"
               raise
             end
           end
@@ -76,19 +75,16 @@ module HybridPlatformsConductor
               progress_bar.title = "Queue: #{nbr_to_process} - Processing: #{nbr_processing} - Done: #{nbr_processed} - Total: #{nbr_total}"
               progress_bar.progress = nbr_processed
               break if nbr_processed == nbr_total
+
               sleep 0.5
             end
           end
         end
         # Wait for threads to be joined
-        threads_to_join.each do |thread|
-          thread.join
-        end
+        threads_to_join.each(&:join)
       else
         # Execute synchronously
-        list.each do |element|
-          yield element
-        end
+        list.each(&block)
       end
     end
 

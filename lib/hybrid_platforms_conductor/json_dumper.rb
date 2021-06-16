@@ -23,7 +23,7 @@ module HybridPlatformsConductor
     # * *config* (Config): Config to be used. [default = Config.new]
     # * *nodes_handler* (NodesHandler): Nodes handler to be used. [default = NodesHandler.new]
     # * *deployer* (Deployer): Deployer to be used. [default = Deployer.new]
-    def initialize(logger: Logger.new(STDOUT), logger_stderr: Logger.new(STDERR), config: Config.new, nodes_handler: NodesHandler.new, deployer: Deployer.new)
+    def initialize(logger: Logger.new($stdout), logger_stderr: Logger.new($stderr), config: Config.new, nodes_handler: NodesHandler.new, deployer: Deployer.new)
       init_loggers(logger, logger_stderr)
       @config = config
       @nodes_handler = nodes_handler
@@ -74,7 +74,7 @@ module HybridPlatformsConductor
             out "[ #{node} ] - Error while dumping JSON. Check #{stdout_file_name}"
           else
             json_file_name = "#{@dump_dir}/#{node}.json"
-            File.write(json_file_name, stdout[dump_begin_idx+1..dump_end_idx-1].join("\n"))
+            File.write(json_file_name, stdout[dump_begin_idx + 1..dump_end_idx - 1].join("\n"))
             out "[ #{node} ] - OK. Check #{json_file_name}"
           end
         else

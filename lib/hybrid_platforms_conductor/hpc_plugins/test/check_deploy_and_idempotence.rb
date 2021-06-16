@@ -18,7 +18,7 @@ module HybridPlatformsConductor
       # Don't forget to add the testadmin private key in your SSH agent if you run this test locally.
       class CheckDeployAndIdempotence < TestByService
 
-        self.extend_config_dsl_with CommonConfigDsl::IdempotenceTests, :init_idempotence_tests
+        extend_config_dsl_with CommonConfigDsl::IdempotenceTests, :init_idempotence_tests
 
         # Check my_test_plugin.rb.sample documentation for signature details.
         def test_for_node
@@ -30,6 +30,7 @@ module HybridPlatformsConductor
                 ssh_ok = ssh.exec!('echo Works').strip == 'Works'
               end
             rescue
+              nil
             end
             assert_equal ssh_ok, true, 'Root does not have access from the empty image'
 
@@ -46,7 +47,7 @@ module HybridPlatformsConductor
               deployer.nbr_retries_on_error = 3
               exit_status, _stdout, _stderr = deployer.deploy_on(@node)[@node]
               assert_equal exit_status, 0, "Deploy from scratch returned error code #{exit_status}", log_debug? ? nil : deployer.stdouts_to_s
-              if exit_status == 0
+              if exit_status.zero?
                 # As it's possible sshd has to be restarted because of a change in its conf, restart the container.
                 # Otherwise you'll get the following error upon reconnection:
                 #   System is booting up. See pam_nologin(8)
@@ -63,6 +64,7 @@ module HybridPlatformsConductor
                         ssh_ok = ssh.exec!('echo Works').strip == 'Works'
                       end
                     rescue
+                      nil
                     end
                     assert_equal ssh_ok, false, 'Root can still connect on the image after deployment'
                     # Even if we can connect using root, run the idempotence test

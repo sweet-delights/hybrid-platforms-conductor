@@ -17,11 +17,11 @@ module HybridPlatformsConductor
 
         # Check my_test_plugin.rb.sample documentation for signature details.
         def test_on_node
-          spectre_cmd = <<~EOS
+          spectre_cmd = <<~EO_BASH
             #{@deployer.instance_variable_get(:@actions_executor).connector(:ssh).ssh_user == 'root' ? '' : "#{@nodes_handler.sudo_on(@node)} "}/bin/bash <<'EOAction'
             #{File.read("#{__dir__}/spectre-meltdown-checker.sh")}
             EOAction
-          EOS
+          EO_BASH
           {
             spectre_cmd => {
               validator: proc do |stdout|
@@ -31,13 +31,11 @@ module HybridPlatformsConductor
                   if status_idx.nil?
                     error "Unable to find vulnerability section #{id}"
                   else
-                    while !stdout[status_idx].nil? && !(stdout[status_idx] =~ /STATUS:[^A-Z]+([A-Z ]+)/)
-                      status_idx += 1
-                    end
+                    status_idx += 1 while !stdout[status_idx].nil? && stdout[status_idx] !~ /STATUS:[^A-Z]+([A-Z ]+)/
                     if stdout[status_idx].nil?
                       error "Unable to find vulnerability status for #{id}"
                     else
-                      status = $1.strip
+                      status = Regexp.last_match(1).strip
                       error "Status for #{name}: #{status}" if status != 'NOT VULNERABLE'
                     end
                   end

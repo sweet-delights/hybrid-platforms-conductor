@@ -17,7 +17,7 @@ executable.parse_options!
 
 # Initialize the topograph
 from_nodes, to_nodes = topographer.resolve_from_to
-topographer.get_json_files
+topographer.json_files
 
 # The list of clusters to group nodes into 1 graphviz node to simplify the graph.
 known_nodes_lists = nodes_handler.known_nodes_lists

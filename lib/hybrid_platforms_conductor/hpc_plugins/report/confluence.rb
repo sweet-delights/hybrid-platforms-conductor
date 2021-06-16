@@ -12,7 +12,7 @@ module HybridPlatformsConductor
       # Export in the Mediawiki format
       class Confluence < HybridPlatformsConductor::Report
 
-        self.extend_config_dsl_with CommonConfigDsl::Confluence, :init_confluence
+        extend_config_dsl_with CommonConfigDsl::Confluence, :init_confluence
 
         # Give the list of supported locales by this report generator
         # [API] - This method is mandatory.
@@ -29,7 +29,7 @@ module HybridPlatformsConductor
         # Parameters::
         # * *nodes* (Array<String>): List of nodes
         # * *locale_code* (Symbol): The locale code
-        def report_for(nodes, locale_code)
+        def report_for(nodes, _locale_code)
           confluence_info = @config.confluence_info
           if confluence_info
             if confluence_info[:inventory_report_page_id]

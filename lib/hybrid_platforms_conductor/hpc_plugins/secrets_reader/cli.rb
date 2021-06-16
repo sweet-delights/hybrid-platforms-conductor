@@ -18,8 +18,8 @@ module HybridPlatformsConductor
         # * *cmd_runner* (CmdRunner): CmdRunner to be used. [default: CmdRunner.new]
         # * *nodes_handler* (NodesHandler): Nodes handler to be used. [default: NodesHandler.new]
         def initialize(
-          logger: Logger.new(STDOUT),
-          logger_stderr: Logger.new(STDERR),
+          logger: Logger.new($stdout),
+          logger_stderr: Logger.new($stderr),
           config: Config.new,
           cmd_runner: CmdRunner.new,
           nodes_handler: NodesHandler.new
@@ -51,15 +51,17 @@ module HybridPlatformsConductor
         # * *service* (String): Service to be deployed
         # Result::
         # * Hash: The secrets
-        def secrets_for(node, service)
+        def secrets_for(_node, _service)
           # As we are dealing with global secrets, cache the reading for performance between nodes and services.
           unless defined?(@secrets)
             @secrets = {}
             @secrets_files.each do |secrets_file|
               raise "Missing secrets file: #{secrets_file}" unless File.exist?(secrets_file)
-              @secrets.merge!(JSON.parse(File.read(secrets_file))) do |key, value1, value2|
-                raise "Secret #{key} has conflicting values between different secret JSON files." if value1 != value2
-                value1
+
+              @secrets.merge!(JSON.parse(File.read(secrets_file))) do |key, value_1, value_2|
+                raise "Secret #{key} has conflicting values between different secret JSON files." if value_1 != value_2
+
+                value_1
               end
             end
           end

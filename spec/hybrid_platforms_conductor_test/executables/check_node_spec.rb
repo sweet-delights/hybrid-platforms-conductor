@@ -3,13 +3,11 @@ describe 'check-node executable' do
   # Setup a platform for check-node tests
   #
   # Parameters::
-  # * Proc: Code called when the platform is setup
+  # * *block* (Proc): Code called when the platform is setup
   #   * Parameters::
   #     * *repository* (String): Platform's repository
-  def with_test_platform_for_check_node
-    with_test_platform({ nodes: { 'node' => {} } }) do |repository|
-      yield repository
-    end
+  def with_test_platform_for_check_node(&block)
+    with_test_platform({ nodes: { 'node' => {} } }, &block)
   end
 
   it 'checks a given node' do
@@ -21,7 +19,7 @@ describe 'check-node executable' do
       end
       exit_code, stdout, stderr = run 'check-node', '--node', 'node'
       expect(exit_code).to eq 0
-      expect(stdout).to match /Check ok/
+      expect(stdout).to match(/Check ok/)
       expect(stderr).to eq ''
     end
   end

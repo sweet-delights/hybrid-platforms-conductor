@@ -19,7 +19,7 @@ module HybridPlatformsConductor
       # Array< Hash<Symbol, Object> >
       attr_reader :fs_paths_rules
 
-      # Initialize the DSL 
+      # Initialize the DSL
       def init_file_system_tests
         @fs_paths_rules = []
         @context = {
@@ -49,7 +49,7 @@ module HybridPlatformsConductor
           paths: paths.flatten,
           nodes_selectors_stack: current_nodes_selectors_stack,
           context: @context.clone,
-          state: :present              
+          state: :present
         }
       end
 
@@ -84,7 +84,7 @@ module HybridPlatformsConductor
           select_confs_for_node(node, fs_paths_rules).
           inject({}) do |merged_paths, paths_info|
             if paths_info[:context][:file_system_type] == file_system_type
-              merged_paths.merge(Hash[paths_info[:paths].map do |path|
+              merged_paths.merge(paths_info[:paths].map do |path|
                 [
                   path,
                   {
@@ -92,9 +92,10 @@ module HybridPlatformsConductor
                     context: paths_info[:context]
                   }
                 ]
-              end]) do |path, rule_info_1, rule_info_2|
+              end.to_h) do |path, rule_info_1, rule_info_2|
                 # Just check that configuration is not inconsistent
                 raise "Inconsistent rule for #{file_system_type} file system checks in configuration for #{node}: #{path} is marked as being both #{rule_info_1[:state]} and #{rule_info_2[:state]}" if rule_info_1[:state] != rule_info_2[:state]
+
                 rule_info_2
               end
             else

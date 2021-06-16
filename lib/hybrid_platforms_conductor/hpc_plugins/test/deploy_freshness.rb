@@ -13,7 +13,6 @@ module HybridPlatformsConductor
 
         # Check my_test_plugin.rb.sample documentation for signature details.
         def test_for_node
-          now = Time.now
           deploy_info = @deployer.deployment_info_from(@node)[@node]
           if deploy_info.key?(:error)
             error "Error while getting deployment info: #{deploy_info[:error]}"

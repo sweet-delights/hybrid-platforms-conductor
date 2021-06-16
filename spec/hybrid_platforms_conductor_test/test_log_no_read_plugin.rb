@@ -4,7 +4,9 @@ module HybridPlatformsConductorTest
   class TestLogNoReadPlugin < HybridPlatformsConductor::Log
 
     class << self
+
       attr_accessor :calls
+
     end
 
     # Get actions to save logs
@@ -29,7 +31,7 @@ module HybridPlatformsConductorTest
         node: node,
         services: services,
         # Don't store the date
-        deployment_info: deployment_info.select { |k, _v| k != :date },
+        deployment_info: deployment_info.reject { |k, _v| k == :date },
         exit_status: exit_status,
         stdout: stdout,
         stderr: stderr

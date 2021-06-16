@@ -1,6 +1,6 @@
 describe HybridPlatformsConductor::TestsRunner do
 
-  context 'checking global tests execution' do
+  context 'when checking global tests execution' do
 
     # Prepare the test platform with test plugins
     #
@@ -8,7 +8,8 @@ describe HybridPlatformsConductor::TestsRunner do
     # * *platforms_info* (Hash): The platforms info [default: {}]
     def with_test_platform_for_global_tests(platforms_info: {})
       with_test_platform(platforms_info) do
-        register_test_plugins(test_tests_runner,
+        register_test_plugins(
+          test_tests_runner,
           global_test: HybridPlatformsConductorTest::TestPlugins::Global,
           global_test_2: HybridPlatformsConductorTest::TestPlugins::Global
         )
@@ -26,7 +27,7 @@ describe HybridPlatformsConductor::TestsRunner do
 
     it 'executes several global tests' do
       with_test_platform_for_global_tests do
-        test_tests_runner.tests = [:global_test, :global_test_2]
+        test_tests_runner.tests = %i[global_test global_test_2]
         expect(test_tests_runner.run_tests([])).to eq 0
         expect(HybridPlatformsConductorTest::TestPlugins::Global.nbr_runs).to eq 2
       end

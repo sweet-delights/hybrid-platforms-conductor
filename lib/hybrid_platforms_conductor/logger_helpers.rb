@@ -55,25 +55,27 @@ module HybridPlatformsConductor
 
       # Make sure if the current line is not flushed we still do it
       def flush
-        unless @current_line.nil?
-          @stream << @current_line
-          @current_line = nil
-        end
+        return if @current_line.nil?
+
+        @stream << @current_line
+        @current_line = nil
       end
 
     end
 
     class << self
+
       attr_reader :progress_bar_semaphore
+
     end
     # Make sure the progress bar setting is protected by a Mutex
     @progress_bar_semaphore = Mutex.new
 
     # Sorted list of levels and their corresponding modifiers.
     LEVELS_MODIFIERS = {
-      fatal: [:red, :bold],
-      error: [:red, :bold],
-      warn: [:yellow, :bold],
+      fatal: %i[red bold],
+      error: %i[red bold],
+      warn: %i[yellow bold],
       info: [:white],
       debug: [:white],
       unknown: [:white]
@@ -82,7 +84,7 @@ module HybridPlatformsConductor
     # List of levels that will output on stderr
     LEVELS_TO_STDERR = %i[warn error fatal]
 
-    LEVELS_MODIFIERS.keys.each do |level|
+    LEVELS_MODIFIERS.each_key do |level|
       define_method("log_#{level}") do |message|
         (LEVELS_TO_STDERR.include?(level) ? @logger_stderr : @logger).send(
           level,
@@ -105,10 +107,10 @@ module HybridPlatformsConductor
     # Set loggers to the desired format
     def set_loggers_format
       [@logger, @logger_stderr].each do |logger|
-        logger.formatter = proc do |severity, datetime, progname, msg|
+        logger.formatter = proc do |severity, _datetime, progname, msg|
           # If the message already has control characters, don't colorize it
           keep_original_color = msg.include? "\u001b"
-          message = "[#{Time.now.utc.strftime('%F %T')} (PID #{$$} / TID #{Thread.current.object_id})] #{severity.rjust(5)} - [ #{progname} ] - "
+          message = "[#{Time.now.utc.strftime('%F %T')} (PID #{$PROCESS_ID} / TID #{Thread.current.object_id})] #{severity.rjust(5)} - [ #{progname} ] - "
           message << "#{msg}\n" unless keep_original_color
           LEVELS_MODIFIERS[severity.downcase.to_sym].each do |modifier|
             message = message.send(modifier)
@@ -282,8 +284,8 @@ module HybridPlatformsConductor
         yield progress_bar
       ensure
         LoggerHelpers.progress_bar_semaphore.synchronize do
-          self.stdout_device.flush
-          self.stderr_device.flush
+          stdout_device.flush
+          stderr_device.flush
           self.stdout_device = previous_stdout_device unless previous_stdout_device.nil?
           self.stderr_device = previous_stderr_device unless previous_stderr_device.nil?
         end
@@ -298,15 +300,16 @@ module HybridPlatformsConductor
     def stdouts_to_s
       messages = []
       {
-        'STDOUT' => self.stdout_device,
-        'STDERR' => self.stderr_device
+        'STDOUT' => stdout_device,
+        'STDERR' => stderr_device
       }.each do |name, device|
-        if device.is_a?(File)
+        case device
+        when File
           if File.exist?(device.path)
             content = File.read(device.path).strip
             messages << "----- #{name} BEGIN - #{device.path} -----\n#{content}\n----- #{name} END - #{device.path} -----" unless content.empty?
           end
-        elsif device.is_a?(StringIO)
+        when StringIO
           content = device.string
           messages << "----- #{name} BEGIN -----\n#{content}\n----- #{name} END -----" unless content.empty?
         end

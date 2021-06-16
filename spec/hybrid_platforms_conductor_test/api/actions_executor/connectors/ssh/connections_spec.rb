@@ -1,8 +1,8 @@
 describe HybridPlatformsConductor::ActionsExecutor do
 
-  context 'checking connector plugin ssh' do
+  context 'when checking connector plugin ssh' do
 
-    context 'checking connections preparations' do
+    context 'when checking connections preparations' do
 
       # Return the connector to be tested
       #
@@ -13,7 +13,7 @@ describe HybridPlatformsConductor::ActionsExecutor do
       end
 
       it 'creates an SSH master to 1 node' do
-        with_test_platform(nodes: { 'node' => { meta: { host_ip: '192.168.42.42' } } }) do
+        with_test_platform({ nodes: { 'node' => { meta: { host_ip: '192.168.42.42' } } } }) do
           with_cmd_runner_mocked(
             [
               ['which env', proc { [0, "/usr/bin/env\n", ''] }],
@@ -29,7 +29,7 @@ describe HybridPlatformsConductor::ActionsExecutor do
       end
 
       it 'creates an SSH master to 1 node not having Session Exec capabilities' do
-        with_test_platform(nodes: { 'node' => { meta: { host_ip: '192.168.42.42', ssh_session_exec: false } } }) do
+        with_test_platform({ nodes: { 'node' => { meta: { host_ip: '192.168.42.42', ssh_session_exec: false } } } }) do
           with_cmd_runner_mocked(
             [
               ['which env', proc { [0, "/usr/bin/env\n", ''] }],
@@ -45,7 +45,7 @@ describe HybridPlatformsConductor::ActionsExecutor do
       end
 
       it 'can\'t create an SSH master to 1 node not having Session Exec capabilities when hpc_interactive is false' do
-        with_test_platform(nodes: { 'node' => { meta: { host_ip: '192.168.42.42', ssh_session_exec: false } } }) do
+        with_test_platform({ nodes: { 'node' => { meta: { host_ip: '192.168.42.42', ssh_session_exec: false } } } }) do
           ENV['hpc_interactive'] = 'false'
           with_cmd_runner_mocked(
             [
@@ -67,11 +67,15 @@ describe HybridPlatformsConductor::ActionsExecutor do
       end
 
       it 'fails without creating exception when creating an SSH master to 1 node not having Session Exec capabilities when hpc_interactive is false and we use no_exception' do
-        with_test_platform(nodes: {
-          'node1' => { meta: { host_ip: '192.168.42.1' } },
-          'node2' => { meta: { host_ip: '192.168.42.2', ssh_session_exec: false } },
-          'node3' => { meta: { host_ip: '192.168.42.3' } }
-        }) do
+        with_test_platform(
+          {
+            nodes: {
+              'node1' => { meta: { host_ip: '192.168.42.1' } },
+              'node2' => { meta: { host_ip: '192.168.42.2', ssh_session_exec: false } },
+              'node3' => { meta: { host_ip: '192.168.42.3' } }
+            }
+          }
+        ) do
           ENV['hpc_interactive'] = 'false'
           with_cmd_runner_mocked(
             [
@@ -97,11 +101,15 @@ describe HybridPlatformsConductor::ActionsExecutor do
       end
 
       it 'creates SSH master to several nodes' do
-        with_test_platform(nodes: {
-          'node1' => { meta: { host_ip: '192.168.42.1' } },
-          'node2' => { meta: { host_ip: '192.168.42.2' } },
-          'node3' => { meta: { host_ip: '192.168.42.3' } }
-        }) do
+        with_test_platform(
+          {
+            nodes: {
+              'node1' => { meta: { host_ip: '192.168.42.1' } },
+              'node2' => { meta: { host_ip: '192.168.42.2' } },
+              'node3' => { meta: { host_ip: '192.168.42.3' } }
+            }
+          }
+        ) do
           with_cmd_runner_mocked(
             [
               ['which env', proc { [0, "/usr/bin/env\n", ''] }],
@@ -123,23 +131,22 @@ describe HybridPlatformsConductor::ActionsExecutor do
       it 'creates SSH master to several nodes with ssh connections transformed' do
         with_test_platform(
           { nodes: {
-          'node1' => { meta: { host_ip: '192.168.42.1' } },
-          'node2' => { meta: { host_ip: '192.168.42.2' } },
-          'node3' => { meta: { host_ip: '192.168.42.3' } }
+            'node1' => { meta: { host_ip: '192.168.42.1' } },
+            'node2' => { meta: { host_ip: '192.168.42.2' } },
+            'node3' => { meta: { host_ip: '192.168.42.3' } }
           } },
-          false,
-          '
+          additional_config: <<~'EO_CONFIG'
             for_nodes(%w[node1 node3]) do
               transform_ssh_connection do |node, connection, connection_user, gateway, gateway_user|
                 ["#{connection}_#{node}_13", "#{connection_user}_#{node}_13", "#{gateway}_#{node}_13", "#{gateway_user}_#{node}_13"]
               end
             end
-            for_nodes(\'node1\') do
+            for_nodes('node1') do
               transform_ssh_connection do |node, connection, connection_user, gateway, gateway_user|
                 ["#{connection}_#{node}_1", "#{connection_user}_#{node}_1", "#{gateway}_#{node}_1", "#{gateway_user}_#{node}_1"]
               end
             end
-          '
+          EO_CONFIG
         ) do
           with_cmd_runner_mocked(
             [
@@ -160,11 +167,15 @@ describe HybridPlatformsConductor::ActionsExecutor do
       end
 
       it 'fails when an SSH master can\'t be created' do
-        with_test_platform(nodes: {
-          'node1' => { meta: { host_ip: '192.168.42.1' } },
-          'node2' => { meta: { host_ip: '192.168.42.2' } },
-          'node3' => { meta: { host_ip: '192.168.42.3' } }
-        }) do
+        with_test_platform(
+          {
+            nodes: {
+              'node1' => { meta: { host_ip: '192.168.42.1' } },
+              'node2' => { meta: { host_ip: '192.168.42.2' } },
+              'node3' => { meta: { host_ip: '192.168.42.3' } }
+            }
+          }
+        ) do
           with_cmd_runner_mocked(
             [
               ['which env', proc { [0, "/usr/bin/env\n", ''] }],
@@ -186,17 +197,21 @@ describe HybridPlatformsConductor::ActionsExecutor do
             )
           ) do
             test_connector.ssh_user = 'test_user'
-            expect { test_connector.with_connection_to(%w[node1 node2 node3]) }.to raise_error(/^Error while starting SSH Control Master with .+\/ssh -o BatchMode=yes -o ControlMaster=yes -o ControlPersist=yes hpc.node2 true: Can't connect to 192.168.42.2$/)
+            expect { test_connector.with_connection_to(%w[node1 node2 node3]) }.to raise_error(%r{^Error while starting SSH Control Master with .+/ssh -o BatchMode=yes -o ControlMaster=yes -o ControlPersist=yes hpc.node2 true: Can't connect to 192.168.42.2$})
           end
         end
       end
 
       it 'fails without throwing exception when an SSH master can\'t be created and we use no_exception' do
-        with_test_platform(nodes: {
-          'node1' => { meta: { host_ip: '192.168.42.1' } },
-          'node2' => { meta: { host_ip: '192.168.42.2' } },
-          'node3' => { meta: { host_ip: '192.168.42.3' } }
-        }) do
+        with_test_platform(
+          {
+            nodes: {
+              'node1' => { meta: { host_ip: '192.168.42.1' } },
+              'node2' => { meta: { host_ip: '192.168.42.2' } },
+              'node3' => { meta: { host_ip: '192.168.42.3' } }
+            }
+          }
+        ) do
           with_cmd_runner_mocked(
             [
               ['which env', proc { [0, "/usr/bin/env\n", ''] }],
@@ -220,7 +235,7 @@ describe HybridPlatformsConductor::ActionsExecutor do
       end
 
       it 'reuses SSH master already created to 1 node' do
-        with_test_platform(nodes: { 'node' => { meta: { host_ip: '192.168.42.42' } } }) do
+        with_test_platform({ nodes: { 'node' => { meta: { host_ip: '192.168.42.42' } } } }) do
           with_cmd_runner_mocked(
             [
               ['which env', proc { [0, "/usr/bin/env\n", ''] }],
@@ -245,12 +260,16 @@ describe HybridPlatformsConductor::ActionsExecutor do
       end
 
       it 'reuses SSH masters already created to some nodes and create new ones if needed' do
-        with_test_platform(nodes: {
-          'node1' => { meta: { host_ip: '192.168.42.1' } },
-          'node2' => { meta: { host_ip: '192.168.42.2' } },
-          'node3' => { meta: { host_ip: '192.168.42.3' } },
-          'node4' => { meta: { host_ip: '192.168.42.4' } }
-        }) do
+        with_test_platform(
+          {
+            nodes: {
+              'node1' => { meta: { host_ip: '192.168.42.1' } },
+              'node2' => { meta: { host_ip: '192.168.42.2' } },
+              'node3' => { meta: { host_ip: '192.168.42.3' } },
+              'node4' => { meta: { host_ip: '192.168.42.4' } }
+            }
+          }
+        ) do
           with_cmd_runner_mocked(
             [
               ['which env', proc { [0, "/usr/bin/env\n", ''] }],
@@ -285,14 +304,14 @@ describe HybridPlatformsConductor::ActionsExecutor do
       end
 
       it 'makes sure the last client using ControlMaster destroys it, even using a different environment' do
-        with_test_platform(nodes: { 'node' => { meta: { host_ip: '192.168.42.42' } } }) do
+        with_test_platform({ nodes: { 'node' => { meta: { host_ip: '192.168.42.42' } } } }) do
           # 1. Current thread creates the ControlMaster.
           # 2. Second thread connects to it.
           # 3. Current thread releases it.
           # 4. Second thread releases it, hence destroying it.
           init_commands = [
             ['which env', proc { [0, "/usr/bin/env\n", ''] }],
-            ['ssh -V 2>&1', proc { [0, "OpenSSH_7.4p1 Debian-10+deb9u7, OpenSSL 1.0.2u  20 Dec 2019\n", ''] }],
+            ['ssh -V 2>&1', proc { [0, "OpenSSH_7.4p1 Debian-10+deb9u7, OpenSSL 1.0.2u  20 Dec 2019\n", ''] }]
           ]
           nodes_connections_to_mock = { 'node' => { connection: '192.168.42.42', user: 'test_user' } }
           step = 0
@@ -311,7 +330,7 @@ describe HybridPlatformsConductor::ActionsExecutor do
               second_config = HybridPlatformsConductor::Config.new logger: logger, logger_stderr: logger
               second_platforms_handler = HybridPlatformsConductor::PlatformsHandler.new logger: logger, logger_stderr: logger, config: second_config, cmd_runner: second_cmd_runner
               second_nodes_handler = HybridPlatformsConductor::NodesHandler.new logger: logger, logger_stderr: logger, config: second_config, cmd_runner: second_cmd_runner, platforms_handler: second_platforms_handler
-              second_actions_executor = HybridPlatformsConductor::ActionsExecutor.new logger: logger, logger_stderr: logger, config: second_config, cmd_runner: second_cmd_runner, nodes_handler: second_nodes_handler
+              second_actions_executor = described_class.new logger: logger, logger_stderr: logger, config: second_config, cmd_runner: second_cmd_runner, nodes_handler: second_nodes_handler
               second_actions_executor.connector(:ssh).ssh_user = 'test_user'
               # Wait for the first thread to create ControlMaster
               sleep 0.1 while step == 0
@@ -339,7 +358,7 @@ describe HybridPlatformsConductor::ActionsExecutor do
       end
 
       it 'does not create SSH master if asked' do
-        with_test_platform(nodes: { 'node' => { meta: { host_ip: '192.168.42.42' } } }) do
+        with_test_platform({ nodes: { 'node' => { meta: { host_ip: '192.168.42.42' } } } }) do
           with_cmd_runner_mocked(
             [
               ['which env', proc { [0, "/usr/bin/env\n", ''] }],
@@ -360,7 +379,7 @@ describe HybridPlatformsConductor::ActionsExecutor do
       end
 
       it 'does not check host keys if asked' do
-        with_test_platform(nodes: { 'node' => { meta: { host_ip: '192.168.42.42' } } }) do
+        with_test_platform({ nodes: { 'node' => { meta: { host_ip: '192.168.42.42' } } } }) do
           with_cmd_runner_mocked(
             [
               ['which env', proc { [0, "/usr/bin/env\n", ''] }],
@@ -379,7 +398,7 @@ describe HybridPlatformsConductor::ActionsExecutor do
       end
 
       it 'does not use batch mode when passwords are to be expected' do
-        with_test_platform(nodes: { 'node' => { meta: { host_ip: '192.168.42.42' } } }) do
+        with_test_platform({ nodes: { 'node' => { meta: { host_ip: '192.168.42.42' } } } }) do
           with_cmd_runner_mocked(
             [
               ['which env', proc { [0, "/usr/bin/env\n", ''] }],
@@ -398,7 +417,7 @@ describe HybridPlatformsConductor::ActionsExecutor do
       end
 
       it 'uses sshpass to prepare connections needing passwords' do
-        with_test_platform(nodes: { 'node' => { meta: { host_ip: '192.168.42.42' } } }) do
+        with_test_platform({ nodes: { 'node' => { meta: { host_ip: '192.168.42.42' } } } }) do
           with_cmd_runner_mocked(
             [
               ['sshpass -V', proc { [0, "sshpass 1.06\n", ''] }],
@@ -418,7 +437,7 @@ describe HybridPlatformsConductor::ActionsExecutor do
       end
 
       it 'does not reuse provided SSH executables and configs' do
-        with_test_platform(nodes: { 'node' => { meta: { host_ip: '192.168.42.42' } } }) do
+        with_test_platform({ nodes: { 'node' => { meta: { host_ip: '192.168.42.42' } } } }) do
           with_cmd_runner_mocked(
             [
               ['which env', proc { [0, "/usr/bin/env\n", ''] }],
@@ -449,7 +468,7 @@ describe HybridPlatformsConductor::ActionsExecutor do
       end
 
       it 'cleans provided SSH executables and configs after use' do
-        with_test_platform(nodes: { 'node' => { meta: { host_ip: '192.168.42.42' } } }) do
+        with_test_platform({ nodes: { 'node' => { meta: { host_ip: '192.168.42.42' } } } }) do
           with_cmd_runner_mocked(
             [
               ['which env', proc { [0, "/usr/bin/env\n", ''] }],
@@ -488,7 +507,7 @@ describe HybridPlatformsConductor::ActionsExecutor do
       end
 
       it 'creates an SSH master to 1 node even when there is a stalled ControlMaster file' do
-        with_test_platform(nodes: { 'node' => { meta: { host_ip: '192.168.42.42' } } }) do
+        with_test_platform({ nodes: { 'node' => { meta: { host_ip: '192.168.42.42' } } } }) do
           with_cmd_runner_mocked(
             [
               ['which env', proc { [0, "/usr/bin/env\n", ''] }],
@@ -505,7 +524,7 @@ describe HybridPlatformsConductor::ActionsExecutor do
       end
 
       it 'creates an SSH master to 1 node even when there is a left-over user for the ControlMaster file that has not been unregistered' do
-        with_test_platform(nodes: { 'node' => { meta: { host_ip: '192.168.42.42' } } }) do
+        with_test_platform({ nodes: { 'node' => { meta: { host_ip: '192.168.42.42' } } } }) do
           with_cmd_runner_mocked(
             [
               ['which env', proc { [0, "/usr/bin/env\n", ''] }],
@@ -522,15 +541,15 @@ describe HybridPlatformsConductor::ActionsExecutor do
       end
 
       it 'retries when the remote node is booting up' do
-        with_test_platform(nodes: { 'node' => { meta: { host_ip: '192.168.42.42' } } }) do
+        with_test_platform({ nodes: { 'node' => { meta: { host_ip: '192.168.42.42' } } } }) do
           nbr_boot_messages = 0
           with_cmd_runner_mocked(
             [
               ['which env', proc { [0, "/usr/bin/env\n", ''] }],
-              ['ssh -V 2>&1', proc { [0, "OpenSSH_7.4p1 Debian-10+deb9u7, OpenSSL 1.0.2u  20 Dec 2019\n", ''] }],
+              ['ssh -V 2>&1', proc { [0, "OpenSSH_7.4p1 Debian-10+deb9u7, OpenSSL 1.0.2u  20 Dec 2019\n", ''] }]
             ] +
               [[
-                /^.+\/ssh -o BatchMode=yes -o ControlMaster=yes -o ControlPersist=yes hpc\.node true$/,
+                %r{^.+/ssh -o BatchMode=yes -o ControlMaster=yes -o ControlPersist=yes hpc\.node true$},
                 proc do
                   nbr_boot_messages += 1
                   [255, '', "System is booting up. See pam_nologin(8)\nAuthentication failed.\n"]

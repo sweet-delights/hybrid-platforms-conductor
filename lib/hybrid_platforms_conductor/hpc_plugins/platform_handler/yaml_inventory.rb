@@ -16,7 +16,7 @@ module HybridPlatformsConductor
         def init
           # This method is called when initializing a new instance of this platform handler, for a given repository.
           inv_file = "#{@repository_path}/inventory.yaml"
-          @inventory = File.exist?(inv_file) ? YAML.load(File.read(inv_file)) : {}
+          @inventory = File.exist?(inv_file) ? YAML.safe_load(File.read(inv_file)) : {}
         end
 
         # Get the list of known nodes.
@@ -89,12 +89,13 @@ module HybridPlatformsConductor
             # * *cmd_runner* (CmdRunner): CmdRunner to be used [default: CmdRunner.new]
             def initialize(
               platform_handler,
-              logger: Logger.new(STDOUT),
-              logger_stderr: Logger.new(STDERR),
+              logger: Logger.new($stdout),
+              logger_stderr: Logger.new($stderr),
               config: Config.new,
               nodes_handler: NodesHandler.new,
               cmd_runner: CmdRunner.new
             )
+              super
               init_loggers(logger, logger_stderr)
               @platform_handler = platform_handler
               @config = config
@@ -127,7 +128,7 @@ module HybridPlatformsConductor
         #     * *:changed*: The task has been changed
         #     * *:identical*: The task has not been changed
         #   * *diffs* (String): Differences, if any
-        def parse_deploy_output(stdout, stderr)
+        def parse_deploy_output(_stdout, _stderr)
           []
         end
 

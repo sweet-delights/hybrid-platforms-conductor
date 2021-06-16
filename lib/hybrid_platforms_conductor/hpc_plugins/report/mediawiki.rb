@@ -1,6 +1,9 @@
 require 'hybrid_platforms_conductor/report'
 require 'time'
 
+# We use true/false as symbols on purpose for translations
+# rubocop:disable Lint/BooleanSymbol
+
 module HybridPlatformsConductor
 
   module HpcPlugins
@@ -71,12 +74,12 @@ module HybridPlatformsConductor
           output = ''
           locale = TRANSLATIONS[locale_code]
 
-          output << <<~EOS
+          output << <<~EO_MEDIAWIKI
             Back to the [[Hadoop]] / [[Impala]] / [[XAE_Network_Topology]] portal pages
 
             This page has been generated using <code>./bin/report --format mediawiki</code> on #{Time.now.utc.strftime('%F %T')} UTC.
 
-          EOS
+          EO_MEDIAWIKI
 
           # Get all confs
           # Use the translations' keys to know all properties we want to display
@@ -84,7 +87,7 @@ module HybridPlatformsConductor
           @nodes_handler.prefetch_metadata_of nodes, locale.keys
           nodes.
             map do |node|
-              { node: node }.merge(Hash[all_properties.map { |property| [property, @nodes_handler.metadata_of(node, property)] }])
+              { node: node }.merge(all_properties.map { |property| [property, @nodes_handler.metadata_of(node, property)] }.to_h)
             end.
             # Group them by physical / VMs
             group_by do |node_info|
@@ -116,22 +119,24 @@ module HybridPlatformsConductor
                           output << "* '''#{node_info.delete(:node)}'''#{node_info[:private_ips].nil? || node_info[:private_ips].empty? ? '' : " - #{node_info[:private_ips].first}"} - #{node_info.delete(:description)}\n"
                           node_info.delete(:private_ips) if !node_info[:private_ips].nil? && node_info[:private_ips].size == 1
                           node_info.sort.each do |property, value|
-                            unless value.nil?
-                              raise "Missing translation of key: #{property}. Please edit TRANSLATIONS[:#{locale_code}]." unless locale.key?(property)
-                              formatted_value =
-                                if value.is_a?(Array)
-                                  "\n#{value.map { |item| "::* #{item}" }.join("\n")}"
-                                elsif value.is_a?(Hash)
-                                  "\n#{value.map { |item, value| "::* #{item}: #{value}" }.join("\n")}"
-                                elsif value.is_a?(TrueClass)
-                                  locale[:true]
-                                elsif value.is_a?(FalseClass)
-                                  locale[:false]
-                                else
-                                  value.to_str
-                                end
-                              output << ": #{locale[property]}: #{formatted_value}\n"
-                            end
+                            next if value.nil?
+
+                            raise "Missing translation of key: #{property}. Please edit TRANSLATIONS[:#{locale_code}]." unless locale.key?(property)
+
+                            output << ": #{locale[property]}: #{
+                              case value
+                              when Array
+                                "\n#{value.map { |item| "::* #{item}" }.join("\n")}"
+                              when Hash
+                                "\n#{value.map { |item, item_value| "::* #{item}: #{item_value}" }.join("\n")}"
+                              when TrueClass
+                                locale[:true]
+                              when FalseClass
+                                locale[:false]
+                              else
+                                value.to_str
+                              end
+                            }\n"
                           end
                           output << "\n\n"
                         end
@@ -139,7 +144,7 @@ module HybridPlatformsConductor
                 end
             end
 
-          output << <<~EOS
+          output << <<~EO_MEDIAWIKI
             Back to the [[Hadoop]] / [[Impala]] / [[XAE_Network_Topology]] portal pages
 
             [[Category:My Project]]
@@ -150,7 +155,7 @@ module HybridPlatformsConductor
             [[Category:Server]]
             [[Category:Configuration]]
             [[Category:Chef]]
-          EOS
+          EO_MEDIAWIKI
 
           out output
         end
@@ -162,3 +167,5 @@ module HybridPlatformsConductor
   end
 
 end
+
+# rubocop:enable Lint/BooleanSymbol

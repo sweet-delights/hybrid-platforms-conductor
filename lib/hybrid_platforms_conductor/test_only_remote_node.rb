@@ -10,7 +10,7 @@ module HybridPlatformsConductor
     def self.only_on_nodes
       # Just 1 node per service and platform
       Test.nodes_handler.prefetch_metadata_of Test.nodes_handler.known_nodes, :local_node
-      Test.nodes_handler.known_nodes.select { |node| !Test.nodes_handler.get_local_node_of(node) }
+      Test.nodes_handler.known_nodes.reject { |node| Test.nodes_handler.get_local_node_of(node) }
     end
 
   end

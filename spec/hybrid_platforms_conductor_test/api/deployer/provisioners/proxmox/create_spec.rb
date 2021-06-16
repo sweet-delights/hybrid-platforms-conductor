@@ -2,7 +2,7 @@ require 'hybrid_platforms_conductor/hpc_plugins/provisioner/proxmox'
 
 describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
 
-  context 'checking containers creation' do
+  context 'when checking containers creation' do
 
     it 'creates an instance' do
       with_test_proxmox_platform do |instance|
@@ -11,7 +11,7 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
           mock_proxmox_to_get_nodes_info
         ]
         instance.create
-        expect(@proxmox_create_options).to eq({
+        expect(proxmox_create_options).to eq(
           'cores' => 2,
           'cpulimit' => 2,
           'description' => "===== HPC info =====\nnode: node\nenvironment: test\ndebug: false\n",
@@ -23,7 +23,7 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
           'password' => 'root_pwd',
           'rootfs' => 'local-lvm:10',
           'searchdomain' => 'my-domain.com'
-        })
+        )
       end
     end
 
@@ -39,7 +39,7 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
           expected_file_id: 'node_really_big_environment_name_that_will_exceed_for_sure_the_limit_of_hostnames_really_big_environment_name_that_will_exceed_for_sure_the_limit_of_hostnames_really_big_environment_name_that_will_exceed_for_sure_the_limit_of_hostnam-258ca1fc'
         )
         instance.create
-        expect(@proxmox_create_options['hostname']).to eq expected_hostname
+        expect(proxmox_create_options['hostname']).to eq expected_hostname
       end
     end
 
@@ -54,7 +54,7 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
           expected_sudo: false
         )
         instance.create
-        expect(@proxmox_create_options).to eq({
+        expect(proxmox_create_options).to eq(
           'cores' => 2,
           'cpulimit' => 2,
           'description' => "===== HPC info =====\nnode: node\nenvironment: test\ndebug: false\n",
@@ -66,7 +66,7 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
           'password' => 'root_pwd',
           'rootfs' => 'local-lvm:10',
           'searchdomain' => 'my-domain.com'
-        })
+        )
       end
     end
 
@@ -110,7 +110,8 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
 
     it 'fails to create an instance when the reserve_proxmox_container sync node ends in error' do
       with_test_proxmox_platform do |instance|
-        mock_proxmox_calls_with([
+        mock_proxmox_calls_with(
+          [
             # 1 - The info on existing containers
             mock_proxmox_to_get_nodes_info
           ],
@@ -121,13 +122,15 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
     end
 
     it 'creates an instance using resources defined for a given node' do
-      with_test_proxmox_platform(node_metadata: {
-        deploy_resources_min: {
-          cpus: 24,
-          ram_mb: 4096,
-          disk_gb: 20
+      with_test_proxmox_platform(
+        node_metadata: {
+          deploy_resources_min: {
+            cpus: 24,
+            ram_mb: 4096,
+            disk_gb: 20
+          }
         }
-      }) do |instance|
+      ) do |instance|
         mock_proxmox_calls_with(
           [
             # 1 - The info on existing containers
@@ -135,7 +138,7 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
           ]
         )
         instance.create
-        expect(@proxmox_create_options).to eq({
+        expect(proxmox_create_options).to eq(
           'cores' => 24,
           'cpulimit' => 24,
           'description' => "===== HPC info =====\nnode: node\nenvironment: test\ndebug: false\n",
@@ -147,7 +150,7 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
           'password' => 'root_pwd',
           'rootfs' => 'local-lvm:20',
           'searchdomain' => 'my-domain.com'
-        })
+        )
       end
     end
 
@@ -164,23 +167,19 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
                 }
               ],
               extra_expects: proc do |proxmox|
-                expect(proxmox).to receive(:get).with('nodes/pve_node_name/lxc') do
-                  [
-                    {
-                      'vmid' => '1042'
-                    }
-                  ]
-                end
-                expect(proxmox).to receive(:get).with('nodes/pve_node_name/lxc/1042/config') do
+                expect(proxmox).to receive(:get).with('nodes/pve_node_name/lxc').and_return [
                   {
-                    'net0' => 'ip=192.168.0.101/32',
-                    'description' => <<~EOS
-                      ===== HPC info =====
-                      node: node
-                      environment: test
-                    EOS
+                    'vmid' => '1042'
                   }
-                end
+                ]
+                expect(proxmox).to receive(:get).with('nodes/pve_node_name/lxc/1042/config').and_return(
+                  'net0' => 'ip=192.168.0.101/32',
+                  'description' => <<~EO_DESCRIPTION
+                    ===== HPC info =====
+                    node: node
+                    environment: test
+                  EO_DESCRIPTION
+                )
               end
             )
           ],
@@ -236,22 +235,18 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
               }
             ],
             extra_expects: proc do |proxmox|
-              expect(proxmox).to receive(:get).with('nodes/pve_node_name/lxc') do
-                [
-                  {
-                    'vmid' => '1042'
-                  }
-                ]
-              end
-              expect(proxmox).to receive(:get).with('nodes/pve_node_name/lxc/1042/config') do
+              expect(proxmox).to receive(:get).with('nodes/pve_node_name/lxc').and_return [
                 {
-                  'description' => <<~EOS
-                    ===== HPC info =====
-                    node: node
-                    environment: other_environment
-                  EOS
+                  'vmid' => '1042'
                 }
-              end
+              ]
+              expect(proxmox).to receive(:get).with('nodes/pve_node_name/lxc/1042/config').and_return(
+                'description' => <<~EO_DESCRIPTION
+                  ===== HPC info =====
+                  node: node
+                  environment: other_environment
+                EO_DESCRIPTION
+              )
             end
           )
         ]
@@ -271,13 +266,11 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
               }
             ],
             extra_expects: proc do |proxmox|
-              expect(proxmox).to receive(:get).with('nodes/pve_node_name/lxc') do
-                [
-                  {
-                    'vmid' => '100'
-                  }
-                ]
-              end
+              expect(proxmox).to receive(:get).with('nodes/pve_node_name/lxc').and_return [
+                {
+                  'vmid' => '100'
+                }
+              ]
             end
           )
         ]

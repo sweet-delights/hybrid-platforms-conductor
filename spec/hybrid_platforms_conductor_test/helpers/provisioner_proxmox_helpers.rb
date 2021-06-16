@@ -98,21 +98,17 @@ module HybridPlatformsConductorTest
           expect(password).to eq proxmox_password
           expect(realm).to eq proxmox_realm
           expect(options[:verify_ssl]).to eq false
-          proxmox = double 'Proxmox info instance'
+          proxmox = instance_double ::Proxmox::Proxmox
           # Mock initialization
-          expect(proxmox).to receive(:logger=) do
-            # Nothing
-          end
-          expect(proxmox).to receive(:logger_stderr=) do
-            # Nothing
-          end
+          expect(proxmox).to receive(:logger=).and_return(nil)
+          expect(proxmox).to receive(:logger_stderr=).and_return(nil)
           # Mock checking existing nodes
           idx_try = 0
           expect(proxmox).to receive(:get).exactly(nbr_api_errors + 1).times.with('nodes') do
             idx_try += 1
             idx_try <= nbr_api_errors ? 'NOK: error code = 500' : nodes_info
           end
-          extra_expects.call(proxmox) unless extra_expects.nil?
+          extra_expects&.call(proxmox)
           proxmox
         end
       end
@@ -142,14 +138,10 @@ module HybridPlatformsConductorTest
           expect(password).to eq proxmox_password
           expect(realm).to eq 'pam'
           expect(options[:verify_ssl]).to eq false
-          proxmox = double 'Proxmox create instance'
+          proxmox = instance_double ::Proxmox::Proxmox
           # Mock initialization
-          expect(proxmox).to receive(:logger=) do
-            # Nothing
-          end
-          expect(proxmox).to receive(:logger_stderr=) do
-            # Nothing
-          end
+          expect(proxmox).to receive(:logger=).and_return(nil)
+          expect(proxmox).to receive(:logger_stderr=).and_return(nil)
           # Mock start a container
           idx_try = 0
           expect(proxmox).to receive(:post).exactly(nbr_api_errors + (task_status.nil? ? 0 : 1)).times.with('nodes/pve_node_name/lxc/1024/status/start') do
@@ -189,18 +181,12 @@ module HybridPlatformsConductorTest
           expect(password).to eq proxmox_password
           expect(realm).to eq 'pam'
           expect(options[:verify_ssl]).to eq false
-          proxmox = double 'Proxmox create instance'
+          proxmox = instance_double ::Proxmox::Proxmox
           # Mock initialization
-          expect(proxmox).to receive(:logger=) do
-            # Nothing
-          end
-          expect(proxmox).to receive(:logger_stderr=) do
-            # Nothing
-          end
+          expect(proxmox).to receive(:logger=).and_return(nil)
+          expect(proxmox).to receive(:logger_stderr=).and_return(nil)
           # Mock start a container
-          expect(proxmox).to receive(:post).with('nodes/pve_node_name/lxc/1024/status/stop') do
-            'UPID:pve_node_name:0000A504:6DEABF24:5F44669B:stop::root@pam:'
-          end
+          expect(proxmox).to receive(:post).with('nodes/pve_node_name/lxc/1024/status/stop').and_return('UPID:pve_node_name:0000A504:6DEABF24:5F44669B:stop::root@pam:')
           # Mock checking task status
           expect(proxmox).to receive(:get).with('nodes/pve_node_name/tasks/UPID:pve_node_name:0000A504:6DEABF24:5F44669B:stop::root@pam:/status') do
             { 'status' => task_status }
@@ -230,18 +216,12 @@ module HybridPlatformsConductorTest
           expect(password).to eq proxmox_password
           expect(realm).to eq 'pam'
           expect(options[:verify_ssl]).to eq false
-          proxmox = double 'Proxmox create instance'
+          proxmox = instance_double ::Proxmox::Proxmox
           # Mock initialization
-          expect(proxmox).to receive(:logger=) do
-            # Nothing
-          end
-          expect(proxmox).to receive(:logger_stderr=) do
-            # Nothing
-          end
+          expect(proxmox).to receive(:logger=).and_return(nil)
+          expect(proxmox).to receive(:logger_stderr=).and_return(nil)
           # Mock start a container
-          expect(proxmox).to receive(:delete).with('nodes/pve_node_name/lxc/1024') do
-            'UPID:pve_node_name:0000A504:6DEABF24:5F44669B:destroy::root@pam:'
-          end
+          expect(proxmox).to receive(:delete).with('nodes/pve_node_name/lxc/1024').and_return('UPID:pve_node_name:0000A504:6DEABF24:5F44669B:destroy::root@pam:')
           # Mock checking task status
           expect(proxmox).to receive(:get).with('nodes/pve_node_name/tasks/UPID:pve_node_name:0000A504:6DEABF24:5F44669B:destroy::root@pam:/status') do
             { 'status' => task_status }
@@ -273,14 +253,10 @@ module HybridPlatformsConductorTest
           expect(password).to eq proxmox_password
           expect(realm).to eq 'pam'
           expect(options[:verify_ssl]).to eq false
-          proxmox = double 'Proxmox create instance'
+          proxmox = instance_double ::Proxmox::Proxmox
           # Mock initialization
-          expect(proxmox).to receive(:logger=) do
-            # Nothing
-          end
-          expect(proxmox).to receive(:logger_stderr=) do
-            # Nothing
-          end
+          expect(proxmox).to receive(:logger=).and_return(nil)
+          expect(proxmox).to receive(:logger_stderr=).and_return(nil)
           # Mock getting status of a container
           idx_try = 0
           expect(proxmox).to receive(:get).exactly(nbr_api_errors + (status.nil? ? 0 : 1)).times.with('nodes/pve_node_name/lxc') do
@@ -306,6 +282,9 @@ module HybridPlatformsConductorTest
           proxmox
         end
       end
+
+      # Give access to the actions that have been called on the mocked Proxmox instances
+      attr_reader(*%i[proxmox_actions proxmox_create_options proxmox_destroy_options])
 
       # Mock a call to the reserve_proxmox_container sync node
       #
@@ -334,24 +313,24 @@ module HybridPlatformsConductorTest
             expect(actions['node'].size).to eq 4
             # First action should be to copy the reserve_proxmox_container code
             expect(actions['node'][0].keys).to eq [:scp]
-            expect(actions['node'][0][:scp].first[0]).to match /^.+\/hpc_plugins\/provisioner\/proxmox\/$/
+            expect(actions['node'][0][:scp].first[0]).to match(%r{^.+/hpc_plugins/provisioner/proxmox/$})
             expect(actions['node'][0][:scp].first[1]).to eq '.'
             # Second action should be to create directories
-            expect(actions['node'][1]).to eq({
+            expect(actions['node'][1]).to eq(
               remote_bash: "mkdir -p ./proxmox/config\nmkdir -p ./proxmox/create"
-            })
+            )
             # Next actions should be to copy the config/create/destroy files
             expect(actions['node'][2].keys).to eq [:scp]
-            expect(actions['node'][2][:scp].first[0]).to match /^.+\/create_#{Regexp.escape(expected_file_id)}\.json$/
+            expect(actions['node'][2][:scp].first[0]).to match(%r{^.+/create_#{Regexp.escape(expected_file_id)}\.json$})
             expect(actions['node'][2][:scp].first[1]).to eq './proxmox/create'
             expect(actions['node'][3].keys).to eq [:scp]
-            expect(actions['node'][3][:scp].first[0]).to match /^.+\/config_#{Regexp.escape(expected_file_id)}\.json$/
+            expect(actions['node'][3][:scp].first[0]).to match(%r{^.+/config_#{Regexp.escape(expected_file_id)}\.json$})
             expect(actions['node'][3][:scp].first[1]).to eq './proxmox/config'
             @proxmox_create_options = JSON.parse(File.read(actions['node'][2][:scp].first[0]))
             { 'node' => [0, '', ''] }
           end,
           proc do |actions|
-            expect(actions).to eq({
+            expect(actions).to eq(
               'node' => {
                 remote_bash: {
                   commands: "#{expected_sudo ? 'sudo -u root -E ' : ''}./proxmox/reserve_proxmox_container --create ./proxmox/create/create_#{expected_file_id}.json --config ./proxmox/config/config_#{expected_file_id}.json",
@@ -362,7 +341,7 @@ module HybridPlatformsConductorTest
                   }
                 }
               }
-            })
+            )
             result =
               if error_on_create
                 { error: error_on_create }
@@ -373,10 +352,10 @@ module HybridPlatformsConductorTest
                   vm_ip: '192.168.0.100'
                 }
               end
-            { 'node' => [0, <<~EOS, ''] }
+            { 'node' => [0, <<~EO_STDOUT, ''] }
               ===== JSON =====
               #{JSON.pretty_generate(result)}
-            EOS
+            EO_STDOUT
           end
         ]
         if destroy_vm
@@ -386,24 +365,24 @@ module HybridPlatformsConductorTest
               expect(actions['node'].size).to eq 4
               # First action should be to copy the reserve_proxmox_container code
               expect(actions['node'][0].keys).to eq [:scp]
-              expect(actions['node'][0][:scp].first[0]).to match /^.+\/hpc_plugins\/provisioner\/proxmox\/$/
+              expect(actions['node'][0][:scp].first[0]).to match(%r{^.+/hpc_plugins/provisioner/proxmox/$})
               expect(actions['node'][0][:scp].first[1]).to eq '.'
               # Second action should be to create directories
-              expect(actions['node'][1]).to eq({
+              expect(actions['node'][1]).to eq(
                 remote_bash: "mkdir -p ./proxmox/config\nmkdir -p ./proxmox/destroy"
-              })
+              )
               # Next actions should be to copy the config/create/destroy files
               expect(actions['node'][2].keys).to eq [:scp]
-              expect(actions['node'][2][:scp].first[0]).to match /^.+\/destroy_#{Regexp.escape(expected_file_id)}\.json$/
+              expect(actions['node'][2][:scp].first[0]).to match(%r{^.+/destroy_#{Regexp.escape(expected_file_id)}\.json$})
               expect(actions['node'][2][:scp].first[1]).to eq './proxmox/destroy'
               expect(actions['node'][3].keys).to eq [:scp]
-              expect(actions['node'][3][:scp].first[0]).to match /^.+\/config_#{Regexp.escape(expected_file_id)}\.json$/
+              expect(actions['node'][3][:scp].first[0]).to match(%r{^.+/config_#{Regexp.escape(expected_file_id)}\.json$})
               expect(actions['node'][3][:scp].first[1]).to eq './proxmox/config'
               @proxmox_destroy_options = JSON.parse(File.read(actions['node'][2][:scp].first[0]))
               { 'node' => [0, '', ''] }
             end,
             proc do |actions|
-              expect(actions).to eq({
+              expect(actions).to eq(
                 'node' => {
                   remote_bash: {
                     commands: "#{expected_sudo ? 'sudo -u root -E ' : ''}./proxmox/reserve_proxmox_container --destroy ./proxmox/destroy/destroy_#{expected_file_id}.json --config ./proxmox/config/config_#{expected_file_id}.json",
@@ -414,7 +393,7 @@ module HybridPlatformsConductorTest
                     }
                   }
                 }
-              })
+              )
               result =
                 if error_on_destroy
                   { error: error_on_destroy }
@@ -425,10 +404,10 @@ module HybridPlatformsConductorTest
                     vm_ip: '192.168.0.100'
                   }
                 end
-              { 'node' => [0, <<~EOS, ''] }
+              { 'node' => [0, <<~EO_STDOUT, ''] }
                 ===== JSON =====
                 #{JSON.pretty_generate(result)}
-              EOS
+              EO_STDOUT
             end
           ]
         end
@@ -515,8 +494,8 @@ module HybridPlatformsConductorTest
         mock_proxmox_calls_with(
           mocked_pve_nodes.map do |pve_nodes|
             # Complete pve_nodes with default values
-            pve_nodes = Hash[pve_nodes.map do |pve_node_name, pve_node_info|
-              pve_node_info[:lxc_containers] = Hash[(pve_node_info.key?(:lxc_containers) ? pve_node_info[:lxc_containers] : {}).map do |vm_id, vm_info|
+            pve_nodes = pve_nodes.map do |pve_node_name, pve_node_info|
+              pve_node_info[:lxc_containers] = (pve_node_info.key?(:lxc_containers) ? pve_node_info[:lxc_containers] : {}).map do |vm_id, vm_info|
                 [
                   vm_id,
                   {
@@ -531,7 +510,7 @@ module HybridPlatformsConductorTest
                     environment: 'test_env'
                   }.merge(vm_info)
                 ]
-              end]
+              end.to_h
               [
                 pve_node_name,
                 {
@@ -540,7 +519,7 @@ module HybridPlatformsConductorTest
                   storage_total: 100 * 1024 * 1024 * 1024
                 }.merge(pve_node_info)
               ]
-            end]
+            end.to_h
             proc do |url, pve_node, user, password, realm, options|
               expect(url).to eq 'https://my-proxmox.my-domain.com:8006/api2/json/'
               expect(pve_node).to eq 'my-proxmox'
@@ -548,30 +527,30 @@ module HybridPlatformsConductorTest
               expect(password).to eq proxmox_password
               expect(realm).to eq proxmox_realm
               expect(options[:verify_ssl]).to eq false
-              proxmox = double 'Proxmox create instance'
+              proxmox = instance_double ::Proxmox::Proxmox
               # Mock getting status of a container
               allow(proxmox).to receive(:get) do |path|
                 case path
                 when 'nodes'
                   pve_nodes.keys.map { |pve_node_name| { 'node' => pve_node_name } }
-                when /^nodes\/([^\/]+)\/status$/
-                  pve_node_name = $1
+                when %r{^nodes/([^/]+)/status$}
+                  pve_node_name = Regexp.last_match(1)
                   {
                     'loadavg' => pve_nodes[pve_node_name][:loadavg].map(&:to_s),
                     'memory' => {
                       'total' => pve_nodes[pve_node_name][:memory_total]
                     }
                   }
-                when /^nodes\/([^\/]+)\/storage$/
-                  pve_node_name = $1
+                when %r{^nodes/([^/]+)/storage$}
+                  pve_node_name = Regexp.last_match(1)
                   [
                     {
                       'storage' => 'local-lvm',
                       'total' => pve_nodes[pve_node_name][:storage_total]
                     }
                   ]
-                when /^nodes\/([^\/]+)\/lxc$/
-                  pve_node_name = $1
+                when %r{^nodes/([^/]+)/lxc$}
+                  pve_node_name = Regexp.last_match(1)
                   if pve_nodes[pve_node_name][:error_strings].nil? || pve_nodes[pve_node_name][:error_strings].empty?
                     pve_nodes[pve_node_name][:lxc_containers].map do |vm_id, vm_info|
                       {
@@ -584,28 +563,26 @@ module HybridPlatformsConductorTest
                   else
                     pve_nodes[pve_node_name][:error_strings].shift
                   end
-                when /^nodes\/([^\/]+)\/lxc\/([^\/]+)\/config$/
-                  pve_node_name = $1
-                  vmid = $2
+                when %r{^nodes/([^/]+)/lxc/([^/]+)/config$}
+                  pve_node_name = Regexp.last_match(1)
+                  vmid = Regexp.last_match(2)
                   {
                     'net0' => "ip=#{pve_nodes[pve_node_name][:lxc_containers][Integer(vmid)][:ip]}/32",
-                    'description' => <<~EOS
+                    'description' => <<~EO_DESCRIPTION
                       ===== HPC info =====
                       node: #{pve_nodes[pve_node_name][:lxc_containers][Integer(vmid)][:node]}
                       environment: #{pve_nodes[pve_node_name][:lxc_containers][Integer(vmid)][:environment]}
                       debug: #{pve_nodes[pve_node_name][:lxc_containers][Integer(vmid)][:debug] ? 'true' : 'false'}
                       creation_date: #{pve_nodes[pve_node_name][:lxc_containers][Integer(vmid)][:creation_date].strftime('%FT%T')}
-                    EOS
+                    EO_DESCRIPTION
                   }
-                when /^nodes\/([^\/]+)\/lxc\/([^\/]+)\/status\/current$/
-                  pve_node_name = $1
-                  vmid = $2
+                when %r{^nodes/([^/]+)/lxc/([^/]+)/status/current$}
+                  pve_node_name = Regexp.last_match(1)
+                  vmid = Regexp.last_match(2)
                   {
                     'status' => pve_nodes[pve_node_name][:lxc_containers][Integer(vmid)][:status]
                   }
-                when /^nodes\/([^\/]+)\/tasks\/([^\/]+)\/status$/
-                  pve_node_name = $1
-                  task = $2
+                when %r{^nodes/[^/]+/tasks/[^/]+/status$}
                   # Mock tasks completion
                   {
                     'status' => 'OK'
@@ -618,12 +595,12 @@ module HybridPlatformsConductorTest
               allow(proxmox).to receive(:post) do |path, args|
                 @proxmox_actions << [:post, path, args].compact
                 case path
-                when /^nodes\/([^\/]+)\/lxc$/
-                  pve_node_name = $1
+                when %r{^nodes/([^/]+)/lxc$}
+                  pve_node_name = Regexp.last_match(1)
                   "UPID:#{pve_node_name}:0000A504:6DEABF24:5F44669B:create::root@pam:"
-                when /^nodes\/([^\/]+)\/lxc\/([^\/]+)\/status\/stop$/
-                  pve_node_name = $1
-                  vmid = $2
+                when %r{^nodes/([^/]+)/lxc/([^/]+)/status/stop$}
+                  pve_node_name = Regexp.last_match(1)
+                  vmid = Regexp.last_match(2)
                   "UPID:#{pve_node_name}:0000A504:6DEABF24:5F44669B:stop_#{vmid}::root@pam:"
                 else
                   raise "Unknown Proxmox API post call: #{path}. Please adapt the test framework."
@@ -633,9 +610,9 @@ module HybridPlatformsConductorTest
               allow(proxmox).to receive(:delete) do |path|
                 @proxmox_actions << [:delete, path]
                 case path
-                when /^nodes\/([^\/]+)\/lxc\/([^\/]+)$/
-                  pve_node_name = $1
-                  vmid = $2
+                when %r{^nodes/([^/]+)/lxc/([^/]+)$}
+                  pve_node_name = Regexp.last_match(1)
+                  vmid = Regexp.last_match(2)
                   # Make sure we delete the mocked information as well
                   pve_nodes[pve_node_name][:lxc_containers].delete(Integer(vmid))
                   "UPID:#{pve_node_name}:0000A504:6DEABF24:5F44669B:destroy_#{vmid}::root@pam:"
@@ -668,9 +645,9 @@ module HybridPlatformsConductorTest
             case dir
             when '/sys/fs/cgroup/*/lxc/*'
               block.nil? ? remaining_leftovers : remaining_leftovers.each(&block)
-            when /^\/sys\/fs\/cgroup\/\*\/lxc\/(.+)$/
-              vm_id_str = $1
-              file_pattern = /^\/sys\/fs\/cgroup\/.+\/lxc\/#{Regexp.escape(vm_id_str)}$/
+            when %r{^/sys/fs/cgroup/\*/lxc/(.+)$}
+              vm_id_str = Regexp.last_match(1)
+              file_pattern = %r{^/sys/fs/cgroup/.+/lxc/#{Regexp.escape(vm_id_str)}$}
               matched_files = remaining_leftovers.select { |file| file =~ file_pattern }
               block.nil? ? matched_files : matched_files.each(&block)
             else
@@ -760,17 +737,15 @@ module HybridPlatformsConductorTest
         $stdout = StringIO.new unless logger.debug?
         begin
           load "#{@repository}/proxmox/reserve_proxmox_container"
-          if logger.debug?
-            raise 'This test can\'t run in debug mode.'
-          else
-            @stdout = $stdout.string
-          end
+          raise 'This test can\'t run in debug mode.' if logger.debug?
+
+          @stdout = $stdout.string
         ensure
           ARGV.replace old_argv
           $stdout = old_stdout
         end
         stdout_lines = @stdout.split("\n")
-        JSON.parse(stdout_lines[stdout_lines.index('===== JSON =====') + 1..-1].join("\n")).transform_keys(&:to_sym)
+        JSON.parse(stdout_lines[stdout_lines.index('===== JSON =====') + 1..].join("\n")).transform_keys(&:to_sym)
       end
 
       # Call the reserve_proxmox_container script and get its result as JSON.
@@ -839,26 +814,26 @@ module HybridPlatformsConductorTest
       # Parameters::
       # * *expected_proxmox_actions* (Array<Array>): Expected Proxmox actions
       def expect_proxmox_actions_to_be(expected_proxmox_actions)
-        expect(@proxmox_actions.size).to eq(expected_proxmox_actions.size), <<~EOS
+        expect(@proxmox_actions.size).to eq(expected_proxmox_actions.size), <<~EO_ERROR_MESSAGE
           Expected #{expected_proxmox_actions.size} Proxmox actions, but got #{@proxmox_actions.size} instead:
           ----- Received:
           #{@proxmox_actions.map(&:inspect).join("\n")}
           ----- Expected:
           #{expected_proxmox_actions.map(&:inspect).join("\n")}
-        EOS
+        EO_ERROR_MESSAGE
         @proxmox_actions.zip(expected_proxmox_actions).each do |proxmox_action, expected_proxmox_action|
           expect(proxmox_action.size).to eq expected_proxmox_action.size
           expect(proxmox_action[0..1]).to eq expected_proxmox_action[0..1]
-          if proxmox_action.size >= 3
-            # The third argument is a Hash that might have Regexp in the expectation
-            expect(proxmox_action[2].keys.sort).to eq expected_proxmox_action[2].keys.sort
-            proxmox_action[2].each do |property, value|
-              expected_value = expected_proxmox_action[2][property]
-              if expected_value.is_a?(Regexp)
-                expect(value).to match expected_value
-              else
-                expect(value).to eq expected_value
-              end
+          next if proxmox_action.size < 3
+
+          # The third argument is a Hash that might have Regexp in the expectation
+          expect(proxmox_action[2].keys.sort).to eq expected_proxmox_action[2].keys.sort
+          proxmox_action[2].each do |property, value|
+            expected_value = expected_proxmox_action[2][property]
+            if expected_value.is_a?(Regexp)
+              expect(value).to match expected_value
+            else
+              expect(value).to eq expected_value
             end
           end
         end

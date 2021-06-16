@@ -8,7 +8,8 @@ module HybridPlatformsConductor
   # Object used to access the whole configuration
   class Config
 
-    include LoggerHelpers, Cleanroom
+    include Cleanroom
+    include LoggerHelpers
 
     class << self
 
@@ -35,6 +36,7 @@ module HybridPlatformsConductor
     # Directory of the definition of the platforms
     #   String
     attr_reader :hybrid_platforms_dir
+
     expose :hybrid_platforms_dir
 
     # List of expected failures info. Each info has the following properties:
@@ -60,7 +62,7 @@ module HybridPlatformsConductor
     # Parameters::
     # * *logger* (Logger): Logger to be used [default = Logger.new(STDOUT)]
     # * *logger_stderr* (Logger): Logger to be used for stderr [default = Logger.new(STDERR)]
-    def initialize(logger: Logger.new(STDOUT), logger_stderr: Logger.new(STDERR))
+    def initialize(logger: Logger.new($stdout), logger_stderr: Logger.new($stderr))
       init_loggers(logger, logger_stderr)
       @hybrid_platforms_dir = File.expand_path(ENV['hpc_platforms'].nil? ? '.' : ENV['hpc_platforms'])
       # Stack of the nodes selectors scopes
@@ -94,7 +96,7 @@ module HybridPlatformsConductor
       end
       # Call initializers if needed
       Config.mixin_initializers.each do |mixin_init_method|
-        self.send(mixin_init_method)
+        send(mixin_init_method)
       end
       include_config_from "#{@hybrid_platforms_dir}/hpc_config.rb"
     end
@@ -105,7 +107,7 @@ module HybridPlatformsConductor
     # * *dsl_file* (String): Path to the DSL file
     def include_config_from(dsl_file)
       log_debug "Include config from #{dsl_file}"
-      self.evaluate_file(dsl_file)
+      evaluate_file(dsl_file)
     end
     expose :include_config_from
 
@@ -116,6 +118,7 @@ module HybridPlatformsConductor
     # * *dir* (String): Directory containing the Dockerfile defining the image
     def os_image(image, dir)
       raise "OS image #{image} already defined to #{@os_images[image]}" if @os_images.key?(image)
+
       @os_images[image] = dir
     end
     expose :os_image

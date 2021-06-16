@@ -14,24 +14,24 @@ module HybridPlatformsConductorTest
       #   * Parameters::
       #     * *repositories* (Hash<String,String>): Path to the repositories, per repository name
       def with_repositories(names = [], as_git: false)
-        repositories = Hash[names.map { |name| [name, "#{Dir.tmpdir}/hpc_test/#{name}"] }]
-        repositories.values.each do |dir|
+        repositories = names.map { |name| [name, "#{Dir.tmpdir}/hpc_test/#{name}"] }.to_h
+        repositories.each_value do |dir|
           FileUtils.rm_rf dir
           FileUtils.mkdir_p dir
-          if as_git
-            git = Git.init(dir)
-            FileUtils.touch("#{dir}/test_file")
-            git.add('test_file')
-            git.config('user.name', 'Thats Me')
-            git.config('user.email', 'email@email.com')
-            git.commit('Test commit')
-            git.add_remote('origin', "https://my_remote.com/path/to/#{File.basename(dir)}.git")
-          end
+          next unless as_git
+
+          git = Git.init(dir)
+          FileUtils.touch("#{dir}/test_file")
+          git.add('test_file')
+          git.config('user.name', 'Thats Me')
+          git.config('user.email', 'email@email.com')
+          git.commit('Test commit')
+          git.add_remote('origin', "https://my_remote.com/path/to/#{File.basename(dir)}.git")
         end
         begin
           yield repositories
         ensure
-          repositories.values.each do |dir|
+          repositories.each_value do |dir|
             FileUtils.rm_rf dir
           end
         end
@@ -73,21 +73,28 @@ module HybridPlatformsConductorTest
       # Clean-up at the end.
       #
       # Parameters::
-      # * *platforms_info* (Hash<String,Object>): Platforms info for the test platform [default = {}]
-      # * *as_git* (Boolean): Do we initialize those repositories as Git repositories? [default = false]
-      # * *additional_platforms_content* (String): Additional platforms content to be added [default = '']
+      # * *platforms_info* (Hash<String,Object>): Platforms info for the test platform
+      # * *as_git* (Boolean): Do we initialize those repositories as Git repositories? [default: false]
+      # * *additional_config* (String): Additional config to be added [default: '']
       # * Proc: Code called with the environment ready
       #   * Parameters::
       #     * *repositories* (Hash<String,String>): Path to the repositories, per repository name
-      def with_test_platforms(platforms_info = {}, as_git = false, additional_platforms_content = '')
+      def with_test_platforms(platforms_info, as_git: false, additional_config: '')
         with_repositories(platforms_info.keys, as_git: as_git) do |repositories|
           platform_types = []
-          with_platforms(repositories.map do |platform, dir|
-            platform_type = platforms_info[platform].key?(:platform_type) ? platforms_info[platform][:platform_type] : :test
-            platform_types << platform_type unless platform_types.include?(platform_type)
-            "#{platform_type}_platform path: '#{dir}'"
-          end.join("\n") + "\n#{additional_platforms_content}") do
-            register_platform_handlers(Hash[platform_types.map { |platform_type| [platform_type, HybridPlatformsConductorTest::PlatformHandlerPlugins.const_get(platform_type.to_s.split('_').collect(&:capitalize).join.to_sym)] }])
+          with_platforms(
+            repositories.map do |platform, dir|
+              platform_type = platforms_info[platform].key?(:platform_type) ? platforms_info[platform][:platform_type] : :test
+              platform_types << platform_type unless platform_types.include?(platform_type)
+              "#{platform_type}_platform path: '#{dir}'"
+            end.join("\n") + "\n#{additional_config}"
+          ) do
+            register_platform_handlers(platform_types.map do |platform_type|
+              [
+                platform_type,
+                HybridPlatformsConductorTest::PlatformHandlerPlugins.const_get(platform_type.to_s.split('_').collect(&:capitalize).join.to_sym)
+              ]
+            end.to_h)
             self.test_platforms_info = platforms_info
             yield repositories
           end
@@ -98,15 +105,19 @@ module HybridPlatformsConductorTest
       # Clean-up at the end.
       #
       # Parameters::
-      # * *platform_info* (Hash<Symbol,Object>): Platform info for the test platform [default = {}]
-      # * *as_git* (Boolean): Do we initialize those repositories as Git repositories? [default = false]
-      # * *additional_platforms_content* (String): Additional platforms content to be added [default = '']
+      # * *platform_info* (Hash<Symbol,Object>): Platform info for the test platform
+      # * *as_git* (Boolean): Do we initialize those repositories as Git repositories? [default: false]
+      # * *additional_config* (String): Additional config to be added [default: '']
       # * Proc: Code called with the environment ready
       #   * Parameters::
       #     * *repository* (String): Path to the repository
-      def with_test_platform(platform_info = {}, as_git = false, additional_platforms_content = '')
+      def with_test_platform(platform_info, as_git: false, additional_config: '')
         platform_name = as_git ? 'my_remote_platform' : 'platform'
-        with_test_platforms({ platform_name => platform_info }, as_git, additional_platforms_content) do |repositories|
+        with_test_platforms(
+          { platform_name => platform_info },
+          as_git: as_git,
+          additional_config: additional_config
+        ) do |repositories|
           yield repositories[platform_name]
         end
       end
@@ -116,7 +127,7 @@ module HybridPlatformsConductorTest
       # Result::
       # * PlatformsHandler: PlatformsHandler on which we can do testing
       def test_platforms_handler
-        @platforms_handler = HybridPlatformsConductor::PlatformsHandler.new logger: logger, logger_stderr: logger, config: test_config, cmd_runner: test_cmd_runner unless @platforms_handler
+        @platforms_handler ||= HybridPlatformsConductor::PlatformsHandler.new logger: logger, logger_stderr: logger, config: test_config, cmd_runner: test_cmd_runner
         @platforms_handler
       end
 

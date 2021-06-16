@@ -38,7 +38,7 @@ module HybridPlatformsConductor
     # * *bitbucket_password* (String): Bitbucket password to be used when querying the API
     # * *logger* (Logger): Logger to be used [default = Logger.new(STDOUT)]
     # * *logger_stderr* (Logger): Logger to be used for stderr [default = Logger.new(STDERR)]
-    def initialize(bitbucket_url, bitbucket_user_name, bitbucket_password, logger: Logger.new(STDOUT), logger_stderr: Logger.new(STDERR))
+    def initialize(bitbucket_url, bitbucket_user_name, bitbucket_password, logger: Logger.new($stdout), logger_stderr: Logger.new($stderr))
       init_loggers(logger, logger_stderr)
       @bitbucket_url = bitbucket_url
       @bitbucket_user_name = bitbucket_user_name
@@ -106,10 +106,11 @@ module HybridPlatformsConductor
       http_response = nil
       loop do
         begin
-          http_response = URI.open(api_url, http_basic_authentication: [@bitbucket_user_name, @bitbucket_password])
+          http_response = URI.parse(api_url).open(http_basic_authentication: [@bitbucket_user_name, @bitbucket_password])
         rescue
-          raise if retries == 0
-          log_warn "Got error #{$!} on #{@bitbucket_user_name}@#{api_url}. Will retry #{retries} times..."
+          raise if retries.zero?
+
+          log_warn "Got error #{$ERROR_INFO} on #{@bitbucket_user_name}@#{api_url}. Will retry #{retries} times..."
           retries -= 1
           sleep 1
         end

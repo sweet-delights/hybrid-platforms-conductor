@@ -3,10 +3,10 @@ describe 'executables\' Nodes Handler options' do
   # Setup a platform for tests
   #
   # Parameters::
-  # * Proc: Code called when the platform is setup
+  # * *block* (Proc): Code called when the platform is setup
   #   * Parameters::
   #     * *repository* (String): Platform's repository
-  def with_test_platform_for_nodes_handler_options
+  def with_test_platform_for_nodes_handler_options(&block)
     with_test_platforms(
       {
         'platform_1' => {
@@ -41,13 +41,13 @@ describe 'executables\' Nodes Handler options' do
               }
             }
           },
-          nodes_lists: { 'my_list' => ['node11', 'node13'] }
+          nodes_lists: { 'my_list' => %w[node11 node13] }
         },
         'platform_2' => {
           nodes: {
             'node21' => {
               meta: { host_ip: '192.168.42.21' },
-              services: ['service2', 'service3']
+              services: %w[service2 service3]
             },
             'node22' => {
               meta: { host_ip: '192.168.42.22' },
@@ -55,10 +55,9 @@ describe 'executables\' Nodes Handler options' do
             }
           }
         }
-      }
-    ) do |repository|
-      yield repository
-    end
+      },
+      &block
+    )
   end
 
   it 'displays info about nodes' do
@@ -69,7 +68,7 @@ describe 'executables\' Nodes Handler options' do
       ] do
         exit_code, stdout, stderr = run 'run', '--show-nodes'
         expect(exit_code).to eq 0
-        expect(stdout).to eq <<~EOS
+        expect(stdout).to eq <<~EO_STDOUT
           * Known platforms:
           platform_1 - Type: test - Location: /tmp/hpc_test/platform_1
           platform_2 - Type: test - Location: /tmp/hpc_test/platform_2
@@ -102,7 +101,7 @@ describe 'executables\' Nodes Handler options' do
           node21 (192.168.42.21) - service2, service3 - 
           node22 (192.168.42.22) - service1 - 
 
-        EOS
+        EO_STDOUT
         expect(stderr).to eq ''
       end
     end
