@@ -1,3 +1,9 @@
+# [v33.0.1](https://github.com/sweet-delights/hybrid-platforms-conductor/compare/v33.0.0...v33.0.1) (2021-06-16 16:22:41)
+
+### Patches
+
+* [[#49] Added lint checks in CI and corrected all non acceptable lint errors](https://github.com/sweet-delights/hybrid-platforms-conductor/commit/b3188532e679f845f66966e7c8054ce8db63be26)
+
 # [v33.0.0](https://github.com/sweet-delights/hybrid-platforms-conductor/compare/v32.18.0...v33.0.0) (2021-06-15 16:10:47)
 
 ### Breaking changes
