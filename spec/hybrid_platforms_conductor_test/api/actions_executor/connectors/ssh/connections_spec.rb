@@ -18,7 +18,7 @@ describe HybridPlatformsConductor::ActionsExecutor do
             [
               ['which env', proc { [0, "/usr/bin/env\n", ''] }],
               ['ssh -V 2>&1', proc { [0, "OpenSSH_7.4p1 Debian-10+deb9u7, OpenSSL 1.0.2u  20 Dec 2019\n", ''] }]
-            ] + ssh_expected_commands_for('node' => { connection: '192.168.42.42', user: 'test_user' })
+            ] + ssh_expected_commands_for({ 'node' => { connection: '192.168.42.42', user: 'test_user' } })
           ) do
             test_connector.ssh_user = 'test_user'
             test_connector.with_connection_to(['node']) do |connected_nodes|
@@ -82,8 +82,10 @@ describe HybridPlatformsConductor::ActionsExecutor do
               ['which env', proc { [0, "/usr/bin/env\n", ''] }],
               ['ssh -V 2>&1', proc { [0, "OpenSSH_7.4p1 Debian-10+deb9u7, OpenSSL 1.0.2u  20 Dec 2019\n", ''] }]
             ] + ssh_expected_commands_for(
-              'node1' => { connection: '192.168.42.1', user: 'test_user' },
-              'node3' => { connection: '192.168.42.3', user: 'test_user' }
+              {
+                'node1' => { connection: '192.168.42.1', user: 'test_user' },
+                'node3' => { connection: '192.168.42.3', user: 'test_user' }
+              }
             ) + ssh_expected_commands_for(
               {
                 'node2' => { connection: '192.168.42.2', user: 'test_user' }
@@ -115,9 +117,11 @@ describe HybridPlatformsConductor::ActionsExecutor do
               ['which env', proc { [0, "/usr/bin/env\n", ''] }],
               ['ssh -V 2>&1', proc { [0, "OpenSSH_7.4p1 Debian-10+deb9u7, OpenSSL 1.0.2u  20 Dec 2019\n", ''] }]
             ] + ssh_expected_commands_for(
-              'node1' => { connection: '192.168.42.1', user: 'test_user' },
-              'node2' => { connection: '192.168.42.2', user: 'test_user' },
-              'node3' => { connection: '192.168.42.3', user: 'test_user' }
+              {
+                'node1' => { connection: '192.168.42.1', user: 'test_user' },
+                'node2' => { connection: '192.168.42.2', user: 'test_user' },
+                'node3' => { connection: '192.168.42.3', user: 'test_user' }
+              }
             )
           ) do
             test_connector.ssh_user = 'test_user'
@@ -153,9 +157,11 @@ describe HybridPlatformsConductor::ActionsExecutor do
               ['which env', proc { [0, "/usr/bin/env\n", ''] }],
               ['ssh -V 2>&1', proc { [0, "OpenSSH_7.4p1 Debian-10+deb9u7, OpenSSL 1.0.2u  20 Dec 2019\n", ''] }]
             ] + ssh_expected_commands_for(
-              'node1' => { ip: '192.168.42.1', connection: '192.168.42.1_node1_13_node1_1', user: 'test_user_node1_13_node1_1' },
-              'node2' => { ip: '192.168.42.2', connection: '192.168.42.2', user: 'test_user' },
-              'node3' => { ip: '192.168.42.3', connection: '192.168.42.3_node3_13', user: 'test_user_node3_13' }
+              {
+                'node1' => { ip: '192.168.42.1', connection: '192.168.42.1_node1_13_node1_1', user: 'test_user_node1_13_node1_1' },
+                'node2' => { ip: '192.168.42.2', connection: '192.168.42.2', user: 'test_user' },
+                'node3' => { ip: '192.168.42.3', connection: '192.168.42.3_node3_13', user: 'test_user_node3_13' }
+              }
             )
           ) do
             test_connector.ssh_user = 'test_user'
@@ -217,8 +223,10 @@ describe HybridPlatformsConductor::ActionsExecutor do
               ['which env', proc { [0, "/usr/bin/env\n", ''] }],
               ['ssh -V 2>&1', proc { [0, "OpenSSH_7.4p1 Debian-10+deb9u7, OpenSSL 1.0.2u  20 Dec 2019\n", ''] }]
             ] + ssh_expected_commands_for(
-              'node1' => { connection: '192.168.42.1', user: 'test_user' },
-              'node3' => { connection: '192.168.42.3', user: 'test_user' }
+              {
+                'node1' => { connection: '192.168.42.1', user: 'test_user' },
+                'node3' => { connection: '192.168.42.3', user: 'test_user' }
+              }
             ) + ssh_expected_commands_for(
               {
                 'node2' => { connection: '192.168.42.2', user: 'test_user', control_master_create_error: 'Can\'t connect to 192.168.42.2' }
@@ -241,7 +249,7 @@ describe HybridPlatformsConductor::ActionsExecutor do
               ['which env', proc { [0, "/usr/bin/env\n", ''] }],
               ['ssh -V 2>&1', proc { [0, "OpenSSH_7.4p1 Debian-10+deb9u7, OpenSSL 1.0.2u  20 Dec 2019\n", ''] }]
             ] +
-              ssh_expected_commands_for('node' => { connection: '192.168.42.42', user: 'test_user' }) +
+              ssh_expected_commands_for({ 'node' => { connection: '192.168.42.42', user: 'test_user' } }) +
               ssh_expected_commands_for(
                 { 'node' => { connection: '192.168.42.42', user: 'test_user' } },
                 with_strict_host_key_checking: false,
@@ -276,12 +284,16 @@ describe HybridPlatformsConductor::ActionsExecutor do
               ['ssh -V 2>&1', proc { [0, "OpenSSH_7.4p1 Debian-10+deb9u7, OpenSSL 1.0.2u  20 Dec 2019\n", ''] }]
             ] +
               ssh_expected_commands_for(
-                'node1' => { connection: '192.168.42.1', user: 'test_user' },
-                'node3' => { connection: '192.168.42.3', user: 'test_user' }
+                {
+                  'node1' => { connection: '192.168.42.1', user: 'test_user' },
+                  'node3' => { connection: '192.168.42.3', user: 'test_user' }
+                }
               ) +
               ssh_expected_commands_for(
-                'node2' => { connection: '192.168.42.2', user: 'test_user' },
-                'node4' => { connection: '192.168.42.4', user: 'test_user' }
+                {
+                  'node2' => { connection: '192.168.42.2', user: 'test_user' },
+                  'node4' => { connection: '192.168.42.4', user: 'test_user' }
+                }
               ) +
               ssh_expected_commands_for(
                 {
@@ -443,7 +455,7 @@ describe HybridPlatformsConductor::ActionsExecutor do
               ['which env', proc { [0, "/usr/bin/env\n", ''] }],
               ['ssh -V 2>&1', proc { [0, "OpenSSH_7.4p1 Debian-10+deb9u7, OpenSSL 1.0.2u  20 Dec 2019\n", ''] }]
             ] +
-              ssh_expected_commands_for('node' => { connection: '192.168.42.42', user: 'test_user' }) +
+              ssh_expected_commands_for({ 'node' => { connection: '192.168.42.42', user: 'test_user' } }) +
               ssh_expected_commands_for(
                 { 'node' => { connection: '192.168.42.42', user: 'test_user' } },
                 with_strict_host_key_checking: false,
@@ -474,7 +486,7 @@ describe HybridPlatformsConductor::ActionsExecutor do
               ['which env', proc { [0, "/usr/bin/env\n", ''] }],
               ['ssh -V 2>&1', proc { [0, "OpenSSH_7.4p1 Debian-10+deb9u7, OpenSSL 1.0.2u  20 Dec 2019\n", ''] }]
             ] +
-              ssh_expected_commands_for('node' => { connection: '192.168.42.42', user: 'test_user' }) +
+              ssh_expected_commands_for({ 'node' => { connection: '192.168.42.42', user: 'test_user' } }) +
               ssh_expected_commands_for(
                 { 'node' => { connection: '192.168.42.42', user: 'test_user' } },
                 with_strict_host_key_checking: false,
@@ -512,7 +524,7 @@ describe HybridPlatformsConductor::ActionsExecutor do
             [
               ['which env', proc { [0, "/usr/bin/env\n", ''] }],
               ['ssh -V 2>&1', proc { [0, "OpenSSH_7.4p1 Debian-10+deb9u7, OpenSSL 1.0.2u  20 Dec 2019\n", ''] }]
-            ] + ssh_expected_commands_for('node' => { connection: '192.168.42.42', user: 'test_user' })
+            ] + ssh_expected_commands_for({ 'node' => { connection: '192.168.42.42', user: 'test_user' } })
           ) do
             test_connector.ssh_user = 'test_user'
             # Fake a ControlMaster file that is stalled
@@ -529,7 +541,7 @@ describe HybridPlatformsConductor::ActionsExecutor do
             [
               ['which env', proc { [0, "/usr/bin/env\n", ''] }],
               ['ssh -V 2>&1', proc { [0, "OpenSSH_7.4p1 Debian-10+deb9u7, OpenSSL 1.0.2u  20 Dec 2019\n", ''] }]
-            ] + ssh_expected_commands_for('node' => { connection: '192.168.42.42', user: 'test_user' })
+            ] + ssh_expected_commands_for({ 'node' => { connection: '192.168.42.42', user: 'test_user' } })
           ) do
             test_connector.ssh_user = 'test_user'
             # Fake a user that was not cleaned correctly
@@ -555,7 +567,7 @@ describe HybridPlatformsConductor::ActionsExecutor do
                   [255, '', "System is booting up. See pam_nologin(8)\nAuthentication failed.\n"]
                 end
               ]] * 3 +
-              ssh_expected_commands_for('node' => { connection: '192.168.42.42', user: 'test_user' })
+              ssh_expected_commands_for({ 'node' => { connection: '192.168.42.42', user: 'test_user' } })
           ) do
             test_connector.ssh_user = 'test_user'
             # To speed up the test, alter the wait time between retries.

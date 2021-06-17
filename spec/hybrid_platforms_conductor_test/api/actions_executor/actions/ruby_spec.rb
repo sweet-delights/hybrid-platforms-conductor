@@ -7,12 +7,14 @@ describe HybridPlatformsConductor::ActionsExecutor do
         executed = false
         expect(
           test_actions_executor.execute_actions(
-            'node' => {
-              ruby: proc do |stdout, stderr|
-                stdout << 'TestStdout'
-                stderr << 'TestStderr'
-                executed = true
-              end
+            {
+              'node' => {
+                ruby: proc do |stdout, stderr|
+                  stdout << 'TestStdout'
+                  stderr << 'TestStderr'
+                  executed = true
+                end
+              }
             }
           )['node']
         ).to eq [0, 'TestStdout', 'TestStderr']
@@ -63,13 +65,15 @@ describe HybridPlatformsConductor::ActionsExecutor do
         executed = false
         expect(
           test_actions_executor.execute_actions(
-            'node' => {
-              ruby: proc do |stdout, stderr, action|
-                expect(action.is_a?(HybridPlatformsConductor::HpcPlugins::Action::Ruby)).to eq true
-                stdout << 'TestStdout'
-                stderr << 'TestStderr'
-                executed = true
-              end
+            {
+              'node' => {
+                ruby: proc do |stdout, stderr, action|
+                  expect(action.is_a?(HybridPlatformsConductor::HpcPlugins::Action::Ruby)).to eq true
+                  stdout << 'TestStdout'
+                  stderr << 'TestStderr'
+                  executed = true
+                end
+              }
             }
           )['node']
         ).to eq [0, 'TestStdout', 'TestStderr']
@@ -82,15 +86,17 @@ describe HybridPlatformsConductor::ActionsExecutor do
         executed = false
         expect(
           test_actions_executor.execute_actions(
-            'node' => {
-              ruby: {
-                code: proc do |stdout, stderr, _action, connector|
-                  expect(connector.is_a?(HybridPlatformsConductorTest::TestConnector)).to eq true
-                  stdout << 'TestStdout'
-                  stderr << 'TestStderr'
-                  executed = true
-                end,
-                need_remote: true
+            {
+              'node' => {
+                ruby: {
+                  code: proc do |stdout, stderr, _action, connector|
+                    expect(connector.is_a?(HybridPlatformsConductorTest::TestConnector)).to eq true
+                    stdout << 'TestStdout'
+                    stderr << 'TestStderr'
+                    executed = true
+                  end,
+                  need_remote: true
+                }
               }
             }
           )['node']
@@ -104,15 +110,17 @@ describe HybridPlatformsConductor::ActionsExecutor do
         executed = false
         expect(
           test_actions_executor.execute_actions(
-            'node' => {
-              ruby: {
-                code: proc do |stdout, stderr, _action, connector|
-                  expect(connector).to be_nil
-                  stdout << 'TestStdout'
-                  stderr << 'TestStderr'
-                  executed = true
-                end,
-                need_remote: false
+            {
+              'node' => {
+                ruby: {
+                  code: proc do |stdout, stderr, _action, connector|
+                    expect(connector).to be_nil
+                    stdout << 'TestStdout'
+                    stderr << 'TestStderr'
+                    executed = true
+                  end,
+                  need_remote: false
+                }
               }
             }
           )['node']

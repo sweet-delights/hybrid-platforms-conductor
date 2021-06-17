@@ -13,10 +13,12 @@ describe HybridPlatformsConductor::ActionsExecutor do
     it 'executes an action without timeout' do
       with_test_platform_for_timeouts_tests do
         expect(test_actions_executor.execute_actions(
-          'node' => { test_action: { code: proc do |stdout, _stderr, action|
-            expect(action.timeout).to eq nil
-            stdout << 'Hello'
-          end } }
+          {
+            'node' => { test_action: { code: proc do |stdout, _stderr, action|
+              expect(action.timeout).to eq nil
+              stdout << 'Hello'
+            end } }
+          }
         )['node']).to eq [0, 'Hello', '']
       end
     end
