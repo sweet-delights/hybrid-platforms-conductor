@@ -36,6 +36,7 @@ module HybridPlatformsConductorTest
       @accept_nodes = []
       @connected_nodes = nil
       @remote_bash_code = nil
+      @remote_copy_code = nil
     end
 
     # Complete an option parser with options meant to control this connector

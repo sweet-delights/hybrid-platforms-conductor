@@ -6,6 +6,7 @@ require 'hybrid_platforms_conductor/actions_executor'
 require 'hybrid_platforms_conductor/cmd_runner'
 require 'hybrid_platforms_conductor/credentials'
 require 'hybrid_platforms_conductor/deployer'
+require 'hybrid_platforms_conductor/executable'
 require 'hybrid_platforms_conductor/log'
 require 'hybrid_platforms_conductor/nodes_handler'
 require 'hybrid_platforms_conductor/platform_handler'
@@ -160,6 +161,23 @@ module HybridPlatformsConductorTest
           }
         )
       end
+
+      config.around do |example|
+        # Make sure we activate warnings for the example to be run
+        org_warnings = false
+        RSpec.configure do |rspec_config|
+          org_warnings = rspec_config.warnings?
+          rspec_config.warnings = true
+        end
+        begin
+          expect { example.run }.not_to output.to_stderr
+        ensure
+          RSpec.configure do |rspec_config|
+            rspec_config.warnings = org_warnings
+          end
+        end
+      end
+
     end
 
     private
