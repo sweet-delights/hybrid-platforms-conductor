@@ -12,6 +12,7 @@ describe HybridPlatformsConductor::HpcPlugins::PlatformHandler::ServerlessChef d
     # * *export* (Boolean): Are we expecting the chef export stage? [default: true]
     # * *data_bags* (Boolean): Do we expect data bags copy? [default: false]
     # * *env* (String): Expected environment being packaged [default: 'prod']
+    # * *cookbook_metadata* (Hash<String, Hash>): JSON metadata to generate for packaged cookbooks [default: {}]
     # * *block* (Proc): Code called with mock in place
     def with_packaging_mocked(
       repository,
@@ -21,6 +22,7 @@ describe HybridPlatformsConductor::HpcPlugins::PlatformHandler::ServerlessChef d
       export: true,
       data_bags: false,
       env: 'prod',
+      cookbook_metadata: {},
       &block
     )
       with_cmd_runner_mocked(
@@ -49,8 +51,14 @@ describe HybridPlatformsConductor::HpcPlugins::PlatformHandler::ServerlessChef d
             [
               %r{^cd #{Regexp.escape(repository)} &&\s+sudo rm -rf dist/#{Regexp.escape(env)}/#{Regexp.escape(policy)} &&\s+/opt/chef-workstation/bin/chef export #{Regexp.escape(policy_file)} dist/#{Regexp.escape(env)}/#{Regexp.escape(policy)} --chef-license accept#{data_bags ? " && cp -ar data_bags/ dist/#{Regexp.escape(env)}/#{Regexp.escape(policy)}/" : ''}$},
               proc do
-                FileUtils.mkdir_p "#{repository}/dist/#{env}/#{policy}"
-                FileUtils.cp_r("#{repository}/data_bags", "#{repository}/dist/#{env}/#{policy}/") if data_bags
+                package_dir = "#{repository}/dist/#{env}/#{policy}"
+                FileUtils.mkdir_p package_dir
+                FileUtils.cp_r("#{repository}/data_bags", "#{package_dir}/") if data_bags
+                cookbook_metadata.each do |cookbook, metadata|
+                  metadata_file = "#{package_dir}/cookbook_artifacts/#{cookbook}/metadata.json"
+                  FileUtils.mkdir_p File.dirname(metadata_file)
+                  File.write(metadata_file, metadata.to_json)
+                end
                 [0, 'Chef export done', '']
               end
             ]
@@ -80,6 +88,9 @@ describe HybridPlatformsConductor::HpcPlugins::PlatformHandler::ServerlessChef d
         with_serverless_chef_platforms('1_node') do |platform, repository|
           with_packaging_mocked(repository) do
             platform.package(services: { 'node' => %w[test_policy] }, secrets: {}, local_environment: false)
+            gems_file = "#{repository}/dist/prod/test_policy/gems.json"
+            expect(File.exist?(gems_file)).to eq true
+            expect(JSON.parse(File.read(gems_file))).to eq []
           end
         end
       end
@@ -206,6 +217,41 @@ describe HybridPlatformsConductor::HpcPlugins::PlatformHandler::ServerlessChef d
           end
           with_cmd_runner_mocked([]) do
             platform.package(services: { 'node2' => %w[test_policy_1] }, secrets: {}, local_environment: false)
+          end
+        end
+      end
+
+    end
+
+    context 'with a platform having several cookbooks' do
+
+      it 'generates the gems info to be installed' do
+        with_serverless_chef_platforms('several_cookbooks') do |platform, repository|
+          with_packaging_mocked(
+            repository,
+            policy: 'test_policy_1',
+            cookbook_metadata: {
+              'test_cookbook_1' => {
+                gems: [
+                  ['my_gem_1', '0.0.1'],
+                  ['my_gem_2', '0.0.2']
+                ]
+              },
+              'dependency_cookbook' => {
+                gems: [
+                  ['my_gem_3', '~> 1.3']
+                ]
+              }
+            }
+          ) do
+            platform.package(services: { 'node1' => %w[test_policy_1] }, secrets: {}, local_environment: false)
+            gems_file = "#{repository}/dist/prod/test_policy_1/gems.json"
+            expect(File.exist?(gems_file)).to eq true
+            expect(JSON.parse(File.read(gems_file)).sort).to eq [
+              ['my_gem_1', '0.0.1'],
+              ['my_gem_2', '0.0.2'],
+              ['my_gem_3', '~> 1.3']
+            ].sort
           end
         end
       end

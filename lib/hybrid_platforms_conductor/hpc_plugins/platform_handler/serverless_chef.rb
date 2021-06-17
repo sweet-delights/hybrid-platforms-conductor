@@ -179,6 +179,13 @@ module HybridPlatformsConductor
               /opt/chef-workstation/bin/chef export #{policy_file} #{package_dir} --chef-license accept#{extra_cp_data_bags}"
             next if @cmd_runner.dry_run
 
+            # Write the list of gems to be installed for this package
+            File.write(
+              "#{@repository_path}/#{package_dir}/gems.json",
+              Dir.glob("#{@repository_path}/#{package_dir}/cookbook_artifacts/*/metadata.json").map do |metadata|
+                JSON.parse(File.read(metadata))['gems']
+              end.flatten(1).to_json
+            )
             # Create secrets file
             secrets_file = "#{@repository_path}/#{package_dir}/data_bags/hpc_secrets/hpc_secrets.json"
             FileUtils.mkdir_p(File.dirname(secrets_file))
@@ -225,6 +232,8 @@ module HybridPlatformsConductor
             FileUtils.mkdir_p "#{package_dir}/nodes"
             File.write("#{package_dir}/nodes/#{node}.json", (known_nodes.include?(node) ? metadata_for(node) : {}).merge(@nodes_handler.metadata_of(node)).to_json)
           end
+          # Get the gems to be installed
+          gems_to_install = JSON.parse(File.read("#{package_dir}/gems.json"))
           client_options = [
             '--local-mode',
             '--chef-license', 'accept',
@@ -233,7 +242,19 @@ module HybridPlatformsConductor
           client_options << '--why-run' if use_why_run
           if @nodes_handler.get_use_local_chef_of(node)
             # Just run the chef-client directly from the packaged repository
-            [{ bash: "cd #{package_dir} && #{@cmd_runner.root? ? '' : 'sudo '}SSL_CERT_DIR=/etc/ssl/certs /opt/chef-workstation/bin/chef-client #{client_options.join(' ')}" }]
+            sudo_prefix = @cmd_runner.root? ? '' : 'sudo '
+            [
+              {
+                bash: [
+                  'set -e',
+                  "cd #{package_dir}"
+                ] +
+                  gems_to_install.map { |(gem_name, gem_version)| "#{sudo_prefix}SSL_CERT_DIR=/etc/ssl/certs /opt/chef-workstation/bin/chef gem install #{gem_name} --version \"#{gem_version}\"" } +
+                  [
+                    "#{sudo_prefix}SSL_CERT_DIR=/etc/ssl/certs /opt/chef-workstation/bin/chef-client #{client_options.join(' ')}"
+                  ]
+              }
+            ]
           else
             # Upload the package and run it from the node
             package_name = File.basename(package_dir)
@@ -261,10 +282,14 @@ module HybridPlatformsConductor
                 scp: { package_dir => './hpc_deploy' },
                 remote_bash: [
                   'set -e',
-                  "cd ./hpc_deploy/#{package_name}",
-                  "#{sudo}SSL_CERT_DIR=/etc/ssl/certs /opt/chef/bin/chef-client #{client_options.join(' ')}",
-                  'cd ..'
-                ] + (log_debug? ? [] : ["#{sudo}rm -rf ./hpc_deploy/#{package_name}"])
+                  "cd ./hpc_deploy/#{package_name}"
+                ] +
+                  gems_to_install.map { |(gem_name, gem_version)| "#{sudo}SSL_CERT_DIR=/etc/ssl/certs /opt/chef/embedded/bin/gem install #{gem_name} --version \"#{gem_version}\"" } +
+                  [
+                    "#{sudo}SSL_CERT_DIR=/etc/ssl/certs /opt/chef/bin/chef-client #{client_options.join(' ')}",
+                    'cd ..'
+                  ] +
+                  (log_debug? ? [] : ["#{sudo}rm -rf ./hpc_deploy/#{package_name}"])
               }
             ]
           end
