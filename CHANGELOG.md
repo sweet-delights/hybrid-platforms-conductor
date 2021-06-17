@@ -1,3 +1,9 @@
+# [v33.0.3](https://github.com/sweet-delights/hybrid-platforms-conductor/compare/v33.0.2...v33.0.3) (2021-06-17 12:42:32)
+
+### Patches
+
+* [[#49] Corrected minor warnings and added tests that no warning occurs anymore in rspec](https://github.com/sweet-delights/hybrid-platforms-conductor/commit/57e9936da05431ca469a98d7f079211d9278574f)
+
 # [v33.0.2](https://github.com/sweet-delights/hybrid-platforms-conductor/compare/v33.0.1...v33.0.2) (2021-06-17 11:15:29)
 
 ### Patches
