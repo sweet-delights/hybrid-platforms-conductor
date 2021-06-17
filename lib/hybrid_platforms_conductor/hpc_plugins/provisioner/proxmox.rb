@@ -221,7 +221,7 @@ module HybridPlatformsConductor
         #   * *:exited*: The instance has run and is now stopped
         #   * *:error*: The instance is in error
         def state
-          if @lxc_details.nil?
+          if !defined?(@lxc_details) || @lxc_details.nil?
             :missing
           else
             status = nil
