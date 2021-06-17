@@ -1,3 +1,9 @@
+# [v33.0.2](https://github.com/sweet-delights/hybrid-platforms-conductor/compare/v33.0.1...v33.0.2) (2021-06-17 11:15:29)
+
+### Patches
+
+* [[#49] Corrected warnings to prepare migration to Ruby 3](https://github.com/sweet-delights/hybrid-platforms-conductor/commit/8f3e758a881dcd988540d660b2df8a38fe39d1ca)
+
 # [v33.0.1](https://github.com/sweet-delights/hybrid-platforms-conductor/compare/v33.0.0...v33.0.1) (2021-06-16 16:22:41)
 
 ### Patches
