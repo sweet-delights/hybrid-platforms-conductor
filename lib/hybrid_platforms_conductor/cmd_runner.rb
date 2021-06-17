@@ -130,18 +130,20 @@ module HybridPlatformsConductor
               (log_to_stdout ? [@logger_stderr] : []) +
               (file_output.nil? ? [] : [file_output])
           ) do
-            cmd_result = TTY::Command.new(
-              printer: :null,
-              pty: true,
-              timeout: timeout,
-              uuid: false
-            ).run!(cmd) do |stdout, stderr|
-              stdout_queue << stdout if stdout
-              stderr_queue << stderr if stderr
+            Bundler.with_unbundled_env do
+              cmd_result = TTY::Command.new(
+                printer: :null,
+                pty: true,
+                timeout: timeout,
+                uuid: false
+              ).run!(cmd) do |stdout, stderr|
+                stdout_queue << stdout if stdout
+                stderr_queue << stderr if stderr
+              end
+              exit_status = cmd_result.exit_status
+              cmd_stdout = cmd_result.out
+              cmd_stderr = cmd_result.err
             end
-            exit_status = cmd_result.exit_status
-            cmd_stdout = cmd_result.out
-            cmd_stderr = cmd_result.err
           end
         rescue TTY::Command::TimeoutExceeded
           exit_status = :timeout

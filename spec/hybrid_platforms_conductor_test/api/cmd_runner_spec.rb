@@ -45,6 +45,12 @@ describe HybridPlatformsConductor::CmdRunner do
     end
   end
 
+  it 'runs a command in an un-bundled environment' do
+    with_repository do
+      expect(test_cmd_runner.run_cmd('echo "${BUNDLE_GEMFILE}"')).to eq [0, "\n", '']
+    end
+  end
+
   it 'fails when the command does not exit 0' do
     with_repository do
       expect { test_cmd_runner.run_cmd 'exit 1' }.to raise_error(HybridPlatformsConductor::CmdRunner::UnexpectedExitCodeError, 'Command \'exit 1\' returned error code 1 (expected 0).')
