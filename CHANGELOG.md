@@ -1,3 +1,15 @@
+# [v33.1.0](https://github.com/sweet-delights/hybrid-platforms-conductor/compare/v33.0.4...v33.1.0) (2021-06-18 11:37:28)
+
+## Global changes
+### Patches
+
+* [[Feature(connector_local)] [#68] Add sudo support when copying files using the local connector](https://github.com/sweet-delights/hybrid-platforms-conductor/commit/7725beca4429de0e81bcac0c0ac4fe149e625da2)
+
+## Changes for connector_local
+### Features
+
+* [[Feature(connector_local)] [#68] Add sudo support when copying files using the local connector](https://github.com/sweet-delights/hybrid-platforms-conductor/commit/7725beca4429de0e81bcac0c0ac4fe149e625da2)
+
 # [v33.0.4](https://github.com/sweet-delights/hybrid-platforms-conductor/compare/v33.0.3...v33.0.4) (2021-06-18 10:09:57)
 
 ## Global changes
