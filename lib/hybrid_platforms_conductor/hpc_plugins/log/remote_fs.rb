@@ -121,7 +121,9 @@ module HybridPlatformsConductor
           # ...
           # ===== STDERR =====
           # ...
-          if exit_status.is_a?(Symbol)
+          if @cmd_runner.dry_run
+            { error: 'No log to show in dry-run mode' }
+          elsif exit_status.is_a?(Symbol)
             { error: "Error: #{exit_status}\n#{stderr}" }
           else
             stdout_lines = stdout.split("\n")

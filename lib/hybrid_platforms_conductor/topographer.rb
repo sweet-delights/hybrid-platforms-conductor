@@ -304,7 +304,8 @@ module HybridPlatformsConductor
 
     # Define clusters of ips with 24 bits ranges.
     def define_clusters_ip_24
-      @nodes_graph.each_key do |node_name|
+      # Clone keys as we modify the hash in the loop
+      @nodes_graph.keys.clone.each do |node_name|
         next unless @nodes_graph[node_name][:type] == :node && !@node_metadata[node_name][:private_ips].nil? && !@node_metadata[node_name][:private_ips].empty?
 
         ip_24 = "#{@node_metadata[node_name][:private_ips].first.split('.')[0..2].join('.')}.0/24"

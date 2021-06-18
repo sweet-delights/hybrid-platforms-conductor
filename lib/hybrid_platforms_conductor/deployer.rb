@@ -146,6 +146,7 @@ module HybridPlatformsConductor
             logger: @logger,
             logger_stderr: @logger_stderr,
             config: @config,
+            cmd_runner: @cmd_runner,
             nodes_handler: @nodes_handler,
             actions_executor: @actions_executor
           )
