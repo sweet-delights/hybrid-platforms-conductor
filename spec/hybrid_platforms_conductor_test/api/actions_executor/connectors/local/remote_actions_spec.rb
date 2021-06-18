@@ -87,6 +87,43 @@ describe HybridPlatformsConductor::ActionsExecutor do
         end
       end
 
+      it 'does not copy files remotely in dry-run mode' do
+        with_test_platform_for_remote_testing do
+          test_cmd_runner.dry_run = true
+          expect(FileUtils).not_to receive(:cp_r)
+          test_connector.remote_copy('/path/to/src.file', '/remote_path/to/dst.dir')
+        end
+      end
+
+      it 'copies files remotely with sudo' do
+        with_test_platform_for_remote_testing(
+          expected_cmds: [
+            [
+              'sudo -u root cp -r "/path/to/src.file" "/remote_path/to/dst.dir"',
+              proc { [0, '', ''] }
+            ]
+          ]
+        ) do
+          test_connector.remote_copy('/path/to/src.file', '/remote_path/to/dst.dir', sudo: true)
+        end
+      end
+
+      it 'copies files remotely with a different sudo' do
+        with_test_platform_for_remote_testing(
+          expected_cmds: [
+            [
+              'other_sudo --user root cp -r "/path/to/src.file" "/remote_path/to/dst.dir"',
+              proc { [0, '', ''] }
+            ]
+          ],
+          additional_config: <<~'EO_CONFIG'
+            sudo_for { |user| "other_sudo --user #{user}" }
+          EO_CONFIG
+        ) do
+          test_connector.remote_copy('/path/to/src.file', '/remote_path/to/dst.dir', sudo: true)
+        end
+      end
+
       it 'copies files remotely with timeout' do
         with_test_platform_for_remote_testing(
           timeout: 5
@@ -100,6 +137,35 @@ describe HybridPlatformsConductor::ActionsExecutor do
         with_test_platform_for_remote_testing do
           expect(FileUtils).to receive(:cp_r).with('/path/to/src.file', '/tmp/hpc_local_workspaces/node/to/dst.dir')
           test_connector.remote_copy('/path/to/src.file', 'to/dst.dir')
+        end
+      end
+
+      it 'copies relative files remotely with sudo' do
+        with_test_platform_for_remote_testing(
+          expected_cmds: [
+            [
+              'sudo -u root cp -r "/path/to/src.file" "/tmp/hpc_local_workspaces/node/to/dst.dir"',
+              proc { [0, '', ''] }
+            ]
+          ]
+        ) do
+          test_connector.remote_copy('/path/to/src.file', 'to/dst.dir', sudo: true)
+        end
+      end
+
+      it 'copies relative files remotely with a different sudo' do
+        with_test_platform_for_remote_testing(
+          expected_cmds: [
+            [
+              'other_sudo --user root cp -r "/path/to/src.file" "/tmp/hpc_local_workspaces/node/to/dst.dir"',
+              proc { [0, '', ''] }
+            ]
+          ],
+          additional_config: <<~'EO_CONFIG'
+            sudo_for { |user| "other_sudo --user #{user}" }
+          EO_CONFIG
+        ) do
+          test_connector.remote_copy('/path/to/src.file', 'to/dst.dir', sudo: true)
         end
       end
 
