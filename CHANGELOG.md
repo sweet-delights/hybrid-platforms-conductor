@@ -1,3 +1,9 @@
+# [v33.1.1](https://github.com/sweet-delights/hybrid-platforms-conductor/compare/v33.1.0...v33.1.1) (2021-06-18 13:19:39)
+
+### Patches
+
+* [[Fix] Corrected bugs on log remote_fs plugin not working in dry-run and topographer](https://github.com/sweet-delights/hybrid-platforms-conductor/commit/90dcde919b6fc99b8f79fc642fef8b4150a5a9d6)
+
 # [v33.1.0](https://github.com/sweet-delights/hybrid-platforms-conductor/compare/v33.0.4...v33.1.0) (2021-06-18 11:37:28)
 
 ## Global changes
