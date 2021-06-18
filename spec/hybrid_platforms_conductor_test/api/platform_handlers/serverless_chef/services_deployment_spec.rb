@@ -285,7 +285,7 @@ describe HybridPlatformsConductor::HpcPlugins::PlatformHandler::ServerlessChef d
               bash: [
                 'set -e',
                 "cd #{repository}/dist/prod/test_policy_1",
-                "sudo SSL_CERT_DIR=/etc/ssl/certs /opt/chef-workstation/bin/chef-client --local-mode --chef-license accept --json-attributes nodes/local.json"
+                'sudo SSL_CERT_DIR=/etc/ssl/certs /opt/chef-workstation/bin/chef-client --local-mode --chef-license accept --json-attributes nodes/local.json'
               ]
             }
           ]
