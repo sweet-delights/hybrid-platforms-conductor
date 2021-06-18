@@ -1,3 +1,15 @@
+# [v33.0.4](https://github.com/sweet-delights/hybrid-platforms-conductor/compare/v33.0.3...v33.0.4) (2021-06-18 10:09:57)
+
+## Global changes
+### Patches
+
+* [[Fix(cmd_runner)] [#69] Make sure commands are run in unbundled env](https://github.com/sweet-delights/hybrid-platforms-conductor/commit/0795c1ffdcf1b355c9dc91423bb6b7d88918fcf7)
+
+## Changes for cmd_runner
+### Patches
+
+* [[Fix(cmd_runner)] [#69] Make sure commands are run in unbundled env](https://github.com/sweet-delights/hybrid-platforms-conductor/commit/0795c1ffdcf1b355c9dc91423bb6b7d88918fcf7)
+
 # [v33.0.3](https://github.com/sweet-delights/hybrid-platforms-conductor/compare/v33.0.2...v33.0.3) (2021-06-17 12:42:32)
 
 ### Patches
