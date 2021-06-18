@@ -50,7 +50,9 @@ module HybridPlatformsConductor
         # [API] - @stdout_io can be used to send stdout output
         # [API] - @stderr_io can be used to send stderr output
         def remote_interactive
-          system "cd #{workspace_for(@node)} ; /bin/bash"
+          Bundler.with_unbundled_env do
+            system "cd #{workspace_for(@node)} ; /bin/bash"
+          end
         end
 
         # rubocop:disable Lint/UnusedMethodArgument
