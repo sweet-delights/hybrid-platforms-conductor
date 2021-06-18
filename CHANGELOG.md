@@ -1,3 +1,15 @@
+# [v33.2.0](https://github.com/sweet-delights/hybrid-platforms-conductor/compare/v33.1.1...v33.2.0) (2021-06-18 23:22:21)
+
+## Global changes
+### Patches
+
+* [[Feature(platform_handler_serverless_chef)] [#70] Install dependency gems from cookbook metadata before calling chef-client](https://github.com/sweet-delights/hybrid-platforms-conductor/commit/6dfe7aa053db63489f3d0a236433304606051ecd)
+
+## Changes for platform_handler_serverless_chef
+### Features
+
+* [[Feature(platform_handler_serverless_chef)] [#70] Install dependency gems from cookbook metadata before calling chef-client](https://github.com/sweet-delights/hybrid-platforms-conductor/commit/6dfe7aa053db63489f3d0a236433304606051ecd)
+
 # [v33.1.1](https://github.com/sweet-delights/hybrid-platforms-conductor/compare/v33.1.0...v33.1.1) (2021-06-18 13:19:39)
 
 ### Patches
