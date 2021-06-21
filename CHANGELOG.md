@@ -1,3 +1,15 @@
+# [v33.2.2](https://github.com/sweet-delights/hybrid-platforms-conductor/compare/v33.2.1...v33.2.2) (2021-06-21 12:41:35)
+
+## Global changes
+### Patches
+
+* [[Hotfix(cmd_runner)] Retain dynamically set environment while executing commands](https://github.com/sweet-delights/hybrid-platforms-conductor/commit/d709d5d2871e43196cc1f5f9eaf5b2155b34ed4e)
+
+## Changes for cmd_runner
+### Patches
+
+* [[Hotfix(cmd_runner)] Retain dynamically set environment while executing commands](https://github.com/sweet-delights/hybrid-platforms-conductor/commit/d709d5d2871e43196cc1f5f9eaf5b2155b34ed4e)
+
 # [v33.2.1](https://github.com/sweet-delights/hybrid-platforms-conductor/compare/v33.2.0...v33.2.1) (2021-06-21 10:23:51)
 
 ## Global changes
