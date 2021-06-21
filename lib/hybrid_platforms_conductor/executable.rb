@@ -1,4 +1,6 @@
 require 'English'
+require 'bundler'
+require 'hybrid_platforms_conductor/core_extensions/bundler/without_bundled_env'
 require 'optparse'
 require 'logger'
 require 'hybrid_platforms_conductor/config'

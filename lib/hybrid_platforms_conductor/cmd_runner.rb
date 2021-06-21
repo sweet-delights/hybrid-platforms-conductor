@@ -130,7 +130,7 @@ module HybridPlatformsConductor
               (log_to_stdout ? [@logger_stderr] : []) +
               (file_output.nil? ? [] : [file_output])
           ) do
-            Bundler.with_unbundled_env do
+            Bundler.without_bundled_env do
               cmd_result = TTY::Command.new(
                 printer: :null,
                 pty: true,

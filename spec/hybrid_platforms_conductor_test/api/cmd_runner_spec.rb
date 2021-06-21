@@ -51,6 +51,14 @@ describe HybridPlatformsConductor::CmdRunner do
     end
   end
 
+  it 'keeps dynamically set environment' do
+    with_repository do
+      value = ('a'..'z').to_a.sample(8).join
+      ENV['hpc_test_new_variable'] = value
+      expect(test_cmd_runner.run_cmd('echo "${hpc_test_new_variable}"')).to eq [0, "#{value}\n", '']
+    end
+  end
+
   it 'fails when the command does not exit 0' do
     with_repository do
       expect { test_cmd_runner.run_cmd 'exit 1' }.to raise_error(HybridPlatformsConductor::CmdRunner::UnexpectedExitCodeError, 'Command \'exit 1\' returned error code 1 (expected 0).')
