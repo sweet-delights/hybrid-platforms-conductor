@@ -227,13 +227,14 @@ module HybridPlatformsConductor
         # * Array< Hash<Symbol,Object> >: List of actions to be done
         def actions_to_deploy_on(node, service, use_why_run: true)
           package_dir = "#{@repository_path}/dist/#{@local_env ? 'local' : 'prod'}/#{service}"
+          gems_to_install = []
           # Generate the nodes attributes file
           unless @cmd_runner.dry_run
             FileUtils.mkdir_p "#{package_dir}/nodes"
             File.write("#{package_dir}/nodes/#{node}.json", (known_nodes.include?(node) ? metadata_for(node) : {}).merge(@nodes_handler.metadata_of(node)).to_json)
+            # Get the gems to be installed
+            gems_to_install = JSON.parse(File.read("#{package_dir}/gems.json"))
           end
-          # Get the gems to be installed
-          gems_to_install = JSON.parse(File.read("#{package_dir}/gems.json"))
           client_options = [
             '--local-mode',
             '--chef-license', 'accept',
