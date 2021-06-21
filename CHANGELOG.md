@@ -1,3 +1,15 @@
+# [v33.2.1](https://github.com/sweet-delights/hybrid-platforms-conductor/compare/v33.2.0...v33.2.1) (2021-06-21 10:23:51)
+
+## Global changes
+### Patches
+
+* [[Hotfix(platform_handler_serverless_chef)] Corrected dry-run mode not working](https://github.com/sweet-delights/hybrid-platforms-conductor/commit/4800a0f4255c1999eed33651c1e66c445acd17bb)
+
+## Changes for platform_handler_serverless_chef
+### Patches
+
+* [[Hotfix(platform_handler_serverless_chef)] Corrected dry-run mode not working](https://github.com/sweet-delights/hybrid-platforms-conductor/commit/4800a0f4255c1999eed33651c1e66c445acd17bb)
+
 # [v33.2.0](https://github.com/sweet-delights/hybrid-platforms-conductor/compare/v33.1.1...v33.2.0) (2021-06-18 23:22:21)
 
 ## Global changes
