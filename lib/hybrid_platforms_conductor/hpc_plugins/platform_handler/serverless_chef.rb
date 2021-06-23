@@ -263,7 +263,7 @@ module HybridPlatformsConductor
             raise "Missing file #{chef_versions_file} specifying the Chef Infra Client version to be deployed" unless File.exist?(chef_versions_file)
 
             required_chef_client_version = YAML.load_file(chef_versions_file)['client']
-            sudo = (@actions_executor.connector(:ssh).ssh_user == 'root' ? '' : "#{@nodes_handler.sudo_on(node)} ")
+            sudo = (@actions_executor.connector(:ssh).ssh_user == 'root' ? '' : "#{@nodes_handler.sudo_on(node)} -E ")
             [
               {
                 # Install dependencies

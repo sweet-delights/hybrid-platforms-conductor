@@ -35,7 +35,7 @@ describe HybridPlatformsConductor::HpcPlugins::PlatformHandler::ServerlessChef d
     def expected_actions_to_deploy_chef(
       repository,
       check_mode: false,
-      sudo: 'sudo -u root ',
+      sudo: 'sudo -u root -E ',
       env: 'prod',
       policy: 'test_policy',
       node: 'node',
