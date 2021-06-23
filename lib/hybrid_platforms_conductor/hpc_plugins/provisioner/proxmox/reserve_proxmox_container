@@ -34,6 +34,7 @@
 #   * *hpc_password_for_proxmox*: Password to be used to query Proxmox API
 #   * *hpc_realm_for_proxmox*: Realm used to connect to the Proxmox API [default = 'pam']
 
+require 'English'
 require 'json'
 
 reserved_resource = nil
