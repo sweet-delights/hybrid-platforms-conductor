@@ -1,3 +1,16 @@
+# [v33.2.4](https://github.com/sweet-delights/hybrid-platforms-conductor/compare/v33.2.3...v33.2.4) (2021-06-23 15:14:20)
+
+## Global changes
+### Patches
+
+* [[Hotfix(platform_handler_serverless_chef)] Forward environment in sudo commands](https://github.com/sweet-delights/hybrid-platforms-conductor/commit/fd3b58875665c29dd071b5af2055eab0c45c0974)
+* [[Hotfix] Fixed unbundled environment not cleaned + Moved deployer config DSL in deployer.rb](https://github.com/sweet-delights/hybrid-platforms-conductor/commit/2bce6dbc31d98b27f196ed646eb9aa669b0f9a86)
+
+## Changes for platform_handler_serverless_chef
+### Patches
+
+* [[Hotfix(platform_handler_serverless_chef)] Forward environment in sudo commands](https://github.com/sweet-delights/hybrid-platforms-conductor/commit/fd3b58875665c29dd071b5af2055eab0c45c0974)
+
 # [v33.2.3](https://github.com/sweet-delights/hybrid-platforms-conductor/compare/v33.2.2...v33.2.3) (2021-06-23 13:45:56)
 
 ## Global changes
