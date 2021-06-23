@@ -47,12 +47,6 @@ module HybridPlatformsConductor
     # Array<Hash,Symbol,Object>
     attr_reader :expected_failures
 
-    # List of retriable errors. Each info has the following properties:
-    # * *nodes_selectors_stack* (Array<Object>): Stack of nodes selectors impacted by those errors
-    # * *errors_on_stdout* (Array<String or Regexp>): List of errors match (as exact string match or using a regexp) to check against stdout
-    # * *errors_on_stderr* (Array<String or Regexp>): List of errors match (as exact string match or using a regexp) to check against stderr
-    attr_reader :retriable_errors
-
     # List of deployment schedules. Each info has the following properties:
     # * *nodes_selectors_stack* (Array<Object>): Stack of nodes selectors impacted by this rule
     # * *schedule* (IceCube::Schedule): The deployment schedule
@@ -81,11 +75,6 @@ module HybridPlatformsConductor
       # * *reason* (String): Reason for this expected failure
       # Array<Hash,Symbol,Object>
       @expected_failures = []
-      # List of retriable errors. Each info has the following properties:
-      # * *nodes_selectors_stack* (Array<Object>): Stack of nodes selectors impacted by those errors
-      # * *errors_on_stdout* (Array<String or Regexp>): List of errors match (as exact string match or using a regexp) to check against stdout
-      # * *errors_on_stderr* (Array<String or Regexp>): List of errors match (as exact string match or using a regexp) to check against stderr
-      @retriable_errors = []
       # List of deployment schedules. Each info has the following properties:
       # * *nodes_selectors_stack* (Array<Object>): Stack of nodes selectors impacted by this rule
       # * *schedule* (IceCube::Schedule): The deployment schedule
@@ -161,30 +150,6 @@ module HybridPlatformsConductor
       }
     end
     expose :expect_tests_to_fail
-
-    # Mark some errors on stdout to be retriable during a deploy
-    #
-    # Parameters::
-    # * *errors* (String, Regexp or Array<String or Regexp>): Single (or list of) errors matching pattern (either as exact string match or using a regexp).
-    def retry_deploy_for_errors_on_stdout(errors)
-      @retriable_errors << {
-        errors_on_stdout: errors.is_a?(Array) ? errors : [errors],
-        nodes_selectors_stack: current_nodes_selectors_stack
-      }
-    end
-    expose :retry_deploy_for_errors_on_stdout
-
-    # Mark some errors on stderr to be retriable during a deploy
-    #
-    # Parameters::
-    # * *errors* (String, Regexp or Array<String or Regexp>): Single (or list of) errors matching pattern (either as exact string match or using a regexp).
-    def retry_deploy_for_errors_on_stderr(errors)
-      @retriable_errors << {
-        errors_on_stderr: errors.is_a?(Array) ? errors : [errors],
-        nodes_selectors_stack: current_nodes_selectors_stack
-      }
-    end
-    expose :retry_deploy_for_errors_on_stderr
 
     # Set a deployment schedule
     #

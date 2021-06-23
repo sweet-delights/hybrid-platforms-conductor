@@ -11,10 +11,27 @@ module Bundler
     # @return [Hash] Environment with all bundler-related variables removed
     def current_unbundled_env
       env = ENV.clone.to_hash
+      %w[
+        PATH
+        RUBYLIB
+        RUBYOPT
+      ].each do |env_name|
+        if original_env.key?(env_name)
+          env[env_name] = original_env[env_name]
+        else
+          env.delete(env_name)
+        end
+      end
 
       env['MANPATH'] = env['BUNDLER_ORIG_MANPATH'] if env.key?('BUNDLER_ORIG_MANPATH')
 
-      env.delete_if { |k, _| k[0, 7] == 'BUNDLE_' }
+      env.delete_if do |k, _|
+        %w[
+          GEM_
+          BUNDLE_
+          BUNDLER_
+        ].any? { |prefix| k.start_with?(prefix) }
+      end
 
       if env.key?('RUBYOPT')
         rubyopt = env['RUBYOPT'].split

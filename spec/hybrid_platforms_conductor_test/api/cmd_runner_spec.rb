@@ -47,7 +47,13 @@ describe HybridPlatformsConductor::CmdRunner do
 
   it 'runs a command in an un-bundled environment' do
     with_repository do
-      expect(test_cmd_runner.run_cmd('echo "${BUNDLE_GEMFILE}"')).to eq [0, "\n", '']
+      %w[
+        BUNDLE_GEMFILE
+        GEM_HOME
+        RUBYOPT
+      ].each do |var_to_check|
+        expect(test_cmd_runner.run_cmd("echo \"${#{var_to_check}}\"")).to eq [0, "\n", '']
+      end
     end
   end
 

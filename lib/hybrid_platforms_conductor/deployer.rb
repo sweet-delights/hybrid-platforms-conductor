@@ -18,6 +18,12 @@ module HybridPlatformsConductor
     # Extend the Config DSL
     module ConfigDSLExtension
 
+      # List of retriable errors. Each info has the following properties:
+      # * *nodes_selectors_stack* (Array<Object>): Stack of nodes selectors impacted by those errors
+      # * *errors_on_stdout* (Array<String or Regexp>): List of errors match (as exact string match or using a regexp) to check against stdout
+      # * *errors_on_stderr* (Array<String or Regexp>): List of errors match (as exact string match or using a regexp) to check against stderr
+      attr_reader :retriable_errors
+
       # List of log plugins. Each info has the following properties:
       # * *nodes_selectors_stack* (Array<Object>): Stack of nodes selectors impacted by this rule.
       # * *log_plugins* (Array<Symbol>): List of log plugins to be used to store deployment logs.
@@ -36,6 +42,11 @@ module HybridPlatformsConductor
       # Mixin initializer
       def init_deployer_config
         @packaging_timeout_secs = 60
+        # List of retriable errors. Each info has the following properties:
+        # * *nodes_selectors_stack* (Array<Object>): Stack of nodes selectors impacted by those errors
+        # * *errors_on_stdout* (Array<String or Regexp>): List of errors match (as exact string match or using a regexp) to check against stdout
+        # * *errors_on_stderr* (Array<String or Regexp>): List of errors match (as exact string match or using a regexp) to check against stderr
+        @retriable_errors = []
         @deployment_logs = []
         @secrets_readers = []
       end
@@ -46,6 +57,28 @@ module HybridPlatformsConductor
       # * *packaging_timeout_secs* (Integer): The packaging timeout, in seconds
       def packaging_timeout(packaging_timeout_secs)
         @packaging_timeout_secs = packaging_timeout_secs
+      end
+
+      # Mark some errors on stdout to be retriable during a deploy
+      #
+      # Parameters::
+      # * *errors* (String, Regexp or Array<String or Regexp>): Single (or list of) errors matching pattern (either as exact string match or using a regexp).
+      def retry_deploy_for_errors_on_stdout(errors)
+        @retriable_errors << {
+          errors_on_stdout: errors.is_a?(Array) ? errors : [errors],
+          nodes_selectors_stack: current_nodes_selectors_stack
+        }
+      end
+
+      # Mark some errors on stderr to be retriable during a deploy
+      #
+      # Parameters::
+      # * *errors* (String, Regexp or Array<String or Regexp>): Single (or list of) errors matching pattern (either as exact string match or using a regexp).
+      def retry_deploy_for_errors_on_stderr(errors)
+        @retriable_errors << {
+          errors_on_stderr: errors.is_a?(Array) ? errors : [errors],
+          nodes_selectors_stack: current_nodes_selectors_stack
+        }
       end
 
       # Set the deployment log plugins to be used
