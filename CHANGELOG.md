@@ -1,3 +1,15 @@
+# [v33.2.3](https://github.com/sweet-delights/hybrid-platforms-conductor/compare/v33.2.2...v33.2.3) (2021-06-23 13:45:56)
+
+## Global changes
+### Patches
+
+* [[Hotfix(provisioner_proxmox)] Add missing require in synchronization script](https://github.com/sweet-delights/hybrid-platforms-conductor/commit/7a6c71595789c9180e1d95323fc5cf5051f2e2cd)
+
+## Changes for provisioner_proxmox
+### Patches
+
+* [[Hotfix(provisioner_proxmox)] Add missing require in synchronization script](https://github.com/sweet-delights/hybrid-platforms-conductor/commit/7a6c71595789c9180e1d95323fc5cf5051f2e2cd)
+
 # [v33.2.2](https://github.com/sweet-delights/hybrid-platforms-conductor/compare/v33.2.1...v33.2.2) (2021-06-21 12:41:35)
 
 ## Global changes
