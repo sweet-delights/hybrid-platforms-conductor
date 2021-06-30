@@ -141,9 +141,14 @@ module HybridPlatformsConductor
                 entry.xpath('Binary').map do |binary|
                   binary_meta = group.document.at_xpath("KeePassFile/Meta/Binaries/Binary[@ID=#{Integer(binary.xpath('Value').attr('Ref').value)}]")
                   binary_content = Base64.decode64(binary_meta.text)
+                  if binary_meta.attr('Compressed') == 'True'
+                    gz = Zlib::GzipReader.new(StringIO.new(binary_content))
+                    binary_content = gz.read
+                    gz.close
+                  end
                   [
                     binary.xpath('Key').text,
-                    binary_meta.attr('Compressed') == 'True' ? Zlib::GzipReader.new(StringIO.new(binary_content)).read : binary_content
+                    binary_content
                   ]
                 end.to_h
               )

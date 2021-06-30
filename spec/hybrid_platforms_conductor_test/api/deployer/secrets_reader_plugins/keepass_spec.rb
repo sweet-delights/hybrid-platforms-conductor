@@ -36,7 +36,11 @@ describe HybridPlatformsConductor::Deployer do
               end
               wait_thr_value_double
             end
-            File.write(cmd.match(/-OutFile:"([^"]+)"/)[1], mocked_call[:xml]) if mocked_call[:xml]
+            if mocked_call[:xml]
+              xml_file = cmd.match(/-OutFile:"([^"]+)"/)[1]
+              logger.debug "Mock KPScript XML file #{xml_file} with\n#{mocked_call[:xml]}"
+              File.write(xml_file, mocked_call[:xml])
+            end
             block.call(
               StringIO.new,
               StringIO.new(mocked_call[:stdout]),
@@ -224,6 +228,152 @@ describe HybridPlatformsConductor::Deployer do
           expect_kpscript_calls: false
         ) do
           expect { test_deployer.deploy_on(%w[node]) }.to raise_error 'Missing KPScript configuration. Please use use_kpscript_from to set it.'
+        end
+      end
+
+      it 'gets secrets from KeePass groups' do
+        with_test_platform_for_keepass_test(
+          <<~EO_CONFIG,
+            use_kpscript_from '/path/to/kpscript'
+            secrets_from_keepass(database: '/path/to/database.kdbx')
+          EO_CONFIG
+          mock_xml: <<~EO_XML
+            <KeePassFile>
+              <Root>
+                <Group>
+                  <Entry>
+                    <String>
+                      <Key>Password</Key>
+                      <Value ProtectInMemory="True">TestPassword0</Value>
+                    </String>
+                    <String>
+                      <Key>Title</Key>
+                      <Value>Secret 0</Value>
+                    </String>
+                  </Entry>
+                  <Group>
+                    <Name>Group1</UUID>
+                    <Entry>
+                      <String>
+                        <Key>Password</Key>
+                        <Value ProtectInMemory="True">TestPassword1</Value>
+                      </String>
+                      <String>
+                        <Key>Title</Key>
+                        <Value>Secret 1</Value>
+                      </String>
+                    </Entry>
+                    <Group>
+                      <Name>Group2</UUID>
+                      <Entry>
+                        <String>
+                          <Key>Password</Key>
+                          <Value ProtectInMemory="True">TestPassword2</Value>
+                        </String>
+                        <String>
+                          <Key>Title</Key>
+                          <Value>Secret 2</Value>
+                        </String>
+                      </Entry>
+                    </Group>
+                    <Group>
+                      <Name>Group3</UUID>
+                      <Entry>
+                        <String>
+                          <Key>Password</Key>
+                          <Value ProtectInMemory="True">TestPassword3</Value>
+                        </String>
+                        <String>
+                          <Key>Title</Key>
+                          <Value>Secret 3</Value>
+                        </String>
+                      </Entry>
+                    </Group>
+                  </Group>
+                </Group>
+              </Root>
+            </KeePassFile>
+          EO_XML
+        ) do
+          expect_secrets_to_be(
+            'Secret 0' => { 'password' => 'TestPassword0' },
+            'Group1' => {
+              'Secret 1' => { 'password' => 'TestPassword1' },
+              'Group2' => {
+                'Secret 2' => { 'password' => 'TestPassword2' }
+              },
+              'Group3' => {
+                'Secret 3' => { 'password' => 'TestPassword3' }
+              }
+            }
+          )
+        end
+      end
+
+      it 'gets secrets with attachments' do
+        with_test_platform_for_keepass_test(
+          <<~EO_CONFIG,
+            use_kpscript_from '/path/to/kpscript'
+            secrets_from_keepass(database: '/path/to/database.kdbx')
+          EO_CONFIG
+          mock_xml: <<~EO_XML
+            <KeePassFile>
+              <Meta>
+                <Binaries>
+                  <Binary ID="0" Compressed="True">#{
+                    str = StringIO.new
+                    gz = Zlib::GzipWriter.new(str)
+                    gz.write('File 0 Content')
+                    gz.close
+                    Base64.encode64(str.string).strip
+                }</Binary>
+                  <Binary ID="1">#{Base64.encode64('File 1 Content').strip}</Binary>
+                </Binaries>
+              </Meta>
+              <Root>
+                <Group>
+                  <Entry>
+                    <String>
+                      <Key>Password</Key>
+                      <Value ProtectInMemory="True">TestPassword0</Value>
+                    </String>
+                    <String>
+                      <Key>Title</Key>
+                      <Value>Secret 0</Value>
+                    </String>
+                    <Binary>
+                      <Key>file0.txt</Key>
+                      <Value Ref="0" />
+                    </Binary>
+                  </Entry>
+                  <Group>
+                    <Name>Group1</UUID>
+                    <Entry>
+                      <String>
+                        <Key>Password</Key>
+                        <Value ProtectInMemory="True">TestPassword1</Value>
+                      </String>
+                      <String>
+                        <Key>Title</Key>
+                        <Value>Secret 1</Value>
+                      </String>
+                      <Binary>
+                        <Key>file1.txt</Key>
+                        <Value Ref="1" />
+                      </Binary>
+                    </Entry>
+                  </Group>
+                </Group>
+              </Root>
+            </KeePassFile>
+          EO_XML
+        ) do
+          expect_secrets_to_be(
+            'Secret 0' => { 'file0.txt' => 'File 0 Content', 'password' => 'TestPassword0' },
+            'Group1' => {
+              'Secret 1' => { 'file1.txt' => 'File 1 Content', 'password' => 'TestPassword1' }
+            }
+          )
         end
       end
 

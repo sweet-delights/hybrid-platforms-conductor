@@ -51,7 +51,7 @@ Gem::Specification.new do |s|
   s.add_runtime_dependency 'ice_cube', '~> 0.16'
   # To access Github API
   s.add_runtime_dependency 'octokit', '~> 4.21'
-  # To access read KeePass databases
+  # To read KeePass databases
   s.add_runtime_dependency 'keepass_kpscript', '~> 1.0'
 
   # Test framework
