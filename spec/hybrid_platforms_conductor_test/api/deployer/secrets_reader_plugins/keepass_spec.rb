@@ -326,7 +326,7 @@ describe HybridPlatformsConductor::Deployer do
                     gz.write('File 0 Content')
                     gz.close
                     Base64.encode64(str.string).strip
-                }</Binary>
+                  }</Binary>
                   <Binary ID="1">#{Base64.encode64('File 1 Content').strip}</Binary>
                 </Binaries>
               </Meta>
