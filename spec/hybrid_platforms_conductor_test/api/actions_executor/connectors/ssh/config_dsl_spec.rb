@@ -13,10 +13,10 @@ describe HybridPlatformsConductor::ActionsExecutor do
       end
 
       it 'returns 1 defined gateway with its content' do
-        ssh_gateway = '
+        ssh_gateway = <<~EO_CONFIG
           Host gateway
             Hostname mygateway.com
-        '
+        EO_CONFIG
         with_repository do
           with_platforms "gateway :gateway_1, '#{ssh_gateway}'" do
             expect(test_config.ssh_for_gateway(:gateway_1)).to eq ssh_gateway
@@ -34,10 +34,12 @@ describe HybridPlatformsConductor::ActionsExecutor do
 
       it 'returns several defined gateways' do
         with_repository do
-          with_platforms '
-            gateway :gateway_1, \'\'
-            gateway :gateway_2, \'\'
-          ' do
+          with_platforms(
+            <<~EO_CONFIG
+              gateway :gateway_1, ''
+              gateway :gateway_2, ''
+            EO_CONFIG
+          ) do
             expect(test_config.known_gateways.sort).to eq %i[gateway_1 gateway_2].sort
           end
         end

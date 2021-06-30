@@ -108,6 +108,7 @@ Naming/VariableNumber:
     - capture3
     - ipv4
     - net0
+    - popen3
 
 # Don't plague files with pre-processor directives
 # Cop supports --auto-correct.

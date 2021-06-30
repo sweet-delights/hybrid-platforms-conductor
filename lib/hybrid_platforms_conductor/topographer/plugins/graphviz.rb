@@ -17,9 +17,11 @@ module HybridPlatformsConductor
           @topographer.force_cluster_strict_hierarchy
           # Write a Graphviz file
           File.open(file_name, 'w') do |f|
-            f.puts 'digraph unix {
-              size="6,6";
-              node [style=filled];'
+            f.puts <<~EO_GRAPHVIZ
+              digraph unix {
+                size="6,6";
+                node [style=filled];
+            EO_GRAPHVIZ
             # First write the definition of all nodes
             # Find all nodes belonging to no cluster
             orphan_nodes = @topographer.nodes_graph.keys
