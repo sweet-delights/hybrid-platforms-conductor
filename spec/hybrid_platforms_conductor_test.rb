@@ -1,5 +1,6 @@
 require 'fileutils'
 require 'tmpdir'
+require 'webmock/rspec'
 require 'hybrid_platforms_conductor/config'
 require 'hybrid_platforms_conductor/platforms_handler'
 require 'hybrid_platforms_conductor/actions_executor'
@@ -83,6 +84,9 @@ module HybridPlatformsConductorTest
     # Make sure the tested components are being reset before each test case
     RSpec.configure do |config|
       config.before do
+        # We allow for connections by default.
+        # Tests that need to test specifically connections at a given point call WebMock.disable_net_connect!
+        WebMock.allow_net_connect!
         @actions_executor = nil
         @cmd_runner = nil
         @config = nil
@@ -95,6 +99,8 @@ module HybridPlatformsConductorTest
         ENV.delete 'hpc_platforms'
         ENV.delete 'hpc_ssh_gateways_conf'
         ENV.delete 'hpc_ssh_gateway_user'
+        ENV.delete 'hpc_user_for_github'
+        ENV.delete 'hpc_password_for_github'
         ENV.delete 'hpc_user_for_proxmox'
         ENV.delete 'hpc_password_for_proxmox'
         ENV.delete 'hpc_realm_for_proxmox'

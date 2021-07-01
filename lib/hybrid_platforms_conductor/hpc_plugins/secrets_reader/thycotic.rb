@@ -42,6 +42,8 @@ module HybridPlatformsConductor
 
         Config.extend_config_dsl_with ConfigDSLExtension, :init_thycotic_config
 
+        include HybridPlatformsConductor::Thycotic
+
         # Return secrets for a given service to be deployed on a node.
         # [API] - This method is mandatory
         # [API] - The following API components are accessible:
@@ -62,7 +64,7 @@ module HybridPlatformsConductor
           @nodes_handler.select_confs_for_node(node, @config.thycotic_secrets).each do |thycotic_secrets_info|
             server_id = "#{thycotic_secrets_info[:thycotic_url]}:#{thycotic_secrets_info[:secret_id]}"
             unless @secrets.key?(server_id)
-              HybridPlatformsConductor::Thycotic.with_thycotic(thycotic_secrets_info[:thycotic_url], @logger, @logger_stderr) do |thycotic|
+              with_thycotic(thycotic_secrets_info[:thycotic_url]) do |thycotic|
                 secret_file_item_id = thycotic.get_secret(thycotic_secrets_info[:secret_id]).dig(:secret, :items, :secret_item, :id)
                 raise "Unable to fetch secret file ID #{thycotic_secrets_info[:secret_id]} from #{thycotic_secrets_info[:thycotic_url]}" if secret_file_item_id.nil?
 

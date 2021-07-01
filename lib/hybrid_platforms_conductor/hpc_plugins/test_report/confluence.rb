@@ -14,6 +14,8 @@ module HybridPlatformsConductor
 
         extend_config_dsl_with CommonConfigDsl::Confluence, :init_confluence
 
+        include HybridPlatformsConductor::Confluence
+
         # Maximum errors to be reported by item
         MAX_ERROR_ITEMS_DISPLAYED = 10
 
@@ -28,7 +30,7 @@ module HybridPlatformsConductor
           confluence_info = @config.confluence_info
           if confluence_info
             if confluence_info[:tests_report_page_id]
-              HybridPlatformsConductor::Confluence.with_confluence(confluence_info[:url], @logger, @logger_stderr) do |confluence|
+              with_confluence(confluence_info[:url]) do |confluence|
                 # Get previous percentages for the evolution
                 @previous_success_percentages = confluence.page_storage_format(confluence_info[:tests_report_page_id]).
                   at('h1:contains("Evolution")').

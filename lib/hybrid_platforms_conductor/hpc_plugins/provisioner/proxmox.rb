@@ -263,6 +263,8 @@ module HybridPlatformsConductor
 
         private
 
+        include Credentials
+
         # Connect to the Proxmox API
         #
         # Parameters::
@@ -273,7 +275,7 @@ module HybridPlatformsConductor
           url = proxmox_test_info[:api_url]
           raise 'No Proxmox server defined' if url.nil?
 
-          Credentials.with_credentials_for(:proxmox, @logger, @logger_stderr, url: url) do |user, password|
+          with_credentials_for(:proxmox, resource: url) do |user, password|
             log_debug "[ #{@node}/#{@environment} ] - Connect to Proxmox #{url}"
             proxmox_logs = StringIO.new
             proxmox = ::Proxmox::Proxmox.new(
@@ -415,7 +417,7 @@ module HybridPlatformsConductor
             extra_files[config_file] = './proxmox/config'
             cmd << " --config ./proxmox/config/#{File.basename(config_file)}"
             stdout = nil
-            Credentials.with_credentials_for(:proxmox, @logger, @logger_stderr, url: proxmox_test_info[:api_url]) do |user, password|
+            with_credentials_for(:proxmox, resource: proxmox_test_info[:api_url]) do |user, password|
               # To avoid too fine concurrent accesses on the sync node file system, make sure all threads of our process wait for their turn to upload their files.
               # Otherwise there is a small probability that a directory scp makes previously copied files inaccessible for a short period of time.
               self.class.proxmox_waiter_files_mutex.synchronize do

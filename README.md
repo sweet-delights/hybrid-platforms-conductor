@@ -304,11 +304,40 @@ See [the executables list](docs/executables.md) for more details.
 # Credentials
 
 Some tools or tests require authentication using user/password to an external resource. Examples of such tools are Bitbucket, Thycotic, Confluence...
-Credentials can be given using either environment variables or by parsing the user's `.netrc` file.
+Credentials can be given 3 different ways:
+* from the configuration file `hpc_config.rb`,
+* from environment variables,
+* from the user's `.netrc` file.
 
-In case a process needs a credential that has not been set, a warning message will be output so that the user knows which credential is missing, and eventually for which URL.
+In case a process needs a credential that has not been set, a warning message will be output so that the user knows which credential is missing, and eventually for which resource (URL, file...).
 
 Following sub-sections explain the different ways of setting such credentials.
+
+## Configuration
+
+The [`credentials_for` config DSL method](docs/config_dsl.md#credentials_for) can be used to define the credentials for a given credential ID and eventual resource.
+The way to do it is to provide a callback that will be called only when a credential is needed, and the credentials are given to a requester object. This way the life-cycle of the secret can be completely controlled, and clean-up can be done to ensure no vulnerabilities are staying after usage.
+
+Example:
+```ruby
+# Simple case
+credentials_for(:bitbucket) do |resource, requester|
+  requester.call 'my_bitbucket_name', 'my_bitbucket_PaSsWoRd'
+end
+
+# More secure case, handling user input and memory clean-up after usage
+credentials_for(:bitbucket) do |resource, requester|
+  puts 'Input Bitbucket password...'
+  password = ''
+  $stdin.noecho { |io| io.sysread(256, password) }
+  begin
+    password.chomp!
+    requester.call 'my_bitbucket_name', password
+  ensure
+    SecretString.erase(password)
+  end
+end
+```
 
 ## Environment variables
 
