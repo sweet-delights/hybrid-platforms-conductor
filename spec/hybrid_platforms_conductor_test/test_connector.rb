@@ -100,9 +100,9 @@ module HybridPlatformsConductorTest
     # [API] - @stderr_io can be used to send stderr output
     #
     # Parameters::
-    # * *bash_cmds* (String): Bash commands to execute
+    # * *bash_cmds* (String or SecretString): Bash commands to execute. Use #to_unprotected to access the real content (otherwise secrets are obfuscated).
     def remote_bash(bash_cmds)
-      @calls << [:remote_bash, bash_cmds]
+      @calls << [:remote_bash, bash_cmds.to_unprotected.clone]
       @remote_bash_code&.call(@stdout_io, @stderr_io, self)
     end
 

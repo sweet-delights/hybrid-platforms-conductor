@@ -35,9 +35,11 @@ module HybridPlatformsConductor
         # [API] - @stderr_io can be used to send stderr output
         #
         # Parameters::
-        # * *bash_cmds* (String): Bash commands to execute
+        # * *bash_cmds* (String or SecretString): Bash commands to execute. Use #to_unprotected to access the real content (otherwise secrets are obfuscated).
         def remote_bash(bash_cmds)
-          run_cmd "cd #{workspace_for(@node)} ; #{bash_cmds}", force_bash: true
+          SecretString.protect("cd #{workspace_for(@node)} ; #{bash_cmds.to_unprotected}", silenced_str: "cd #{workspace_for(@node)} ; #{bash_cmds}") do |cmd|
+            run_cmd cmd, force_bash: true
+          end
         end
 
         # Execute an interactive shell on the remote node

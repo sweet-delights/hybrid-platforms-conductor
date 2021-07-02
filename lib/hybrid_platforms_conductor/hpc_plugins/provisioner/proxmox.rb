@@ -284,7 +284,7 @@ module HybridPlatformsConductor
               # cf https://pve.proxmox.com/wiki/Renaming_a_PVE_node
               URI.parse(url).host.downcase.split('.').first,
               user,
-              password,
+              password&.to_unprotected,
               ENV['hpc_realm_for_proxmox'] || 'pam',
               {
                 verify_ssl: false,

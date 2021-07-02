@@ -330,11 +330,9 @@ credentials_for(:bitbucket) do |resource, requester|
   puts 'Input Bitbucket password...'
   password = ''
   $stdin.noecho { |io| io.sysread(256, password) }
-  begin
-    password.chomp!
-    requester.call 'my_bitbucket_name', password
-  ensure
-    SecretString.erase(password)
+  password.chomp!
+  SecretString.protect(password) do |secret_password|
+    requester.call 'my_bitbucket_name', secret_password
   end
 end
 ```

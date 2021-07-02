@@ -15,15 +15,19 @@ describe HybridPlatformsConductor::Credentials do
   # * *resource* (String or nil): The resource for which we query the credentials, or nil if none [default: nil]
   def expect_credentials_to_be(expected_user, expected_password, resource: nil)
     creds = {}
+    password_class = nil
     credential_tester_class.new(logger: logger, logger_stderr: logger, config: test_config).instance_exec do
       with_credentials_for(:test_credential, resource: resource) do |user, password|
+        password_class = password.class
         creds = {
           user: user,
           # We clone the value as for security reasons it is removed when exiting the block
-          password: password.clone
+          password: password&.to_unprotected.clone
         }
       end
     end
+    # Make sure we always return a SecretString for the password
+    expect(password_class).to be SecretString unless password_class == NilClass
     expect(creds).to eq(
       user: expected_user,
       password: expected_password
@@ -64,7 +68,7 @@ describe HybridPlatformsConductor::Credentials do
             leaked_password = password
           end
         end
-        expect(leaked_password).to eq 'gotyou!' * 100
+        expect(leaked_password.to_unprotected).to eq "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
       ensure
         ENV.delete('hpc_user_for_test_credential')
         ENV.delete('hpc_password_for_test_credential')
@@ -96,7 +100,7 @@ describe HybridPlatformsConductor::Credentials do
     end
   end
 
-  it 'erases the value of the password taken from netrc' do
+  it 'erases the value of the password taken from netrc after usage' do
     with_platforms '' do
       netrc_data = [['mocked_data']]
       expect(::Netrc).to receive(:read) do
@@ -111,7 +115,7 @@ describe HybridPlatformsConductor::Credentials do
           leaked_password = password
         end
       end
-      expect(leaked_password).to eq 'gotyou!' * 100
+      expect(leaked_password).to eq "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
       expect(netrc_data).to eq [['GotYou!!!' * 100]]
     end
   end

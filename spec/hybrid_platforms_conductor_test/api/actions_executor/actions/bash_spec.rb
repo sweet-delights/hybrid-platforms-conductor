@@ -17,6 +17,21 @@ describe HybridPlatformsConductor::ActionsExecutor do
       end
     end
 
+    it 'executes local Bash code from a SecretString' do
+      with_test_platform_for_action_plugins do |repository|
+        expect(
+          test_actions_executor.execute_actions(
+            {
+              'node' => {
+                bash: SecretString.new("echo TestContent >#{repository}/test_file ; echo TestStdout ; echo TestStderr 1>&2", silenced_str: '__INVALID_BASH__')
+              }
+            }
+          )['node']
+        ).to eq [0, "TestStdout\n", "TestStderr\n"]
+        expect(File.read("#{repository}/test_file")).to eq "TestContent\n"
+      end
+    end
+
     it 'executes local Bash code with timeout' do
       with_test_platform_for_action_plugins do
         expect(test_actions_executor.execute_actions(

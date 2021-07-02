@@ -34,7 +34,7 @@ module HybridPlatformsConductor
       # Parameters::
       # * *confluence_url* (String): The Confluence URL
       # * *confluence_user_name* (String): Confluence user name to be used when querying the API
-      # * *confluence_password* (String): Confluence password to be used when querying the API
+      # * *confluence_password* (SecretString): Confluence password to be used when querying the API
       # * *logger* (Logger): Logger to be used [default = Logger.new(STDOUT)]
       # * *logger_stderr* (Logger): Logger to be used for stderr [default = Logger.new(STDERR)]
       def initialize(confluence_url, confluence_user_name, confluence_password, logger: Logger.new($stdout), logger_stderr: Logger.new($stderr))
@@ -109,7 +109,7 @@ module HybridPlatformsConductor
         page_url = URI.parse("#{@confluence_url}/#{api_path}")
         Net::HTTP.start(page_url.host, page_url.port, use_ssl: true) do |http|
           request = Net::HTTP.const_get(http_method.to_s.capitalize.to_sym).new(page_url.request_uri)
-          request.basic_auth @confluence_user_name, @confluence_password
+          request.basic_auth @confluence_user_name, @confluence_password&.to_unprotected
           yield request if block_given?
           response = http.request(request)
           raise "Confluence page API request on #{page_url} returned an error: #{response.code}\n#{response.body}\n===== Request body =====\n#{request.body}" unless response.is_a?(Net::HTTPSuccess)

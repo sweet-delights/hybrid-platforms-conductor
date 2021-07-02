@@ -33,7 +33,7 @@ module HybridPlatformsConductor
       # Parameters::
       # * *url* (String): URL of the Thycotic Secret Server
       # * *user* (String): User name to be used to connect to Thycotic
-      # * *password* (String): Password to be used to connect to Thycotic
+      # * *password* (SecretString): Password to be used to connect to Thycotic
       # * *domain* (String): Domain to use for authentication to Thycotic [default: ENV['hpc_domain_for_thycotic']]
       # * *logger* (Logger): Logger to be used [default: Logger.new(STDOUT)]
       # * *logger_stderr* (Logger): Logger to be used for stderr [default: Logger.new(STDERR)]
@@ -57,7 +57,7 @@ module HybridPlatformsConductor
           :authenticate,
           message: {
             username: user,
-            password: password,
+            password: password&.to_unprotected,
             domain: domain
           }
         ).to_hash.dig(:authenticate_response, :authenticate_result, :token)

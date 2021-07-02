@@ -54,6 +54,15 @@ describe HybridPlatformsConductor::ActionsExecutor do
         end
       end
 
+      it 'executes bash commands remotely from a SecretString' do
+        with_test_platform_for_remote_testing(
+          expected_cmds: [['cd /tmp/hpc_local_workspaces/node ; bash_cmd.bash', proc { [0, 'Bash commands executed on node', ''] }]],
+          expected_stdout: 'Bash commands executed on node'
+        ) do
+          test_connector.remote_bash(SecretString.new('bash_cmd.bash', silenced_str: '__INVALID_BASH__'))
+        end
+      end
+
       it 'executes bash commands remotely with timeout' do
         with_test_platform_for_remote_testing(
           expected_cmds: [

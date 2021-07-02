@@ -13,6 +13,17 @@ describe HybridPlatformsConductor::ActionsExecutor do
       end
     end
 
+    it 'executes remote Bash code from a SecretString' do
+      with_test_platform_for_action_plugins do
+        test_actions_executor.execute_actions({ 'node' => { remote_bash: SecretString.new('remote_bash_cmd.bash', silenced_str: '__INVALID_BASH__') } })
+        expect(test_actions_executor.connector(:test_connector).calls).to eq [
+          [:connectable_nodes_from, ['node']],
+          [:with_connection_to, ['node'], { no_exception: true }],
+          [:remote_bash, 'remote_bash_cmd.bash']
+        ]
+      end
+    end
+
     it 'executes remote Bash code with timeout' do
       with_test_platform_for_action_plugins do
         test_actions_executor.connector(:test_connector).remote_bash_code = proc do |_stdout, _stderr, connector|
@@ -111,6 +122,27 @@ describe HybridPlatformsConductor::ActionsExecutor do
               commands: 'bash_cmd.bash',
               env: {
                 'var1' => 'value1',
+                'var2' => 'value2'
+              }
+            } }
+          }
+        )
+        expect(test_actions_executor.connector(:test_connector).calls).to eq [
+          [:connectable_nodes_from, ['node']],
+          [:with_connection_to, ['node'], { no_exception: true }],
+          [:remote_bash, "export var1='value1'\nexport var2='value2'\nbash_cmd.bash"]
+        ]
+      end
+    end
+
+    it 'executes remote Bash code with environment variables set using SecretStrings' do
+      with_test_platform_for_action_plugins do
+        test_actions_executor.execute_actions(
+          {
+            'node' => { remote_bash: {
+              commands: 'bash_cmd.bash',
+              env: {
+                'var1' => SecretString.new('value1', silenced_str: 'SILENCED_VALUE'),
                 'var2' => 'value2'
               }
             } }

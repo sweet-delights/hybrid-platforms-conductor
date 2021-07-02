@@ -14,7 +14,7 @@ module HybridPlatformsConductor
         # [API] - @actions_executor is accessible
         #
         # Parameters::
-        # * *cmd* (String): The bash command to execute
+        # * *cmd* (String or SecretString): The bash command to execute
         def setup(cmd)
           @cmd = cmd
         end
