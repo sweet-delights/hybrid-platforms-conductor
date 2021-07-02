@@ -59,7 +59,7 @@ describe HybridPlatformsConductor::Credentials do
       ENV['hpc_password_for_test_credential'] = 'env_test_password'
       begin
         leaked_password = nil
-        CredentialTester.new(logger: logger, logger_stderr: logger, config: test_config).instance_exec do
+        credential_tester_class.new(logger: logger, logger_stderr: logger, config: test_config).instance_exec do
           with_credentials_for(:test_credential) do |_user, password|
             leaked_password = password
           end
@@ -106,7 +106,7 @@ describe HybridPlatformsConductor::Credentials do
         mocked_netrc
       end
       leaked_password = nil
-      CredentialTester.new(logger: logger, logger_stderr: logger, config: test_config).instance_exec do
+      credential_tester_class.new(logger: logger, logger_stderr: logger, config: test_config).instance_exec do
         with_credentials_for(:test_credential, resource: 'http://My_Domain.com/path/to/resource') do |_user, password|
           leaked_password = password
         end
@@ -235,7 +235,7 @@ describe HybridPlatformsConductor::Credentials do
       EO_CONFIG
     ) do
       expect do
-        CredentialTester.new(logger: logger, logger_stderr: logger, config: test_config).instance_exec do
+        credential_tester_class.new(logger: logger, logger_stderr: logger, config: test_config).instance_exec do
           with_credentials_for(:test_credential) do |_user, _password|
             nil
           end
