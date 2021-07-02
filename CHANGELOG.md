@@ -1,3 +1,15 @@
+# [v33.3.0](https://github.com/sweet-delights/hybrid-platforms-conductor/compare/v33.2.4...v33.3.0) (2021-07-02 17:20:58)
+
+## Global changes
+### Patches
+
+* [[Feature(secrets_reader_keepass)] [#79] Add Keepass secrets reader plugin to get secrets from KeePass databases](https://github.com/sweet-delights/hybrid-platforms-conductor/commit/7ace48653a74f03ed535ee6b41b21242a6454ff3)
+
+## Changes for secrets_reader_keepass
+### Features
+
+* [[Feature(secrets_reader_keepass)] [#79] Add Keepass secrets reader plugin to get secrets from KeePass databases](https://github.com/sweet-delights/hybrid-platforms-conductor/commit/7ace48653a74f03ed535ee6b41b21242a6454ff3)
+
 # [v33.2.4](https://github.com/sweet-delights/hybrid-platforms-conductor/compare/v33.2.3...v33.2.4) (2021-06-23 15:14:20)
 
 ## Global changes
