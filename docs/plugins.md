@@ -196,6 +196,7 @@ Check the [sample plugin file](../lib/hybrid_platforms_conductor/hpc_plugins/sec
 
 Plugins shipped by default:
 * [`cli`](plugins/secrets_reader/cli.md)
+* [`keepass`](plugins/secrets_reader/keepass.md)
 * [`thycotic`](plugins/secrets_reader/thycotic.md)
 
 <a name="test"></a>

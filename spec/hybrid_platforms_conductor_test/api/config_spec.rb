@@ -19,10 +19,12 @@ describe HybridPlatformsConductor::Config do
   end
 
   it 'returns several defined OS images' do
-    with_platforms '
-      os_image :image_1, \'/path/to/image_1\'
-      os_image :image_2, \'/path/to/image_2\'
-    ' do
+    with_platforms(
+      <<~EO_CONFIG
+        os_image :image_1, '/path/to/image_1'
+        os_image :image_2, '/path/to/image_2'
+      EO_CONFIG
+    ) do
       expect(test_config.known_os_images.sort).to eq %i[image_1 image_2].sort
     end
   end
@@ -49,11 +51,13 @@ describe HybridPlatformsConductor::Config do
   end
 
   it 'includes several configuration files' do
-    with_platforms '
-      os_image :image_1, \'/path/to/image_1\'
-      include_config_from "#{__dir__}/my_conf_1.rb"
-      include_config_from "#{__dir__}/my_conf_2.rb"
-    ' do |hybrid_platforms_dir|
+    with_platforms(
+      <<~'EO_CONFIG'
+        os_image :image_1, '/path/to/image_1'
+        include_config_from "#{__dir__}/my_conf_1.rb"
+        include_config_from "#{__dir__}/my_conf_2.rb"
+      EO_CONFIG
+    ) do |hybrid_platforms_dir|
       File.write("#{hybrid_platforms_dir}/my_conf_1.rb", <<~'EO_CONFIG')
         os_image :image_4, '/path/to/image_4'
         include_config_from "#{__dir__}/my_conf_3.rb"
@@ -65,9 +69,7 @@ describe HybridPlatformsConductor::Config do
   end
 
   it 'applies nodes specific configuration to all nodes by default' do
-    with_platforms '
-      expect_tests_to_fail :my_test, \'Failure reason\'
-    ' do
+    with_platforms 'expect_tests_to_fail :my_test, \'Failure reason\'' do
       expect(test_config.expected_failures).to eq [
         {
           nodes_selectors_stack: [],
@@ -79,12 +81,14 @@ describe HybridPlatformsConductor::Config do
   end
 
   it 'filters nodes specific configuration to nodes sets in a scope' do
-    with_platforms '
-      for_nodes(%w[node1 node2 node3]) do
-        expect_tests_to_fail :my_test_1, \'Failure reason 1\'
-      end
-      expect_tests_to_fail :my_test_2, \'Failure reason 2\'
-    ' do
+    with_platforms(
+      <<~EO_CONFIG
+        for_nodes(%w[node1 node2 node3]) do
+          expect_tests_to_fail :my_test_1, 'Failure reason 1'
+        end
+        expect_tests_to_fail :my_test_2, 'Failure reason 2'
+      EO_CONFIG
+    ) do
       sort_proc = proc { |expected_failure_info| expected_failure_info[:reason] }
       expect(test_config.expected_failures.sort_by(&sort_proc)).to eq [
         {
@@ -102,14 +106,16 @@ describe HybridPlatformsConductor::Config do
   end
 
   it 'filters nodes specific configuration in a scoped stack' do
-    with_platforms '
-      for_nodes(%w[node1 node2 node3]) do
-        expect_tests_to_fail :my_test_1, \'Failure reason 1\'
-        for_nodes(%w[node2 node3 node4]) do
-          expect_tests_to_fail :my_test_2, \'Failure reason 2\'
+    with_platforms(
+      <<~EO_CONFIG
+        for_nodes(%w[node1 node2 node3]) do
+          expect_tests_to_fail :my_test_1, 'Failure reason 1'
+          for_nodes(%w[node2 node3 node4]) do
+            expect_tests_to_fail :my_test_2, 'Failure reason 2'
+          end
         end
-      end
-    ' do
+      EO_CONFIG
+    ) do
       sort_proc = proc { |expected_failure_info| expected_failure_info[:reason] }
       expect(test_config.expected_failures.sort_by(&sort_proc)).to eq [
         {
@@ -127,13 +133,15 @@ describe HybridPlatformsConductor::Config do
   end
 
   it 'returns the expected failures correctly' do
-    with_platforms '
-      expect_tests_to_fail :my_test_1, \'Failure reason 1\'
-      expect_tests_to_fail %i[my_test_2 my_test_3], \'Failure reason 23\'
-      for_nodes(%w[node1 node2 node3]) do
-        expect_tests_to_fail :my_test_4, \'Failure reason 4\'
-      end
-    ' do
+    with_platforms(
+      <<~EO_CONFIG
+        expect_tests_to_fail :my_test_1, 'Failure reason 1'
+        expect_tests_to_fail %i[my_test_2 my_test_3], 'Failure reason 23'
+        for_nodes(%w[node1 node2 node3]) do
+          expect_tests_to_fail :my_test_4, 'Failure reason 4'
+        end
+      EO_CONFIG
+    ) do
       sort_proc = proc { |expected_failure_info| expected_failure_info[:reason] }
       expect(test_config.expected_failures.sort_by(&sort_proc)).to eq [
         {
@@ -156,12 +164,14 @@ describe HybridPlatformsConductor::Config do
   end
 
   it 'returns the deployment schedules correctly' do
-    with_platforms '
-      deployment_schedule(IceCube::Schedule.new(Time.parse(\'2020-05-01 11:22:33 UTC\')))
-      for_nodes(%w[node1 node2 node3]) do
-        deployment_schedule(IceCube::Schedule.new(Time.parse(\'2020-05-02 22:33:44 UTC\')))
-      end
-    ' do
+    with_platforms(
+      <<~EO_CONFIG
+        deployment_schedule(IceCube::Schedule.new(Time.parse('2020-05-01 11:22:33 UTC')))
+        for_nodes(%w[node1 node2 node3]) do
+          deployment_schedule(IceCube::Schedule.new(Time.parse('2020-05-02 22:33:44 UTC')))
+        end
+      EO_CONFIG
+    ) do
       sort_proc = proc { |deployment_schedule_info| deployment_schedule_info[:schedule].to_ical }
       expect(test_config.deployment_schedules.sort_by(&sort_proc)).to eq [
         {

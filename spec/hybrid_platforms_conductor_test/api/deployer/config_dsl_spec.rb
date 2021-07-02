@@ -9,17 +9,19 @@ describe HybridPlatformsConductor::Deployer do
     end
 
     it 'returns the retriable errors correctly' do
-      with_platforms '
-        retry_deploy_for_errors_on_stdout \'Retry stdout global\'
-        retry_deploy_for_errors_on_stderr [
-          \'Retry stderr global\',
-          /.+Retry stderr regexp global/
-        ]
-        for_nodes(%w[node1 node2 node3]) do
-          retry_deploy_for_errors_on_stdout \'Retry stdout nodes\'
-          retry_deploy_for_errors_on_stderr \'Retry stderr nodes\'
-        end
-      ' do
+      with_platforms(
+        <<~EO_CONFIG
+          retry_deploy_for_errors_on_stdout 'Retry stdout global'
+          retry_deploy_for_errors_on_stderr [
+            'Retry stderr global',
+            /.+Retry stderr regexp global/
+          ]
+          for_nodes(%w[node1 node2 node3]) do
+            retry_deploy_for_errors_on_stdout 'Retry stdout nodes'
+            retry_deploy_for_errors_on_stderr 'Retry stderr nodes'
+          end
+        EO_CONFIG
+      ) do
         sort_proc = proc { |retriable_error_info| ((retriable_error_info[:errors_on_stdout] || []) + (retriable_error_info[:errors_on_stderr] || [])).first.to_s }
         expect(test_config.retriable_errors.sort_by(&sort_proc)).to eq [
           {

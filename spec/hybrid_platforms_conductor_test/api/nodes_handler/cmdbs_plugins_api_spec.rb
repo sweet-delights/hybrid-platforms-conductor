@@ -255,12 +255,12 @@ describe HybridPlatformsConductor::NodesHandler do
     it 'can configure different priority rules for different properties' do
       with_cmdb_test_platform(
         cmdbs: %i[test_cmdb test_cmdb_2],
-        additional_config: '
+        additional_config: <<~EO_CONFIG
           master_cmdbs(
             test_cmdb: :different_comment_2,
             test_cmdb_2: :different_comment
           )
-        '
+        EO_CONFIG
       ) do
         expect(test_nodes_handler.get_different_comment_of('node1')).to eq 'Comment from test_cmdb_2'
         expect(test_nodes_handler.get_different_comment_2_of('node1')).to eq 'Comment2 from test_cmdb'

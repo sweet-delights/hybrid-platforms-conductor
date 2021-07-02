@@ -1,3 +1,4 @@
+require 'forwardable'
 require 'hybrid_platforms_conductor/logger_helpers'
 
 module HybridPlatformsConductor

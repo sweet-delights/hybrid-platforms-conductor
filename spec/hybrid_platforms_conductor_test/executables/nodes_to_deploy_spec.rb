@@ -3,14 +3,14 @@ describe 'nodes_to_deploy executable' do
   # Setup a platform for nodes_to_deploy tests
   #
   # Parameters::
-  # * *additional_platforms_content* (String): Additional platforms content to be added [default = '']
+  # * *additional_config* (String): Additional platforms content to be added [default: '']
   # * *block* (Proc): Code called when the platform is setup
   #   * Parameters::
   #     * *repository* (String): Platform's repository
-  def with_test_platform_for_nodes_to_deploy(additional_platforms_content: '', &block)
+  def with_test_platform_for_nodes_to_deploy(additional_config: '', &block)
     with_test_platform(
       { nodes: { 'node1' => {}, 'node2' => {} } },
-      additional_config: "#{additional_platforms_content}\nsend_logs_to :test_log",
+      additional_config: "#{additional_config}\nsend_logs_to :test_log",
       &block
     )
   end
@@ -203,10 +203,12 @@ describe 'nodes_to_deploy executable' do
   end
 
   it 'does not return nodes that are outside the schedule' do
-    with_test_platform_for_nodes_to_deploy(additional_platforms_content: '
-      for_nodes(\'node1\') { deployment_schedule(IceCube::Schedule.new(Time.now.utc - 120, duration: 60)) }
-      for_nodes(\'node2\') { deployment_schedule(IceCube::Schedule.new(Time.now.utc - 60, duration: 120)) }
-    ') do
+    with_test_platform_for_nodes_to_deploy(
+      additional_config: <<~EO_CONFIG
+        for_nodes('node1') { deployment_schedule(IceCube::Schedule.new(Time.now.utc - 120, duration: 60)) }
+        for_nodes('node2') { deployment_schedule(IceCube::Schedule.new(Time.now.utc - 60, duration: 120)) }
+      EO_CONFIG
+    ) do
       expect(test_deployer).to receive(:deployment_info_from).with(%w[node2]).and_return(
         'node2' => {
           services: %w[service2],
@@ -232,10 +234,12 @@ describe 'nodes_to_deploy executable' do
   end
 
   it 'does not return nodes that are outside the schedule when using a different deployment time' do
-    with_test_platform_for_nodes_to_deploy(additional_platforms_content: '
-      for_nodes(\'node1\') { deployment_schedule(IceCube::Schedule.new(Time.now.utc - 120, duration: 60)) }
-      for_nodes(\'node2\') { deployment_schedule(IceCube::Schedule.new(Time.now.utc - 60, duration: 120)) }
-    ') do
+    with_test_platform_for_nodes_to_deploy(
+      additional_config: <<~EO_CONFIG
+        for_nodes('node1') { deployment_schedule(IceCube::Schedule.new(Time.now.utc - 120, duration: 60)) }
+        for_nodes('node2') { deployment_schedule(IceCube::Schedule.new(Time.now.utc - 60, duration: 120)) }
+      EO_CONFIG
+    ) do
       expect(test_deployer).to receive(:deployment_info_from).with(%w[node1]).and_return(
         'node1' => {
           services: %w[service1],
@@ -262,10 +266,12 @@ describe 'nodes_to_deploy executable' do
   end
 
   it 'returns nodes that are outside the schedule when ignoring the schedule' do
-    with_test_platform_for_nodes_to_deploy(additional_platforms_content: '
-      for_nodes(\'node1\') { deployment_schedule(IceCube::Schedule.new(Time.now.utc - 120, duration: 60)) }
-      for_nodes(\'node2\') { deployment_schedule(IceCube::Schedule.new(Time.now.utc - 60, duration: 120)) }
-    ') do
+    with_test_platform_for_nodes_to_deploy(
+      additional_config: <<~EO_CONFIG
+        for_nodes('node1') { deployment_schedule(IceCube::Schedule.new(Time.now.utc - 120, duration: 60)) }
+        for_nodes('node2') { deployment_schedule(IceCube::Schedule.new(Time.now.utc - 60, duration: 120)) }
+      EO_CONFIG
+    ) do
       expect(test_deployer).to receive(:deployment_info_from).with(%w[node1 node2]).and_return(
         'node1' => {
           services: %w[service1],
