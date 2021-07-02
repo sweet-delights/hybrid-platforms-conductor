@@ -69,14 +69,15 @@ module HybridPlatformsConductor
               SecretString.new("export #{var_name}='#{var_value.to_unprotected}'", silenced_str: "export #{var_name}='#{var_value}'")
             end + cmd_info[:commands]
           end.flatten
-
-          SecretString.protect(bash_cmds.map(&:to_unprotected).join("\n"), silenced_str: bash_cmds.join("\n")) do |bash_str|
-            log_debug "[#{@node}] - Execute remote Bash commands \"#{bash_str}\"..."
-            @connector.remote_bash bash_str
+          begin
+            SecretString.protect(bash_cmds.map(&:to_unprotected).join("\n"), silenced_str: bash_cmds.join("\n")) do |bash_str|
+              log_debug "[#{@node}] - Execute remote Bash commands \"#{bash_str}\"..."
+              @connector.remote_bash bash_str
+            end
+          ensure
+            # Make sure we erase all secret strings
+            bash_cmds.each(&:erase)
           end
-
-          # Make sure we erase all secret strings
-          bash_cmds.each(&:erase)
         end
 
       end
