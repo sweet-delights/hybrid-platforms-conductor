@@ -1,3 +1,9 @@
+# [v33.4.0](https://github.com/sweet-delights/hybrid-platforms-conductor/compare/v33.3.0...v33.4.0) (2021-07-05 13:24:27)
+
+### Features
+
+* [[Feature] [#83] Credentials can now be given through config DSL for better security and control](https://github.com/sweet-delights/hybrid-platforms-conductor/commit/9dd40e82b4c71bea9686abd828adb4359f5bebb2)
+
 # [v33.3.0](https://github.com/sweet-delights/hybrid-platforms-conductor/compare/v33.2.4...v33.3.0) (2021-07-02 17:20:58)
 
 ## Global changes
