@@ -18,7 +18,7 @@ module HybridPlatformsConductor
         # Check my_test_plugin.rb.sample documentation for signature details.
         def test_on_node
           spectre_cmd = <<~EO_BASH
-            #{@deployer.instance_variable_get(:@actions_executor).connector(:ssh).ssh_user == 'root' ? '' : "#{@nodes_handler.sudo_on(@node)} "}/bin/bash <<'EOAction'
+            #{@actions_executor.sudo_prefix(@node)}/bin/bash <<'EOAction'
             #{File.read("#{__dir__}/spectre-meltdown-checker.sh")}
             EOAction
           EO_BASH

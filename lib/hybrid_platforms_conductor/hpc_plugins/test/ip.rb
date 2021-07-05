@@ -12,8 +12,7 @@ module HybridPlatformsConductor
         # Check my_test_plugin.rb.sample documentation for signature details.
         def test_on_node
           {
-            # TODO: Access the user correctly when the user notion will be moved out of the ssh connector
-            "#{@deployer.instance_variable_get(:@actions_executor).connector(:ssh).ssh_user == 'root' ? '' : "#{@nodes_handler.sudo_on(@node)} "}hostname -I" => proc do |stdout|
+            "#{@actions_executor.sudo_prefix(@node)}hostname -I" => proc do |stdout|
               if stdout.first.nil?
                 error 'No IP returned by "hostname -I"'
               else

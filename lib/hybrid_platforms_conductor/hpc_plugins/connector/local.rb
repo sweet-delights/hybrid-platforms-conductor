@@ -77,8 +77,8 @@ module HybridPlatformsConductor
         def remote_copy(from, to, sudo: false, owner: nil, group: nil)
           # If the destination is a relative path, prepend the workspace dir to it.
           to = "#{workspace_for(@node)}/#{to}" unless to.start_with?('/')
-          if sudo
-            run_cmd "#{@nodes_handler.sudo_on(@node)} cp -r \"#{from}\" \"#{to}\""
+          if sudo && !@actions_executor.privileged_access?(@node)
+            run_cmd "#{@actions_executor.sudo_prefix(@node)}cp -r \"#{from}\" \"#{to}\""
           else
             FileUtils.cp_r from, to unless @cmd_runner.dry_run
           end

@@ -52,8 +52,7 @@ module HybridPlatformsConductor
         # Check my_test_plugin.rb.sample documentation for signature details.
         def test_on_node
           {
-            # TODO: Access the user correctly when the user notion will be moved out of the ssh connector
-            "#{@deployer.instance_variable_get(:@actions_executor).connector(:ssh).ssh_user == 'root' ? '' : "#{@nodes_handler.sudo_on(@node)} "}/usr/bin/find / \\( #{
+            "#{@actions_executor.sudo_prefix(@node)}/usr/bin/find / \\( #{
               @nodes_handler.
                 select_confs_for_node(@node, @config.ignored_orphan_files_paths).
                 inject(DIRECTORIES_TO_ALWAYS_IGNORE) { |merged_paths, paths_to_ignore_info| merged_paths + paths_to_ignore_info[:ignored_paths] }.
