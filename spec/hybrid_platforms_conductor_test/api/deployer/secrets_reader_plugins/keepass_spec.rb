@@ -57,12 +57,9 @@ describe HybridPlatformsConductor::Deployer do
       # * *additional_config* (String): Additional config
       # * *platform_info* (Hash): Platform configuration [default: 1 node having 1 service]
       # * *mock_keepass_password* (String): Password to be returned by credentials [default: 'test_keepass_password']
-      # * *mock_xml* (String): XML to be mocked [default: xml_single_entry]
       # * *expect_key_file* (String or nil): Key file to be expected, or nil if none [default: nil]
       # * *expect_password_enc* (String or nil): Encrypted password to be expected, or nil if none [default: nil]
       # * *expect_kpscript_calls* (Boolean): Should we expect calls to KPScript? [default: true]
-      # * *expect_nbr_credentials_calls* (Integer): How many calls to the credentials are expected? [default: 1]
-      # * *block* (Proc): Code called when the platform is setup
       def with_test_platform_for_keepass_test(
         additional_config,
         platform_info: {
@@ -70,33 +67,35 @@ describe HybridPlatformsConductor::Deployer do
           deployable_services: %w[service]
         },
         mock_keepass_password: 'test_keepass_password',
-        mock_xml: xml_single_entry,
+        mock_databases: { '/path/to/database.kdbx' => xml_single_entry },
         expect_key_file: nil,
         expect_password_enc: nil,
-        expect_kpscript_calls: true,
-        expect_nbr_credentials_calls: 1,
-        &block
+        expect_kpscript_calls: true
       )
-        expect(HybridPlatformsConductor::Credentials).to receive(:with_credentials_for).exactly(expect_nbr_credentials_calls).times do |id, _logger, _logger_stderr, url: nil, &client_code|
-          expect(id).to eq :keepass
-          client_code.call nil, mock_keepass_password
-        end
-        if expect_kpscript_calls
-          expect_calls_to_kpscript [
-            [
-              %r{/path/to/kpscript "/path/to/database.kdbx"#{mock_keepass_password.nil? ? '' : " -pw:\"#{Regexp.escape(mock_keepass_password)}\""}#{expect_password_enc.nil? ? '' : " -pw-enc:\"#{Regexp.escape(expect_password_enc)}\""}#{expect_key_file.nil? ? '' : " -keyfile:\"#{Regexp.escape(expect_key_file)}\""} -c:Export -Format:"KeePass XML \(2.x\)" -OutFile:"/tmp/.+"},
-              {
-                stdout: 'OK: Operation completed successfully.',
-                xml: mock_xml
-              }
-            ]
-          ]
-        end
         with_test_platform(
           platform_info,
-          additional_config: "read_secrets_from :keepass\n#{additional_config}",
-          &block
-        )
+          additional_config: "read_secrets_from :keepass\n#{additional_config}"
+        ) do
+          mock_databases.each do |database, _xml|
+            expect(test_deployer.instance_variable_get(:@secrets_readers)[:keepass]).to receive(:with_credentials_for).with(:keepass, resource: database) do |_id, resource: nil, &client_code|
+              client_code.call nil, mock_keepass_password
+            end
+          end
+          if expect_kpscript_calls
+            expect_calls_to_kpscript(
+              mock_databases.map do |database, xml|
+                [
+                  %r{/path/to/kpscript "#{Regexp.escape(database)}"#{mock_keepass_password.nil? ? '' : " -pw:\"#{Regexp.escape(mock_keepass_password)}\""}#{expect_password_enc.nil? ? '' : " -pw-enc:\"#{Regexp.escape(expect_password_enc)}\""}#{expect_key_file.nil? ? '' : " -keyfile:\"#{Regexp.escape(expect_key_file)}\""} -c:Export -Format:"KeePass XML \(2.x\)" -OutFile:"/tmp/.+"},
+                  {
+                    stdout: 'OK: Operation completed successfully.',
+                    xml: xml
+                  }
+                ]
+              end
+            )
+          end
+          yield
+        end
       end
 
       # Expect secrets to be set to given values
@@ -224,7 +223,7 @@ describe HybridPlatformsConductor::Deployer do
           <<~EO_CONFIG,
             secrets_from_keepass(database: '/path/to/database.kdbx')
           EO_CONFIG
-          expect_nbr_credentials_calls: 0,
+          mock_databases: {},
           expect_kpscript_calls: false
         ) do
           expect { test_deployer.deploy_on(%w[node]) }.to raise_error 'Missing KPScript configuration. Please use use_kpscript_from to set it.'
@@ -237,63 +236,65 @@ describe HybridPlatformsConductor::Deployer do
             use_kpscript_from '/path/to/kpscript'
             secrets_from_keepass(database: '/path/to/database.kdbx')
           EO_CONFIG
-          mock_xml: <<~EO_XML
-            <KeePassFile>
-              <Root>
-                <Group>
-                  <Entry>
-                    <String>
-                      <Key>Password</Key>
-                      <Value ProtectInMemory="True">TestPassword0</Value>
-                    </String>
-                    <String>
-                      <Key>Title</Key>
-                      <Value>Secret 0</Value>
-                    </String>
-                  </Entry>
+          mock_databases: {
+            '/path/to/database.kdbx' => <<~EO_XML
+              <KeePassFile>
+                <Root>
                   <Group>
-                    <Name>Group1</UUID>
                     <Entry>
                       <String>
                         <Key>Password</Key>
-                        <Value ProtectInMemory="True">TestPassword1</Value>
+                        <Value ProtectInMemory="True">TestPassword0</Value>
                       </String>
                       <String>
                         <Key>Title</Key>
-                        <Value>Secret 1</Value>
+                        <Value>Secret 0</Value>
                       </String>
                     </Entry>
                     <Group>
-                      <Name>Group2</UUID>
+                      <Name>Group1</UUID>
                       <Entry>
                         <String>
                           <Key>Password</Key>
-                          <Value ProtectInMemory="True">TestPassword2</Value>
+                          <Value ProtectInMemory="True">TestPassword1</Value>
                         </String>
                         <String>
                           <Key>Title</Key>
-                          <Value>Secret 2</Value>
+                          <Value>Secret 1</Value>
                         </String>
                       </Entry>
-                    </Group>
-                    <Group>
-                      <Name>Group3</UUID>
-                      <Entry>
-                        <String>
-                          <Key>Password</Key>
-                          <Value ProtectInMemory="True">TestPassword3</Value>
-                        </String>
-                        <String>
-                          <Key>Title</Key>
-                          <Value>Secret 3</Value>
-                        </String>
-                      </Entry>
+                      <Group>
+                        <Name>Group2</UUID>
+                        <Entry>
+                          <String>
+                            <Key>Password</Key>
+                            <Value ProtectInMemory="True">TestPassword2</Value>
+                          </String>
+                          <String>
+                            <Key>Title</Key>
+                            <Value>Secret 2</Value>
+                          </String>
+                        </Entry>
+                      </Group>
+                      <Group>
+                        <Name>Group3</UUID>
+                        <Entry>
+                          <String>
+                            <Key>Password</Key>
+                            <Value ProtectInMemory="True">TestPassword3</Value>
+                          </String>
+                          <String>
+                            <Key>Title</Key>
+                            <Value>Secret 3</Value>
+                          </String>
+                        </Entry>
+                      </Group>
                     </Group>
                   </Group>
-                </Group>
-              </Root>
-            </KeePassFile>
-          EO_XML
+                </Root>
+              </KeePassFile>
+            EO_XML
+          }
         ) do
           expect_secrets_to_be(
             'Secret 0' => { 'password' => 'TestPassword0' },
@@ -316,57 +317,59 @@ describe HybridPlatformsConductor::Deployer do
             use_kpscript_from '/path/to/kpscript'
             secrets_from_keepass(database: '/path/to/database.kdbx')
           EO_CONFIG
-          mock_xml: <<~EO_XML
-            <KeePassFile>
-              <Meta>
-                <Binaries>
-                  <Binary ID="0" Compressed="True">#{
-                    str = StringIO.new
-                    gz = Zlib::GzipWriter.new(str)
-                    gz.write('File 0 Content')
-                    gz.close
-                    Base64.encode64(str.string).strip
-                  }</Binary>
-                  <Binary ID="1">#{Base64.encode64('File 1 Content').strip}</Binary>
-                </Binaries>
-              </Meta>
-              <Root>
-                <Group>
-                  <Entry>
-                    <String>
-                      <Key>Password</Key>
-                      <Value ProtectInMemory="True">TestPassword0</Value>
-                    </String>
-                    <String>
-                      <Key>Title</Key>
-                      <Value>Secret 0</Value>
-                    </String>
-                    <Binary>
-                      <Key>file0.txt</Key>
-                      <Value Ref="0" />
-                    </Binary>
-                  </Entry>
+          mock_databases: {
+            '/path/to/database.kdbx' => <<~EO_XML
+              <KeePassFile>
+                <Meta>
+                  <Binaries>
+                    <Binary ID="0" Compressed="True">#{
+                      str = StringIO.new
+                      gz = Zlib::GzipWriter.new(str)
+                      gz.write('File 0 Content')
+                      gz.close
+                      Base64.encode64(str.string).strip
+                    }</Binary>
+                    <Binary ID="1">#{Base64.encode64('File 1 Content').strip}</Binary>
+                  </Binaries>
+                </Meta>
+                <Root>
                   <Group>
-                    <Name>Group1</UUID>
                     <Entry>
                       <String>
                         <Key>Password</Key>
-                        <Value ProtectInMemory="True">TestPassword1</Value>
+                        <Value ProtectInMemory="True">TestPassword0</Value>
                       </String>
                       <String>
                         <Key>Title</Key>
-                        <Value>Secret 1</Value>
+                        <Value>Secret 0</Value>
                       </String>
                       <Binary>
-                        <Key>file1.txt</Key>
-                        <Value Ref="1" />
+                        <Key>file0.txt</Key>
+                        <Value Ref="0" />
                       </Binary>
                     </Entry>
+                    <Group>
+                      <Name>Group1</UUID>
+                      <Entry>
+                        <String>
+                          <Key>Password</Key>
+                          <Value ProtectInMemory="True">TestPassword1</Value>
+                        </String>
+                        <String>
+                          <Key>Title</Key>
+                          <Value>Secret 1</Value>
+                        </String>
+                        <Binary>
+                          <Key>file1.txt</Key>
+                          <Value Ref="1" />
+                        </Binary>
+                      </Entry>
+                    </Group>
                   </Group>
-                </Group>
-              </Root>
-            </KeePassFile>
-          EO_XML
+                </Root>
+              </KeePassFile>
+            EO_XML
+          }
         ) do
           expect_secrets_to_be(
             'Secret 0' => { 'file0.txt' => 'File 0 Content', 'password' => 'TestPassword0' },
@@ -410,47 +413,33 @@ describe HybridPlatformsConductor::Deployer do
             nodes: { 'node1' => { services: %w[service1] }, 'node2' => { services: %w[service2] } },
             deployable_services: %w[service1 service2]
           },
-          expect_kpscript_calls: false,
-          expect_nbr_credentials_calls: 2
+          mock_databases: {
+            '/path/to/database1.kdbx' => xml_single_entry,
+            '/path/to/database2.kdbx' => <<~EO_XML
+              <KeePassFile>
+                <Root>
+                  <Group>
+                    <Entry>
+                      <UUID>Iv3JjMzpPEaijOB+SFZpRw==</UUID>
+                      <String>
+                        <Key>Password</Key>
+                        <Value ProtectInMemory="True">TestPassword2</Value>
+                      </String>
+                      <String>
+                        <Key>Title</Key>
+                        <Value>Test Secret 2</Value>
+                      </String>
+                      <String>
+                        <Key>UserName</Key>
+                        <Value>Test User Name 2</Value>
+                      </String>
+                    </Entry>
+                  </Group>
+                </Root>
+              </KeePassFile>
+            EO_XML
+          }
         ) do
-          expect_calls_to_kpscript [
-            [
-              %r{/path/to/kpscript "/path/to/database1.kdbx" -pw:"test_keepass_password" -c:Export -Format:"KeePass XML \(2.x\)" -OutFile:"/tmp/.+"},
-              {
-                stdout: 'OK: Operation completed successfully.',
-                xml: xml_single_entry
-              }
-            ],
-            [
-              %r{/path/to/kpscript "/path/to/database2.kdbx" -pw:"test_keepass_password" -c:Export -Format:"KeePass XML \(2.x\)" -OutFile:"/tmp/.+"},
-              {
-                stdout: 'OK: Operation completed successfully.',
-                xml: <<~EO_XML
-                  <KeePassFile>
-                    <Root>
-                      <Group>
-                        <Entry>
-                          <UUID>Iv3JjMzpPEaijOB+SFZpRw==</UUID>
-                          <String>
-                            <Key>Password</Key>
-                            <Value ProtectInMemory="True">TestPassword2</Value>
-                          </String>
-                          <String>
-                            <Key>Title</Key>
-                            <Value>Test Secret 2</Value>
-                          </String>
-                          <String>
-                            <Key>UserName</Key>
-                            <Value>Test User Name 2</Value>
-                          </String>
-                        </Entry>
-                      </Group>
-                    </Root>
-                  </KeePassFile>
-                EO_XML
-              }
-            ]
-          ]
           expect(test_services_handler).to receive(:package).with(
             services: { 'node1' => %w[service1], 'node2' => %w[service2] },
             secrets: {
@@ -500,122 +489,108 @@ describe HybridPlatformsConductor::Deployer do
             nodes: { 'node1' => { services: %w[service1] }, 'node2' => { services: %w[service2] } },
             deployable_services: %w[service1 service2]
           },
-          expect_kpscript_calls: false,
-          expect_nbr_credentials_calls: 2
+          mock_databases: {
+            '/path/to/database1.kdbx' => <<~EO_XML,
+              <KeePassFile>
+                <Root>
+                  <Group>
+                    <Entry>
+                      <UUID>Iv3JjMzpPEaijOB+SFZpRw==</UUID>
+                      <String>
+                        <Key>Password</Key>
+                        <Value ProtectInMemory="True">TestPassword1</Value>
+                      </String>
+                      <String>
+                        <Key>Title</Key>
+                        <Value>Test Secret 1</Value>
+                      </String>
+                      <String>
+                        <Key>UserName</Key>
+                        <Value>Test User Name 1</Value>
+                      </String>
+                    </Entry>
+                    <Group>
+                      <UUID>RsonCc3VHk+k85z5zHhZzQ==</UUID>
+                      <Name>Group1</Name>
+                      <Entry>
+                        <UUID>Iv3JjMzpPEaijOB+SFZpRw==</UUID>
+                        <String>
+                          <Key>Password</Key>
+                          <Value ProtectInMemory="True">TestPassword3</Value>
+                        </String>
+                        <String>
+                          <Key>Title</Key>
+                          <Value>Test Secret 3</Value>
+                        </String>
+                        <String>
+                          <Key>UserName</Key>
+                          <Value>Test User Name 3</Value>
+                        </String>
+                      </Entry>
+                    </Group>
+                  </Group>
+                </Root>
+              </KeePassFile>
+            EO_XML
+            '/path/to/database2.kdbx' => <<~EO_XML
+              <KeePassFile>
+                <Root>
+                  <Group>
+                    <Entry>
+                      <UUID>Iv3JjMzpPEaijOB+SFZpRw==</UUID>
+                      <String>
+                        <Key>Password</Key>
+                        <Value ProtectInMemory="True">TestPassword2</Value>
+                      </String>
+                      <String>
+                        <Key>Title</Key>
+                        <Value>Test Secret 2</Value>
+                      </String>
+                      <String>
+                        <Key>UserName</Key>
+                        <Value>Test User Name 2</Value>
+                      </String>
+                    </Entry>
+                    <Group>
+                      <UUID>RsonCc3VHk+k85z5zHhZzQ==</UUID>
+                      <Name>Group1</Name>
+                      <Entry>
+                        <UUID>Iv3JjMzpPEaijOB+SFZpRw==</UUID>
+                        <String>
+                          <Key>Password</Key>
+                          <Value ProtectInMemory="True">TestPassword3</Value>
+                        </String>
+                        <String>
+                          <Key>Title</Key>
+                          <Value>Test Secret 3</Value>
+                        </String>
+                        <String>
+                          <Key>Notes</Key>
+                          <Value>Notes 3</Value>
+                        </String>
+                      </Entry>
+                      <Entry>
+                        <UUID>Iv3JjMzpPEaijOB+SFZpRw==</UUID>
+                        <String>
+                          <Key>Password</Key>
+                          <Value ProtectInMemory="True">TestPassword4</Value>
+                        </String>
+                        <String>
+                          <Key>Title</Key>
+                          <Value>Test Secret 4</Value>
+                        </String>
+                        <String>
+                          <Key>UserName</Key>
+                          <Value>Test User Name 4</Value>
+                        </String>
+                      </Entry>
+                    </Group>
+                  </Group>
+                </Root>
+              </KeePassFile>
+            EO_XML
+          }
         ) do
-          expect_calls_to_kpscript [
-            [
-              %r{/path/to/kpscript "/path/to/database1.kdbx" -pw:"test_keepass_password" -c:Export -Format:"KeePass XML \(2.x\)" -OutFile:"/tmp/.+"},
-              {
-                stdout: 'OK: Operation completed successfully.',
-                xml: <<~EO_XML
-                  <KeePassFile>
-                    <Root>
-                      <Group>
-                        <Entry>
-                          <UUID>Iv3JjMzpPEaijOB+SFZpRw==</UUID>
-                          <String>
-                            <Key>Password</Key>
-                            <Value ProtectInMemory="True">TestPassword1</Value>
-                          </String>
-                          <String>
-                            <Key>Title</Key>
-                            <Value>Test Secret 1</Value>
-                          </String>
-                          <String>
-                            <Key>UserName</Key>
-                            <Value>Test User Name 1</Value>
-                          </String>
-                        </Entry>
-                        <Group>
-                          <UUID>RsonCc3VHk+k85z5zHhZzQ==</UUID>
-                          <Name>Group1</Name>
-                          <Entry>
-                            <UUID>Iv3JjMzpPEaijOB+SFZpRw==</UUID>
-                            <String>
-                              <Key>Password</Key>
-                              <Value ProtectInMemory="True">TestPassword3</Value>
-                            </String>
-                            <String>
-                              <Key>Title</Key>
-                              <Value>Test Secret 3</Value>
-                            </String>
-                            <String>
-                              <Key>UserName</Key>
-                              <Value>Test User Name 3</Value>
-                            </String>
-                          </Entry>
-                        </Group>
-                      </Group>
-                    </Root>
-                  </KeePassFile>
-                EO_XML
-              }
-            ],
-            [
-              %r{/path/to/kpscript "/path/to/database2.kdbx" -pw:"test_keepass_password" -c:Export -Format:"KeePass XML \(2.x\)" -OutFile:"/tmp/.+"},
-              {
-                stdout: 'OK: Operation completed successfully.',
-                xml: <<~EO_XML
-                  <KeePassFile>
-                    <Root>
-                      <Group>
-                        <Entry>
-                          <UUID>Iv3JjMzpPEaijOB+SFZpRw==</UUID>
-                          <String>
-                            <Key>Password</Key>
-                            <Value ProtectInMemory="True">TestPassword2</Value>
-                          </String>
-                          <String>
-                            <Key>Title</Key>
-                            <Value>Test Secret 2</Value>
-                          </String>
-                          <String>
-                            <Key>UserName</Key>
-                            <Value>Test User Name 2</Value>
-                          </String>
-                        </Entry>
-                        <Group>
-                          <UUID>RsonCc3VHk+k85z5zHhZzQ==</UUID>
-                          <Name>Group1</Name>
-                          <Entry>
-                            <UUID>Iv3JjMzpPEaijOB+SFZpRw==</UUID>
-                            <String>
-                              <Key>Password</Key>
-                              <Value ProtectInMemory="True">TestPassword3</Value>
-                            </String>
-                            <String>
-                              <Key>Title</Key>
-                              <Value>Test Secret 3</Value>
-                            </String>
-                            <String>
-                              <Key>Notes</Key>
-                              <Value>Notes 3</Value>
-                            </String>
-                          </Entry>
-                          <Entry>
-                            <UUID>Iv3JjMzpPEaijOB+SFZpRw==</UUID>
-                            <String>
-                              <Key>Password</Key>
-                              <Value ProtectInMemory="True">TestPassword4</Value>
-                            </String>
-                            <String>
-                              <Key>Title</Key>
-                              <Value>Test Secret 4</Value>
-                            </String>
-                            <String>
-                              <Key>UserName</Key>
-                              <Value>Test User Name 4</Value>
-                            </String>
-                          </Entry>
-                        </Group>
-                      </Group>
-                    </Root>
-                  </KeePassFile>
-                EO_XML
-              }
-            ]
-          ]
           expect(test_services_handler).to receive(:package).with(
             services: { 'node1' => %w[service1], 'node2' => %w[service2] },
             secrets: {
@@ -645,69 +620,55 @@ describe HybridPlatformsConductor::Deployer do
             nodes: { 'node1' => { services: %w[service1] }, 'node2' => { services: %w[service2] } },
             deployable_services: %w[service1 service2]
           },
-          expect_kpscript_calls: false,
-          expect_nbr_credentials_calls: 2
+          mock_databases: {
+            '/path/to/database1.kdbx' => <<~EO_XML,
+              <KeePassFile>
+                <Root>
+                  <Group>
+                    <Entry>
+                      <UUID>Iv3JjMzpPEaijOB+SFZpRw==</UUID>
+                      <String>
+                        <Key>Password</Key>
+                        <Value ProtectInMemory="True">TestPassword1</Value>
+                      </String>
+                      <String>
+                        <Key>Title</Key>
+                        <Value>Test Secret 1</Value>
+                      </String>
+                      <String>
+                        <Key>UserName</Key>
+                        <Value>Test User Name 1</Value>
+                      </String>
+                    </Entry>
+                  </Group>
+                </Root>
+              </KeePassFile>
+            EO_XML
+            '/path/to/database2.kdbx' => <<~EO_XML
+              <KeePassFile>
+                <Root>
+                  <Group>
+                    <Entry>
+                      <UUID>Iv3JjMzpPEaijOB+SFZpRw==</UUID>
+                      <String>
+                        <Key>Password</Key>
+                        <Value ProtectInMemory="True">OtherTestPassword1</Value>
+                      </String>
+                      <String>
+                        <Key>Title</Key>
+                        <Value>Test Secret 1</Value>
+                      </String>
+                      <String>
+                        <Key>UserName</Key>
+                        <Value>Test User Name 1</Value>
+                      </String>
+                    </Entry>
+                  </Group>
+                </Root>
+              </KeePassFile>
+            EO_XML
+          }
         ) do
-          expect_calls_to_kpscript [
-            [
-              %r{/path/to/kpscript "/path/to/database1.kdbx" -pw:"test_keepass_password" -c:Export -Format:"KeePass XML \(2.x\)" -OutFile:"/tmp/.+"},
-              {
-                stdout: 'OK: Operation completed successfully.',
-                xml: <<~EO_XML
-                  <KeePassFile>
-                    <Root>
-                      <Group>
-                        <Entry>
-                          <UUID>Iv3JjMzpPEaijOB+SFZpRw==</UUID>
-                          <String>
-                            <Key>Password</Key>
-                            <Value ProtectInMemory="True">TestPassword1</Value>
-                          </String>
-                          <String>
-                            <Key>Title</Key>
-                            <Value>Test Secret 1</Value>
-                          </String>
-                          <String>
-                            <Key>UserName</Key>
-                            <Value>Test User Name 1</Value>
-                          </String>
-                        </Entry>
-                      </Group>
-                    </Root>
-                  </KeePassFile>
-                EO_XML
-              }
-            ],
-            [
-              %r{/path/to/kpscript "/path/to/database2.kdbx" -pw:"test_keepass_password" -c:Export -Format:"KeePass XML \(2.x\)" -OutFile:"/tmp/.+"},
-              {
-                stdout: 'OK: Operation completed successfully.',
-                xml: <<~EO_XML
-                  <KeePassFile>
-                    <Root>
-                      <Group>
-                        <Entry>
-                          <UUID>Iv3JjMzpPEaijOB+SFZpRw==</UUID>
-                          <String>
-                            <Key>Password</Key>
-                            <Value ProtectInMemory="True">OtherTestPassword1</Value>
-                          </String>
-                          <String>
-                            <Key>Title</Key>
-                            <Value>Test Secret 1</Value>
-                          </String>
-                          <String>
-                            <Key>UserName</Key>
-                            <Value>Test User Name 1</Value>
-                          </String>
-                        </Entry>
-                      </Group>
-                    </Root>
-                  </KeePassFile>
-                EO_XML
-              }
-            ]
-          ]
           expect { test_deployer.deploy_on(%w[node1 node2]) }.to raise_error 'Secret set at path Test Secret 1->password by /path/to/database2.kdbx for service service2 on node node2 has conflicting values (set debug for value details).'
         end
       end

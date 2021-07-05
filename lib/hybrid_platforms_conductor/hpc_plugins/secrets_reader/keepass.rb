@@ -17,6 +17,7 @@ module HybridPlatformsConductor
       class Keepass < HybridPlatformsConductor::SecretsReader
 
         include SafeMerge
+        include Credentials
 
         # Extend the Config DSL
         module ConfigDSLExtension
@@ -84,7 +85,7 @@ module HybridPlatformsConductor
             unless @secrets.key?(secret_id)
               raise 'Missing KPScript configuration. Please use use_kpscript_from to set it.' if @config.kpscript.nil?
 
-              Credentials.with_credentials_for(:keepass, @logger, @logger_stderr) do |_user, password|
+              with_credentials_for(:keepass, resource: keepass_secrets_info[:database]) do |_user, password|
                 Tempfile.create('hpc_keepass') do |xml_file|
                   key_file = ENV['hpc_key_file_for_keepass']
                   password_enc = ENV['hpc_password_enc_for_keepass']

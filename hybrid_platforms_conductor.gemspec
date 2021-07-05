@@ -62,4 +62,6 @@ Gem::Specification.new do |s|
   s.add_development_dependency 'rubocop', '~> 1.16'
   # Lint checker for rspec
   s.add_development_dependency 'rubocop-rspec', '~> 2.4'
+  # Mock web responses when needed
+  s.add_development_dependency 'webmock', '~> 3.11'
 end

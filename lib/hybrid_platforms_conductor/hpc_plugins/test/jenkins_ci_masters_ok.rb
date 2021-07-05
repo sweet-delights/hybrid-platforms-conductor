@@ -1,5 +1,6 @@
 require 'json'
 require 'hybrid_platforms_conductor/credentials'
+require 'hybrid_platforms_conductor/bitbucket'
 require 'hybrid_platforms_conductor/common_config_dsl/bitbucket'
 
 module HybridPlatformsConductor
@@ -13,6 +14,9 @@ module HybridPlatformsConductor
 
         extend_config_dsl_with CommonConfigDsl::Bitbucket, :init_bitbucket
 
+        include Credentials
+        include HybridPlatformsConductor::Bitbucket
+
         SUCCESS_STATUSES = [
           # Add nil as the status of a currently running job (which is always the case for hybrid-platforms) is null
           nil,
@@ -23,12 +27,12 @@ module HybridPlatformsConductor
 
         # Check my_test_plugin.rb.sample documentation for signature details.
         def test
-          @config.for_each_bitbucket_repo do |_bitbucket, repo_info|
+          for_each_bitbucket_repo do |_bitbucket, repo_info|
             if repo_info[:jenkins_ci_url].nil?
               error "Repository #{repo_info[:name]} does not have any Jenkins CI URL configured."
             else
               master_info_url = "#{repo_info[:jenkins_ci_url]}/job/master/api/json"
-              Credentials.with_credentials_for(:jenkins_ci, @logger, @logger_stderr, url: master_info_url) do |jenkins_user, jenkins_password|
+              with_credentials_for(:jenkins_ci, resource: master_info_url) do |jenkins_user, jenkins_password|
                 # Get the master branch info from the API
                 master_info = JSON.parse(URI.parse(master_info_url).open(http_basic_authentication: [jenkins_user, jenkins_password]).read)
                 # Get the last build's URL

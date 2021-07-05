@@ -1,4 +1,5 @@
 require 'git'
+require 'hybrid_platforms_conductor/bitbucket'
 require 'hybrid_platforms_conductor/common_config_dsl/bitbucket'
 
 module HybridPlatformsConductor
@@ -12,9 +13,11 @@ module HybridPlatformsConductor
 
         extend_config_dsl_with CommonConfigDsl::Bitbucket, :init_bitbucket
 
+        include HybridPlatformsConductor::Bitbucket
+
         # Check my_test_plugin.rb.sample documentation for signature details.
         def test
-          @config.for_each_bitbucket_repo do |bitbucket, repo_info|
+          for_each_bitbucket_repo do |bitbucket, repo_info|
             # Test repo_info
             repo_id = "#{repo_info[:project]}/#{repo_info[:name]}"
             settings_pr = bitbucket.settings_pr(repo_info[:project], repo_info[:name])

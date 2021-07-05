@@ -88,7 +88,13 @@ module HybridPlatformsConductor
       define_method("log_#{level}") do |message|
         (LEVELS_TO_STDERR.include?(level) ? @logger_stderr : @logger).send(
           level,
-          defined?(@log_component) ? @log_component : self.class.name.split('::').last
+          if defined?(@log_component)
+            @log_component
+          else
+            # Handle the case when the class is unnamed
+            class_name = self.class.name
+            class_name.nil? ? '<Unnamed class>' : class_name.split('::').last
+          end
         ) { message }
       end
     end

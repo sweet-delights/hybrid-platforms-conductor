@@ -39,9 +39,9 @@ describe HybridPlatformsConductor::Deployer do
         if user.nil?
           user = 'thycotic_user_from_netrc'
           password = 'thycotic_password_from_netrc'
-          expect(HybridPlatformsConductor::Credentials).to receive(:with_credentials_for) do |id, _logger, _logger_stderr, url: nil, &client_code|
+          expect(test_deployer.instance_variable_get(:@secrets_readers)[:thycotic]).to receive(:with_credentials_for) do |id, resource: nil, &client_code|
             expect(id).to eq :thycotic
-            expect(url).to eq thycotic_url
+            expect(resource).to eq thycotic_url
             client_code.call user, password
           end
         end

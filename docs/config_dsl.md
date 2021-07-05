@@ -13,6 +13,7 @@ This DSL can also be completed by plugins. Check [the plugins documentations](pl
   * [`hybrid_platforms_dir`](#hybrid_platforms_dir)
   * [`tests_provisioner`](#tests_provisioner)
   * [`expect_tests_to_fail`](#expect_tests_to_fail)
+  * [`credentials_for`](#credentials_for)
   * [`read_secrets_from`](#read_secrets_from)
   * [`send_logs_to`](#send_logs_to)
   * [`retry_deploy_for_errors_on_stdout`](#retry_deploy_for_errors_on_stdout)
@@ -199,6 +200,48 @@ expect_tests_to_fail :bitbucket_conf, 'Our Bitbucket server is down.'
 # Test nodes are not yet patched against Spectre variants
 for_nodes('/tst/') do
   expect_tests_to_fail :spectre, 'Test nodes are not patched yet. See ticket PRJ-455'
+end
+```
+
+<a name="credentials_for"></a>
+## `credentials_for`
+
+Set the credentials to be used (user, password) for a given credential ID and an optional resources selection.
+
+Credentials can be used by any plugin (using the [`with_credentials_for`](/lib/hybrid_platforms_conductor/credentials.rb) method) and are used by various processes in Hybrid Platforms Conductor. See each [plugin's documentation](plugins.md) to know which plugin uses which credential.
+
+It takes the following parameters:
+* the credential ID (as a Symbol),
+* an optional resource specification (can be a String for a complete resource name, or a Regexp matching resources' names),
+* a code block that will be called back by any process needing credentials matching the ID and resource specification.
+The code block will be given both the resource name being accessed, and a requester object that needs to be given the corresponding user and password. When the requester finishes running, the credentials are not needed anymore and should be cleaned from memory to avoid vulnerabilities.
+
+Examples:
+```ruby
+# Using an environment variable as a password
+credentials_for(:github) do |resource, requester|
+  requester.call 'MyUserName', ENV['MY_GITHUB_PASSWORD']
+end
+
+# Using user input and cleaning memory
+credentials_for(:github) do |resource, requester|
+  puts 'Input Github password...'
+  password = ''
+  $stdin.noecho { |io| io.sysread(256, password) }
+  begin
+    password.chomp!
+    requester.call 'MyUserName', password
+  ensure
+    SecretString.erase(password)
+  end
+end
+
+# Defining different credentials based on the resource being accessed
+credentials_for(:github, resource: %r{github.com/my-projects}) do |resource, requester|
+  requester.call 'MyUserName', 'MyPassword'
+end
+credentials_for(:github, resource: %r{github.com/company}) do |resource, requester|
+  requester.call 'CompanyUserName', 'CompanyPassword'
 end
 ```
 
