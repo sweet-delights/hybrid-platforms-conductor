@@ -11,6 +11,7 @@ module HybridPlatformsConductorTest
       # * *nodes_connections* (Hash<String, Hash<Symbol,Object> >): Nodes' connections info, per node name:
       #   * *connection* (String): Connection string (fqdn, IP...) used by SSH
       #   * *ip* (String): IP used by SSH (can be different from connection in case of transformed SSH) [default: connection]
+      #   * *port* (Integer): SSH port used [default: 22]
       #   * *user* (String): User used by SSH
       #   * *times* (Integer): Number of times this connection should be used [default: 1]
       #   * *control_master_create_error* (String or nil): Error to simulate during the SSH ControlMaster creation, or nil for none [default: nil]
@@ -37,6 +38,7 @@ module HybridPlatformsConductorTest
       )
         nodes_connections.map do |node, node_connection_info|
           node_connection_info[:times] = 1 unless node_connection_info.key?(:times)
+          node_connection_info[:port] = 22 unless node_connection_info.key?(:port)
           ssh_commands_once = []
           ssh_commands_per_connection = []
           if with_strict_host_key_checking
@@ -44,7 +46,7 @@ module HybridPlatformsConductorTest
             ssh_commands_once.concat(
               [
                 [
-                  "ssh-keyscan #{ip}",
+                  "ssh-keyscan -p #{node_connection_info[:port]} #{ip}",
                   proc { [0, "#{ip} ssh-rsa fake_host_key_for_#{ip}", ''] }
                 ]
               ]
@@ -67,7 +69,7 @@ module HybridPlatformsConductorTest
                 %r{^xterm -e '.+/ssh -o ControlMaster=yes -o ControlPersist=yes hpc\.#{Regexp.escape(node)}'$}
               end,
               proc do
-                control_file = test_actions_executor.connector(:ssh).send(:control_master_file, node_connection_info[:connection], '22', node_connection_info[:user])
+                control_file = test_actions_executor.connector(:ssh).send(:control_master_file, node_connection_info[:connection], node_connection_info[:port].to_s, node_connection_info[:user])
                 # Fail if the ControlMaster file already exists, as would SSH do if the file is stalled
                 if File.exist?(control_file)
                   [255, '', "Control file #{control_file} already exists"]
@@ -97,7 +99,7 @@ module HybridPlatformsConductorTest
               %r{^.+/ssh -O exit hpc\.#{Regexp.escape(node)} 2>&1 \| grep -v 'Exit request sent\.'$},
               proc do
                 # Really mock the control file deletion
-                File.unlink(test_actions_executor.connector(:ssh).send(:control_master_file, node_connection_info[:connection], '22', node_connection_info[:user]))
+                File.unlink(test_actions_executor.connector(:ssh).send(:control_master_file, node_connection_info[:connection], node_connection_info[:port].to_s, node_connection_info[:user]))
                 [1, '', '']
               end,
               { optional: with_control_master_destroy_optional }

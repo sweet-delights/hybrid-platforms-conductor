@@ -175,6 +175,16 @@ describe HybridPlatformsConductor::ActionsExecutor do
         end
       end
 
+      it 'generates a simple config for a node with host_ip and a given SSH port' do
+        with_test_platform({ nodes: { 'node' => { meta: { host_ip: '192.168.42.42', ssh_port: 666 } } } }) do
+          expect(ssh_config_for('node')).to eq <<~EO_SSH_CONFIG
+            Host hpc.node
+              Hostname 192.168.42.42
+              Port 666
+          EO_SSH_CONFIG
+        end
+      end
+
       it 'generates a simple config for several nodes' do
         with_test_platform(
           {
