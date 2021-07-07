@@ -70,6 +70,7 @@ end
 | `host_keys` | `Array<String>` | The node's host keys used to generate a `known_hosts` file with those to avoid user confirmations when connecting. |
 | `hostname` | `String` | Host name used to connect in case no IP address can be found in metadata. |
 | `private_ips` | `Array<String>` | IP list to connect in case `host_ip` is not defined in metadata. |
+| `ssh_port` | `Integer` | Port used to connect to SSH (default: 22). |
 | `ssh_session_exec` | `Boolean` | If set to `false`, then consider that the node does not have any SSH SessionExec capabilities. This will make sure that remote command executions is done using stdin piping on interactive sessions instead of SSH commands execution. |
 
 ## Used environment variables

@@ -384,16 +384,18 @@ module HybridPlatformsConductor
 
           # Add each node
           # Query for the metadata of all nodes at once
-          @nodes_handler.prefetch_metadata_of nodes, %i[private_ips hostname host_ip description]
+          @nodes_handler.prefetch_metadata_of nodes, %i[private_ips hostname host_ip description ssh_port]
           nodes.sort.each do |node|
             # Generate the conf for the node
             connection, connection_user, gateway, gateway_user = connection_info_for(node, no_exception: true)
             if connection.nil?
               config_content << "# #{node} - Not connectable using SSH - #{@nodes_handler.get_description_of(node) || ''}\n"
             else
+              ssh_port = @nodes_handler.get_ssh_port_of(node)
               config_content << "# #{node} - #{connection} - #{@nodes_handler.get_description_of(node) || ''}\n"
               config_content << "Host #{ssh_aliases_for(node).join(' ')}\n"
               config_content << "  Hostname #{connection}\n"
+              config_content << "  Port #{ssh_port}\n" unless ssh_port.nil?
               config_content << "  User \"#{connection_user}\"\n" if connection_user != @ssh_user
               config_content << "  ProxyCommand #{ssh_exec} -q -W %h:%p #{gateway_user}@#{gateway}\n" unless gateway.nil?
               if @passwords.key?(node)
@@ -658,7 +660,7 @@ module HybridPlatformsConductor
             existing_users = File.exist?(control_master_users_file) ? File.read(control_master_users_file).split("\n") : []
             ssh_url = "hpc.#{node}"
             connection, connection_user, _gateway, _gateway_user = connection_info_for(node)
-            control_path_file = control_master_file(connection, '22', connection_user)
+            control_path_file = control_master_file(connection, @nodes_handler.get_ssh_port_of(node) || 22, connection_user)
             if existing_users.empty?
               # Make sure there is no stale one.
               if File.exist?(control_path_file)

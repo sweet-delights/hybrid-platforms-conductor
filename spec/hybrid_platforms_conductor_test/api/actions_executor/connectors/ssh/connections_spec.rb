@@ -132,6 +132,36 @@ describe HybridPlatformsConductor::ActionsExecutor do
         end
       end
 
+      it 'creates SSH master to several nodes differing only by the SSH port' do
+        with_test_platform(
+          {
+            nodes: {
+              'node1' => { meta: { host_ip: '192.168.42.1', ssh_port: 6661 } },
+              'node2' => { meta: { host_ip: '192.168.42.1', ssh_port: 6662 } },
+              'node3' => { meta: { host_ip: '192.168.42.1', ssh_port: 6663 } }
+            }
+          }
+        ) do
+          with_cmd_runner_mocked(
+            [
+              ['which env', proc { [0, "/usr/bin/env\n", ''] }],
+              ['ssh -V 2>&1', proc { [0, "OpenSSH_7.4p1 Debian-10+deb9u7, OpenSSL 1.0.2u  20 Dec 2019\n", ''] }]
+            ] + ssh_expected_commands_for(
+              {
+                'node1' => { connection: '192.168.42.1', user: 'test_user', port: 6661 },
+                'node2' => { connection: '192.168.42.1', user: 'test_user', port: 6662 },
+                'node3' => { connection: '192.168.42.1', user: 'test_user', port: 6663 }
+              }
+            )
+          ) do
+            test_connector.ssh_user = 'test_user'
+            test_connector.with_connection_to(%w[node1 node2 node3]) do |connected_nodes|
+              expect(connected_nodes.sort).to eq %w[node1 node2 node3].sort
+            end
+          end
+        end
+      end
+
       it 'creates SSH master to several nodes with ssh connections transformed' do
         with_test_platform(
           { nodes: {

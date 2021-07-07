@@ -26,7 +26,13 @@ module HybridPlatformsConductor
             # Check that we can connect with root
             ssh_ok = false
             begin
-              Net::SSH.start(instance.ip, 'root', password: 'root_pwd', auth_methods: ['password'], verify_host_key: :never) do |ssh|
+              Net::SSH.start(
+                instance.ip,
+                'root',
+                password: 'root_pwd',
+                auth_methods: ['password'],
+                verify_host_key: :never
+              ) do |ssh|
                 ssh_ok = ssh.exec!('echo Works').strip == 'Works'
               end
             rescue
@@ -53,14 +59,22 @@ module HybridPlatformsConductor
                 #   System is booting up. See pam_nologin(8)
                 #   Authentication failed.
                 instance.stop
-                instance.with_running_instance(port: 22) do
+                ssh_port = @nodes_handler.get_ssh_port_of(@node) || 22
+                instance.with_running_instance(port: ssh_port) do
 
                   unless @nodes_handler.get_root_access_allowed_of(@node)
                     # ===== Deploy removes root access
                     # Check that we can't connect with root
                     ssh_ok = false
                     begin
-                      Net::SSH.start(instance.ip, 'root', password: 'root_pwd', auth_methods: ['password'], verify_host_key: :never) do |ssh|
+                      Net::SSH.start(
+                        instance.ip,
+                        'root',
+                        password: 'root_pwd',
+                        auth_methods: ['password'],
+                        verify_host_key: :never,
+                        port: ssh_port
+                      ) do |ssh|
                         ssh_ok = ssh.exec!('echo Works').strip == 'Works'
                       end
                     rescue

@@ -27,7 +27,7 @@ module HybridPlatformsConductor
               #   System is booting up. See pam_nologin(8)
               #   Authentication failed.
               instance.stop
-              instance.with_running_instance(port: 22) do
+              instance.with_running_instance(port: @nodes_handler.get_ssh_port_of(@node) || 22) do
                 # Now that the node has been deployed, use the a_testadmin user for the check-node (as root has no more access)
                 deployer.instance_variable_get(:@actions_executor).connector(:ssh).ssh_user = 'a_testadmin'
                 deployer.instance_variable_get(:@actions_executor).connector(:ssh).passwords.delete(@node)

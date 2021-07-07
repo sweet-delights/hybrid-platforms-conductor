@@ -24,7 +24,7 @@ module HybridPlatformsConductor
         # * Hash<Symbol, Symbol or Array<Symbol> >: The list of necessary properties (or single one) that should be set, per property name (:others can also be used here)
         def property_dependencies
           {
-            host_keys: %i[hostname host_ip]
+            host_keys: %i[hostname host_ip ssh_port]
           }
         end
 
@@ -41,19 +41,20 @@ module HybridPlatformsConductor
         #     Nodes for which the property can't be fetched can be ommitted.
         def get_host_keys(_nodes, metadata)
           updated_metadata = {}
-          # Get the list of nodes, per hostname (just in case several nodes share the same hostname)
-          # Hash<String, Array<String> >
+          # Get the list of nodes, per [hostname, port] (just in case several nodes share the same hostname and port)
+          # Hash<[String, Integer], Array<String> >
           hostnames = Hash.new { |hash, key| hash[key] = [] }
           metadata.each do |node, node_metadata|
+            ssh_port = node_metadata[:ssh_port] || 22
             if node_metadata[:host_ip]
-              hostnames[node_metadata[:host_ip]] << node
+              hostnames[[node_metadata[:host_ip], ssh_port]] << node
             elsif node_metadata[:hostname]
-              hostnames[node_metadata[:hostname]] << node
+              hostnames[[node_metadata[:hostname], ssh_port]] << node
             end
           end
           unless hostnames.empty?
-            host_keys_for(*hostnames.keys).each do |hostname, ip|
-              hostnames[hostname].each do |node|
+            host_keys_for(*hostnames.keys).each do |host_id, ip|
+              hostnames[host_id].each do |node|
                 updated_metadata[node] = ip
               end
             end
@@ -71,7 +72,7 @@ module HybridPlatformsConductor
         # Discover the host keys associated to a list of hosts.
         #
         # Parameters::
-        # * *hosts* (Array<String>): The hosts to check for
+        # * *hosts* (Array<[String, Integer]>): The hosts to check for ([hostname, port])
         # Result::
         # * Hash<String, Array<String> >: The corresponding host keys, per host name
         def host_keys_for(*hosts)
@@ -82,9 +83,9 @@ module HybridPlatformsConductor
             parallel: true,
             nbr_threads_max: MAX_THREADS_SSH_KEY_SCAN,
             progress: log_debug? ? 'Gather host keys' : nil
-          ) do |host|
+          ) do |(host, ssh_port)|
             exit_status, stdout, _stderr = @cmd_runner.run_cmd(
-              "ssh-keyscan #{host}",
+              "ssh-keyscan -p #{ssh_port} #{host}",
               timeout: TIMEOUT_SSH_KEYSCAN,
               log_to_stdout: log_debug?,
               no_exception: true
@@ -97,9 +98,9 @@ module HybridPlatformsConductor
                   found_keys << "#{type} #{key}"
                 end
               end
-              results[host] = found_keys.sort unless found_keys.empty?
+              results[[host, ssh_port]] = found_keys.sort unless found_keys.empty?
             else
-              log_warn "Unable to get host key for #{host}. Ignoring it. Accessing #{host} might require manual acceptance of its host key."
+              log_warn "Unable to get host key for #{host} (port #{ssh_port}). Ignoring it. Accessing #{host} might require manual acceptance of its host key."
             end
           end
           results
