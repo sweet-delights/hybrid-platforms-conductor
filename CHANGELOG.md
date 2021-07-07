@@ -1,3 +1,9 @@
+# [v33.5.0](https://github.com/sweet-delights/hybrid-platforms-conductor/compare/v33.4.0...v33.5.0) (2021-07-07 11:03:01)
+
+### Features
+
+* [[Feature] [Security] [#80] Use SecretString for credentials to avoid passwords and secrets accidental leakage](https://github.com/sweet-delights/hybrid-platforms-conductor/commit/0db5f529e539b81f86b9f618a63e62bdbd58cb38)
+
 # [v33.4.0](https://github.com/sweet-delights/hybrid-platforms-conductor/compare/v33.3.0...v33.4.0) (2021-07-05 13:24:27)
 
 ### Features
