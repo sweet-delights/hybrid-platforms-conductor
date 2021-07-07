@@ -1,6 +1,23 @@
 require 'colorize'
 require 'logger'
 require 'ruby-progressbar'
+require 'secret_string'
+
+# Add colorization methods to SecretString, but always directed to the silenced string as we NEVER want to modiy/clone a secret
+class SecretString
+
+  extend Colorize::ClassMethods
+
+  def_delegators :@silenced_str, *%i[
+    colorize
+    uncolorize
+    colorized?
+  ]
+
+  color_methods
+  modes_methods
+
+end
 
 module HybridPlatformsConductor
 

@@ -104,7 +104,7 @@ module HybridPlatformsConductor
         # [API] - @stderr_io can be used to send stderr output
         #
         # Parameters::
-        # * *bash_cmds* (String): Bash commands to execute
+        # * *bash_cmds* (String or SecretString): Bash commands to execute. Use #to_unprotected to access the real content (otherwise secrets are obfuscated).
         def remote_bash(bash_cmds)
           MyConnectLib.connect_to(@nodes_handler.get_host_ip_of(@node)).run_bash(bash_cmds)
         end

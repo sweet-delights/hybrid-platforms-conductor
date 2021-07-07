@@ -7,6 +7,13 @@ describe HybridPlatformsConductor::CmdRunner do
     end
   end
 
+  it 'runs a simple bash command in a SecretString' do
+    with_repository do |repository|
+      test_cmd_runner.run_cmd SecretString.new("echo TestContent >#{repository}/test_file", silenced_str: '__INVALID_BASH__')
+      expect(File.read("#{repository}/test_file")).to eq "TestContent\n"
+    end
+  end
+
   it 'runs a simple bash command and returns exit code, stdout and stderr correctly' do
     with_repository do
       expect(test_cmd_runner.run_cmd('echo TestStderr 1>&2 ; echo TestStdout')).to eq [0, "TestStdout\n", "TestStderr\n"]
@@ -17,6 +24,13 @@ describe HybridPlatformsConductor::CmdRunner do
     with_repository do
       # Use set -o pipefail that does not work in /bin/sh
       expect(test_cmd_runner.run_cmd('set -o pipefail ; echo TestStderr 1>&2 ; echo TestStdout', force_bash: true)).to eq [0, "TestStdout\n", "TestStderr\n"]
+    end
+  end
+
+  it 'runs a simple bash command and forces usage of bash in a SecretString' do
+    with_repository do
+      # Use set -o pipefail that does not work in /bin/sh
+      expect(test_cmd_runner.run_cmd(SecretString.new('set -o pipefail ; echo TestStderr 1>&2 ; echo TestStdout', silenced_str: '__INVALID_BASH__'), force_bash: true)).to eq [0, "TestStdout\n", "TestStderr\n"]
     end
   end
 

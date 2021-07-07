@@ -59,7 +59,7 @@ module HybridPlatformsConductor
     # Raise an exception if the exit status is not the expected one.
     #
     # Parameters::
-    # * *cmd* (String): Command to be run
+    # * *cmd* (String or SecretString): Command to be run
     # * *log_to_file* (String or nil): Log file capturing stdout or stderr (or nil for none). [default: nil]
     # * *log_to_stdout* (Boolean): Do we send the output to stdout? [default: true]
     # * *log_stdout_to_io* (IO or nil): IO to send command's stdout to, or nil for none. [default: nil]
@@ -108,7 +108,7 @@ module HybridPlatformsConductor
         bash_file = nil
         if force_bash
           bash_file = Tempfile.new('hpc_bash')
-          bash_file.write(cmd)
+          bash_file.write(cmd.to_unprotected)
           bash_file.chmod 0o700
           bash_file.close
           cmd = "/bin/bash -c #{bash_file.path}"
@@ -136,7 +136,7 @@ module HybridPlatformsConductor
                 pty: true,
                 timeout: timeout,
                 uuid: false
-              ).run!(cmd) do |stdout, stderr|
+              ).run!(cmd.to_unprotected) do |stdout, stderr|
                 stdout_queue << stdout if stdout
                 stderr_queue << stderr if stderr
               end
@@ -162,7 +162,7 @@ module HybridPlatformsConductor
           log_debug "Finished in #{elapsed} seconds with exit status #{exit_status} (#{(expected_code.include?(exit_status) ? 'success'.light_green : 'failure'.light_red).bold})"
         end
         unless expected_code.include?(exit_status)
-          error_title = "Command '#{cmd.split("\n").first}' returned error code #{exit_status} (expected #{expected_code.join(', ')})."
+          error_title = "Command '#{cmd.to_s.split("\n").first}' returned error code #{exit_status} (expected #{expected_code.join(', ')})."
           if no_exception
             # We consider the caller is responsible for logging what he wants about the details of the error (stdout and stderr)
             log_error error_title

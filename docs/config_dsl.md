@@ -216,6 +216,10 @@ It takes the following parameters:
 * a code block that will be called back by any process needing credentials matching the ID and resource specification.
 The code block will be given both the resource name being accessed, and a requester object that needs to be given the corresponding user and password. When the requester finishes running, the credentials are not needed anymore and should be cleaned from memory to avoid vulnerabilities.
 
+A secure way to five the password is to use a [`SecretString`](https://github.com/Muriel-Salvan/secret_string) class that will give the following guarantees:
+* Avoid the password to leak inadvertently in logs, on-screen, files...
+* Clear the password from memory as soon as it is not needed anymore.
+
 Examples:
 ```ruby
 # Using an environment variable as a password
@@ -228,11 +232,9 @@ credentials_for(:github) do |resource, requester|
   puts 'Input Github password...'
   password = ''
   $stdin.noecho { |io| io.sysread(256, password) }
-  begin
-    password.chomp!
-    requester.call 'MyUserName', password
-  ensure
-    SecretString.erase(password)
+  password.chomp!
+  SecretString.protect(password) do |secret_password|
+    requester.call 'MyUserName', secret_password
   end
 end
 

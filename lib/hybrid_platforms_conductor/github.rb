@@ -23,7 +23,7 @@ module HybridPlatformsConductor
           c.api_endpoint = repo_info[:url]
         end
         with_credentials_for(:github, resource: repo_info[:url]) do |_github_user, github_token|
-          client = Octokit::Client.new(access_token: github_token)
+          client = Octokit::Client.new(access_token: github_token&.to_unprotected)
           (repo_info[:repos] == :all ? client.repositories(repo_info[:user]).map { |repo| repo[:name] } : repo_info[:repos]).each do |name|
             yield client, {
               name: name,

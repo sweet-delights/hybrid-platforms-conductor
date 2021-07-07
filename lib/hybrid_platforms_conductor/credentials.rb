@@ -1,4 +1,5 @@
 require 'netrc'
+require 'secret_string'
 require 'uri'
 require 'hybrid_platforms_conductor/logger_helpers'
 
@@ -65,8 +66,8 @@ module HybridPlatformsConductor
     # * Proc: Client code called with credentials provided
     #   * Parameters::
     #     * *user* (String or nil): User name, or nil if none
-    #     * *password* (String or nil): Password, or nil if none.
-    #       !!! Never store this password in a scope broader than the client code itself !!!
+    #     * *password* (SecretString or nil): Password, or nil if none.
+    #       !!! Never clone this password in a scope broader than the client code itself !!!
     def with_credentials_for(id, resource: nil)
       # Get the credentials provider
       provider = nil
@@ -81,7 +82,8 @@ module HybridPlatformsConductor
 
       provider ||= proc do |requested_resource, requester|
         # Check environment variables
-        user = ENV["hpc_user_for_#{id}"].dup
+        user = ENV["hpc_user_for_#{id}"]
+        # Clone the password as we are going to treat it as a secret string that will be wiped out
         password = ENV["hpc_password_for_#{id}"].dup
         if user.nil? || user.empty? || password.nil? || password.empty?
           log_debug "[ Credentials for #{id} ] - Credentials not found from environment variables."
@@ -103,6 +105,7 @@ module HybridPlatformsConductor
                 # TODO: Add more credentials source if needed here
                 log_warn "[ Credentials for #{id} ] - Unable to get credentials for #{id} (Resource: #{requested_resource})."
               else
+                # Clone in memory as we are going to wipe out ::Netrc's memory
                 user = netrc_user.dup
                 password = netrc_password.dup
                 log_debug "[ Credentials for #{id} ] - Credentials retrieved from .netrc using #{requested_resource}."
@@ -115,19 +118,18 @@ module HybridPlatformsConductor
                   data_string.replace('GotYou!!!' * 100)
                 end
               end
-              # We do this assignment on purpose so that GC can remove sensitive data later
-              # rubocop:disable Lint/UselessAssignment
-              netrc = nil
-              # rubocop:enable Lint/UselessAssignment
             end
           end
         else
           log_debug "[ Credentials for #{id} ] - Credentials retrieved from environment variables."
         end
-        GC.start
-        requester.call user, password
-        password&.replace('gotyou!' * 100)
-        GC.start
+        if password.nil?
+          requester.call user, password
+        else
+          SecretString.protect(password) do |secret_password|
+            requester.call user, secret_password
+          end
+        end
       end
 
       requester_called = false
@@ -135,7 +137,13 @@ module HybridPlatformsConductor
         resource,
         proc do |user, password|
           requester_called = true
-          yield user, password
+          if password.is_a?(String)
+            SecretString.protect(password) do |secret_password|
+              yield user, secret_password
+            end
+          else
+            yield user, password
+          end
         end
       )
 

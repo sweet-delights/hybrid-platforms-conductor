@@ -236,31 +236,40 @@ module HybridPlatformsConductor
         # [API] - @stderr_io can be used to send stderr output
         #
         # Parameters::
-        # * *bash_cmds* (String): Bash commands to execute
+        # * *bash_cmds* (String or SecretString): Bash commands to execute. Use #to_unprotected to access the real content (otherwise secrets are obfuscated).
         def remote_bash(bash_cmds)
-          ssh_cmd =
+          SecretString.protect(
             if @nodes_handler.get_ssh_session_exec_of(@node) == false
               # When ExecSession is disabled we need to use stdin directly
-              "{ cat | #{ssh_exec} #{ssh_url} -T; } <<'HPC_EOF'\n#{bash_cmds}\nHPC_EOF"
+              "{ cat | #{ssh_exec} #{ssh_url} -T; } <<'HPC_EOF'\n#{bash_cmds.to_unprotected}\nHPC_EOF"
             else
-              "#{ssh_exec} #{ssh_url} /bin/bash <<'HPC_EOF'\n#{bash_cmds}\nHPC_EOF"
+              "#{ssh_exec} #{ssh_url} /bin/bash <<'HPC_EOF'\n#{bash_cmds.to_unprotected}\nHPC_EOF"
+            end,
+            silenced_str:
+              if @nodes_handler.get_ssh_session_exec_of(@node) == false
+                # When ExecSession is disabled we need to use stdin directly
+                "{ cat | #{ssh_exec} #{ssh_url} -T; } <<'HPC_EOF'\n#{bash_cmds}\nHPC_EOF"
+              else
+                "#{ssh_exec} #{ssh_url} /bin/bash <<'HPC_EOF'\n#{bash_cmds}\nHPC_EOF"
+              end
+          ) do |ssh_cmd|
+            # Due to a limitation of Process.spawn, each individual argument is limited to 128KB of size.
+            # Therefore we need to make sure that if bash_cmds exceeds MAX_CMD_ARG_LENGTH bytes (considering EOF chars) then we use an intermediary shell script to store the commands.
+            if bash_cmds.to_unprotected.size > MAX_CMD_ARG_LENGTH
+              # Write the commands in a file
+              temp_file = "#{Dir.tmpdir}/hpc_temp_cmds_#{Digest::MD5.hexdigest(bash_cmds.to_unprotected)}.sh"
+              File.open(temp_file, 'w+') do |file|
+                file.write ssh_cmd.to_unprotected
+                file.chmod 0o700
+              end
+              begin
+                run_cmd(temp_file)
+              ensure
+                File.unlink(temp_file)
+              end
+            else
+              run_cmd ssh_cmd
             end
-          # Due to a limitation of Process.spawn, each individual argument is limited to 128KB of size.
-          # Therefore we need to make sure that if bash_cmds exceeds MAX_CMD_ARG_LENGTH bytes (considering EOF chars) then we use an intermediary shell script to store the commands.
-          if bash_cmds.size > MAX_CMD_ARG_LENGTH
-            # Write the commands in a file
-            temp_file = "#{Dir.tmpdir}/hpc_temp_cmds_#{Digest::MD5.hexdigest(bash_cmds)}.sh"
-            File.open(temp_file, 'w+') do |file|
-              file.write ssh_cmd
-              file.chmod 0o700
-            end
-            begin
-              run_cmd(temp_file)
-            ensure
-              File.unlink(temp_file)
-            end
-          else
-            run_cmd ssh_cmd
           end
         end
 

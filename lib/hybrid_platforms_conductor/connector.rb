@@ -67,7 +67,7 @@ module HybridPlatformsConductor
     # Handle the redirection of standard output and standard error to file and stdout depending on the context of the run.
     #
     # Parameters::
-    # * *cmd* (String): The command to be run
+    # * *cmd* (String or SecretString): The command to be run
     # * *force_bash* (Boolean): If true, then make sure command is invoked with bash instead of sh [default: false]
     # Result::
     # * Integer: Exit code

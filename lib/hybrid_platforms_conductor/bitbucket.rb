@@ -77,7 +77,7 @@ module HybridPlatformsConductor
       # Parameters::
       # * *bitbucket_url* (String): The Bitbucket URL
       # * *bitbucket_user_name* (String): Bitbucket user name to be used when querying the API
-      # * *bitbucket_password* (String): Bitbucket password to be used when querying the API
+      # * *bitbucket_password* (SecretString): Bitbucket password to be used when querying the API
       # * *logger* (Logger): Logger to be used [default = Logger.new(STDOUT)]
       # * *logger_stderr* (Logger): Logger to be used for stderr [default = Logger.new(STDERR)]
       def initialize(bitbucket_url, bitbucket_user_name, bitbucket_password, logger: Logger.new($stdout), logger_stderr: Logger.new($stderr))
@@ -148,7 +148,7 @@ module HybridPlatformsConductor
         http_response = nil
         loop do
           begin
-            http_response = URI.parse(api_url).open(http_basic_authentication: [@bitbucket_user_name, @bitbucket_password])
+            http_response = URI.parse(api_url).open(http_basic_authentication: [@bitbucket_user_name, @bitbucket_password&.to_unprotected])
           rescue
             raise if retries.zero?
 

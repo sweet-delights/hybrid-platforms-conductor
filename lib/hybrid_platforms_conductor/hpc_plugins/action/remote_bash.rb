@@ -15,29 +15,29 @@ module HybridPlatformsConductor
         #
         # Parameters::
         # * *remote_bash* (Array or Object): List of commands (or single command) to be executed. Each command can be the following:
-        #   * String: Simple bash command.
+        #   * String or SecretString: Simple bash command.
         #   * Hash<Symbol, Object>: Information about the commands to execute. Can have the following properties:
-        #     * *commands* (Array<String> or String): List of bash commands to execute (can be a single one) [default: ''].
+        #     * *commands* (Array<String or SecretString> or String or SecretString): List of bash commands to execute (can be a single one) [default: ''].
         #     * *file* (String): Name of file from which commands should be taken [optional].
-        #     * *env* (Hash<String, String>): Environment variables to be set before executing those commands [default: {}].
+        #     * *env* (Hash<String, String or SecretString>): Environment variables to be set before executing those commands [default: {}].
         def setup(remote_bash)
           # Normalize the parameters.
           # Array< Hash<Symbol,Object> >: Simple array of info:
-          # * *commands* (Array<String>): List of bash commands to execute.
-          # * *env* (Hash<String, String>): Environment variables to be set before executing those commands.
+          # * *commands* (Array<String or SecretString>): List of bash commands to execute.
+          # * *env* (Hash<String, String or SecretString>): Environment variables to be set before executing those commands.
           @remote_bash = (remote_bash.is_a?(Array) ? remote_bash : [remote_bash]).map do |cmd_info|
-            if cmd_info.is_a?(String)
-              {
-                commands: [cmd_info],
-                env: {}
-              }
-            else
+            if cmd_info.is_a?(Hash)
               commands = []
-              commands.concat(cmd_info[:commands].is_a?(String) ? [cmd_info[:commands]] : cmd_info[:commands]) if cmd_info[:commands]
+              commands.concat(cmd_info[:commands].is_a?(Array) ? cmd_info[:commands] : [cmd_info[:commands]]) if cmd_info[:commands]
               commands << File.read(cmd_info[:file]) if cmd_info[:file]
               {
                 commands: commands,
                 env: cmd_info[:env] || {}
+              }
+            else
+              {
+                commands: [cmd_info],
+                env: {}
               }
             end
           end
@@ -63,11 +63,21 @@ module HybridPlatformsConductor
         # [API] - @stderr_io can be used to log stderr messages
         # [API] - run_cmd(String) method can be used to execute a command. See CmdRunner#run_cmd to know about the result's signature.
         def execute
-          bash_str = @remote_bash.map do |cmd_info|
-            (cmd_info[:env].map { |var_name, var_value| "export #{var_name}='#{var_value}'" } + cmd_info[:commands]).join("\n")
-          end.join("\n")
-          log_debug "[#{@node}] - Execute remote Bash commands \"#{bash_str}\"..."
-          @connector.remote_bash bash_str
+          # The commands or ENV variables can contain secrets, so make sure to protect all strings from secrets leaking
+          bash_cmds = @remote_bash.map do |cmd_info|
+            cmd_info[:env].map do |var_name, var_value|
+              SecretString.new("export #{var_name}='#{var_value.to_unprotected}'", silenced_str: "export #{var_name}='#{var_value}'")
+            end + cmd_info[:commands]
+          end.flatten
+          begin
+            SecretString.protect(bash_cmds.map(&:to_unprotected).join("\n"), silenced_str: bash_cmds.join("\n")) do |bash_str|
+              log_debug "[#{@node}] - Execute remote Bash commands \"#{bash_str}\"..."
+              @connector.remote_bash bash_str
+            end
+          ensure
+            # Make sure we erase all secret strings
+            bash_cmds.each(&:erase)
+          end
         end
 
       end

@@ -53,6 +53,8 @@ Gem::Specification.new do |s|
   s.add_runtime_dependency 'octokit', '~> 4.21'
   # To read KeePass databases
   s.add_runtime_dependency 'keepass_kpscript', '~> 1.0'
+  # To protect passwords and secrets in memory
+  s.add_runtime_dependency 'secret_string', '~> 1.1'
 
   # Test framework
   s.add_development_dependency 'rspec', '~> 3.8'

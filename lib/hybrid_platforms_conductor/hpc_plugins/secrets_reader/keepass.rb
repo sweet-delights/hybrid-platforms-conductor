@@ -90,7 +90,7 @@ module HybridPlatformsConductor
                   key_file = ENV['hpc_key_file_for_keepass']
                   password_enc = ENV['hpc_password_enc_for_keepass']
                   keepass_credentials = {}
-                  keepass_credentials[:password] = password if password
+                  keepass_credentials[:password] = password.to_unprotected if password
                   keepass_credentials[:password_enc] = password_enc if password_enc
                   keepass_credentials[:key_file] = key_file if key_file
                   KeepassKpscript.
