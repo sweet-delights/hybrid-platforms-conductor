@@ -53,7 +53,8 @@ module HybridPlatformsConductor
             logger_stderr: @logger_stderr,
             config: @config,
             cmd_runner: @cmd_runner,
-            nodes_handler: @nodes_handler
+            nodes_handler: @nodes_handler,
+            actions_executor: self
           )
         end
       )
@@ -244,6 +245,33 @@ module HybridPlatformsConductor
     # * Connector or nil: The connector, or nil if none found
     def connector(connector_name)
       @connector_plugins[connector_name]
+    end
+
+    # Is the access to a given node privileged?
+    # Take into account if remote actions are executed on a local node, and configurable sudos.
+    #
+    # Parameters::
+    # * *node* (String): Node on which we want privileged access
+    # Result::
+    # * Boolean: Is the access privileged?
+    def privileged_access?(node)
+      (@nodes_handler.get_local_node_of(node) ? @cmd_runner.whoami : connector(:ssh).ssh_user) == 'root'
+    end
+
+    # Get the sudo prefix to get privileged access.
+    # Take into account if remote actions are executed on a local node, and configurable sudos.
+    #
+    # Parameters::
+    # * *node* (String): Node on which we want privileged access
+    # * *forward_env* (Boolean): Do we need to forward environment in case of sudo? [default: false]
+    # Result::
+    # * String: Sudo prefix to be used (can be empty if root is being used)
+    def sudo_prefix(node, forward_env: false)
+      if privileged_access?(node)
+        ''
+      else
+        "#{@nodes_handler.sudo_on(node)} #{forward_env ? '-E ' : ''}"
+      end
     end
 
     private

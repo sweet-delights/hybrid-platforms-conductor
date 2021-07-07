@@ -29,10 +29,9 @@ module HybridPlatformsConductor
         # Result::
         # * Array< Hash<Symbol,Object> >: List of actions to be done
         def actions_to_save_logs(node, services, deployment_info, exit_status, stdout, stderr)
-          # Create a log file to be scp with all relevant info
-          ssh_user = @actions_executor.connector(:ssh).ssh_user
-          sudo_prefix = ssh_user == 'root' ? '' : "#{@nodes_handler.sudo_on(node)} "
-          log_file = "#{Dir.tmpdir}/hpc_deploy_logs/#{node}_#{Time.now.utc.strftime('%F_%H%M%S')}_#{ssh_user}"
+          # Create a log file to be scp-ed with all relevant info
+          sudo_prefix = @actions_executor.sudo_prefix(node)
+          log_file = "#{Dir.tmpdir}/hpc_deploy_logs/#{node}_#{Time.now.utc.strftime('%F_%H%M%S')}_#{@actions_executor.connector(:ssh).ssh_user}"
           [
             {
               ruby: proc do
@@ -56,7 +55,7 @@ module HybridPlatformsConductor
             {
               scp: {
                 log_file => '/var/log/deployments',
-                :sudo => ssh_user != 'root',
+                :sudo => !@actions_executor.privileged_access?(node),
                 :owner => 'root',
                 :group => 'root'
               }
@@ -85,7 +84,7 @@ module HybridPlatformsConductor
         # Result::
         # * Array< Hash<Symbol,Object> >: List of actions to be done
         def actions_to_read_logs(node)
-          sudo_prefix = @actions_executor.connector(:ssh).ssh_user == 'root' ? '' : "#{@nodes_handler.sudo_on(node)} "
+          sudo_prefix = @actions_executor.sudo_prefix(node)
           [
             { remote_bash: "#{sudo_prefix}cat /var/log/deployments/`#{sudo_prefix}ls -t /var/log/deployments/ | head -1`" }
           ]

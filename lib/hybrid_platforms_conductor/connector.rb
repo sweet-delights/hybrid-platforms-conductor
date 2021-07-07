@@ -14,16 +14,19 @@ module HybridPlatformsConductor
     # * *config* (Config): Config to be used. [default: Config.new]
     # * *cmd_runner* (CmdRunner): Command executor to be used. [default: CmdRunner.new]
     # * *nodes_handler* (NodesHandler): NodesHandler to be used. [default: NodesHandler.new]
+    # * *actions_executor* (ActionsExecutor): ActionsExecutor to be used. [default: ActionsExecutor.new]
     def initialize(
       logger: Logger.new($stdout),
       logger_stderr: Logger.new($stderr),
       config: Config.new,
       cmd_runner: CmdRunner.new,
-      nodes_handler: NodesHandler.new
+      nodes_handler: NodesHandler.new,
+      actions_executor: ActionsExecutor.new
     )
       super(logger: logger, logger_stderr: logger_stderr, config: config)
       @cmd_runner = cmd_runner
       @nodes_handler = nodes_handler
+      @actions_executor = actions_executor
       # If the connector has an initializer, use it
       init if respond_to?(:init)
     end

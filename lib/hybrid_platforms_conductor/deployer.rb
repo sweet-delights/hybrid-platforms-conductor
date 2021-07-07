@@ -544,15 +544,13 @@ module HybridPlatformsConductor
     # Result::
     # * Hash<String, [Integer or Symbol, String, String]>: Exit status code (or Symbol in case of error or dry run), standard output and error for each node.
     def deploy(services)
-      # Get the ssh user directly from the connector
-      ssh_user = @actions_executor.connector(:ssh).ssh_user
-
       # Deploy for real
       @nodes_handler.prefetch_metadata_of services.keys, :image
       outputs = @actions_executor.execute_actions(
         services.map do |node, node_services|
           image_id = @nodes_handler.get_image_of(node)
-          sudo = (ssh_user == 'root' ? '' : "#{@nodes_handler.sudo_on(node)} ")
+          need_sudo = !@actions_executor.privileged_access?(node)
+          sudo = @actions_executor.sudo_prefix(node)
           # Install corporate certificates if present
           certificate_actions =
             if @local_environment && ENV['hpc_certificates']
@@ -568,7 +566,7 @@ module HybridPlatformsConductor
                   {
                     scp: {
                       ENV['hpc_certificates'] => '/usr/local/share/ca-certificates',
-                      :sudo => ssh_user != 'root'
+                      :sudo => need_sudo
                     },
                     remote_bash: "#{sudo}update-ca-certificates"
                   }
@@ -584,7 +582,7 @@ module HybridPlatformsConductor
                         cert_file,
                         '/etc/pki/ca-trust/source/anchors'
                       ]
-                    end.to_h.merge(sudo: ssh_user != 'root'),
+                    end.to_h.merge(sudo: need_sudo),
                     remote_bash: [
                       "#{sudo}update-ca-trust enable",
                       "#{sudo}update-ca-trust extract"
@@ -619,7 +617,7 @@ module HybridPlatformsConductor
         services.keys.map do |node|
           [
             node,
-            { remote_bash: "#{ssh_user == 'root' ? '' : "#{@nodes_handler.sudo_on(node)} "}./mutex_dir unlock /tmp/hybrid_platforms_conductor_deploy_lock" }
+            { remote_bash: "#{@actions_executor.sudo_prefix(node)}./mutex_dir unlock /tmp/hybrid_platforms_conductor_deploy_lock" }
           ]
         end.to_h,
         timeout: 10,

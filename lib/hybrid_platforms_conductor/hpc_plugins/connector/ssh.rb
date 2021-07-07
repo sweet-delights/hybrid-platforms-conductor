@@ -310,13 +310,14 @@ module HybridPlatformsConductor
         # * *owner* (String or nil): Owner to be used when copying the files, or nil for current one [default: nil]
         # * *group* (String or nil): Group to be used when copying the files, or nil for current one [default: nil]
         def remote_copy(from, to, sudo: false, owner: nil, group: nil)
+          need_sudo = sudo && !@actions_executor.privileged_access?(@node)
           if @nodes_handler.get_ssh_session_exec_of(@node) == false
             # We don't have ExecSession, so don't use ssh, but scp instead.
-            if sudo
+            if need_sudo
               # We need to first copy the file in an accessible directory, and then sudo mv
               remote_bash('mkdir -p hpc_tmp_scp')
               run_cmd "scp -S #{ssh_exec} #{from} #{ssh_url}:./hpc_tmp_scp"
-              remote_bash("#{@nodes_handler.sudo_on(@node)} mv ./hpc_tmp_scp/#{File.basename(from)} #{to}")
+              remote_bash("#{@actions_executor.sudo_prefix(@node)}mv ./hpc_tmp_scp/#{File.basename(from)} #{to}")
             else
               run_cmd "scp -S #{ssh_exec} #{from} #{ssh_url}:#{to}"
             end
@@ -332,7 +333,7 @@ module HybridPlatformsConductor
                 #{File.basename(from)} | \
               #{ssh_exec} \
                 #{ssh_url} \
-                \"#{sudo ? "#{@nodes_handler.sudo_on(@node)} " : ''}tar \
+                \"#{need_sudo ? @actions_executor.sudo_prefix(@node) : ''}tar \
                   --extract \
                   --gunzip \
                   --file - \

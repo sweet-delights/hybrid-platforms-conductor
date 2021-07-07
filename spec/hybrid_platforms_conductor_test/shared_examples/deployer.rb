@@ -46,6 +46,30 @@ shared_examples 'a deployer' do
     end
   end
 
+  it 'deploys on 1 local node' do
+    with_platform_to_deploy(nodes_info: { nodes: { 'node' => { meta: { local_node: true }, services: %w[service] } } }) do
+      # Make sure the ssh_user is ignored in this case
+      test_actions_executor.connector(:ssh).ssh_user = 'root'
+      with_cmd_runner_mocked [
+        ['whoami', proc { [0, 'test_user', ''] }]
+      ] do
+        expect(test_deployer.deploy_on('node')).to eq('node' => expected_deploy_result)
+      end
+    end
+  end
+
+  it 'deploys on 1 local node as root' do
+    with_platform_to_deploy(nodes_info: { nodes: { 'node' => { meta: { local_node: true }, services: %w[service] } } }, expect_sudo: nil) do
+      # Make sure the ssh_user is ignored in this case
+      test_actions_executor.connector(:ssh).ssh_user = 'test_user'
+      with_cmd_runner_mocked [
+        ['whoami', proc { [0, 'root', ''] }]
+      ] do
+        expect(test_deployer.deploy_on('node')).to eq('node' => expected_deploy_result)
+      end
+    end
+  end
+
   it 'deploys on 1 node using 1 secret' do
     with_platform_to_deploy(expect_secrets: { 'secret1' => 'password1' }) do
       test_deployer.override_secrets('secret1' => 'password1')
@@ -137,6 +161,61 @@ shared_examples 'a deployer' do
     end
   end
 
+  it 'deploys on 1 local node in local environment with certificates to install using hpc_certificates on Debian' do
+    with_certs_dir do |certs_dir|
+      with_platform_to_deploy(
+        nodes_info: { nodes: { 'node' => { meta: { local_node: true, image: 'debian_9' }, services: %w[service] } } },
+        expect_local_environment: true,
+        expect_additional_actions: [
+          { remote_bash: 'sudo -u root apt update && sudo -u root apt install -y ca-certificates' },
+          {
+            remote_bash: 'sudo -u root update-ca-certificates',
+            scp: {
+              certs_dir => '/usr/local/share/ca-certificates',
+              :sudo => true
+            }
+          }
+        ]
+      ) do
+        ENV['hpc_certificates'] = certs_dir
+        test_deployer.local_environment = true
+        with_cmd_runner_mocked [
+          ['whoami', proc { [0, 'test_user', ''] }]
+        ] do
+          expect(test_deployer.deploy_on('node')).to eq('node' => expected_deploy_result)
+        end
+      end
+    end
+  end
+
+  it 'deploys on 1 local node in local environment with certificates to install using hpc_certificates on Debian as root' do
+    with_certs_dir do |certs_dir|
+      with_platform_to_deploy(
+        nodes_info: { nodes: { 'node' => { meta: { local_node: true, image: 'debian_9' }, services: %w[service] } } },
+        expect_sudo: nil,
+        expect_local_environment: true,
+        expect_additional_actions: [
+          { remote_bash: 'apt update && apt install -y ca-certificates' },
+          {
+            remote_bash: 'update-ca-certificates',
+            scp: {
+              certs_dir => '/usr/local/share/ca-certificates',
+              :sudo => false
+            }
+          }
+        ]
+      ) do
+        ENV['hpc_certificates'] = certs_dir
+        test_deployer.local_environment = true
+        with_cmd_runner_mocked [
+          ['whoami', proc { [0, 'root', ''] }]
+        ] do
+          expect(test_deployer.deploy_on('node')).to eq('node' => expected_deploy_result)
+        end
+      end
+    end
+  end
+
   it 'deploys on 1 node with certificates to install using hpc_certificates on CentOS' do
     with_certs_dir do |certs_dir|
       with_platform_to_deploy(
@@ -208,6 +287,61 @@ shared_examples 'a deployer' do
         test_actions_executor.connector(:ssh).ssh_user = 'root'
         test_deployer.local_environment = true
         expect(test_deployer.deploy_on('node')).to eq('node' => expected_deploy_result)
+      end
+    end
+  end
+
+  it 'deploys on 1 local node with certificates to install using hpc_certificates on CentOS' do
+    with_certs_dir do |certs_dir|
+      with_platform_to_deploy(
+        nodes_info: { nodes: { 'node' => { meta: { local_node: true, image: 'centos_7' }, services: %w[service] } } },
+        expect_local_environment: true,
+        expect_additional_actions: [
+          { remote_bash: 'sudo -u root yum install -y ca-certificates' },
+          {
+            remote_bash: ['sudo -u root update-ca-trust enable', 'sudo -u root update-ca-trust extract'],
+            scp: {
+              "#{certs_dir}/test_cert.crt" => '/etc/pki/ca-trust/source/anchors',
+              :sudo => true
+            }
+          }
+        ]
+      ) do
+        ENV['hpc_certificates'] = certs_dir
+        test_deployer.local_environment = true
+        with_cmd_runner_mocked [
+          ['whoami', proc { [0, 'test_user', ''] }]
+        ] do
+          expect(test_deployer.deploy_on('node')).to eq('node' => expected_deploy_result)
+        end
+      end
+    end
+  end
+
+  it 'deploys on 1 local node with certificates to install using hpc_certificates on CentOS as root' do
+    with_certs_dir do |certs_dir|
+      with_platform_to_deploy(
+        nodes_info: { nodes: { 'node' => { meta: { local_node: true, image: 'centos_7' }, services: %w[service] } } },
+        expect_sudo: nil,
+        expect_local_environment: true,
+        expect_additional_actions: [
+          { remote_bash: 'yum install -y ca-certificates' },
+          {
+            remote_bash: ['update-ca-trust enable', 'update-ca-trust extract'],
+            scp: {
+              "#{certs_dir}/test_cert.crt" => '/etc/pki/ca-trust/source/anchors',
+              :sudo => false
+            }
+          }
+        ]
+      ) do
+        ENV['hpc_certificates'] = certs_dir
+        test_deployer.local_environment = true
+        with_cmd_runner_mocked [
+          ['whoami', proc { [0, 'root', ''] }]
+        ] do
+          expect(test_deployer.deploy_on('node')).to eq('node' => expected_deploy_result)
+        end
       end
     end
   end

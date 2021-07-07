@@ -274,12 +274,13 @@ module HybridPlatformsConductor
     # * Test: Corresponding test
     def new_test(test_name, platform: nil, node: nil, ignore_expected_failure: false)
       (test_name.nil? ? Test : @tests_plugins[test_name]).new(
-        @logger,
-        @logger_stderr,
-        @config,
-        @cmd_runner,
-        @nodes_handler,
-        @deployer,
+        logger: @logger,
+        logger_stderr: @logger_stderr,
+        config: @config,
+        cmd_runner: @cmd_runner,
+        nodes_handler: @nodes_handler,
+        actions_executor: @actions_executor,
+        deployer: @deployer,
         name: test_name.nil? ? :global : test_name,
         platform: platform,
         node: node,

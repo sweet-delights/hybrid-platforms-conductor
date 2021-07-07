@@ -56,8 +56,7 @@ module HybridPlatformsConductor
                   current_url
                 end
               )
-              # TODO: Access the user correctly when the user notion will be moved out of the ssh connector
-              sudo = @deployer.instance_variable_get(:@actions_executor).connector(:ssh).ssh_user == 'root' ? '' : "#{@nodes_handler.sudo_on(@node)} "
+              sudo = @actions_executor.sudo_prefix(@node)
               urls.map do |url|
                 # 1. Get the OVAL file on the node to be tested (uncompress it if needed)
                 # 2. Make sure oscap is installed

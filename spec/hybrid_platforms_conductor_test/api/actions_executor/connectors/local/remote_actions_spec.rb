@@ -108,6 +108,10 @@ describe HybridPlatformsConductor::ActionsExecutor do
         with_test_platform_for_remote_testing(
           expected_cmds: [
             [
+              'whoami',
+              proc { [0, 'test_user', ''] }
+            ],
+            [
               'sudo -u root cp -r "/path/to/src.file" "/remote_path/to/dst.dir"',
               proc { [0, '', ''] }
             ]
@@ -117,9 +121,27 @@ describe HybridPlatformsConductor::ActionsExecutor do
         end
       end
 
+      it 'copies files remotely with sudo when being root' do
+        with_test_platform_for_remote_testing(
+          expected_cmds: [
+            [
+              'whoami',
+              proc { [0, 'root', ''] }
+            ]
+          ]
+        ) do
+          expect(FileUtils).to receive(:cp_r).with('/path/to/src.file', '/remote_path/to/dst.dir')
+          test_connector.remote_copy('/path/to/src.file', '/remote_path/to/dst.dir', sudo: true)
+        end
+      end
+
       it 'copies files remotely with a different sudo' do
         with_test_platform_for_remote_testing(
           expected_cmds: [
+            [
+              'whoami',
+              proc { [0, 'test_user', ''] }
+            ],
             [
               'other_sudo --user root cp -r "/path/to/src.file" "/remote_path/to/dst.dir"',
               proc { [0, '', ''] }
@@ -129,6 +151,23 @@ describe HybridPlatformsConductor::ActionsExecutor do
             sudo_for { |user| "other_sudo --user #{user}" }
           EO_CONFIG
         ) do
+          test_connector.remote_copy('/path/to/src.file', '/remote_path/to/dst.dir', sudo: true)
+        end
+      end
+
+      it 'copies files remotely with a different sudo when being root' do
+        with_test_platform_for_remote_testing(
+          expected_cmds: [
+            [
+              'whoami',
+              proc { [0, 'root', ''] }
+            ]
+          ],
+          additional_config: <<~'EO_CONFIG'
+            sudo_for { |user| "other_sudo --user #{user}" }
+          EO_CONFIG
+        ) do
+          expect(FileUtils).to receive(:cp_r).with('/path/to/src.file', '/remote_path/to/dst.dir')
           test_connector.remote_copy('/path/to/src.file', '/remote_path/to/dst.dir', sudo: true)
         end
       end
@@ -153,6 +192,10 @@ describe HybridPlatformsConductor::ActionsExecutor do
         with_test_platform_for_remote_testing(
           expected_cmds: [
             [
+              'whoami',
+              proc { [0, 'test_user', ''] }
+            ],
+            [
               'sudo -u root cp -r "/path/to/src.file" "/tmp/hpc_local_workspaces/node/to/dst.dir"',
               proc { [0, '', ''] }
             ]
@@ -162,9 +205,27 @@ describe HybridPlatformsConductor::ActionsExecutor do
         end
       end
 
+      it 'copies relative files remotely with sudo when being root' do
+        with_test_platform_for_remote_testing(
+          expected_cmds: [
+            [
+              'whoami',
+              proc { [0, 'root', ''] }
+            ]
+          ]
+        ) do
+          expect(FileUtils).to receive(:cp_r).with('/path/to/src.file', '/tmp/hpc_local_workspaces/node/to/dst.dir')
+          test_connector.remote_copy('/path/to/src.file', 'to/dst.dir', sudo: true)
+        end
+      end
+
       it 'copies relative files remotely with a different sudo' do
         with_test_platform_for_remote_testing(
           expected_cmds: [
+            [
+              'whoami',
+              proc { [0, 'test_user', ''] }
+            ],
             [
               'other_sudo --user root cp -r "/path/to/src.file" "/tmp/hpc_local_workspaces/node/to/dst.dir"',
               proc { [0, '', ''] }
@@ -174,6 +235,23 @@ describe HybridPlatformsConductor::ActionsExecutor do
             sudo_for { |user| "other_sudo --user #{user}" }
           EO_CONFIG
         ) do
+          test_connector.remote_copy('/path/to/src.file', 'to/dst.dir', sudo: true)
+        end
+      end
+
+      it 'copies relative files remotely with a different sudo when being root' do
+        with_test_platform_for_remote_testing(
+          expected_cmds: [
+            [
+              'whoami',
+              proc { [0, 'root', ''] }
+            ]
+          ],
+          additional_config: <<~'EO_CONFIG'
+            sudo_for { |user| "other_sudo --user #{user}" }
+          EO_CONFIG
+        ) do
+          expect(FileUtils).to receive(:cp_r).with('/path/to/src.file', '/tmp/hpc_local_workspaces/node/to/dst.dir')
           test_connector.remote_copy('/path/to/src.file', 'to/dst.dir', sudo: true)
         end
       end

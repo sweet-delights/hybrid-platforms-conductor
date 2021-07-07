@@ -256,6 +256,44 @@ describe HybridPlatformsConductor::HpcPlugins::PlatformHandler::ServerlessChef d
 
     end
 
+    context 'with a platform having 1 local node' do
+
+      it 'returns actions to deploy on this node' do
+        with_serverless_chef_platforms('1_local_node') do |platform, repository|
+          mock_package(repository)
+          platform.prepare_for_deploy(
+            services: { 'node' => %w[test_policy] },
+            secrets: {},
+            local_environment: false,
+            why_run: false
+          )
+          with_cmd_runner_mocked [
+            ['whoami', proc { [0, 'test_user', ''] }]
+          ] do
+            expect(platform.actions_to_deploy_on('node', 'test_policy', use_why_run: false)).to eq expected_actions_to_deploy_chef(repository)
+          end
+        end
+      end
+
+      it 'returns actions to deploy on this node as root' do
+        with_serverless_chef_platforms('1_local_node') do |platform, repository|
+          mock_package(repository)
+          platform.prepare_for_deploy(
+            services: { 'node' => %w[test_policy] },
+            secrets: {},
+            local_environment: false,
+            why_run: false
+          )
+          with_cmd_runner_mocked [
+            ['whoami', proc { [0, 'root', ''] }]
+          ] do
+            expect(platform.actions_to_deploy_on('node', 'test_policy', use_why_run: false)).to eq expected_actions_to_deploy_chef(repository, sudo: '')
+          end
+        end
+      end
+
+    end
+
     context 'with a platform having several nodes' do
 
       it 'deploys services declared on 1 node on another node if asked' do
