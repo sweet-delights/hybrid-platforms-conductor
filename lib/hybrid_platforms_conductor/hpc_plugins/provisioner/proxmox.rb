@@ -2,6 +2,7 @@ require 'json'
 require 'proxmox'
 require 'digest'
 require 'hybrid_platforms_conductor/actions_executor'
+require 'hybrid_platforms_conductor/credentials'
 require 'hybrid_platforms_conductor/provisioner'
 
 module HybridPlatformsConductor
