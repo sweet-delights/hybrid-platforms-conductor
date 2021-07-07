@@ -1,3 +1,20 @@
+# [v33.6.0](https://github.com/sweet-delights/hybrid-platforms-conductor/compare/v33.5.1...v33.6.0) (2021-07-07 15:45:12)
+
+## Global changes
+### Patches
+
+* [[Feature(connector_ssh)] [Feature(cmdb_host_keys)] [#78] Way to configure the SSH port being used with the ssh_port metadata](https://github.com/sweet-delights/hybrid-platforms-conductor/commit/f1be319eae30eedcf7f901d3ce0a14f6f4d1f2ea)
+
+## Changes for cmdb_host_keys
+### Features
+
+* [[Feature(connector_ssh)] [Feature(cmdb_host_keys)] [#78] Way to configure the SSH port being used with the ssh_port metadata](https://github.com/sweet-delights/hybrid-platforms-conductor/commit/f1be319eae30eedcf7f901d3ce0a14f6f4d1f2ea)
+
+## Changes for connector_ssh
+### Features
+
+* [[Feature(connector_ssh)] [Feature(cmdb_host_keys)] [#78] Way to configure the SSH port being used with the ssh_port metadata](https://github.com/sweet-delights/hybrid-platforms-conductor/commit/f1be319eae30eedcf7f901d3ce0a14f6f4d1f2ea)
+
 # [v33.5.1](https://github.com/sweet-delights/hybrid-platforms-conductor/compare/v33.5.0...v33.5.1) (2021-07-07 12:01:32)
 
 ### Patches
