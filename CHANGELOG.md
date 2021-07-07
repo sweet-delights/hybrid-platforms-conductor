@@ -1,3 +1,9 @@
+# [v33.5.1](https://github.com/sweet-delights/hybrid-platforms-conductor/compare/v33.5.0...v33.5.1) (2021-07-07 12:01:32)
+
+### Patches
+
+* [[Bugfix] [#87] Make sure local nodes and root accounts are taken into account when getting sudo prefixes](https://github.com/sweet-delights/hybrid-platforms-conductor/commit/cb626f1c99a6f1a95c9c884c03bf3fd71045259c)
+
 # [v33.5.0](https://github.com/sweet-delights/hybrid-platforms-conductor/compare/v33.4.0...v33.5.0) (2021-07-07 11:03:01)
 
 ### Features
