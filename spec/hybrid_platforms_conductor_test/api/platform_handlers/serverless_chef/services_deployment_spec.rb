@@ -46,7 +46,7 @@ describe HybridPlatformsConductor::HpcPlugins::PlatformHandler::ServerlessChef d
           remote_bash: [
             'set -e',
             'set -o pipefail',
-            "if [ -n \"$(command -v apt)\" ]; then #{sudo}apt update && #{sudo}apt install -y curl build-essential ; else #{sudo}yum groupinstall 'Development Tools' && #{sudo}yum install -y curl ; fi",
+            "if [ -n \"$(command -v apt)\" ]; then #{sudo}apt update && #{sudo}apt install -y curl build-essential expect ; else #{sudo}yum groupinstall 'Development Tools' && #{sudo}yum install -y curl expect ; fi",
             'mkdir -p ./hpc_deploy',
             'rm -rf ./hpc_deploy/tmp',
             'mkdir -p ./hpc_deploy/tmp',
@@ -57,16 +57,22 @@ describe HybridPlatformsConductor::HpcPlugins::PlatformHandler::ServerlessChef d
         },
         {
           scp: { "#{repository}/dist/#{env}/#{policy}" => './hpc_deploy' },
-          remote_bash: [
-            'set -e',
-            "cd ./hpc_deploy/#{policy}"
-          ] +
-            gems_install_cmds.map { |gem_install_cmd| "#{sudo}SSL_CERT_DIR=/etc/ssl/certs /opt/chef/embedded/bin/#{gem_install_cmd}" } +
-            [
-              "#{sudo}SSL_CERT_DIR=/etc/ssl/certs /opt/chef/bin/chef-client --local-mode --chef-license accept --json-attributes nodes/#{node}.json#{check_mode ? ' --why-run' : ''}",
-              'cd ..',
-              "#{sudo}rm -rf ./hpc_deploy/#{policy}"
-            ]
+          remote_bash: {
+            commands: [
+              'set -e',
+              "cd ./hpc_deploy/#{policy}"
+            ] +
+              gems_install_cmds.map { |gem_install_cmd| "#{sudo}/opt/chef/embedded/bin/#{gem_install_cmd}" } +
+              [
+                "#{sudo}unbuffer /opt/chef/bin/chef-client --local-mode --chef-license accept --json-attributes nodes/#{node}.json#{check_mode ? ' --why-run' : ''}",
+                'cd ..',
+                "#{sudo}rm -rf ./hpc_deploy/#{policy}"
+              ],
+            env: {
+              'SSL_CERT_DIR' => '/etc/ssl/certs',
+              'TERM' => 'xterm-256color'
+            }
+          }
         }
       ]
     end
@@ -323,7 +329,9 @@ describe HybridPlatformsConductor::HpcPlugins::PlatformHandler::ServerlessChef d
               bash: [
                 'set -e',
                 "cd #{repository}/dist/prod/test_policy_1",
-                'sudo SSL_CERT_DIR=/etc/ssl/certs /opt/chef-workstation/bin/chef-client --local-mode --chef-license accept --json-attributes nodes/local.json'
+                'export SSL_CERT_DIR=/etc/ssl/certs',
+                'export TERM=xterm-256color',
+                'sudo -E /opt/chef-workstation/bin/chef-client --local-mode --chef-license accept --json-attributes nodes/local.json'
               ]
             }
           ]
@@ -352,10 +360,12 @@ describe HybridPlatformsConductor::HpcPlugins::PlatformHandler::ServerlessChef d
               bash: [
                 'set -e',
                 "cd #{repository}/dist/prod/test_policy_1",
-                'sudo SSL_CERT_DIR=/etc/ssl/certs /opt/chef-workstation/bin/chef gem install my_gem_1 --version "0.0.1"',
-                'sudo SSL_CERT_DIR=/etc/ssl/certs /opt/chef-workstation/bin/chef gem install my_gem_2 --version "0.0.2"',
-                'sudo SSL_CERT_DIR=/etc/ssl/certs /opt/chef-workstation/bin/chef gem install my_gem_3 --version "~> 1.3"',
-                'sudo SSL_CERT_DIR=/etc/ssl/certs /opt/chef-workstation/bin/chef-client --local-mode --chef-license accept --json-attributes nodes/local.json'
+                'export SSL_CERT_DIR=/etc/ssl/certs',
+                'export TERM=xterm-256color',
+                'sudo -E /opt/chef-workstation/bin/chef gem install my_gem_1 --version "0.0.1"',
+                'sudo -E /opt/chef-workstation/bin/chef gem install my_gem_2 --version "0.0.2"',
+                'sudo -E /opt/chef-workstation/bin/chef gem install my_gem_3 --version "~> 1.3"',
+                'sudo -E /opt/chef-workstation/bin/chef-client --local-mode --chef-license accept --json-attributes nodes/local.json'
               ]
             }
           ]

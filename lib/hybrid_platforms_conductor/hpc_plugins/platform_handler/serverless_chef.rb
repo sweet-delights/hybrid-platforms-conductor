@@ -241,18 +241,24 @@ module HybridPlatformsConductor
             '--json-attributes', "nodes/#{node}.json"
           ]
           client_options << '--why-run' if use_why_run
+          # Force setting of TERM variable and usage of unbuffer to get colored output from chef-client even if executed through a non-interactive SSH session.
+          client_env = {
+            'SSL_CERT_DIR' => '/etc/ssl/certs',
+            'TERM' => 'xterm-256color'
+          }
           if @nodes_handler.get_use_local_chef_of(node)
             # Just run the chef-client directly from the packaged repository
-            sudo_prefix = @cmd_runner.root? ? '' : 'sudo '
+            sudo_prefix = @cmd_runner.root? ? '' : 'sudo -E '
             [
               {
                 bash: [
                   'set -e',
                   "cd #{package_dir}"
                 ] +
-                  gems_to_install.map { |(gem_name, gem_version)| "#{sudo_prefix}SSL_CERT_DIR=/etc/ssl/certs /opt/chef-workstation/bin/chef gem install #{gem_name} --version \"#{gem_version}\"" } +
+                  client_env.map { |var_name, value| "export #{var_name}=#{value}" } +
+                  gems_to_install.map { |(gem_name, gem_version)| "#{sudo_prefix}/opt/chef-workstation/bin/chef gem install #{gem_name} --version \"#{gem_version}\"" } +
                   [
-                    "#{sudo_prefix}SSL_CERT_DIR=/etc/ssl/certs /opt/chef-workstation/bin/chef-client #{client_options.join(' ')}"
+                    "#{sudo_prefix}/opt/chef-workstation/bin/chef-client #{client_options.join(' ')}"
                   ]
               }
             ]
@@ -270,7 +276,7 @@ module HybridPlatformsConductor
                 remote_bash: [
                   'set -e',
                   'set -o pipefail',
-                  "if [ -n \"$(command -v apt)\" ]; then #{sudo}apt update && #{sudo}apt install -y curl build-essential ; else #{sudo}yum groupinstall 'Development Tools' && #{sudo}yum install -y curl ; fi",
+                  "if [ -n \"$(command -v apt)\" ]; then #{sudo}apt update && #{sudo}apt install -y curl build-essential expect ; else #{sudo}yum groupinstall 'Development Tools' && #{sudo}yum install -y curl expect ; fi",
                   'mkdir -p ./hpc_deploy',
                   'rm -rf ./hpc_deploy/tmp',
                   'mkdir -p ./hpc_deploy/tmp',
@@ -281,16 +287,19 @@ module HybridPlatformsConductor
               },
               {
                 scp: { package_dir => './hpc_deploy' },
-                remote_bash: [
-                  'set -e',
-                  "cd ./hpc_deploy/#{package_name}"
-                ] +
-                  gems_to_install.map { |(gem_name, gem_version)| "#{sudo}SSL_CERT_DIR=/etc/ssl/certs /opt/chef/embedded/bin/gem install #{gem_name} --version \"#{gem_version}\"" } +
-                  [
-                    "#{sudo}SSL_CERT_DIR=/etc/ssl/certs /opt/chef/bin/chef-client #{client_options.join(' ')}",
-                    'cd ..'
+                remote_bash: {
+                  commands: [
+                    'set -e',
+                    "cd ./hpc_deploy/#{package_name}"
                   ] +
-                  (log_debug? ? [] : ["#{sudo}rm -rf ./hpc_deploy/#{package_name}"])
+                    gems_to_install.map { |(gem_name, gem_version)| "#{sudo}/opt/chef/embedded/bin/gem install #{gem_name} --version \"#{gem_version}\"" } +
+                    [
+                      "#{sudo}unbuffer /opt/chef/bin/chef-client #{client_options.join(' ')}",
+                      'cd ..'
+                    ] +
+                    (log_debug? ? [] : ["#{sudo}rm -rf ./hpc_deploy/#{package_name}"]),
+                  env: client_env
+                }
               }
             ]
           end
