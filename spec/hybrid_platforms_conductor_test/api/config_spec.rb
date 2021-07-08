@@ -29,6 +29,17 @@ describe HybridPlatformsConductor::Config do
     end
   end
 
+  it 'can check if we are in debug mode' do
+    with_platforms(
+      <<~EO_CONFIG
+        os_image :image_1, '/path/to/image_1' if log_debug?
+        os_image :image_2, '/path/to/image_2'
+      EO_CONFIG
+    ) do
+      expect(test_config.known_os_images.sort).to eq %i[image_2].sort
+    end
+  end
+
   it 'returns the tests provisioner correctly' do
     with_platforms 'tests_provisioner :test_provisioner' do
       expect(test_config.tests_provisioner_id).to eq :test_provisioner

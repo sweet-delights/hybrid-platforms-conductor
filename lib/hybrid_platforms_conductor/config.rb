@@ -34,6 +34,8 @@ module HybridPlatformsConductor
     end
     @mixin_initializers = []
 
+    expose :log_debug?
+
     # Directory of the definition of the platforms
     #   String
     attr_reader :hybrid_platforms_dir
