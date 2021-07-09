@@ -1,3 +1,15 @@
+# [v33.7.1](https://github.com/sweet-delights/hybrid-platforms-conductor/compare/v33.7.0...v33.7.1) (2021-07-09 17:17:18)
+
+## Global changes
+### Patches
+
+* [[Bugfix(platform_handler_serverless_chef)] [#93] Make sure chef runs use colors in their output](https://github.com/sweet-delights/hybrid-platforms-conductor/commit/14352425115cf46b92e4c747b2e34e3734314288)
+
+## Changes for platform_handler_serverless_chef
+### Patches
+
+* [[Bugfix(platform_handler_serverless_chef)] [#93] Make sure chef runs use colors in their output](https://github.com/sweet-delights/hybrid-platforms-conductor/commit/14352425115cf46b92e4c747b2e34e3734314288)
+
 # [v33.7.0](https://github.com/sweet-delights/hybrid-platforms-conductor/compare/v33.6.0...v33.7.0) (2021-07-09 16:32:25)
 
 ### Features
