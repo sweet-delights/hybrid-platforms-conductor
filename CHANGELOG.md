@@ -1,3 +1,9 @@
+# [v33.7.0](https://github.com/sweet-delights/hybrid-platforms-conductor/compare/v33.6.0...v33.7.0) (2021-07-09 16:32:25)
+
+### Features
+
+* [[Feature] [#91] Expose log_debug? method to the config DSL to adapt configuration in case we are in debug mode](https://github.com/sweet-delights/hybrid-platforms-conductor/commit/87f6f51df2d20c7861f9ddd59a8d7f68c27cdd74)
+
 # [v33.6.0](https://github.com/sweet-delights/hybrid-platforms-conductor/compare/v33.5.1...v33.6.0) (2021-07-07 15:45:12)
 
 ## Global changes
