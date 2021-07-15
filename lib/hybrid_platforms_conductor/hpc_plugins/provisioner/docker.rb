@@ -40,7 +40,7 @@ module HybridPlatformsConductor
           docker_image = nil
           image_futex_file = "#{Dir.tmpdir}/hpc_docker_image_futexes/#{image_tag}"
           FileUtils.mkdir_p File.dirname(image_futex_file)
-          Futex.new(image_futex_file).open do
+          Futex.new(image_futex_file, timeout: 600).open do
             docker_image = ::Docker::Image.all.find { |search_image| !search_image.info['RepoTags'].nil? && search_image.info['RepoTags'].include?("#{image_tag}:latest") }
             unless docker_image
               log_debug "[ #{@node}/#{@environment} ] - Creating Docker image #{image_tag}..."

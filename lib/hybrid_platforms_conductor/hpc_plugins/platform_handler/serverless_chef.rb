@@ -241,6 +241,7 @@ module HybridPlatformsConductor
             '--json-attributes', "nodes/#{node}.json"
           ]
           client_options << '--why-run' if use_why_run
+          # client_options.concat ['--log_level', 'debug'] if log_debug?
           # Force setting of TERM variable and usage of unbuffer to get colored output from chef-client even if executed through a non-interactive SSH session.
           client_env = {
             'SSL_CERT_DIR' => '/etc/ssl/certs',
