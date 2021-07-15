@@ -1,3 +1,15 @@
+# [v33.7.2](https://github.com/sweet-delights/hybrid-platforms-conductor/compare/v33.7.1...v33.7.2) (2021-07-15 14:37:59)
+
+## Global changes
+### Patches
+
+* [[Hotfix(provisioner_docker)] Increase Futex timeout to cope with image building time](https://github.com/sweet-delights/hybrid-platforms-conductor/commit/52a03adbfc176f49800793acb3ab28026eb56289)
+
+## Changes for provisioner_docker
+### Patches
+
+* [[Hotfix(provisioner_docker)] Increase Futex timeout to cope with image building time](https://github.com/sweet-delights/hybrid-platforms-conductor/commit/52a03adbfc176f49800793acb3ab28026eb56289)
+
 # [v33.7.1](https://github.com/sweet-delights/hybrid-platforms-conductor/compare/v33.7.0...v33.7.1) (2021-07-09 17:17:18)
 
 ## Global changes
