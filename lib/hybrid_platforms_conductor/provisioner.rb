@@ -42,7 +42,7 @@ module HybridPlatformsConductor
     # Result::
     # * Integer: The timeout in seconds
     def default_timeout
-      60
+      300
     end
 
     # Provision a running instance for the needed node and environment.
