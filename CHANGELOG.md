@@ -1,3 +1,9 @@
+# [v33.7.3](https://github.com/sweet-delights/hybrid-platforms-conductor/compare/v33.7.2...v33.7.3) (2021-07-16 12:05:04)
+
+### Patches
+
+* [[Hotfix] Increase port timeout](https://github.com/sweet-delights/hybrid-platforms-conductor/commit/a450e6ee74bcd14a0f4f7bfcdad826928ad7918c)
+
 # [v33.7.2](https://github.com/sweet-delights/hybrid-platforms-conductor/compare/v33.7.1...v33.7.2) (2021-07-15 14:37:59)
 
 ## Global changes
