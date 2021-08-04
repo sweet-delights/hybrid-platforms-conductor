@@ -65,7 +65,7 @@ describe HybridPlatformsConductor::HpcPlugins::PlatformHandler::ServerlessChef d
               gems_install_cmds.map { |gem_install_cmd| "#{sudo}/opt/chef/embedded/bin/#{gem_install_cmd}" } +
               [
                 "#{sudo}unbuffer /opt/chef/bin/chef-client --local-mode --chef-license accept --json-attributes nodes/#{node}.json#{check_mode ? ' --why-run' : ''}",
-                'cd ..',
+                'cd -',
                 "#{sudo}rm -rf ./hpc_deploy/#{policy}"
               ],
             env: {

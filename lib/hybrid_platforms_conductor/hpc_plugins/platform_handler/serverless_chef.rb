@@ -296,7 +296,7 @@ module HybridPlatformsConductor
                     gems_to_install.map { |(gem_name, gem_version)| "#{sudo}/opt/chef/embedded/bin/gem install #{gem_name} --version \"#{gem_version}\"" } +
                     [
                       "#{sudo}unbuffer /opt/chef/bin/chef-client #{client_options.join(' ')}",
-                      'cd ..'
+                      'cd -'
                     ] +
                     (log_debug? ? [] : ["#{sudo}rm -rf ./hpc_deploy/#{package_name}"]),
                   env: client_env
