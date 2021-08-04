@@ -1,3 +1,15 @@
+# [v33.7.4](https://github.com/sweet-delights/hybrid-platforms-conductor/compare/v33.7.3...v33.7.4) (2021-08-04 14:21:08)
+
+## Global changes
+### Patches
+
+* [[Bugfix(platform_handler_serverless_chef)] Corrected clean-up of deployment directory on nodes](https://github.com/sweet-delights/hybrid-platforms-conductor/commit/0fdfe17f7c08da089881bc48fcd9cb1b487a95a2)
+
+## Changes for platform_handler_serverless_chef
+### Patches
+
+* [[Bugfix(platform_handler_serverless_chef)] Corrected clean-up of deployment directory on nodes](https://github.com/sweet-delights/hybrid-platforms-conductor/commit/0fdfe17f7c08da089881bc48fcd9cb1b487a95a2)
+
 # [v33.7.3](https://github.com/sweet-delights/hybrid-platforms-conductor/compare/v33.7.2...v33.7.3) (2021-07-16 12:05:04)
 
 ### Patches
