@@ -190,6 +190,15 @@ module HybridPlatformsConductor
             secrets_file = "#{@repository_path}/#{package_dir}/data_bags/hpc_secrets/hpc_secrets.json"
             FileUtils.mkdir_p(File.dirname(secrets_file))
             File.write(secrets_file, secrets.merge(id: 'hpc_secrets').to_json)
+            # Make the testadmin public key available for deployment for hpc_test cookbook
+            testadmin_pub_key = "#{@config.hybrid_platforms_dir}/testadmin.key.pub"
+            if local_environment && File.exist?(testadmin_pub_key)
+              Dir.glob("#{@repository_path}/#{package_dir}/cookbook_artifacts/hpc_test-*") do |hpc_test_cookbook_path|
+                hpc_test_files_dir = "#{hpc_test_cookbook_path}/files/default"
+                FileUtils.mkdir_p hpc_test_files_dir
+                FileUtils.cp(testadmin_pub_key, "#{hpc_test_files_dir}/testadmin.key.pub")
+              end
+            end
             # Remember the package info
             File.write(package_info_file, package_info.to_json)
           end

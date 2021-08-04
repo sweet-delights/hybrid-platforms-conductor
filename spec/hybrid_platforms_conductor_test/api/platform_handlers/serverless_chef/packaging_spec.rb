@@ -51,6 +51,7 @@ describe HybridPlatformsConductor::HpcPlugins::PlatformHandler::ServerlessChef d
             [
               %r{^cd #{Regexp.escape(repository)} &&\s+sudo rm -rf dist/#{Regexp.escape(env)}/#{Regexp.escape(policy)} &&\s+/opt/chef-workstation/bin/chef export #{Regexp.escape(policy_file)} dist/#{Regexp.escape(env)}/#{Regexp.escape(policy)} --chef-license accept#{data_bags ? " && cp -ar data_bags/ dist/#{Regexp.escape(env)}/#{Regexp.escape(policy)}/" : ''}$},
               proc do
+                # Mock the packaging in the dist directory
                 package_dir = "#{repository}/dist/#{env}/#{policy}"
                 FileUtils.mkdir_p package_dir
                 FileUtils.cp_r("#{repository}/data_bags", "#{package_dir}/") if data_bags
@@ -325,6 +326,25 @@ describe HybridPlatformsConductor::HpcPlugins::PlatformHandler::ServerlessChef d
                 'hpc_test::after_run'
               ]
             )
+          end
+        end
+      end
+
+      it 'packages the repository with a testadmin public key' do
+        with_serverless_chef_platforms('hpc_test') do |platform, repository|
+          File.write("#{ENV['hpc_platforms']}/testadmin.key.pub", 'ssh-rsa 12345 testadmin@test.com')
+          with_packaging_mocked(
+            repository,
+            policy_file: 'policyfiles/test_policy.local.rb',
+            env: 'local',
+            cookbook_metadata: {
+              'hpc_test-1234' => {}
+            }
+          ) do
+            platform.package(services: { 'node' => %w[test_policy] }, secrets: {}, local_environment: true)
+            testadmin_key_pub = Dir.glob("#{repository}/dist/local/test_policy/cookbook_artifacts/hpc_test-*/files/default/testadmin.key.pub").first
+            expect(testadmin_key_pub).not_to eq nil
+            expect(File.read(testadmin_key_pub)).to eq 'ssh-rsa 12345 testadmin@test.com'
           end
         end
       end
