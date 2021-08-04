@@ -1,3 +1,15 @@
+# [v33.8.0](https://github.com/sweet-delights/hybrid-platforms-conductor/compare/v33.7.4...v33.8.0) (2021-08-04 15:55:54)
+
+## Global changes
+### Patches
+
+* [[Feature(platform_handler_serverless_chef)] Integrate testadmin public key while deploying in local mode](https://github.com/sweet-delights/hybrid-platforms-conductor/commit/6083463bf3bc760c393b786515db59af89315333)
+
+## Changes for platform_handler_serverless_chef
+### Features
+
+* [[Feature(platform_handler_serverless_chef)] Integrate testadmin public key while deploying in local mode](https://github.com/sweet-delights/hybrid-platforms-conductor/commit/6083463bf3bc760c393b786515db59af89315333)
+
 # [v33.7.4](https://github.com/sweet-delights/hybrid-platforms-conductor/compare/v33.7.3...v33.7.4) (2021-08-04 14:21:08)
 
 ## Global changes
