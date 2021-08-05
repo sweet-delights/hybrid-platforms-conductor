@@ -1,3 +1,9 @@
+# [v33.8.1](https://github.com/sweet-delights/hybrid-platforms-conductor/compare/v33.8.0...v33.8.1) (2021-08-05 17:11:39)
+
+### Patches
+
+* [[Hotfix] Added test checking that test keys are not deployed in production for security](https://github.com/sweet-delights/hybrid-platforms-conductor/commit/f2e5bcc59b595592bf0a2b4f63c92966f10902ef)
+
 # [v33.8.0](https://github.com/sweet-delights/hybrid-platforms-conductor/compare/v33.7.4...v33.8.0) (2021-08-04 15:55:54)
 
 ## Global changes
