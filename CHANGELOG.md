@@ -1,3 +1,15 @@
+# [v33.8.2](https://github.com/sweet-delights/hybrid-platforms-conductor/compare/v33.8.1...v33.8.2) (2021-08-14 21:12:19)
+
+## Global changes
+### Patches
+
+* [[Fix(test_github_ci)] [#95] Make sure the github_ci test does not fail when a repository has no workflow run](https://github.com/sweet-delights/hybrid-platforms-conductor/commit/e805c5b2d7e391c3c5205996fd56dadc14ddec7f)
+
+## Changes for test_github_ci
+### Patches
+
+* [[Fix(test_github_ci)] [#95] Make sure the github_ci test does not fail when a repository has no workflow run](https://github.com/sweet-delights/hybrid-platforms-conductor/commit/e805c5b2d7e391c3c5205996fd56dadc14ddec7f)
+
 # [v33.8.1](https://github.com/sweet-delights/hybrid-platforms-conductor/compare/v33.8.0...v33.8.1) (2021-08-05 17:11:39)
 
 ### Patches
