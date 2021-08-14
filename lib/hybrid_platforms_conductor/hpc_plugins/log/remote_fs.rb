@@ -138,22 +138,23 @@ module HybridPlatformsConductor
                   value = Regexp.last_match(2)
                   key = key_str.to_sym
                   # Type-cast some values
-                  case key_str
-                  when 'date'
-                    # Date and time values
-                    # Thu Nov 23 18:43:01 UTC 2017
-                    deploy_info[key] = Time.parse("#{value} UTC")
-                  when 'debug'
-                    # Boolean values
-                    # Yes
-                    deploy_info[key] = (value == 'Yes')
-                  when /^diff_files_.+$/, 'services'
-                    # Array of strings
-                    # my_file.txt, other_file.txt
-                    deploy_info[key] = value.split(', ')
-                  else
-                    deploy_info[key] = value
-                  end
+                  deploy_info[key] =
+                    case key_str
+                    when 'date'
+                      # Date and time values
+                      # Thu Nov 23 18:43:01 UTC 2017
+                      Time.parse("#{value} UTC")
+                    when 'debug'
+                      # Boolean values
+                      # Yes
+                      value == 'Yes'
+                    when /^diff_files_.+$/, 'services'
+                      # Array of strings
+                      # my_file.txt, other_file.txt
+                      value.split(', ')
+                    else
+                      value
+                    end
                 else
                   deploy_info[:unknown_lines] = [] unless deploy_info.key?(:unknown_lines)
                   deploy_info[:unknown_lines] << line
