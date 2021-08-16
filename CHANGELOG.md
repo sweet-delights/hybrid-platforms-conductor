@@ -1,3 +1,15 @@
+# [v33.8.3](https://github.com/sweet-delights/hybrid-platforms-conductor/compare/v33.8.2...v33.8.3) (2021-08-16 14:18:52)
+
+## Global changes
+### Patches
+
+* [[Fix(platform_handler_serverless_chef)] [#97] Fix git_diff_impacts when a library file is removed](https://github.com/sweet-delights/hybrid-platforms-conductor/commit/da60609dbd395b9a78c5df8089b39255db1fed9f)
+
+## Changes for platform_handler_serverless_chef
+### Patches
+
+* [[Fix(platform_handler_serverless_chef)] [#97] Fix git_diff_impacts when a library file is removed](https://github.com/sweet-delights/hybrid-platforms-conductor/commit/da60609dbd395b9a78c5df8089b39255db1fed9f)
+
 # [v33.8.2](https://github.com/sweet-delights/hybrid-platforms-conductor/compare/v33.8.1...v33.8.2) (2021-08-14 21:12:19)
 
 ## Global changes
