@@ -428,14 +428,16 @@ module HybridPlatformsConductor
                   end
                 when %r{libraries/(.+)}
                   # Find any recipe using methods from this library
-                  lib_methods_regexps = File.read("#{@repository_path}/#{impacted_file}").scan(/(\W|^)def\s+(\w+)(\W|$)/).map { |_grp_1, method_name, _grp_2| /(\W|^)#{Regexp.escape(method_name)}(\W|$)/ }
-                  known_cookbook_paths.each do |cookbooks_path|
-                    Dir.glob("#{@repository_path}/#{cookbooks_path}/**/recipes/*.rb") do |recipe_path|
-                      file_content = File.read(recipe_path)
-                      found_lib_regexp = lib_methods_regexps.find { |regexp| file_content =~ regexp }
-                      unless found_lib_regexp.nil?
-                        cookbook_name, recipe_name = recipe_path.match(%r{#{cookbooks_path}/(\w+)/recipes/(\w+)\.rb})[1..2]
-                        register.call("included library helper #{found_lib_regexp.source[6..-7]}", recipe_name, cookbook_name: cookbook_name)
+                  if File.exist?("#{@repository_path}/#{impacted_file}")
+                    lib_methods_regexps = File.read("#{@repository_path}/#{impacted_file}").scan(/(\W|^)def\s+(\w+)(\W|$)/).map { |_grp_1, method_name, _grp_2| /(\W|^)#{Regexp.escape(method_name)}(\W|$)/ }
+                    known_cookbook_paths.each do |cookbooks_path|
+                      Dir.glob("#{@repository_path}/#{cookbooks_path}/**/recipes/*.rb") do |recipe_path|
+                        file_content = File.read(recipe_path)
+                        found_lib_regexp = lib_methods_regexps.find { |regexp| file_content =~ regexp }
+                        unless found_lib_regexp.nil?
+                          cookbook_name, recipe_name = recipe_path.match(%r{#{cookbooks_path}/(\w+)/recipes/(\w+)\.rb})[1..2]
+                          register.call("included library helper #{found_lib_regexp.source[6..-7]}", recipe_name, cookbook_name: cookbook_name)
+                        end
                       end
                     end
                   end

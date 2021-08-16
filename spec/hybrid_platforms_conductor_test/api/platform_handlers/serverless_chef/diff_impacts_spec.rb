@@ -158,6 +158,16 @@ describe HybridPlatformsConductor::HpcPlugins::PlatformHandler::ServerlessChef d
       end
     end
 
+    it 'returns no impacted service due to a library helper being removed' do
+      with_serverless_chef_platforms('recipes') do |platform|
+        expect(platform.impacts_from('cookbooks/test_cookbook_2/libraries/removed.rb' => {})).to eq [
+          [],
+          [],
+          false
+        ]
+      end
+    end
+
     it 'ignored impacted service from an unknown helper' do
       with_serverless_chef_platforms('recipes') do |platform, repository|
         File.write("#{repository}/cookbooks/test_cookbook_1/recipes/default.rb", <<~EO_RECIPE)
