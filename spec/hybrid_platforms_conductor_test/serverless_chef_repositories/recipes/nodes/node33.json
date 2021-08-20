@@ -1,0 +1,10 @@
+{
+  "name": "node33",
+  "normal": {
+    "description": "Node 33",
+    "image": "debian_9",
+    "private_ips": ["172.16.0.33"]
+  },
+  "policy_name": "test_policy_33",
+  "policy_group": "test_group"
+}

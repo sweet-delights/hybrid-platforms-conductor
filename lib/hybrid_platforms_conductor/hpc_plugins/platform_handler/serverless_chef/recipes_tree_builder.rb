@@ -105,8 +105,59 @@ module HybridPlatformsConductor
             recipe_content = File.read("#{@platform.repository_path}/#{cookbook_dir}/#{cookbook}/recipes/#{recipe}.rb")
             # Check for include_recipe
             used_recipes = recipe_content.
-              scan(/include_recipe\s+["'](\w+(::\w+)?)["']/).
-              map { |(recipe_def, _sub_grp)| @platform.decode_recipe(recipe_def) }
+              scan(/include_recipe(\((.+)\)|\s+(.+)|\((.*))$/).
+              map do |(_match, match_1, match_2, match_3)|
+                case match_1 || match_2 || match_3
+                when /^["']([^:'"]+(::[^'"]+)?)["']$/
+                  # The recipe definition is given in a String
+                  used_cookbook, used_recipe = Regexp.last_match(1).split('::')
+                  used_recipe = 'default' if used_recipe.nil?
+                  if used_cookbook =~ /^\w+$/
+                    # Find the cookbook it belongs to
+                    used_cookbook_dir = @platform.known_cookbook_paths.find { |cookbook_path| File.exist?("#{@platform.repository_path}/#{cookbook_path}/#{used_cookbook}") }
+                    if used_recipe =~ /^\w+$/
+                      # Check that the recipe exists if we know the cookbook dir
+                      raise "Unknown recipe #{used_cookbook}::#{used_recipe} from cookbook #{@platform.repository_path}/#{used_cookbook_dir}/#{used_cookbook}." if !used_cookbook_dir.nil? && !File.exist?("#{@platform.repository_path}/#{used_cookbook_dir}/#{used_cookbook}/recipes/#{used_recipe}.rb")
+
+                      [
+                        [used_cookbook_dir, used_cookbook.to_sym, used_recipe.to_sym]
+                      ]
+                    elsif used_cookbook_dir
+                      # We are dealing with a dynamically named recipe.
+                      # Return all recipes of the cookbook if we know the cookbook dir
+                      Dir.glob("#{@platform.repository_path}/#{used_cookbook_dir}/#{used_cookbook}/recipes/*.rb").map do |used_recipe_file_path|
+                        [
+                          used_cookbook_dir,
+                          used_cookbook.to_sym,
+                          File.basename(used_recipe_file_path, '.rb').to_sym
+                        ]
+                      end
+                    else
+                      # We are dealing with a dynamically named recipe.
+                      # We have no cookbook dir - certainly comes from the supermarket.
+                      []
+                    end
+                  elsif used_recipe =~ /^\w+$/
+                    # We are dealing with a dynamically named cookbook, but the recipe name is known.
+                    # Look for this recipe in all cookbooks that are part of the metadata.
+                    dependent_cookbooks(cookbook_dir, cookbook).map do |dependent_cookbook|
+                      dependent_cookbook_dir = @platform.known_cookbook_paths.find { |cookbook_path| File.exist?("#{@platform.repository_path}/#{cookbook_path}/#{dependent_cookbook}") }
+                      if !dependent_cookbook_dir.nil? && File.exist?("#{@platform.repository_path}/#{dependent_cookbook_dir}/#{dependent_cookbook}/recipes/#{used_recipe}.rb")
+                        # Found a matching recipe name
+                        [dependent_cookbook_dir, dependent_cookbook, used_recipe.to_sym]
+                      end
+                    end.compact
+                  else
+                    # We are dealing with cynamically named cookbooks and recipes.
+                    # Consider we depend on all recipes of our dependent cookbooks.
+                    all_dependent_recipes(cookbook_dir, cookbook)
+                  end
+                else
+                  # The recipe definition is much more complex, so treat it as unparsable and consider we depnd on all recipes of our dependent cookbooks from metadata.
+                  all_dependent_recipes(cookbook_dir, cookbook)
+                end
+              end.
+              flatten(1)
             # Check for some helpers we know include some recipes
             @config.known_helpers_including_recipes.each do |helper_name, used_recipes_by_helper|
               if recipe_content =~ Regexp.new(/(\W|^)#{Regexp.escape(helper_name)}(\W|$)/)
@@ -220,6 +271,47 @@ module HybridPlatformsConductor
             @recipes_tree[cookbook][recipe][:included_recipes].each do |(_sub_cookbook_dir, sub_cookbook, sub_recipe)|
               mark_recipe_used_by_policy(sub_cookbook, sub_recipe, used_by_policy)
             end
+          end
+
+          # Get the list of dependent cookbooks from a cookbook's metadata
+          #
+          # Parameters::
+          # * *cookbook_dir* (String): The cookbook directory
+          # * *cookbook* (Symbol): The cookbook name
+          # Result::
+          # * Array<Symbol>: List of dependent cookbooks
+          def dependent_cookbooks(cookbook_dir, cookbook)
+            # Read the metadata file
+            dsl_parser = DslParser.new
+            dsl_parser.parse("#{@platform.repository_path}/#{cookbook_dir}/#{cookbook}/metadata.rb")
+            dsl_parser.
+              calls.
+              map { |call_info| call_info[:method] == :depends ? call_info[:args].first.to_sym : nil }.
+              compact
+          end
+
+          # Get all recipes from all cookbooks that are a metadata dependency from a given cookbook.
+          #
+          # Parameters::
+          # * *cookbook_dir* (String): The cookbook directory
+          # * *cookbook* (Symbol): The cookbook name
+          # Result::
+          # * Array< [String, Symbol, Symbol] >: List of tuples [cookbook_dir, cookbook, recipe] used by this recipe
+          def all_dependent_recipes(cookbook_dir, cookbook)
+            dependent_cookbooks(cookbook_dir, cookbook).map do |dependent_cookbook|
+              dependent_cookbook_dir = @platform.known_cookbook_paths.find { |cookbook_path| File.exist?("#{@platform.repository_path}/#{cookbook_path}/#{dependent_cookbook}") }
+              if dependent_cookbook_dir.nil?
+                nil
+              else
+                Dir.glob("#{@platform.repository_path}/#{dependent_cookbook_dir}/#{dependent_cookbook}/recipes/*.rb").map do |used_recipe_file_path|
+                  [
+                    dependent_cookbook_dir,
+                    dependent_cookbook,
+                    File.basename(used_recipe_file_path, '.rb').to_sym
+                  ]
+                end
+              end
+            end.compact.flatten(1)
           end
 
         end
