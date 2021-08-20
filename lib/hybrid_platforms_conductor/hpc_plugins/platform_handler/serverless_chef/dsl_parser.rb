@@ -26,7 +26,7 @@ module HybridPlatformsConductor
           # Parameters::
           # * *source* (String): File to parse
           def parse(source)
-            instance_eval(File.read(source))
+            instance_eval(File.read(source), source)
           end
 
           # Intercept all missing methods

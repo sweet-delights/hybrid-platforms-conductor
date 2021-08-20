@@ -235,6 +235,59 @@ describe HybridPlatformsConductor::HpcPlugins::PlatformHandler::ServerlessChef d
       end
     end
 
+    it 'returns impacted service due to a usage of another cookbook\'s recipe using parenthesis' do
+      with_serverless_chef_platforms('recipes') do |platform, repository|
+        File.write("#{repository}/cookbooks/test_cookbook_1/recipes/default.rb", <<~EO_RECIPE)
+          include_recipe('test_cookbook_2::other_recipe')
+        EO_RECIPE
+        expect(platform.impacts_from('cookbooks/test_cookbook_2/recipes/other_recipe.rb' => {})).to eq [
+          [],
+          %w[test_policy_1],
+          false
+        ]
+      end
+    end
+
+    it 'returns impacted service due to a usage of another cookbook\'s recipe using dynamic recipe name' do
+      with_serverless_chef_platforms('recipes') do |platform|
+        expect(platform.impacts_from('cookbooks/test_cookbook_4/recipes/recipe_1.rb' => {})).to eq [
+          [],
+          %w[test_policy_31 test_policy_33 test_policy_35],
+          false
+        ]
+      end
+    end
+
+    it 'returns impacted service due to a usage of another cookbook\'s recipe using dynamic cookbook name' do
+      with_serverless_chef_platforms('recipes') do |platform|
+        expect(platform.impacts_from('cookbooks/test_cookbook_4/recipes/recipe_2.rb' => {})).to eq [
+          [],
+          %w[test_policy_31 test_policy_32 test_policy_33 test_policy_35],
+          false
+        ]
+      end
+    end
+
+    it 'returns impacted service due to a usage of another cookbook\'s recipe using dynamic cookbook and recipe names' do
+      with_serverless_chef_platforms('recipes') do |platform|
+        expect(platform.impacts_from('cookbooks/test_cookbook_4/recipes/recipe_3.rb' => {})).to eq [
+          [],
+          %w[test_policy_31 test_policy_33 test_policy_35],
+          false
+        ]
+      end
+    end
+
+    it 'returns impacted service due to a usage of another cookbook\'s recipe using dynamic or unparsable cookbook and recipe names, using metadata' do
+      with_serverless_chef_platforms('recipes') do |platform|
+        expect(platform.impacts_from('cookbooks/test_cookbook_5/recipes/recipe_1.rb' => {})).to eq [
+          [],
+          %w[test_policy_33 test_policy_35],
+          false
+        ]
+      end
+    end
+
     it 'ignores cookbooks from cookbook paths that are not configured' do
       with_serverless_chef_platforms('several_cookbooks') do |platform, repository|
         File.write("#{repository}/cookbooks/test_cookbook_1/recipes/default.rb", <<~EO_RECIPE)
