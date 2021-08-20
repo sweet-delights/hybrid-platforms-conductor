@@ -1,3 +1,15 @@
+# [v33.8.4](https://github.com/sweet-delights/hybrid-platforms-conductor/compare/v33.8.3...v33.8.4) (2021-08-20 15:45:41)
+
+## Global changes
+### Patches
+
+* [[Fix(platform_handler_serverless_chef)] [#99] Make sure dynamic or unparsable cookbook/recipe names are considered using metadata for recipes dependencies](https://github.com/sweet-delights/hybrid-platforms-conductor/commit/1d7feb24881f04cd3f31bc1e41712dfc4cfe715f)
+
+## Changes for platform_handler_serverless_chef
+### Patches
+
+* [[Fix(platform_handler_serverless_chef)] [#99] Make sure dynamic or unparsable cookbook/recipe names are considered using metadata for recipes dependencies](https://github.com/sweet-delights/hybrid-platforms-conductor/commit/1d7feb24881f04cd3f31bc1e41712dfc4cfe715f)
+
 # [v33.8.3](https://github.com/sweet-delights/hybrid-platforms-conductor/compare/v33.8.2...v33.8.3) (2021-08-16 14:18:52)
 
 ## Global changes
