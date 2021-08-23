@@ -73,7 +73,9 @@ module HybridPlatformsConductorTest
       # Clean-up at the end.
       #
       # Parameters::
-      # * *platforms_info* (Hash<String,Object>): Platforms info for the test platform
+      # * *platforms_info* (Hash<String,Object>): Platforms info for the test platform:
+      #   * *platform_type* (Symbol): Name of the platform handler plugin for this platform
+      #   * *name* (String): Optional name to give the platform [optional]
       # * *as_git* (Boolean): Do we initialize those repositories as Git repositories? [default: false]
       # * *additional_config* (String): Additional config to be added [default: '']
       # * Proc: Code called with the environment ready
@@ -86,7 +88,7 @@ module HybridPlatformsConductorTest
             repositories.map do |platform, dir|
               platform_type = platforms_info[platform].key?(:platform_type) ? platforms_info[platform][:platform_type] : :test
               platform_types << platform_type unless platform_types.include?(platform_type)
-              "#{platform_type}_platform path: '#{dir}'"
+              "#{platform_type}_platform path: '#{dir}'#{platforms_info[platform].key?(:name) ? ", name: '#{platforms_info[platform][:name]}'" : ''}"
             end.join("\n") + "\n#{additional_config}"
           ) do
             register_platform_handlers(platform_types.map do |platform_type|

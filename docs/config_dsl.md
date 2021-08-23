@@ -28,19 +28,25 @@ This DSL can also be completed by plugins. Check [the plugins documentations](pl
 Declare a new platform of type `<platform_type>`, providing either a local path to it (using `path: '/path/to/files'`) or a git repository to it (using `git: 'git_url'`). The possible platform types are the names of the [`platform_handler` plugins](plugins.md#platform_handler).
 
 Git branches can also be specified using `branch: 'branch_name'`.
+
+The name of the platform (as used for example by the [`for_nodes`](#for_nodes) DSL) defaults to the base name of the directory in case of a local path, or the base name of the first remote in case of a git repository. It can be enforced to a given name using `name: 'platform_name'` (useful to avoid name conflicts and keep consistency with the rest of your configuration among the team).
+
 An optional code block taking the local repository path as parameter can also be specified to add configuration that is specific to this platform.
 
 Examples:
 ```ruby
-# Declare a platform of type Chef, located in a distant git repository
+# Declare a platform of type Chef, located in a distant git repository (its name will be my-chef-repo)
 chef_platform git: 'https://my-git.domain.com/project/my-chef-repo.git'
 
-# Declare a platform located in a local path
-chef_platform path: '/path/to/my-chef-repo'
+# Declare a platform located in a local path (its name will be my-other-chef-repo)
+chef_platform path: '/path/to/my-other-chef-repo'
+
+# Declare a platform located in a local path and forces its name (its name will be my-platform)
+chef_platform path: '/path/to/my-repo', name: 'my-platform'
 
 # Declare a platform from a git branch, and apply some configuration to it
 chef_platform(
-  git: 'https://my-git.domain.com/project/my-chef-repo.git',
+  git: 'https://my-git.domain.com/project/devops-chef-repo.git',
   branch: 'my-branch'
 ) do |path|
   # Here path will be a local path containing a checkout of the branch my-branch of the git repo.

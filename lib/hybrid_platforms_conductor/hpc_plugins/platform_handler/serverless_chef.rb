@@ -47,24 +47,10 @@ module HybridPlatformsConductor
         end
         extend_config_dsl_with MyDSLExtension, :init_serverless_chef
 
-        # Constructor
-        #
-        # Parameters::
-        # * *platform_type* (Symbol): Platform type
-        # * *repository_path* (String): Repository path
-        # * *logger* (Logger): Logger to be used [default: Logger.new(STDOUT)]
-        # * *logger_stderr* (Logger): Logger to be used for stderr [default: Logger.new(STDERR)]
-        # * *config* (Config): Config to be used. [default: Config.new]
-        # * *cmd_runner* (CmdRunner): Command executor to be used. [default: CmdRunner.new]
-        def initialize(
-          platform_type,
-          repository_path,
-          logger: Logger.new($stdout),
-          logger_stderr: Logger.new($stderr),
-          config: Config.new,
-          cmd_runner: CmdRunner.new
-        )
-          super
+        # Initialize a new instance of this platform handler.
+        # [API] - This method is optional.
+        # [API] - @cmd_runner is accessible.
+        def init
           # Mutex for getting the full recipes tree
           @recipes_tree_mutex = Mutex.new
         end

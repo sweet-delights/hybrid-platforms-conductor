@@ -9,13 +9,14 @@ module HybridPlatformsConductor
     # Add some config DSL
     module ConfigDSLExtension
 
-      # List of platforms repository directories, per platform type
-      #   Hash<Symbol, Array<String> >
-      attr_reader :platform_dirs
+      # List of platforms repository directories and their associated info, per platform type
+      #   Hash<Symbol,        Hash<String,          Hash<Symbol,Object> > >
+      #   Hash<platform_type, Hash<repository_path, Hash<Symbol,Object> > >
+      attr_reader :platforms_info
 
       # Mixin initializer
       def init_platforms_handler
-        @platform_dirs = {}
+        @platforms_info = {}
         # Directory in which platforms are cloned
         @git_platforms_dir = "#{@hybrid_platforms_dir}/cloned_platforms"
       end
@@ -46,15 +47,16 @@ module HybridPlatformsConductor
       # Hash<Symbol, Array<PlatformHandler> >
       @platform_handlers = {}
       # Read all platforms from the config
-      @config.platform_dirs.each do |platform_type, repositories|
-        repositories.each do |repository_path|
+      @config.platforms_info.each do |platform_type, repositories_info|
+        repositories_info.each do |repository_path, repository_info|
           platform_handler = @platform_types[platform_type].new(
             platform_type,
             repository_path,
             logger: @logger,
             logger_stderr: @logger_stderr,
             config: @config,
-            cmd_runner: @cmd_runner
+            cmd_runner: @cmd_runner,
+            name: repository_info[:name]
           )
           # Check that this platform has unique name
           raise "Platform name #{platform_handler.name} is declared several times." if @platform_handlers.values.flatten.any? { |known_platform| known_platform.name == platform_handler.name }

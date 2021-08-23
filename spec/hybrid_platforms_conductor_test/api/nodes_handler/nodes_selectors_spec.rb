@@ -15,6 +15,10 @@ describe HybridPlatformsConductor::NodesHandler do
           },
           'platform2' => {
             nodes: { 'node4' => {}, 'node5' => { services: %w[service3 service1] }, 'node6' => {} }
+          },
+          'platform3' => {
+            nodes: { 'node7' => {} },
+            name: 'other_platform'
           }
         },
         &block
@@ -24,12 +28,13 @@ describe HybridPlatformsConductor::NodesHandler do
     # List all tests of nodes selectors, and the corresponding nodes list they should be resolved into
     {
       [] => [],
-      [{ all: true }] => %w[node1 node2 node3 node4 node5 node6],
+      [{ all: true }] => %w[node1 node2 node3 node4 node5 node6 node7],
       'node1' => %w[node1],
       '/node[12]/' => %w[node1 node2],
       [{ list: 'nodeslist1' }] => %w[node1 node3],
       [{ list: 'nodeslist2' }] => %w[node1 node2],
       [{ platform: 'platform2' }] => %w[node4 node5 node6],
+      [{ platform: 'other_platform' }] => %w[node7],
       [{ service: 'service1' }] => %w[node2 node5],
       ['/node[12]/', { service: 'service1' }] => %w[node1 node2 node5],
       [{ git_diff: { platform: 'platform2' } }] => %w[node4 node5 node6]
@@ -45,13 +50,13 @@ describe HybridPlatformsConductor::NodesHandler do
 
     it 'fails when selecting unknown nodes' do
       with_test_platform_for_nodes do
-        expect { test_nodes_handler.select_nodes('node1', 'node7') }.to raise_error(RuntimeError, 'Unknown nodes: node7')
+        expect { test_nodes_handler.select_nodes('node1', 'unknown_node') }.to raise_error(RuntimeError, 'Unknown nodes: unknown_node')
       end
     end
 
     it 'ignore unknown nodes when asked' do
       with_test_platform_for_nodes do
-        expect(test_nodes_handler.select_nodes(%w[node1 node7], ignore_unknowns: true).sort).to eq %w[node1 node7].sort
+        expect(test_nodes_handler.select_nodes(%w[node1 unknown_node], ignore_unknowns: true).sort).to eq %w[node1 unknown_node].sort
       end
     end
 
@@ -105,7 +110,7 @@ describe HybridPlatformsConductor::NodesHandler do
 
     it 'considers all nodes for en empty nodes selector stack' do
       with_test_platform_for_nodes do
-        expect(test_nodes_handler.select_from_nodes_selector_stack([]).sort).to eq %w[node1 node2 node3 node4 node5 node6].sort
+        expect(test_nodes_handler.select_from_nodes_selector_stack([]).sort).to eq %w[node1 node2 node3 node4 node5 node6 node7].sort
       end
     end
 
