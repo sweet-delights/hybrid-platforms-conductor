@@ -1,3 +1,15 @@
+# [v33.9.0](https://github.com/sweet-delights/hybrid-platforms-conductor/compare/v33.8.4...v33.9.0) (2021-08-24 13:15:44)
+
+## Global changes
+### Patches
+
+* [[Feature(platform_handler)] [#102] Add the name option when declaring platforms to set the platform name](https://github.com/sweet-delights/hybrid-platforms-conductor/commit/13ada7687f08b3f970521320e2b26ea42d9a6d7f)
+
+## Changes for platform_handler
+### Features
+
+* [[Feature(platform_handler)] [#102] Add the name option when declaring platforms to set the platform name](https://github.com/sweet-delights/hybrid-platforms-conductor/commit/13ada7687f08b3f970521320e2b26ea42d9a6d7f)
+
 # [v33.8.4](https://github.com/sweet-delights/hybrid-platforms-conductor/compare/v33.8.3...v33.8.4) (2021-08-20 15:45:41)
 
 ## Global changes
