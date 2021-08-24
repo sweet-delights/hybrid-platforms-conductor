@@ -200,10 +200,11 @@ module HybridPlatformsConductorTest
       # Result::
       # * Hash<Symbol, Object>: Platform info (check TestPlatformHandler#platforms_info to know about properties)
       def platform_info
+        _repo_base_name, found_platform_info = HybridPlatformsConductorTest::PlatformHandlerPlugins::Test.platforms_info.find { |search_repo_base_name, search_platform_info| (search_platform_info[:name] || search_repo_base_name) == name }
         {
           nodes: {},
           nodes_lists: {}
-        }.merge(HybridPlatformsConductorTest::PlatformHandlerPlugins::Test.platforms_info[name])
+        }.merge(found_platform_info)
       end
 
       # Return the node info of a given node

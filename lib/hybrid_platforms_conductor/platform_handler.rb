@@ -17,13 +17,13 @@ module HybridPlatformsConductor
       # Make sure we define automatically a helper for such a platform
       mixin = Module.new
       platform_type = subclass.name.split('::').last.gsub(/([a-z\d])([A-Z\d])/, '\1_\2').downcase.to_sym
-      mixin.define_method("#{platform_type}_platform".to_sym) do |path: nil, git: nil, branch: 'master', &platform_config_code|
+      mixin.define_method("#{platform_type}_platform".to_sym) do |path: nil, git: nil, branch: 'master', name: nil, &platform_config_code|
         repository_path =
           if !path.nil?
             path
           elsif !git.nil?
             # Clone in a local repository
-            local_repository_path = "#{@git_platforms_dir}/#{File.basename(git)[0..-File.extname(git).size - 1]}"
+            local_repository_path = "#{@git_platforms_dir}/#{name.nil? ? File.basename(git)[0..-File.extname(git).size - 1] : name}"
             unless File.exist?(local_repository_path)
               branch = "refs/heads/#{branch}" unless branch.include?('/')
               local_ref = "refs/remotes/origin/#{branch.split('/').last}"
@@ -37,8 +37,10 @@ module HybridPlatformsConductor
           else
             raise 'The platform has to be defined with either a path or a git URL'
           end
-        @platform_dirs[platform_type] = [] unless @platform_dirs.key?(platform_type)
-        @platform_dirs[platform_type] << repository_path
+        @platforms_info[platform_type] = {} unless @platforms_info.key?(platform_type)
+        raise "Platform repository path #{repository_path} is declared several times." if @platforms_info.values.any? { |known_platforms_info| known_platforms_info.key?(repository_path) }
+
+        @platforms_info[platform_type][repository_path] = name.nil? ? {} : { name: name }
         platform_config_code&.call(repository_path)
       end
       # Register this new mixin in the Config DSL
@@ -66,18 +68,21 @@ module HybridPlatformsConductor
     # * *logger_stderr* (Logger): Logger to be used for stderr [default: Logger.new(STDERR)]
     # * *config* (Config): Config to be used. [default: Config.new]
     # * *cmd_runner* (CmdRunner): Command executor to be used. [default: CmdRunner.new]
+    # * *name* (String or nil): Platform name, or nil for defaults (based on path or git remote) [default: nil]
     def initialize(
       platform_type,
       repository_path,
       logger: Logger.new($stdout),
       logger_stderr: Logger.new($stderr),
       config: Config.new,
-      cmd_runner: CmdRunner.new
+      cmd_runner: CmdRunner.new,
+      name: nil
     )
       super(logger: logger, logger_stderr: logger_stderr, config: config)
       @platform_type = platform_type
       @repository_path = repository_path
       @cmd_runner = cmd_runner
+      @name = name
       init if respond_to?(:init)
     end
 
@@ -142,7 +147,12 @@ module HybridPlatformsConductor
             git_status = git.status
             git_commit = git.log.first
             {
-              repo_name: git.remotes.empty? ? File.basename(@repository_path) : File.basename(git.remotes.first.url).gsub(/\.git$/, ''),
+              repo_name:
+                if @name.nil?
+                  git.remotes.empty? ? File.basename(@repository_path) : File.basename(git.remotes.first.url).gsub(/\.git$/, '')
+                else
+                  @name
+                end,
               commit: {
                 id: git_commit.sha,
                 ref: git_commit.name,
@@ -162,7 +172,7 @@ module HybridPlatformsConductor
             }
           else
             {
-              repo_name: File.basename(@repository_path)
+              repo_name: @name.nil? ? File.basename(@repository_path) : @name
             }
           end
       end

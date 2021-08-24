@@ -2,22 +2,22 @@ describe HybridPlatformsConductor::PlatformsHandler do
 
   context 'when checking config specific DSL' do
 
-    it 'returns platform directories along with platform types' do
+    it 'returns platforms info' do
       with_test_platforms(
         {
           'platform1' => { platform_type: :test },
           'platform2' => { platform_type: :test_2 },
-          'platform3' => { platform_type: :test }
+          'platform3' => { platform_type: :test, name: 'other_platform' }
         }
       ) do |repositories|
-        expect(test_config.platform_dirs.keys.sort).to eq %i[test test_2].sort
-        expect(test_config.platform_dirs[:test].sort).to eq [
-          repositories['platform1'],
-          repositories['platform3']
-        ].sort
-        expect(test_config.platform_dirs[:test_2].sort).to eq [
-          repositories['platform2']
-        ].sort
+        expect(test_config.platforms_info.keys.sort).to eq %i[test test_2].sort
+        expect(test_config.platforms_info[:test]).to eq(
+          repositories['platform1'] => {},
+          repositories['platform3'] => { name: 'other_platform' }
+        )
+        expect(test_config.platforms_info[:test_2]).to eq(
+          repositories['platform2'] => {}
+        )
       end
     end
 
@@ -55,23 +55,53 @@ describe HybridPlatformsConductor::PlatformsHandler do
       {
         'platform1' => { platform_type: :test },
         'platform2' => { platform_type: :test_2 },
-        'platform3' => { platform_type: :test }
+        'platform3' => { platform_type: :test, name: 'other_platform' }
       }
     ) do
-      expect(test_platforms_handler.known_platforms.map(&:name).sort).to eq %w[platform1 platform2 platform3].sort
+      expect(test_platforms_handler.known_platforms.map(&:name).sort).to eq %w[platform1 platform2 other_platform].sort
     end
   end
 
   it 'fails if several platforms share the same name' do
+    with_repository('platform1') do |repository|
+      FileUtils.mkdir_p "#{repository}/platform1"
+      with_test_platforms(
+        {
+          'platform1' => { platform_type: :test },
+          'platform2' => { platform_type: :test_2 }
+        },
+        additional_config: "test_2_platform path: \'#{repository}/platform1\'"
+      ) do
+        expect { test_platforms_handler.known_platforms }.to raise_error 'Platform name platform1 is declared several times.'
+      end
+    end
+  end
+
+  it 'fails if several platforms share the same path' do
     with_repository('platform1') do |repository|
       with_test_platforms(
         {
           'platform1' => { platform_type: :test },
           'platform2' => { platform_type: :test_2 }
         },
-        additional_config: "test_2_platform path: \'#{repository}\'"
+        additional_config: "test_2_platform path: \'#{repository}\', name: 'other_platform'"
       ) do
-        expect { test_platforms_handler.known_platforms }.to raise_error 'Platform name platform1 is declared several times.'
+        expect { test_platforms_handler.known_platforms }.to raise_error "Platform repository path #{repository} is declared several times."
+      end
+    end
+  end
+
+  it 'can differentiate several platforms sharing the same path ending but with different explicit names' do
+    with_repository('platform1') do |repository|
+      FileUtils.mkdir_p "#{repository}/platform1"
+      with_test_platforms(
+        {
+          'platform1' => { platform_type: :test },
+          'platform2' => { platform_type: :test_2 }
+        },
+        additional_config: "test_platform path: \'#{repository}/platform1\', name: 'other_platform'"
+      ) do
+        expect(test_platforms_handler.known_platforms.map(&:name).sort).to eq %w[platform1 platform2 other_platform].sort
       end
     end
   end
