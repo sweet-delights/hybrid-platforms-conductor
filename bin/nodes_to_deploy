@@ -17,6 +17,7 @@ executable = HybridPlatformsConductor::Executable.new(deploy_options: false) do 
   end
 end
 nodes_handler = executable.nodes_handler
+platforms_handler = executable.platforms_handler
 deployer = executable.deployer
 
 executable.parse_options!
@@ -72,14 +73,20 @@ unless ignore_deploy_info
         commit_id = node_deploy_info[:deployment_info]["commit_id_#{repo_idx}".to_sym]
         impacted_nodes = cache_impacted_nodes.dig(repo_name, commit_id)
         if impacted_nodes.nil?
-          begin
-            impacted_nodes, _single_impacted_nodes, _impacted_services, _impact_global = nodes_handler.impacted_nodes_from_git_diff(
-              repo_name,
-              from_commit: commit_id,
-              to_commit: 'master'
-            )
-          rescue HybridPlatformsConductor::NodesHandler::GitError
-            # Consider the node was deployed with a non-release branch commit (as it is missing)
+          if platforms_handler.platform(repo_name)
+            begin
+              impacted_nodes, _single_impacted_nodes, _impacted_services, _impact_global = nodes_handler.impacted_nodes_from_git_diff(
+                repo_name,
+                from_commit: commit_id,
+                to_commit: 'master'
+              )
+            rescue HybridPlatformsConductor::NodesHandler::GitError
+              # Consider the node was deployed with a non-release branch commit (as it is missing)
+              # So we have to make sure we deploy it again
+              impacted_nodes = [node]
+            end
+          else
+            # Consider the node was deployed with an obdsolete platform (as it is unknown)
             # So we have to make sure we deploy it again
             impacted_nodes = [node]
           end
