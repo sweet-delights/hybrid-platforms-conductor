@@ -1,3 +1,15 @@
+# [v33.9.2](https://github.com/sweet-delights/hybrid-platforms-conductor/compare/v33.9.1...v33.9.2) (2021-09-01 17:46:34)
+
+## Global changes
+### Patches
+
+* [[Fix(nodes_to_deploy)] [#112] Support UTF-8 encoding from log files](https://github.com/sweet-delights/hybrid-platforms-conductor/commit/26a7bd2fd53d387bd972b5e1b60cac9be6541ce5)
+
+## Changes for nodes_to_deploy
+### Patches
+
+* [[Fix(nodes_to_deploy)] [#112] Support UTF-8 encoding from log files](https://github.com/sweet-delights/hybrid-platforms-conductor/commit/26a7bd2fd53d387bd972b5e1b60cac9be6541ce5)
+
 # [v33.9.1](https://github.com/sweet-delights/hybrid-platforms-conductor/compare/v33.9.0...v33.9.1) (2021-09-01 16:59:59)
 
 ## Global changes
