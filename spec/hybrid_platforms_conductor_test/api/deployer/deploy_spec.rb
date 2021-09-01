@@ -196,6 +196,50 @@ describe HybridPlatformsConductor::Deployer do
         end
       end
 
+      it 'gets deployment info from log plugins returning UTF-8 characters' do
+        with_test_platform_for_deploy_tests({ nodes: { 'node' => {} } }) do
+          HybridPlatformsConductorTest::TestLogPlugin.mocked_logs = {
+            'node' => {
+              deployment_info: { user: 'test_user' },
+              exit_status: 666,
+              services: %w[unknown],
+              stderr: 'stderrの展開テストログ',
+              stdout: 'stdoutの展開テストログ'
+            }
+          }
+          expect_actions_executor_runs [
+            # Expect the actions to get log files
+            proc do |actions_per_nodes|
+              expect(actions_per_nodes).to eq('node' => [{ bash: 'echo Read logs for node' }])
+              # Simulate the fact that data returned by the ssh system calls can contain UTF-8 chars, but is perceived as binary
+              { 'node' => [42, 'ログファイルはstdoutを読み取ります'.force_encoding('BINARY'), 'ログファイルはstderrを読み取ります'.force_encoding('BINARY')] }
+            end
+          ]
+          expect(test_deployer.deployment_info_from('node')).to eq(
+            'node' => {
+              deployment_info: { user: 'test_user' },
+              exit_status: 666,
+              services: %w[unknown],
+              stderr: 'stderrの展開テストログ',
+              stdout: 'stdoutの展開テストログ'
+            }
+          )
+          expect(HybridPlatformsConductorTest::TestLogPlugin.calls).to eq [
+            {
+              method: :actions_to_read_logs,
+              node: 'node'
+            },
+            {
+              method: :logs_for,
+              node: 'node',
+              exit_status: 42,
+              stdout: 'ログファイルはstdoutを読み取ります',
+              stderr: 'ログファイルはstderrを読み取ります'
+            }
+          ]
+        end
+      end
+
       it 'gets deployment info from log plugins not having actions_to_read_logs' do
         with_test_platform_for_deploy_tests({ nodes: { 'node' => {} } }, additional_config: 'send_logs_to :test_log_no_read') do
           expect(test_deployer.deployment_info_from('node')).to eq(

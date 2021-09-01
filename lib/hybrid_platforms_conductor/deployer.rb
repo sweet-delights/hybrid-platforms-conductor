@@ -475,9 +475,15 @@ module HybridPlatformsConductor
         progress_name: 'Read deployment logs'
       )
       nodes.map do |node|
+        exit_code, stdout, stderr = read_actions_results[node] || [nil, nil, nil]
         [
           node,
-          @log_plugins[log_plugins_for(node).first].logs_for(node, *(read_actions_results[node] || [nil, nil, nil]))
+          @log_plugins[log_plugins_for(node).first].logs_for(
+            node,
+            exit_code,
+            stdout&.force_encoding(Encoding::UTF_8),
+            stderr&.force_encoding(Encoding::UTF_8)
+          )
         ]
       end.to_h
     end
