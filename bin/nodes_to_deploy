@@ -83,16 +83,17 @@ unless ignore_deploy_info
             rescue HybridPlatformsConductor::NodesHandler::GitError
               # Consider the node was deployed with a non-release branch commit (as it is missing)
               # So we have to make sure we deploy it again
-              impacted_nodes = [node]
+              impacted_nodes = :unknown
             end
           else
             # Consider the node was deployed with an obdsolete platform (as it is unknown)
             # So we have to make sure we deploy it again
-            impacted_nodes = [node]
+            impacted_nodes = :unknown
           end
           cache_impacted_nodes[repo_name] = {} unless cache_impacted_nodes.key?(repo_name)
           cache_impacted_nodes[repo_name][commit_id] = impacted_nodes
         end
+        impacted_nodes = [node] if impacted_nodes == :unknown
         if impacted_nodes.include?(node)
           executable.log_debug "[ #{node} ] - Diffs on #{repo_name} between #{commit_id} and master are impacting this node."
           node_impacted = true
