@@ -83,11 +83,13 @@ unless ignore_deploy_info
             rescue HybridPlatformsConductor::NodesHandler::GitError
               # Consider the node was deployed with a non-release branch commit (as it is missing)
               # So we have to make sure we deploy it again
+              executable.log_warn "[ #{node} ] - Unknown commit ID from deployment logs: #{repo_name} / #{commit_id}."
               impacted_nodes = :unknown
             end
           else
             # Consider the node was deployed with an obdsolete platform (as it is unknown)
             # So we have to make sure we deploy it again
+            executable.log_warn "[ #{node} ] - Unknown platform from deployment logs: #{repo_name}."
             impacted_nodes = :unknown
           end
           cache_impacted_nodes[repo_name] = {} unless cache_impacted_nodes.key?(repo_name)
