@@ -5,7 +5,7 @@ module HybridPlatformsConductorTest
 
     class << self
 
-      attr_accessor :calls
+      attr_accessor(*%i[calls mocked_logs])
 
     end
 
@@ -89,7 +89,7 @@ module HybridPlatformsConductorTest
         stdout: stdout,
         stderr: stderr
       }
-      {
+      TestLogPlugin.mocked_logs[node] || {
         services: %w[unknown],
         deployment_info: {
           user: 'test_user'

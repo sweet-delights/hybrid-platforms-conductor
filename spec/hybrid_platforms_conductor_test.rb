@@ -145,6 +145,7 @@ module HybridPlatformsConductorTest
         HybridPlatformsConductorTest::TestPlugins::NodeCheck.only_on_nodes = nil
         HybridPlatformsConductorTest::TestPlugins::SeveralChecks.runs = []
         HybridPlatformsConductorTest::TestLogPlugin.calls = []
+        HybridPlatformsConductorTest::TestLogPlugin.mocked_logs = {}
         HybridPlatformsConductorTest::TestLogNoReadPlugin.calls = []
         HybridPlatformsConductorTest::TestSecretsReaderPlugin.calls = []
         HybridPlatformsConductorTest::TestSecretsReaderPlugin.deployer = nil
