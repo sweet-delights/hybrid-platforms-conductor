@@ -1,3 +1,15 @@
+# [v33.9.1](https://github.com/sweet-delights/hybrid-platforms-conductor/compare/v33.9.0...v33.9.1) (2021-09-01 16:59:59)
+
+## Global changes
+### Patches
+
+* [[Fix(nodes_to_deploy)] [#110] Make sure unknown platforms are taken into account when detecting nodes to be deployed](https://github.com/sweet-delights/hybrid-platforms-conductor/commit/c1b8312c5d473a1c5d044f6cda3ad9bed2b3ca61)
+
+## Changes for nodes_to_deploy
+### Patches
+
+* [[Fix(nodes_to_deploy)] [#110] Make sure unknown platforms are taken into account when detecting nodes to be deployed](https://github.com/sweet-delights/hybrid-platforms-conductor/commit/c1b8312c5d473a1c5d044f6cda3ad9bed2b3ca61)
+
 # [v33.9.0](https://github.com/sweet-delights/hybrid-platforms-conductor/compare/v33.8.4...v33.9.0) (2021-08-24 13:15:44)
 
 ## Global changes
