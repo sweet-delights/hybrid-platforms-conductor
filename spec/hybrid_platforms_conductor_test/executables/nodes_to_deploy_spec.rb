@@ -190,6 +190,81 @@ describe 'nodes_to_deploy executable' do
     end
   end
 
+  it 'considers nodes having the same invalid commit ids in their logs to be deployed' do
+    with_test_platform_for_nodes_to_deploy do
+      expect(test_deployer).to receive(:deployment_info_from).with(%w[node1 node2]).and_return(
+        'node1' => {
+          services: %w[service1],
+          deployment_info: {
+            repo_name_0: 'platform',
+            commit_id_0: 'abcdef1',
+            exit_status: 0
+          },
+          exit_status: 0,
+          stdout: '',
+          stderr: ''
+        },
+        'node2' => {
+          services: %w[service2],
+          deployment_info: {
+            repo_name_0: 'platform',
+            commit_id_0: 'abcdef1',
+            exit_status: 0
+          },
+          exit_status: 0,
+          stdout: '',
+          stderr: ''
+        }
+      )
+      expect(test_nodes_handler).to receive(:impacted_nodes_from_git_diff).with('platform', from_commit: 'abcdef1', to_commit: 'master') do
+        raise HybridPlatformsConductor::NodesHandler::GitError, 'Mocked git error due to an invalid commit id'
+      end
+      exit_code, stdout = run 'nodes_to_deploy'
+      expect(exit_code).to eq 0
+      expect(stdout).to eq <<~EO_STDOUT
+        ===== Nodes to deploy =====
+        node1
+        node2
+      EO_STDOUT
+    end
+  end
+
+  it 'considers nodes having unknown platforms in their logs to be deployed' do
+    with_test_platform_for_nodes_to_deploy do
+      expect(test_deployer).to receive(:deployment_info_from).with(%w[node1 node2]).and_return(
+        'node1' => {
+          services: %w[service1],
+          deployment_info: {
+            repo_name_0: 'unknown_platform',
+            commit_id_0: 'abcdef1',
+            exit_status: 0
+          },
+          exit_status: 0,
+          stdout: '',
+          stderr: ''
+        },
+        'node2' => {
+          services: %w[service2],
+          deployment_info: {
+            repo_name_0: 'platform',
+            commit_id_0: 'abcdef2',
+            exit_status: 0
+          },
+          exit_status: 0,
+          stdout: '',
+          stderr: ''
+        }
+      )
+      expect(test_nodes_handler).to receive(:impacted_nodes_from_git_diff).with('platform', from_commit: 'abcdef2', to_commit: 'master').and_return [%w[], [], [], false]
+      exit_code, stdout = run 'nodes_to_deploy'
+      expect(exit_code).to eq 0
+      expect(stdout).to eq <<~EO_STDOUT
+        ===== Nodes to deploy =====
+        node1
+      EO_STDOUT
+    end
+  end
+
   it 'ignores impacts if asked' do
     with_test_platform_for_nodes_to_deploy do
       exit_code, stdout = run 'nodes_to_deploy', '--ignore-deployed-info'
