@@ -79,13 +79,24 @@ module HybridPlatformsConductor
             nbr_threads_max: MAX_THREADS_GETENT,
             progress: log_debug? ? 'Gather IPs' : nil
           ) do |host|
-            _exit_status, stdout, _stderr = @cmd_runner.run_cmd(
-              "getent hosts #{host}",
-              timeout: TIMEOUT_GETENT,
-              log_to_stdout: log_debug?,
-              no_exception: true
-            )
-            ip = stdout.strip.split(/\s+/).first
+            if /darwin/ =~ RUBY_PLATFORM
+              _exit_status, stdout, _stderr = @cmd_runner.run_cmd(
+                "host #{host}",
+                timeout: TIMEOUT_GETENT,
+                log_to_stdout: log_debug?,
+                no_exception: true
+              )
+              ip = stdout.strip.split(/\s+/).last
+            else
+              _exit_status, stdout, _stderr = @cmd_runner.run_cmd(
+                "getent hosts #{host}",
+                timeout: TIMEOUT_GETENT,
+                log_to_stdout: log_debug?,
+                no_exception: true
+              )
+              ip = stdout.strip.split(/\s+/).first
+            end
+            
             if ip.nil?
               log_warn "Host #{host} has no IP."
             else
