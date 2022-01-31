@@ -31,7 +31,7 @@ module HybridPlatformsConductor
             next if stdout.empty?
 
             _exit_status, stdout, _stderr = @cmd_runner.run_cmd(
-              "cd #{@platform.repository_path} && git --no-pager log #{merge_commit_id} --pretty=format:%aI",
+              "cd #{@platform.repository_path} && git --no-pager log #{merge_commit_id} --max-count 1 --pretty=format:%aI",
               log_to_stdout: log_debug?
             )
             error "Git history is not linear because of Merge commit #{merge_commit_id}" if Time.now - Time.parse(stdout.strip) < LOOKING_PERIOD
