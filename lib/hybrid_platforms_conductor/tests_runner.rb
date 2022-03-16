@@ -524,14 +524,14 @@ module HybridPlatformsConductor
           nodes_to_test = selected_tests.map(&:node).uniq.sort
           @outputs =
             if @skip_run
-              nodes_to_test.map do |node|
+              nodes_to_test.to_h do |node|
                 run_log_file_name = "#{@config.hybrid_platforms_dir}/run_logs/#{node}.stdout"
                 [
                   node,
                   # TODO: Find a way to also save stderr and the status code
                   [0, File.exist?(run_log_file_name) ? File.read(run_log_file_name) : nil, '']
                 ]
-              end.to_h
+              end
             else
               # Why-run deploy on all nodes
               @deployer.concurrent_execution = !log_debug?

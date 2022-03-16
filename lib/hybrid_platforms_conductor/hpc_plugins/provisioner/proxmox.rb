@@ -101,10 +101,10 @@ module HybridPlatformsConductor
 
                 # Get the HPC info associated to this VM
                 # Hash<Symbol,String>
-                vm_hpc_info = vm_description_lines[hpc_marker_idx + 1..].map do |line|
+                vm_hpc_info = vm_description_lines[hpc_marker_idx + 1..].to_h do |line|
                   property, value = line.split(': ')
                   [property.to_sym, value]
-                end.to_h
+                end
                 next unless vm_hpc_info[:node] == @node && vm_hpc_info[:environment] == @environment
 
                 # Found it

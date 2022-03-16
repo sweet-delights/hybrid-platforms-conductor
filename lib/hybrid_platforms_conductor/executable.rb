@@ -99,7 +99,7 @@ module HybridPlatformsConductor
           @instantiated_components[component] = HybridPlatformsConductor.const_get(component.to_s.split('_').collect(&:capitalize).join.to_sym).new(
             logger: @logger,
             logger_stderr: @logger_stderr,
-            **dependencies.map { |dependency| [dependency, send(dependency)] }.to_h
+            **dependencies.to_h { |dependency| [dependency, send(dependency)] }
           )
         end
         @instantiated_components[component]

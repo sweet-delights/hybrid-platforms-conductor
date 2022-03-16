@@ -162,7 +162,7 @@ describe HybridPlatformsConductor::TestsRunner do
             'echo "$?"'
           ]
         end
-        node_suffixes.map do |node_suffix|
+        node_suffixes.to_h do |node_suffix|
           [
             "node#{node_suffix}",
             [
@@ -178,7 +178,7 @@ describe HybridPlatformsConductor::TestsRunner do
               EO_STDERR
             ]
           ]
-        end.to_h
+        end
       end])
       # Run everything
       test_tests_runner.tests = [:several_tests]

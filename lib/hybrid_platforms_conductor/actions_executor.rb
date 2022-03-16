@@ -146,7 +146,7 @@ module HybridPlatformsConductor
           actions_per_node[node].concat(resolved_nodes_actions)
         end
       end
-      result = actions_per_node.keys.map { |node| [node, nil] }.to_h
+      result = actions_per_node.keys.to_h { |node| [node, nil] }
       with_connections_prepared_to(nodes_needing_connectors, no_exception: true) do |connected_nodes|
         missing_nodes = []
         connected_nodes.each do |node, connector|
@@ -194,7 +194,7 @@ module HybridPlatformsConductor
     #     * *connected_nodes* (Hash<String, Connector or Symbol>): Prepared connectors (or Symbol in case of failure with no_exception), per node name
     def with_connections_prepared_to(nodes, no_exception: false)
       # Make sure every node needing connectors finds a connector
-      nodes_needing_connectors = nodes.map { |node| [node, nil] }.to_h
+      nodes_needing_connectors = nodes.to_h { |node| [node, nil] }
       @connector_plugins.each_value do |connector|
         nodes_without_connectors = nodes_needing_connectors.select { |_node, selected_connector| selected_connector.nil? }.keys
         break if nodes_without_connectors.empty?

@@ -14,7 +14,7 @@ module HybridPlatformsConductor
         # Check my_test_plugin.rb.sample documentation for signature details.
         def test_on_node
           # Flatten the paths rules so that we can spot inconsistencies in configuration
-          @config.aggregate_files_rules(@nodes_handler, @node, file_system_type: :hdfs).map do |path, rule_info|
+          @config.aggregate_files_rules(@nodes_handler, @node, file_system_type: :hdfs).to_h do |path, rule_info|
             [
               "if sudo#{rule_info[:context][:sudo_user] ? " -u #{rule_info[:context][:sudo_user]}" : ''} hdfs dfs -ls \"#{path}\" ; then echo 1 ; else echo 0 ; fi",
               {
@@ -31,7 +31,7 @@ module HybridPlatformsConductor
                 timeout: 5
               }
             ]
-          end.to_h
+          end
         end
 
       end

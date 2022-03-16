@@ -371,7 +371,7 @@ class ProxmoxWaiter
   # Result::
   # * Hash<String, [Float or nil, Float or nil]>: The set of 2 scores, per PVE node name
   def pve_scores_for(_nbr_cpus, ram_mb, disk_gb)
-    @config['pve_nodes'].map do |pve_node|
+    @config['pve_nodes'].to_h do |pve_node|
       # Get some resource usages stats from the node directly
       status_info = api_get("nodes/#{pve_node}/status")
       load_average = status_info['loadavg'].map { |load_str| Float(load_str) }
@@ -431,7 +431,7 @@ class ProxmoxWaiter
           [nil, nil]
         end
       ]
-    end.to_h
+    end
   end
 
   # Is a given VM expired?
@@ -499,10 +499,10 @@ class ProxmoxWaiter
     if hpc_marker_idx.nil?
       {}
     else
-      vm_description_lines[hpc_marker_idx + 1..].map do |line|
+      vm_description_lines[hpc_marker_idx + 1..].to_h do |line|
         property, value = line.split(': ')
         [property.to_sym, value]
-      end.to_h
+      end
     end
   end
 

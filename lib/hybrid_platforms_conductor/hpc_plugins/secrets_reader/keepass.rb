@@ -125,7 +125,7 @@ module HybridPlatformsConductor
         # * Hash: The JSON secrets parsed from this group
         def parse_xml_secrets(group)
           # Parse all entries
-          group.xpath('Entry').map do |entry|
+          group.xpath('Entry').to_h do |entry|
             [
               entry.at_xpath('String/Key[contains(.,"Title")]/../Value').text,
               FIELDS.map do |property, field|
@@ -139,7 +139,7 @@ module HybridPlatformsConductor
                   ]
                 end
               end.compact.to_h.merge(
-                entry.xpath('Binary').map do |binary|
+                entry.xpath('Binary').to_h do |binary|
                   binary_meta = group.document.at_xpath("KeePassFile/Meta/Binaries/Binary[@ID=#{Integer(binary.xpath('Value').attr('Ref').value)}]")
                   binary_content = Base64.decode64(binary_meta.text)
                   if binary_meta.attr('Compressed') == 'True'
@@ -151,17 +151,17 @@ module HybridPlatformsConductor
                     binary.xpath('Key').text,
                     binary_content
                   ]
-                end.to_h
+                end
               )
             ]
-          end.to_h.merge(
+          end.merge(
             # Add children groups
-            group.xpath('Group').map do |sub_group|
+            group.xpath('Group').to_h do |sub_group|
               [
                 sub_group.at_xpath('Name').text,
                 parse_xml_secrets(sub_group)
               ]
-            end.to_h
+            end
           )
         end
 
