@@ -418,11 +418,11 @@ class ProxmoxWaiter
           [
             if expected_ram_percent_used <= @config['limits']['ram_percent_used_max'] &&
                 expected_disk_percent_used <= @config['limits']['disk_percent_used_max']
-              expected_ram_percent_used * @config['coeff_ram_consumption'] + expected_disk_percent_used * @config['coeff_disk_consumption']
+              (expected_ram_percent_used * @config['coeff_ram_consumption']) + (expected_disk_percent_used * @config['coeff_disk_consumption'])
             end,
             if expected_ram_percent_used_without_expired <= @config['limits']['ram_percent_used_max'] &&
                 expected_disk_percent_used_without_expired <= @config['limits']['disk_percent_used_max']
-              expected_ram_percent_used_without_expired * @config['coeff_ram_consumption'] + expected_disk_percent_used_without_expired * @config['coeff_disk_consumption']
+              (expected_ram_percent_used_without_expired * @config['coeff_ram_consumption']) + (expected_disk_percent_used_without_expired * @config['coeff_disk_consumption'])
             end
           ]
         else

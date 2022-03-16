@@ -590,13 +590,13 @@ describe HybridPlatformsConductor::ActionsExecutor do
               ['which env', proc { [0, "/usr/bin/env\n", ''] }],
               ['ssh -V 2>&1', proc { [0, "OpenSSH_7.4p1 Debian-10+deb9u7, OpenSSL 1.0.2u  20 Dec 2019\n", ''] }]
             ] +
-              [[
+              ([[
                 %r{^.+/ssh -o BatchMode=yes -o ControlMaster=yes -o ControlPersist=yes hpc\.node true$},
                 proc do
                   nbr_boot_messages += 1
                   [255, '', "System is booting up. See pam_nologin(8)\nAuthentication failed.\n"]
                 end
-              ]] * 3 +
+              ]] * 3) +
               ssh_expected_commands_for({ 'node' => { connection: '192.168.42.42', user: 'test_user' } })
           ) do
             test_connector.ssh_user = 'test_user'

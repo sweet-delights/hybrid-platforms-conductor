@@ -50,7 +50,7 @@ module HybridPlatformsConductorTest
       def record_call(method, *args)
         @calls = [] unless defined?(@calls)
         # Create a shallow copy of the args, just to make sure they won't get changed by later code
-        @calls << [method] + Marshal.load(Marshal.dump(args))
+        @calls << ([method] + Marshal.load(Marshal.dump(args)))
       end
 
     end

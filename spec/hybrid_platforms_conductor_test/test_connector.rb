@@ -140,7 +140,7 @@ module HybridPlatformsConductorTest
       extra_opts[:sudo] = sudo if sudo
       extra_opts[:owner] = owner if owner
       extra_opts[:group] = group if group
-      @calls << [:remote_copy, from, to] + (extra_opts.empty? ? [] : [extra_opts])
+      @calls << ([:remote_copy, from, to] + (extra_opts.empty? ? [] : [extra_opts]))
       @remote_copy_code&.call(@stdout_io, @stderr_io, self)
     end
 
