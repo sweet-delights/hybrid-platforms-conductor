@@ -3,6 +3,7 @@ require 'hybrid_platforms_conductor/core_extensions/cleanroom/fix_kwargs'
 require 'git'
 require 'ice_cube'
 require 'hybrid_platforms_conductor/plugins'
+require 'active_support/core_ext/module'
 
 module HybridPlatformsConductor
 

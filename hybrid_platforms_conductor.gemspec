@@ -55,6 +55,8 @@ Gem::Specification.new do |s|
   s.add_runtime_dependency 'keepass_kpscript', '~> 1.0'
   # To protect passwords and secrets in memory
   s.add_runtime_dependency 'secret_string', '~> 1.1'
+  # To work-around a bug of IceCube dependency: https://stackoverflow.com/questions/27109766/undefined-method-delegate-for-capybaradslmodule
+  s.add_runtime_dependency 'activesupport', '~> 7.0'
 
   # Test framework
   s.add_development_dependency 'rspec', '~> 3.8'
