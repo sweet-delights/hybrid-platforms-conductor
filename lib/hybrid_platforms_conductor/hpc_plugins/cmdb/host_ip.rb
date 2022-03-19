@@ -73,30 +73,33 @@ module HybridPlatformsConductor
         def ip_for(*hosts)
           results = {}
           log_debug "Get IPs of #{hosts.size} hosts..."
+          exit_status, _stdout, _stderr = @cmd_runner.run_cmd('command -v getent', no_exception: true)
+          getent_present = exit_status.zero?
           for_each_element_in(
             hosts,
             parallel: true,
             nbr_threads_max: MAX_THREADS_GETENT,
             progress: log_debug? ? 'Gather IPs' : nil
           ) do |host|
-            if /darwin/ =~ RUBY_PLATFORM
-              _exit_status, stdout, _stderr = @cmd_runner.run_cmd(
-                "host #{host}",
-                timeout: TIMEOUT_GETENT,
-                log_to_stdout: log_debug?,
-                no_exception: true
-              )
-              ip = stdout.strip.split(/\s+/).last
-            else
-              _exit_status, stdout, _stderr = @cmd_runner.run_cmd(
-                "getent hosts #{host}",
-                timeout: TIMEOUT_GETENT,
-                log_to_stdout: log_debug?,
-                no_exception: true
-              )
-              ip = stdout.strip.split(/\s+/).first
-            end
-            
+            ip =
+              if getent_present
+                _exit_status, stdout, _stderr = @cmd_runner.run_cmd(
+                  "getent hosts #{host}",
+                  timeout: TIMEOUT_GETENT,
+                  log_to_stdout: log_debug?,
+                  no_exception: true
+                )
+                stdout.strip.split(/\s+/).first
+              else
+                _exit_status, stdout, _stderr = @cmd_runner.run_cmd(
+                  "host #{host} | grep 'has address'",
+                  timeout: TIMEOUT_GETENT,
+                  log_to_stdout: log_debug?,
+                  no_exception: true
+                )
+                stdout.strip.split(/\s+/).last
+              end
+
             if ip.nil?
               log_warn "Host #{host} has no IP."
             else
