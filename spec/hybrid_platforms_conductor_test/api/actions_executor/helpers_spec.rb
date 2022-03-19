@@ -11,14 +11,14 @@ describe HybridPlatformsConductor::ActionsExecutor do
     it 'returns if a user has privileged access on a node' do
       with_test_platform({ nodes: { 'node' => {} } }) do
         test_actions_executor.connector(:ssh).ssh_user = 'test_user'
-        expect(test_actions_executor.privileged_access?('node')).to eq false
+        expect(test_actions_executor.privileged_access?('node')).to be false
       end
     end
 
     it 'returns if a user has privileged access on a node when connecting with root' do
       with_test_platform({ nodes: { 'node' => {} } }) do
         test_actions_executor.connector(:ssh).ssh_user = 'root'
-        expect(test_actions_executor.privileged_access?('node')).to eq true
+        expect(test_actions_executor.privileged_access?('node')).to be true
       end
     end
 
@@ -28,7 +28,7 @@ describe HybridPlatformsConductor::ActionsExecutor do
           ['whoami', proc { [0, 'test_user', ''] }]
         ] do
           test_actions_executor.connector(:ssh).ssh_user = 'test_user'
-          expect(test_actions_executor.privileged_access?('node')).to eq false
+          expect(test_actions_executor.privileged_access?('node')).to be false
         end
       end
     end
@@ -39,7 +39,7 @@ describe HybridPlatformsConductor::ActionsExecutor do
           ['whoami', proc { [0, 'root', ''] }]
         ] do
           test_actions_executor.connector(:ssh).ssh_user = 'test_user'
-          expect(test_actions_executor.privileged_access?('node')).to eq true
+          expect(test_actions_executor.privileged_access?('node')).to be true
         end
       end
     end

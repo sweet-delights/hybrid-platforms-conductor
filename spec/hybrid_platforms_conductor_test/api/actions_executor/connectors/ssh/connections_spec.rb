@@ -536,14 +536,14 @@ describe HybridPlatformsConductor::ActionsExecutor do
               test_connector.with_connection_to(['node']) do
                 test_connector.prepare_for('node', nil, stdout, stderr)
                 ssh_exec_2 = test_connector.ssh_exec
-                expect(File.exist?(ssh_exec_1)).to eq true
-                expect(File.exist?(ssh_exec_2)).to eq true
+                expect(File.exist?(ssh_exec_1)).to be true
+                expect(File.exist?(ssh_exec_2)).to be true
               end
-              expect(File.exist?(ssh_exec_1)).to eq true
-              expect(File.exist?(ssh_exec_2)).to eq false
+              expect(File.exist?(ssh_exec_1)).to be true
+              expect(File.exist?(ssh_exec_2)).to be false
             end
-            expect(File.exist?(ssh_exec_1)).to eq false
-            expect(File.exist?(ssh_exec_2)).to eq false
+            expect(File.exist?(ssh_exec_1)).to be false
+            expect(File.exist?(ssh_exec_2)).to be false
           end
         end
       end

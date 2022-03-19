@@ -246,7 +246,7 @@ describe HybridPlatformsConductor::ActionsExecutor do
             Host hpc.node1
               Hostname 192.168.42.1
           EO_SSH_CONFIG
-          expect(ssh_config_for('node2', nodes: %w[node1 node3])).to eq nil
+          expect(ssh_config_for('node2', nodes: %w[node1 node3])).to be_nil
         end
       end
 

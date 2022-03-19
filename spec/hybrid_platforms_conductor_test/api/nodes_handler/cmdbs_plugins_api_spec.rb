@@ -56,7 +56,7 @@ describe HybridPlatformsConductor::NodesHandler do
 
     it 'returns nodes metadata using dynamic method even on non-existant properties' do
       with_cmdb_test_platform do
-        expect(test_nodes_handler.get_downcase_of('node1')).to eq nil
+        expect(test_nodes_handler.get_downcase_of('node1')).to be_nil
       end
     end
 
@@ -245,7 +245,7 @@ describe HybridPlatformsConductor::NodesHandler do
         additional_config: 'master_cmdbs(test_cmdb_2: :different_comment)'
       ) do
         expect(test_nodes_handler.get_different_comment_of('node1')).to eq 'Comment from test_cmdb_2'
-        expect(cmdb(:test_cmdb).calls).to eq nil
+        expect(cmdb(:test_cmdb).calls).to be_nil
         expect(cmdb(:test_cmdb_2).calls).to eq [
           [:get_different_comment, ['node1'], {}]
         ]
@@ -385,7 +385,7 @@ describe HybridPlatformsConductor::NodesHandler do
 
     it 'does not cache metadata from others method when they are not the required property' do
       with_cmdb_test_platform(cmdbs: %i[test_cmdb test_cmdb_others]) do
-        expect(test_nodes_handler.get_unknown_of('node1')).to eq nil
+        expect(test_nodes_handler.get_unknown_of('node1')).to be_nil
         expect(cmdb(:test_cmdb_others).calls).to eq [
           [:get_others, ['node1'], {}]
         ]
@@ -400,7 +400,7 @@ describe HybridPlatformsConductor::NodesHandler do
     it 'does not refuse conflicts between CMDBs and overriden values' do
       with_cmdb_test_platform(cmdbs: %i[test_cmdb_others]) do
         test_nodes_handler.override_metadata_of 'node1', :downcase, 'OVERIDDEN'
-        expect(test_nodes_handler.get_unknown_of('node1')).to eq nil
+        expect(test_nodes_handler.get_unknown_of('node1')).to be_nil
         expect(test_nodes_handler.get_downcase_of('node1')).to eq 'OVERIDDEN'
       end
     end
@@ -409,7 +409,7 @@ describe HybridPlatformsConductor::NodesHandler do
       with_cmdb_test_platform do
         test_nodes_handler.override_metadata_of 'node1', :upcase, 'OVERIDDEN'
         expect(test_nodes_handler.metadata_of('node1', :upcase)).to eq 'OVERIDDEN'
-        expect(cmdb(:test_cmdb).calls).to eq nil
+        expect(cmdb(:test_cmdb).calls).to be_nil
       end
     end
 

@@ -122,7 +122,7 @@ describe HybridPlatformsConductor::Plugins do
       plugins[:new_plugin] = HybridPlatformsConductorTest::RandomClassWithValidation
       expect(plugins.keys).to eq [:new_plugin]
       expect(plugins[:new_plugin]).to eq HybridPlatformsConductorTest::RandomClassWithValidation
-      expect(HybridPlatformsConductorTest::RandomClassWithValidation.validation_done).to eq true
+      expect(HybridPlatformsConductorTest::RandomClassWithValidation.validation_done).to be true
     end
   end
 
@@ -133,7 +133,7 @@ describe HybridPlatformsConductor::Plugins do
       HybridPlatformsConductorTest::RandomClassWithValidation.validation_result = false
       plugins[:new_plugin] = HybridPlatformsConductorTest::RandomClassWithValidation
       expect(plugins.keys).to eq []
-      expect(HybridPlatformsConductorTest::RandomClassWithValidation.validation_done).to eq true
+      expect(HybridPlatformsConductorTest::RandomClassWithValidation.validation_done).to be true
     end
   end
 

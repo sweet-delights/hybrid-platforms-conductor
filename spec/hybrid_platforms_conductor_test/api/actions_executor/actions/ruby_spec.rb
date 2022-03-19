@@ -18,7 +18,7 @@ describe HybridPlatformsConductor::ActionsExecutor do
             }
           )['node']
         ).to eq [0, 'TestStdout', 'TestStderr']
-        expect(executed).to eq true
+        expect(executed).to be true
       end
     end
 
@@ -38,7 +38,7 @@ describe HybridPlatformsConductor::ActionsExecutor do
             timeout: 1
           )['node']
         ).to eq [:timeout, '', '']
-        expect(executed).to eq false
+        expect(executed).to be false
       end
     end
 
@@ -54,7 +54,7 @@ describe HybridPlatformsConductor::ActionsExecutor do
             } },
             log_to_dir: logs_dir
           )
-          expect(File.exist?("#{logs_dir}/node.stdout")).to eq true
+          expect(File.exist?("#{logs_dir}/node.stdout")).to be true
           expect(File.read("#{logs_dir}/node.stdout")).to eq "TestStdout\nTestStderr\n"
         end
       end
@@ -68,7 +68,7 @@ describe HybridPlatformsConductor::ActionsExecutor do
             {
               'node' => {
                 ruby: proc do |stdout, stderr, action|
-                  expect(action.is_a?(HybridPlatformsConductor::HpcPlugins::Action::Ruby)).to eq true
+                  expect(action.is_a?(HybridPlatformsConductor::HpcPlugins::Action::Ruby)).to be true
                   stdout << 'TestStdout'
                   stderr << 'TestStderr'
                   executed = true
@@ -77,7 +77,7 @@ describe HybridPlatformsConductor::ActionsExecutor do
             }
           )['node']
         ).to eq [0, 'TestStdout', 'TestStderr']
-        expect(executed).to eq true
+        expect(executed).to be true
       end
     end
 
@@ -90,7 +90,7 @@ describe HybridPlatformsConductor::ActionsExecutor do
               'node' => {
                 ruby: {
                   code: proc do |stdout, stderr, _action, connector|
-                    expect(connector.is_a?(HybridPlatformsConductorTest::TestConnector)).to eq true
+                    expect(connector.is_a?(HybridPlatformsConductorTest::TestConnector)).to be true
                     stdout << 'TestStdout'
                     stderr << 'TestStderr'
                     executed = true
@@ -101,7 +101,7 @@ describe HybridPlatformsConductor::ActionsExecutor do
             }
           )['node']
         ).to eq [0, 'TestStdout', 'TestStderr']
-        expect(executed).to eq true
+        expect(executed).to be true
       end
     end
 
@@ -125,7 +125,7 @@ describe HybridPlatformsConductor::ActionsExecutor do
             }
           )['node']
         ).to eq [0, 'TestStdout', 'TestStderr']
-        expect(executed).to eq true
+        expect(executed).to be true
       end
     end
 

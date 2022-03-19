@@ -24,7 +24,7 @@ shared_examples 'a deployer' do
     with_platform_to_deploy(expect_local_environment: true) do
       test_deployer.local_environment = true
       expect(test_deployer.deploy_on('node')).to eq('node' => expected_deploy_result)
-      expect(test_deployer.local_environment).to eq true
+      expect(test_deployer.local_environment).to be true
     end
   end
 

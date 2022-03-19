@@ -168,7 +168,7 @@ describe HybridPlatformsConductor::HpcPlugins::PlatformHandler::ServerlessChef d
           )
           expect(platform.actions_to_deploy_on('node', 'test_policy', use_why_run: false)).to eq expected_actions_to_deploy_chef(repository)
           attributes_file = "#{repository}/dist/prod/test_policy/nodes/node.json"
-          expect(File.exist?(attributes_file)).to eq true
+          expect(File.exist?(attributes_file)).to be true
           expect(JSON.parse(File.read(attributes_file))).to eq(
             'description' => 'Single test node',
             'image' => 'debian_9',

@@ -54,7 +54,7 @@ describe HybridPlatformsConductor::ActionsExecutor do
             },
             log_to_dir: logs_dir
           )
-          expect(File.exist?("#{logs_dir}/node.stdout")).to eq true
+          expect(File.exist?("#{logs_dir}/node.stdout")).to be true
           expect(File.read("#{logs_dir}/node.stdout")).to eq "TestStdout\nTestStderr\n"
         end
       end

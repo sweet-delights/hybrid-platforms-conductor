@@ -34,14 +34,14 @@ describe HybridPlatformsConductor::ServicesHandler do
     it 'allows deployment in local environment' do
       with_test_platform_for_services_test do
         with_cmd_runner_mocked([]) do
-          expect(test_services_handler.deploy_allowed?(services: { 'node1' => %w[service1] }, local_environment: true)).to eq nil
+          expect(test_services_handler.deploy_allowed?(services: { 'node1' => %w[service1] }, local_environment: true)).to be_nil
         end
       end
     end
 
     it 'allows deployment if branch is on master' do
       with_test_platform_for_services_test do
-        expect(test_services_handler.deploy_allowed?(services: { 'node1' => %w[service1] }, local_environment: false)).to eq nil
+        expect(test_services_handler.deploy_allowed?(services: { 'node1' => %w[service1] }, local_environment: false)).to be_nil
       end
     end
 
@@ -52,7 +52,7 @@ describe HybridPlatformsConductor::ServicesHandler do
           deployable_services: %w[service1]
         }
       ) do
-        expect(test_services_handler.deploy_allowed?(services: { 'node1' => %w[service1] }, local_environment: false)).to eq nil
+        expect(test_services_handler.deploy_allowed?(services: { 'node1' => %w[service1] }, local_environment: false)).to be_nil
       end
     end
 
@@ -62,7 +62,7 @@ describe HybridPlatformsConductor::ServicesHandler do
           git = Git.open(repository)
           git.add_remote('another_remote', remote_repo).fetch
           git.checkout('remotes/another_remote/master')
-          expect(test_services_handler.deploy_allowed?(services: { 'node1' => %w[service1] }, local_environment: false)).to eq nil
+          expect(test_services_handler.deploy_allowed?(services: { 'node1' => %w[service1] }, local_environment: false)).to be_nil
         end
       end
     end
@@ -70,7 +70,7 @@ describe HybridPlatformsConductor::ServicesHandler do
     it 'allows deployment if branch is on master even if not checked-out' do
       with_test_platform_for_services_test do |repository|
         Git.open(repository).branch('other_branch').checkout
-        expect(test_services_handler.deploy_allowed?(services: { 'node1' => %w[service1] }, local_environment: false)).to eq nil
+        expect(test_services_handler.deploy_allowed?(services: { 'node1' => %w[service1] }, local_environment: false)).to be_nil
       end
     end
 
@@ -95,7 +95,7 @@ describe HybridPlatformsConductor::ServicesHandler do
             services: { 'node1' => %w[service1], 'node2' => %w[service2], 'node3' => %w[service3] },
             local_environment: false
           )
-        ).to eq nil
+        ).to be_nil
       end
     end
 
@@ -137,7 +137,7 @@ describe HybridPlatformsConductor::ServicesHandler do
             services: { 'node1' => %w[service1 service3] },
             local_environment: false
           )
-        ).to eq nil
+        ).to be_nil
       end
     end
 

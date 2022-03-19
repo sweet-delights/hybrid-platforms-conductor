@@ -48,7 +48,7 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Docker do
       instance.wait_for_state! :created
       begin
         # Test that the instance is created
-        expect(::Docker::Container.all(all: true).find { |container| container.info['Names'].include? "/hpc_docker_container_node_#{environment}" }).not_to eq nil
+        expect(::Docker::Container.all(all: true).find { |container| container.info['Names'].include? "/hpc_docker_container_node_#{environment}" }).not_to be_nil
         expect(instance.state).to eq :created
       ensure
         # Clean the Docker containers if needed

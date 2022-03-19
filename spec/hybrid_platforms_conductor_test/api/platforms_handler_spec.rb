@@ -138,7 +138,7 @@ describe HybridPlatformsConductor::PlatformsHandler do
         'platform3' => { platform_type: :test }
       }
     ) do
-      expect(test_platforms_handler.platform('platform4')).to eq nil
+      expect(test_platforms_handler.platform('platform4')).to be_nil
     end
   end
 

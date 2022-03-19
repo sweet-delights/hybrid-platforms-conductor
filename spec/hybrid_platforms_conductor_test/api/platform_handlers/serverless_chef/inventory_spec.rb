@@ -12,7 +12,7 @@ describe HybridPlatformsConductor::HpcPlugins::PlatformHandler::ServerlessChef d
 
       it 'returns no nodes list' do
         with_serverless_chef_platforms('empty') do |platform|
-          expect(platform.respond_to?(:known_nodes_lists)).to eq false
+          expect(platform.respond_to?(:known_nodes_lists)).to be false
         end
       end
 

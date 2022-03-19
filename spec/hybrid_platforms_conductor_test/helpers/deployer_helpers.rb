@@ -43,7 +43,7 @@ module HybridPlatformsConductorTest
         mocked_result = nodes.to_h { |node| [node, [0, "#{check ? 'Check' : 'Deploy'} successful", '']] } if mocked_result.nil?
         expect(actions.size).to eq nodes.size
         nodes.each do |node|
-          expect(actions.key?(node)).to eq true
+          expect(actions.key?(node)).to be true
           expect(actions[node].size).to eq(2 + expected_actions.size)
           expect_action_to_lock_node(actions[node][0], node, sudo: sudo)
           expect(actions[node][1..-2]).to eq expected_actions
@@ -62,7 +62,7 @@ module HybridPlatformsConductorTest
         nodes = [nodes] if nodes.is_a?(String)
         expect(actions.size).to eq nodes.size
         nodes.each do |node|
-          expect(actions.key?(node)).to eq true
+          expect(actions.key?(node)).to be true
           expect_action_to_unlock_node(actions[node], node, sudo: sudo)
         end
         nodes.to_h { |node| [node, [0, 'Release mutex successful', '']] }
@@ -77,7 +77,7 @@ module HybridPlatformsConductorTest
         nodes = [nodes] if nodes.is_a?(String)
         expect(actions.size).to eq nodes.size
         nodes.each do |node|
-          expect(actions.key?(node)).to eq true
+          expect(actions.key?(node)).to be true
           expect(actions[node]).to eq [{ bash: "echo Save test logs to #{node}" }]
         end
         nodes.to_h { |node| [node, [0, 'Logs uploaded', '']] }
