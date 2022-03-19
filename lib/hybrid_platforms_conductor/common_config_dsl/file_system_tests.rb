@@ -84,7 +84,7 @@ module HybridPlatformsConductor
           select_confs_for_node(node, fs_paths_rules).
           inject({}) do |merged_paths, paths_info|
             if paths_info[:context][:file_system_type] == file_system_type
-              merged_paths.merge(paths_info[:paths].map do |path|
+              merged_paths.merge(paths_info[:paths].to_h do |path|
                 [
                   path,
                   {
@@ -92,7 +92,7 @@ module HybridPlatformsConductor
                     context: paths_info[:context]
                   }
                 ]
-              end.to_h) do |path, rule_info_1, rule_info_2|
+              end) do |path, rule_info_1, rule_info_2|
                 # Just check that configuration is not inconsistent
                 raise "Inconsistent rule for #{file_system_type} file system checks in configuration for #{node}: #{path} is marked as being both #{rule_info_1[:state]} and #{rule_info_2[:state]}" if rule_info_1[:state] != rule_info_2[:state]
 

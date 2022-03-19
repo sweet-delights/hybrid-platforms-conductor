@@ -132,8 +132,7 @@ module HybridPlatformsConductor
               else
                 (info[:status][:added_files] + info[:status][:changed_files] + info[:status][:untracked_files]).
                   sort.
-                  map { |f| [f, File.mtime("#{@repository_path}/#{f}").strftime('%F %T')] }.
-                  to_h
+                  to_h { |f| [f, File.mtime("#{@repository_path}/#{f}").strftime('%F %T')] }
               end,
             deleted_files: info[:status].nil? ? [] : info[:status][:deleted_files].sort
           }

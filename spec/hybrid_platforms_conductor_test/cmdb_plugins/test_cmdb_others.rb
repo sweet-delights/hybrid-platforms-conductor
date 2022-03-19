@@ -30,7 +30,7 @@ module HybridPlatformsConductorTest
       #     Nodes for which the property can't be fetched can be ommitted.
       def get_others(nodes, metadata)
         record_call(:get_others, nodes, metadata)
-        nodes.map do |node|
+        nodes.to_h do |node|
           [
             node,
             {
@@ -39,7 +39,7 @@ module HybridPlatformsConductorTest
               nothing: "#{node} has another nothing"
             }
           ]
-        end.to_h
+        end
       end
 
       # Register a call to be checked by the tests later
@@ -50,7 +50,7 @@ module HybridPlatformsConductorTest
       def record_call(method, *args)
         @calls = [] unless defined?(@calls)
         # Create a shallow copy of the args, just to make sure they won't get changed by later code
-        @calls << [method] + Marshal.load(Marshal.dump(args))
+        @calls << ([method] + Marshal.load(Marshal.dump(args)))
       end
 
     end

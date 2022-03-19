@@ -168,7 +168,7 @@ describe HybridPlatformsConductor::CmdRunner do
       cmd_runner = test_cmd_runner
       cmd_runner.dry_run = true
       expect(cmd_runner.run_cmd("echo TestContent >#{repository}/test_file")).to eq [0, '', '']
-      expect(File.exist?("#{repository}/test_file")).to eq false
+      expect(File.exist?("#{repository}/test_file")).to be false
     end
   end
 
@@ -177,7 +177,7 @@ describe HybridPlatformsConductor::CmdRunner do
       cmd_runner = test_cmd_runner
       cmd_runner.dry_run = true
       expect(cmd_runner.run_cmd("echo TestContent >#{repository}/test_file", expected_code: 2)).to eq [2, '', '']
-      expect(File.exist?("#{repository}/test_file")).to eq false
+      expect(File.exist?("#{repository}/test_file")).to be false
     end
   end
 
@@ -190,13 +190,13 @@ describe HybridPlatformsConductor::CmdRunner do
   it 'returns non-root user when user is not root' do
     cmd_runner = test_cmd_runner
     expect(cmd_runner).to receive(:run_cmd).with('whoami', log_to_stdout: false).and_return [0, 'not_root', '']
-    expect(cmd_runner.root?).to eq false
+    expect(cmd_runner.root?).to be false
   end
 
   it 'returns root user when user is root' do
     cmd_runner = test_cmd_runner
     expect(cmd_runner).to receive(:run_cmd).with('whoami', log_to_stdout: false).and_return [0, 'root', '']
-    expect(cmd_runner.root?).to eq true
+    expect(cmd_runner.root?).to be true
   end
 
   it 'returns the correct executable prefix' do

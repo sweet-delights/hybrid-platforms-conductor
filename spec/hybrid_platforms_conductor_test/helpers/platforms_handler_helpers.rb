@@ -14,7 +14,7 @@ module HybridPlatformsConductorTest
       #   * Parameters::
       #     * *repositories* (Hash<String,String>): Path to the repositories, per repository name
       def with_repositories(names = [], as_git: false)
-        repositories = names.map { |name| [name, "#{Dir.tmpdir}/hpc_test/#{name}"] }.to_h
+        repositories = names.to_h { |name| [name, "#{Dir.tmpdir}/hpc_test/#{name}"] }
         repositories.each_value do |dir|
           FileUtils.rm_rf dir
           FileUtils.mkdir_p dir
@@ -91,12 +91,12 @@ module HybridPlatformsConductorTest
               "#{platform_type}_platform path: '#{dir}'#{platforms_info[platform].key?(:name) ? ", name: '#{platforms_info[platform][:name]}'" : ''}"
             end.join("\n") + "\n#{additional_config}"
           ) do
-            register_platform_handlers(platform_types.map do |platform_type|
+            register_platform_handlers(platform_types.to_h do |platform_type|
               [
                 platform_type,
                 HybridPlatformsConductorTest::PlatformHandlerPlugins.const_get(platform_type.to_s.split('_').collect(&:capitalize).join.to_sym)
               ]
-            end.to_h)
+            end)
             self.test_platforms_info = platforms_info
             yield repositories
           end

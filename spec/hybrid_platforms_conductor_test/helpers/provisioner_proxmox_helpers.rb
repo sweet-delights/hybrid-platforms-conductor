@@ -97,7 +97,7 @@ module HybridPlatformsConductorTest
           expect(user).to eq proxmox_user
           expect(password).to eq proxmox_password
           expect(realm).to eq proxmox_realm
-          expect(options[:verify_ssl]).to eq false
+          expect(options[:verify_ssl]).to be false
           proxmox = instance_double ::Proxmox::Proxmox
           # Mock initialization
           expect(proxmox).to receive(:logger=).and_return(nil)
@@ -137,7 +137,7 @@ module HybridPlatformsConductorTest
           expect(user).to eq proxmox_user
           expect(password).to eq proxmox_password
           expect(realm).to eq 'pam'
-          expect(options[:verify_ssl]).to eq false
+          expect(options[:verify_ssl]).to be false
           proxmox = instance_double ::Proxmox::Proxmox
           # Mock initialization
           expect(proxmox).to receive(:logger=).and_return(nil)
@@ -180,7 +180,7 @@ module HybridPlatformsConductorTest
           expect(user).to eq proxmox_user
           expect(password).to eq proxmox_password
           expect(realm).to eq 'pam'
-          expect(options[:verify_ssl]).to eq false
+          expect(options[:verify_ssl]).to be false
           proxmox = instance_double ::Proxmox::Proxmox
           # Mock initialization
           expect(proxmox).to receive(:logger=).and_return(nil)
@@ -215,7 +215,7 @@ module HybridPlatformsConductorTest
           expect(user).to eq proxmox_user
           expect(password).to eq proxmox_password
           expect(realm).to eq 'pam'
-          expect(options[:verify_ssl]).to eq false
+          expect(options[:verify_ssl]).to be false
           proxmox = instance_double ::Proxmox::Proxmox
           # Mock initialization
           expect(proxmox).to receive(:logger=).and_return(nil)
@@ -252,7 +252,7 @@ module HybridPlatformsConductorTest
           expect(user).to eq proxmox_user
           expect(password).to eq proxmox_password
           expect(realm).to eq 'pam'
-          expect(options[:verify_ssl]).to eq false
+          expect(options[:verify_ssl]).to be false
           proxmox = instance_double ::Proxmox::Proxmox
           # Mock initialization
           expect(proxmox).to receive(:logger=).and_return(nil)
@@ -494,8 +494,8 @@ module HybridPlatformsConductorTest
         mock_proxmox_calls_with(
           mocked_pve_nodes.map do |pve_nodes|
             # Complete pve_nodes with default values
-            pve_nodes = pve_nodes.map do |pve_node_name, pve_node_info|
-              pve_node_info[:lxc_containers] = (pve_node_info.key?(:lxc_containers) ? pve_node_info[:lxc_containers] : {}).map do |vm_id, vm_info|
+            pve_nodes = pve_nodes.to_h do |pve_node_name, pve_node_info|
+              pve_node_info[:lxc_containers] = (pve_node_info.key?(:lxc_containers) ? pve_node_info[:lxc_containers] : {}).to_h do |vm_id, vm_info|
                 [
                   vm_id,
                   {
@@ -510,7 +510,7 @@ module HybridPlatformsConductorTest
                     environment: 'test_env'
                   }.merge(vm_info)
                 ]
-              end.to_h
+              end
               [
                 pve_node_name,
                 {
@@ -519,14 +519,14 @@ module HybridPlatformsConductorTest
                   storage_total: 100 * 1024 * 1024 * 1024
                 }.merge(pve_node_info)
               ]
-            end.to_h
+            end
             proc do |url, pve_node, user, password, realm, options|
               expect(url).to eq 'https://my-proxmox.my-domain.com:8006/api2/json/'
               expect(pve_node).to eq 'my-proxmox'
               expect(user).to eq proxmox_user
               expect(password).to eq proxmox_password
               expect(realm).to eq proxmox_realm
-              expect(options[:verify_ssl]).to eq false
+              expect(options[:verify_ssl]).to be false
               proxmox = instance_double ::Proxmox::Proxmox
               # Mock getting status of a container
               allow(proxmox).to receive(:get) do |path|
@@ -647,8 +647,7 @@ module HybridPlatformsConductorTest
               block.nil? ? remaining_leftovers : remaining_leftovers.each(&block)
             when %r{^/sys/fs/cgroup/\*/lxc/(.+)$}
               vm_id_str = Regexp.last_match(1)
-              file_pattern = %r{^/sys/fs/cgroup/.+/lxc/#{Regexp.escape(vm_id_str)}$}
-              matched_files = remaining_leftovers.select { |file| file =~ file_pattern }
+              matched_files = remaining_leftovers.grep(%r{^/sys/fs/cgroup/.+/lxc/#{Regexp.escape(vm_id_str)}$})
               block.nil? ? matched_files : matched_files.each(&block)
             else
               original_glob.call(dir, &block)

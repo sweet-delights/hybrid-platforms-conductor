@@ -90,7 +90,7 @@ describe HybridPlatformsConductor::HpcPlugins::PlatformHandler::ServerlessChef d
           with_packaging_mocked(repository) do
             platform.package(services: { 'node' => %w[test_policy] }, secrets: {}, local_environment: false)
             gems_file = "#{repository}/dist/prod/test_policy/gems.json"
-            expect(File.exist?(gems_file)).to eq true
+            expect(File.exist?(gems_file)).to be true
             expect(JSON.parse(File.read(gems_file))).to eq []
           end
         end
@@ -110,7 +110,7 @@ describe HybridPlatformsConductor::HpcPlugins::PlatformHandler::ServerlessChef d
           with_packaging_mocked(repository) do
             platform.package(services: { 'node' => %w[test_policy] }, secrets: { secret: 'value' }, local_environment: false)
             secret_file = "#{repository}/dist/prod/test_policy/data_bags/hpc_secrets/hpc_secrets.json"
-            expect(File.exist?(secret_file)).to eq true
+            expect(File.exist?(secret_file)).to be true
             expect(JSON.parse(File.read(secret_file))).to eq(
               'id' => 'hpc_secrets',
               'secret' => 'value'
@@ -124,7 +124,7 @@ describe HybridPlatformsConductor::HpcPlugins::PlatformHandler::ServerlessChef d
           with_packaging_mocked(repository, policy_file: 'policyfiles/test_policy.local.rb', env: 'local') do
             platform.package(services: { 'node' => %w[test_policy] }, secrets: {}, local_environment: true)
             local_policy_file = "#{repository}/policyfiles/test_policy.local.lock.json"
-            expect(File.exist?(local_policy_file)).to eq true
+            expect(File.exist?(local_policy_file)).to be true
             expect(JSON.parse(File.read(local_policy_file))).to eq('run_list' => ['recipe[test_cookbook]'])
           end
         end
@@ -247,7 +247,7 @@ describe HybridPlatformsConductor::HpcPlugins::PlatformHandler::ServerlessChef d
           ) do
             platform.package(services: { 'node1' => %w[test_policy_1] }, secrets: {}, local_environment: false)
             gems_file = "#{repository}/dist/prod/test_policy_1/gems.json"
-            expect(File.exist?(gems_file)).to eq true
+            expect(File.exist?(gems_file)).to be true
             expect(JSON.parse(File.read(gems_file)).sort).to eq [
               ['my_gem_1', '0.0.1'],
               ['my_gem_2', '0.0.2'],
@@ -266,7 +266,7 @@ describe HybridPlatformsConductor::HpcPlugins::PlatformHandler::ServerlessChef d
           with_packaging_mocked(repository, data_bags: true) do
             platform.package(services: { 'node' => %w[test_policy] }, secrets: {}, local_environment: false)
             data_bag_file = "#{repository}/dist/prod/test_policy/data_bags/my_bag/my_item.json"
-            expect(File.exist?(data_bag_file)).to eq true
+            expect(File.exist?(data_bag_file)).to be true
             expect(JSON.parse(File.read(data_bag_file))).to eq(
               'id' => 'my_item',
               'content' => 'Bag content'
@@ -284,7 +284,7 @@ describe HybridPlatformsConductor::HpcPlugins::PlatformHandler::ServerlessChef d
           with_packaging_mocked(repository, policy_file: 'policyfiles/test_policy.local.rb', env: 'local') do
             platform.package(services: { 'node' => %w[test_policy] }, secrets: {}, local_environment: true)
             local_policy_file = "#{repository}/policyfiles/test_policy.local.lock.json"
-            expect(File.exist?(local_policy_file)).to eq true
+            expect(File.exist?(local_policy_file)).to be true
             expect(JSON.parse(File.read(local_policy_file))).to eq(
               'run_list' => [
                 'hpc_test::before_run',
@@ -302,7 +302,7 @@ describe HybridPlatformsConductor::HpcPlugins::PlatformHandler::ServerlessChef d
           with_packaging_mocked(repository, policy_file: 'policyfiles/test_policy.local.rb', env: 'local') do
             platform.package(services: { 'node' => %w[test_policy] }, secrets: {}, local_environment: true)
             local_policy_file = "#{repository}/policyfiles/test_policy.local.lock.json"
-            expect(File.exist?(local_policy_file)).to eq true
+            expect(File.exist?(local_policy_file)).to be true
             expect(JSON.parse(File.read(local_policy_file))).to eq(
               'run_list' => [
                 'hpc_test::before_run',
@@ -319,7 +319,7 @@ describe HybridPlatformsConductor::HpcPlugins::PlatformHandler::ServerlessChef d
           with_packaging_mocked(repository, policy_file: 'policyfiles/test_policy.local.rb', env: 'local') do
             platform.package(services: { 'node' => %w[test_policy] }, secrets: {}, local_environment: true)
             local_policy_file = "#{repository}/policyfiles/test_policy.local.lock.json"
-            expect(File.exist?(local_policy_file)).to eq true
+            expect(File.exist?(local_policy_file)).to be true
             expect(JSON.parse(File.read(local_policy_file))).to eq(
               'run_list' => [
                 'recipe[test_cookbook]',
@@ -343,7 +343,7 @@ describe HybridPlatformsConductor::HpcPlugins::PlatformHandler::ServerlessChef d
           ) do
             platform.package(services: { 'node' => %w[test_policy] }, secrets: {}, local_environment: true)
             testadmin_key_pub = Dir.glob("#{repository}/dist/local/test_policy/cookbook_artifacts/hpc_test-*/files/default/testadmin.key.pub").first
-            expect(testadmin_key_pub).not_to eq nil
+            expect(testadmin_key_pub).not_to be_nil
             expect(File.read(testadmin_key_pub)).to eq 'ssh-rsa 12345 testadmin@test.com'
           end
         end

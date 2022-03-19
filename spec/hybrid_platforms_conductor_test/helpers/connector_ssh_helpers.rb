@@ -105,7 +105,7 @@ module HybridPlatformsConductorTest
               { optional: with_control_master_destroy_optional }
             ]
           end
-          ssh_commands_once + ssh_commands_per_connection * node_connection_info[:times]
+          ssh_commands_once + (ssh_commands_per_connection * node_connection_info[:times])
         end.flatten(1)
       end
 

@@ -14,7 +14,7 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
                 memory_total: 4 * 1024 * 1024 * 1024,
                 lxc_containers: {
                   # Make sure it is expired
-                  1000 => { ip: '192.168.0.100', maxmem: 1024 * 1024 * 1024, creation_date: (Time.now - 31 * 24 * 60 * 60).utc }
+                  1000 => { ip: '192.168.0.100', maxmem: 1024 * 1024 * 1024, creation_date: (Time.now - (31 * 24 * 60 * 60)).utc }
                 }
               }
             }
@@ -29,7 +29,7 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
 
       it 'expires a VM when there are not enough free resources on a PVE node' do
         with_sync_node do
-          creation_date = (Time.now - 31 * 24 * 60 * 60).utc
+          creation_date = (Time.now - (31 * 24 * 60 * 60)).utc
           mock_proxmox(
             mocked_pve_nodes: {
               'pve_node_name' => {
@@ -81,7 +81,7 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
                     maxmem: 4 * 1024 * 1024 * 1024,
                     status: 'stopped',
                     # Make sure it is expired
-                    creation_date: (Time.now - 31 * 24 * 60 * 60).utc
+                    creation_date: (Time.now - (31 * 24 * 60 * 60)).utc
                   }
                 }
               }
@@ -117,7 +117,7 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
                 memory_total: 8 * 1024 * 1024 * 1024,
                 lxc_containers: {
                   1000 => { ip: '192.168.0.100', maxmem: 2 * 1024 * 1024 * 1024, creation_date: Time.now.utc },
-                  1001 => { ip: '192.168.0.101', maxmem: 4 * 1024 * 1024 * 1024, creation_date: (Time.now - 31 * 24 * 60 * 60).utc },
+                  1001 => { ip: '192.168.0.101', maxmem: 4 * 1024 * 1024 * 1024, creation_date: (Time.now - (31 * 24 * 60 * 60)).utc },
                   1002 => { ip: '192.168.0.102', maxmem: 2 * 1024 * 1024 * 1024, creation_date: Time.now.utc }
                 }
               }
@@ -154,7 +154,7 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
                 memory_total: 6 * 1024 * 1024 * 1024,
                 lxc_containers: {
                   1000 => { ip: '192.168.0.100', maxmem: 2 * 1024 * 1024 * 1024, creation_date: Time.now.utc },
-                  1001 => { ip: '192.168.0.101', maxmem: 2 * 1024 * 1024 * 1024, creation_date: (Time.now - 31 * 24 * 60 * 60).utc },
+                  1001 => { ip: '192.168.0.101', maxmem: 2 * 1024 * 1024 * 1024, creation_date: (Time.now - (31 * 24 * 60 * 60)).utc },
                   1002 => { ip: '192.168.0.102', maxmem: 2 * 1024 * 1024 * 1024, creation_date: Time.now.utc }
                 }
               }
@@ -185,8 +185,8 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
                 memory_total: 8 * 1024 * 1024 * 1024,
                 lxc_containers: {
                   1000 => { ip: '192.168.0.100', maxmem: 2 * 1024 * 1024 * 1024, creation_date: Time.now.utc },
-                  1001 => { ip: '192.168.0.101', maxmem: 4 * 1024 * 1024 * 1024, creation_date: (Time.now - 31 * 24 * 60 * 60).utc },
-                  1002 => { ip: '192.168.0.102', maxmem: 2 * 1024 * 1024 * 1024, creation_date: (Time.now - 31 * 24 * 60 * 60).utc }
+                  1001 => { ip: '192.168.0.101', maxmem: 4 * 1024 * 1024 * 1024, creation_date: (Time.now - (31 * 24 * 60 * 60)).utc },
+                  1002 => { ip: '192.168.0.102', maxmem: 2 * 1024 * 1024 * 1024, creation_date: (Time.now - (31 * 24 * 60 * 60)).utc }
                 }
               }
             }
@@ -224,8 +224,8 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
                 memory_total: 8 * 1024 * 1024 * 1024,
                 lxc_containers: {
                   1000 => { ip: '192.168.0.100', maxmem: 2 * 1024 * 1024 * 1024, creation_date: Time.now.utc },
-                  1001 => { ip: '192.168.0.101', maxmem: 4 * 1024 * 1024 * 1024, creation_date: (Time.now - 31 * 24 * 60 * 60).utc },
-                  2002 => { ip: '192.168.0.102', maxmem: 2 * 1024 * 1024 * 1024, creation_date: (Time.now - 31 * 24 * 60 * 60).utc }
+                  1001 => { ip: '192.168.0.101', maxmem: 4 * 1024 * 1024 * 1024, creation_date: (Time.now - (31 * 24 * 60 * 60)).utc },
+                  2002 => { ip: '192.168.0.102', maxmem: 2 * 1024 * 1024 * 1024, creation_date: (Time.now - (31 * 24 * 60 * 60)).utc }
                 }
               }
             }
@@ -261,14 +261,14 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
               'pve_node_1' => {
                 memory_total: 16 * 1024 * 1024 * 1024,
                 lxc_containers: {
-                  1000 => { ip: '192.168.0.100', maxmem: 14 * 1024 * 1024 * 1024, creation_date: (Time.now - 31 * 24 * 60 * 60).utc }
+                  1000 => { ip: '192.168.0.100', maxmem: 14 * 1024 * 1024 * 1024, creation_date: (Time.now - (31 * 24 * 60 * 60)).utc }
                 }
               },
               # But this node has still a bit of resources left without expiring VMs
               'pve_node_2' => {
                 memory_total: 16 * 1024 * 1024 * 1024,
                 lxc_containers: {
-                  1001 => { ip: '192.168.0.101', maxmem: 10 * 1024 * 1024 * 1024, creation_date: (Time.now - 31 * 24 * 60 * 60).utc }
+                  1001 => { ip: '192.168.0.101', maxmem: 10 * 1024 * 1024 * 1024, creation_date: (Time.now - (31 * 24 * 60 * 60)).utc }
                 }
               }
             }
@@ -302,14 +302,14 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
                 memory_total: 16 * 1024 * 1024 * 1024,
                 lxc_containers: {
                   1000 => { ip: '192.168.0.100', maxmem: 8 * 1024 * 1024 * 1024, creation_date: Time.now.utc },
-                  1001 => { ip: '192.168.0.101', maxmem: 6 * 1024 * 1024 * 1024, creation_date: (Time.now - 31 * 24 * 60 * 60).utc }
+                  1001 => { ip: '192.168.0.101', maxmem: 6 * 1024 * 1024 * 1024, creation_date: (Time.now - (31 * 24 * 60 * 60)).utc }
                 }
               },
               'pve_node_2' => {
                 memory_total: 16 * 1024 * 1024 * 1024,
                 lxc_containers: {
                   1002 => { ip: '192.168.0.102', maxmem: 10 * 1024 * 1024 * 1024, creation_date: Time.now.utc },
-                  1003 => { ip: '192.168.0.103', maxmem: 4 * 1024 * 1024 * 1024, creation_date: (Time.now - 31 * 24 * 60 * 60).utc }
+                  1003 => { ip: '192.168.0.103', maxmem: 4 * 1024 * 1024 * 1024, creation_date: (Time.now - (31 * 24 * 60 * 60)).utc }
                 }
               }
             }
@@ -359,7 +359,7 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
                 memory_total: 16 * 1024 * 1024 * 1024,
                 lxc_containers: {
                   1000 => { ip: '192.168.0.100', maxmem: 1 * 1024 * 1024 * 1024, creation_date: Time.now.utc },
-                  1001 => { ip: '192.168.0.101', maxmem: 1 * 1024 * 1024 * 1024, creation_date: (Time.now - 31 * 24 * 60 * 60).utc },
+                  1001 => { ip: '192.168.0.101', maxmem: 1 * 1024 * 1024 * 1024, creation_date: (Time.now - (31 * 24 * 60 * 60)).utc },
                   1002 => { ip: '192.168.0.102', maxmem: 1 * 1024 * 1024 * 1024, creation_date: Time.now.utc }
                 }
               }
@@ -415,7 +415,7 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
               'pve_node_2' => {
                 memory_total: 2 * 1024 * 1024 * 1024,
                 lxc_containers: {
-                  1001 => { ip: '192.168.0.101', maxmem: 1 * 1024 * 1024 * 1024, creation_date: (Time.now - 31 * 24 * 60 * 60).utc }
+                  1001 => { ip: '192.168.0.101', maxmem: 1 * 1024 * 1024 * 1024, creation_date: (Time.now - (31 * 24 * 60 * 60)).utc }
                 }
               }
             }
@@ -463,7 +463,7 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
                 memory_total: 16 * 1024 * 1024 * 1024,
                 lxc_containers: {
                   1000 => { ip: '192.168.0.100', maxmem: 1 * 1024 * 1024 * 1024, creation_date: Time.now.utc },
-                  1001 => { ip: '192.168.0.101', maxmem: 1 * 1024 * 1024 * 1024, creation_date: (Time.now - 31 * 24 * 60 * 60).utc },
+                  1001 => { ip: '192.168.0.101', maxmem: 1 * 1024 * 1024 * 1024, creation_date: (Time.now - (31 * 24 * 60 * 60)).utc },
                   1002 => { ip: '192.168.0.102', maxmem: 1 * 1024 * 1024 * 1024, creation_date: Time.now.utc }
                 }
               }
@@ -521,7 +521,7 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
               'pve_node_2' => {
                 memory_total: 2 * 1024 * 1024 * 1024,
                 lxc_containers: {
-                  1001 => { ip: '192.168.0.101', maxmem: 1 * 1024 * 1024 * 1024, creation_date: (Time.now - 31 * 24 * 60 * 60).utc }
+                  1001 => { ip: '192.168.0.101', maxmem: 1 * 1024 * 1024 * 1024, creation_date: (Time.now - (31 * 24 * 60 * 60)).utc }
                 }
               }
             }
@@ -571,7 +571,7 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
                 memory_total: 16 * 1024 * 1024 * 1024,
                 lxc_containers: {
                   1000 => { ip: '192.168.0.100', maxmem: 1 * 1024 * 1024 * 1024, creation_date: Time.now.utc },
-                  1001 => { ip: '192.168.0.101', maxmem: 1 * 1024 * 1024 * 1024, creation_date: (Time.now - 31 * 24 * 60 * 60).utc },
+                  1001 => { ip: '192.168.0.101', maxmem: 1 * 1024 * 1024 * 1024, creation_date: (Time.now - (31 * 24 * 60 * 60)).utc },
                   1002 => { ip: '192.168.0.102', maxmem: 1 * 1024 * 1024 * 1024, creation_date: Time.now.utc }
                 }
               }
@@ -634,7 +634,7 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
               'pve_node_2' => {
                 memory_total: 2 * 1024 * 1024 * 1024,
                 lxc_containers: {
-                  1001 => { ip: '192.168.0.101', maxmem: 1 * 1024 * 1024 * 1024, creation_date: (Time.now - 31 * 24 * 60 * 60).utc }
+                  1001 => { ip: '192.168.0.101', maxmem: 1 * 1024 * 1024 * 1024, creation_date: (Time.now - (31 * 24 * 60 * 60)).utc }
                 }
               }
             }
@@ -748,7 +748,7 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
       it 'does not expire a VM that is stopped for some time even when it is not used for debug purposes' do
         with_sync_node do
           mock_proxmox(
-            mocked_pve_nodes: [{
+            mocked_pve_nodes: ([{
               # 2 seconds separate each run.
               # Make sure the third and later runs mock the container as running instead of stopped
               'pve_node_name' => {
@@ -765,8 +765,8 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
                   }
                 }
               }
-            }] * 2 +
-            [{
+            }] * 2) +
+            ([{
               # 2 seconds separate each run.
               # Make sure the third and later runs mock the container as running instead of stopped
               'pve_node_name' => {
@@ -783,7 +783,7 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
                   }
                 }
               }
-            }] * 2
+            }] * 2)
           )
           # Timeout for a non-debug stopped container to be considered expired is 3 seconds in tests
           expect(call_reserve_proxmox_container(2, 1024, 1, max_retries: 4, wait_before_retry: 2)).to eq(error: 'not_enough_resources')
@@ -796,7 +796,7 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
           creation_date_1 = (Time.now - 20).utc
           creation_date_2 = (Time.now - 10).utc
           mock_proxmox(
-            mocked_pve_nodes: [{
+            mocked_pve_nodes: ([{
               # 2 seconds separate each run.
               # Make sure the third and later runs mock the container as another one, still stopped
               'pve_node_name' => {
@@ -812,8 +812,8 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
                   }
                 }
               }
-            }] * 2 +
-            [{
+            }] * 2) +
+            ([{
               # 2 seconds separate each run.
               # Make sure the third and later runs mock the container as another one, still stopped
               'pve_node_name' => {
@@ -829,7 +829,7 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Proxmox do
                   }
                 }
               }
-            }] * 2
+            }] * 2)
           )
           # Timeout for a non-debug stopped container to be considered expired is 3 seconds in tests
           expect(call_reserve_proxmox_container(2, 1024, 1, max_retries: 4, wait_before_retry: 2)).to eq(error: 'not_enough_resources')

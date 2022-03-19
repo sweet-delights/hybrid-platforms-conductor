@@ -13,7 +13,7 @@ describe 'executables\' Cmd Runner options' do
   it 'displays commands instead of running them' do
     with_test_platform_for_cmd_runner_options do
       expect_actions_executor_runs([proc do
-        expect(test_cmd_runner.dry_run).to eq true
+        expect(test_cmd_runner.dry_run).to be true
         {}
       end])
       exit_code, stdout, stderr = run 'run', '--node', 'node', '--command', 'echo Hello', '--show-commands'

@@ -263,9 +263,9 @@ module HybridPlatformsConductor
     def deploy_on(*nodes_selectors)
       # Get the sorted list of services to be deployed, per node
       # Hash<String, Array<String> >
-      services_to_deploy = @nodes_handler.select_nodes(nodes_selectors.flatten).map do |node|
+      services_to_deploy = @nodes_handler.select_nodes(nodes_selectors.flatten).to_h do |node|
         [node, @nodes_handler.get_services_of(node)]
-      end.to_h
+      end
 
       # Get the secrets to be deployed
       secrets = {}
@@ -474,7 +474,7 @@ module HybridPlatformsConductor
         timeout: 10,
         progress_name: 'Read deployment logs'
       )
-      nodes.map do |node|
+      nodes.to_h do |node|
         exit_code, stdout, stderr = read_actions_results[node] || [nil, nil, nil]
         [
           node,
@@ -485,7 +485,7 @@ module HybridPlatformsConductor
             stderr&.force_encoding(Encoding::UTF_8)
           )
         ]
-      end.to_h
+      end
     end
 
     # Parse stdout and stderr of a given deploy run and get the list of tasks with their status
@@ -553,7 +553,7 @@ module HybridPlatformsConductor
       # Deploy for real
       @nodes_handler.prefetch_metadata_of services.keys, :image
       outputs = @actions_executor.execute_actions(
-        services.map do |node, node_services|
+        services.to_h do |node, node_services|
           image_id = @nodes_handler.get_image_of(node)
           need_sudo = !@actions_executor.privileged_access?(node)
           sudo = @actions_executor.sudo_prefix(node)
@@ -583,12 +583,12 @@ module HybridPlatformsConductor
                     remote_bash: "#{sudo}yum install -y ca-certificates"
                   },
                   {
-                    scp: Dir.glob("#{ENV['hpc_certificates']}/*.crt").map do |cert_file|
+                    scp: Dir.glob("#{ENV['hpc_certificates']}/*.crt").to_h do |cert_file|
                       [
                         cert_file,
                         '/etc/pki/ca-trust/source/anchors'
                       ]
-                    end.to_h.merge(sudo: need_sudo),
+                    end.merge(sudo: need_sudo),
                     remote_bash: [
                       "#{sudo}update-ca-trust enable",
                       "#{sudo}update-ca-trust extract"
@@ -613,19 +613,19 @@ module HybridPlatformsConductor
               certificate_actions +
               @services_handler.actions_to_deploy_on(node, node_services, @use_why_run)
           ]
-        end.to_h,
+        end,
         timeout: @timeout,
         concurrent: @concurrent_execution,
         log_to_stdout: !@concurrent_execution
       )
       # Free eventual locks
       @actions_executor.execute_actions(
-        services.keys.map do |node|
+        services.keys.to_h do |node|
           [
             node,
             { remote_bash: "#{@actions_executor.sudo_prefix(node)}./mutex_dir unlock /tmp/hybrid_platforms_conductor_deploy_lock" }
           ]
-        end.to_h,
+        end,
         timeout: 10,
         concurrent: true,
         log_to_dir: nil
@@ -647,7 +647,7 @@ module HybridPlatformsConductor
       section "Saving deployment logs for #{logs.size} nodes" do
         ssh_user = @actions_executor.connector(:ssh).ssh_user
         @actions_executor.execute_actions(
-          logs.map do |node, (exit_status, stdout, stderr)|
+          logs.to_h do |node, (exit_status, stdout, stderr)|
             [
               node,
               log_plugins_for(node).
@@ -666,7 +666,7 @@ module HybridPlatformsConductor
                 end.
                 flatten(1)
             ]
-          end.to_h,
+          end,
           timeout: 10,
           concurrent: true,
           log_to_dir: nil,

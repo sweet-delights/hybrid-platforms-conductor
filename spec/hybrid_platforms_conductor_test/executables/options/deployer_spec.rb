@@ -13,7 +13,7 @@ describe 'executables\' Deployer options' do
   it 'uses parallel mode' do
     with_test_platform_for_deployer_options do
       expect(test_deployer).to receive(:deploy_on).with(['node']) do
-        expect(test_deployer.concurrent_execution).to eq true
+        expect(test_deployer.concurrent_execution).to be true
         {}
       end
       exit_code, _stdout, stderr = run 'deploy', '--node', 'node', '--parallel'
@@ -25,7 +25,7 @@ describe 'executables\' Deployer options' do
   it 'uses why-run' do
     with_test_platform_for_deployer_options do
       expect(test_deployer).to receive(:deploy_on).with(['node']) do
-        expect(test_deployer.use_why_run).to eq true
+        expect(test_deployer.use_why_run).to be true
         {}
       end
       exit_code, _stdout, stderr = run 'deploy', '--node', 'node', '--why-run'

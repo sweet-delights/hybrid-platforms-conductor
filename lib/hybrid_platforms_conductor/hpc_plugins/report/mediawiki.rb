@@ -87,7 +87,7 @@ module HybridPlatformsConductor
           @nodes_handler.prefetch_metadata_of nodes, locale.keys
           nodes.
             map do |node|
-              { node: node }.merge(all_properties.map { |property| [property, @nodes_handler.metadata_of(node, property)] }.to_h)
+              { node: node }.merge(all_properties.to_h { |property| [property, @nodes_handler.metadata_of(node, property)] })
             end.
             # Group them by physical / VMs
             group_by do |node_info|

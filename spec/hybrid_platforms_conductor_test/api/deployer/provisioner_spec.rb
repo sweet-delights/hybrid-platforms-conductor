@@ -14,7 +14,7 @@ describe HybridPlatformsConductor::Deployer do
         expect(Socket).to receive(:tcp).with('172.17.0.1', 22, { connect_timeout: 1 }).and_yield
         provisioner = nil
         test_deployer.with_test_provisioned_instance(:test_provisioner, 'node', environment: 'hpc_testing_provisioner') do |sub_test_deployer, test_instance|
-          expect(sub_test_deployer.local_environment).to eq true
+          expect(sub_test_deployer.local_environment).to be true
           provisioner = test_instance
           expect(test_instance.node).to eq 'node'
           expect(test_instance.environment).to match(/^#{Regexp.escape(`whoami`.strip)}_hpc_testing_provisioner_\d+_\d+_\w+$/)
@@ -33,7 +33,7 @@ describe HybridPlatformsConductor::Deployer do
         expect(Socket).to receive(:tcp).with('172.17.0.1', 22, { connect_timeout: 666 }).and_yield
         provisioner = nil
         test_deployer.with_test_provisioned_instance(:test_provisioner, 'node', environment: 'hpc_testing_provisioner') do |sub_test_deployer, test_instance|
-          expect(sub_test_deployer.local_environment).to eq true
+          expect(sub_test_deployer.local_environment).to be true
           provisioner = test_instance
           expect(test_instance.node).to eq 'node'
           expect(test_instance.environment).to match(/^#{Regexp.escape(`whoami`.strip)}_hpc_testing_provisioner_\d+_\d+_\w+$/)
@@ -65,8 +65,8 @@ describe HybridPlatformsConductor::Deployer do
         expect(Socket).to receive(:tcp).with('172.17.0.1', 22, { connect_timeout: 1 }).and_yield
         test_deployer.with_test_provisioned_instance(:test_provisioner, 'node1', environment: 'hpc_testing_provisioner') do |sub_test_deployer, test_instance|
           sub_nodes_handler = sub_test_deployer.instance_variable_get(:@nodes_handler)
-          expect(sub_nodes_handler.get_ssh_session_exec_of('node1')).to eq true
-          expect(sub_nodes_handler.get_ssh_session_exec_of('node2')).to eq false
+          expect(sub_nodes_handler.get_ssh_session_exec_of('node1')).to be true
+          expect(sub_nodes_handler.get_ssh_session_exec_of('node2')).to be false
           ssh_transforms = test_instance.instance_variable_get(:@config).ssh_connection_transforms
           expect(ssh_transforms.size).to eq 1
           expect(ssh_transforms[0][:nodes_selectors_stack]).to eq [%w[node2]]
@@ -90,8 +90,8 @@ describe HybridPlatformsConductor::Deployer do
         expect(Socket).to receive(:tcp).with('172.17.0.1', 22, { connect_timeout: 1 }).and_yield
         test_deployer.with_test_provisioned_instance(:test_provisioner, 'node1', environment: 'hpc_testing_provisioner') do |sub_test_deployer|
           sub_nodes_handler = sub_test_deployer.instance_variable_get(:@nodes_handler)
-          expect(sub_nodes_handler.get_local_node_of('node1')).to eq false
-          expect(sub_nodes_handler.get_local_node_of('node2')).to eq true
+          expect(sub_nodes_handler.get_local_node_of('node1')).to be false
+          expect(sub_nodes_handler.get_local_node_of('node2')).to be true
         end
       end
     end
@@ -132,7 +132,7 @@ describe HybridPlatformsConductor::Deployer do
         expect(Socket).to receive(:tcp).with('172.17.0.1', 22, { connect_timeout: 1 }).and_yield
         provisioner = nil
         test_deployer.with_test_provisioned_instance(:test_provisioner, 'node', environment: 'hpc_testing_provisioner', reuse_instance: true) do |sub_test_deployer, test_instance|
-          expect(sub_test_deployer.local_environment).to eq true
+          expect(sub_test_deployer.local_environment).to be true
           provisioner = test_instance
           expect(test_instance.node).to eq 'node'
           expect(test_instance.environment).to eq "#{`whoami`.strip}_hpc_testing_provisioner"
@@ -150,7 +150,7 @@ describe HybridPlatformsConductor::Deployer do
         expect(Socket).to receive(:tcp).with('172.17.0.1', 22, { connect_timeout: 1 }).and_yield
         provisioner = nil
         test_deployer.with_test_provisioned_instance(:test_provisioner, 'node', environment: 'hpc_testing_provisioner', reuse_instance: true) do |sub_test_deployer, test_instance|
-          expect(sub_test_deployer.local_environment).to eq true
+          expect(sub_test_deployer.local_environment).to be true
           provisioner = test_instance
           expect(test_instance.node).to eq 'node'
           expect(test_instance.environment).to eq "#{`whoami`.strip}_hpc_testing_provisioner"

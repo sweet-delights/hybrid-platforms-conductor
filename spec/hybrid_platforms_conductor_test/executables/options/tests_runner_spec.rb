@@ -61,7 +61,7 @@ describe 'executables\' Tests Runner options' do
   it 'uses current run_logs instead of executing new check-nodes' do
     with_test_platform({}) do
       expect(test_tests_runner).to receive(:run_tests).with([]) do
-        expect(test_tests_runner.skip_run).to eq true
+        expect(test_tests_runner.skip_run).to be true
         0
       end
       exit_code, stdout, stderr = run 'test', '--test', 'my_test', '--skip-run'

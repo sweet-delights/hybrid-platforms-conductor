@@ -40,10 +40,10 @@ module HybridPlatformsConductorTest
       # * Hash<String, [Integer or Symbol, String, String] >: Expected result of those expected actions
       def expect_actions_to_deploy_on(actions, nodes, check: false, sudo: 'sudo -u root', expected_actions: [], mocked_result: nil)
         nodes = [nodes] if nodes.is_a?(String)
-        mocked_result = nodes.map { |node| [node, [0, "#{check ? 'Check' : 'Deploy'} successful", '']] }.to_h if mocked_result.nil?
+        mocked_result = nodes.to_h { |node| [node, [0, "#{check ? 'Check' : 'Deploy'} successful", '']] } if mocked_result.nil?
         expect(actions.size).to eq nodes.size
         nodes.each do |node|
-          expect(actions.key?(node)).to eq true
+          expect(actions.key?(node)).to be true
           expect(actions[node].size).to eq(2 + expected_actions.size)
           expect_action_to_lock_node(actions[node][0], node, sudo: sudo)
           expect(actions[node][1..-2]).to eq expected_actions
@@ -62,10 +62,10 @@ module HybridPlatformsConductorTest
         nodes = [nodes] if nodes.is_a?(String)
         expect(actions.size).to eq nodes.size
         nodes.each do |node|
-          expect(actions.key?(node)).to eq true
+          expect(actions.key?(node)).to be true
           expect_action_to_unlock_node(actions[node], node, sudo: sudo)
         end
-        nodes.map { |node| [node, [0, 'Release mutex successful', '']] }.to_h
+        nodes.to_h { |node| [node, [0, 'Release mutex successful', '']] }
       end
 
       # Expect a given set of actions to upload log files on a list of nodes (using the test_log log plugin)
@@ -77,10 +77,10 @@ module HybridPlatformsConductorTest
         nodes = [nodes] if nodes.is_a?(String)
         expect(actions.size).to eq nodes.size
         nodes.each do |node|
-          expect(actions.key?(node)).to eq true
+          expect(actions.key?(node)).to be true
           expect(actions[node]).to eq [{ bash: "echo Save test logs to #{node}" }]
         end
-        nodes.map { |node| [node, [0, 'Logs uploaded', '']] }.to_h
+        nodes.to_h { |node| [node, [0, 'Logs uploaded', '']] }
       end
 
       # Get a test Deployer
@@ -325,7 +325,7 @@ module HybridPlatformsConductorTest
         expect_actions_executor_runs(statuses.map do |status|
           status = { 'node' => status } if status.is_a?(Array)
           expected_actions_for_deploy_on(
-            services: status.keys.map { |node| [node, %w[service]] }.to_h,
+            services: status.keys.to_h { |node| [node, %w[service]] },
             mocked_deploy_result: status
           )
         end.flatten)

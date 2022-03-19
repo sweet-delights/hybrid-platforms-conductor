@@ -15,7 +15,7 @@ module HybridPlatformsConductor
         # Check my_test_plugin.rb.sample documentation for signature details.
         def test_on_node
           # Flatten the paths rules so that we can spot inconsistencies in configuration
-          @config.aggregate_files_rules(@nodes_handler, @node).map do |path, rule_info|
+          @config.aggregate_files_rules(@nodes_handler, @node).to_h do |path, rule_info|
             [
               "if #{@actions_executor.sudo_prefix(@node)}/bin/bash -c '[[ -d \"#{path}\" ]]' ; then echo 1 ; else echo 0 ; fi",
               {
@@ -32,7 +32,7 @@ module HybridPlatformsConductor
                 timeout: 2
               }
             ]
-          end.to_h
+          end
         end
 
       end

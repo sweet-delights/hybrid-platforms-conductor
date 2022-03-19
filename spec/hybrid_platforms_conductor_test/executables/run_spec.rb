@@ -73,7 +73,7 @@ describe 'run executable' do
   it 'executes a single command on several nodes' do
     with_test_platform_for_run do
       expect_actions_executor_runs([proc do |actions, timeout: nil, concurrent: false, log_to_dir: 'run_logs', log_to_stdout: true|
-        expect(concurrent).to eq false
+        expect(concurrent).to be false
         expect(actions).to eq(%w[node1 node2] => [{ remote_bash: ['echo Hello'] }])
         test_actions_executor.stdout_device << "Hello\nHello\n"
         { 'node1' => [0, "Hello\nHello\n", ''] }
@@ -133,7 +133,7 @@ describe 'run executable' do
   it 'executes in parallel' do
     with_test_platform_for_run do
       expect_actions_executor_runs([proc do |actions, timeout: nil, concurrent: false, log_to_dir: 'run_logs', log_to_stdout: true|
-        expect(concurrent).to eq true
+        expect(concurrent).to be true
         expect(actions).to eq(%w[node1 node2] => [{ remote_bash: ['echo Hello'] }])
         test_actions_executor.stdout_device << "Hello\nHello\n"
         { 'node1' => [0, "Hello\nHello\n", ''] }

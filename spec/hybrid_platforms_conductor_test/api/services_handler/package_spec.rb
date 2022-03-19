@@ -10,7 +10,7 @@ describe HybridPlatformsConductor::ServicesHandler do
           package: proc do |services:, secrets:, local_environment:|
             expect(services).to eq('node1' => %w[service1])
             expect(secrets).to eq({})
-            expect(local_environment).to eq false
+            expect(local_environment).to be false
           end
         }
       ) do
@@ -31,7 +31,7 @@ describe HybridPlatformsConductor::ServicesHandler do
           package: proc do |services:, secrets:, local_environment:|
             expect(services).to eq('node1' => %w[service1])
             expect(secrets).to eq({})
-            expect(local_environment).to eq false
+            expect(local_environment).to be false
             nbr_calls += 1
           end
         }
@@ -56,7 +56,7 @@ describe HybridPlatformsConductor::ServicesHandler do
           package: proc do |services:, secrets:, local_environment:|
             expect(services).to eq('node1' => %w[service1])
             expect(secrets).to eq({})
-            expect(local_environment).to eq false
+            expect(local_environment).to be false
             nbr_calls += 1
           end
         }
@@ -91,7 +91,7 @@ describe HybridPlatformsConductor::ServicesHandler do
           package: proc do |services:, secrets:, local_environment:|
             expect(services).to eq('node1' => %w[service1])
             expect(secrets).to eq('my_secret' => 'value')
-            expect(local_environment).to eq false
+            expect(local_environment).to be false
           end
         }
       ) do
@@ -111,7 +111,7 @@ describe HybridPlatformsConductor::ServicesHandler do
           package: proc do |services:, secrets:, local_environment:|
             expect(services).to eq('node1' => %w[service1])
             expect(secrets).to eq({})
-            expect(local_environment).to eq true
+            expect(local_environment).to be true
           end
         }
       ) do
@@ -137,7 +137,7 @@ describe HybridPlatformsConductor::ServicesHandler do
             package: proc do |services:, secrets:, local_environment:|
               expect(services).to eq('node1' => %w[service1])
               expect(secrets).to eq({})
-              expect(local_environment).to eq false
+              expect(local_environment).to be false
               nbr_calls['platform1'] += 1
             end
           },
@@ -147,7 +147,7 @@ describe HybridPlatformsConductor::ServicesHandler do
             package: proc do |services:, secrets:, local_environment:|
               expect(services).to eq('node2' => %w[service2])
               expect(secrets).to eq({})
-              expect(local_environment).to eq false
+              expect(local_environment).to be false
               nbr_calls['platform2'] += 1
             end
           },
@@ -157,7 +157,7 @@ describe HybridPlatformsConductor::ServicesHandler do
             package: proc do |services:, secrets:, local_environment:|
               expect(services).to eq('node3' => %w[service3])
               expect(secrets).to eq({})
-              expect(local_environment).to eq false
+              expect(local_environment).to be false
               nbr_calls['platform3'] += 1
             end
           }
@@ -190,7 +190,7 @@ describe HybridPlatformsConductor::ServicesHandler do
             package: proc do |services:, secrets:, local_environment:|
               expect(services).to eq('node1' => %w[service1])
               expect(secrets).to eq({})
-              expect(local_environment).to eq false
+              expect(local_environment).to be false
               nbr_calls['platform1'] += 1
             end
           },
@@ -200,7 +200,7 @@ describe HybridPlatformsConductor::ServicesHandler do
             package: proc do |services:, secrets:, local_environment:|
               expect(services).to eq('node2' => %w[service2])
               expect(secrets).to eq({})
-              expect(local_environment).to eq false
+              expect(local_environment).to be false
               nbr_calls['platform2'] += 1
             end
           },
@@ -210,7 +210,7 @@ describe HybridPlatformsConductor::ServicesHandler do
             package: proc do |services:, secrets:, local_environment:|
               expect(services).to eq('node1' => %w[service3])
               expect(secrets).to eq({})
-              expect(local_environment).to eq false
+              expect(local_environment).to be false
               nbr_calls['platform3'] += 1
             end
           }
@@ -243,7 +243,7 @@ describe HybridPlatformsConductor::ServicesHandler do
             package: proc do |services:, secrets:, local_environment:|
               expect(services).to eq('node' => %w[service1 service2])
               expect(secrets).to eq({})
-              expect(local_environment).to eq false
+              expect(local_environment).to be false
               nbr_calls['platform1'] += 1
             end
           },
@@ -253,7 +253,7 @@ describe HybridPlatformsConductor::ServicesHandler do
             package: proc do |services:, secrets:, local_environment:|
               expect(services).to eq('node' => %w[service3])
               expect(secrets).to eq({})
-              expect(local_environment).to eq false
+              expect(local_environment).to be false
               nbr_calls['platform2'] += 1
             end
           },
@@ -263,7 +263,7 @@ describe HybridPlatformsConductor::ServicesHandler do
             package: proc do |services:, secrets:, local_environment:|
               expect(services).to eq('node' => %w[service5 service6])
               expect(secrets).to eq({})
-              expect(local_environment).to eq false
+              expect(local_environment).to be false
               nbr_calls['platform3'] += 1
             end
           }
@@ -296,7 +296,7 @@ describe HybridPlatformsConductor::ServicesHandler do
             package: proc do |services:, secrets:, local_environment:|
               expect(services).to eq('node1' => %w[service1])
               expect(secrets).to eq({})
-              expect(local_environment).to eq false
+              expect(local_environment).to be false
               nbr_calls['platform1'] += 1
             end
           },
@@ -306,7 +306,7 @@ describe HybridPlatformsConductor::ServicesHandler do
             package: proc do |services:, secrets:, local_environment:|
               expect(services).to eq('node2' => %w[service2])
               expect(secrets).to eq({})
-              expect(local_environment).to eq false
+              expect(local_environment).to be false
               nbr_calls['platform2'] += 1
             end
           },
@@ -316,7 +316,7 @@ describe HybridPlatformsConductor::ServicesHandler do
             package: proc do |services:, secrets:, local_environment:|
               expect(services).to eq('node3' => %w[service3])
               expect(secrets).to eq({})
-              expect(local_environment).to eq false
+              expect(local_environment).to be false
               nbr_calls['platform3'] += 1
             end
           }
@@ -355,7 +355,7 @@ describe HybridPlatformsConductor::ServicesHandler do
           package: proc do |services:, secrets:, local_environment:|
             expect(services).to eq('node1' => %w[service1])
             expect(secrets).to eq(expected_secrets)
-            expect(local_environment).to eq false
+            expect(local_environment).to be false
             nbr_calls += 1
           end
         }

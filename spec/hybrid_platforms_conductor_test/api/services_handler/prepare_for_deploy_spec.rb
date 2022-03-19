@@ -11,8 +11,8 @@ describe HybridPlatformsConductor::ServicesHandler do
           prepare_for_deploy: proc do |services:, secrets:, local_environment:, why_run:|
             expect(services).to eq('node1' => %w[service1])
             expect(secrets).to eq({})
-            expect(local_environment).to eq false
-            expect(why_run).to eq false
+            expect(local_environment).to be false
+            expect(why_run).to be false
             called = true
           end
         }
@@ -23,7 +23,7 @@ describe HybridPlatformsConductor::ServicesHandler do
           local_environment: false,
           why_run: false
         )
-        expect(called).to eq true
+        expect(called).to be true
       end
     end
 
@@ -36,8 +36,8 @@ describe HybridPlatformsConductor::ServicesHandler do
           prepare_for_deploy: proc do |services:, secrets:, local_environment:, why_run:|
             expect(services).to eq('node1' => %w[service1])
             expect(secrets).to eq('my_secret' => 'value')
-            expect(local_environment).to eq false
-            expect(why_run).to eq false
+            expect(local_environment).to be false
+            expect(why_run).to be false
             called = true
           end
         }
@@ -48,7 +48,7 @@ describe HybridPlatformsConductor::ServicesHandler do
           local_environment: false,
           why_run: false
         )
-        expect(called).to eq true
+        expect(called).to be true
       end
     end
 
@@ -61,8 +61,8 @@ describe HybridPlatformsConductor::ServicesHandler do
           prepare_for_deploy: proc do |services:, secrets:, local_environment:, why_run:|
             expect(services).to eq('node1' => %w[service1])
             expect(secrets).to eq({})
-            expect(local_environment).to eq true
-            expect(why_run).to eq false
+            expect(local_environment).to be true
+            expect(why_run).to be false
             called = true
           end
         }
@@ -73,7 +73,7 @@ describe HybridPlatformsConductor::ServicesHandler do
           local_environment: true,
           why_run: false
         )
-        expect(called).to eq true
+        expect(called).to be true
       end
     end
 
@@ -86,8 +86,8 @@ describe HybridPlatformsConductor::ServicesHandler do
           prepare_for_deploy: proc do |services:, secrets:, local_environment:, why_run:|
             expect(services).to eq('node1' => %w[service1])
             expect(secrets).to eq({})
-            expect(local_environment).to eq false
-            expect(why_run).to eq true
+            expect(local_environment).to be false
+            expect(why_run).to be true
             called = true
           end
         }
@@ -98,7 +98,7 @@ describe HybridPlatformsConductor::ServicesHandler do
           local_environment: false,
           why_run: true
         )
-        expect(called).to eq true
+        expect(called).to be true
       end
     end
 
@@ -116,8 +116,8 @@ describe HybridPlatformsConductor::ServicesHandler do
             prepare_for_deploy: proc do |services:, secrets:, local_environment:, why_run:|
               expect(services).to eq('node1' => %w[service1])
               expect(secrets).to eq({})
-              expect(local_environment).to eq false
-              expect(why_run).to eq false
+              expect(local_environment).to be false
+              expect(why_run).to be false
               called['platform1'] = true
             end
           },
@@ -127,8 +127,8 @@ describe HybridPlatformsConductor::ServicesHandler do
             prepare_for_deploy: proc do |services:, secrets:, local_environment:, why_run:|
               expect(services).to eq('node2' => %w[service2])
               expect(secrets).to eq({})
-              expect(local_environment).to eq false
-              expect(why_run).to eq false
+              expect(local_environment).to be false
+              expect(why_run).to be false
               called['platform2'] = true
             end
           },
@@ -138,8 +138,8 @@ describe HybridPlatformsConductor::ServicesHandler do
             prepare_for_deploy: proc do |services:, secrets:, local_environment:, why_run:|
               expect(services).to eq('node3' => %w[service3])
               expect(secrets).to eq({})
-              expect(local_environment).to eq false
-              expect(why_run).to eq false
+              expect(local_environment).to be false
+              expect(why_run).to be false
               called['platform3'] = true
             end
           }
@@ -173,8 +173,8 @@ describe HybridPlatformsConductor::ServicesHandler do
             prepare_for_deploy: proc do |services:, secrets:, local_environment:, why_run:|
               expect(services).to eq('node1' => %w[service1])
               expect(secrets).to eq({})
-              expect(local_environment).to eq false
-              expect(why_run).to eq false
+              expect(local_environment).to be false
+              expect(why_run).to be false
               called['platform1'] = true
             end
           },
@@ -184,8 +184,8 @@ describe HybridPlatformsConductor::ServicesHandler do
             prepare_for_deploy: proc do |services:, secrets:, local_environment:, why_run:|
               expect(services).to eq('node2' => %w[service2])
               expect(secrets).to eq({})
-              expect(local_environment).to eq false
-              expect(why_run).to eq false
+              expect(local_environment).to be false
+              expect(why_run).to be false
               called['platform2'] = true
             end
           },
@@ -195,8 +195,8 @@ describe HybridPlatformsConductor::ServicesHandler do
             prepare_for_deploy: proc do |services:, secrets:, local_environment:, why_run:|
               expect(services).to eq('node1' => %w[service3])
               expect(secrets).to eq({})
-              expect(local_environment).to eq false
-              expect(why_run).to eq false
+              expect(local_environment).to be false
+              expect(why_run).to be false
               called['platform3'] = true
             end
           }
@@ -230,8 +230,8 @@ describe HybridPlatformsConductor::ServicesHandler do
             prepare_for_deploy: proc do |services:, secrets:, local_environment:, why_run:|
               expect(services).to eq('node' => %w[service1 service2])
               expect(secrets).to eq({})
-              expect(local_environment).to eq false
-              expect(why_run).to eq false
+              expect(local_environment).to be false
+              expect(why_run).to be false
               called['platform1'] = true
             end
           },
@@ -241,8 +241,8 @@ describe HybridPlatformsConductor::ServicesHandler do
             prepare_for_deploy: proc do |services:, secrets:, local_environment:, why_run:|
               expect(services).to eq('node' => %w[service3])
               expect(secrets).to eq({})
-              expect(local_environment).to eq false
-              expect(why_run).to eq false
+              expect(local_environment).to be false
+              expect(why_run).to be false
               called['platform2'] = true
             end
           },
@@ -252,8 +252,8 @@ describe HybridPlatformsConductor::ServicesHandler do
             prepare_for_deploy: proc do |services:, secrets:, local_environment:, why_run:|
               expect(services).to eq('node' => %w[service5 service6])
               expect(secrets).to eq({})
-              expect(local_environment).to eq false
-              expect(why_run).to eq false
+              expect(local_environment).to be false
+              expect(why_run).to be false
               called['platform3'] = true
             end
           }

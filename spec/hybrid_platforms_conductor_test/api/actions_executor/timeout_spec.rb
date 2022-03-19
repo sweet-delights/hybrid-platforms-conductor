@@ -15,7 +15,7 @@ describe HybridPlatformsConductor::ActionsExecutor do
         expect(test_actions_executor.execute_actions(
           {
             'node' => { test_action: { code: proc do |stdout, _stderr, action|
-              expect(action.timeout).to eq nil
+              expect(action.timeout).to be_nil
               stdout << 'Hello'
             end } }
           }

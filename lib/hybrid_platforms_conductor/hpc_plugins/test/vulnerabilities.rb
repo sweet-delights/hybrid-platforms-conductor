@@ -57,7 +57,7 @@ module HybridPlatformsConductor
                 end
               )
               sudo = @actions_executor.sudo_prefix(@node)
-              urls.map do |url|
+              urls.to_h do |url|
                 # 1. Get the OVAL file on the node to be tested (uncompress it if needed)
                 # 2. Make sure oscap is installed
                 # 3. Generate the report for this OVAL file using oscap
@@ -143,7 +143,7 @@ module HybridPlatformsConductor
                     timeout: 240
                   }
                 ]
-              end.to_h
+              end
             else
               error "No OVAL file defined for image #{image} at #{oval_file}"
               {}

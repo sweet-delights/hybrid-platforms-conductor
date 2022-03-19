@@ -34,7 +34,7 @@ describe HybridPlatformsConductor::Deployer do
                 expect(actions_per_nodes['node'][0].keys.sort).to eq %i[ruby remote_bash].sort
                 expect(actions_per_nodes['node'][0][:remote_bash]).to eq 'sudo -u root mkdir -p /var/log/deployments && sudo -u root chmod 600 /var/log/deployments'
                 expect(actions_per_nodes['node'][1].keys.sort).to eq %i[scp].sort
-                expect(actions_per_nodes['node'][1][:scp].delete(:sudo)).to eq true
+                expect(actions_per_nodes['node'][1][:scp].delete(:sudo)).to be true
                 expect(actions_per_nodes['node'][1][:scp].delete(:owner)).to eq 'root'
                 expect(actions_per_nodes['node'][1][:scp].delete(:group)).to eq 'root'
                 expect(actions_per_nodes['node'][1][:scp].size).to eq 1
@@ -44,7 +44,7 @@ describe HybridPlatformsConductor::Deployer do
                 expect(actions_per_nodes['node'][2][:remote_bash]).to eq "sudo -u root chmod 600 /var/log/deployments/#{File.basename(tmp_log_file)}"
                 # Call the Ruby codes to be tested
                 actions_per_nodes['node'][0][:ruby].call
-                expect(File.exist?(tmp_log_file)).to eq true
+                expect(File.exist?(tmp_log_file)).to be true
                 file_content_regexp = Regexp.new <<~EOREGEXP
                   repo_name_0: platform
                   commit_id_0: 123456
@@ -62,7 +62,7 @@ describe HybridPlatformsConductor::Deployer do
                 expect(File.read(tmp_log_file)).to match file_content_regexp
                 actions_per_nodes['node'][2][:ruby].call
                 # Check temporary log file gets deleted for security reasons
-                expect(File.exist?(tmp_log_file)).to eq false
+                expect(File.exist?(tmp_log_file)).to be false
               end
             ]
             expect(test_deployer.deploy_on('node')).to eq('node' => [0, 'Deploy successful stdout', 'Deploy successful stderr'])
@@ -93,7 +93,7 @@ describe HybridPlatformsConductor::Deployer do
                 expect(actions_per_nodes['node'][0].keys.sort).to eq %i[ruby remote_bash].sort
                 expect(actions_per_nodes['node'][0][:remote_bash]).to eq 'mkdir -p /var/log/deployments && chmod 600 /var/log/deployments'
                 expect(actions_per_nodes['node'][1].keys.sort).to eq %i[scp].sort
-                expect(actions_per_nodes['node'][1][:scp].delete(:sudo)).to eq false
+                expect(actions_per_nodes['node'][1][:scp].delete(:sudo)).to be false
                 expect(actions_per_nodes['node'][1][:scp].delete(:owner)).to eq 'root'
                 expect(actions_per_nodes['node'][1][:scp].delete(:group)).to eq 'root'
                 expect(actions_per_nodes['node'][1][:scp].size).to eq 1
@@ -103,7 +103,7 @@ describe HybridPlatformsConductor::Deployer do
                 expect(actions_per_nodes['node'][2][:remote_bash]).to eq "chmod 600 /var/log/deployments/#{File.basename(tmp_log_file)}"
                 # Call the Ruby codes to be tested
                 actions_per_nodes['node'][0][:ruby].call
-                expect(File.exist?(tmp_log_file)).to eq true
+                expect(File.exist?(tmp_log_file)).to be true
                 file_content_regexp = Regexp.new <<~EOREGEXP
                   repo_name_0: platform
                   commit_id_0: 123456
@@ -121,7 +121,7 @@ describe HybridPlatformsConductor::Deployer do
                 expect(File.read(tmp_log_file)).to match file_content_regexp
                 actions_per_nodes['node'][2][:ruby].call
                 # Check temporary log file gets deleted for security reasons
-                expect(File.exist?(tmp_log_file)).to eq false
+                expect(File.exist?(tmp_log_file)).to be false
               end
             ]
             expect(test_deployer.deploy_on('node')).to eq('node' => [0, 'Deploy successful stdout', 'Deploy successful stderr'])
@@ -150,7 +150,7 @@ describe HybridPlatformsConductor::Deployer do
               expect(actions_per_nodes['node'][0].keys.sort).to eq %i[ruby remote_bash].sort
               expect(actions_per_nodes['node'][0][:remote_bash]).to eq 'sudo -u root mkdir -p /var/log/deployments && sudo -u root chmod 600 /var/log/deployments'
               expect(actions_per_nodes['node'][1].keys.sort).to eq %i[scp].sort
-              expect(actions_per_nodes['node'][1][:scp].delete(:sudo)).to eq true
+              expect(actions_per_nodes['node'][1][:scp].delete(:sudo)).to be true
               expect(actions_per_nodes['node'][1][:scp].delete(:owner)).to eq 'root'
               expect(actions_per_nodes['node'][1][:scp].delete(:group)).to eq 'root'
               expect(actions_per_nodes['node'][1][:scp].size).to eq 1
@@ -160,7 +160,7 @@ describe HybridPlatformsConductor::Deployer do
               expect(actions_per_nodes['node'][2][:remote_bash]).to eq "sudo -u root chmod 600 /var/log/deployments/#{File.basename(tmp_log_file)}"
               # Call the Ruby codes to be tested
               actions_per_nodes['node'][0][:ruby].call
-              expect(File.exist?(tmp_log_file)).to eq true
+              expect(File.exist?(tmp_log_file)).to be true
               file_content_regexp = Regexp.new <<~EOREGEXP
                 repo_name_0: platform
                 commit_id_0: 123456
@@ -178,7 +178,7 @@ describe HybridPlatformsConductor::Deployer do
               expect(File.read(tmp_log_file)).to match file_content_regexp
               actions_per_nodes['node'][2][:ruby].call
               # Check temporary log file gets deleted for security reasons
-              expect(File.exist?(tmp_log_file)).to eq false
+              expect(File.exist?(tmp_log_file)).to be false
             end
           ]
           with_cmd_runner_mocked [
@@ -211,7 +211,7 @@ describe HybridPlatformsConductor::Deployer do
               expect(actions_per_nodes['node'][0].keys.sort).to eq %i[ruby remote_bash].sort
               expect(actions_per_nodes['node'][0][:remote_bash]).to eq 'mkdir -p /var/log/deployments && chmod 600 /var/log/deployments'
               expect(actions_per_nodes['node'][1].keys.sort).to eq %i[scp].sort
-              expect(actions_per_nodes['node'][1][:scp].delete(:sudo)).to eq false
+              expect(actions_per_nodes['node'][1][:scp].delete(:sudo)).to be false
               expect(actions_per_nodes['node'][1][:scp].delete(:owner)).to eq 'root'
               expect(actions_per_nodes['node'][1][:scp].delete(:group)).to eq 'root'
               expect(actions_per_nodes['node'][1][:scp].size).to eq 1
@@ -221,7 +221,7 @@ describe HybridPlatformsConductor::Deployer do
               expect(actions_per_nodes['node'][2][:remote_bash]).to eq "chmod 600 /var/log/deployments/#{File.basename(tmp_log_file)}"
               # Call the Ruby codes to be tested
               actions_per_nodes['node'][0][:ruby].call
-              expect(File.exist?(tmp_log_file)).to eq true
+              expect(File.exist?(tmp_log_file)).to be true
               file_content_regexp = Regexp.new <<~EOREGEXP
                 repo_name_0: platform
                 commit_id_0: 123456
@@ -239,7 +239,7 @@ describe HybridPlatformsConductor::Deployer do
               expect(File.read(tmp_log_file)).to match file_content_regexp
               actions_per_nodes['node'][2][:ruby].call
               # Check temporary log file gets deleted for security reasons
-              expect(File.exist?(tmp_log_file)).to eq false
+              expect(File.exist?(tmp_log_file)).to be false
             end
           ]
           with_cmd_runner_mocked [

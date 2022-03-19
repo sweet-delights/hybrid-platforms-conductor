@@ -58,6 +58,7 @@ require 'hybrid_platforms_conductor_test/test_plugins/several_checks'
 require 'hybrid_platforms_conductor_test/test_provisioner'
 require 'hybrid_platforms_conductor_test/test_secrets_reader_plugin'
 require 'hybrid_platforms_conductor_test/tests_report_plugin'
+require 'active_support/core_ext/module'
 
 module HybridPlatformsConductorTest
 
