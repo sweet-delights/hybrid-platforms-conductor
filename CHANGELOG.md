@@ -1,3 +1,11 @@
+# [v33.9.3](https://github.com/sweet-delights/hybrid-platforms-conductor/compare/v33.9.2...v33.9.3) (2022-03-20 00:06:14)
+
+### Patches
+
+* [Fix semantic-release dependencies](https://github.com/sweet-delights/hybrid-platforms-conductor/commit/68ec49fbec772c1de6971173830a85b76398de42)
+* [Work-around IceCube dependency issue and correct rubocop errors](https://github.com/sweet-delights/hybrid-platforms-conductor/commit/68858e4d5fbb9d91fcee0525f56dfc40850af7df)
+* [fixing issue 118](https://github.com/sweet-delights/hybrid-platforms-conductor/commit/bb917101c336119104889e5d6cedd34aef538f54)
+
 # [v33.9.2](https://github.com/sweet-delights/hybrid-platforms-conductor/compare/v33.9.1...v33.9.2) (2021-09-01 17:46:34)
 
 ## Global changes
