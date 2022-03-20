@@ -37,7 +37,7 @@ describe HybridPlatformsConductor::TestsRunner do
             ["cd #{repository_path} && git --no-pager log --merges --pretty=format:\"%H\"", proc { [0, "11111111\n22222222\n", ''] }],
             [/^cd #{Regexp.escape(repository_path)} && git --no-pager log\s+--pretty=format:"%H"\s+--graph\s+\$\(git merge-base\s+--octopus\s+\$\(git --no-pager log 11111111 --max-count 1 --pretty=format:"%P"\)\s*\)\.\.11111111\s+\| grep '\|'$/, proc { [1, '', ''] }],
             [/^cd #{Regexp.escape(repository_path)} && git --no-pager log\s+--pretty=format:"%H"\s+--graph\s+\$\(git merge-base\s+--octopus\s+\$\(git --no-pager log 22222222 --max-count 1 --pretty=format:"%P"\)\s*\)\.\.22222222\s+\| grep '\|'$/, proc { [0, '* | 33333333', ''] }],
-            ["cd #{repository_path} && git show -s --format=%ci 22222222", proc { [0, "#{(Time.now - (24 * 60 * 60)).strftime('%F %T')}\n", ''] }]
+            ["cd #{repository_path} && git show --no-patch --format=%ci 22222222", proc { [0, "#{(Time.now - (24 * 60 * 60)).strftime('%F %T')}\n", ''] }]
           ] do
             expect(test_tests_runner.run_tests([])).to eq 1
             expect(HybridPlatformsConductorTest::TestsReportPlugin.reports.size).to eq 1
@@ -55,7 +55,7 @@ describe HybridPlatformsConductor::TestsRunner do
             ["cd #{repository_path} && git --no-pager log --merges --pretty=format:\"%H\"", proc { [0, "11111111\n22222222\n", ''] }],
             [/^cd #{Regexp.escape(repository_path)} && git --no-pager log\s+--pretty=format:"%H"\s+--graph\s+\$\(git merge-base\s+--octopus\s+\$\(git --no-pager log 11111111 --max-count 1 --pretty=format:"%P"\)\s*\)\.\.11111111\s+\| grep '\|'$/, proc { [1, '', ''] }],
             [/^cd #{Regexp.escape(repository_path)} && git --no-pager log\s+--pretty=format:"%H"\s+--graph\s+\$\(git merge-base\s+--octopus\s+\$\(git --no-pager log 22222222 --max-count 1 --pretty=format:"%P"\)\s*\)\.\.22222222\s+\| grep '\|'$/, proc { [0, '* | 33333333', ''] }],
-            ["cd #{repository_path} && git show -s --format=%ci 22222222", proc { [0, "#{(Time.now - (6 * 31 * 24 * 60 * 60)).strftime('%F %T')}\n", ''] }]
+            ["cd #{repository_path} && git show --no-patch --format=%ci 22222222", proc { [0, "#{(Time.now - (6 * 31 * 24 * 60 * 60)).strftime('%F %T')}\n", ''] }]
           ] do
             expect(test_tests_runner.run_tests([])).to eq 0
           end

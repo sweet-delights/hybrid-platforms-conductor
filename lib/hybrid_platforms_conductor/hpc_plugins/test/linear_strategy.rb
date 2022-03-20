@@ -31,7 +31,7 @@ module HybridPlatformsConductor
             next if stdout.empty?
 
             _exit_status, stdout, _stderr = @cmd_runner.run_cmd(
-              "cd #{@platform.repository_path} && git show -s --format=%ci #{merge_commit_id}",
+              "cd #{@platform.repository_path} && git show --no-patch --format=%ci #{merge_commit_id}",
               log_to_stdout: log_debug?
             )
             error "Git history is not linear because of Merge commit #{merge_commit_id}" if Time.now - Time.parse(stdout.strip) < LOOKING_PERIOD
