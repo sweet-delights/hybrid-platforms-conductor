@@ -20,18 +20,18 @@ module HybridPlatformsConductor
             _exit_status, stdout, _stderr = @cmd_runner.run_cmd(<<~EO_BASH, log_to_stdout: log_debug?, no_exception: true, expected_code: [0, 1])
               cd #{@platform.repository_path} && \
               git --no-pager log \
+                --pretty=format:\"%H\" \
+                --graph \
                 $(git merge-base \
                   --octopus \
                   $(git --no-pager log #{merge_commit_id} --max-count 1 --pretty=format:\"%P\") \
-                )..#{merge_commit_id} \
-                --pretty=format:\"%H\" \
-                --graph \
+                )..#{merge_commit_id}
               | grep '|'
             EO_BASH
             next if stdout.empty?
 
             _exit_status, stdout, _stderr = @cmd_runner.run_cmd(
-              "cd #{@platform.repository_path} && git --no-pager log #{merge_commit_id} --max-count 1 --pretty=format:%aI",
+              "cd #{@platform.repository_path} && git show --no-patch --format=%ci #{merge_commit_id}",
               log_to_stdout: log_debug?
             )
             error "Git history is not linear because of Merge commit #{merge_commit_id}" if Time.now - Time.parse(stdout.strip) < LOOKING_PERIOD
