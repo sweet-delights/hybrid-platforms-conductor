@@ -47,6 +47,7 @@ describe 'report executable' do
       }
     ) do
       with_cmd_runner_mocked [
+        ['command -v getent', proc { [0, '', ''] }],
         ['getent hosts node.domain.com', proc { [0, '192.168.0.1 node.domain.com', ''] }]
       ] do
         exit_code, stdout, stderr = run 'report', '--node', 'node'
