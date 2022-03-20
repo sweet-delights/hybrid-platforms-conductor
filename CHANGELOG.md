@@ -1,3 +1,10 @@
+# [v33.9.4](https://github.com/sweet-delights/hybrid-platforms-conductor/compare/v33.9.3...v33.9.4) (2022-03-20 16:20:04)
+
+### Patches
+
+* [Added missing tests and corrections from PR #119](https://github.com/sweet-delights/hybrid-platforms-conductor/commit/e86be2f99e273e65bf9073c1b389a10ad53d7353)
+* [Merge branch 'rebase_pull_116'](https://github.com/sweet-delights/hybrid-platforms-conductor/commit/4030ba58e0e9cf4ef96328a32cf4daa6226270c0)
+
 # [v33.9.3](https://github.com/sweet-delights/hybrid-platforms-conductor/compare/v33.9.2...v33.9.3) (2022-03-20 00:06:14)
 
 ### Patches
