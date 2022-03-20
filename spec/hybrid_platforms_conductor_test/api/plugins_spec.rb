@@ -7,6 +7,9 @@ module HybridPlatformsConductor
   class TestPluginType2 < Plugin
   end
 
+  class TestPluginType3 < Plugin
+  end
+
 end
 
 module HybridPlatformsConductorTest
@@ -156,6 +159,31 @@ describe HybridPlatformsConductor::Plugins do
         plugins = described_class.new(:test_plugin_type, logger: logger, logger_stderr: logger)
         expect(plugins.keys).to eq [:test_plugin_id_1]
         expect(plugins[:test_plugin_id_1]).to eq HybridPlatformsConductorTest::MockedLib::MyTestGem::HpcPlugins::TestPluginType::TestPluginId1
+      ensure
+        $LOAD_PATH.shift
+      end
+    end
+  end
+
+  it 'discovers automatically plugins of a given type in the hpc_plugins directory of a gem even if lib is used in the gem\'s installation path' do
+    with_test_platform({}) do
+      # Mock the discovery of Ruby gems
+      expect(Gem).to receive(:loaded_specs) do
+        my_test_gem_spec = instance_double Gem::Specification
+        expect(my_test_gem_spec).to receive(:full_gem_path).and_return('path/to/__gem_full_path__/in/lib/sub')
+        expect(Dir).to receive(:glob).with('path/to/__gem_full_path__/in/lib/sub/lib/**/*.rb').and_return [
+          'path/to/__gem_full_path__/in/lib/sub/lib/my_test_gem_with_lib/sub1/lib/sub2/hpc_plugins/test_plugin_type_3/test_plugin_id_5.rb'
+        ]
+        {
+          'my_test_gem_with_lib' => my_test_gem_spec
+        }
+      end
+      # Alter the load path to mock an extra Rubygem
+      $LOAD_PATH.unshift "#{__dir__}/../mocked_lib"
+      begin
+        plugins = described_class.new(:test_plugin_type_3, logger: logger, logger_stderr: logger)
+        expect(plugins.keys).to eq [:test_plugin_id_5]
+        expect(plugins[:test_plugin_id_5]).to eq HybridPlatformsConductorTest::MockedLib::MyTestGemWithLib::Sub1::Lib::Sub2::HpcPlugins::TestPluginType3::TestPluginId5
       ensure
         $LOAD_PATH.shift
       end

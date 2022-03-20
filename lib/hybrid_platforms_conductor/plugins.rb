@@ -75,12 +75,12 @@ module HybridPlatformsConductor
     # Register plugins by parsing gems
     def register_plugins_from_gems
       # Require all possible files that could define such a plugin, from all gems
-      files_regexp = %r{lib/(.*hpc_plugins/#{Regexp.escape(@plugins_type.to_s)}/[^/]+)\.rb$}
       Gem.loaded_specs.clone.each do |gem_name, gem_specs|
+        gem_path = gem_specs.full_gem_path
+        files_regexp = %r{#{Regexp.escape(gem_path)}/lib/(.*hpc_plugins/#{Regexp.escape(@plugins_type.to_s)}/[^/]+)\.rb$}
         # Careful to not use gem_specs.files here as if your gem name contains "-" or other weird characters, files won't appear in the gemspec list.
-        Dir.glob("#{gem_specs.full_gem_path}/lib/**/*.rb").each do |file|
-          idx = file.rindex('lib/')
-          next unless file.match(files_regexp, idx)
+        Dir.glob("#{gem_path}/lib/**/*.rb").each do |file|
+          next unless file =~ files_regexp
 
           require_name = Regexp.last_match(1)
           log_debug "[ #{@plugins_type} ] - Require from #{gem_name} file #{require_name}"

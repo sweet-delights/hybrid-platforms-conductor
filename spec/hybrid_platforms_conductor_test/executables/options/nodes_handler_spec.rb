@@ -63,6 +63,7 @@ describe 'executables\' Nodes Handler options' do
   it 'displays info about nodes' do
     with_test_platform_for_nodes_handler_options do
       with_cmd_runner_mocked [
+        ['command -v getent', proc { [0, '', ''] }],
         ['getent hosts my_host15.my_domain', proc { [0, '192.168.42.15 my_host16.my_domain', ''] }],
         ['getent hosts my_host16.my_domain', proc { [0, '192.168.42.16 my_host16.my_domain', ''] }]
       ] do
