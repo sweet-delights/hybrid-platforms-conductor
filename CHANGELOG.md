@@ -1,3 +1,9 @@
+# [v33.9.5](https://github.com/sweet-delights/hybrid-platforms-conductor/compare/v33.9.4...v33.9.5) (2022-03-20 17:46:29)
+
+### Patches
+
+* [[#118] Fix linear strategy checks when merge commits are found](https://github.com/sweet-delights/hybrid-platforms-conductor/commit/01464ae5bb5c39e95be6216fceed0e9ac00ae83e)
+
 # [v33.9.4](https://github.com/sweet-delights/hybrid-platforms-conductor/compare/v33.9.3...v33.9.4) (2022-03-20 16:20:04)
 
 ### Patches
