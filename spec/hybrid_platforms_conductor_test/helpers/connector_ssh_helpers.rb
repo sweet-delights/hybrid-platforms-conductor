@@ -43,12 +43,10 @@ module HybridPlatformsConductorTest
           ssh_commands_per_connection = []
           if with_strict_host_key_checking
             ip = node_connection_info[:ip] || node_connection_info[:connection]
-            ssh_commands_once.concat(
+            ssh_commands_once.push(
               [
-                [
-                  "ssh-keyscan -p #{node_connection_info[:port]} #{ip}",
-                  proc { [0, "#{ip} ssh-rsa fake_host_key_for_#{ip}", ''] }
-                ]
+                "ssh-keyscan -p #{node_connection_info[:port]} #{ip}",
+                proc { [0, "#{ip} ssh-rsa fake_host_key_for_#{ip}", ''] }
               ]
             )
           end

@@ -26,12 +26,12 @@ module HybridPlatformsConductor
             cmd_runner: @cmd_runner
           ).known_platforms.first
           unless example_platform.nil?
-            tests.concat [
+            tests.push 
               "#{CmdRunner.executables_prefix}get_impacted_nodes --platform #{example_platform.name} --show-commands"
-            ]
+            
             example_node = example_platform.known_nodes.first
             unless example_node.nil?
-              tests.concat [
+              tests.push 
                 "#{CmdRunner.executables_prefix}check-node --node #{example_node} --show-commands",
                 "#{CmdRunner.executables_prefix}deploy --node #{example_node} --show-commands --why-run",
                 "#{CmdRunner.executables_prefix}last_deploys --node #{example_node} --show-commands",
@@ -39,7 +39,7 @@ module HybridPlatformsConductor
                 "#{CmdRunner.executables_prefix}report --node #{example_node} --format stdout",
                 "#{CmdRunner.executables_prefix}run --node #{example_node} --show-commands --interactive",
                 "#{CmdRunner.executables_prefix}topograph --from \"--node #{example_node}\" --to \"--node #{example_node}\" --skip-run --output graphviz:graph.gv"
-              ]
+              
             end
           end
           tests.sort.each do |cmd|
@@ -48,7 +48,7 @@ module HybridPlatformsConductor
             assert_equal(exit_status, 0, "Command #{cmd} returned code #{exit_status}:\n#{stdout}")
           end
           # Remove the file created by Topograph if it exists
-          File.unlink('graph.gv') if File.exist?('graph.gv')
+          FileUtils.rm_f('graph.gv')
         end
 
       end

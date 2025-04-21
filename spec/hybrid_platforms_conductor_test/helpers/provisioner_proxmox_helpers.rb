@@ -359,7 +359,7 @@ module HybridPlatformsConductorTest
           end
         ]
         if destroy_vm
-          runs.concat [
+          runs.push 
             proc do |actions|
               expect(actions.keys).to eq ['node']
               expect(actions['node'].size).to eq 4
@@ -409,7 +409,7 @@ module HybridPlatformsConductorTest
                 #{JSON.pretty_generate(result)}
               EO_STDOUT
             end
-          ]
+          
         end
         expect_actions_executor_runs runs
       end
@@ -722,12 +722,12 @@ module HybridPlatformsConductorTest
         unless create.nil?
           create_file = "#{@repository}/proxmox/create_vm.json"
           File.write(create_file, create.to_json)
-          script_args.concat(['--create', create_file])
+          script_args.push('--create', create_file)
         end
         unless destroy.nil?
           destroy_file = "#{@repository}/proxmox/destroy_vm.json"
           File.write(destroy_file, destroy.to_json)
-          script_args.concat(['--destroy', destroy_file])
+          script_args.push('--destroy', destroy_file)
         end
         # Call the script by loading the Ruby file mocking the ARGV and ENV variables
         old_argv = ARGV.dup

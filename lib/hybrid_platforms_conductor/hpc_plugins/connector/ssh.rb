@@ -141,7 +141,7 @@ module HybridPlatformsConductor
           @ssh_strict_host_key_checking = true
           @passwords = {}
           @auth_password = false
-          @ssh_gateways_conf = ENV['hpc_ssh_gateways_conf'].nil? ? nil : ENV['hpc_ssh_gateways_conf'].to_sym
+          @ssh_gateways_conf = ENV['hpc_ssh_gateways_conf']&.to_sym
           @ssh_gateway_user = ENV['hpc_ssh_gateway_user'].nil? ? 'ubradm' : ENV['hpc_ssh_gateway_user']
           # The map of existing ssh directories that have been created, per node that can access them
           # Array< String, Array<String> >

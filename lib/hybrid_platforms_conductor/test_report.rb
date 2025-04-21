@@ -155,11 +155,11 @@ module HybridPlatformsConductor
           first_criteria =
             case first_criteria
             when :test_name
-              proc { |test| test.name }
+              proc(&:name)
             when :platform
-              proc { |test| test.platform }
+              proc(&:platform)
             when :node
-              proc { |test| test.node }
+              proc(&:node)
             else
               raise "Unknown group criteria name: #{first_criteria}"
             end
