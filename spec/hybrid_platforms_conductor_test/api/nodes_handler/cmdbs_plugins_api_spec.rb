@@ -276,7 +276,7 @@ describe HybridPlatformsConductor::NodesHandler do
     it 'can configure different priority rules for different properties on different nodes' do
       with_cmdb_test_platform(
         cmdbs: %i[test_cmdb test_cmdb_2],
-        additional_config: <<~'EO_CONFIG'
+        additional_config: <<~EO_CONFIG
           for_nodes('node1') do
             master_cmdbs(
               test_cmdb: :different_comment_2,
@@ -309,7 +309,7 @@ describe HybridPlatformsConductor::NodesHandler do
     it 'fails when there are conflicts in the definition of master CMDBs' do
       with_cmdb_test_platform(
         cmdbs: %i[test_cmdb test_cmdb_2],
-        additional_config: <<~'EO_CONFIG'
+        additional_config: <<~EO_CONFIG
           master_cmdbs(
             test_cmdb: %i[different_comment different_comment_2]
           )
@@ -326,7 +326,7 @@ describe HybridPlatformsConductor::NodesHandler do
     it 'fails when the CMDB marked as master does not implement the property' do
       with_cmdb_test_platform(
         cmdbs: %i[test_cmdb test_cmdb_2],
-        additional_config: <<~'EO_CONFIG'
+        additional_config: <<~EO_CONFIG
           master_cmdbs(
             test_cmdb_2: :upcase
           )

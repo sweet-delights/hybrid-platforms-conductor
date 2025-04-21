@@ -323,7 +323,7 @@ module HybridPlatformsConductor
     # Parameters::
     # * *property* (Symbol): The property name
     def define_property_method_for(property)
-      define_singleton_method("get_#{property}_of".to_sym) { |node| metadata_of(node, property) }
+      define_singleton_method(:"get_#{property}_of") { |node| metadata_of(node, property) }
     end
 
     # Accept any method of name get_<property>_of to get the metadata property of a given node.
@@ -339,7 +339,7 @@ module HybridPlatformsConductor
         # Define the method so that we don't go trough method_missing next time (more efficient).
         define_property_method_for(property)
         # Then call it
-        send("get_#{property}_of".to_sym, *args, &block)
+        send(:"get_#{property}_of", *args, &block)
       else
         # We really don't know this method.
         # Call original implementation of method_missing that will raise an exception.
@@ -391,7 +391,7 @@ module HybridPlatformsConductor
           end
           # Property values, per node name
           # Hash< String, Object >
-          metadata_from_cmdb = cmdb.send("get_#{cmdb_property}".to_sym, nodes_to_query, @metadata.slice(*nodes_to_query)).transform_values do |cmdb_result|
+          metadata_from_cmdb = cmdb.send(:"get_#{cmdb_property}", nodes_to_query, @metadata.slice(*nodes_to_query)).transform_values do |cmdb_result|
             cmdb_property == :others ? cmdb_result[property] : cmdb_result
           end.compact
           cmdb_log_header = "[CMDB #{cmdb.class.name.split('::').last}.#{cmdb_property}] -"

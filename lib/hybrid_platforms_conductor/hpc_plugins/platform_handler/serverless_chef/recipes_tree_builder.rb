@@ -160,7 +160,7 @@ module HybridPlatformsConductor
               flatten(1)
             # Check for some helpers we know include some recipes
             @config.known_helpers_including_recipes.each do |helper_name, used_recipes_by_helper|
-              if recipe_content =~ Regexp.new(/(\W|^)#{Regexp.escape(helper_name)}(\W|$)/)
+              if recipe_content =~ /(\W|^)#{Regexp.escape(helper_name)}(\W|$)/
                 used_recipes.concat(used_recipes_by_helper.map { |recipe_def| @platform.decode_recipe(recipe_def) })
                 used_recipes.uniq!
               end

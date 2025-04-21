@@ -31,12 +31,6 @@ RSpec/ExampleLength:
   Exclude:
     - '**/*'
 
-# As test cases are big for some classes (testing plugins, and various methods from plugins), limiting to simple file paths is not an option.
-# Configuration parameters: Include, CustomTransform, IgnoreMethods, SpecSuffixOnly.
-# Include: **/*_spec*rb*, **/spec/**/*
-RSpec/FilePath:
-  SpecSuffixOnly: true
-
 # Message expectations and test spies respond to a different testing usecase, and one can not always replace the other.
 # Configuration parameters: .
 # SupportedStyles: have_received, receive

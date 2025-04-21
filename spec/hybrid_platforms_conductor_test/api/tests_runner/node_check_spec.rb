@@ -134,7 +134,7 @@ describe HybridPlatformsConductor::TestsRunner do
 
     it 'reuses run_logs logs instead of running check-node when we ask for it' do
       with_test_platform_for_node_check_tests do
-        run_logs_dir = "#{ENV['hpc_platforms']}/run_logs"
+        run_logs_dir = "#{ENV.fetch('hpc_platforms', nil)}/run_logs"
         FileUtils.mkdir_p run_logs_dir
         File.write("#{run_logs_dir}/node11.stdout", 'node11 check ok from logs')
         File.write("#{run_logs_dir}/node12.stdout", 'node12 check ok from logs')
@@ -155,7 +155,7 @@ describe HybridPlatformsConductor::TestsRunner do
 
     it 'fails when some run_logs are missing' do
       with_test_platform_for_node_check_tests do
-        run_logs_dir = "#{ENV['hpc_platforms']}/run_logs"
+        run_logs_dir = "#{ENV.fetch('hpc_platforms', nil)}/run_logs"
         FileUtils.mkdir_p run_logs_dir
         File.write("#{run_logs_dir}/node11.stdout", 'node11 check ok from logs')
         File.write("#{run_logs_dir}/node12.stdout", 'node12 check ok from logs')

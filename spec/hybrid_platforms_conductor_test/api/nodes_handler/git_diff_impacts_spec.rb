@@ -70,7 +70,7 @@ describe HybridPlatformsConductor::NodesHandler do
                  gemspec
                 +
                 +gem 'byebug'
-                \ No newline at end of file
+                 No newline at end of file
                 diff --git a/lib/hybrid_platforms_conductor/nodes_handler.rb b/lib/stale/hybrid_platforms_conductor/nodes_handler.rb
                 index e8e1778..69a84bd 100644
                 --- a/lib/hybrid_platforms_conductor/nodes_handler.rb
@@ -101,7 +101,7 @@ describe HybridPlatformsConductor::NodesHandler do
                  gemspec
                 +
                 +gem 'byebug'
-                \ No newline at end of file
+                 No newline at end of file
               EO_STDOUT
             },
             'lib/hybrid_platforms_conductor/nodes_handler.rb' => {

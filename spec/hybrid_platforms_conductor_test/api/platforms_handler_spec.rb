@@ -70,7 +70,7 @@ describe HybridPlatformsConductor::PlatformsHandler do
           'platform1' => { platform_type: :test },
           'platform2' => { platform_type: :test_2 }
         },
-        additional_config: "test_2_platform path: \'#{repository}/platform1\'"
+        additional_config: "test_2_platform path: '#{repository}/platform1'"
       ) do
         expect { test_platforms_handler.known_platforms }.to raise_error 'Platform name platform1 is declared several times.'
       end
@@ -84,7 +84,7 @@ describe HybridPlatformsConductor::PlatformsHandler do
           'platform1' => { platform_type: :test },
           'platform2' => { platform_type: :test_2 }
         },
-        additional_config: "test_2_platform path: \'#{repository}\', name: 'other_platform'"
+        additional_config: "test_2_platform path: '#{repository}', name: 'other_platform'"
       ) do
         expect { test_platforms_handler.known_platforms }.to raise_error "Platform repository path #{repository} is declared several times."
       end
@@ -99,7 +99,7 @@ describe HybridPlatformsConductor::PlatformsHandler do
           'platform1' => { platform_type: :test },
           'platform2' => { platform_type: :test_2 }
         },
-        additional_config: "test_platform path: \'#{repository}/platform1\', name: 'other_platform'"
+        additional_config: "test_platform path: '#{repository}/platform1', name: 'other_platform'"
       ) do
         expect(test_platforms_handler.known_platforms.map(&:name).sort).to eq %w[platform1 platform2 other_platform].sort
       end

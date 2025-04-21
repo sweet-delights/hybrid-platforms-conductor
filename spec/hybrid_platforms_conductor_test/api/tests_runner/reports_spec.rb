@@ -309,7 +309,7 @@ describe HybridPlatformsConductor::TestsRunner do
             'nodes_list2' => %w[node2 node3 node4]
           }
         },
-        additional_config: <<~'EO_CONFIG'
+        additional_config: <<~EO_CONFIG
           for_nodes('node1') do
             expect_tests_to_fail(:node_test, 'Expected failure')
           end

@@ -53,7 +53,7 @@ describe HybridPlatformsConductor::TestsRunner do
   it 'returns 0 when tests are failing as expected' do
     with_test_platform(
       {},
-      additional_config: <<~'EO_CONFIG'
+      additional_config: <<~EO_CONFIG
         expect_tests_to_fail(:platform_test, 'Expected failure')
       EO_CONFIG
     ) do
@@ -67,7 +67,7 @@ describe HybridPlatformsConductor::TestsRunner do
   it 'returns 0 when tests are failing as expected on a given node' do
     with_test_platform(
       { nodes: { 'node1' => {}, 'node2' => {}, 'node3' => {} } },
-      additional_config: <<~'EO_CONFIG'
+      additional_config: <<~EO_CONFIG
         for_nodes('node2') do
           expect_tests_to_fail(:node_test, 'Expected failure')
         end
@@ -83,7 +83,7 @@ describe HybridPlatformsConductor::TestsRunner do
   it 'returns 1 when tests are succeeding but were expected to fail' do
     with_test_platform(
       {},
-      additional_config: <<~'EO_CONFIG'
+      additional_config: <<~EO_CONFIG
         expect_tests_to_fail(:platform_test, 'Expected failure')
       EO_CONFIG
     ) do
@@ -96,7 +96,7 @@ describe HybridPlatformsConductor::TestsRunner do
   it 'returns 1 when extra expected failures have not been tested when running all tests' do
     with_test_platform(
       { nodes: { 'another_node' => {} } },
-      additional_config: <<~'EO_CONFIG'
+      additional_config: <<~EO_CONFIG
         for_nodes('another_node') do
           expect_tests_to_fail(:platform_test, 'Expected failure')
         end
@@ -111,7 +111,7 @@ describe HybridPlatformsConductor::TestsRunner do
   it 'fails when expected failures reference missing nodes' do
     with_test_platform(
       { nodes: { 'node' => {} } },
-      additional_config: <<~'EO_CONFIG'
+      additional_config: <<~EO_CONFIG
         for_nodes('missing_node') do
           expect_tests_to_fail(:node_test, 'Expected failure')
         end

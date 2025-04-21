@@ -82,7 +82,7 @@ module HybridPlatformsConductor
     # Result::
     # * Array<PlatformHandler>: List of platform handlers
     def known_platforms(platform_type: nil)
-      (platform_type.nil? ? @platform_handlers.keys : [platform_type]).map { |search_platform_type| (@platform_handlers[search_platform_type] || []) }.flatten
+      (platform_type.nil? ? @platform_handlers.keys : [platform_type]).map { |search_platform_type| @platform_handlers[search_platform_type] || [] }.flatten
     end
 
     # Return the platform handler for a given platform name

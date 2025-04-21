@@ -85,7 +85,7 @@ module HybridPlatformsConductor
               binding
             end
             variables.each do |var_name, var_value|
-              erb_context.instance_variable_set("@#{var_name}".to_sym, var_value)
+              erb_context.instance_variable_set(:"@#{var_name}", var_value)
             end
             ERB.new(@gateways[gateway_conf]).result(erb_context.private_binding)
           end
@@ -131,8 +131,8 @@ module HybridPlatformsConductor
         # [API] - @nodes_handler can be used
         def init
           # Default values
-          @ssh_user = ENV['hpc_ssh_user']
-          @ssh_user = ENV['USER'] if @ssh_user.nil? || @ssh_user.empty?
+          @ssh_user = ENV.fetch('hpc_ssh_user', nil)
+          @ssh_user = ENV.fetch('USER', nil) if @ssh_user.nil? || @ssh_user.empty?
           if @ssh_user.nil? || @ssh_user.empty?
             _exit_status, stdout = @cmd_runner.run_cmd 'whoami', log_to_stdout: log_debug?
             @ssh_user = stdout.strip
@@ -333,13 +333,13 @@ module HybridPlatformsConductor
                 #{File.basename(from)} | \
               #{ssh_exec} \
                 #{ssh_url} \
-                \"#{need_sudo ? @actions_executor.sudo_prefix(@node) : ''}tar \
+                "#{need_sudo ? @actions_executor.sudo_prefix(@node) : ''}tar \
                   --extract \
                   --gunzip \
                   --file - \
                   --directory #{to} \
                   --owner root \
-                \"
+                "
             EO_BASH
           end
         end

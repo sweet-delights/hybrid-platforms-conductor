@@ -198,13 +198,13 @@ module HybridPlatformsConductor
       # Get all platforms involved in the deployment of those services on this node
       platforms_for(node => services).keys.each.with_index do |platform, platform_idx|
         log_info.merge!(
-          "repo_name_#{platform_idx}".to_sym => platform.name
+          "repo_name_#{platform_idx}": platform.name
         )
         if platform.info.key?(:commit)
           log_info.merge!(
-            "commit_id_#{platform_idx}".to_sym => platform.info[:commit][:id],
-            "commit_message_#{platform_idx}".to_sym => platform.info[:commit][:message].split("\n").first,
-            "diff_files_#{platform_idx}".to_sym => (platform.info[:status][:changed_files] + platform.info[:status][:added_files] + platform.info[:status][:deleted_files] + platform.info[:status][:untracked_files]).join(', ')
+            "commit_id_#{platform_idx}": platform.info[:commit][:id],
+            "commit_message_#{platform_idx}": platform.info[:commit][:message].split("\n").first,
+            "diff_files_#{platform_idx}": (platform.info[:status][:changed_files] + platform.info[:status][:added_files] + platform.info[:status][:deleted_files] + platform.info[:status][:untracked_files]).join(', ')
           )
         end
       end

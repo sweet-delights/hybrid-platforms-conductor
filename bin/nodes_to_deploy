@@ -68,9 +68,9 @@ unless ignore_deploy_info
       node_impacted = false
       # Loop over all possible repositories concerned by this deployment
       repo_idx = 0
-      while node_deploy_info[:deployment_info].key?("repo_name_#{repo_idx}".to_sym)
-        repo_name = node_deploy_info[:deployment_info]["repo_name_#{repo_idx}".to_sym]
-        commit_id = node_deploy_info[:deployment_info]["commit_id_#{repo_idx}".to_sym]
+      while node_deploy_info[:deployment_info].key?(:"repo_name_#{repo_idx}")
+        repo_name = node_deploy_info[:deployment_info][:"repo_name_#{repo_idx}"]
+        commit_id = node_deploy_info[:deployment_info][:"commit_id_#{repo_idx}"]
         impacted_nodes = cache_impacted_nodes.dig(repo_name, commit_id)
         if impacted_nodes.nil?
           if platforms_handler.platform(repo_name)

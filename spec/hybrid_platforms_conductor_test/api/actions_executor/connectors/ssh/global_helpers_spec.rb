@@ -76,7 +76,7 @@ describe HybridPlatformsConductor::ActionsExecutor do
 
       it 'generates a global configuration with user taken from whoami when no env variable is set' do
         with_test_platform({}) do
-          original_user = ENV['USER']
+          original_user = ENV.fetch('USER', nil)
           begin
             ENV.delete 'USER'
             ENV.delete 'hpc_ssh_user'

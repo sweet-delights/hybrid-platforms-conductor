@@ -11,7 +11,7 @@ describe HybridPlatformsConductor::NodesHandler do
             'node3' => {}
           }
         },
-        additional_config: <<~'EO_CONFIG'
+        additional_config: <<~EO_CONFIG
           master_cmdbs(
             test_cmdb: :property_1,
             test_cmdb_2: :property_2
