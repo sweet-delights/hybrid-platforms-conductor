@@ -23,11 +23,11 @@ module HybridPlatformsConductor
     def self.decorate_method(module_to_decorate, method_name)
       original_method_name = "__hpc__#{method_name}__undecorated__".to_sym
       module_to_decorate.alias_method original_method_name, method_name
-      module_to_decorate.define_method(method_name) do |*args, &block|
+      module_to_decorate.define_method(method_name) do |*args, **kwargs, &block|
         result = nil
         CurrentDirMonitor.monitor.synchronize do
           # puts "TID #{Thread.current.object_id} from #{caller[2]} - Current dir monitor taken from #{Dir.pwd}"
-          result = send(original_method_name, *args, &block)
+          result = send(original_method_name, *args, **kwargs, &block)
           # puts "TID #{Thread.current.object_id} from #{caller[2]} - Current dir monitor released back to #{Dir.pwd}"
         end
         result

@@ -5,7 +5,7 @@
       "generateNotesCmd": "bundle exec sem_ver_git --from \"${lastRelease.gitTag}\" --output semantic_release_generate_notes"
     }],
     "@semantic-release/changelog",
-    "semantic-release-rubygem",
+    "@webhippie/semantic-release-rubygem",
     ["@semantic-release/git", {
       "assets": [
         'CHANGELOG.md',

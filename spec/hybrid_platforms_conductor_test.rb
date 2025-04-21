@@ -154,6 +154,7 @@ module HybridPlatformsConductorTest
         FileUtils.rm_rf './run_logs'
         FileUtils.rm_rf './testadmin.key.pub'
         FileUtils.rm_rf '/tmp/hpc_ssh'
+        FileUtils.rm_rf './test_stdout'
         register_plugins(
           :log,
           {
@@ -204,8 +205,8 @@ module HybridPlatformsConductorTest
         logger.level = Logger::DEBUG
         logger
       else
-        # Still put the level, as when testing executables we switch the device from /dev/null to a file
-        Logger.new('/dev/null', level: :info)
+        # Still put the level, as when testing executables we use a file to test logs
+        Logger.new('./test_stdout', level: :info)
       end
     end
 

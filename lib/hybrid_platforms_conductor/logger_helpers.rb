@@ -221,7 +221,7 @@ module HybridPlatformsConductor
     # * Object: The stdout log device
     def stdout_device
       # TODO: Find a more elegant way to access the internal log device
-      @logger.instance_variable_get(:@logdev).dev
+      @logger.instance_variable_get(:@logdev)&.dev
     end
 
     # Set the stdout device
@@ -230,7 +230,7 @@ module HybridPlatformsConductor
     # * *log_device* (Object): The stdout log device to set
     def stdout_device=(log_device)
       # TODO: Find a more elegant way to access the internal log device
-      @logger.instance_variable_get(:@logdev).send(:set_dev, log_device)
+      @logger.instance_variable_get(:@logdev)&.send(:set_dev, log_device)
     end
 
     # Get the stderr device
@@ -239,7 +239,7 @@ module HybridPlatformsConductor
     # * IO or String: The stdout IO or file name
     def stderr_device
       # TODO: Find a more elegant way to access the internal log device
-      @logger_stderr.instance_variable_get(:@logdev).dev
+      @logger_stderr.instance_variable_get(:@logdev)&.dev
     end
 
     # Set the stderr device
@@ -248,7 +248,7 @@ module HybridPlatformsConductor
     # * *log_device* (Object): The stdout log device to set
     def stderr_device=(log_device)
       # TODO: Find a more elegant way to access the internal log device
-      @logger_stderr.instance_variable_get(:@logdev).send(:set_dev, log_device)
+      @logger_stderr.instance_variable_get(:@logdev)&.send(:set_dev, log_device)
     end
 
     # Is stdout really getting to the terminal display?
@@ -307,8 +307,8 @@ module HybridPlatformsConductor
         yield progress_bar
       ensure
         LoggerHelpers.progress_bar_semaphore.synchronize do
-          stdout_device.flush
-          stderr_device.flush
+          stdout_device&.flush
+          stderr_device&.flush
           self.stdout_device = previous_stdout_device unless previous_stdout_device.nil?
           self.stderr_device = previous_stderr_device unless previous_stderr_device.nil?
         end

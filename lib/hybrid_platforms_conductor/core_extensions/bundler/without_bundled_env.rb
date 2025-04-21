@@ -10,7 +10,7 @@ module Bundler
 
     # @return [Hash] Environment with all bundler-related variables removed
     def current_unbundled_env
-      env = ENV.clone.to_hash
+      env = ENV.to_h
       %w[
         PATH
         RUBYLIB
