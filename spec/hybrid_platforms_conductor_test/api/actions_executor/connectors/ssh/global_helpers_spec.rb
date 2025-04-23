@@ -57,7 +57,6 @@ describe HybridPlatformsConductor::ActionsExecutor do
             Host *
               User test_user
               ControlPath #{Dir.tmpdir}/hpc_ssh/hpc_ssh_mux_%h_%p_%r
-              PubkeyAcceptedKeyTypes +ssh-dss
           EO_SSH_CONFIG
         end
       end
@@ -69,7 +68,6 @@ describe HybridPlatformsConductor::ActionsExecutor do
             Host *
               User test_user
               ControlPath #{Dir.tmpdir}/hpc_ssh/hpc_ssh_mux_%h_%p_%r
-              PubkeyAcceptedKeyTypes +ssh-dss
           EO_SSH_CONFIG
         end
       end
@@ -106,7 +104,6 @@ describe HybridPlatformsConductor::ActionsExecutor do
             Host *
               User test_user
               ControlPath #{Dir.tmpdir}/hpc_ssh/hpc_ssh_mux_%h_%p_%r
-              PubkeyAcceptedKeyTypes +ssh-dss
           EO_SSH_CONFIG
         end
       end
@@ -118,7 +115,6 @@ describe HybridPlatformsConductor::ActionsExecutor do
             Host *
               User test_user
               ControlPath #{Dir.tmpdir}/hpc_ssh/hpc_ssh_mux_%h_%p_%r
-              PubkeyAcceptedKeyTypes +ssh-dss
               UserKnownHostsFile /path/to/known_hosts
           EO_SSH_CONFIG
         end
@@ -132,7 +128,6 @@ describe HybridPlatformsConductor::ActionsExecutor do
             Host *
               User test_user
               ControlPath #{Dir.tmpdir}/hpc_ssh/hpc_ssh_mux_%h_%p_%r
-              PubkeyAcceptedKeyTypes +ssh-dss
               StrictHostKeyChecking no
           EO_SSH_CONFIG
         end

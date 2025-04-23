@@ -304,6 +304,7 @@ module HybridPlatformsConductor
         end
       end
       begin
+        p progress_bar.class
         yield progress_bar
       ensure
         LoggerHelpers.progress_bar_semaphore.synchronize do

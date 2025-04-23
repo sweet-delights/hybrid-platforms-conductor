@@ -415,7 +415,7 @@ module HybridPlatformsConductor
               User #{@ssh_user}
               # Default control socket path to be used when multiplexing SSH connections
               ControlPath #{control_master_file('%h', '%p', '%r')}
-              #{open_ssh_major_version >= 7 ? 'PubkeyAcceptedKeyTypes +ssh-dss' : ''}
+              #{open_ssh_major_version >= 7 && open_ssh_major_version < 9 ? 'PubkeyAcceptedKeyTypes +ssh-dss' : ''}
               #{known_hosts_file.nil? ? '' : "UserKnownHostsFile #{known_hosts_file}"}
               #{@ssh_strict_host_key_checking ? '' : 'StrictHostKeyChecking no'}
 

@@ -65,7 +65,7 @@ module HybridPlatformsConductor
       local_environment:
     )
       if local_environment
-        false
+        nil
       else
         # Check that master is checked out correctly before deploying.
         # Check it on every platform having at least 1 node to be deployed.
@@ -88,7 +88,7 @@ module HybridPlatformsConductor
           end
         end
         if wrong_platforms.empty?
-          false
+          nil
         else
           "The following platforms have not checked out master: #{wrong_platforms.map(&:repository_path).join(', ')}. Only master should be deployed in production."
         end

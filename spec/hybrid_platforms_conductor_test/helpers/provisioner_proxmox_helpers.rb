@@ -359,7 +359,7 @@ module HybridPlatformsConductorTest
           end
         ]
         if destroy_vm
-          runs.push 
+          runs.push(
             proc do |actions|
               expect(actions.keys).to eq ['node']
               expect(actions['node'].size).to eq 4
@@ -409,7 +409,7 @@ module HybridPlatformsConductorTest
                 #{JSON.pretty_generate(result)}
               EO_STDOUT
             end
-          
+          )
         end
         expect_actions_executor_runs runs
       end

@@ -72,7 +72,7 @@ module HybridPlatformsConductor
                 nbr_processing = pools[:processing].size
                 nbr_processed = pools[:processed].size
               end
-              progress_bar.title = "Queue: #{nbr_to_process} - Processing: #{nbr_processing} - Done: #{nbr_processed} - Total: #{nbr_total}"
+              progress_bar.title = "Queue: #{nbr_to_process} - Processing: #{nbr_processing} - Done: #{nbr_processed} - Total: #{nbr_total}" if stdout_displayed?
               progress_bar.progress = nbr_processed
               break if nbr_processed == nbr_total
 

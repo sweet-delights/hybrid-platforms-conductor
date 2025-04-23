@@ -429,7 +429,7 @@ A subset of tests (or even a single test) can be run by using a part of their na
 
 To enable debugging logs during tests run, set the environment variable `TEST_DEBUG` to `1`: `TEST_DEBUG=1 bundle exec rspec -e "HybridPlatformsConductor::Deployer checking the docker images provisioning"`
 
-Some tests depend on Docker which should be installed separately if those tests are required to pass.
+Some tests depend on Docker and sshpass which should be installed separately if those tests are required to pass.
 
 ## License
 
