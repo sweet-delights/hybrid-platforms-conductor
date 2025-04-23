@@ -492,6 +492,8 @@ module HybridPlatformsConductor
         # Time in seconds to wait between different retries because system is booting up
         WAIT_TIME_FOR_BOOT = 10
 
+        private_constant :MAX_THREADS_CONTROL_MASTER, :MAX_RETRIES_FOR_BOOT, :WAIT_TIME_FOR_BOOT
+
         # Open an SSH control master to multiplex connections to a given list of nodes.
         # This method is re-entrant and reuses the same control masters.
         # It is multi-processes:

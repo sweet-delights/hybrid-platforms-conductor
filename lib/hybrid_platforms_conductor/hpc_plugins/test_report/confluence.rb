@@ -56,6 +56,7 @@ module HybridPlatformsConductor
         private
 
         TEMPLATES_PATH = File.expand_path("#{__dir__}/templates")
+        private_constant :TEMPLATES_PATH
 
         # Render a given ERB template into a String
         #

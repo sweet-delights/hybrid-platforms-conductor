@@ -34,14 +34,14 @@ describe HybridPlatformsConductor::ServicesHandler do
     it 'allows deployment in local environment' do
       with_test_platform_for_services_test do
         with_cmd_runner_mocked([]) do
-          expect(test_services_handler.deploy_allowed?(services: { 'node1' => %w[service1] }, local_environment: true)).to be_nil
+          expect(test_services_handler.barrier_to_deploy(services: { 'node1' => %w[service1] }, local_environment: true)).to be_nil
         end
       end
     end
 
     it 'allows deployment if branch is on master' do
       with_test_platform_for_services_test do
-        expect(test_services_handler.deploy_allowed?(services: { 'node1' => %w[service1] }, local_environment: false)).to be_nil
+        expect(test_services_handler.barrier_to_deploy(services: { 'node1' => %w[service1] }, local_environment: false)).to be_nil
       end
     end
 
@@ -52,7 +52,7 @@ describe HybridPlatformsConductor::ServicesHandler do
           deployable_services: %w[service1]
         }
       ) do
-        expect(test_services_handler.deploy_allowed?(services: { 'node1' => %w[service1] }, local_environment: false)).to be_nil
+        expect(test_services_handler.barrier_to_deploy(services: { 'node1' => %w[service1] }, local_environment: false)).to be_nil
       end
     end
 
@@ -62,7 +62,7 @@ describe HybridPlatformsConductor::ServicesHandler do
           git = Git.open(repository)
           git.add_remote('another_remote', remote_repo).fetch
           git.checkout('remotes/another_remote/master')
-          expect(test_services_handler.deploy_allowed?(services: { 'node1' => %w[service1] }, local_environment: false)).to be_nil
+          expect(test_services_handler.barrier_to_deploy(services: { 'node1' => %w[service1] }, local_environment: false)).to be_nil
         end
       end
     end
@@ -70,14 +70,14 @@ describe HybridPlatformsConductor::ServicesHandler do
     it 'allows deployment if branch is on master even if not checked-out' do
       with_test_platform_for_services_test do |repository|
         Git.open(repository).branch('other_branch').checkout
-        expect(test_services_handler.deploy_allowed?(services: { 'node1' => %w[service1] }, local_environment: false)).to be_nil
+        expect(test_services_handler.barrier_to_deploy(services: { 'node1' => %w[service1] }, local_environment: false)).to be_nil
       end
     end
 
     it 'refuses deployment if branch is not master' do
       with_test_platform_for_services_test do |repository|
         checkout_non_master_on(repository)
-        expect(test_services_handler.deploy_allowed?(services: { 'node1' => %w[service1] }, local_environment: false)).to eq "The following platforms have not checked out master: #{repository}. Only master should be deployed in production."
+        expect(test_services_handler.barrier_to_deploy(services: { 'node1' => %w[service1] }, local_environment: false)).to eq "The following platforms have not checked out master: #{repository}. Only master should be deployed in production."
       end
     end
 
@@ -91,7 +91,7 @@ describe HybridPlatformsConductor::ServicesHandler do
         as_git: true
       ) do
         expect(
-          test_services_handler.deploy_allowed?(
+          test_services_handler.barrier_to_deploy(
             services: { 'node1' => %w[service1], 'node2' => %w[service2], 'node3' => %w[service3] },
             local_environment: false
           )
@@ -112,7 +112,7 @@ describe HybridPlatformsConductor::ServicesHandler do
         checkout_non_master_on(repositories['platform2'])
         checkout_non_master_on(repositories['platform4'])
         expect(
-          test_services_handler.deploy_allowed?(
+          test_services_handler.barrier_to_deploy(
             services: { 'node1' => %w[service1], 'node2' => %w[service2], 'node3' => %w[service3], 'node4' => %w[service4] },
             local_environment: false
           )
@@ -133,7 +133,7 @@ describe HybridPlatformsConductor::ServicesHandler do
         checkout_non_master_on(repositories['platform2'])
         checkout_non_master_on(repositories['platform4'])
         expect(
-          test_services_handler.deploy_allowed?(
+          test_services_handler.barrier_to_deploy(
             services: { 'node1' => %w[service1 service3] },
             local_environment: false
           )

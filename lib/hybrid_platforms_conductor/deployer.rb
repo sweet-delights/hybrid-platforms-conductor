@@ -288,7 +288,7 @@ module HybridPlatformsConductor
 
       # Check that we are allowed to deploy
       unless @use_why_run
-        reason_for_interdiction = @services_handler.deploy_allowed?(
+        reason_for_interdiction = @services_handler.barrier_to_deploy(
           services: services_to_deploy,
           local_environment: @local_environment
         )

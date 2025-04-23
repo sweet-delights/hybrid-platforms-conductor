@@ -58,15 +58,5 @@ Gem::Specification.new do |s|
   # To work-around a bug of IceCube dependency: https://stackoverflow.com/questions/27109766/undefined-method-delegate-for-capybaradslmodule
   s.add_dependency 'activesupport', '~> 8.0'
 
-  # Test framework
-  s.add_development_dependency 'rspec', '~> 3.13'
-  # Automatic semantic releasing
-  s.add_development_dependency 'sem_ver_components', '~> 0.4'
-  # Lint checker
-  s.add_development_dependency 'rubocop', '~> 1.75'
-  # Lint checker for rspec
-  s.add_development_dependency 'rubocop-rspec', '~> 3.6'
-  # Mock web responses when needed
-  s.add_development_dependency 'webmock', '~> 3.25'
   s.metadata['rubygems_mfa_required'] = 'true'
 end

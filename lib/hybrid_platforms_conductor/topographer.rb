@@ -398,7 +398,7 @@ module HybridPlatformsConductor
         next if nodes_list.include?(node_name)
 
         new_nodes_graph[node_name] = node_info.merge(
-          connections: node_info[:connections].reject { |connected_hostname, _labels| nodes_list.include?(connected_hostname) },
+          connections: node_info[:connections].except(*nodes_list),
           includes: node_info[:includes] - nodes_list
         )
       end

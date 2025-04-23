@@ -214,6 +214,7 @@ module HybridPlatformsConductor
           INVALID_LIBRARY_METHODS = [
             'initialize'
           ]
+          private_constant :INVALID_LIBRARY_METHODS
 
           # Get the user defined library methods, per cookbook.
           # Keep a memory cache of it.

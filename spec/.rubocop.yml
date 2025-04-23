@@ -6,6 +6,15 @@ inherit_from:
 AllCops:
   NewCops: enable
 
+RSpec:
+  Language:
+    Expectations:
+      - with_serverless_chef_platforms
+      - with_test_platform
+      - with_test_platform_for_remote_testing
+      - with_test_podman_platform
+      - with_test_proxmox_platform
+
 # Empty blocks are perfectly valid, especially in test cases
 # Configuration parameters: AllowComments, AllowEmptyLambdas.
 Lint/EmptyBlock:
@@ -16,6 +25,16 @@ Lint/EmptyBlock:
 # Configuration parameters: IgnoreEmptyBlocks, AllowUnusedKeywordArguments.
 Lint/UnusedBlockArgument:
   AllowUnusedKeywordArguments: true
+
+# In the tests we simulate running executables by overriding $0
+# Offense count: 2
+# Configuration parameters: EnforcedStyle, CheckMethodNames, CheckSymbols, AllowedIdentifiers, AllowedPatterns.
+# SupportedStyles: snake_case, normalcase, non_integer
+# AllowedIdentifiers: TLS1_1, TLS1_2, capture3, iso8601, rfc1123_date, rfc822, rfc2822, rfc3339, x86_64
+Naming/VariableNumber:
+  Exclude:
+    - 'hybrid_platforms_conductor_test/helpers/executables_helpers.rb'
+
 
 # Executables tests are not linked to a given class/module, so skip this cop for them.
 # Configuration parameters: IgnoredMetadata.
@@ -30,6 +49,12 @@ RSpec/DescribeClass:
 RSpec/ExampleLength:
   Exclude:
     - '**/*'
+
+# Offense count: 86
+# Configuration parameters: Include, CustomTransform, IgnoreMethods, IgnoreMetadata.
+# Include: **/*_spec.rb
+RSpec/SpecFilePathFormat:
+  Enabled: false
 
 # Message expectations and test spies respond to a different testing usecase, and one can not always replace the other.
 # Configuration parameters: .

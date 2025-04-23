@@ -35,7 +35,7 @@ describe 'executables\' common options' do
     # 'topograph' => ['--from', '--node node1', '--to', '--node node1', '--skip-run', '--output', 'graphviz:graph.gv'],
   }.each do |executable, default_options|
 
-    context "checking common options for #{executable}" do
+    context "when checking common options for #{executable}" do
 
       it 'displays its help' do
         with_test_platform_for_common_options do

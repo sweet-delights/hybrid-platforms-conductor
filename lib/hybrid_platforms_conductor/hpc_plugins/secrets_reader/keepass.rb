@@ -116,6 +116,7 @@ module HybridPlatformsConductor
           url: 'URL',
           user_name: 'UserName'
         }
+        private_constant :FIELDS
 
         # Parse XML secrets from a Nokogiri XML group node
         #

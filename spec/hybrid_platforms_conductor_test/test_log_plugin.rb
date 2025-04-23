@@ -31,7 +31,7 @@ module HybridPlatformsConductorTest
         node: node,
         services: services,
         # Don't store the date
-        deployment_info: deployment_info.reject { |k, _v| k == :date },
+        deployment_info: deployment_info.except(:date),
         exit_status: exit_status,
         stdout: stdout,
         stderr: stderr

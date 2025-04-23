@@ -331,15 +331,13 @@ module HybridPlatformsConductor
     #
     # Parameters::
     # * *method* (Symbol): The missing method name
-    # * *args* (Array<Object>): Arguments given to the call
-    # * *block* (Proc): Code block given to the call
-    def method_missing(method, *args, &block)
+    def method_missing(method, ...)
       if method.to_s =~ /^get_(.*)_of$/
         property = Regexp.last_match(1).to_sym
         # Define the method so that we don't go trough method_missing next time (more efficient).
         define_property_method_for(property)
         # Then call it
-        send(:"get_#{property}_of", *args, &block)
+        send(:"get_#{property}_of", ...)
       else
         # We really don't know this method.
         # Call original implementation of method_missing that will raise an exception.
