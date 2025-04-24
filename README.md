@@ -96,7 +96,7 @@ Here are the various plugin categories:
 # Installation
 
 Installing Hybrid Platforms Conductor requires 2 steps:
-1. Have **Ruby >= 2.5 and < 3.0** installed.
+1. Have **Ruby >= 3.0** installed.
 2. Install the `hybrid_platforms_conductor` Rubygem.
 
 See [installation details](docs/install.md) for more details on how to install those.
