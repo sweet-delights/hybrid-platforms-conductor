@@ -96,7 +96,7 @@ Here are the various plugin categories:
 # Installation
 
 Installing Hybrid Platforms Conductor requires 2 steps:
-1. Have **Ruby >= 2.5 and < 3.0** installed.
+1. Have **Ruby >= 3.0** installed.
 2. Install the `hybrid_platforms_conductor` Rubygem.
 
 See [installation details](docs/install.md) for more details on how to install those.
@@ -428,6 +428,8 @@ The whole tests suite can be run by using `bundle exec rspec`.
 A subset of tests (or even a single test) can be run by using a part of their name this way: `bundle exec rspec -e "HybridPlatformsConductor::Deployer checking the docker images provisioning"`
 
 To enable debugging logs during tests run, set the environment variable `TEST_DEBUG` to `1`: `TEST_DEBUG=1 bundle exec rspec -e "HybridPlatformsConductor::Deployer checking the docker images provisioning"`
+
+Some tests depend on Docker and sshpass which should be installed separately if those tests are required to pass.
 
 ## License
 

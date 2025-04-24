@@ -696,6 +696,7 @@ class ProxmoxWaiter
 
   # Timeout in seconds before giving up on a lock
   LOCK_TIMEOUT = 30
+  private_constant :LOCK_TIMEOUT
 
   # Get the IP address of a given LXC container
   #

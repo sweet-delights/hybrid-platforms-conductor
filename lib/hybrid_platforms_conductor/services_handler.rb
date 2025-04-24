@@ -52,7 +52,7 @@ module HybridPlatformsConductor
       @platforms_handler.inject_dependencies(nodes_handler: @nodes_handler, actions_executor: @actions_executor)
     end
 
-    # Are we allowed to deploy?
+    # Get a potential reason that would prevent deployment.
     # This checks eventual restrictions on deployments, considering environments, options, secrets...
     #
     # Parameters::
@@ -60,7 +60,7 @@ module HybridPlatformsConductor
     # * *local_environment* (Boolean): Are we deploying to a local environment?
     # Result::
     # * String or nil: Reason for which we are not allowed to deploy, or nil if deployment is authorized
-    def deploy_allowed?(
+    def barrier_to_deploy(
       services:,
       local_environment:
     )
@@ -198,13 +198,13 @@ module HybridPlatformsConductor
       # Get all platforms involved in the deployment of those services on this node
       platforms_for(node => services).keys.each.with_index do |platform, platform_idx|
         log_info.merge!(
-          "repo_name_#{platform_idx}".to_sym => platform.name
+          "repo_name_#{platform_idx}": platform.name
         )
         if platform.info.key?(:commit)
           log_info.merge!(
-            "commit_id_#{platform_idx}".to_sym => platform.info[:commit][:id],
-            "commit_message_#{platform_idx}".to_sym => platform.info[:commit][:message].split("\n").first,
-            "diff_files_#{platform_idx}".to_sym => (platform.info[:status][:changed_files] + platform.info[:status][:added_files] + platform.info[:status][:deleted_files] + platform.info[:status][:untracked_files]).join(', ')
+            "commit_id_#{platform_idx}": platform.info[:commit][:id],
+            "commit_message_#{platform_idx}": platform.info[:commit][:message].split("\n").first,
+            "diff_files_#{platform_idx}": (platform.info[:status][:changed_files] + platform.info[:status][:added_files] + platform.info[:status][:deleted_files] + platform.info[:status][:untracked_files]).join(', ')
           )
         end
       end

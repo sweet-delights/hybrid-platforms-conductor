@@ -69,6 +69,8 @@ module HybridPlatformsConductor
         # Number of threads max to use for ssh-keyscan calls
         MAX_THREADS_SSH_KEY_SCAN = 32
 
+        private_constant :TIMEOUT_SSH_KEYSCAN, :MAX_THREADS_SSH_KEY_SCAN
+
         # Discover the host keys associated to a list of hosts.
         #
         # Parameters::

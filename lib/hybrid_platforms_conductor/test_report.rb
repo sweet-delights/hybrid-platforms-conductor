@@ -155,11 +155,11 @@ module HybridPlatformsConductor
           first_criteria =
             case first_criteria
             when :test_name
-              proc { |test| test.name }
+              proc(&:name)
             when :platform
-              proc { |test| test.platform }
+              proc(&:platform)
             when :node
-              proc { |test| test.node }
+              proc(&:node)
             else
               raise "Unknown group criteria name: #{first_criteria}"
             end
@@ -232,7 +232,7 @@ module HybridPlatformsConductor
     def flatten_hash(hash)
       hash.each_with_object({}) do |(k, v), h|
         if v.is_a? Hash
-          flatten_hash(v).map { |h_k, h_v| h["#{k}.#{h_k}".to_sym] = h_v }
+          flatten_hash(v).map { |h_k, h_v| h[:"#{k}.#{h_k}"] = h_v }
         else
           h[k] = v
         end

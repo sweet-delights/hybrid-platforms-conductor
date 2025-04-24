@@ -46,6 +46,7 @@ module Cleanroom
     #   []
     #   {:string=>"With to_hash"}
     KWARGS_TYPES = %i[key keyreq]
+    private_constant :KWARGS_TYPES
 
     #
     # The list of exposed methods with kwargs.

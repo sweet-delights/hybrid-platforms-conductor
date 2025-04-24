@@ -17,7 +17,7 @@ module HybridPlatformsConductor
     # * *domain* (String): Domain to use for authentication to Thycotic [default: ENV['hpc_domain_for_thycotic']]
     # * Proc: Code called with the Thyctotic instance.
     #   * *thycotic* (ThyctoticApi): The Thycotic instance to use.
-    def with_thycotic(thycotic_url, domain: ENV['hpc_domain_for_thycotic'])
+    def with_thycotic(thycotic_url, domain: ENV.fetch('hpc_domain_for_thycotic', nil))
       with_credentials_for(:thycotic, resource: thycotic_url) do |thycotic_user, thycotic_password|
         yield ThycoticApi.new(thycotic_url, thycotic_user, thycotic_password, domain: domain, logger: @logger, logger_stderr: @logger_stderr)
       end
@@ -41,7 +41,7 @@ module HybridPlatformsConductor
         url,
         user,
         password,
-        domain: ENV['hpc_domain_for_thycotic'],
+        domain: ENV.fetch('hpc_domain_for_thycotic', nil),
         logger: Logger.new($stdout),
         logger_stderr: Logger.new($stderr)
       )

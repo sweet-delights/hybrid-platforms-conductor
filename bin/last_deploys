@@ -53,7 +53,7 @@ info_displayed = {
   error: 'Error'
 }
 executable.out(Terminal::Table.new(headings: info_displayed.values) do |table|
-  sorted_deploy_info.each do |_node, deploy_info|
+  sorted_deploy_info.each do |(_node, deploy_info)|
     table << info_displayed.keys.map { |key| deploy_info[key] }
   end
 end)

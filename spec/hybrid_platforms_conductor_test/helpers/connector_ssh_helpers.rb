@@ -43,12 +43,10 @@ module HybridPlatformsConductorTest
           ssh_commands_per_connection = []
           if with_strict_host_key_checking
             ip = node_connection_info[:ip] || node_connection_info[:connection]
-            ssh_commands_once.concat(
+            ssh_commands_once.push(
               [
-                [
-                  "ssh-keyscan -p #{node_connection_info[:port]} #{ip}",
-                  proc { [0, "#{ip} ssh-rsa fake_host_key_for_#{ip}", ''] }
-                ]
+                "ssh-keyscan -p #{node_connection_info[:port]} #{ip}",
+                proc { [0, "#{ip} ssh-rsa fake_host_key_for_#{ip}", ''] }
               ]
             )
           end
@@ -144,7 +142,7 @@ module HybridPlatformsConductorTest
           with_cmd_runner_mocked(
             [
               ['which env', proc { [0, "/usr/bin/env\n", ''] }],
-              ['ssh -V 2>&1', proc { [0, "OpenSSH_7.4p1 Debian-10+deb9u7, OpenSSL 1.0.2u  20 Dec 2019\n", ''] }]
+              ['ssh -V 2>&1', proc { [0, "OpenSSH_9.8p1 Debian-10+deb9u7, OpenSSL 1.0.2u  20 Dec 2019\n", ''] }]
             ] +
               (password ? [['sshpass -V', proc { [0, "sshpass 1.06\n", ''] }]] : []) +
               ssh_expected_commands_for(

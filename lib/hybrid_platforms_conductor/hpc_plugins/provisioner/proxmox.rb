@@ -518,6 +518,7 @@ module HybridPlatformsConductor
         # Consider that it is to be used on the following patterns: (config|create|destroy)_<ID>.json
         # So remaining length is 255 - 13 = 242 characters.
         MAX_FILE_ID_SIZE = 242
+        private_constant :MAX_FILE_ID_SIZE
 
         # Get an ID unique for this node/environment and that can be used in file names.
         #

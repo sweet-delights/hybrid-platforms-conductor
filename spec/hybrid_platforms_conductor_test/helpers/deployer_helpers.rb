@@ -97,7 +97,7 @@ module HybridPlatformsConductorTest
       # Parameters::
       # * *services* (Hash<String, Array<String> >): List of services to be expected, per node name
       def expect_services_handler_to_deploy(services)
-        expect(test_services_handler).to receive(:deploy_allowed?).with(
+        expect(test_services_handler).to receive(:barrier_to_deploy).with(
           services: services,
           local_environment: false
         ).and_return(nil)
@@ -187,7 +187,7 @@ module HybridPlatformsConductorTest
       # Parameters::
       # * *nodes_info* (Hash): Node info to give the platform [default: 1 node having 1 service]
       # * *expect_services_to_deploy* (Hash<String,Array<String>>): Expected services to be deployed [default: all services from nodes_info]
-      # * *expect_deploy_allowed* (Boolean): Should we expect the call to deploy_allowed? [default: true]
+      # * *expect_deploy_allowed* (Boolean): Should we expect the call to barrier_to_deploy [default: true]
       # * *expect_package* (Boolean): Should we expect packaging? [default: true]
       # * *expect_prepare_for_deploy* (Boolean): Should we expect calls to prepare for deploy? [default: true]
       # * *expect_connections_to_nodes* (Boolean): Should we expect connections to nodes? [default: true]
@@ -223,7 +223,7 @@ module HybridPlatformsConductorTest
         with_test_platform(nodes_info, as_git: !check_mode, additional_config: "#{additional_config}\nsend_logs_to :test_log") do |repository|
           # Mock the ServicesHandler accesses
           if !check_mode && expect_deploy_allowed
-            expect(test_services_handler).to receive(:deploy_allowed?).with(
+            expect(test_services_handler).to receive(:barrier_to_deploy).with(
               services: expect_services_to_deploy,
               local_environment: expect_local_environment
             ).and_return(nil)

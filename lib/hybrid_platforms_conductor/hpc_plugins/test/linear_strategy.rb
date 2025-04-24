@@ -20,11 +20,11 @@ module HybridPlatformsConductor
             _exit_status, stdout, _stderr = @cmd_runner.run_cmd(<<~EO_BASH, log_to_stdout: log_debug?, no_exception: true, expected_code: [0, 1])
               cd #{@platform.repository_path} && \
               git --no-pager log \
-                --pretty=format:\"%H\" \
+                --pretty=format:"%H" \
                 --graph \
                 $(git merge-base \
                   --octopus \
-                  $(git --no-pager log #{merge_commit_id} --max-count 1 --pretty=format:\"%P\") \
+                  $(git --no-pager log #{merge_commit_id} --max-count 1 --pretty=format:"%P") \
                 )..#{merge_commit_id}
               | grep '|'
             EO_BASH

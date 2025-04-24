@@ -86,7 +86,7 @@ module HybridPlatformsConductor
       #
       # Result::
       # * Boolean: Has a singleton been instantiated for this component?
-      define_method("#{component}_instantiated?".to_sym) do
+      define_method(:"#{component}_instantiated?") do
         @instantiated_components.key?(component)
       end
 

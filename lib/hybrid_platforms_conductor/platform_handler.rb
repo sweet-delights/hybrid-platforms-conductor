@@ -17,7 +17,7 @@ module HybridPlatformsConductor
       # Make sure we define automatically a helper for such a platform
       mixin = Module.new
       platform_type = subclass.name.split('::').last.gsub(/([a-z\d])([A-Z\d])/, '\1_\2').downcase.to_sym
-      mixin.define_method("#{platform_type}_platform".to_sym) do |path: nil, git: nil, branch: 'master', name: nil, &platform_config_code|
+      mixin.define_method(:"#{platform_type}_platform") do |path: nil, git: nil, branch: 'master', name: nil, &platform_config_code|
         repository_path =
           if !path.nil?
             path

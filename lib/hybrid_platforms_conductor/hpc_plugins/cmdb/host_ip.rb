@@ -64,6 +64,8 @@ module HybridPlatformsConductor
         # Number of threads max to use for getent calls
         MAX_THREADS_GETENT = 32
 
+        private_constant :TIMEOUT_GETENT, :MAX_THREADS_GETENT
+
         # Discover the real IPs associated to a list of hosts.
         #
         # Parameters::

@@ -62,7 +62,7 @@ module HybridPlatformsConductorTest
           allow(component_class).to(receive(:new).once { component })
         end
         # Run the executable
-        args.concat(['--debug']) if ENV['TEST_DEBUG'] == '1'
+        args.push('--debug') if ENV['TEST_DEBUG'] == '1'
         ARGV.replace(args)
         old_program_name = $PROGRAM_NAME
         $0 = executable

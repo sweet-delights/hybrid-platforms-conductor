@@ -85,7 +85,7 @@ module HybridPlatformsConductor
               binding
             end
             variables.each do |var_name, var_value|
-              erb_context.instance_variable_set("@#{var_name}".to_sym, var_value)
+              erb_context.instance_variable_set(:"@#{var_name}", var_value)
             end
             ERB.new(@gateways[gateway_conf]).result(erb_context.private_binding)
           end
@@ -131,8 +131,8 @@ module HybridPlatformsConductor
         # [API] - @nodes_handler can be used
         def init
           # Default values
-          @ssh_user = ENV['hpc_ssh_user']
-          @ssh_user = ENV['USER'] if @ssh_user.nil? || @ssh_user.empty?
+          @ssh_user = ENV.fetch('hpc_ssh_user', nil)
+          @ssh_user = ENV.fetch('USER', nil) if @ssh_user.nil? || @ssh_user.empty?
           if @ssh_user.nil? || @ssh_user.empty?
             _exit_status, stdout = @cmd_runner.run_cmd 'whoami', log_to_stdout: log_debug?
             @ssh_user = stdout.strip
@@ -141,7 +141,7 @@ module HybridPlatformsConductor
           @ssh_strict_host_key_checking = true
           @passwords = {}
           @auth_password = false
-          @ssh_gateways_conf = ENV['hpc_ssh_gateways_conf'].nil? ? nil : ENV['hpc_ssh_gateways_conf'].to_sym
+          @ssh_gateways_conf = ENV['hpc_ssh_gateways_conf']&.to_sym
           @ssh_gateway_user = ENV['hpc_ssh_gateway_user'].nil? ? 'ubradm' : ENV['hpc_ssh_gateway_user']
           # The map of existing ssh directories that have been created, per node that can access them
           # Array< String, Array<String> >
@@ -333,13 +333,13 @@ module HybridPlatformsConductor
                 #{File.basename(from)} | \
               #{ssh_exec} \
                 #{ssh_url} \
-                \"#{need_sudo ? @actions_executor.sudo_prefix(@node) : ''}tar \
+                "#{need_sudo ? @actions_executor.sudo_prefix(@node) : ''}tar \
                   --extract \
                   --gunzip \
                   --file - \
                   --directory #{to} \
                   --owner root \
-                \"
+                "
             EO_BASH
           end
         end
@@ -415,7 +415,7 @@ module HybridPlatformsConductor
               User #{@ssh_user}
               # Default control socket path to be used when multiplexing SSH connections
               ControlPath #{control_master_file('%h', '%p', '%r')}
-              #{open_ssh_major_version >= 7 ? 'PubkeyAcceptedKeyTypes +ssh-dss' : ''}
+              #{open_ssh_major_version >= 7 && open_ssh_major_version < 9 ? 'PubkeyAcceptedKeyTypes +ssh-dss' : ''}
               #{known_hosts_file.nil? ? '' : "UserKnownHostsFile #{known_hosts_file}"}
               #{@ssh_strict_host_key_checking ? '' : 'StrictHostKeyChecking no'}
 
@@ -491,6 +491,8 @@ module HybridPlatformsConductor
 
         # Time in seconds to wait between different retries because system is booting up
         WAIT_TIME_FOR_BOOT = 10
+
+        private_constant :MAX_THREADS_CONTROL_MASTER, :MAX_RETRIES_FOR_BOOT, :WAIT_TIME_FOR_BOOT
 
         # Open an SSH control master to multiplex connections to a given list of nodes.
         # This method is re-entrant and reuses the same control masters.

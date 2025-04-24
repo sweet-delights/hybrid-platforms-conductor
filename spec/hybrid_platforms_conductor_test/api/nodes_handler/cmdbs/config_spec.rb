@@ -14,7 +14,7 @@ describe HybridPlatformsConductor::NodesHandler do
     it 'sets different metadata for different nodes' do
       with_test_platform(
         { nodes: { 'node1' => {}, 'node2' => {} } },
-        additional_config: <<~'EO_CONFIG'
+        additional_config: <<~EO_CONFIG
           for_nodes('node1') { set_metadata(my_property_1: 'my_value1', my_property_2: 'my_value2') }
           for_nodes('node2') { set_metadata(my_property_2: 'my_value3', my_property_3: 'my_value4') }
         EO_CONFIG

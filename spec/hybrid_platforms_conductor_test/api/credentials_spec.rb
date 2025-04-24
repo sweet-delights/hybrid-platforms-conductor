@@ -37,7 +37,7 @@ describe HybridPlatformsConductor::Credentials do
   it 'returns no credentials when they are not set' do
     with_platforms '' do
       # Check that .netrc won't be read
-      expect(::Netrc).not_to receive(:read)
+      expect(Netrc).not_to receive(:read)
       expect_credentials_to_be nil, nil
     end
   end
@@ -48,7 +48,7 @@ describe HybridPlatformsConductor::Credentials do
       ENV['hpc_password_for_test_credential'] = 'env_test_password'
       begin
         # Check that .netrc won't be read
-        expect(::Netrc).not_to receive(:read)
+        expect(Netrc).not_to receive(:read)
         expect_credentials_to_be 'env_test_user', 'env_test_password'
       ensure
         ENV.delete('hpc_user_for_test_credential')
@@ -78,8 +78,8 @@ describe HybridPlatformsConductor::Credentials do
 
   it 'returns credentials taken from .netrc when a resource is specified' do
     with_platforms '' do
-      expect(::Netrc).to receive(:read) do
-        mocked_netrc = instance_double(::Netrc)
+      expect(Netrc).to receive(:read) do
+        mocked_netrc = instance_double(Netrc)
         expect(mocked_netrc).to receive(:[]).with('my_domain.com').and_return %w[test_user test_password]
         expect(mocked_netrc).to receive(:instance_variable_get).with(:@data).and_return []
         mocked_netrc
@@ -90,8 +90,8 @@ describe HybridPlatformsConductor::Credentials do
 
   it 'returns credentials taken from .netrc when a non-URL resource is specified' do
     with_platforms '' do
-      expect(::Netrc).to receive(:read) do
-        mocked_netrc = instance_double(::Netrc)
+      expect(Netrc).to receive(:read) do
+        mocked_netrc = instance_double(Netrc)
         expect(mocked_netrc).to receive(:[]).with('This is:not/ a URL!').and_return %w[test_user test_password]
         expect(mocked_netrc).to receive(:instance_variable_get).with(:@data).and_return []
         mocked_netrc
@@ -103,8 +103,8 @@ describe HybridPlatformsConductor::Credentials do
   it 'erases the value of the password taken from netrc after usage' do
     with_platforms '' do
       netrc_data = [['mocked_data']]
-      expect(::Netrc).to receive(:read) do
-        mocked_netrc = instance_double(::Netrc)
+      expect(Netrc).to receive(:read) do
+        mocked_netrc = instance_double(Netrc)
         expect(mocked_netrc).to receive(:[]).with('my_domain.com').and_return %w[test_user test_password]
         expect(mocked_netrc).to receive(:instance_variable_get).with(:@data).and_return netrc_data
         mocked_netrc
@@ -133,7 +133,7 @@ describe HybridPlatformsConductor::Credentials do
       ENV['hpc_password_for_test_credential'] = 'env_test_password'
       begin
         # Check that .netrc won't be read
-        expect(::Netrc).not_to receive(:read)
+        expect(Netrc).not_to receive(:read)
         expect_credentials_to_be 'user_for_', 'password_for_'
       ensure
         ENV.delete('hpc_user_for_test_credential')
@@ -155,7 +155,7 @@ describe HybridPlatformsConductor::Credentials do
       ENV['hpc_password_for_test_credential'] = 'env_test_password'
       begin
         # Check that .netrc won't be read
-        expect(::Netrc).not_to receive(:read)
+        expect(Netrc).not_to receive(:read)
         expect_credentials_to_be 'user_for_test_resource', 'password_for_test_resource', resource: 'test_resource'
       ensure
         ENV.delete('hpc_user_for_test_credential')
@@ -166,7 +166,7 @@ describe HybridPlatformsConductor::Credentials do
 
   it 'returns credentials taken from config for a given resource even when they are nil' do
     with_platforms(
-      <<~'EO_CONFIG'
+      <<~EO_CONFIG
         credentials_for(:test_credential) do |resource, requester|
           requester.call nil, nil
         end
@@ -177,7 +177,7 @@ describe HybridPlatformsConductor::Credentials do
       ENV['hpc_password_for_test_credential'] = 'env_test_password'
       begin
         # Check that .netrc won't be read
-        expect(::Netrc).not_to receive(:read)
+        expect(Netrc).not_to receive(:read)
         expect_credentials_to_be nil, nil, resource: 'test_resource'
       ensure
         ENV.delete('hpc_user_for_test_credential')
@@ -233,7 +233,7 @@ describe HybridPlatformsConductor::Credentials do
 
   it 'fails if the requester is not called from config' do
     with_platforms(
-      <<~'EO_CONFIG'
+      <<~EO_CONFIG
         credentials_for(:test_credential) do |resource, requester|
         end
       EO_CONFIG

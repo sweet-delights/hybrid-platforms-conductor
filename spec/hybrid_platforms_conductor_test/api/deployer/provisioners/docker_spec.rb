@@ -43,12 +43,12 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Docker do
     # Make sure we use a unique environment for this test
     environment = "test_#{Process.pid}_#{(Time.now - Process.clock_gettime(Process::CLOCK_BOOTTIME)).strftime('%Y%m%d%H%M%S')}"
     with_test_docker_platform(environment) do |instance|
-      expect(::Docker::Container).to receive(:create).and_call_original
+      expect(Docker::Container).to receive(:create).and_call_original
       instance.create
       instance.wait_for_state! :created
       begin
         # Test that the instance is created
-        expect(::Docker::Container.all(all: true).find { |container| container.info['Names'].include? "/hpc_docker_container_node_#{environment}" }).not_to be_nil
+        expect(Docker::Container.all(all: true).find { |container| container.info['Names'].include? "/hpc_docker_container_node_#{environment}" }).not_to be_nil
         expect(instance.state).to eq :created
       ensure
         # Clean the Docker containers if needed
@@ -62,7 +62,7 @@ describe HybridPlatformsConductor::HpcPlugins::Provisioner::Docker do
       instance.create
       instance.wait_for_state! :created
       begin
-        expect(::Docker::Container).not_to receive(:create)
+        expect(Docker::Container).not_to receive(:create)
         instance.create
         expect(instance.state).to eq :created
       ensure

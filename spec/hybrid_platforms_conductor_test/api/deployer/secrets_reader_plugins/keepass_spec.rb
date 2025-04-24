@@ -76,7 +76,7 @@ describe HybridPlatformsConductor::Deployer do
           platform_info,
           additional_config: "read_secrets_from :keepass\n#{additional_config}"
         ) do
-          mock_databases.each do |database, _xml|
+          mock_databases.each_key do |database|
             expect(test_deployer.instance_variable_get(:@secrets_readers)[:keepass]).to receive(:with_credentials_for).with(:keepass, resource: database) do |_id, resource: nil, &client_code|
               client_code.call nil, mock_keepass_password
             end

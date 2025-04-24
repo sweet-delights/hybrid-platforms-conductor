@@ -87,8 +87,8 @@ module HybridPlatformsConductor
 
               with_credentials_for(:keepass, resource: keepass_secrets_info[:database]) do |_user, password|
                 Tempfile.create('hpc_keepass') do |xml_file|
-                  key_file = ENV['hpc_key_file_for_keepass']
-                  password_enc = ENV['hpc_password_enc_for_keepass']
+                  key_file = ENV.fetch('hpc_key_file_for_keepass', nil)
+                  password_enc = ENV.fetch('hpc_password_enc_for_keepass', nil)
                   keepass_credentials = {}
                   keepass_credentials[:password] = password.to_unprotected if password
                   keepass_credentials[:password_enc] = password_enc if password_enc
@@ -116,6 +116,7 @@ module HybridPlatformsConductor
           url: 'URL',
           user_name: 'UserName'
         }
+        private_constant :FIELDS
 
         # Parse XML secrets from a Nokogiri XML group node
         #

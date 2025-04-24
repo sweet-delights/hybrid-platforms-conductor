@@ -105,9 +105,7 @@ describe HybridPlatformsConductor::Plugins do
     with_test_platform({}) do
       plugins = described_class.new(
         :test_plugin_type,
-        init_plugin: proc do |plugin_class|
-          plugin_class.name
-        end,
+        init_plugin: proc(&:name),
         logger: logger,
         logger_stderr: logger
       )

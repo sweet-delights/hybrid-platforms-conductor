@@ -1,5 +1,5 @@
 # This is an example of Dockerfile that can serve as an image for testing Docker handling in the Deployer
-FROM debian:stretch
+FROM debian:bookworm
 
 RUN apt-get update && apt-get install -y openssh-server
 RUN mkdir /var/run/sshd

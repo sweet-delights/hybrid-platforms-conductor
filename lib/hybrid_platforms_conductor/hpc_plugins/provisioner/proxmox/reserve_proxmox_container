@@ -85,8 +85,8 @@ begin
 
   proxmox_waiter = ProxmoxWaiter.new(
     config_file,
-    ENV['hpc_user_for_proxmox'],
-    ENV['hpc_password_for_proxmox'],
+    ENV.fetch('hpc_user_for_proxmox', nil),
+    ENV.fetch('hpc_password_for_proxmox', nil),
     ENV['hpc_realm_for_proxmox'] || 'pam'
   )
 

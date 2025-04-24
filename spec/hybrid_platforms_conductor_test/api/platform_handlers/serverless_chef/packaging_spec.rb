@@ -332,7 +332,7 @@ describe HybridPlatformsConductor::HpcPlugins::PlatformHandler::ServerlessChef d
 
       it 'packages the repository with a testadmin public key in local mode' do
         with_serverless_chef_platforms('hpc_test') do |platform, repository|
-          File.write("#{ENV['hpc_platforms']}/testadmin.key.pub", 'ssh-rsa 12345 testadmin@test.com')
+          File.write("#{ENV.fetch('hpc_platforms', nil)}/testadmin.key.pub", 'ssh-rsa 12345 testadmin@test.com')
           with_packaging_mocked(
             repository,
             policy_file: 'policyfiles/test_policy.local.rb',
@@ -351,7 +351,7 @@ describe HybridPlatformsConductor::HpcPlugins::PlatformHandler::ServerlessChef d
 
       it 'does not package the repository with a testadmin public key in prod mode' do
         with_serverless_chef_platforms('hpc_test') do |platform, repository|
-          File.write("#{ENV['hpc_platforms']}/testadmin.key.pub", 'ssh-rsa 12345 testadmin@test.com')
+          File.write("#{ENV.fetch('hpc_platforms', nil)}/testadmin.key.pub", 'ssh-rsa 12345 testadmin@test.com')
           with_packaging_mocked(
             repository,
             cookbook_metadata: {

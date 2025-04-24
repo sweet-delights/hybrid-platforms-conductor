@@ -57,7 +57,6 @@ describe HybridPlatformsConductor::ActionsExecutor do
             Host *
               User test_user
               ControlPath #{Dir.tmpdir}/hpc_ssh/hpc_ssh_mux_%h_%p_%r
-              PubkeyAcceptedKeyTypes +ssh-dss
           EO_SSH_CONFIG
         end
       end
@@ -69,14 +68,13 @@ describe HybridPlatformsConductor::ActionsExecutor do
             Host *
               User test_user
               ControlPath #{Dir.tmpdir}/hpc_ssh/hpc_ssh_mux_%h_%p_%r
-              PubkeyAcceptedKeyTypes +ssh-dss
           EO_SSH_CONFIG
         end
       end
 
       it 'generates a global configuration with user taken from whoami when no env variable is set' do
         with_test_platform({}) do
-          original_user = ENV['USER']
+          original_user = ENV.fetch('USER', nil)
           begin
             ENV.delete 'USER'
             ENV.delete 'hpc_ssh_user'
@@ -106,7 +104,6 @@ describe HybridPlatformsConductor::ActionsExecutor do
             Host *
               User test_user
               ControlPath #{Dir.tmpdir}/hpc_ssh/hpc_ssh_mux_%h_%p_%r
-              PubkeyAcceptedKeyTypes +ssh-dss
           EO_SSH_CONFIG
         end
       end
@@ -118,7 +115,6 @@ describe HybridPlatformsConductor::ActionsExecutor do
             Host *
               User test_user
               ControlPath #{Dir.tmpdir}/hpc_ssh/hpc_ssh_mux_%h_%p_%r
-              PubkeyAcceptedKeyTypes +ssh-dss
               UserKnownHostsFile /path/to/known_hosts
           EO_SSH_CONFIG
         end
@@ -132,7 +128,6 @@ describe HybridPlatformsConductor::ActionsExecutor do
             Host *
               User test_user
               ControlPath #{Dir.tmpdir}/hpc_ssh/hpc_ssh_mux_%h_%p_%r
-              PubkeyAcceptedKeyTypes +ssh-dss
               StrictHostKeyChecking no
           EO_SSH_CONFIG
         end

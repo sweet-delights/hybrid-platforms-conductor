@@ -82,7 +82,7 @@ module HybridPlatformsConductor
 
       provider ||= proc do |requested_resource, requester|
         # Check environment variables
-        user = ENV["hpc_user_for_#{id}"]
+        user = ENV.fetch("hpc_user_for_#{id}", nil)
         # Clone the password as we are going to treat it as a secret string that will be wiped out
         password = ENV["hpc_password_for_#{id}"].dup
         if user.nil? || user.empty? || password.nil? || password.empty?
