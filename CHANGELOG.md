@@ -1,3 +1,13 @@
+# [v34.0.0](https://github.com/sweet-delights/hybrid-platforms-conductor/compare/v33.9.5...v34.0.0) (2025-04-25 22:44:39)
+
+### Patches
+
+* [Fix NPM packages installation in Github workflows](https://github.com/sweet-delights/hybrid-platforms-conductor/commit/5d18119b49ad7d0975d2c003139a394b9dd1116b)
+
+### Breaking changes
+
+* [Migrate to Ruby 3](https://github.com/sweet-delights/hybrid-platforms-conductor/commit/6e1b93a37b68b01b3144fe03ccc280e1275dd493)
+
 # [v33.9.5](https://github.com/sweet-delights/hybrid-platforms-conductor/compare/v33.9.4...v33.9.5) (2022-03-20 17:46:29)
 
 ### Patches
